@@ -135,7 +135,9 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 
 ### 수치로 검증된 개선 폭 순위
 
-같은 베이스라인 위에서 5-fold OOF로 재측정된 개선 폭 순위다 ([733495](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733495) 코멘트, Georgy Mamarin).
+5-fold OOF로 잰 개선 폭 순위다 ([733495](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733495) 코멘트, Georgy Mamarin).
+단, 측정 조건이 항목마다 다르다.
+피처 항목(3, 4, 6번)은 같은 기준 모델에 하나씩 얹어 쟀고, 용량 확장과 정확값 인코딩(1, 2번)은 누적으로(인코딩은 용량 확장 위에서) 쟀으며, OOF 라이브러리 평균(5번)은 다른 베이스에서 측정되어 나머지와 직접 비교할 수 없다고 원문에 명시돼 있다.
 
 1. 각 컬럼을 크기가 아니라 정확한 값으로 타깃 인코딩: **+0.0032** (tomasa2가 +0.0023으로 독립 측정).
 2. 모델 용량 확장 (63 leaves/400 rounds에서 255/1500 + 낮은 학습률): **+0.0012**.
@@ -143,8 +145,9 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
    slack은 daily 스크린타임을 예산으로 보고 관측된(결측 아닌) 성분들의 합을 뺀 여유분을 뜻하며, 관측 성분 개수와 짝지어 성분이 일부 결측인 행에서도 산술 관계를 활용한다.
    정확한 수식은 원 노트북 미확인이라 이 해석은 스레드 맥락(ryota517의 예산 제약 틀) 기반이다.
 4. `other_screen = daily - (social + gaming + work)` 잔차: **+0.00058~0.00074**, 단독 AUC 0.765 ([732223](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732223) 코멘트에서 복수 독립 재측정, [733541](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733541)).
-5. 공개 OOF 라이브러리 상위 10개 모델 평균: **+0.0005**.
-6. 손수 만든 행동 피처: **+0.0002 이하 또는 음수**.
+5. 공개 OOF 라이브러리(참가자들이 공유한 공개 노트북 모델들의 OOF/테스트 예측 모음) 상위 10개 모델 평균: **+0.0005**.
+   가장 좋은 모델 하나만 쓰는 것 대비 수치이고, 균등 평균 대신 가중치를 최적화해도 약 +0.0001 더 얻는 데 그친다.
+6. 손수 만든 행동 피처(도메인 직관으로 컬럼을 조합한 것): **+0.0002 이하 또는 음수**.
 
 - slack 피처(3번)와 other_screen 잔차(4번)는 같은 예산 제약 산술의 변형이다.
   성분 셋이 모두 채워진 행에서는 두 값이 동일하고, slack + 관측 성분 개수 쪽이 성분이 일부 결측인 행까지 커버하는 확장판이다.
