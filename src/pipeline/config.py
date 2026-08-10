@@ -1,4 +1,3 @@
-# PROTOTYPE (issue #17): 구조 확인용 뼈대.
 """설정 파일 로딩. 형식은 YAML(실험 설정 관례를 따름)."""
 
 from __future__ import annotations

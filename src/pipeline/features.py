@@ -1,4 +1,3 @@
-# PROTOTYPE (issue #17): 구조 확인용 뼈대.
 """피처 구성.
 
 baseline은 원시 피처 그대로. (#16)

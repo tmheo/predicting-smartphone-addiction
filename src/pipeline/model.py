@@ -1,4 +1,3 @@
-# PROTOTYPE (issue #17): 구조 확인용 뼈대.
 """모델 학습. 지금은 LightGBM 하나. 모델 종류가 늘면 kind별 함수를 추가한다."""
 
 from __future__ import annotations

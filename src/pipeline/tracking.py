@@ -1,4 +1,3 @@
-# PROTOTYPE (issue #17): 구조 확인용 뼈대.
 """실험 기록. MLflow 로컬 SQLite 백엔드(mlflow.db, gitignore 대상)에 남긴다. (#14)
 
 #14는 file store를 권장했지만 mlflow 3.15부터 file store가 유지보수 모드로 내려가
@@ -18,8 +17,11 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+import pandas as pd
+
 from .config import ExperimentConfig
 from .cv import CVResult
+from .data import ID, TARGET
 
 
 def git_state() -> dict[str, str]:
@@ -34,9 +36,22 @@ def git_state() -> dict[str, str]:
     return {"git_commit": commit, "git_dirty": str(dirty)}
 
 
+def build_submission(cfg: ExperimentConfig, test_pred: pd.DataFrame) -> pd.DataFrame:
+    """sample_submission의 id 순서를 따라 제출 파일(id, addicted_label)을 만든다.
+
+    id 집합이 어긋나면 merge 검증이 즉시 실패한다.
+    """
+    sample = pd.read_csv(cfg.data.sample_submission, usecols=[ID])
+    pred = test_pred.rename(columns={"pred": TARGET})
+    return sample.merge(pred, on=ID, how="left", validate="one_to_one")
+
+
 def log_run(cfg: ExperimentConfig, result: CVResult, input_hashes: dict[str, str]) -> str:
     """CV 결과 하나를 MLflow run 하나로 기록하고 run_id를 돌려준다."""
     import mlflow
+
+    submission = build_submission(cfg, result.test_pred)
+    assert submission[TARGET].notna().all(), "제출 파일에 예측이 없는 id가 있다."
 
     # 상대 경로 URI이므로 저장소 루트에서 실행하는 것이 전제다.
     mlflow.set_tracking_uri("sqlite:///mlflow.db")
@@ -54,11 +69,10 @@ def log_run(cfg: ExperimentConfig, result: CVResult, input_hashes: dict[str, str
         mlflow.set_tags({**git_state(), **{f"sha256.{k}": v for k, v in input_hashes.items()}})
         mlflow.log_artifact(str(cfg.source_path))
         with tempfile.TemporaryDirectory() as tmp:
-            oof_path = Path(tmp) / "oof.parquet"
-            test_path = Path(tmp) / "test_pred.parquet"
-            result.oof.to_parquet(oof_path, index=False)
-            result.test_pred.to_parquet(test_path, index=False)
-            mlflow.log_artifact(str(oof_path))
-            mlflow.log_artifact(str(test_path))
-            # submission.csv도 여기서 만들어 artifact로 남긴다. TODO: sample_submission 컬럼 규약 확인.
+            tmp_dir = Path(tmp)
+            result.oof.to_parquet(tmp_dir / "oof.parquet", index=False)
+            result.test_pred.to_parquet(tmp_dir / "test_pred.parquet", index=False)
+            submission.to_csv(tmp_dir / "submission.csv", index=False)
+            for name in ("oof.parquet", "test_pred.parquet", "submission.csv"):
+                mlflow.log_artifact(str(tmp_dir / name))
         return run.info.run_id

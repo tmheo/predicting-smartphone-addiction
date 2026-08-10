@@ -24,7 +24,7 @@ dependencies = [
 [tool.uv]
 override-dependencies = ["pandas>=3.0.5"]
 
-# PROTOTYPE (issue #17): src/pipeline 패키지를 `python -m pipeline.run`으로 실행하기 위한 최소 패키징.
+# src/pipeline 패키지를 `python -m pipeline.run`으로 실행하기 위한 최소 패키징.
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

@@ -1,4 +1,3 @@
-# PROTOTYPE (issue #17): 구조 확인용 뼈대.
 """CV 루프. 실행당 산출물 규약의 원천.
 
 반환 규약 (#14의 스키마 결정):
@@ -29,6 +28,16 @@ class CVResult:
     feature_names: list[str]
 
 
+def score_predictions(y: pd.Series, folds: pd.Series, pred: np.ndarray) -> dict[str, float]:
+    """fold별 AUC와 전체 OOF AUC를 계산한다. 시드 평균 예측의 재채점에도 쓴다. (#15)"""
+    fold_aucs: dict[str, float] = {}
+    for fold in sorted(folds.unique()):
+        mask = folds == fold
+        fold_aucs[f"auc_fold_{int(fold)}"] = roc_auc_score(y[mask], pred[mask])
+    fold_aucs["auc_oof"] = roc_auc_score(y, pred)
+    return fold_aucs
+
+
 def run_cv(cfg: ExperimentConfig, train: pd.DataFrame, test: pd.DataFrame, seed: int) -> CVResult:
     """커밋된 fold 배정대로 학습하고 OOF와 테스트 예측을 만든다.
 
@@ -41,7 +50,6 @@ def run_cv(cfg: ExperimentConfig, train: pd.DataFrame, test: pd.DataFrame, seed:
     oof_pred = np.zeros(len(train))
     test_pred = np.zeros(len(test))
     n_folds = int(train["fold"].max()) + 1
-    fold_aucs: dict[str, float] = {}
 
     for fold in range(n_folds):
         va_idx = train.index[train["fold"] == fold]
@@ -51,12 +59,10 @@ def run_cv(cfg: ExperimentConfig, train: pd.DataFrame, test: pd.DataFrame, seed:
         )
         oof_pred[va_idx] = va_pred
         test_pred += model_mod.predict_test(model, X_test) / n_folds
-        fold_aucs[f"auc_fold_{fold}"] = roc_auc_score(y.loc[va_idx], va_pred)
 
-    fold_aucs["auc_oof"] = roc_auc_score(y, oof_pred)
     return CVResult(
         oof=pd.DataFrame({"id": train[ID], "fold": train["fold"], "pred": oof_pred}),
         test_pred=pd.DataFrame({"id": test[ID], "pred": test_pred}),
-        fold_aucs=fold_aucs,
+        fold_aucs=score_predictions(y, train["fold"], oof_pred),
         feature_names=list(X.columns),
     )

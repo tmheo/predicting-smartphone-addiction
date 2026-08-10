@@ -1,4 +1,3 @@
-# PROTOTYPE (issue #17): 구조 확인용 뼈대.
 """데이터 로딩과 fold 부여.
 
 파이프라인은 fold를 계산하지 않는다.
@@ -25,17 +24,21 @@ def file_sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def load_train(path: Path, categorical: list[str]) -> pd.DataFrame:
-    # NaN 유지, 대치 없음. (#16) 범주형은 LightGBM 내장 처리를 위해 category dtype으로.
-    df = pd.read_csv(path)
-    df[categorical] = df[categorical].astype("category")
-    return df
+def load_csv(path: Path) -> pd.DataFrame:
+    # NaN 유지, 대치 없음. (#16)
+    return pd.read_csv(path)
 
 
-def load_test(path: Path, categorical: list[str]) -> pd.DataFrame:
-    df = pd.read_csv(path)
-    df[categorical] = df[categorical].astype("category")
-    return df
+def align_categories(train: pd.DataFrame, test: pd.DataFrame, categorical: list[str]) -> None:
+    """범주형 컬럼을 train/test 공통 카테고리 체계의 category dtype으로 맞춘다.
+
+    각각 astype("category")를 하면 한쪽에만 있는 값이 코드 배정을 어긋나게 만들 수 있어,
+    두 데이터의 값 합집합으로 카테고리를 고정한다. LightGBM 내장 범주형 처리는 이 코드를 쓴다. (#16)
+    """
+    for col in categorical:
+        cats = sorted(set(train[col].dropna()) | set(test[col].dropna()))
+        train[col] = pd.Categorical(train[col], categories=cats)
+        test[col] = pd.Categorical(test[col], categories=cats)
 
 
 def attach_folds(train: pd.DataFrame, folds_path: Path) -> pd.DataFrame:
