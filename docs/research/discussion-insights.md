@@ -38,6 +38,8 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 - 같은 방향의 독립 증거가 셋 더 있다: 전 피처를 범주형으로 취급한 Keras 베이스라인의 임베딩 공간 클래스 분리 ([732358](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732358)), 전 피처 one-hot + 결합 피처 로지스틱 회귀의 OOF 0.9601 ([733708](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733708) 코멘트), 정확값 타깃 인코딩 +0.0032 ([733495](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733495) 코멘트).
 - 정확값 인코딩이 통하는 이유는 스마트폰 도메인과 무관하다.
   데이터가 특정 값들 위에서 생성되거나 반올림되어 있어, 정확한 값이 같은 값에서 나온 행들을 묶어 주는 것뿐이다 ([733495](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733495)).
+- 우리 파이프라인 재현 결과: 이 신호는 표현 하나만 넣어야 한다.
+  범주형 복제 `_cat`은 +0.00329([#31](https://github.com/tmheo/predicting-smartphone-addiction/issues/31)), 그 위에 타깃 인코딩 `_te`를 겹쳐 넣으면 신호를 나눠 가지며 이득이 없고([#34](https://github.com/tmheo/predicting-smartphone-addiction/issues/34)), `_cat`을 `_te`로 교체하면 추가로 +0.00055가 나와 채택됐다([#36](https://github.com/tmheo/predicting-smartphone-addiction/issues/36), exp006).
 
 ### 점수로 이어지는 것은 사실상 생성기의 산술 오류뿐이다
 
