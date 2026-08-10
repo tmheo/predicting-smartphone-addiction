@@ -11,3 +11,6 @@ data/
 
 # OS
 .DS_Store
+
+# Playwright MCP session logs
+.playwright-mcp/

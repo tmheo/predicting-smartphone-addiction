@@ -1,5 +1,0 @@
-[     439ms] [WARNING] No `HydrateFallback` element provided to render during initial hydration @ https://www.kaggle.com/static/assets/vendor.js?v=c9016ab40db98160:255
-[     948ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://www.kaggle.com/api/i/competitions.PageService/GetPage:0
-[    1581ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://www.kaggle.com/api/i/datasets.databundles.DatabundleService/GetDatabundleExternalColumns:0
-[    1597ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://www.kaggle.com/api/i/datasets.DatasetService/GetDataViewExternal:0
-[    1805ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://www.kaggle.com/api/i/competitions.PageService/GetPage:0
