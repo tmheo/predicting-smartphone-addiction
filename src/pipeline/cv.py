@@ -17,7 +17,7 @@ from sklearn.metrics import roc_auc_score
 from . import model as model_mod
 from .config import ExperimentConfig
 from .data import ID, TARGET
-from .features import build_features
+from .features import add_fold_fit_columns, build_features, make_fold_fit
 
 
 @dataclass
@@ -47,26 +47,45 @@ def run_cv(cfg: ExperimentConfig, train: pd.DataFrame, test: pd.DataFrame, seed:
     X = build_features(train, cfg.features, seed)
     X_test = build_features(test, cfg.features, seed)
     y = train[TARGET]
+    transformers = make_fold_fit(cfg.features)
 
     oof_pred = np.zeros(len(train))
     test_pred = np.zeros(len(test))
     n_folds = int(train["fold"].max()) + 1
     importances: list[pd.DataFrame] = []
+    feature_names = list(X.columns)
 
     for fold in range(n_folds):
         va_idx = train.index[train["fold"] == fold]
         tr_idx = train.index[train["fold"] != fold]
+        X_fold, X_test_fold = X, X_test
+        if transformers:
+            # fold-fit 단계: 학습 fold로만 fit하고, 같은 상태를 검증 fold와 test에 적용한다.
+            # 전체 train으로 fit하는 별도 경로는 없다. (#32 결정 4)
+            for t in transformers:
+                t.fit(train.loc[tr_idx], seed)
+            X_fold = add_fold_fit_columns(transformers, X, train)
+            X_test_fold = add_fold_fit_columns(transformers, X_test, test)
+            assert list(X_fold.columns) == list(X_test_fold.columns), (
+                "train/test의 fold-fit 컬럼 집합이 다르다."
+            )
+            if fold == 0:
+                feature_names = list(X_fold.columns)
+            else:
+                assert list(X_fold.columns) == feature_names, (
+                    f"fold {fold}의 컬럼 집합이 fold 0과 다르다."
+                )
         model, va_pred = model_mod.train_one_fold(
-            cfg.model, X.loc[tr_idx], y.loc[tr_idx], X.loc[va_idx], y.loc[va_idx], seed
+            cfg.model, X_fold.loc[tr_idx], y.loc[tr_idx], X_fold.loc[va_idx], y.loc[va_idx], seed
         )
         oof_pred[va_idx] = va_pred
-        test_pred += model_mod.predict_test(model, X_test) / n_folds
+        test_pred += model_mod.predict_test(model, X_test_fold) / n_folds
         importances.append(model_mod.gain_importance(model).assign(fold=fold, seed=seed))
 
     return CVResult(
         oof=pd.DataFrame({"id": train[ID], "fold": train["fold"], "pred": oof_pred}),
         test_pred=pd.DataFrame({"id": test[ID], "pred": test_pred}),
         fold_aucs=score_predictions(y, train["fold"], oof_pred),
-        feature_names=list(X.columns),
+        feature_names=feature_names,
         importance=pd.concat(importances, ignore_index=True),
     )

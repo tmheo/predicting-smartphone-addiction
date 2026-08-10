@@ -7,6 +7,9 @@ baseline은 원시 피처 그대로. (#16)
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from typing import Protocol
+
 import numpy as np
 import pandas as pd
 
@@ -33,3 +36,45 @@ def build_features(df: pd.DataFrame, cfg: FeatureConfig, seed: int) -> pd.DataFr
         noise[df[PLACEBO_MASK_SOURCE].isna().to_numpy()] = np.nan
         X[PLACEBO] = noise
     return X
+
+
+class FoldFitTransformer(Protocol):
+    """fold 루프 안에서 학습하는 fold-fit 피처의 단위. (#32, #35)
+
+    fit은 타깃이 포함된 학습 fold의 원본 DataFrame을 받아 상태를 새로 계산하고
+    (fold마다 다시 불리므로 이전 fold의 상태를 남기면 안 된다),
+    transform은 원본 DataFrame을 받아 같은 인덱스의 새 컬럼 DataFrame을 돌려준다.
+    컬럼 이름은 트랜스포머 책임이며, 기존 컬럼과 겹치면 파이프라인이 즉시 실패한다.
+    """
+
+    def fit(self, train_fold: pd.DataFrame, seed: int) -> None: ...
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame: ...
+
+
+# kind -> 트랜스포머 팩토리. 새 fold-fit 피처는 여기 등록만 하면 설정에서 켤 수 있다.
+FOLD_FIT_REGISTRY: dict[str, Callable[..., FoldFitTransformer]] = {}
+
+
+def make_fold_fit(cfg: FeatureConfig) -> list[FoldFitTransformer]:
+    """설정의 fold_fit 목록을 트랜스포머 인스턴스로 만든다. kind 외 키는 생성자 인자."""
+    transformers: list[FoldFitTransformer] = []
+    for spec in cfg.fold_fit:
+        params = dict(spec)
+        kind = params.pop("kind")
+        transformers.append(FOLD_FIT_REGISTRY[kind](**params))
+    return transformers
+
+
+def add_fold_fit_columns(
+    transformers: list[FoldFitTransformer], X: pd.DataFrame, df: pd.DataFrame
+) -> pd.DataFrame:
+    """fit된 트랜스포머들의 새 컬럼을 X에 붙인 행렬을 돌려준다. 추가 전용."""
+    out = X
+    for t in transformers:
+        new = t.transform(df)
+        assert new.index.equals(df.index), f"{type(t).__name__}의 transform 인덱스가 원본과 다르다."
+        collision = set(new.columns) & set(out.columns)
+        assert not collision, f"fold-fit 컬럼 이름 충돌: {sorted(collision)}"
+        out = pd.concat([out, new], axis=1)
+    return out
