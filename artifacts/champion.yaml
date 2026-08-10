@@ -1,0 +1,7 @@
+run_id: ce66e16b12fd43b4bc95fdcf2972555c
+oof_auc: 0.9627593050791433
+config: exp001_lgbm_baseline
+features: academic_work_impact,age,app_opens_per_day,daily_screen_time_hours,gaming_hours,gender,notifications_per_day,placebo_noise,sleep_hours,social_media_hours,stress_level,weekend_screen_time,work_study_hours
+git_commit: 5c5a9d752ba0bb85a251f2e6409ac160d599205c
+adopted_at: '2026-08-10'
+reason: 플라시보 결측 패턴 정정(#19) 후 baseline 재실행을 첫 champion으로 부트스트랩

@@ -109,7 +109,8 @@ def judge(champion: dict, challenger: RunFacts) -> tuple[bool, bool, list[str]]:
 def write_champion(challenger: RunFacts, reason: str) -> None:
     record = {
         "run_id": challenger.run_id,
-        "oof_auc": round(challenger.auc_oof, 5),
+        # 판정이 +0.0001 단위 비교이므로 반올림 없이 전체 정밀도로 남긴다.
+        "oof_auc": float(challenger.auc_oof),
         "config": challenger.experiment,
         "features": ",".join(sorted(challenger.features)),
         "git_commit": challenger.git_commit,
