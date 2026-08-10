@@ -14,3 +14,6 @@ data/
 
 # Playwright MCP session logs
 .playwright-mcp/
+
+# Claude Code agent worktrees
+.claude/worktrees/
