@@ -94,19 +94,30 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 
 ## 3. CV-LB 안정성과 리더보드 해석
 
-### 리더보드의 분해능
+### 리더보드는 얼마나 작은 점수 차이까지 구분할 수 있나
 
 - 공개 LB에 같은 점수로 표시되는 팀들은 동점이 아니다.
   Kaggle은 full precision으로 랭킹하고 소수점 5자리는 표시용 반올림이며, 0.97086 부근에서 랭크 1계단의 비용은 약 4e-07 AUC다 ([733618](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733618)).
-- 팀 간 비교의 paired sigma는 0.00009~0.00011로, 진리값 대비 표준오차(약 0.00066)보다 6~7배 작다.
-  1위 대 50위는 약 3 시그마로 실제 차이지만, 같은 모델의 시드 두 개는 절반 확률로 순위가 뒤집히고, 10~100위 구간에서는 순수 시드 노이즈 ±1 시그마가 약 60팀 범위다 ([734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005)).
-- 리더보드 분해능 공식: sd(gap) = sd(move) * sqrt(2(1 - rho)).
-  비슷한 블렌드끼리의 95% 분해 가능 차이는 ~0.00015 수준까지 좁아진다.
-  예측 벡터의 상관이 아니라 AUC 추정치의 상관을 넣어야 하며, 전자를 넣으면 낙관적으로 치우친다 ([733214](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733214) 코멘트).
+- 점수 오차는 두 종류를 구분해야 한다.
+  한 팀의 표시 점수가 진짜 AUC(테스트가 무한히 많다면 나올 값)에서 벗어나는 폭은 표준오차 약 0.00066이다.
+  그런데 모든 팀이 같은 20% 표본으로 채점되므로, 표본이 우연히 쉽게/어렵게 뽑혀 생기는 공통 오차는 두 팀의 점수를 빼면 상쇄된다.
+  그래서 두 팀의 점수 차이가 흔들리는 폭(paired sigma)은 0.00009~0.00011로, 절대 오차보다 6~7배 작다 ([734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005)).
+  같은 자로 두 사람의 키를 재면 자가 부정확해도 누가 더 큰지는 정확히 알 수 있는 것과 같은 원리다.
+- 이 paired sigma를 자로 삼아 리더보드를 읽으면: 1위와 50위의 차이는 약 3 시그마라 노이즈로 보기 어려운 실제 실력 차이다.
+  반면 같은 모델을 시드만 바꾼 두 제출은 어느 쪽이 위에 갈지 동전 던지기(50%)이고, 팀이 빽빽하게 몰린 10~100위 구간에서는 시드 노이즈 1 시그마만큼의 점수 흔들림만으로 순위가 약 60계단 움직인다 ([734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005)).
+- 두 제출물의 점수 차이가 흔들리는 폭은 sd(gap) = sd(move) * sqrt(2(1 - rho))로 계산한다.
+  sd(move)는 제출물 하나의 점수 오차(위의 약 0.00066), rho는 테스트 표본이 바뀔 때 두 점수(AUC 추정치)가 함께 오르내리는 정도다.
+  두 제출물이 비슷할수록 rho가 1에 가까워져 차이의 오차가 작아지고, 비슷한 블렌드끼리는 95% 신뢰 수준에서 구분 가능한 최소 차이가 약 0.00015까지 좁아진다.
+  즉 비슷한 블렌드 두 개의 점수 차이가 0.00015보다 작으면 노이즈와 구분되지 않는다.
+  주의: rho 자리에는 AUC 추정치의 상관을 넣어야 한다.
+  예측 벡터끼리의 상관(보통 0.999 수준)을 넣으면 rho를 과대평가해서, 리더보드가 실제보다 미세한 차이까지 구분해 준다고 착각하게 된다 ([733214](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733214) 코멘트).
 
 ### best-of-N 함정과 제출 규율
 
-- Kaggle은 best 공개 점수를 유지하므로 개선 없는 재제출도 잃을 것 없는 코인 플립이고, 겉보기 랭크 상승의 절반은 실력이 아니라 best-of-N 효과다 ([733618](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733618)).
+- 리더보드에 표시되는 점수는 최신 제출이 아니라 지금까지 제출한 것 중 가장 좋은 public 점수이고, 한 번 좋은 점수가 나오면 그 뒤에 나쁜 제출을 해도 내려가지 않는다.
+  각 제출 점수에는 표본 노이즈가 섞여 있으므로, 모델 개선 없이 같은 제출을 반복해도 우연히 잘 나온 만큼 표시 점수가 올라간다.
+  점수가 나쁘면 표시는 그대로고 좋으면 오르니, 재제출은 잃을 것 없는 동전 던지기다.
+  이렇게 N번 뽑은 것 중 최고 기록은 진짜 실력보다 좋게 나오기 마련이고(best-of-N 효과), 겉보기 순위 상승의 절반은 실력이 아니라 이 효과다 ([733618](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733618)).
 - 실용 규칙: 어떤 변경이 순위를 40계단 올렸어도 public 점수 변화가 0.0001 미만이면 아무것도 측정한 게 아니다 ([734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005)).
 - Public LB는 테스트의 20%로 채점되므로 미세 차이를 분간하지 못한다.
   의사결정은 OOF 기준으로 한다 ([733495](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733495) 코멘트).
