@@ -1,0 +1,13 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Competition data (downloaded via kaggle CLI, not committed)
+data/
+
+# OS
+.DS_Store
