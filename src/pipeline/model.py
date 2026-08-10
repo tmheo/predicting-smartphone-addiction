@@ -23,7 +23,8 @@ def train_one_fold(
     model.fit(
         X_tr,
         y_tr,
-        eval_set=[(X_va, y_va)],
+        eval_X=X_va,
+        eval_y=y_va,
         callbacks=[lgb.early_stopping(cfg.fit["early_stopping_rounds"])],
     )
     return model, model.predict_proba(X_va)[:, 1]

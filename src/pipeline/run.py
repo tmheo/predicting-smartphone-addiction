@@ -47,6 +47,7 @@ def main() -> None:
     train = data.load_csv(cfg.data.train)
     test = data.load_csv(cfg.data.test)
     data.align_categories(train, test, cfg.features.categorical)
+    data.add_categorical_copies(train, test, cfg.features.categorical_copies)
     train = data.attach_folds(train, cfg.data.folds)
 
     # 시드 반복: 예측은 평균, metric은 평균 예측 기준으로 다시 계산. (#15)

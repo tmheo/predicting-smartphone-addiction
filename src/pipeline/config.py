@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
@@ -21,6 +21,8 @@ class FeatureConfig:
     include: str  # "raw" 또는 명시적 컬럼 목록(후속 실험에서 확장)
     categorical: list[str]
     placebo: bool
+    # 수치 컬럼을 유지한 채 <col>_cat 범주형 복제 컬럼을 추가할 대상. (#31 변형 b)
+    categorical_copies: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

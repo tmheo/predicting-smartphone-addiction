@@ -1,7 +1,7 @@
-run_id: ce66e16b12fd43b4bc95fdcf2972555c
-oof_auc: 0.9627593050791433
-config: exp001_lgbm_baseline
-features: academic_work_impact,age,app_opens_per_day,daily_screen_time_hours,gaming_hours,gender,notifications_per_day,placebo_noise,sleep_hours,social_media_hours,stress_level,weekend_screen_time,work_study_hours
-git_commit: 5c5a9d752ba0bb85a251f2e6409ac160d599205c
-adopted_at: '2026-08-10'
-reason: 플라시보 결측 패턴 정정(#19) 후 baseline 재실행을 첫 champion으로 부트스트랩
+run_id: 77217687c0514dab9f693fd4aa50c741
+oof_auc: 0.9660458127109742
+config: exp003_categorical_copies
+features: academic_work_impact,age,age_cat,app_opens_per_day,app_opens_per_day_cat,daily_screen_time_hours,daily_screen_time_hours_cat,gaming_hours,gaming_hours_cat,gender,notifications_per_day,notifications_per_day_cat,placebo_noise,sleep_hours,sleep_hours_cat,social_media_hours,social_media_hours_cat,stress_level,weekend_screen_time,weekend_screen_time_cat,work_study_hours,work_study_hours_cat
+git_commit: 70fc8e33cb87fe19913b1f9cfbfac4c72af0d9e0
+adopted_at: '2026-08-11'
+reason: 수치 유지 + 정확값 범주형 복제(exp003)로 정확값 묶기 신호 반영, OOF +0.00329 (#31)

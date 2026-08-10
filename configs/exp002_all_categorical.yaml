@@ -1,0 +1,45 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #31 변형 (a): 수치 컬럼을 전부 LightGBM 내장 범주형으로 교체.
+# 디스커션의 "정확값 묶기" 신호가 범주형 처리만으로 얼마나 잡히는지 본다.
+
+name: exp002_all_categorical
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  include: raw
+  # id와 타깃을 제외한 원시 컬럼 전부를 category로 처리한다.
+  categorical:
+    [
+      age,
+      daily_screen_time_hours,
+      social_media_hours,
+      gaming_hours,
+      work_study_hours,
+      sleep_hours,
+      notifications_per_day,
+      app_opens_per_day,
+      weekend_screen_time,
+      gender,
+      stress_level,
+      academic_work_impact,
+    ]
+  placebo: true
+
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.05
+    num_leaves: 255
+    n_estimators: 10000
+  fit:
+    early_stopping_rounds: 200
+
+cv:
+  seeds: [42]
