@@ -8,13 +8,21 @@ dependencies = [
     "ipykernel>=7.3.0",
     "jupyterlab>=4.6.2",
     "kaggle>=2.2.4",
+    "lightgbm>=4.7.0",
     "matplotlib>=3.11.1",
+    "mlflow>=3.6",
     "numpy>=2.5.2",
     "pandas>=3.0.5",
-    "pyarrow>=25.0.0",
+    "pyarrow>=20",
+    "pyyaml>=6.0.3",
     "scikit-learn>=1.9.0",
     "seaborn>=0.13.2",
 ]
+
+# mlflow 3.x는 pandas<3을 선언하지만 이 프로젝트의 사용 범위(로컬 file store 기록)에서는 pandas 3과 동작한다.
+# mlflow가 pandas 3 지원을 선언하면 이 재정의는 제거한다.
+[tool.uv]
+override-dependencies = ["pandas>=3.0.5"]
 
 # PROTOTYPE (issue #17): src/pipeline 패키지를 `python -m pipeline.run`으로 실행하기 위한 최소 패키징.
 [build-system]

@@ -1,14 +1,12 @@
 # PROTOTYPE (issue #17): 구조 확인용 뼈대.
-"""설정 파일 로딩.
-
-TOML을 쓰는 이유: 파이썬 3.11+ 표준 라이브러리(tomllib)로 파싱되므로 의존성이 늘지 않는다.
-"""
+"""설정 파일 로딩. 형식은 YAML(실험 설정 관례를 따름)."""
 
 from __future__ import annotations
 
-import tomllib
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
+
+import yaml
 
 
 @dataclass(frozen=True)
@@ -45,8 +43,8 @@ class ExperimentConfig:
 
 def load_config(path: str | Path) -> ExperimentConfig:
     path = Path(path)
-    with path.open("rb") as f:
-        raw = tomllib.load(f)
+    with path.open() as f:
+        raw = yaml.safe_load(f)
     return ExperimentConfig(
         name=raw["name"],
         data=DataConfig(**{k: Path(v) for k, v in raw["data"].items()}),

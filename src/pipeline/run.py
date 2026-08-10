@@ -2,8 +2,8 @@
 """실행 진입점.
 
 사용법:
-    uv run python -m pipeline.run configs/exp001_lgbm_baseline.toml
-    uv run python -m pipeline.run configs/exp001_lgbm_baseline.toml --plan  # 실행 계획만 출력
+    uv run python -m pipeline.run configs/exp001_lgbm_baseline.yaml
+    uv run python -m pipeline.run configs/exp001_lgbm_baseline.yaml --plan  # 실행 계획만 출력
 
 실험 하나 = 설정 파일 하나 = MLflow run 하나.
 """
@@ -20,7 +20,7 @@ from .config import load_config
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="CV 파이프라인 실행")
-    parser.add_argument("config", help="실험 설정 TOML 경로")
+    parser.add_argument("config", help="실험 설정 YAML 경로")
     parser.add_argument("--plan", action="store_true", help="학습 없이 실행 계획만 출력")
     args = parser.parse_args()
 
@@ -40,7 +40,7 @@ def main() -> None:
             print(f"sha256.{name:<6}: {h[:16]}…")
         print("git        :", tracking.git_state())
         print("기록될 것   : params(feature 목록, 모델 파라미터), metrics(auc_fold_*, auc_oof),")
-        print("             artifacts(설정 toml, oof.parquet[id,fold,pred], test_pred.parquet[id,pred], submission.csv)")
+        print("             artifacts(설정 yaml, oof.parquet[id,fold,pred], test_pred.parquet[id,pred], submission.csv)")
         return
 
     train = data.load_train(cfg.data.train, cfg.features.categorical)

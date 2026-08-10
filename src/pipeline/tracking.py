@@ -1,10 +1,14 @@
 # PROTOTYPE (issue #17): 구조 확인용 뼈대.
-"""실험 기록. MLflow 로컬 file store(mlruns/, gitignore 대상)에 남긴다. (#14)
+"""실험 기록. MLflow 로컬 SQLite 백엔드(mlflow.db, gitignore 대상)에 남긴다. (#14)
+
+#14는 file store를 권장했지만 mlflow 3.15부터 file store가 유지보수 모드로 내려가
+기본 차단되므로, #14가 업그레이드 경로로 언급한 sqlite:///mlflow.db를 처음부터 쓴다.
+artifact는 로컬 mlartifacts/ 아래 파일로 남으므로 소비 방식은 달라지지 않는다.
 
 실행당 기록 규약:
 - params: 실험 이름, feature 목록(정렬), 모델 파라미터, 시드.
 - metrics: auc_fold_0..4, auc_oof. 시드 반복 시 시드 평균본이 대표 metric.
-- artifacts: 설정 원본(toml), oof.parquet, test_pred.parquet, submission.csv.
+- artifacts: 설정 원본(yaml), oof.parquet, test_pred.parquet, submission.csv.
 - tags: git_commit, git_dirty, 입력 파일 sha256. dirty 실행은 앙상블 후보에서 제외하는 관행. (#14)
 """
 
@@ -34,6 +38,8 @@ def log_run(cfg: ExperimentConfig, result: CVResult, input_hashes: dict[str, str
     """CV 결과 하나를 MLflow run 하나로 기록하고 run_id를 돌려준다."""
     import mlflow
 
+    # 상대 경로 URI이므로 저장소 루트에서 실행하는 것이 전제다.
+    mlflow.set_tracking_uri("sqlite:///mlflow.db")
     mlflow.set_experiment("predicting-smartphone-addiction")
     with mlflow.start_run(run_name=cfg.name) as run:
         mlflow.log_params(

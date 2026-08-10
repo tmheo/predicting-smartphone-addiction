@@ -9,6 +9,11 @@ __pycache__/
 # Competition data (downloaded via kaggle CLI, not committed)
 data/
 
+# MLflow local tracking (issue #14/#17)
+mlflow.db
+mlruns/
+mlartifacts/
+
 # OS
 .DS_Store
 
