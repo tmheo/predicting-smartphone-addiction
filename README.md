@@ -60,6 +60,17 @@ uv run jupyter lab
 └── uv.lock
 ```
 
+## 실험 기록 조회
+
+실험 기록은 MLflow에 남는다.
+메타데이터(시작 시각, metric, params, tag)는 `mlflow.db`(SQLite)에, 예측 파일 등 artifact는 `mlruns/<experiment_id>/<run_id>/artifacts/`에 저장된다.
+
+```bash
+uv run mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+
+브라우저에서 <http://127.0.0.1:5000> 에 접속하면 run 목록을 시작 시각 순으로 보고 metric·artifact를 확인할 수 있다.
+
 ## 제출
 
 제출은 마일스톤 단위 건전성 점검 용도다.
