@@ -39,6 +39,15 @@ def score_predictions(y: pd.Series, folds: pd.Series, pred: np.ndarray) -> dict[
     return fold_aucs
 
 
+def _with_built_columns(df: pd.DataFrame, X: pd.DataFrame) -> pd.DataFrame:
+    """원본 df에 build_features가 만든 컬럼(placebo 등)을 더한 fold-fit 입력을 만든다.
+
+    placebo 카나리아를 타깃 인코딩하려면 fold-fit 입력에 placebo 컬럼이 있어야 한다. (#33 파급)
+    """
+    extra = [c for c in X.columns if c not in df.columns]
+    return pd.concat([df, X[extra]], axis=1) if extra else df
+
+
 def run_cv(cfg: ExperimentConfig, train: pd.DataFrame, test: pd.DataFrame, seed: int) -> CVResult:
     """커밋된 fold 배정대로 학습하고 OOF와 테스트 예측을 만든다.
 
@@ -48,6 +57,9 @@ def run_cv(cfg: ExperimentConfig, train: pd.DataFrame, test: pd.DataFrame, seed:
     X_test = build_features(test, cfg.features, seed)
     y = train[TARGET]
     transformers = make_fold_fit(cfg.features)
+    if transformers:
+        train_ff = _with_built_columns(train, X)
+        test_ff = _with_built_columns(test, X_test)
 
     oof_pred = np.zeros(len(train))
     test_pred = np.zeros(len(test))
@@ -62,10 +74,13 @@ def run_cv(cfg: ExperimentConfig, train: pd.DataFrame, test: pd.DataFrame, seed:
         if transformers:
             # fold-fit 단계: 학습 fold로만 fit하고, 같은 상태를 검증 fold와 test에 적용한다.
             # 전체 train으로 fit하는 별도 경로는 없다. (#32 결정 4)
+            # transform은 학습 fold 행과 검증 fold 행이 섞인 train 전체를 받는다.
+            # 학습 행에 OOF 값을 줘야 하는 트랜스포머는 fit 때 저장한 행 집합(id 기준,
+            # test와 위치 인덱스가 겹치므로)으로 두 경우를 구분해 돌려준다. (#33 파급)
             for t in transformers:
-                t.fit(train.loc[tr_idx], seed)
-            X_fold = add_fold_fit_columns(transformers, X, train)
-            X_test_fold = add_fold_fit_columns(transformers, X_test, test)
+                t.fit(train_ff.loc[tr_idx], seed)
+            X_fold = add_fold_fit_columns(transformers, X, train_ff)
+            X_test_fold = add_fold_fit_columns(transformers, X_test, test_ff)
             assert list(X_fold.columns) == list(X_test_fold.columns), (
                 "train/test의 fold-fit 컬럼 집합이 다르다."
             )
