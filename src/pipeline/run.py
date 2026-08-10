@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 
 import numpy as np
+import pandas as pd
 
 from . import cv, data, tracking
 from .config import load_config
@@ -39,7 +40,8 @@ def main() -> None:
             print(f"sha256.{name:<6}: {h[:16]}…")
         print("git        :", tracking.git_state())
         print("기록될 것   : params(feature 목록, 모델 파라미터), metrics(auc_fold_*, auc_oof),")
-        print("             artifacts(설정 yaml, oof.parquet[id,fold,pred], test_pred.parquet[id,pred], submission.csv)")
+        print("             artifacts(설정 yaml, oof.parquet[id,fold,pred], test_pred.parquet[id,pred],")
+        print("             feature_importance.parquet[feature,fold,seed,gain], submission.csv)")
         return
 
     train = data.load_csv(cfg.data.train)
@@ -56,8 +58,10 @@ def main() -> None:
         final.fold_aucs = cv.score_predictions(
             train[data.TARGET], train["fold"], final.oof["pred"].to_numpy()
         )
+        final.importance = pd.concat([r.importance for r in results], ignore_index=True)
 
     run_id = tracking.log_run(cfg, final, input_hashes)
+    tracking.warn_below_placebo(final.importance)
     print(f"run_id={run_id} auc_oof={final.fold_aucs['auc_oof']:.5f}")
 
 

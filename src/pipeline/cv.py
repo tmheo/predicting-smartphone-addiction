@@ -26,6 +26,7 @@ class CVResult:
     test_pred: pd.DataFrame  # columns: id, pred
     fold_aucs: dict[str, float]  # auc_fold_0..N, auc_oof
     feature_names: list[str]
+    importance: pd.DataFrame  # columns: feature, fold, seed, gain (#19)
 
 
 def score_predictions(y: pd.Series, folds: pd.Series, pred: np.ndarray) -> dict[str, float]:
@@ -50,6 +51,7 @@ def run_cv(cfg: ExperimentConfig, train: pd.DataFrame, test: pd.DataFrame, seed:
     oof_pred = np.zeros(len(train))
     test_pred = np.zeros(len(test))
     n_folds = int(train["fold"].max()) + 1
+    importances: list[pd.DataFrame] = []
 
     for fold in range(n_folds):
         va_idx = train.index[train["fold"] == fold]
@@ -59,10 +61,12 @@ def run_cv(cfg: ExperimentConfig, train: pd.DataFrame, test: pd.DataFrame, seed:
         )
         oof_pred[va_idx] = va_pred
         test_pred += model_mod.predict_test(model, X_test) / n_folds
+        importances.append(model_mod.gain_importance(model).assign(fold=fold, seed=seed))
 
     return CVResult(
         oof=pd.DataFrame({"id": train[ID], "fold": train["fold"], "pred": oof_pred}),
         test_pred=pd.DataFrame({"id": test[ID], "pred": test_pred}),
         fold_aucs=score_predictions(y, train["fold"], oof_pred),
         feature_names=list(X.columns),
+        importance=pd.concat(importances, ignore_index=True),
     )

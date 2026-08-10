@@ -14,6 +14,9 @@ from .config import FeatureConfig
 from .data import ID, TARGET
 
 PLACEBO = "placebo_noise"
+# 플라시보에 입힐 결측 패턴의 원본 열. 결측 없는 잡음은 후보 피처(원본 열의 결측을
+# 물려받음)와 다른 종류의 자가 되므로, 실제 열의 NaN 마스크를 복사한다. (#19 정정)
+PLACEBO_MASK_SOURCE = "social_media_hours"
 
 
 def build_features(df: pd.DataFrame, cfg: FeatureConfig, seed: int) -> pd.DataFrame:
@@ -26,5 +29,7 @@ def build_features(df: pd.DataFrame, cfg: FeatureConfig, seed: int) -> pd.DataFr
     if cfg.placebo:
         # 개선 판정 기준선: 이 피처보다 importance가 낮으면 노이즈로 본다. (#15)
         rng = np.random.default_rng(seed)
-        X[PLACEBO] = rng.normal(size=len(X))
+        noise = rng.normal(size=len(X))
+        noise[df[PLACEBO_MASK_SOURCE].isna().to_numpy()] = np.nan
+        X[PLACEBO] = noise
     return X

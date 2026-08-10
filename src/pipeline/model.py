@@ -31,3 +31,14 @@ def train_one_fold(
 
 def predict_test(model, X_test: pd.DataFrame):
     return model.predict_proba(X_test)[:, 1]
+
+
+def gain_importance(model) -> pd.DataFrame:
+    """학습된 모델의 gain importance를 (feature, gain) 프레임으로 돌려준다. (#19)"""
+    booster = model.booster_
+    return pd.DataFrame(
+        {
+            "feature": booster.feature_name(),
+            "gain": booster.feature_importance(importance_type="gain"),
+        }
+    )

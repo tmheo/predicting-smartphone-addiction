@@ -7,7 +7,8 @@ artifact는 로컬 mlartifacts/ 아래 파일로 남으므로 소비 방식은 �
 실행당 기록 규약:
 - params: 실험 이름, feature 목록(정렬), 모델 파라미터, 시드.
 - metrics: auc_fold_0..4, auc_oof. 시드 반복 시 시드 평균본이 대표 metric.
-- artifacts: 설정 원본(yaml), oof.parquet, test_pred.parquet, submission.csv.
+- artifacts: 설정 원본(yaml), oof.parquet, test_pred.parquet, submission.csv,
+  feature_importance.parquet(feature, fold, seed, gain 스키마의 fold별 gain importance). (#19)
 - tags: git_commit, git_dirty, 입력 파일 sha256. dirty 실행은 앙상블 후보에서 제외하는 관행. (#14)
 """
 
@@ -22,6 +23,7 @@ import pandas as pd
 from .config import ExperimentConfig
 from .cv import CVResult
 from .data import ID, TARGET
+from .features import PLACEBO
 
 
 def git_state() -> dict[str, str]:
@@ -72,7 +74,29 @@ def log_run(cfg: ExperimentConfig, result: CVResult, input_hashes: dict[str, str
             tmp_dir = Path(tmp)
             result.oof.to_parquet(tmp_dir / "oof.parquet", index=False)
             result.test_pred.to_parquet(tmp_dir / "test_pred.parquet", index=False)
+            result.importance.to_parquet(tmp_dir / "feature_importance.parquet", index=False)
             submission.to_csv(tmp_dir / "submission.csv", index=False)
-            for name in ("oof.parquet", "test_pred.parquet", "submission.csv"):
+            for name in (
+                "oof.parquet",
+                "test_pred.parquet",
+                "feature_importance.parquet",
+                "submission.csv",
+            ):
                 mlflow.log_artifact(str(tmp_dir / name))
         return run.info.run_id
+
+
+def warn_below_placebo(importance: pd.DataFrame) -> None:
+    """평균 gain이 플라시보보다 낮은 피처를 콘솔 경고로 알린다. (#19)
+
+    이 경고는 판정이 아니라 관찰이다. 채택 판정은 pipeline.compare가 새 피처에만 묻는다.
+    """
+    mean_gain = importance.groupby("feature")["gain"].mean()
+    if PLACEBO not in mean_gain.index:
+        return
+    below = mean_gain[mean_gain < mean_gain[PLACEBO]].drop(PLACEBO, errors="ignore")
+    for feature, gain in below.sort_values().items():
+        print(
+            f"경고: {feature}의 평균 gain importance({gain:.1f})가 "
+            f"플라시보({mean_gain[PLACEBO]:.1f})보다 낮다."
+        )
