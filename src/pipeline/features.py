@@ -12,6 +12,7 @@ from typing import Protocol
 
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import StratifiedKFold
 
 from .config import FeatureConfig
 from .data import ID, TARGET
@@ -58,8 +59,60 @@ class FoldFitTransformer(Protocol):
     def transform(self, df: pd.DataFrame) -> pd.DataFrame: ...
 
 
+class ExactValueTargetEncoder:
+    """정확값 키 타깃 인코딩. (#33 설계, #34)
+
+    학습 fold 전체로 키별 타깃 평균표를 만들고,
+    학습 fold 행에는 내부 층화 K-fold OOF 값을, 검증 fold와 test 행에는 전체 평균표 값을 준다.
+    평활 없음, 미지 키는 fit 데이터의 전체 타깃 평균. 새 컬럼 이름은 <col>_te.
+    """
+
+    def __init__(self, cols: list[str], inner_folds: int = 10) -> None:
+        self.cols = list(cols)
+        self.inner_folds = inner_folds
+
+    @staticmethod
+    def _keys(s: pd.Series) -> pd.Series:
+        # 반올림 없는 정확값 문자열 키(원문 .astype(str)와 등가). NaN은 별도 키로 명시 치환한다.
+        return s.astype(str).where(s.notna(), "__nan__")
+
+    def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
+        assert train_fold[ID].is_unique, "학습 fold의 id가 유일하지 않다."
+        y = train_fold[TARGET]
+        self.global_mean_ = float(y.mean())
+        self.tables_: dict[str, pd.Series] = {}
+        skf = StratifiedKFold(n_splits=self.inner_folds, shuffle=True, random_state=seed)
+        splits = list(skf.split(train_fold, y))
+        oof: dict[str, np.ndarray] = {}
+        for col in self.cols:
+            keys = self._keys(train_fold[col])
+            self.tables_[col] = y.groupby(keys).mean()
+            vals = np.empty(len(train_fold))
+            for tr_i, va_i in splits:
+                inner_y = y.iloc[tr_i]
+                inner_table = inner_y.groupby(keys.iloc[tr_i]).mean()
+                mapped = keys.iloc[va_i].map(inner_table).fillna(inner_y.mean())
+                vals[va_i] = mapped.to_numpy()
+            oof[col] = vals
+        self.oof_ = pd.DataFrame(oof, index=pd.Index(train_fold[ID], name=ID))
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        # 학습 fold 행(fit 때 저장한 id)은 OOF 값, 그 외(검증 fold, test)는 전체 평균표 값.
+        is_fit_row = df[ID].isin(self.oof_.index).to_numpy()
+        out: dict[str, pd.Series] = {}
+        for col in self.cols:
+            mapped = self._keys(df[col]).map(self.tables_[col]).fillna(self.global_mean_)
+            if is_fit_row.any():
+                mapped = mapped.copy()
+                mapped.iloc[is_fit_row] = self.oof_[col].loc[df.loc[is_fit_row, ID]].to_numpy()
+            out[f"{col}_te"] = mapped
+        return pd.DataFrame(out, index=df.index)
+
+
 # kind -> 트랜스포머 팩토리. 새 fold-fit 피처는 여기 등록만 하면 설정에서 켤 수 있다.
-FOLD_FIT_REGISTRY: dict[str, Callable[..., FoldFitTransformer]] = {}
+FOLD_FIT_REGISTRY: dict[str, Callable[..., FoldFitTransformer]] = {
+    "target_encoding": ExactValueTargetEncoder,
+}
 
 
 def make_fold_fit(cfg: FeatureConfig) -> list[FoldFitTransformer]:

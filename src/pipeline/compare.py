@@ -4,10 +4,13 @@
     uv run python -m pipeline.compare <challenger_run_id>
     uv run python -m pipeline.compare <challenger_run_id> --adopt --reason "채택 사유"
 
-판정 규칙 (#15, #19):
+판정 규칙 (#15, #19, #33):
 - OOF AUC 개선이 +0.0001 이상이어야 한다.
 - champion에 없던 새 피처는 fold별 gain importance 평균이 플라시보 평균보다 높아야 한다.
   피처 변화가 없는 실험에는 이 조건을 묻지 않는다.
+- 플라시보에서 파생된 카나리아 피처(placebo_noise_te 등)는 새 피처 판정에서 제외하되,
+  importance가 플라시보 원본보다 낮아야 한다. 높으면 누수(평균표가 자기 라벨을 봄)로 보고
+  그 run은 판정에 쓰지 않는다. (#33 placebo 카나리아)
 - 개선 폭이 +0.0003 이하인데 단일 시드면 채택을 거부한다(3시드 재실행 안내).
 
 champion의 원본은 커밋되는 artifacts/champion.yaml이다. mlflow.db는 로컬 전용이므로
@@ -64,6 +67,11 @@ def load_run_facts(run_id: str) -> RunFacts:
     )
 
 
+def _is_canary(feature: str) -> bool:
+    """플라시보에서 파생된 카나리아 피처인지. 예: placebo_noise_te. (#33)"""
+    return feature.startswith(f"{PLACEBO}_")
+
+
 def judge(champion: dict, challenger: RunFacts) -> tuple[bool, bool, list[str]]:
     """(개선 여부, 단일 시드 채택 거부 여부, 판정 로그)를 돌려준다."""
     lines: list[str] = []
@@ -74,13 +82,30 @@ def judge(champion: dict, challenger: RunFacts) -> tuple[bool, bool, list[str]]:
         f"(delta {delta:+.5f}, 문턱 +{AUC_THRESHOLD}) → {'통과' if auc_ok else '미달'}"
     )
 
+    mean_gain = challenger.importance.groupby("feature")["gain"].mean()
+
+    # placebo 카나리아: 파생 피처가 플라시보 원본보다 중요해지면 누수다. (#33)
+    canary_ok = True
+    canaries = sorted(f for f in challenger.features if _is_canary(f))
+    for canary in canaries:
+        placebo_gain = mean_gain.get(PLACEBO)
+        gain = mean_gain.get(canary, 0.0)
+        ok = placebo_gain is not None and gain < placebo_gain
+        canary_ok &= ok
+        shown = f"{placebo_gain:.1f}" if placebo_gain is not None else "기록 없음"
+        lines.append(
+            f"카나리아 {canary}: 평균 gain {gain:.1f} vs 플라시보 {shown} "
+            f"→ {'통과' if ok else '누수 의심(판정 불가)'}"
+        )
+
     champion_features = set(champion["features"].split(","))
-    new_features = sorted(challenger.features - champion_features - {PLACEBO})
+    new_features = sorted(
+        f for f in challenger.features - champion_features - {PLACEBO} if not _is_canary(f)
+    )
     importance_ok = True
     if not new_features:
         lines.append("새 피처 없음: importance 조건은 묻지 않는다.")
     else:
-        mean_gain = challenger.importance.groupby("feature")["gain"].mean()
         if PLACEBO not in mean_gain.index:
             importance_ok = False
             lines.append("challenger run에 플라시보 피처가 없어 새 피처의 importance를 판정할 수 없다.")
@@ -103,7 +128,7 @@ def judge(champion: dict, challenger: RunFacts) -> tuple[bool, bool, list[str]]:
             "채택하려면 설정의 cv.seeds를 [42, 43, 44]로 바꿔 3시드 평균으로 재실행할 것."
         )
 
-    return auc_ok and importance_ok, seed_blocked, lines
+    return auc_ok and importance_ok and canary_ok, seed_blocked, lines
 
 
 def write_champion(challenger: RunFacts, reason: str) -> None:
