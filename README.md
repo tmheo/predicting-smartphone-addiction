@@ -62,6 +62,13 @@ uv run jupyter lab
 
 ## 제출
 
+제출은 마일스톤 단위 건전성 점검 용도다.
+판단 기준은 CV(OOF)이고, public 점수는 CV와 같은 방향인지 확인하는 데만 쓴다.
+
 ```bash
-uv run kaggle competitions submit -c playground-series-s6e8 -f <submission.csv> -m "<메시지>"
+uv run python -m pipeline.submit <run_id>
 ```
+
+해당 MLflow run의 submission artifact를 Kaggle에 제출하고, public 점수를 그 run에 metric `public_auc`로 기록한다.
+제출 메시지는 run 이름, run_id 앞 8자리, 커밋 해시, OOF AUC로 자동 생성된다.
+`git_dirty=True`로 기록된 run은 제출할 수 없고(우회 없음), 이미 제출된 run의 재제출은 `--force`로만 허용된다.
