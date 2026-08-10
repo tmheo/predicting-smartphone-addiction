@@ -17,3 +17,6 @@ data/
 
 # Claude Code agent worktrees
 .claude/worktrees/
+
+# Humanize-Korean Skill workspace
+_workspace/
