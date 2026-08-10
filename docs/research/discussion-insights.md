@@ -2,6 +2,7 @@
 
 Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커션 25개 스레드 전체를 읽고, 모델링에 활용할 수 있는 인사이트를 주제별로 정리한 문서다.
 스냅샷 기준일은 2026-08-10이고, 대회는 2026-08-31까지 진행되므로 이후 올라온 스레드는 반영되어 있지 않다.
+이후 올라오는 스레드는 증분 업데이트 절차(`docs/agents/discussion-update.md`)에 따라 이 문서에 반영한다.
 
 원자료는 세 개의 리딩 노트다.
 
@@ -231,3 +232,37 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 4. 모델: LightGBM/XGBoost 고용량(255 leaves급, early stopping, 학습률 고정 후 최종만 하향), monotone 제약 금지, 불균형 대응 없음.
 5. 앙상블: 시드 앙상블 + 순위 평균 블렌딩, 여력이 되면 OOF 메타 피처 스태킹.
 6. 제출: 확률 제출, 최종 선택은 CV 기준, public 0.0001 미만 변화는 노이즈로 취급.
+
+## 부록: 읽은 스레드 장부
+
+이 문서에 반영된 디스커션 스레드의 전수 목록이다.
+증분 업데이트(`docs/agents/discussion-update.md`)에서 새 스레드 식별의 기준 장부로 쓴다.
+코멘트 수는 확인 시점(2026-08-10) 목록 페이지 기준이고, 재방문 표시가 있는 스레드는 회차마다 코멘트 수가 늘었는지 다시 확인한다.
+
+| id | 제목 | 코멘트 수 | 재방문 |
+| --- | --- | --- | --- |
+| [734063](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734063) | Decoding the Synthetic Generator: 0.9689+ via Stringified Target Encoding and Rank Averaging | 1 | O |
+| [734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005) | Changing the random seed moves you 60 places - what this leaderboard can and can't resolve | 1 | |
+| [733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983) | A quarter of the rows describe people who can't exist - and LightGBM already knew | 0 | O |
+| [733908](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733908) | An interesting competition | 1 | |
+| [733730](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733730) | My finding on the data and some questions | 2 | |
+| [733708](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733708) | 5 Features, Logistic Regression, ~0.945 ROC AUC | 1 | O |
+| [733619](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733619) | Question about Top 3 Prizes for Teams | 0 | |
+| [733618](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733618) | 27 teams show 0.97086. None of them are tied. | 0 | |
+| [733552](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733552) | I Injected Real-World Data Into My Model and Every Single Fold Got Worse | 2 | |
+| [733541](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733541) | Feature Engineering: What Works, What Fails, and the Math Behind It | 2 | |
+| [733495](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733495) | As a Beginner, What's the First Thing You Check in a Tabular Competition? | 9 | O |
+| [733214](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733214) | There is no distribution shift in this data - only missingness. What that means for the private LB | 2 | |
+| [733023](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733023) | Single Model Feature Engineering technique... | 4 | |
+| [732985](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732985) | XGBoost + Optuna on GPU \| 0.96514 LB - sharing what worked | 8 | |
+| [732955](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732955) | The Signal in the Noise: Treating Missing Values as Features in S6E8 | 3 | |
+| [732503](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732503) | Example Submission and Expected outputs are different | 5 | |
+| [732434](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732434) | The generator turned a hard rule into a smooth field: a forensic look at the synthetic layer | 3 | O |
+| [732428](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732428) | Generation model of the missing "original" dataset | 0 | O |
+| [732427](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732427) | Train and test have different missingness rates - in all twelve columns | 0 | |
+| [732358](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732358) | Baseline Keras training, all categoricals | 0 | |
+| [732256](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732256) | LightGBM Gain Importance: What the Model Actually Cares About (and What it Ignores) | 2 | |
+| [732223](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732223) | Plot Twist: Why My "Golden" EDA Features Dropped My CV Score (EDA vs LightGBM) | 4 | |
+| [731764](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/731764) | Handling Class Imbalance & Missing Values in This Dataset | 5 | |
+| [731755](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/731755) | Nomophobia: No Mobile Phone Phobia on Kaggle Playground : ) | 4 | |
+| [731719](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/731719) | Original Dataset not available | 10 | |
