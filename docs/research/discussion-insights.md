@@ -153,8 +153,8 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
   성분 셋이 모두 채워진 행에서는 두 값이 동일하고, slack + 관측 성분 개수 쪽이 성분이 일부 결측인 행까지 커버하는 확장판이다.
   위 순위는 피처를 한 번에 하나씩 얹어 잰 것이라, 둘을 같이 넣었을 때 효과가 합산된다는 보장이 없다.
   실험에서는 둘을 따로 넣어 보고 같이도 넣어 봐서 기여가 겹치는지 측정한다.
-- 타깃 인코딩은 반드시 폴드 안에서 적합해야 한다.
-  전체 train으로 적합하면 검증 점수가 가짜로 뛴다 ([733730](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733730) 코멘트).
+- 타깃 인코딩의 값별 평균표는 반드시 각 폴드의 훈련 데이터만으로 계산하고, 검증 데이터에는 적용만 한다.
+  train 전체로 계산하면 검증 행의 라벨이 평균표에 새어 들어가 검증 점수가 가짜로 뛴다 ([733730](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733730) 코멘트).
   10-fold를 쓰면 값별 타깃 평균을 담는 조회 테이블이 데이터의 90%로 계산되어, 드물게 나타나는 값의 추정이 안정된다 ([734063](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734063)).
 
 ### 실패하는 피처와 성공하는 피처의 구분
@@ -252,7 +252,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 
 1. 데이터: NaN 그대로, 대치 없음, 결측 피처 없음, 원본 데이터 훈련 미사용.
 2. 검증: Stratified K-Fold (10-fold 권장), 플라시보 피처 상시 포함, 모든 런에서 OOF/테스트 예측 저장.
-3. 피처: 정확값(문자열화) 타깃 인코딩(폴드 내 적합)을 최우선으로, other_screen 잔차와 slack 계열을 추가.
+3. 피처: 정확값(문자열화) 타깃 인코딩(평균표는 폴드 내 훈련 데이터로만 계산)을 최우선으로, other_screen 잔차와 slack 계열을 추가.
    둘은 완전한 행에서 값이 같아 기여가 겹칠 수 있으므로 따로/같이 넣어 비교한다.
    선형 결합/비율/결측 피처는 만들지 않는다.
 4. 모델: LightGBM/XGBoost 고용량(255 leaves급, early stopping, 학습률 고정 후 최종만 하향), monotone 제약 금지, 불균형 대응 없음.
