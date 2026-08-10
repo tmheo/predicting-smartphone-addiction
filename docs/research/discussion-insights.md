@@ -31,22 +31,24 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 - OOF 예측이 대각선에 놓이므로 합성 라벨은 매끄러운 확률장에서의 베르누이 추출이다.
   중복 행이 0개라 중복 매칭류 누수 트릭은 시간 낭비다 ([732434](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732434)).
 
-### 값 격자가 이산적이라 "정확한 값"이 강한 키다
+### 값이 정해진 눈금 위에만 있어, 정확한 값 자체가 강력한 단서다
 
-- `sleep_hours`, `notifications_per_day`, `app_opens_per_day` 등의 분포는 매끄러운 연속 분포가 아니라 이산 격자 패턴이며, 생성기가 원본의 이산 아티팩트를 그대로 복제했다 ([734063](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734063)).
+- `sleep_hours`, `notifications_per_day`, `app_opens_per_day` 등의 값은 연속적으로 고르게 퍼져 있지 않고 특정 값들에만 몰려 있으며, 생성기가 원본의 이런 값 패턴을 그대로 복제했다 ([734063](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734063)).
 - 같은 방향의 독립 증거가 셋 더 있다: 전 피처를 범주형으로 취급한 Keras 베이스라인의 임베딩 공간 클래스 분리 ([732358](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732358)), 전 피처 one-hot + 결합 피처 로지스틱 회귀의 OOF 0.9601 ([733708](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733708) 코멘트), 정확값 타깃 인코딩 +0.0032 ([733495](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733495) 코멘트).
 - 정확값 인코딩이 통하는 이유는 스마트폰 도메인과 무관하다.
-  데이터가 격자 위에 생성/반올림되어 있어 정확한 값이 그 격자를 집어내는 것뿐이다 ([733495](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733495)).
+  데이터가 특정 값들 위에서 생성되거나 반올림되어 있어, 정확한 값이 같은 값에서 나온 행들을 묶어 주는 것뿐이다 ([733495](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733495)).
 
-### 생성기의 산술 결함이 유일하게 돈이 되는 구조다
+### 점수로 이어지는 것은 사실상 생성기의 산술 오류뿐이다
 
 - 대회 데이터의 26%는 원본의 `weekend_screen_time` 제약(평일 스크린타임의 1.044~1.965배)을 위반하는, 존재할 수 없는 조합이다.
-  다만 train/test에서 비율이 동일해 누수로 쓸 거리는 없고, ratio 피처를 LightGBM에 줘도 시드 편차 수준의 널 결과다.
-  트리가 이미 그 영역을 스스로 파내고 있다 ([733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983)).
+  다만 train/test에서 비율이 동일해 누수로 쓸 거리는 없고, ratio 피처를 LightGBM에 줘도 시드를 바꿀 때 생기는 오차 범위 안이라 효과가 없다.
+  트리 모델이 분기 과정에서 이미 그 영역을 스스로 구분해 내고 있기 때문이다 ([733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983)).
 - 반면 생성기 내부 산술이 안 맞는 행을 노출하는 `other_screen = daily - (social + gaming + work)` 잔차는 단독 AUC 0.765의 실질 피처다 (자세한 수치는 [4장](#4-피처-엔지니어링)).
-- 데이터의 addiction 경계는 비단조다.
-  저 social 밴드에서 addicted 비율이 내려갔다 올라가는 dip이 Wilson 신뢰구간으로 유의하고 ([733730](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733730) 코멘트), envelope 안팎의 타깃 발화율이 81% 대 25%로 혹(hump) 형태다 ([733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983)).
-  단조 모델과 monotone 제약이 손해 보는 구조적 이유다.
+- 이 데이터에서 addicted 비율은 사용량이 늘어난다고 한 방향으로만 움직이지 않는다.
+  social_media_hours가 낮은 구간에서 addicted 비율이 한 번 내려갔다가 다시 올라가는 굴곡이 있고, 이 굴곡은 Wilson 신뢰구간 기준으로 통계적으로 유의하다 ([733730](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733730) 코멘트).
+  또 주말/평일 비율이 weekend_screen_time 제약 범위(1.044~1.965배) 안이면 addicted 비율이 81%인데, 2.5배를 넘는 구간에서는 25%까지 떨어진다.
+  비율이 커질수록 addicted 비율이 계속 오르는 게 아니라 중간에서 솟았다가 다시 내려오는 모양이다 ([733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983)).
+  예측값이 피처와 같은 방향으로만 움직이도록 강제하는 모델(monotone 제약 등)이 이 데이터에서 불리한 이유가 여기에 있다.
 
 ### 원본 데이터의 정체와 활용
 
@@ -153,7 +155,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 
 - 결측 관련 피처(is_missing, missing_count)는 전부 배제한다 (2장 참조).
 - monotone 제약은 이 데이터에서 금지에 가깝다.
-  스크린 컬럼 3개에 걸었더니 OOF -0.0034였고 ([733730](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733730) 코멘트), 데이터가 실제로 비단조라는 구조적 근거도 있다 ([733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983)).
+  스크린 컬럼 3개에 걸었더니 OOF -0.0034였고 ([733730](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733730) 코멘트), addicted 비율이 실제로 값에 따라 오르내린다는 구조적 근거도 있다 ([733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983)).
 - 원본의 하드 룰 이식과 룰 기반 후처리는 상한 0.835짜리 함정이다 ([732434](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732434)).
 
 ### 신호의 집중
@@ -180,7 +182,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 - 클래스 불균형(71/29)은 AUC 지표 하에서 무시해도 된다.
   SMOTE, 리샘플링, 재가중 모두 불필요하다 ([731764](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/731764)).
 - 전 피처 one-hot 로지스틱 회귀도 0.96까지 나오므로, 해석 가능한 서브모델이나 스태킹의 다양성 소스로 쓸 수 있다 ([733708](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733708) 코멘트).
-- 단조 모델(로지스틱 회귀, monotone 제약 부스터)은 데이터의 비단조 혹 구조를 표현할 수 없다는 한계를 감안하고 쓴다 ([733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983)).
+- 예측이 피처 값과 같은 방향으로만 움직이는 모델(로지스틱 회귀, monotone 제약을 건 부스팅)은 addicted 비율이 중간에서 솟았다가 내려오는 이 데이터의 구조를 표현할 수 없다는 한계를 감안하고 쓴다 ([733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983)).
 
 ### 앙상블과 스태킹
 
