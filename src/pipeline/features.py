@@ -418,6 +418,100 @@ def _binary_entropy(p: np.ndarray) -> np.ndarray:
     return out
 
 
+class OriginalKnnColumns:
+    """row-wise 제공자: 원본 프록시 최근접 행들의 라벨 평균. (#50 진단이 연 #54의 잔여 범위)
+
+    수치 컬럼을 프록시 표준편차로 표준화한 뒤, 관측된 컬럼만의 제곱차 합(NaN 인지
+    거리, #50 진단과 같은 정의)으로 각 행의 최근접 프록시 행 k개를 찾아 라벨 평균을
+    새 열로 준다. k=1이면 최근접 행 라벨 그 자체다. 거리와 존재 플래그 표현은
+    진단(docs/research/original-overlap-diagnosis.md)이 닫았으므로 만들지 않는다.
+
+    통계의 원천이 해시 고정 외부 파일뿐이고 대회 타깃을 읽지 않으므로 행 단위
+    결정적이다(uses_target=False, original_prior와 같은 근거로 row-wise).
+    수치 컬럼이 전부 결측인 행은 거리가 정의되지 않아 NaN을 준다.
+    새 컬럼 이름은 orig_nn<k>_mean.
+    """
+
+    uses_target = False
+
+    def __init__(
+        self,
+        path: str,
+        cols: list[str],
+        ks: list[int] = [1],
+        sha256: str = ORIGINAL_PROXY_SHA256,
+    ) -> None:
+        from pathlib import Path
+
+        if not ks or any(not isinstance(k, int) or k < 1 for k in ks):
+            raise ValueError(f"ks는 1 이상의 정수 목록이어야 한다(받은 값: {ks})")
+        if len(set(ks)) != len(ks):
+            raise ValueError(f"ks에 중복이 있다: {ks}")
+        self.cols = list(cols)
+        self.ks = list(ks)
+
+        actual = file_sha256(Path(path))
+        if actual != sha256:
+            raise ValueError(
+                f"원본 프록시 해시 불일치: {path}\n기대 {sha256}\n실제 {actual}\n"
+                "docs/research/original-proxy-data.md의 재현 절차로 판본 1을 다시 받을 것."
+            )
+        proxy = pd.read_csv(path)
+        forbidden = sorted(set(self.cols) & _PROXY_FORBIDDEN_COLS)
+        if forbidden:
+            raise ValueError(f"프록시 전용 열 {forbidden}은 대회 설명변수로 쓸 수 없다. (#47 경계)")
+        missing = sorted(c for c in self.cols if c not in proxy.columns)
+        if missing:
+            raise ValueError(f"프록시에 없는 열 {missing}. 프록시 열: {sorted(proxy.columns)}")
+        non_numeric = [c for c in self.cols if not pd.api.types.is_numeric_dtype(proxy[c])]
+        if non_numeric:
+            raise ValueError(f"거리는 수치 열 전용이다. 수치가 아닌 열: {non_numeric}")
+        if max(self.ks) > len(proxy):
+            raise ValueError(f"ks 최대값 {max(self.ks)}이 프록시 행 수 {len(proxy)}를 넘는다.")
+
+        scale = proxy[self.cols].std().to_numpy(dtype="float64")
+        if (scale == 0).any() or np.isnan(scale).any():
+            bad = [c for c, s in zip(self.cols, scale) if s == 0 or np.isnan(s)]
+            raise ValueError(f"프록시 표준편차가 0이거나 정의되지 않는 열: {bad}")
+        self._scale = scale
+        self._proxy_points = proxy[self.cols].to_numpy(dtype="float64") / scale
+        self._proxy_labels = proxy[_PROXY_LABEL].to_numpy(dtype="float64")
+
+    def columns(self) -> list[str]:
+        return [f"orig_nn{k}_mean" for k in self.ks]
+
+    def compute(self, df: pd.DataFrame) -> pd.DataFrame:
+        X = df[self.cols].to_numpy(dtype="float64") / self._scale
+        observed = ~np.isnan(X)
+        X0 = np.where(observed, X, 0.0)
+        P = self._proxy_points
+        P2 = (P**2).T
+        kmax = max(self.ks)
+        out = {name: np.full(len(df), np.nan) for name in self.columns()}
+        chunk = 4000
+        for s in range(0, len(df), chunk):
+            e = min(s + chunk, len(df))
+            x0, m = X0[s:e], observed[s:e].astype(float)
+            # d2_ij = sum_k m_ik (x_ik - p_jk)^2. 관측 컬럼 수 나눗셈은 행 내 순위에
+            # 영향이 없어 생략한다. (#50 진단과 같은 마스크 행렬곱 전개)
+            d2 = (x0**2).sum(axis=1)[:, None] - 2.0 * (x0 @ P.T) + m @ P2
+            if kmax == 1:
+                idx = d2.argmin(axis=1)[:, None]
+            else:
+                part = np.argpartition(d2, kmax - 1, axis=1)[:, :kmax]
+                # 선택된 kmax개를 거리 오름차순으로 고정해 k별 접두 평균이 결정적이게 한다.
+                order = np.take_along_axis(d2, part, axis=1).argsort(axis=1, kind="stable")
+                idx = np.take_along_axis(part, order, axis=1)
+            labels = self._proxy_labels[idx]
+            for k in self.ks:
+                out[f"orig_nn{k}_mean"][s:e] = labels[:, :k].mean(axis=1)
+        # 수치 전결측 행은 모든 프록시 행과의 거리가 0으로 붕괴하므로 정의하지 않는다.
+        no_numeric = ~observed.any(axis=1)
+        result = pd.DataFrame(out, index=df.index).astype("float64")
+        result.loc[no_numeric] = np.nan
+        return result[self.columns()]
+
+
 class MedianImputeAux:
     """fold-fit 제공자: 원시 NaN 열을 유지한 채 중앙값 대체본을 보조 열로 추가한다. (#49)
 

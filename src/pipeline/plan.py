@@ -103,6 +103,7 @@ REGISTRY: dict[str, ProviderKind] = {
     "pair_ce": ProviderKind(DATASET_WIDE, features.PairCE),
     "derived": ProviderKind(ROW_WISE, features.DerivedColumns),
     "original_prior": ProviderKind(ROW_WISE, features.OriginalPriorColumns),
+    "original_knn": ProviderKind(ROW_WISE, features.OriginalKnnColumns),
     "target_encoding": ProviderKind(FOLD_FIT, features.ExactValueTargetEncoder),
     "frequency_encoding": ProviderKind(FOLD_FIT, features.FrequencyEncoder),
     "median_impute_aux": ProviderKind(FOLD_FIT, features.MedianImputeAux),
