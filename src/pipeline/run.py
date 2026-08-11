@@ -39,7 +39,7 @@ def main() -> None:
         for name, h in _input_hashes(cfg).items():
             print(f"sha256.{name:<6}: {h[:16]}…")
         print("git        :", tracking.git_state())
-        print("기록될 것   : params(feature 목록, 모델 파라미터), metrics(auc_fold_*, auc_oof),")
+        print("기록될 것   : params(feature 목록, 모델 파라미터), metrics(auc_fold_*, auc_oof, auc_oof_seed_*),")
         print("             progress.*/time.* 진행 기록, artifacts(설정 yaml, oof.parquet,")
         print("             test_pred.parquet, feature_importance.parquet, submission.csv,")
         print("             summary.html 등 결과 요약, logs/run.log)")
@@ -65,6 +65,8 @@ def main() -> None:
         results = [cv.run_cv(cfg, train, test, seed, recorder=observer) for seed in cfg.seeds]
 
         observer.stage("evaluation")
+        # 시드별 OOF AUC는 평균 재채점으로 fold_aucs가 덮이기 전에 확보한다. (ADR 0001)
+        seed_aucs = {seed: r.fold_aucs["auc_oof"] for seed, r in zip(cfg.seeds, results)}
         final = results[0]
         if len(results) > 1:
             final.oof["pred"] = np.mean([r.oof["pred"] for r in results], axis=0)
@@ -73,6 +75,9 @@ def main() -> None:
                 train[data.TARGET], train["fold"], final.oof["pred"].to_numpy()
             )
             final.importance = pd.concat([r.importance for r in results], ignore_index=True)
+        # 확정 재검증의 시드별 비교를 위해 대표 metric과 함께 기록된다. (ADR 0001)
+        for seed, auc in seed_aucs.items():
+            final.fold_aucs[f"auc_oof_seed_{seed}"] = auc
 
         observer.stage("artifacts")
         observer.log_final(final)

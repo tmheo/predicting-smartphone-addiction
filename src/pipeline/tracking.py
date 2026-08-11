@@ -9,7 +9,8 @@ artifact는 로컬 mlartifacts/ 아래 파일로 남으므로 소비 방식은 �
 
 실행당 기록 규약:
 - params: 실험 이름, 시드, 모델 파라미터(시작 시점), feature 목록(CV 후 확정되므로 최종 시점).
-- metrics: auc_fold_0..4, auc_oof. 시드 반복 시 시드 평균본이 대표 metric.
+- metrics: auc_fold_0..4, auc_oof, auc_oof_seed_*. 시드 반복 시 시드 평균본이 대표 metric이고
+  auc_oof_seed_*가 시드별 OOF AUC다(확정 재검증의 시드별 비교 근거, ADR 0001).
 - artifacts: 설정 원본(yaml, 시작 시점), oof.parquet, test_pred.parquet, submission.csv,
   feature_importance.parquet(feature, fold, seed, gain 스키마의 fold별 gain importance). (#19)
 - tags: git_commit, git_dirty, 입력 파일 sha256. dirty 실행은 앙상블 후보에서 제외하는 관행. (#14)
