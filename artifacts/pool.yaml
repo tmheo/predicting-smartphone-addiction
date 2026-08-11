@@ -30,3 +30,19 @@ members:
     ensemble_auc_with: 0.9672561070687407
     ensemble_auc_without: 0.9665924316740748
     contribution: 0.0006636753946658303
+- run_id: 52e9c12bcfb94ee9912e4bb7f43e3f09
+  config: exp022_orig_knn
+  oof_auc: 0.9673310988424522
+  seeds: 42,43,44
+  entered_at: '2026-08-11'
+  reason: '이슈 #54: 원본 프록시 최근접 라벨 계열. champion 교체는 스크리닝 미달이나 스피어만 0.99739로 중복 아님, 표준
+    평가 앙상블 기여 +0.00018'
+  evidence:
+    champion_run_id: e21d19af37bb461db5dc1a59b66411a6
+    champion_oof_auc: 0.9674010717025592
+    floor_margin: 0.009930027139892994
+    nearest_run_id: e21d19af37bb461db5dc1a59b66411a6
+    nearest_spearman: 0.99739428362223
+    ensemble_auc_with: 0.9674367112386212
+    ensemble_auc_without: 0.9672561070687407
+    contribution: 0.0001806041698805272
