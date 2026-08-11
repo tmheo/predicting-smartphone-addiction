@@ -1,0 +1,65 @@
+# 이슈 #53: 원본 프록시(jayjoshi37 판본 1, 해시는 코드가 검증)의 값별 라벨 평균 prior.
+# exp018의 평활 제거 변형: m=0 원시 값별 평균(값당 중앙 8행의 잡음 그대로), 미지 키 NaN.
+# 프록시 표만 쓰고 합성 train 라벨은 쓰지 않는다(row-wise, uses_target=False).
+# 스크리닝(seed 42) 단계.
+
+name: exp019_orig_mean_raw
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [other_screen, screen_slack]
+    - kind: original_prior
+      path: data/external/Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      stats: [mean]
+      smoothing: 0
+      unknown: nan
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.05
+    num_leaves: 255
+    n_estimators: 10000
+    force_row_wise: true
+  fit:
+    early_stopping_rounds: 200
+
+cv:
+  seeds: [42]
