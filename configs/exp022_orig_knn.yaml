@@ -3,7 +3,9 @@
 # k=1 최근접 라벨(단독 AUC 0.7764)과 k-이웃 라벨 평균만. 거리·존재 플래그는 닫힘.
 # champion exp011 구성 + 수치 9열 NaN 인지 표준화 거리의 orig_nn1_mean, orig_nn10_mean.
 # 프록시 표만 쓰고 합성 train 라벨은 쓰지 않는다(row-wise, uses_target=False).
-# 스크리닝(seed 42) 단계. 미달이면 진단의 판정대로 트랙 전체를 닫는다.
+# 스크리닝(seed 42, run aa9010fe)은 champion 대비 -0.00046으로 미달(champion 교체 닫힘).
+# 다만 champion과 스피어만 0.99626(중복 아님), 표준 평가 앙상블 기여 +0.00012로
+# 다양성 계열 세 게이트를 통과해, 후보 풀 진입 확정을 위한 3시드 평균본 단계다.
 
 name: exp022_orig_knn
 
@@ -62,4 +64,4 @@ model:
     early_stopping_rounds: 200
 
 cv:
-  seeds: [42]
+  seeds: [42, 43, 44]
