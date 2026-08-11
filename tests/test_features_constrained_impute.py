@@ -113,6 +113,15 @@ def test_width_is_slack_only_on_reconstructed_cells():
     assert f"{SCREEN_TOTAL}_recon_width" not in out.columns  # daily 폭 열은 없다
 
 
+def test_widths_false_emits_recon_columns_only():
+    df = make_df()
+    provider = ConstrainedImputeAux(cols=COLS, widths=False)
+    provider.imputer_ = FakeImputer(df.ffill().bfill())
+    out = provider.transform(df)
+    assert list(out.columns) == [f"{c}_recon" for c in [SCREEN_TOTAL, *SCREEN_PARTS]]
+    assert list(out.columns) == provider.columns()
+
+
 def test_fit_transform_respects_feasible_intervals():
     rng = np.random.default_rng(0)
     n = 400

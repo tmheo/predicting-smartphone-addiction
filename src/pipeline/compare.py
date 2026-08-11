@@ -7,7 +7,10 @@
 판정 규칙은 ADR 0001 계열 1(특성·단일 모델 challenger)의 2단계 판정이다.
 challenger run의 시드가 어느 단계인지 결정한다: [42]면 스크리닝, [42, 43, 44]면 확정 재검증.
 
-- 스크리닝(seed 42 단일): OOF AUC 개선이 0 이상이면 확정 재검증 자격을 얻는다.
+- 스크리닝(seed 42 단일): champion의 같은 시드(seed 42) OOF AUC(champion.yaml의
+  seed_aucs[42]) 대비 개선이 0 이상이면 확정 재검증 자격을 얻는다.
+  시드 평균본 OOF AUC를 기준선으로 쓰면 시드 평균 이득(약 +0.0003)이 문턱에 섞여
+  같은 시드의 실재 개선을 걸러내므로 짝지은 비교여야 한다. (#74 개정)
   통과는 채택이 아니므로 --adopt는 항상 거부된다.
 - 확정 재검증(3시드 평균본):
   - 시드 평균본 OOF AUC가 champion 대비 +0.0001 이상.
@@ -143,12 +146,19 @@ def check_new_features(champion: dict, challenger: RunFacts, lines: list[str]) -
 
 
 def judge_screening(champion: dict, challenger: RunFacts) -> tuple[bool, list[str]]:
-    """스크리닝: 개선 >= 0이면 확정 재검증 자격. 통과는 채택이 아니다. (ADR 0001)"""
+    """스크리닝: 같은 시드끼리 짝지어 개선 >= 0이면 확정 재검증 자격. (ADR 0001, #74 개정)"""
     lines: list[str] = []
-    delta = challenger.auc_oof - champion["oof_auc"]
+    seed = SCREENING_SEEDS[0]
+    if "seed_aucs" not in champion or seed not in {int(k) for k in champion["seed_aucs"]}:
+        sys.exit(
+            f"champion.yaml에 seed_aucs[{seed}]가 없어 짝지은 스크리닝 비교를 할 수 없다. "
+            "동일 설정·시드로 champion을 재실행해 시드별 지표를 백필할 것."
+        )
+    baseline = {int(k): v for k, v in champion["seed_aucs"].items()}[seed]
+    delta = challenger.auc_oof - baseline
     auc_ok = delta >= 0.0
     lines.append(
-        f"스크리닝(seed 42) OOF AUC: champion {champion['oof_auc']:.5f} → "
+        f"스크리닝(seed {seed} 짝지은 비교) OOF AUC: champion {baseline:.5f} → "
         f"challenger {challenger.auc_oof:.5f} (delta {delta:+.5f}, 문턱 개선 >= 0) "
         f"→ {'통과' if auc_ok else '미달'}"
     )

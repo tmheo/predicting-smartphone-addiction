@@ -522,24 +522,30 @@ class ConstrainedImputeAux:
     - daily 결측: 관측 성분 합이 하한. 상한 없음.
     - 성분 결측: [0, daily - 관측 성분 합]. daily도 결측이면 하한 0만 적용.
 
-    성분 열에는 실현 가능 구간 폭(daily - 관측 성분 합)을 <col>_recon_width로 병행하되,
-    재구성이 일어난(결측이었던) 셀에서만 값을 준다. daily의 구간은 위로 열려 있어 폭이
-    0/NaN 결측 지표로 퇴화하므로 daily 폭 열은 만들지 않는다(지도의 배제 경계).
+    widths=True면 성분 열에 실현 가능 구간 폭(daily - 관측 성분 합)을 <col>_recon_width로
+    병행하되, 재구성이 일어난(결측이었던) 셀에서만 값을 준다. daily의 구간은 위로 열려
+    있어 폭이 0/NaN 결측 지표로 퇴화하므로 daily 폭 열은 만들지 않는다(지도의 배제 경계).
+    폭 열은 seed 42 스크리닝에서 gain importance가 플라시보 미달이라 widths=False의
+    recon 전용 변형을 함께 둔다.
     """
 
     uses_target = False
 
-    def __init__(self, cols: list[str], max_iter: int = 20) -> None:
+    def __init__(self, cols: list[str], max_iter: int = 20, widths: bool = True) -> None:
         screen = [SCREEN_TOTAL, *SCREEN_PARTS]
         missing = [c for c in screen if c not in cols]
         if missing:
             raise ValueError(f"cols에 화면 블록 열 {missing}이 없다. 제약 재구성의 대상 열이다.")
         self.cols = list(cols)
         self.max_iter = max_iter
+        self.widths = widths
 
     def columns(self) -> list[str]:
         screen = [SCREEN_TOTAL, *SCREEN_PARTS]
-        return [f"{c}_recon" for c in screen] + [f"{c}_recon_width" for c in SCREEN_PARTS]
+        cols = [f"{c}_recon" for c in screen]
+        if self.widths:
+            cols += [f"{c}_recon_width" for c in SCREEN_PARTS]
+        return cols
 
     def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
         from sklearn.experimental import enable_iterative_imputer  # noqa: F401
@@ -570,8 +576,9 @@ class ConstrainedImputeAux:
             clipped = clipped.where(upper.isna(), np.minimum(clipped, upper))
             rec[m] = clipped
             out[f"{c}_recon"] = rec.astype("float64")
-        for c in SCREEN_PARTS:
-            out[f"{c}_recon_width"] = slack.where(df[c].isna()).astype("float64")
+        if self.widths:
+            for c in SCREEN_PARTS:
+                out[f"{c}_recon_width"] = slack.where(df[c].isna()).astype("float64")
         return pd.DataFrame(out, index=df.index)[self.columns()]
 
 
