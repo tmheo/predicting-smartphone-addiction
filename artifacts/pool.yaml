@@ -77,3 +77,20 @@ members:
     ensemble_auc_with: 0.9676591285688336
     ensemble_auc_without: 0.9675430190054946
     contribution: 0.00011610956333907296
+- run_id: b1bd4b08386946c9a4e05b755dbd5f26
+  config: exp032_recon_orig_mean_top3
+  oof_auc: 0.9676472210375413
+  seeds: 42,43,44
+  entered_at: '2026-08-12'
+  reason: '이슈 #78: 원본 prior 상위 3열(m=20)의 exp026 베이스 재구성. champion 교체는 +0.0000996으로
+    문턱 미달 기각(3/3 시드, 5/5 fold 개선), 최근접 exp026과 스피어만 0.99790으로 중복 아님, 표준 평가 앙상블 기여
+    +0.00009'
+  evidence:
+    champion_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+    champion_oof_auc: 0.9675476423592995
+    floor_margin: 0.01009957867824185
+    nearest_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+    nearest_spearman: 0.9979047950638438
+    ensemble_auc_with: 0.9677517186433671
+    ensemble_auc_without: 0.9676591285688336
+    contribution: 9.259007453343848e-05
