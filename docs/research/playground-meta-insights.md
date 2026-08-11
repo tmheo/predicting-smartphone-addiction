@@ -23,6 +23,8 @@
   S6E8은 train 91만 행 대용량이므로 "공격적 피처 엔지니어링 + 스태킹" 구간이다.
 - 상위권과 중위권을 가른 요소는 대회마다 달랐다: 피처가 가른 대회(S6E3, S5E11, S4E1), 검증 설계가 가른 대회(S5E12), 물량과 완성도가 가른 대회(S5E8, S6E5), 제출 선택 규율이 가른 대회(S6E2).
   S6E8은 눈금값 아티팩트가 확인된 대용량 대회라 S6E3·S5E11형(피처)에 가깝고, 후반부는 S5E8형(물량전)이 겹칠 전망이다.
+  여기서 눈금값 아티팩트란 수치 컬럼 값이 연속적으로 고르게 퍼져 있지 않고 자의 눈금처럼 정해진 이산값들 위에만 몰려 있는 현상을 말한다.
+  스마트폰 도메인의 성질이 아니라 원본 데이터가 특정 값 위에서 생성·반올림되고 합성 생성기가 그 값 패턴을 그대로 복제하면서 남은 데이터 생성 과정의 흔적이며, 덕분에 수치 컬럼이 사실상 유한한 범주형처럼 동작해 정확값 타깃 인코딩 같은 피처 엔지니어링이 순위를 가르게 된다 (`docs/research/discussion-insights.md`의 "값이 정해진 눈금 위에만 있어, 정확한 값 자체가 강력한 단서다" 절).
 
 기존 결론과의 관계: 일치하며, "데이터 크기에 따른 행동 범위"라는 상위 프레임을 보강한다.
 
@@ -41,11 +43,24 @@ S6E8의 확립 결론(정확값 문자열화 TE +0.0032, [733495](https://www.ka
 
 ### 결합 컬럼(쌍/삼중) TE/CE가 다음 확장이다
 
+여기서 TE는 타깃 인코딩(그 값을 가진 행들의 타깃 평균을 피처로 주는 것), CE는 빈도 인코딩(그 값을 가진 행이 데이터에 몇 번 등장하는지를 피처로 주는 것)이다.
+결합 컬럼 TE/CE란 컬럼 하나가 아니라 두세 컬럼의 값 조합(예: sleep_hours가 6.5이면서 app_opens_per_day가 42인 경우)을 하나의 키로 묶고, 그 조합 키에 대해 TE와 CE를 적용하는 확장을 말한다.
+
 - Deotte는 S5E6에서 쌍(28) + 삼중(56) + 사중(70) 결합 컬럼에 TE를 적용한 2,268 컬럼 XGBoost로 우승했다 ([S5E6 1위 writeup](https://www.kaggle.com/competitions/playground-series-s5e6/writeups/chris-deotte-1st-place-fast-gpu-experimentation-wi)).
 - 독립 표본이 셋 더 있다: S6E3 1위의 범주 쌍/삼중 결합 중첩 TE(약 37개 모델, TE 통계량은 std·min·max·분위수까지 다양화) ([S6E3 1위 writeup](https://www.kaggle.com/competitions/playground-series-s6e3/writeups/1st-place-gpt5-4-gemini3-1-claudeopus4-6-kgm)), S5E8 2위의 bigram TE/CE ([S5E8 2위 writeup](https://www.kaggle.com/competitions/playground-series-s5e8/writeups/2nd-place-yet-another-ensemble)), S5E11 1위의 기본 피처 쌍 결합 + 자릿수 결합 TE/CE ([S5E11 1위 writeup](https://www.kaggle.com/competitions/playground-series-s5e11/writeups/1st-place-a-lot-of-features-a-lot-of-models-an)).
 - 확장의 경험칙: 쌍 결합은 꾸준히 이득, 삼중 이상은 미미하거나 노이즈다 ([S5E8 3위 writeup](https://www.kaggle.com/competitions/playground-series-s5e8/writeups/3rd-place-solution-oof-stacking-autogluon)).
 - 탐색 절차는 S4E12 1위의 "CV가 오르는 조합만 자동 수집" 루프가 모범이다 ([S4E12 1위](https://www.kaggle.com/competitions/playground-series-s4e12/discussion/554328)).
-  그의 과적합 방어 논리(대용량이면 OOF 전체가 우연히 좋아지기 어렵다)는 91만 행 S6E8에서도 성립한다.
+  루프의 구조는 이렇다: 컬럼 2~3개를 무작위로 뽑아 조합 키를 만들고, 거기에 TE/CE를 적용한 후보 피처를 베이스라인 피처 세트에 추가해 CV를 재고, CV가 오르면 그 조합을 저장하고 아니면 버리는 시행을 수천 번 반복한다.
+  그는 이 루프를 수 일 동안 GPU로 돌려 살아남은 강한 조합 약 170개를 얻었고, 그렇게 수집한 조합 피처로 구성한 611피처 단일 XGBoost로 앙상블 없이 우승했다.
+  어떤 조합이 의미 있을지를 사람이 도메인 가설로 고르는 대신, 조합 생성과 채택 판정을 "무작위 생성 + CV 상승 여부"라는 기계적 절차로 바꾼 것이 핵심이다.
+  수천 번 시도 중 우연히 CV가 오른 조합이 섞이지 않느냐는 의문에 대한 그의 방어 논리가 "대용량이면 OOF 전체가 우연히 좋아지기 어렵다"이며(데이터가 적으면 이 루프 대신 2~3개 조합만 손으로 시도해야 한다), 이 논리는 91만 행 S6E8에서도 성립한다.
+- 단 그는 이 루프를 GPU로 돌렸고, 이 프로젝트의 로컬 CPU 환경에서 같은 절차를 쓰려면 탐색 단계의 검증 비용을 낮추는 프록시 CV가 필요하다.
+  프록시 CV란 정식 판정 기준(커밋된 `artifacts/folds.parquet`의 5-fold CV) 대신 탐색 단계에서만 쓰는 약식 검증을 말한다.
+  예를 들어 `folds.parquet`의 특정 fold 하나만 holdout으로 쓰면 조합당 학습이 5번에서 1번으로 줄고, 행 샘플링이나 가벼운 학습 설정(높은 학습률, 공격적 early stopping)을 더하면 더 줄어든다.
+  탐색 단계에 필요한 것은 조합의 정확한 점수가 아니라 조합 간 순위뿐이고, 약식 검증에서도 순위는 대체로 보존되므로 이것으로 충분하다.
+  규율은 두 가지다.
+  첫째, 프록시 점수는 후보 걸러내기에만 쓰고, 살아남은 상위 후보는 반드시 정식 5-fold로 재검증해 채택을 판정한다.
+  둘째, holdout fold는 새로 만들지 않고 커밋된 `folds.parquet`의 fold를 그대로 골라 써서, 정식 검증과의 비교 가능성과 fold 분할 읽기 전용 원칙을 유지한다.
 - S6E8 쪽에도 개연성 근거가 있다: gaming_hours 등이 단독으론 무익하지만 강한 컬럼과의 조합으로 +0.00380을 기여한다는 관측이다 ([732223](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732223) 코멘트).
 
 기존 결론과의 관계: 보강이자 확장이다.
