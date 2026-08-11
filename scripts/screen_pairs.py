@@ -35,13 +35,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from pipeline import data, model as model_mod
 from pipeline.config import FeatureConfig, ModelConfig
 from pipeline.cv import _with_built_columns
-from pipeline.features import (
-    PLACEBO,
-    add_fold_fit_columns,
-    add_pair_ce,
-    build_features,
-    make_fold_fit,
-)
+from pipeline.features import PLACEBO
+from pipeline.plan import FeaturePlan
 
 SEED = 42
 VALID_FOLD = 0
@@ -91,27 +86,32 @@ QUICK_MODEL = ModelConfig(
 )
 
 
-def feature_config(te_cols: list) -> FeatureConfig:
-    return FeatureConfig(
-        include="raw",
-        categorical=CAT_COLS,
-        placebo=True,
-        derived=["other_screen", "screen_slack"],
-        fold_fit=[{"kind": "target_encoding", "inner_folds": 5, "cols": te_cols}],
+def make_plan(te_cols: list, pair: tuple | None = None) -> FeaturePlan:
+    """champion 피처 구성의 약식 계획. pair를 주면 그 쌍의 CE 제공자를 함께 켠다."""
+    providers: list[dict] = []
+    if pair is not None:
+        providers.append({"kind": "pair_ce", "pairs": [list(pair)]})
+    providers.append({"kind": "derived", "names": ["other_screen", "screen_slack"]})
+    providers.append({"kind": "target_encoding", "inner_folds": 5, "cols": te_cols})
+    return FeaturePlan.from_config(
+        FeatureConfig(base="raw", categorical=CAT_COLS, providers=providers)
     )
 
 
-def quick_run(train: pd.DataFrame, feat_cfg: FeatureConfig) -> tuple[float, pd.Series]:
-    """fold 0 검증의 약식 실행 하나. (fold0 AUC, 피처별 gain)을 돌려준다."""
-    X = build_features(train, feat_cfg, SEED)
+def quick_run(plan: FeaturePlan, train: pd.DataFrame) -> tuple[float, pd.Series]:
+    """fold 0 검증의 약식 실행 하나. (fold0 AUC, 피처별 gain)을 돌려준다.
+
+    plan은 apply_dataset_wide를 이미 거친 상태여야 한다.
+    """
+    X = plan.build_matrix(train, SEED)
     y = train[data.TARGET]
-    transformers = make_fold_fit(feat_cfg)
+    transformers = plan.fold_fit_transformers()
     train_ff = _with_built_columns(train, X)
     va_idx = train.index[train["fold"] == VALID_FOLD]
     tr_idx = train.index[train["fold"] != VALID_FOLD]
     for t in transformers:
         t.fit(train_ff.loc[tr_idx], SEED)
-    X_fold = add_fold_fit_columns(transformers, X, train_ff)
+    X_fold = plan.add_fold_fit_columns(X, train_ff)
     model, va_pred = model_mod.train_one_fold(
         QUICK_MODEL, X_fold.loc[tr_idx], y.loc[tr_idx], X_fold.loc[va_idx], y.loc[va_idx], SEED
     )
@@ -157,7 +157,9 @@ def main() -> None:
             print(f"{name}: 기록 재사용 auc={bases[name]:.6f}")
             continue
         t0 = time.time()
-        auc, gain = quick_run(train, feature_config(te_cols))
+        plan = make_plan(te_cols)
+        train_b, _ = plan.apply_dataset_wide(train, test)
+        auc, gain = quick_run(plan, train_b)
         bases[name] = auc
         record(
             name,
@@ -179,11 +181,10 @@ def main() -> None:
         if name in done:
             continue
         t0 = time.time()
-        train_c = train.copy()
-        test_c = test.copy()
-        add_pair_ce(train_c, test_c, [list(pair)])
         te_cols = [*CHAMPION_TE_COLS, list(pair), CANARY_PAIR]
-        auc, gain = quick_run(train_c, feature_config(te_cols))
+        plan = make_plan(te_cols, pair)
+        train_c, _ = plan.apply_dataset_wide(train, test)
+        auc, gain = quick_run(plan, train_c)
         placebo_gain = float(gain.get(PLACEBO, 0.0))
         canary_gain = float(gain.get(canary_name, 0.0))
         valid = canary_gain < placebo_gain

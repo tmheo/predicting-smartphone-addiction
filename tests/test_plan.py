@@ -1,0 +1,225 @@
+"""피처 계획 interface 테스트. (#71 완료 기준)
+
+- 등록된 모든 kind의 선언 대 실제 산출(합성 소형 frame).
+- 누출 검증 거부 사례.
+- 컬럼 충돌과 적용 순서 불변식.
+- exp011 config의 선언 컬럼 골든 테스트.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pytest
+
+from pipeline import plan as plan_mod
+from pipeline.config import FeatureConfig, load_config
+from pipeline.features import PLACEBO
+from pipeline.plan import FeaturePlan
+
+REPO = Path(__file__).resolve().parents[1]
+
+
+def toy_frames(n: int = 60) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """실제 컬럼 이름을 흉내 낸 합성 소형 frame 쌍. placebo 마스크 원본 열을 포함해야 한다."""
+    rng = np.random.default_rng(0)
+    train = pd.DataFrame(
+        {
+            "id": np.arange(n),
+            "daily_screen_time_hours": rng.uniform(1, 10, n).round(1),
+            "social_media_hours": rng.uniform(0, 5, n).round(1),
+            "gaming_hours": rng.uniform(0, 5, n).round(1),
+            "work_study_hours": rng.uniform(0, 5, n).round(1),
+            "stress_level": rng.choice(["low", "mid", "high"], n),
+            "addicted_label": np.tile([0, 1], n // 2),
+        }
+    )
+    train.loc[::7, "social_media_hours"] = np.nan
+    test = train.drop(columns=["addicted_label"]).copy()
+    test["id"] = test["id"] + n
+    return train, test
+
+
+def make_config(providers: list[dict]) -> FeatureConfig:
+    return FeatureConfig(base="raw", categorical=["stress_level"], providers=providers)
+
+
+ALL_KIND_PROVIDERS = [
+    {"kind": "categorical_copies", "cols": ["gaming_hours"]},
+    {"kind": "pair_ce", "pairs": [["gaming_hours", "stress_level"]]},
+    {"kind": "derived", "names": ["other_screen", "screen_slack"]},
+    {"kind": "target_encoding", "inner_folds": 3, "cols": ["gaming_hours", PLACEBO]},
+    {"kind": "frequency_encoding", "cols": ["work_study_hours"]},
+    {"kind": "median_impute_aux", "cols": ["social_media_hours"]},
+]
+
+
+def test_declared_vs_actual_for_all_registered_kinds():
+    """레지스트리의 모든 kind가 선언한 컬럼을 실제로 산출하고, 최종 행렬이 선언 전체와 같다."""
+    assert {spec["kind"] for spec in ALL_KIND_PROVIDERS} == set(plan_mod.REGISTRY)
+    plan = FeaturePlan.from_config(make_config(ALL_KIND_PROVIDERS))
+    train, test = toy_frames()
+    train, test = plan.apply_dataset_wide(train, test)
+    assert list(train.columns[-2:]) == ["gaming_hours_cat", "gaming_hours__stress_level_ce"]
+
+    X = plan.build_matrix(train, seed=7)
+    assert list(X.columns) == plan.matrix_columns()
+    assert PLACEBO in X.columns  # placebo는 설정 없이도 상시 포함된다.
+
+    # fold-fit: 앞 40행을 학습 fold로 fit하고 train 전체를 transform한다.
+    df_ff = pd.concat([train, X[[c for c in X.columns if c not in train.columns]]], axis=1)
+    for t in plan.fold_fit_transformers():
+        t.fit(df_ff.iloc[:40], seed=7)
+    X_full = plan.add_fold_fit_columns(X, df_ff)
+    assert list(X_full.columns) == plan.all_columns()
+
+
+def test_stage_order_invariant_ignores_config_interleaving():
+    """providers 목록이 단계를 섞어 나열해도 적용 순서는 base 뒤 dataset-wide,
+    row-wise, placebo, fold-fit 순서이고 같은 단계 안에서는 목록 순서다."""
+    plan = FeaturePlan.from_config(
+        make_config(
+            [
+                {"kind": "frequency_encoding", "cols": ["work_study_hours"]},
+                {"kind": "derived", "names": ["screen_slack"]},
+                {"kind": "pair_ce", "pairs": [["gaming_hours", "stress_level"]]},
+                {"kind": "target_encoding", "inner_folds": 3, "cols": [PLACEBO]},
+                {"kind": "derived", "names": ["other_screen"]},
+            ]
+        )
+    )
+    train, test = toy_frames()
+    plan.apply_dataset_wide(train, test)
+    base = [c for c in train.columns if c not in ("id", "addicted_label")]
+    assert plan.all_columns() == base + [
+        "gaming_hours__stress_level_ce",  # dataset-wide
+        "screen_slack",  # row-wise, 목록 등장 순서
+        "other_screen",
+        PLACEBO,  # placebo 자동 삽입
+        "work_study_hours_ce",  # fold-fit, 목록 등장 순서
+        "placebo_noise_te",
+    ]
+
+
+def test_target_provider_without_placebo_spec_is_rejected():
+    with pytest.raises(ValueError, match=PLACEBO):
+        FeaturePlan.from_config(
+            make_config([{"kind": "target_encoding", "inner_folds": 3, "cols": ["gaming_hours"]}])
+        )
+
+
+def test_pair_spec_containing_placebo_satisfies_canary_rule():
+    plan = FeaturePlan.from_config(
+        make_config(
+            [
+                {
+                    "kind": "target_encoding",
+                    "inner_folds": 3,
+                    "cols": [["gaming_hours", PLACEBO]],
+                }
+            ]
+        )
+    )
+    assert plan.fold_fit_transformers()[0].columns() == [f"gaming_hours__{PLACEBO}_te"]
+
+
+def test_target_provider_outside_fold_fit_stage_is_rejected(monkeypatch):
+    class LeakyRowWise:
+        uses_target = True
+
+        def columns(self) -> list[str]:
+            return [f"{PLACEBO}_leaky"]
+
+        def compute(self, df: pd.DataFrame) -> pd.DataFrame:
+            raise AssertionError("적재 시점에 거부되어야 한다.")
+
+    monkeypatch.setitem(
+        plan_mod.REGISTRY, "leaky", plan_mod.ProviderKind(plan_mod.ROW_WISE, LeakyRowWise)
+    )
+    with pytest.raises(ValueError, match="fold-fit"):
+        FeaturePlan.from_config(make_config([{"kind": "leaky"}]))
+
+
+def test_duplicate_declared_columns_are_rejected():
+    with pytest.raises(ValueError, match="충돌"):
+        FeaturePlan.from_config(
+            make_config(
+                [
+                    {"kind": "derived", "names": ["other_screen"]},
+                    {"kind": "derived", "names": ["other_screen"]},
+                ]
+            )
+        )
+
+
+def test_provider_column_colliding_with_raw_column_fails():
+    """합성 frame에 이미 있는 컬럼을 제공자가 다시 선언하면 적용이 실패한다."""
+    plan = FeaturePlan.from_config(make_config([{"kind": "derived", "names": ["other_screen"]}]))
+    train, test = toy_frames()
+    train["other_screen"] = 0.0
+    test["other_screen"] = 0.0
+    with pytest.raises(AssertionError, match="raw 컬럼과 충돌"):
+        plan.apply_dataset_wide(train, test)
+
+
+def test_build_matrix_requires_apply_dataset_wide_first():
+    plan = FeaturePlan.from_config(make_config([]))
+    train, _ = toy_frames()
+    with pytest.raises(AssertionError, match="apply_dataset_wide"):
+        plan.build_matrix(train, seed=7)
+
+
+def test_unknown_kind_and_non_raw_base_are_rejected():
+    with pytest.raises(ValueError, match="알 수 없는 kind"):
+        FeaturePlan.from_config(make_config([{"kind": "no_such_kind"}]))
+    with pytest.raises(ValueError, match="raw"):
+        FeaturePlan.from_config(
+            FeatureConfig(base="explicit", categorical=[], providers=[])
+        )
+
+
+def test_legacy_configs_are_rejected_and_exp011_loads():
+    """종결 실험 config 16개는 옛 스키마라 명확한 오류로 거부되고, exp011만 적재된다."""
+    for path in sorted((REPO / "configs").glob("*.yaml")):
+        if path.name == "exp011_resid_pair.yaml":
+            load_config(path)
+        else:
+            with pytest.raises(ValueError, match="#71 이전"):
+                load_config(path)
+
+
+def test_exp011_declared_columns_golden():
+    """champion 계보 exp011의 선언 컬럼 골든 테스트. 순서까지 고정한다."""
+    cfg = load_config(REPO / "configs" / "exp011_resid_pair.yaml")
+    plan = FeaturePlan.from_config(cfg.features)
+    train_header = pd.read_csv(REPO / cfg.data.train, nrows=0)
+    test_header = pd.read_csv(REPO / cfg.data.test, nrows=0)
+    plan.apply_dataset_wide(train_header, test_header)
+    assert plan.all_columns() == [
+        "age",
+        "daily_screen_time_hours",
+        "social_media_hours",
+        "gaming_hours",
+        "work_study_hours",
+        "sleep_hours",
+        "notifications_per_day",
+        "app_opens_per_day",
+        "weekend_screen_time",
+        "gender",
+        "stress_level",
+        "academic_work_impact",
+        "other_screen",
+        "screen_slack",
+        "placebo_noise",
+        "age_te",
+        "daily_screen_time_hours_te",
+        "social_media_hours_te",
+        "work_study_hours_te",
+        "sleep_hours_te",
+        "notifications_per_day_te",
+        "app_opens_per_day_te",
+        "weekend_screen_time_te",
+        "placebo_noise_te",
+    ]

@@ -18,7 +18,7 @@ from sklearn.metrics import roc_auc_score
 from . import model as model_mod
 from .config import ExperimentConfig
 from .data import ID, TARGET
-from .features import add_fold_fit_columns, build_features, make_fold_fit
+from .plan import FeaturePlan
 
 
 class RunRecorder(Protocol):
@@ -52,7 +52,7 @@ def score_predictions(y: pd.Series, folds: pd.Series, pred: np.ndarray) -> dict[
 
 
 def _with_built_columns(df: pd.DataFrame, X: pd.DataFrame) -> pd.DataFrame:
-    """원본 df에 build_features가 만든 컬럼(placebo 등)을 더한 fold-fit 입력을 만든다.
+    """원본 df에 build_matrix가 만든 컬럼(placebo 등)을 더한 fold-fit 입력을 만든다.
 
     placebo 카나리아를 타깃 인코딩하려면 fold-fit 입력에 placebo 컬럼이 있어야 한다. (#33 파급)
     """
@@ -62,6 +62,7 @@ def _with_built_columns(df: pd.DataFrame, X: pd.DataFrame) -> pd.DataFrame:
 
 def run_cv(
     cfg: ExperimentConfig,
+    plan: FeaturePlan,
     train: pd.DataFrame,
     test: pd.DataFrame,
     seed: int,
@@ -70,14 +71,16 @@ def run_cv(
     """커밋된 fold 배정대로 학습하고 OOF와 테스트 예측을 만든다.
 
     시드 반복(cfg.seeds가 여럿)일 때는 run.py가 이 함수를 시드별로 부르고 예측을 평균한다.
+    피처 구성은 주입받은 피처 계획만 안다: 행렬은 plan.build_matrix가 만들고,
+    fold-fit 컬럼은 plan.fold_fit_transformers를 fold 안에서 fit해 더한다. (#71)
     recorder가 없으면(단독 실행, 노트북) 아무것도 기록하지 않는다. (#43)
     """
     if recorder is not None:
         recorder.stage("feature_build")
-    X = build_features(train, cfg.features, seed)
-    X_test = build_features(test, cfg.features, seed)
+    X = plan.build_matrix(train, seed)
+    X_test = plan.build_matrix(test, seed)
     y = train[TARGET]
-    transformers = make_fold_fit(cfg.features)
+    transformers = plan.fold_fit_transformers()
     if transformers:
         train_ff = _with_built_columns(train, X)
         test_ff = _with_built_columns(test, X_test)
@@ -103,8 +106,8 @@ def run_cv(
             # test와 위치 인덱스가 겹치므로)으로 두 경우를 구분해 돌려준다. (#33 파급)
             for t in transformers:
                 t.fit(train_ff.loc[tr_idx], seed)
-            X_fold = add_fold_fit_columns(transformers, X, train_ff)
-            X_test_fold = add_fold_fit_columns(transformers, X_test, test_ff)
+            X_fold = plan.add_fold_fit_columns(X, train_ff)
+            X_test_fold = plan.add_fold_fit_columns(X_test, test_ff)
             assert list(X_fold.columns) == list(X_test_fold.columns), (
                 "train/test의 fold-fit 컬럼 집합이 다르다."
             )

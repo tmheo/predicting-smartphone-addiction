@@ -36,16 +36,10 @@ def align_categories(train: pd.DataFrame, test: pd.DataFrame, categorical: list[
     두 데이터의 값 합집합으로 카테고리를 고정한다. LightGBM 내장 범주형 처리는 이 코드를 쓴다. (#16)
     """
     for col in categorical:
-        train[col], test[col] = _union_categorical(train[col], test[col])
+        train[col], test[col] = union_categorical(train[col], test[col])
 
 
-def add_categorical_copies(train: pd.DataFrame, test: pd.DataFrame, cols: list[str]) -> None:
-    """수치 컬럼은 그대로 두고 <col>_cat 범주형 복제 컬럼을 두 데이터에 추가한다. (#31 변형 b)"""
-    for col in cols:
-        train[f"{col}_cat"], test[f"{col}_cat"] = _union_categorical(train[col], test[col])
-
-
-def _union_categorical(a: pd.Series, b: pd.Series) -> tuple[pd.Categorical, pd.Categorical]:
+def union_categorical(a: pd.Series, b: pd.Series) -> tuple[pd.Categorical, pd.Categorical]:
     cats = sorted(set(a.dropna()) | set(b.dropna()))
     return pd.Categorical(a, categories=cats), pd.Categorical(b, categories=cats)
 

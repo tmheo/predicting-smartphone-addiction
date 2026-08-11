@@ -17,8 +17,9 @@ import sys
 import numpy as np
 import pandas as pd
 
-from . import cv, data, features, tracking
+from . import cv, data, tracking
 from .config import load_config
+from .plan import FeaturePlan
 
 
 def main() -> None:
@@ -27,8 +28,9 @@ def main() -> None:
     parser.add_argument("--plan", action="store_true", help="학습 없이 실행 계획만 출력")
     args = parser.parse_args()
 
-    # 검증된 설정 파일 = ExperimentConfig 생성 성공. (#43)
+    # 검증된 설정 파일 = ExperimentConfig 생성 성공. 피처 계획의 누출 규율 검증 포함. (#43, #71)
     cfg = load_config(args.config)
+    plan = FeaturePlan.from_config(cfg.features)
 
     if args.plan:
         # 계획 출력은 MLflow 실행도 실행 로그 파일도 만들지 않는다. (#43 시나리오 5)
@@ -39,6 +41,11 @@ def main() -> None:
         for name, h in _input_hashes(cfg).items():
             print(f"sha256.{name:<6}: {h[:16]}…")
         print("git        :", tracking.git_state())
+        print("feature plan (단계 / kind / 산출 컬럼 / 타깃 참조):")
+        raw_columns = list(pd.read_csv(cfg.data.train, nrows=0).columns)
+        for stage, kind, columns, uses_target in plan.describe(raw_columns):
+            mark = "타깃 참조" if uses_target else "-"
+            print(f"  [{stage}] {kind}: {', '.join(columns)} ({mark})")
         print("기록될 것   : params(feature 목록, 모델 파라미터), metrics(auc_fold_*, auc_oof, auc_oof_seed_*),")
         print("             progress.*/time.* 진행 기록, artifacts(설정 yaml, oof.parquet,")
         print("             test_pred.parquet, feature_importance.parquet, submission.csv,")
@@ -56,19 +63,24 @@ def main() -> None:
         train = data.load_csv(cfg.data.train)
         test = data.load_csv(cfg.data.test)
         data.align_categories(train, test, cfg.features.categorical)
-        data.add_categorical_copies(train, test, cfg.features.categorical_copies)
-        features.add_pair_ce(train, test, cfg.features.pair_ce)
+        # dataset-wide 컬럼은 새 frame으로 받는다. 제자리 변형 없음. (#71)
+        train, test = plan.apply_dataset_wide(train, test)
         train = data.attach_folds(train, cfg.data.folds)
         n_folds = int(train["fold"].max()) + 1
         observer.data_loaded(seed_total=len(cfg.seeds), fold_total=n_folds)
 
         # 시드 반복: 예측은 평균, metric은 평균 예측 기준으로 다시 계산. (#15)
-        results = [cv.run_cv(cfg, train, test, seed, recorder=observer) for seed in cfg.seeds]
+        results = [cv.run_cv(cfg, plan, train, test, seed, recorder=observer) for seed in cfg.seeds]
 
         observer.stage("evaluation")
         # 시드별 OOF AUC는 평균 재채점으로 fold_aucs가 덮이기 전에 확보한다. (ADR 0001)
         seed_aucs = {seed: r.fold_aucs["auc_oof"] for seed, r in zip(cfg.seeds, results)}
         final = results[0]
+        # 선언 = 실제: 학습에 쓴 컬럼이 계획의 선언과 다르면 기록 전에 실패한다.
+        # feature 목록 param은 이 검증을 거친 선언 기준 목록이 된다. (#71)
+        assert final.feature_names == plan.all_columns(), (
+            f"학습 컬럼이 피처 계획의 선언과 다르다: {final.feature_names} != {plan.all_columns()}"
+        )
         if len(results) > 1:
             final.oof["pred"] = np.mean([r.oof["pred"] for r in results], axis=0)
             final.test_pred["pred"] = np.mean([r.test_pred["pred"] for r in results], axis=0)
