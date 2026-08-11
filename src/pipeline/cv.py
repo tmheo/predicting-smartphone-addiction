@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Protocol
 
 import numpy as np
 import pandas as pd
@@ -18,6 +19,17 @@ from . import model as model_mod
 from .config import ExperimentConfig
 from .data import ID, TARGET
 from .features import add_fold_fit_columns, build_features, make_fold_fit
+
+
+class RunRecorder(Protocol):
+    """CV가 진행 상황을 통지하는 좁은 계약. 구현은 observe.RunObserver. (#43)
+
+    CV는 무슨 일이 있었는지만 알리고, MLflow 지표 이름과 step 규약은 기록기가 소유한다.
+    """
+
+    def stage(self, name: str) -> None: ...
+
+    def fold_completed(self, seed_index: int, fold_index: int, auc: float) -> None: ...
 
 
 @dataclass
@@ -48,11 +60,20 @@ def _with_built_columns(df: pd.DataFrame, X: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([df, X[extra]], axis=1) if extra else df
 
 
-def run_cv(cfg: ExperimentConfig, train: pd.DataFrame, test: pd.DataFrame, seed: int) -> CVResult:
+def run_cv(
+    cfg: ExperimentConfig,
+    train: pd.DataFrame,
+    test: pd.DataFrame,
+    seed: int,
+    recorder: RunRecorder | None = None,
+) -> CVResult:
     """커밋된 fold 배정대로 학습하고 OOF와 테스트 예측을 만든다.
 
     시드 반복(cfg.seeds가 여럿)일 때는 run.py가 이 함수를 시드별로 부르고 예측을 평균한다.
+    recorder가 없으면(단독 실행, 노트북) 아무것도 기록하지 않는다. (#43)
     """
+    if recorder is not None:
+        recorder.stage("feature_build")
     X = build_features(train, cfg.features, seed)
     X_test = build_features(test, cfg.features, seed)
     y = train[TARGET]
@@ -67,6 +88,9 @@ def run_cv(cfg: ExperimentConfig, train: pd.DataFrame, test: pd.DataFrame, seed:
     importances: list[pd.DataFrame] = []
     feature_names = list(X.columns)
 
+    # fold 안의 fold-fit 변환 fit도 training 단계에 포함한다. (#40)
+    if recorder is not None:
+        recorder.stage("training")
     for fold in range(n_folds):
         va_idx = train.index[train["fold"] == fold]
         tr_idx = train.index[train["fold"] != fold]
@@ -96,6 +120,12 @@ def run_cv(cfg: ExperimentConfig, train: pd.DataFrame, test: pd.DataFrame, seed:
         oof_pred[va_idx] = va_pred
         test_pred += model_mod.predict_test(model, X_test_fold) / n_folds
         importances.append(model_mod.gain_importance(model).assign(fold=fold, seed=seed))
+        if recorder is not None:
+            # 실행 중 fold AUC는 해당 시드의 fold 예측 기준. 최종 auc_fold_*는
+            # 시드 평균 예측으로 평가 단계에서 다시 채점한다. (#40)
+            recorder.fold_completed(
+                cfg.seeds.index(seed), fold, roc_auc_score(y.loc[va_idx], va_pred)
+            )
 
     return CVResult(
         oof=pd.DataFrame({"id": train[ID], "fold": train["fold"], "pred": oof_pred}),

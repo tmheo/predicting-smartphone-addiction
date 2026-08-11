@@ -14,6 +14,9 @@ mlflow.db
 mlruns/
 mlartifacts/
 
+# 실행 로그 로컬 사본 (issue #39: 보존 성공 시 삭제, 실패 시 잔존)
+run-logs/
+
 # OS
 .DS_Store
 

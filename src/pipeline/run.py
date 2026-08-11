@@ -5,11 +5,14 @@
     uv run python -m pipeline.run configs/exp001_lgbm_baseline.yaml --plan  # 실행 계획만 출력
 
 실험 하나 = 설정 파일 하나 = MLflow run 하나.
+관찰 규약(#43): 설정 적재 성공 직후, 데이터 적재보다 먼저 observe.RunObserver가
+MLflow 실행을 만들고 수명주기를 소유한다. 진입점은 단계 전환과 결과만 통지한다.
 """
 
 from __future__ import annotations
 
 import argparse
+import sys
 
 import numpy as np
 import pandas as pd
@@ -24,46 +27,69 @@ def main() -> None:
     parser.add_argument("--plan", action="store_true", help="학습 없이 실행 계획만 출력")
     args = parser.parse_args()
 
+    # 검증된 설정 파일 = ExperimentConfig 생성 성공. (#43)
     cfg = load_config(args.config)
-    input_hashes = {
-        "train": data.file_sha256(cfg.data.train),
-        "test": data.file_sha256(cfg.data.test),
-        "folds": data.file_sha256(cfg.data.folds),
-    }
 
     if args.plan:
+        # 계획 출력은 MLflow 실행도 실행 로그 파일도 만들지 않는다. (#43 시나리오 5)
         print(f"experiment : {cfg.name}")
         print(f"config     : {cfg.source_path}")
         print(f"seeds      : {cfg.seeds}")
         print(f"model      : {cfg.model.kind} {cfg.model.params}")
-        for name, h in input_hashes.items():
+        for name, h in _input_hashes(cfg).items():
             print(f"sha256.{name:<6}: {h[:16]}…")
         print("git        :", tracking.git_state())
         print("기록될 것   : params(feature 목록, 모델 파라미터), metrics(auc_fold_*, auc_oof),")
-        print("             artifacts(설정 yaml, oof.parquet[id,fold,pred], test_pred.parquet[id,pred],")
-        print("             feature_importance.parquet[feature,fold,seed,gain], submission.csv)")
+        print("             progress.*/time.* 진행 기록, artifacts(설정 yaml, oof.parquet,")
+        print("             test_pred.parquet, feature_importance.parquet, submission.csv,")
+        print("             summary.html 등 결과 요약, logs/run.log)")
         return
 
-    train = data.load_csv(cfg.data.train)
-    test = data.load_csv(cfg.data.test)
-    data.align_categories(train, test, cfg.features.categorical)
-    data.add_categorical_copies(train, test, cfg.features.categorical_copies)
-    train = data.attach_folds(train, cfg.data.folds)
+    from .observe import RunObserver
 
-    # 시드 반복: 예측은 평균, metric은 평균 예측 기준으로 다시 계산. (#15)
-    results = [cv.run_cv(cfg, train, test, seed) for seed in cfg.seeds]
-    final = results[0]
-    if len(results) > 1:
-        final.oof["pred"] = np.mean([r.oof["pred"] for r in results], axis=0)
-        final.test_pred["pred"] = np.mean([r.test_pred["pred"] for r in results], axis=0)
-        final.fold_aucs = cv.score_predictions(
-            train[data.TARGET], train["fold"], final.oof["pred"].to_numpy()
-        )
-        final.importance = pd.concat([r.importance for r in results], ignore_index=True)
+    observer = RunObserver.begin(cfg)
+    try:
+        observer.stage("setup")
+        observer.record_input_hashes(_input_hashes(cfg))
 
-    run_id = tracking.log_run(cfg, final, input_hashes)
-    tracking.warn_below_placebo(final.importance)
-    print(f"run_id={run_id} auc_oof={final.fold_aucs['auc_oof']:.5f}")
+        observer.stage("data_load")
+        train = data.load_csv(cfg.data.train)
+        test = data.load_csv(cfg.data.test)
+        data.align_categories(train, test, cfg.features.categorical)
+        data.add_categorical_copies(train, test, cfg.features.categorical_copies)
+        train = data.attach_folds(train, cfg.data.folds)
+        n_folds = int(train["fold"].max()) + 1
+        observer.data_loaded(seed_total=len(cfg.seeds), fold_total=n_folds)
+
+        # 시드 반복: 예측은 평균, metric은 평균 예측 기준으로 다시 계산. (#15)
+        results = [cv.run_cv(cfg, train, test, seed, recorder=observer) for seed in cfg.seeds]
+
+        observer.stage("evaluation")
+        final = results[0]
+        if len(results) > 1:
+            final.oof["pred"] = np.mean([r.oof["pred"] for r in results], axis=0)
+            final.test_pred["pred"] = np.mean([r.test_pred["pred"] for r in results], axis=0)
+            final.fold_aucs = cv.score_predictions(
+                train[data.TARGET], train["fold"], final.oof["pred"].to_numpy()
+            )
+            final.importance = pd.concat([r.importance for r in results], ignore_index=True)
+
+        observer.stage("artifacts")
+        observer.log_final(final)
+        tracking.warn_below_placebo(final.importance)
+        print(f"run_id={observer.run_id} auc_oof={final.fold_aucs['auc_oof']:.5f}")
+        observer.succeed()
+    except BaseException as exc:
+        observer.fail(exc)
+        sys.exit(130 if isinstance(exc, KeyboardInterrupt) else 1)
+
+
+def _input_hashes(cfg) -> dict[str, str]:
+    return {
+        "train": data.file_sha256(cfg.data.train),
+        "test": data.file_sha256(cfg.data.test),
+        "folds": data.file_sha256(cfg.data.folds),
+    }
 
 
 if __name__ == "__main__":
