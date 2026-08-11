@@ -22,6 +22,35 @@ PLACEBO = "placebo_noise"
 # 물려받음)와 다른 종류의 자가 되므로, 실제 열의 NaN 마스크를 복사한다. (#19 정정)
 PLACEBO_MASK_SOURCE = "social_media_hours"
 
+# 생성기의 화면 시간 합계 제약(daily = social + gaming + work + other)의 산술 표현. (#46)
+SCREEN_TOTAL = "daily_screen_time_hours"
+SCREEN_PARTS = ["social_media_hours", "gaming_hours", "work_study_hours"]
+
+
+def _other_screen(df: pd.DataFrame) -> pd.Series:
+    # 성분 넷 중 하나라도 결측이면 NaN. 전성분 관측 행에서만 말하는 엄격한 잔차.
+    return df[SCREEN_TOTAL] - df[SCREEN_PARTS].sum(axis=1, skipna=False)
+
+
+def _screen_slack(df: pd.DataFrame) -> pd.Series:
+    # daily를 예산으로 보고 관측된(결측 아닌) 성분 합만 뺀 여유분. daily 결측이면 NaN.
+    return df[SCREEN_TOTAL] - df[SCREEN_PARTS].sum(axis=1)
+
+
+def _screen_slack_n_obs(df: pd.DataFrame) -> pd.Series:
+    # slack에서 실제로 뺀 성분 개수. slack의 해석 짝이므로 slack이 정의되는 행(daily 관측)
+    # 에서만 값을 준다. 일반 결측 개수 피처는 지도에서 배제 대상이라 범위를 이렇게 좁힌다.
+    n = df[SCREEN_PARTS].notna().sum(axis=1).astype(float)
+    return n.where(df[SCREEN_TOTAL].notna())
+
+
+# name -> 파생 컬럼 계산 함수. 타깃을 쓰지 않는 행 단위 결정적 파생만 등록한다.
+DERIVED_REGISTRY: dict[str, Callable[[pd.DataFrame], pd.Series]] = {
+    "other_screen": _other_screen,
+    "screen_slack": _screen_slack,
+    "screen_slack_n_obs": _screen_slack_n_obs,
+}
+
 
 def build_features(df: pd.DataFrame, cfg: FeatureConfig, seed: int) -> pd.DataFrame:
     """모델 입력 행렬을 만든다. 반환 컬럼 목록이 곧 params로 기록되는 feature 목록."""
@@ -30,6 +59,9 @@ def build_features(df: pd.DataFrame, cfg: FeatureConfig, seed: int) -> pd.DataFr
     else:
         cols = list(cfg.include)
     X = df[cols].copy()
+    for name in cfg.derived:
+        assert name not in X.columns, f"파생 컬럼 이름 충돌: {name}"
+        X[name] = DERIVED_REGISTRY[name](df)
     if cfg.placebo:
         # 개선 판정 기준선: 이 피처보다 importance가 낮으면 노이즈로 본다. (#15)
         rng = np.random.default_rng(seed)

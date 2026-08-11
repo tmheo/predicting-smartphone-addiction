@@ -23,6 +23,8 @@ class FeatureConfig:
     placebo: bool
     # 수치 컬럼을 유지한 채 <col>_cat 범주형 복제 컬럼을 추가할 대상. (#31 변형 b)
     categorical_copies: list[str] = field(default_factory=list)
+    # 타깃 없이 행 단위로 계산하는 파생 컬럼 이름 목록. features 모듈 DERIVED_REGISTRY의 키. (#46)
+    derived: list[str] = field(default_factory=list)
     # fold 루프 안에서 fit/transform하는 fold-fit 트랜스포머 목록.
     # 항목은 {kind: ..., 그 외 생성자 인자} 형태로, kind는 features 모듈 레지스트리의 키. (#35)
     fold_fit: list[dict] = field(default_factory=list)
