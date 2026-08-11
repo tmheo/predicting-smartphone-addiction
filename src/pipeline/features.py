@@ -44,11 +44,31 @@ def _screen_slack_n_obs(df: pd.DataFrame) -> pd.Series:
     return n.where(df[SCREEN_TOTAL].notna())
 
 
+# 소수 첫째 자리가 실제로 변하는 격자 컬럼(정수 격자인 age 등은 제외). (#49)
+DECIMAL_GRID_COLS = [
+    "daily_screen_time_hours",
+    "social_media_hours",
+    "gaming_hours",
+    "work_study_hours",
+    "sleep_hours",
+    "weekend_screen_time",
+]
+
+
+def _first_decimal(col: str) -> Callable[[pd.DataFrame], pd.Series]:
+    def f(df: pd.DataFrame) -> pd.Series:
+        # 2.9*10=28.999… 같은 부동소수 오차가 자리를 깨지 않게 반올림 뒤 자리를 뗀다.
+        return np.floor(np.round(df[col] * 10, 6) % 10)
+
+    return f
+
+
 # name -> 파생 컬럼 계산 함수. 타깃을 쓰지 않는 행 단위 결정적 파생만 등록한다.
 DERIVED_REGISTRY: dict[str, Callable[[pd.DataFrame], pd.Series]] = {
     "other_screen": _other_screen,
     "screen_slack": _screen_slack,
     "screen_slack_n_obs": _screen_slack_n_obs,
+    **{f"{c}_dec1": _first_decimal(c) for c in DECIMAL_GRID_COLS},
 }
 
 
@@ -91,22 +111,39 @@ class FoldFitTransformer(Protocol):
     def transform(self, df: pd.DataFrame) -> pd.DataFrame: ...
 
 
+def _exact_keys(s: pd.Series, digits: int | None = None) -> pd.Series:
+    """정확값 문자열 키. NaN은 별도 키로 명시 치환한다. (#33)
+
+    digits를 주면 반올림해 해상도를 낮춘 키가 된다(반올림 표현, #49).
+    """
+    if digits is not None:
+        s = s.round(digits)
+    return s.astype(str).where(s.notna(), "__nan__")
+
+
 class ExactValueTargetEncoder:
     """정확값 키 타깃 인코딩. (#33 설계, #34)
 
     학습 fold 전체로 키별 타깃 평균표를 만들고,
     학습 fold 행에는 내부 층화 K-fold OOF 값을, 검증 fold와 test 행에는 전체 평균표 값을 준다.
-    평활 없음, 미지 키는 fit 데이터의 전체 타깃 평균. 새 컬럼 이름은 <col>_te.
+    평활 없음, 미지 키는 fit 데이터의 전체 타깃 평균. 새 컬럼 이름은 <col><suffix>.
+    key_digits로 키 해상도를 낮춘 반올림 표현을 만들 수 있다(suffix로 정확값 TE와 구분). (#49)
     """
 
-    def __init__(self, cols: list[str], inner_folds: int = 10) -> None:
+    def __init__(
+        self,
+        cols: list[str],
+        inner_folds: int = 10,
+        key_digits: int | None = None,
+        suffix: str = "_te",
+    ) -> None:
         self.cols = list(cols)
         self.inner_folds = inner_folds
+        self.key_digits = key_digits
+        self.suffix = suffix
 
-    @staticmethod
-    def _keys(s: pd.Series) -> pd.Series:
-        # 반올림 없는 정확값 문자열 키(원문 .astype(str)와 등가). NaN은 별도 키로 명시 치환한다.
-        return s.astype(str).where(s.notna(), "__nan__")
+    def _keys(self, s: pd.Series) -> pd.Series:
+        return _exact_keys(s, self.key_digits)
 
     def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
         assert train_fold[ID].is_unique, "학습 fold의 id가 유일하지 않다."
@@ -137,13 +174,58 @@ class ExactValueTargetEncoder:
             if is_fit_row.any():
                 mapped = mapped.copy()
                 mapped.iloc[is_fit_row] = self.oof_[col].loc[df.loc[is_fit_row, ID]].to_numpy()
-            out[f"{col}_te"] = mapped
+            out[f"{col}{self.suffix}"] = mapped
+        return pd.DataFrame(out, index=df.index)
+
+
+class FrequencyEncoder:
+    """정확값 키 빈도 인코딩(CE). (#49)
+
+    타깃을 쓰지 않지만 데이터에서 표를 학습하므로 fold-fit으로 학습 fold에서만 센다.
+    타깃 미사용이라 OOF 구분이 필요 없고 모든 행에 같은 표를 적용한다.
+    미지 키는 0(한 번도 못 본 값). 새 컬럼 이름은 <col>_ce.
+    """
+
+    def __init__(self, cols: list[str]) -> None:
+        self.cols = list(cols)
+
+    def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
+        self.tables_ = {
+            col: _exact_keys(train_fold[col]).value_counts().astype(float) for col in self.cols
+        }
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        out = {
+            f"{col}_ce": _exact_keys(df[col]).map(self.tables_[col]).fillna(0.0)
+            for col in self.cols
+        }
+        return pd.DataFrame(out, index=df.index)
+
+
+class MedianImputeAux:
+    """원시 NaN 열을 유지한 채 중앙값 대체본을 보조 열로 추가한다. (#49)
+
+    원래 열을 덮는 대체는 지도의 배제 대상이고, 근거가 강한 것은 두 열 병행이다
+    (docs/research/code-notebook-insights.md 전처리 절). 중앙값은 학습 fold에서만 계산한다.
+    새 컬럼 이름은 <col>_fill.
+    """
+
+    def __init__(self, cols: list[str]) -> None:
+        self.cols = list(cols)
+
+    def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
+        self.medians_ = {col: float(train_fold[col].median()) for col in self.cols}
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        out = {f"{col}_fill": df[col].fillna(self.medians_[col]) for col in self.cols}
         return pd.DataFrame(out, index=df.index)
 
 
 # kind -> 트랜스포머 팩토리. 새 fold-fit 피처는 여기 등록만 하면 설정에서 켤 수 있다.
 FOLD_FIT_REGISTRY: dict[str, Callable[..., FoldFitTransformer]] = {
     "target_encoding": ExactValueTargetEncoder,
+    "frequency_encoding": FrequencyEncoder,
+    "median_impute_aux": MedianImputeAux,
 }
 
 
