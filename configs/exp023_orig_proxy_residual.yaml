@@ -1,0 +1,79 @@
+# 이슈 #52: 원본 프록시만 학습한 5-fold LightGBM 시드 평균본의 로짓을 초기 점수로 준다.
+# 합성 train은 1단계 예측 입력으로만 쓰고 합성 라벨은 초기 점수 생성기 경계에서 거부한다.
+# 2단계는 champion exp011의 피처와 LightGBM 설정을 그대로 써 생성기 잔차만 학습한다.
+
+name: exp023_orig_proxy_residual
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [other_screen, screen_slack]
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.05
+    num_leaves: 255
+    n_estimators: 10000
+    force_row_wise: true
+  fit:
+    early_stopping_rounds: 200
+
+initial_score:
+  kind: original_proxy_lightgbm
+  params:
+    path: data/external/Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv
+    cols:
+      [
+        age,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        gender,
+        stress_level,
+        academic_work_impact,
+      ]
+    categorical: [gender, stress_level, academic_work_impact]
+    model_params:
+      objective: binary
+      metric: auc
+      learning_rate: 0.03
+      num_leaves: 31
+      n_estimators: 5000
+      force_row_wise: true
+      verbosity: -1
+    n_splits: 5
+    early_stopping_rounds: 100
+    clip: 0.000001
+
+cv:
+  seeds: [42]

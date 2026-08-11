@@ -22,12 +22,20 @@ class ModelAdapter(Protocol):
     """fold 하나의 학습기 계약. 인스턴스는 fold마다 새로 만든다."""
 
     def fit(
-        self, X_tr: pd.DataFrame, y_tr: pd.Series, X_va: pd.DataFrame, y_va: pd.Series
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
     ) -> np.ndarray:
         """한 fold를 학습하고 검증 fold 예측을 돌려준다."""
         ...
 
-    def predict(self, X: pd.DataFrame) -> np.ndarray: ...
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray: ...
 
     def importance(self) -> pd.DataFrame:
         """학습된 모델의 importance를 (feature, gain) 프레임으로 돌려준다. (#19)"""
@@ -44,23 +52,61 @@ class LightGBMAdapter:
         self._model = None
 
     def fit(
-        self, X_tr: pd.DataFrame, y_tr: pd.Series, X_va: pd.DataFrame, y_va: pd.Series
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
     ) -> np.ndarray:
         # 무거운 의존성은 실제 학습 시점에만 import한다. --plan 실행은 이 모듈이 필요 없다.
         import lightgbm as lgb
 
         self._model = lgb.LGBMClassifier(**self._params, random_state=self._seed)
+        if (initial_score_tr is None) != (initial_score_va is None):
+            raise ValueError("학습과 검증 초기 점수는 함께 주거나 함께 생략해야 한다.")
+        self._uses_initial_score = initial_score_tr is not None
+        kwargs = {}
+        if self._uses_initial_score:
+            kwargs = {
+                "init_score": initial_score_tr,
+                "eval_init_score": [initial_score_va],
+            }
         self._model.fit(
             X_tr,
             y_tr,
             eval_X=X_va,
             eval_y=y_va,
             callbacks=[lgb.early_stopping(self._fit["early_stopping_rounds"])],
+            **kwargs,
         )
-        return self._model.predict_proba(X_va)[:, 1]
+        return self._predict(X_va, initial_score_va)
 
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
-        return self._model.predict_proba(X)[:, 1]
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray:
+        return self._predict(X, initial_score)
+
+    def _predict(self, X: pd.DataFrame, initial_score: pd.Series | None) -> np.ndarray:
+        if not self._uses_initial_score:
+            if initial_score is not None:
+                raise ValueError("초기 점수 없이 학습한 모델에 예측 초기 점수가 전달됐다.")
+            return self._model.predict_proba(X)[:, 1]
+        if initial_score is None:
+            raise ValueError("초기 점수로 학습한 모델은 예측에도 같은 출처의 초기 점수가 필요하다.")
+        residual = np.asarray(self._model.predict(X, raw_score=True), dtype="float64")
+        margin = np.asarray(initial_score, dtype="float64")
+        if residual.shape != margin.shape:
+            raise ValueError(f"예측과 초기 점수 길이가 다르다: {residual.shape} != {margin.shape}")
+        total = residual + margin
+        # 큰 음수에서도 overflow 경고 없이 안정적으로 sigmoid를 계산한다.
+        out = np.empty_like(total)
+        positive = total >= 0
+        out[positive] = 1.0 / (1.0 + np.exp(-total[positive]))
+        exp_total = np.exp(total[~positive])
+        out[~positive] = exp_total / (1.0 + exp_total)
+        return out
 
     def importance(self) -> pd.DataFrame:
         booster = self._model.booster_

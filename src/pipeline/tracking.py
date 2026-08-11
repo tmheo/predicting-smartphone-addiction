@@ -67,6 +67,10 @@ def log_start_records(client, run_id: str, cfg: ExperimentConfig) -> None:
     client.log_param(run_id, "seeds", ",".join(map(str, cfg.seeds)))
     for key, value in cfg.model.params.items():
         client.log_param(run_id, f"model.{key}", value)
+    if cfg.initial_score is not None:
+        client.log_param(run_id, "initial_score.kind", cfg.initial_score.kind)
+        for key, value in cfg.initial_score.params.items():
+            client.log_param(run_id, f"initial_score.{key}", value)
     for key, value in git_state().items():
         client.set_tag(run_id, key, value)
     client.log_artifact(run_id, str(cfg.source_path))

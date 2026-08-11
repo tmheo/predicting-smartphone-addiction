@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
+from . import initial_score as initial_score_mod
 from . import model as model_mod
 from .config import ExperimentConfig
 from .data import ID, TARGET
@@ -77,6 +78,15 @@ def run_cv(
     """
     if recorder is not None:
         recorder.stage("feature_build")
+    initial_provider = initial_score_mod.create(cfg.initial_score)
+    initial_scores = (
+        initial_provider.compute(train.drop(columns=[TARGET]), test, seed)
+        if initial_provider is not None
+        else None
+    )
+    if initial_scores is not None:
+        assert initial_scores.train.index.equals(train.index), "train 초기 점수 인덱스가 다르다."
+        assert initial_scores.test.index.equals(test.index), "test 초기 점수 인덱스가 다르다."
     X = plan.build_matrix(train, seed)
     X_test = plan.build_matrix(test, seed)
     y = train[TARGET]
@@ -119,10 +129,18 @@ def run_cv(
                 )
         adapter = model_mod.create(cfg.model, seed)
         va_pred = adapter.fit(
-            X_fold.loc[tr_idx], y.loc[tr_idx], X_fold.loc[va_idx], y.loc[va_idx]
+            X_fold.loc[tr_idx],
+            y.loc[tr_idx],
+            X_fold.loc[va_idx],
+            y.loc[va_idx],
+            initial_scores.train.loc[tr_idx] if initial_scores is not None else None,
+            initial_scores.train.loc[va_idx] if initial_scores is not None else None,
         )
         oof_pred[va_idx] = va_pred
-        test_pred += adapter.predict(X_test_fold) / n_folds
+        test_pred += adapter.predict(
+            X_test_fold,
+            initial_scores.test if initial_scores is not None else None,
+        ) / n_folds
         importances.append(adapter.importance().assign(fold=fold, seed=seed))
         if recorder is not None:
             # 실행 중 fold AUC는 해당 시드의 fold 예측 기준. 최종 auc_fold_*는

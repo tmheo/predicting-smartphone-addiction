@@ -35,11 +35,18 @@ class ModelConfig:
 
 
 @dataclass(frozen=True)
+class InitialScoreConfig:
+    kind: str
+    params: dict
+
+
+@dataclass(frozen=True)
 class ExperimentConfig:
     name: str
     data: DataConfig
     features: FeatureConfig
     model: ModelConfig
+    initial_score: InitialScoreConfig | None
     seeds: list[int]
     source_path: Path  # 설정 원본 경로. run artifact로 그대로 복사해 남긴다.
 
@@ -73,6 +80,11 @@ def load_config(path: str | Path) -> ExperimentConfig:
             kind=raw["model"]["kind"],
             params=raw["model"]["params"],
             fit=raw["model"]["fit"],
+        ),
+        initial_score=(
+            InitialScoreConfig(**raw["initial_score"])
+            if raw.get("initial_score") is not None
+            else None
         ),
         seeds=raw["cv"]["seeds"],
         source_path=path,

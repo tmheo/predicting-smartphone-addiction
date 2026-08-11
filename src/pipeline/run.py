@@ -17,7 +17,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-from . import cv, data, tracking
+from . import cv, data, initial_score, tracking
 from .config import load_config
 from .plan import FeaturePlan
 
@@ -38,6 +38,8 @@ def main() -> None:
         print(f"config     : {cfg.source_path}")
         print(f"seeds      : {cfg.seeds}")
         print(f"model      : {cfg.model.kind} {cfg.model.params}")
+        if cfg.initial_score is not None:
+            print(f"init score : {cfg.initial_score.kind} {cfg.initial_score.params}")
         for name, h in _input_hashes(cfg).items():
             print(f"sha256.{name:<6}: {h[:16]}…")
         print("git        :", tracking.git_state())
@@ -103,11 +105,15 @@ def main() -> None:
 
 
 def _input_hashes(cfg) -> dict[str, str]:
-    return {
+    hashes = {
         "train": data.file_sha256(cfg.data.train),
         "test": data.file_sha256(cfg.data.test),
         "folds": data.file_sha256(cfg.data.folds),
     }
+    hashes.update(
+        {name: data.file_sha256(path) for name, path in initial_score.input_paths(cfg.initial_score).items()}
+    )
+    return hashes
 
 
 if __name__ == "__main__":

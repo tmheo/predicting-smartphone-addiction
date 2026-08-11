@@ -38,12 +38,20 @@ class FakeAdapter:
         self._feature_names: list[str] | None = None
 
     def fit(
-        self, X_tr: pd.DataFrame, y_tr: pd.Series, X_va: pd.DataFrame, y_va: pd.Series
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
     ) -> np.ndarray:
         self._feature_names = list(X_tr.columns)
         return np.full(len(X_va), self.fold_value)
 
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray:
         return np.full(len(X), self.fold_value * 10)
 
     def importance(self) -> pd.DataFrame:
@@ -73,6 +81,7 @@ def fake_experiment_config() -> ExperimentConfig:
         ),
         features=FeatureConfig(base="raw", categorical=[], providers=[]),
         model=ModelConfig(kind="fake", params={"p": 1}, fit={"f": 2}),
+        initial_score=None,
         seeds=[SEED],
         source_path=Path("unused"),
     )
@@ -200,3 +209,36 @@ def test_lightgbm_adapter_smoke():
     imp = adapter.importance()
     assert list(imp.columns) == ["feature", "gain"]
     assert list(imp["feature"]) == ["a", "b"]
+
+
+def test_lightgbm_adapter_adds_initial_score_back_to_predictions():
+    rng = np.random.default_rng(2)
+    n = 240
+    X = pd.DataFrame({"a": rng.normal(size=n), "b": rng.normal(size=n)})
+    y = pd.Series((X["a"] + rng.normal(scale=0.5, size=n) > 0).astype(int))
+    margin = pd.Series(np.where(X["a"] > 0, 0.7, -0.7), index=X.index)
+    cfg = ModelConfig(
+        kind="lightgbm",
+        params={
+            "objective": "binary",
+            "n_estimators": 30,
+            "num_leaves": 7,
+            "learning_rate": 0.1,
+            "verbosity": -1,
+        },
+        fit={"early_stopping_rounds": 5},
+    )
+    adapter = model_mod.create(cfg, seed=SEED)
+    va_pred = adapter.fit(
+        X.iloc[:180],
+        y.iloc[:180],
+        X.iloc[180:],
+        y.iloc[180:],
+        margin.iloc[:180],
+        margin.iloc[180:],
+    )
+    assert va_pred.shape == (60,)
+    assert ((va_pred > 0) & (va_pred < 1)).all()
+    with pytest.raises(ValueError, match="예측에도 같은 출처의 초기 점수"):
+        adapter.predict(X.iloc[:10])
+    assert adapter.predict(X.iloc[:10], margin.iloc[:10]).shape == (10,)
