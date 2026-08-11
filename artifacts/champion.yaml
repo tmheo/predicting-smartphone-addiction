@@ -1,18 +1,18 @@
-run_id: e21d19af37bb461db5dc1a59b66411a6
-oof_auc: 0.9674010717025592
+run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+oof_auc: 0.9675476423592995
 seed_aucs:
-  42: 0.9670517545443666
-  43: 0.9670218595614227
-  44: 0.9670881630502626
+  42: 0.9672173234483032
+  43: 0.9671895385083535
+  44: 0.9672339687662443
 fold_aucs:
-  0: 0.9667256205705624
-  1: 0.9674887954034526
-  2: 0.9675614454715221
-  3: 0.9680708540276706
-  4: 0.967183425723702
-config: exp011_resid_pair
-features: academic_work_impact,age,age_te,app_opens_per_day,app_opens_per_day_te,daily_screen_time_hours,daily_screen_time_hours_te,gaming_hours,gender,notifications_per_day,notifications_per_day_te,other_screen,placebo_noise,placebo_noise_te,screen_slack,sleep_hours,sleep_hours_te,social_media_hours,social_media_hours_te,stress_level,weekend_screen_time,weekend_screen_time_te,work_study_hours,work_study_hours_te
-git_commit: e529837229c249e4751a8237093d17d75446913e
+  0: 0.9668697312692528
+  1: 0.9675781014016
+  2: 0.9677566611316597
+  3: 0.9682564722367888
+  4: 0.9672919853249142
+config: exp026_constrained_impute_nowidth
+features: academic_work_impact,age,age_te,app_opens_per_day,app_opens_per_day_te,daily_screen_time_hours,daily_screen_time_hours_recon,daily_screen_time_hours_te,gaming_hours,gaming_hours_recon,gender,notifications_per_day,notifications_per_day_te,other_screen,placebo_noise,placebo_noise_te,screen_slack,sleep_hours,sleep_hours_te,social_media_hours,social_media_hours_recon,social_media_hours_te,stress_level,weekend_screen_time,weekend_screen_time_te,work_study_hours,work_study_hours_recon,work_study_hours_te
+git_commit: 837e63dcadb99e3c5db10913e2b164e4bf9aa54f
 adopted_at: '2026-08-11'
-reason: '이슈 #46: 화면 시간 합계 제약의 산술 잔차 병행(other_screen+screen_slack)이 3시드 +0.00081, 3/3
-  시드, 5/5 fold 개선'
+reason: '이슈 #74: 생성 규칙을 산술 경계로 쓰는 제약 결측 재구성 recon 4열이 3시드 +0.00015, 3/3 시드, 5/5 fold
+  개선. 이득은 결측 있는 층에 집중(기제 확인)'

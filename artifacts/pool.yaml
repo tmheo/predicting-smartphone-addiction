@@ -61,3 +61,19 @@ members:
     ensemble_auc_with: 0.9675430190054946
     ensemble_auc_without: 0.9674367112386212
     contribution: 0.00010630776687337029
+- run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+  config: exp026_constrained_impute_nowidth
+  oof_auc: 0.9675476423592995
+  seeds: 42,43,44
+  entered_at: '2026-08-11'
+  reason: '이슈 #74: 새 champion exp026의 3시드 평균본. 최근접 exp011과 스피어만 0.99712로 중복 아님, 표준
+    평가 앙상블 기여 +0.00012'
+  evidence:
+    champion_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+    champion_oof_auc: 0.9675476423592995
+    floor_margin: 0.010000000000000009
+    nearest_run_id: e21d19af37bb461db5dc1a59b66411a6
+    nearest_spearman: 0.9971180102892839
+    ensemble_auc_with: 0.9676591285688336
+    ensemble_auc_without: 0.9675430190054946
+    contribution: 0.00011610956333907296
