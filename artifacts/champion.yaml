@@ -1,8 +1,9 @@
-run_id: 01a466bd64e44522b628a0512809c542
+run_id: 264f7e6f8e45402e8322e522c426e8eb
 oof_auc: 0.9665924316740748
 config: exp006_te_drop_gaming
 features: academic_work_impact,age,age_te,app_opens_per_day,app_opens_per_day_te,daily_screen_time_hours,daily_screen_time_hours_te,gaming_hours,gender,notifications_per_day,notifications_per_day_te,placebo_noise,placebo_noise_te,sleep_hours,sleep_hours_te,social_media_hours,social_media_hours_te,stress_level,weekend_screen_time,weekend_screen_time_te,work_study_hours,work_study_hours_te
-git_commit: a5692a5c22af789dc59236ede305fbf1408d0098
+git_commit: 40f1b79aff2f4b0a641d874ccd21e73ceee2e352
 adopted_at: '2026-08-11'
 reason: 정확값 신호를 _cat 복제 대신 8컬럼 정확값 타깃 인코딩 _te로 교체 (3시드 OOF AUC +0.00055, 카나리아·importance
-  전부 통과)
+  전부 통과). run 01a466bd가 git_dirty로 기록되어 제출이 막혀, 동일 설정·시드의 클린 커밋 재실행(fold별 AUC까지 동일)으로
+  교체
