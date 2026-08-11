@@ -85,6 +85,16 @@ def all_kind_providers(proxy_path: str, proxy_sha: str) -> list[dict]:
         {"kind": "target_encoding", "inner_folds": 3, "cols": ["gaming_hours", PLACEBO]},
         {"kind": "frequency_encoding", "cols": ["work_study_hours"]},
         {"kind": "median_impute_aux", "cols": ["social_media_hours"]},
+        {
+            "kind": "constrained_impute_aux",
+            "cols": [
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "gaming_hours",
+                "work_study_hours",
+            ],
+            "max_iter": 5,
+        },
     ]
 
 

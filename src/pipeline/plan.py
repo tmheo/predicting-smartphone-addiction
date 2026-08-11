@@ -107,6 +107,7 @@ REGISTRY: dict[str, ProviderKind] = {
     "target_encoding": ProviderKind(FOLD_FIT, features.ExactValueTargetEncoder),
     "frequency_encoding": ProviderKind(FOLD_FIT, features.FrequencyEncoder),
     "median_impute_aux": ProviderKind(FOLD_FIT, features.MedianImputeAux),
+    "constrained_impute_aux": ProviderKind(FOLD_FIT, features.ConstrainedImputeAux),
 }
 
 

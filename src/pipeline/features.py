@@ -512,6 +512,69 @@ class OriginalKnnColumns:
         return result[self.columns()]
 
 
+class ConstrainedImputeAux:
+    """fold-fit 제공자: 생성 규칙을 산술 경계로 쓰는 제약 결측 재구성 열을 병행 추가. (#74)
+
+    학습 fold의 수치 열로 IterativeImputer를 fit하고, 화면 블록(daily와 세 성분)의
+    결측 셀 추정치를 생성 규칙 `daily >= social + gaming + work`가 주는 실현 가능
+    구간으로 잘라 <col>_recon 열로 준다. 관측 셀은 원시 값 그대로다(원시 열은 덮지 않음).
+
+    - daily 결측: 관측 성분 합이 하한. 상한 없음.
+    - 성분 결측: [0, daily - 관측 성분 합]. daily도 결측이면 하한 0만 적용.
+
+    성분 열에는 실현 가능 구간 폭(daily - 관측 성분 합)을 <col>_recon_width로 병행하되,
+    재구성이 일어난(결측이었던) 셀에서만 값을 준다. daily의 구간은 위로 열려 있어 폭이
+    0/NaN 결측 지표로 퇴화하므로 daily 폭 열은 만들지 않는다(지도의 배제 경계).
+    """
+
+    uses_target = False
+
+    def __init__(self, cols: list[str], max_iter: int = 20) -> None:
+        screen = [SCREEN_TOTAL, *SCREEN_PARTS]
+        missing = [c for c in screen if c not in cols]
+        if missing:
+            raise ValueError(f"cols에 화면 블록 열 {missing}이 없다. 제약 재구성의 대상 열이다.")
+        self.cols = list(cols)
+        self.max_iter = max_iter
+
+    def columns(self) -> list[str]:
+        screen = [SCREEN_TOTAL, *SCREEN_PARTS]
+        return [f"{c}_recon" for c in screen] + [f"{c}_recon_width" for c in SCREEN_PARTS]
+
+    def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
+        from sklearn.experimental import enable_iterative_imputer  # noqa: F401
+        from sklearn.impute import IterativeImputer
+
+        self.imputer_ = IterativeImputer(max_iter=self.max_iter, random_state=seed)
+        self.imputer_.fit(train_fold[self.cols])
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        est = pd.DataFrame(
+            self.imputer_.transform(df[self.cols]), columns=self.cols, index=df.index
+        )
+        # 관측 성분 합(결측은 0 기여). 결측 성분의 상한이자 daily의 하한이다.
+        obs_sum = df[SCREEN_PARTS].sum(axis=1)
+        # 성분 결측 셀의 구간 폭. daily 결측이면 NaN(상한 없음). 규칙 위반 방어로 0 하한.
+        slack = (df[SCREEN_TOTAL] - obs_sum).clip(lower=0.0)
+
+        out: dict[str, pd.Series] = {}
+        rec = df[SCREEN_TOTAL].copy()
+        m = rec.isna()
+        rec[m] = est.loc[m, SCREEN_TOTAL].clip(lower=obs_sum[m])
+        out[f"{SCREEN_TOTAL}_recon"] = rec.astype("float64")
+        for c in SCREEN_PARTS:
+            rec = df[c].copy()
+            m = rec.isna()
+            clipped = est.loc[m, c].clip(lower=0.0)
+            upper = slack[m]
+            clipped = clipped.where(upper.isna(), np.minimum(clipped, upper))
+            rec[m] = clipped
+            out[f"{c}_recon"] = rec.astype("float64")
+        for c in SCREEN_PARTS:
+            out[f"{c}_recon_width"] = slack.where(df[c].isna()).astype("float64")
+        return pd.DataFrame(out, index=df.index)[self.columns()]
+
+
 class MedianImputeAux:
     """fold-fit 제공자: 원시 NaN 열을 유지한 채 중앙값 대체본을 보조 열로 추가한다. (#49)
 
