@@ -1,0 +1,46 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #46 누적 제거: exp008에서 screen_slack_n_obs가 플라시보 미달(12821 vs 30171)이라
+# 확정 게이트를 못 넘는다. slack만 남긴 변형. seed 42 스크리닝.
+
+name: exp010_resid_slack_only
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  include: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  placebo: true
+  derived: [screen_slack]
+  fold_fit:
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.05
+    num_leaves: 255
+    n_estimators: 10000
+  fit:
+    early_stopping_rounds: 200
+
+cv:
+  seeds: [42]
