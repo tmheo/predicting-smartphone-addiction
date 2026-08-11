@@ -5,6 +5,9 @@
 # 평활 m=20과 내부 4-fold는 출처 구성을 따른다. placebo 쌍 카나리아는 자동 포함.
 # exp026 champion 베이스에 lattice_pair_te 블록(37쌍 x TE·CT = 74열)만 더한다.
 # 0.1 해상도 셀 추가 변형은 exp034로 분리해 따로 잰다.
+# seed 42 스크리닝(run 4cf4f9f5)은 -0.00050 미달로 기각. 원문 측정과 방향 일치
+# (0.1 해상도는 LightGBM에 무효). 카나리아 placebo_noise__age_latf_te가 플라시보를
+# 4% 상회해 판정 불가 처리했으나 AUC 미달만으로도 결론은 같다. 후속 실행 없음.
 
 name: exp034_lattice_te_r1
 

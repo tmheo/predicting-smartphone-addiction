@@ -5,6 +5,10 @@
 # 평활 m=20과 내부 4-fold는 출처 구성을 따른다. placebo 쌍 카나리아는 자동 포함.
 # exp026 champion 베이스에 lattice_pair_te 블록(37쌍 x TE·CT = 74열)만 더한다.
 # 0.1 해상도 셀 추가 변형은 exp034로 분리해 따로 잰다.
+# seed 42 스크리닝(run e02d3e5c)은 -0.00037 미달로 champion 교체 기각. 화면·알림 쌍 TE
+# 일부는 gain이 매우 컸으나(중요도는 단일 TE에서 나눠 갖고 예측력은 추가 안 됨, #49 패턴)
+# CT 열 36개 전부 플라시보 미달. 카나리아 3종 통과로 측정 자체는 유효.
+# 이후 3시드 전환은 다양성 구성원 진입 판정(#77이 잰 양자화 계열 결손) 전용이다.
 
 name: exp033_lattice_te
 
@@ -78,4 +82,4 @@ model:
     early_stopping_rounds: 200
 
 cv:
-  seeds: [42]
+  seeds: [42, 43, 44]
