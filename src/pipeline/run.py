@@ -17,7 +17,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-from . import cv, data, tracking
+from . import cv, data, features, tracking
 from .config import load_config
 
 
@@ -57,6 +57,7 @@ def main() -> None:
         test = data.load_csv(cfg.data.test)
         data.align_categories(train, test, cfg.features.categorical)
         data.add_categorical_copies(train, test, cfg.features.categorical_copies)
+        features.add_pair_ce(train, test, cfg.features.pair_ce)
         train = data.attach_folds(train, cfg.data.folds)
         n_folds = int(train["fold"].max()) + 1
         observer.data_loaded(seed_total=len(cfg.seeds), fold_total=n_folds)

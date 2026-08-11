@@ -121,6 +121,40 @@ def _exact_keys(s: pd.Series, digits: int | None = None) -> pd.Series:
     return s.astype(str).where(s.notna(), "__nan__")
 
 
+# TE/CE 대상 지정: 단일 컬럼 이름 또는 컬럼 이름 목록(결합 키, #48/#51).
+ColumnSpec = str | list[str]
+
+
+def _spec_name(spec: ColumnSpec) -> str:
+    """spec의 산출 컬럼 이름 어간. 결합 키는 구성 컬럼을 __로 잇는다."""
+    return spec if isinstance(spec, str) else "__".join(spec)
+
+
+def _spec_keys(df: pd.DataFrame, spec: ColumnSpec, digits: int | None = None) -> pd.Series:
+    """spec의 정확값 키. 결합 키는 컬럼별 정확값 키를 |로 잇는다(#48 규약)."""
+    if isinstance(spec, str):
+        return _exact_keys(df[spec], digits)
+    keys = _exact_keys(df[spec[0]], digits)
+    for col in spec[1:]:
+        keys = keys + "|" + _exact_keys(df[col], digits)
+    return keys
+
+
+def add_pair_ce(train: pd.DataFrame, test: pd.DataFrame, pairs: list[list[str]]) -> None:
+    """결합 키의 훈련+테스트 합산 빈도 log1p를 <a>__<b>_ce 컬럼으로 두 데이터에 추가한다. (#48, #51)
+
+    타깃을 참조하지 않으므로 fold-fit이 필요 없고, 합산 표라 미지 조합도 생기지 않는다.
+    """
+    for pair in pairs:
+        name = f"{_spec_name(pair)}_ce"
+        assert name not in train.columns, f"pair CE 컬럼 이름 충돌: {name}"
+        train_keys = _spec_keys(train, pair)
+        test_keys = _spec_keys(test, pair)
+        counts = pd.concat([train_keys, test_keys], ignore_index=True).value_counts()
+        train[name] = np.log1p(train_keys.map(counts)).astype("float64")
+        test[name] = np.log1p(test_keys.map(counts)).astype("float64")
+
+
 class ExactValueTargetEncoder:
     """정확값 키 타깃 인코딩. (#33 설계, #34)
 
@@ -128,11 +162,12 @@ class ExactValueTargetEncoder:
     학습 fold 행에는 내부 층화 K-fold OOF 값을, 검증 fold와 test 행에는 전체 평균표 값을 준다.
     평활 없음, 미지 키는 fit 데이터의 전체 타깃 평균. 새 컬럼 이름은 <col><suffix>.
     key_digits로 키 해상도를 낮춘 반올림 표현을 만들 수 있다(suffix로 정확값 TE와 구분). (#49)
+    cols 항목이 컬럼 목록이면 결합 키 TE가 되고, 이름은 컬럼들을 __로 이은 어간을 쓴다. (#48, #51)
     """
 
     def __init__(
         self,
-        cols: list[str],
+        cols: list[ColumnSpec],
         inner_folds: int = 10,
         key_digits: int | None = None,
         suffix: str = "_te",
@@ -142,9 +177,6 @@ class ExactValueTargetEncoder:
         self.key_digits = key_digits
         self.suffix = suffix
 
-    def _keys(self, s: pd.Series) -> pd.Series:
-        return _exact_keys(s, self.key_digits)
-
     def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
         assert train_fold[ID].is_unique, "학습 fold의 id가 유일하지 않다."
         y = train_fold[TARGET]
@@ -153,28 +185,31 @@ class ExactValueTargetEncoder:
         skf = StratifiedKFold(n_splits=self.inner_folds, shuffle=True, random_state=seed)
         splits = list(skf.split(train_fold, y))
         oof: dict[str, np.ndarray] = {}
-        for col in self.cols:
-            keys = self._keys(train_fold[col])
-            self.tables_[col] = y.groupby(keys).mean()
+        for spec in self.cols:
+            name = _spec_name(spec)
+            keys = _spec_keys(train_fold, spec, self.key_digits)
+            self.tables_[name] = y.groupby(keys).mean()
             vals = np.empty(len(train_fold))
             for tr_i, va_i in splits:
                 inner_y = y.iloc[tr_i]
                 inner_table = inner_y.groupby(keys.iloc[tr_i]).mean()
                 mapped = keys.iloc[va_i].map(inner_table).fillna(inner_y.mean())
                 vals[va_i] = mapped.to_numpy()
-            oof[col] = vals
+            oof[name] = vals
         self.oof_ = pd.DataFrame(oof, index=pd.Index(train_fold[ID], name=ID))
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         # 학습 fold 행(fit 때 저장한 id)은 OOF 값, 그 외(검증 fold, test)는 전체 평균표 값.
         is_fit_row = df[ID].isin(self.oof_.index).to_numpy()
         out: dict[str, pd.Series] = {}
-        for col in self.cols:
-            mapped = self._keys(df[col]).map(self.tables_[col]).fillna(self.global_mean_)
+        for spec in self.cols:
+            name = _spec_name(spec)
+            mapped = _spec_keys(df, spec, self.key_digits).map(self.tables_[name])
+            mapped = mapped.fillna(self.global_mean_)
             if is_fit_row.any():
                 mapped = mapped.copy()
-                mapped.iloc[is_fit_row] = self.oof_[col].loc[df.loc[is_fit_row, ID]].to_numpy()
-            out[f"{col}{self.suffix}"] = mapped
+                mapped.iloc[is_fit_row] = self.oof_[name].loc[df.loc[is_fit_row, ID]].to_numpy()
+            out[f"{name}{self.suffix}"] = mapped
         return pd.DataFrame(out, index=df.index)
 
 

@@ -28,6 +28,8 @@ class FeatureConfig:
     # fold 루프 안에서 fit/transform하는 fold-fit 트랜스포머 목록.
     # 항목은 {kind: ..., 그 외 생성자 인자} 형태로, kind는 features 모듈 레지스트리의 키. (#35)
     fold_fit: list[dict] = field(default_factory=list)
+    # 훈련+테스트 합산 빈도 log1p CE를 추가할 결합 키 목록. 타깃 미참조라 fold-fit이 아니다. (#48, #51)
+    pair_ce: list[list[str]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
