@@ -41,6 +41,10 @@ model:
     learning_rate: 0.05
     num_leaves: 255
     n_estimators: 10000
+    # 재현성 고정(#71): LightGBM이 실행 시점 속도 측정으로 row/col-wise를 골라
+    # 같은 설정도 실행마다 bit이 달라진다. champion run e21d19af는 15개 fold 모델
+    # 전부 row-wise를 골랐으므로 그 실현값으로 고정한다. 수치 영향 없음.
+    force_row_wise: true
   fit:
     early_stopping_rounds: 200
 
