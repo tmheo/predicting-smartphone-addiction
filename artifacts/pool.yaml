@@ -1,0 +1,16 @@
+members:
+- run_id: 4aaddd505ade428588cf83659f205cf6
+  config: exp006_te_drop_gaming
+  oof_auc: 0.9665924316740748
+  seeds: 42,43,44
+  entered_at: '2026-08-11'
+  reason: '후보 풀 창립 구성원: champion exp006_te_drop_gaming의 3시드 평균본'
+  evidence:
+    champion_run_id: 4aaddd505ade428588cf83659f205cf6
+    champion_oof_auc: 0.9665924316740748
+    floor_margin: 0.010000000000000009
+    nearest_run_id: null
+    nearest_spearman: null
+    ensemble_auc_with: null
+    ensemble_auc_without: null
+    contribution: null
