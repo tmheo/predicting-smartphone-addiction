@@ -30,8 +30,9 @@ from .config import FeatureConfig
 from .data import ID, TARGET
 from .features import PLACEBO
 
-# 적용 단계. 지금은 세 단계로 시작하고, 원본 프록시 입력이 필요해지면(#53)
-# external-source 단계를 이 선언에 추가한다.
+# 적용 단계. 원본 프록시 prior(#53)는 별도 단계 대신 row-wise로 들어갔다:
+# 통계표가 해시 고정된 외부 파일에서 학습 전에 확정되므로 행 단위 결정적 매핑이고,
+# 다른 행도 대회 타깃도 보지 않아 fold 분리가 필요 없다.
 DATASET_WIDE = "dataset-wide"  # 훈련+테스트를 함께 보고 컬럼을 만든다.
 ROW_WISE = "row-wise"  # 행 단위 결정적으로 컬럼을 만든다.
 FOLD_FIT = "fold-fit"  # fold 루프 안에서 학습 fold로만 fit한다.
@@ -101,6 +102,7 @@ REGISTRY: dict[str, ProviderKind] = {
     "categorical_copies": ProviderKind(DATASET_WIDE, features.CategoricalCopies),
     "pair_ce": ProviderKind(DATASET_WIDE, features.PairCE),
     "derived": ProviderKind(ROW_WISE, features.DerivedColumns),
+    "original_prior": ProviderKind(ROW_WISE, features.OriginalPriorColumns),
     "target_encoding": ProviderKind(FOLD_FIT, features.ExactValueTargetEncoder),
     "frequency_encoding": ProviderKind(FOLD_FIT, features.FrequencyEncoder),
     "median_impute_aux": ProviderKind(FOLD_FIT, features.MedianImputeAux),

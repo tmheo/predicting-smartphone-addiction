@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
 
-from .data import ID, TARGET, union_categorical
+from .data import ID, TARGET, file_sha256, union_categorical
 
 PLACEBO = "placebo_noise"
 # 플라시보에 입힐 결측 패턴의 원본 열. 결측 없는 잡음은 후보 피처(원본 열의 결측을
@@ -280,6 +280,142 @@ class FrequencyEncoder:
             for col in self.cols
         }
         return pd.DataFrame(out, index=df.index)
+
+
+# 원본 프록시(#47에서 고정한 jayjoshi37 판본 1)의 CSV 해시. 이 해시와 다른 파일로는
+# prior를 만들지 않는다(docs/research/original-proxy-data.md의 재현 경계). (#53)
+ORIGINAL_PROXY_SHA256 = "2194ce1946e8559f26780049c8d972857d8378104f2c9ec25ed9ec35409f1074"
+# 대회 설명변수로 쓰면 안 되는 프록시 전용 열(#47의 사용 경계).
+_PROXY_FORBIDDEN_COLS = {"transaction_id", "user_id", "addiction_level", "addicted_label"}
+_PROXY_LABEL = "addicted_label"
+
+
+def _aligned_keys(s: pd.Series) -> pd.Series:
+    """데이터셋 경계를 넘는 정확값 키. 수치는 float64로 정규화한다.
+
+    같은 frame 안에서만 쓰는 _exact_keys와 달리, 프록시와 대회 데이터처럼 서로 다른
+    CSV에서 읽힌 열을 같은 키 공간으로 보내야 한다. 프록시의 age는 int64, 대회 train의
+    age는 float64로 읽히므로 정규화 없이는 "23"과 "23.0"으로 어긋난다. (#53)
+    """
+    if pd.api.types.is_numeric_dtype(s):
+        s = s.astype("float64")
+    return s.astype(str).where(s.notna(), "__nan__")
+
+
+def _aligned_spec_keys(df: pd.DataFrame, spec: ColumnSpec) -> pd.Series:
+    if isinstance(spec, str):
+        return _aligned_keys(df[spec])
+    keys = _aligned_keys(df[spec[0]])
+    for col in spec[1:]:
+        keys = keys + "|" + _aligned_keys(df[col])
+    return keys
+
+
+class OriginalPriorColumns:
+    """row-wise 제공자: 원본 프록시의 값별 라벨 통계를 새 열로 매핑한다. (#53)
+
+    통계표는 해시가 고정된 프록시 파일만으로 만들고 대회 train 라벨은 읽지 않는다
+    (uses_target=False). 표가 학습 전에 외부 파일로 고정되므로 매핑은 행 단위
+    결정적이고 fold 분리가 필요 없다.
+
+    값별 통계는 m-평활 라벨 평균 p = (n·p_raw + m·g) / (n + m) 기반이다(g는 프록시
+    전체 평균). stats: mean(p), woe(logit(p) - logit(g)), entropy(p의 이진 엔트로피),
+    count(log1p(n)). 프록시에 없는 키(대회 전용 값, 결측)는 unknown이 "nan"이면 NaN,
+    "global"이면 n=0 대입값(g, 0, H(g), 0)을 준다. 새 컬럼 이름은 <spec>_orig_<stat>.
+    """
+
+    uses_target = False
+    STATS = ("mean", "woe", "entropy", "count")
+
+    def __init__(
+        self,
+        path: str,
+        cols: list[ColumnSpec],
+        stats: list[str] = ["mean"],
+        smoothing: float = 20.0,
+        unknown: str = "nan",
+        sha256: str = ORIGINAL_PROXY_SHA256,
+    ) -> None:
+        from pathlib import Path
+
+        unknown_stats = [s for s in stats if s not in self.STATS]
+        if unknown_stats:
+            raise ValueError(f"알 수 없는 stat {unknown_stats}. 지원: {', '.join(self.STATS)}")
+        if unknown not in ("nan", "global"):
+            raise ValueError(f"unknown은 'nan' 또는 'global'이어야 한다(받은 값: {unknown!r})")
+        if smoothing < 0:
+            raise ValueError(f"smoothing은 0 이상이어야 한다(받은 값: {smoothing})")
+        if smoothing == 0 and "woe" in stats:
+            raise ValueError("woe는 평활 없는(p=0/1) 셀에서 발산하므로 smoothing > 0이 필요하다.")
+        self.cols = list(cols)
+        self.stats = list(stats)
+        self.smoothing = float(smoothing)
+        self.unknown = unknown
+
+        actual = file_sha256(Path(path))
+        if actual != sha256:
+            raise ValueError(
+                f"원본 프록시 해시 불일치: {path}\n기대 {sha256}\n실제 {actual}\n"
+                "docs/research/original-proxy-data.md의 재현 절차로 판본 1을 다시 받을 것."
+            )
+        proxy = pd.read_csv(path)
+        used = {c for spec in self.cols for c in ([spec] if isinstance(spec, str) else spec)}
+        forbidden = sorted(used & _PROXY_FORBIDDEN_COLS)
+        if forbidden:
+            raise ValueError(f"프록시 전용 열 {forbidden}은 대회 설명변수로 쓸 수 없다. (#47 경계)")
+        missing = sorted(c for c in used if c not in proxy.columns)
+        if missing:
+            raise ValueError(f"프록시에 없는 열 {missing}. 프록시 열: {sorted(proxy.columns)}")
+
+        label = proxy[_PROXY_LABEL].astype("float64")
+        g = float(label.mean())
+        self._tables: dict[str, dict[str, pd.Series]] = {}
+        self._fills: dict[str, float] = {
+            "mean": g,
+            "woe": 0.0,
+            "entropy": float(_binary_entropy(np.array([g]))[0]),
+            "count": 0.0,
+        }
+        m = self.smoothing
+        for spec in self.cols:
+            keys = _aligned_spec_keys(proxy, spec)
+            n = label.groupby(keys).size().astype("float64")
+            p_raw = label.groupby(keys).mean()
+            p = (n * p_raw + m * g) / (n + m)
+            per_stat = {
+                "mean": p,
+                "count": np.log1p(n),
+                "entropy": pd.Series(_binary_entropy(p.to_numpy()), index=p.index),
+            }
+            if "woe" in self.stats:
+                per_stat["woe"] = np.log(p / (1 - p)) - np.log(g / (1 - g))
+            self._tables[_spec_name(spec)] = {
+                stat: per_stat[stat].astype("float64") for stat in self.stats
+            }
+
+    def columns(self) -> list[str]:
+        return [f"{_spec_name(spec)}_orig_{stat}" for spec in self.cols for stat in self.stats]
+
+    def compute(self, df: pd.DataFrame) -> pd.DataFrame:
+        out: dict[str, pd.Series] = {}
+        for spec in self.cols:
+            name = _spec_name(spec)
+            keys = _aligned_spec_keys(df, spec)
+            for stat in self.stats:
+                mapped = keys.map(self._tables[name][stat])
+                if self.unknown == "global":
+                    mapped = mapped.fillna(self._fills[stat])
+                out[f"{name}_orig_{stat}"] = mapped.astype("float64")
+        return pd.DataFrame(out, index=df.index)
+
+
+def _binary_entropy(p: np.ndarray) -> np.ndarray:
+    """이진 엔트로피. p가 0/1인 셀(평활 0)은 극한값 0을 준다."""
+    out = np.zeros_like(p, dtype="float64")
+    interior = (p > 0) & (p < 1)
+    q = p[interior]
+    out[interior] = -(q * np.log(q) + (1 - q) * np.log(1 - q))
+    return out
 
 
 class MedianImputeAux:

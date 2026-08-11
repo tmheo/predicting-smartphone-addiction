@@ -46,20 +46,46 @@ def make_config(providers: list[dict]) -> FeatureConfig:
     return FeatureConfig(base="raw", categorical=["stress_level"], providers=providers)
 
 
-ALL_KIND_PROVIDERS = [
-    {"kind": "categorical_copies", "cols": ["gaming_hours"]},
-    {"kind": "pair_ce", "pairs": [["gaming_hours", "stress_level"]]},
-    {"kind": "derived", "names": ["other_screen", "screen_slack"]},
-    {"kind": "target_encoding", "inner_folds": 3, "cols": ["gaming_hours", PLACEBO]},
-    {"kind": "frequency_encoding", "cols": ["work_study_hours"]},
-    {"kind": "median_impute_aux", "cols": ["social_media_hours"]},
-]
+def toy_proxy_file(tmp_path: Path) -> tuple[str, str]:
+    """원본 프록시를 흉내 낸 소형 CSV와 그 SHA-256. original_prior 테스트 입력."""
+    import hashlib
+
+    rng = np.random.default_rng(1)
+    proxy = pd.DataFrame(
+        {
+            "gaming_hours": rng.uniform(0, 5, 200).round(1),
+            "stress_level": rng.choice(["low", "mid", "high"], 200),
+            "addicted_label": rng.integers(0, 2, 200),
+        }
+    )
+    path = tmp_path / "toy_proxy.csv"
+    proxy.to_csv(path, index=False)
+    return str(path), hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def test_declared_vs_actual_for_all_registered_kinds():
+def all_kind_providers(proxy_path: str, proxy_sha: str) -> list[dict]:
+    return [
+        {"kind": "categorical_copies", "cols": ["gaming_hours"]},
+        {"kind": "pair_ce", "pairs": [["gaming_hours", "stress_level"]]},
+        {"kind": "derived", "names": ["other_screen", "screen_slack"]},
+        {
+            "kind": "original_prior",
+            "path": proxy_path,
+            "sha256": proxy_sha,
+            "cols": ["gaming_hours", ["gaming_hours", "stress_level"]],
+            "stats": ["mean", "count"],
+        },
+        {"kind": "target_encoding", "inner_folds": 3, "cols": ["gaming_hours", PLACEBO]},
+        {"kind": "frequency_encoding", "cols": ["work_study_hours"]},
+        {"kind": "median_impute_aux", "cols": ["social_media_hours"]},
+    ]
+
+
+def test_declared_vs_actual_for_all_registered_kinds(tmp_path):
     """레지스트리의 모든 kind가 선언한 컬럼을 실제로 산출하고, 최종 행렬이 선언 전체와 같다."""
-    assert {spec["kind"] for spec in ALL_KIND_PROVIDERS} == set(plan_mod.REGISTRY)
-    plan = FeaturePlan.from_config(make_config(ALL_KIND_PROVIDERS))
+    providers = all_kind_providers(*toy_proxy_file(tmp_path))
+    assert {spec["kind"] for spec in providers} == set(plan_mod.REGISTRY)
+    plan = FeaturePlan.from_config(make_config(providers))
     train, test = toy_frames()
     train, test = plan.apply_dataset_wide(train, test)
     assert list(train.columns[-2:]) == ["gaming_hours_cat", "gaming_hours__stress_level_ce"]
@@ -180,14 +206,18 @@ def test_unknown_kind_and_non_raw_base_are_rejected():
         )
 
 
-def test_legacy_configs_are_rejected_and_exp011_loads():
-    """종결 실험 config 16개는 옛 스키마라 명확한 오류로 거부되고, exp011만 적재된다."""
+# #71 이전 스키마로 종결된 실험 config. 역사 기록으로 보존하되 적재는 거부된다.
+LEGACY_CONFIG_NUMBERS = set(range(1, 18)) - {11}
+
+
+def test_legacy_configs_are_rejected_and_current_schema_loads():
+    """종결 실험 config 16개는 옛 스키마라 명확한 오류로 거부되고, 나머지는 적재된다."""
     for path in sorted((REPO / "configs").glob("*.yaml")):
-        if path.name == "exp011_resid_pair.yaml":
-            load_config(path)
-        else:
+        if int(path.name[3:6]) in LEGACY_CONFIG_NUMBERS:
             with pytest.raises(ValueError, match="#71 이전"):
                 load_config(path)
+        else:
+            load_config(path)
 
 
 def test_exp011_declared_columns_golden():
