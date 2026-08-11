@@ -14,3 +14,19 @@ members:
     ensemble_auc_with: null
     ensemble_auc_without: null
     contribution: null
+- run_id: e21d19af37bb461db5dc1a59b66411a6
+  config: exp011_resid_pair
+  oof_auc: 0.9674010717025592
+  seeds: 42,43,44
+  entered_at: '2026-08-11'
+  reason: '이슈 #46: 새 champion exp011_resid_pair의 3시드 평균본. 구 champion과 스피어만 0.99584로
+    중복 아님, 표준 평가 앙상블 기여 +0.00066'
+  evidence:
+    champion_run_id: e21d19af37bb461db5dc1a59b66411a6
+    champion_oof_auc: 0.9674010717025592
+    floor_margin: 0.010000000000000009
+    nearest_run_id: 4aaddd505ade428588cf83659f205cf6
+    nearest_spearman: 0.995837141602973
+    ensemble_auc_with: 0.9672561070687407
+    ensemble_auc_without: 0.9665924316740748
+    contribution: 0.0006636753946658303
