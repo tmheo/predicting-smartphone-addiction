@@ -117,12 +117,13 @@ def run_cv(
                 assert list(X_fold.columns) == feature_names, (
                     f"fold {fold}의 컬럼 집합이 fold 0과 다르다."
                 )
-        model, va_pred = model_mod.train_one_fold(
-            cfg.model, X_fold.loc[tr_idx], y.loc[tr_idx], X_fold.loc[va_idx], y.loc[va_idx], seed
+        adapter = model_mod.create(cfg.model, seed)
+        va_pred = adapter.fit(
+            X_fold.loc[tr_idx], y.loc[tr_idx], X_fold.loc[va_idx], y.loc[va_idx]
         )
         oof_pred[va_idx] = va_pred
-        test_pred += model_mod.predict_test(model, X_test_fold) / n_folds
-        importances.append(model_mod.gain_importance(model).assign(fold=fold, seed=seed))
+        test_pred += adapter.predict(X_test_fold) / n_folds
+        importances.append(adapter.importance().assign(fold=fold, seed=seed))
         if recorder is not None:
             # 실행 중 fold AUC는 해당 시드의 fold 예측 기준. 최종 auc_fold_*는
             # 시드 평균 예측으로 평가 단계에서 다시 채점한다. (#40)

@@ -112,11 +112,10 @@ def quick_run(plan: FeaturePlan, train: pd.DataFrame) -> tuple[float, pd.Series]
     for t in transformers:
         t.fit(train_ff.loc[tr_idx], SEED)
     X_fold = plan.add_fold_fit_columns(X, train_ff)
-    model, va_pred = model_mod.train_one_fold(
-        QUICK_MODEL, X_fold.loc[tr_idx], y.loc[tr_idx], X_fold.loc[va_idx], y.loc[va_idx], SEED
-    )
+    adapter = model_mod.create(QUICK_MODEL, SEED)
+    va_pred = adapter.fit(X_fold.loc[tr_idx], y.loc[tr_idx], X_fold.loc[va_idx], y.loc[va_idx])
     auc = float(roc_auc_score(y.loc[va_idx], va_pred))
-    gain = model_mod.gain_importance(model).set_index("feature")["gain"]
+    gain = adapter.importance().set_index("feature")["gain"]
     return auc, gain
 
 
