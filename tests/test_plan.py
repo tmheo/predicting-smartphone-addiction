@@ -83,6 +83,12 @@ def all_kind_providers(proxy_path: str, proxy_sha: str) -> list[dict]:
             "ks": [1, 3],
         },
         {"kind": "target_encoding", "inner_folds": 3, "cols": ["gaming_hours", PLACEBO]},
+        {
+            "kind": "lattice_pair_te",
+            "cols": ["daily_screen_time_hours", "gaming_hours"],
+            "resolutions": ["floor", "r1"],
+            "inner_folds": 2,
+        },
         {"kind": "frequency_encoding", "cols": ["work_study_hours"]},
         {"kind": "median_impute_aux", "cols": ["social_media_hours"]},
         {

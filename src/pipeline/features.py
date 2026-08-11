@@ -253,6 +253,137 @@ class ExactValueTargetEncoder:
         return pd.DataFrame(out, index=df.index)
 
 
+# 격자 쌍 TE의 셀 해상도 -> 컬럼 이름 접미어 어간. (#75)
+LATTICE_RESOLUTIONS = {"floor": "latf", "r1": "latr1"}
+
+
+class LatticePairTargetEncoder:
+    """fold-fit 제공자: 숫자 쌍 격자 셀 TE와 셀 개수 열의 일괄 블록. (#75)
+
+    cols의 모든 2-조합을 개별 선별 없이 통째로 인코딩한다. 셀 키는 두 컬럼을 해상도로
+    거칠게 만든 값의 결합이다: floor는 정수 내림, r1은 소수 첫째 자리 반올림. 셀별로
+    평활 타깃 평균(<a>__<b>_<res>_te)과 학습 표본 개수(<a>__<b>_<res>_ct)를 함께 내
+    모델이 얇은 셀의 평균을 스스로 불신하게 한다(개수 열이 블록 기제의 일부다).
+
+    학습 fold 행은 내부 층화 K-fold OOF 값(자기 행이 자기 인코딩에 안 들어감),
+    검증 fold와 test 행은 학습 fold 전체 표의 값을 받는다. 평활은 m-평활
+    (n·p + m·g)/(n + m), 미지 셀은 TE가 전체 평균 g, 개수가 0이다.
+    placebo 쌍 카나리아([placebo_noise, cols[0]])는 자동 포함한다(#48 규약).
+
+    출처 구성(szymonkapiski full lattice, docs/research/code-notebook-insights-2.md)을
+    따르되 키 표기는 이 저장소의 정확값 키 규약(__nan__ 결측 버킷, | 결합)을 쓴다.
+    """
+
+    uses_target = True
+
+    def __init__(
+        self,
+        cols: list[str],
+        resolutions: list[str] = ["floor"],
+        inner_folds: int = 4,
+        smoothing: float = 20.0,
+    ) -> None:
+        if len(cols) < 2:
+            raise ValueError(f"격자 쌍에는 컬럼이 2개 이상 필요하다(받은 값: {cols})")
+        if len(set(cols)) != len(cols):
+            raise ValueError(f"cols에 중복이 있다: {cols}")
+        if PLACEBO in cols:
+            raise ValueError(f"{PLACEBO}는 쌍 카나리아로 자동 포함되므로 cols에 넣지 않는다.")
+        unknown = [r for r in resolutions if r not in LATTICE_RESOLUTIONS]
+        if unknown:
+            raise ValueError(
+                f"알 수 없는 해상도 {unknown}. 지원: {', '.join(LATTICE_RESOLUTIONS)}"
+            )
+        if not resolutions or len(set(resolutions)) != len(resolutions):
+            raise ValueError(f"resolutions는 중복 없는 비어 있지 않은 목록이어야 한다: {resolutions}")
+        if inner_folds < 2:
+            raise ValueError(f"inner_folds는 2 이상이어야 한다(받은 값: {inner_folds})")
+        if smoothing <= 0:
+            raise ValueError(f"smoothing은 0보다 커야 한다(받은 값: {smoothing})")
+        self.cols = list(cols)
+        self.resolutions = list(resolutions)
+        self.inner_folds = inner_folds
+        self.smoothing = float(smoothing)
+        # 전 쌍 블록: cols의 모든 2-조합 + placebo 쌍 카나리아. 카나리아는 placebo가
+        # 앞이어야 compare의 카나리아 인식(placebo_noise_ 접두어)에 걸린다.
+        self.pairs: list[tuple[str, str]] = [
+            (a, b) for i, a in enumerate(self.cols) for b in self.cols[i + 1 :]
+        ]
+        self.pairs.append((PLACEBO, self.cols[0]))
+
+    def _stems(self) -> list[tuple[str, tuple[str, str], str]]:
+        return [
+            (f"{a}__{b}_{LATTICE_RESOLUTIONS[res]}", (a, b), res)
+            for res in self.resolutions
+            for a, b in self.pairs
+        ]
+
+    def columns(self) -> list[str]:
+        return [f"{stem}_{kind}" for stem, _, _ in self._stems() for kind in ("te", "ct")]
+
+    def _pair_keys(
+        self,
+        df: pd.DataFrame,
+        pair: tuple[str, str],
+        res: str,
+        cache: dict[tuple[str, str], pd.Series],
+    ) -> pd.Series:
+        def col_keys(col: str) -> pd.Series:
+            if (col, res) not in cache:
+                cache[(col, res)] = (
+                    _exact_keys(np.floor(df[col])) if res == "floor" else _exact_keys(df[col], 1)
+                )
+            return cache[(col, res)]
+
+        return col_keys(pair[0]) + "|" + col_keys(pair[1])
+
+    def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
+        assert train_fold[ID].is_unique, "학습 fold의 id가 유일하지 않다."
+        y = train_fold[TARGET]
+        gm = self.global_mean_ = float(y.mean())
+        m = self.smoothing
+        skf = StratifiedKFold(n_splits=self.inner_folds, shuffle=True, random_state=seed)
+        splits = list(skf.split(train_fold, y))
+        cache: dict[tuple[str, str], pd.Series] = {}
+        self.te_tables_: dict[str, pd.Series] = {}
+        self.ct_tables_: dict[str, pd.Series] = {}
+        oof: dict[str, np.ndarray] = {}
+        for stem, pair, res in self._stems():
+            keys = self._pair_keys(train_fold, pair, res, cache)
+            grp = y.groupby(keys).agg(["sum", "count"])
+            self.te_tables_[stem] = (grp["sum"] + m * gm) / (grp["count"] + m)
+            self.ct_tables_[stem] = grp["count"].astype("float64")
+            te = np.empty(len(train_fold), dtype="float64")
+            ct = np.empty(len(train_fold), dtype="float64")
+            for tr_i, va_i in splits:
+                g = y.iloc[tr_i].groupby(keys.iloc[tr_i]).agg(["sum", "count"])
+                mp = (g["sum"] + m * gm) / (g["count"] + m)
+                va_keys = keys.iloc[va_i]
+                te[va_i] = va_keys.map(mp).fillna(gm).to_numpy()
+                ct[va_i] = va_keys.map(g["count"]).fillna(0.0).to_numpy()
+            oof[f"{stem}_te"] = te
+            oof[f"{stem}_ct"] = ct
+        self.oof_ = pd.DataFrame(oof, index=pd.Index(train_fold[ID], name=ID))
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        # 학습 fold 행(fit 때 저장한 id)은 OOF 값, 그 외(검증 fold, test)는 전체 표 값.
+        is_fit_row = df[ID].isin(self.oof_.index).to_numpy()
+        fit_ids = df.loc[is_fit_row, ID]
+        cache: dict[tuple[str, str], pd.Series] = {}
+        out: dict[str, pd.Series] = {}
+        for stem, pair, res in self._stems():
+            keys = self._pair_keys(df, pair, res, cache)
+            te = keys.map(self.te_tables_[stem]).fillna(self.global_mean_)
+            ct = keys.map(self.ct_tables_[stem]).fillna(0.0)
+            if is_fit_row.any():
+                te, ct = te.copy(), ct.copy()
+                te.iloc[is_fit_row] = self.oof_[f"{stem}_te"].loc[fit_ids].to_numpy()
+                ct.iloc[is_fit_row] = self.oof_[f"{stem}_ct"].loc[fit_ids].to_numpy()
+            out[f"{stem}_te"] = te.astype("float64")
+            out[f"{stem}_ct"] = ct.astype("float64")
+        return pd.DataFrame(out, index=df.index)
+
+
 class FrequencyEncoder:
     """fold-fit 제공자: 정확값 키 빈도 인코딩(CE). (#49)
 

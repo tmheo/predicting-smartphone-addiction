@@ -105,6 +105,7 @@ REGISTRY: dict[str, ProviderKind] = {
     "original_prior": ProviderKind(ROW_WISE, features.OriginalPriorColumns),
     "original_knn": ProviderKind(ROW_WISE, features.OriginalKnnColumns),
     "target_encoding": ProviderKind(FOLD_FIT, features.ExactValueTargetEncoder),
+    "lattice_pair_te": ProviderKind(FOLD_FIT, features.LatticePairTargetEncoder),
     "frequency_encoding": ProviderKind(FOLD_FIT, features.FrequencyEncoder),
     "median_impute_aux": ProviderKind(FOLD_FIT, features.MedianImputeAux),
     "constrained_impute_aux": ProviderKind(FOLD_FIT, features.ConstrainedImputeAux),
