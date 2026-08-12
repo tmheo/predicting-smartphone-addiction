@@ -10,7 +10,7 @@ CV와 같은 방향인지 확인하는 데만 쓴다. 그래서 run_id는 필수
 실수 방지 장치 (#20):
 - git_dirty=True로 기록된 run은 제출 거부. 우회 옵션 없음.
 - 이미 제출된 run(태그 submitted_at 또는 metric public_auc 존재)은 재제출 거부.
-  --force로만 우회한다(일일 5회 한도 낭비 방지).
+  --force로만 우회한다(일일 10회 한도 낭비 방지).
 - 제출 메시지는 run 이름·run_id 앞 8자리·커밋 해시·OOF AUC로 자동 생성한다.
 
 제출 직후 submitted_at 태그를 남기고, 점수가 나오면 metric public_auc를 기록한다.
