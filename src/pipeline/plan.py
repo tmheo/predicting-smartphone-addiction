@@ -104,6 +104,8 @@ REGISTRY: dict[str, ProviderKind] = {
     "derived": ProviderKind(ROW_WISE, features.DerivedColumns),
     "original_prior": ProviderKind(ROW_WISE, features.OriginalPriorColumns),
     "original_knn": ProviderKind(ROW_WISE, features.OriginalKnnColumns),
+    "original_cdf_diff": ProviderKind(ROW_WISE, features.OriginalClassCdfDiff),
+    "original_kde_ratio": ProviderKind(ROW_WISE, features.OriginalKdeLogRatio),
     "target_encoding": ProviderKind(FOLD_FIT, features.ExactValueTargetEncoder),
     "lattice_pair_te": ProviderKind(FOLD_FIT, features.LatticePairTargetEncoder),
     "frequency_encoding": ProviderKind(FOLD_FIT, features.FrequencyEncoder),

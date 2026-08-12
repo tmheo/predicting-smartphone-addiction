@@ -87,6 +87,18 @@ def all_kind_providers(proxy_path: str, proxy_sha: str) -> list[dict]:
             "cols": ["gaming_hours"],
             "ks": [1, 3],
         },
+        {
+            "kind": "original_cdf_diff",
+            "path": proxy_path,
+            "sha256": proxy_sha,
+            "cols": ["gaming_hours"],
+        },
+        {
+            "kind": "original_kde_ratio",
+            "path": proxy_path,
+            "sha256": proxy_sha,
+            "cols": ["gaming_hours"],
+        },
         {"kind": "target_encoding", "inner_folds": 3, "cols": ["gaming_hours", PLACEBO]},
         {
             "kind": "lattice_pair_te",

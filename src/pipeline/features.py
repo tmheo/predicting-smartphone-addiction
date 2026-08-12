@@ -421,6 +421,26 @@ _PROXY_FORBIDDEN_COLS = {"transaction_id", "user_id", "addiction_level", "addict
 _PROXY_LABEL = "addicted_label"
 
 
+def _load_locked_proxy(path: str, sha256: str, used_cols: list[str]) -> pd.DataFrame:
+    """해시 고정 원본 프록시를 읽고 사용 경계(#47)를 검증한다. 원본 계열 제공자 공용."""
+    from pathlib import Path
+
+    actual = file_sha256(Path(path))
+    if actual != sha256:
+        raise ValueError(
+            f"원본 프록시 해시 불일치: {path}\n기대 {sha256}\n실제 {actual}\n"
+            "docs/research/original-proxy-data.md의 재현 절차로 판본 1을 다시 받을 것."
+        )
+    proxy = pd.read_csv(path)
+    forbidden = sorted(set(used_cols) & _PROXY_FORBIDDEN_COLS)
+    if forbidden:
+        raise ValueError(f"프록시 전용 열 {forbidden}은 대회 설명변수로 쓸 수 없다. (#47 경계)")
+    missing = sorted(c for c in used_cols if c not in proxy.columns)
+    if missing:
+        raise ValueError(f"프록시에 없는 열 {missing}. 프록시 열: {sorted(proxy.columns)}")
+    return proxy
+
+
 def _aligned_keys(s: pd.Series) -> pd.Series:
     """데이터셋 경계를 넘는 정확값 키. 수치는 float64로 정규화한다.
 
@@ -467,8 +487,6 @@ class OriginalPriorColumns:
         unknown: str = "nan",
         sha256: str = ORIGINAL_PROXY_SHA256,
     ) -> None:
-        from pathlib import Path
-
         unknown_stats = [s for s in stats if s not in self.STATS]
         if unknown_stats:
             raise ValueError(f"알 수 없는 stat {unknown_stats}. 지원: {', '.join(self.STATS)}")
@@ -483,20 +501,8 @@ class OriginalPriorColumns:
         self.smoothing = float(smoothing)
         self.unknown = unknown
 
-        actual = file_sha256(Path(path))
-        if actual != sha256:
-            raise ValueError(
-                f"원본 프록시 해시 불일치: {path}\n기대 {sha256}\n실제 {actual}\n"
-                "docs/research/original-proxy-data.md의 재현 절차로 판본 1을 다시 받을 것."
-            )
-        proxy = pd.read_csv(path)
-        used = {c for spec in self.cols for c in ([spec] if isinstance(spec, str) else spec)}
-        forbidden = sorted(used & _PROXY_FORBIDDEN_COLS)
-        if forbidden:
-            raise ValueError(f"프록시 전용 열 {forbidden}은 대회 설명변수로 쓸 수 없다. (#47 경계)")
-        missing = sorted(c for c in used if c not in proxy.columns)
-        if missing:
-            raise ValueError(f"프록시에 없는 열 {missing}. 프록시 열: {sorted(proxy.columns)}")
+        used = sorted({c for spec in self.cols for c in ([spec] if isinstance(spec, str) else spec)})
+        proxy = _load_locked_proxy(path, sha256, used)
 
         label = proxy[_PROXY_LABEL].astype("float64")
         g = float(label.mean())
@@ -572,8 +578,6 @@ class OriginalKnnColumns:
         ks: list[int] = [1],
         sha256: str = ORIGINAL_PROXY_SHA256,
     ) -> None:
-        from pathlib import Path
-
         if not ks or any(not isinstance(k, int) or k < 1 for k in ks):
             raise ValueError(f"ks는 1 이상의 정수 목록이어야 한다(받은 값: {ks})")
         if len(set(ks)) != len(ks):
@@ -581,19 +585,7 @@ class OriginalKnnColumns:
         self.cols = list(cols)
         self.ks = list(ks)
 
-        actual = file_sha256(Path(path))
-        if actual != sha256:
-            raise ValueError(
-                f"원본 프록시 해시 불일치: {path}\n기대 {sha256}\n실제 {actual}\n"
-                "docs/research/original-proxy-data.md의 재현 절차로 판본 1을 다시 받을 것."
-            )
-        proxy = pd.read_csv(path)
-        forbidden = sorted(set(self.cols) & _PROXY_FORBIDDEN_COLS)
-        if forbidden:
-            raise ValueError(f"프록시 전용 열 {forbidden}은 대회 설명변수로 쓸 수 없다. (#47 경계)")
-        missing = sorted(c for c in self.cols if c not in proxy.columns)
-        if missing:
-            raise ValueError(f"프록시에 없는 열 {missing}. 프록시 열: {sorted(proxy.columns)}")
+        proxy = _load_locked_proxy(path, sha256, self.cols)
         non_numeric = [c for c in self.cols if not pd.api.types.is_numeric_dtype(proxy[c])]
         if non_numeric:
             raise ValueError(f"거리는 수치 열 전용이다. 수치가 아닌 열: {non_numeric}")
@@ -641,6 +633,147 @@ class OriginalKnnColumns:
         result = pd.DataFrame(out, index=df.index).astype("float64")
         result.loc[no_numeric] = np.nan
         return result[self.columns()]
+
+
+def _class_values(proxy: pd.DataFrame, col: str) -> dict[int, np.ndarray]:
+    """프록시 열의 클래스별 관측값(결측 제거). 클래스가 비면 참조 분포가 정의 불가라 거부."""
+    label = proxy[_PROXY_LABEL].astype("int64")
+    out: dict[int, np.ndarray] = {}
+    for cls in (0, 1):
+        vals = proxy.loc[label == cls, col].dropna().to_numpy(dtype="float64")
+        if len(vals) == 0:
+            raise ValueError(f"프록시 열 {col}의 클래스 {cls}에 관측값이 없어 참조 분포를 만들 수 없다.")
+        out[cls] = vals
+    return out
+
+
+class OriginalClassCdfDiff:
+    """row-wise 제공자: 원본 프록시의 클래스별 경험적 CDF 차 F0(x) - F1(x). (#84가 연 #87)
+
+    kodaifukuda 레시피(docs/research/original-distribution-coordinate-recipe.md)의
+    클래스별 누적분포 차 재현이다. 열마다 프록시의 클래스 0/1 관측값으로 우측 포함
+    경험적 CDF를 만들고, 대회 값 x에 F0(x) - F1(x)를 준다. 입력 결측은 NaN 유지.
+
+    레시피의 중복 제거(대회 train 해시 일치 행과 프록시 내부 중복 제거)는 고정
+    프록시에서 제거 0행으로 검증됐으므로(#84) 다시 수행하지 않는다. 해시 고정이
+    다른 파일을 거부하니 이 생략은 결과 동일성을 바꾸지 않고, 제공자는 대회
+    train을 읽지 않는 행 단위 결정적 매핑으로 남는다(#53과 같은 row-wise 근거).
+    새 컬럼 이름은 <col>_orig_cdf_diff.
+    """
+
+    uses_target = False
+
+    def __init__(
+        self,
+        path: str,
+        cols: list[str],
+        sha256: str = ORIGINAL_PROXY_SHA256,
+    ) -> None:
+        self.cols = list(cols)
+        proxy = _load_locked_proxy(path, sha256, self.cols)
+        non_numeric = [c for c in self.cols if not pd.api.types.is_numeric_dtype(proxy[c])]
+        if non_numeric:
+            raise ValueError(f"경험적 CDF는 수치 열 전용이다. 수치가 아닌 열: {non_numeric}")
+        self._refs: dict[str, dict[int, np.ndarray]] = {
+            col: {cls: np.sort(vals) for cls, vals in _class_values(proxy, col).items()}
+            for col in self.cols
+        }
+
+    def columns(self) -> list[str]:
+        return [f"{col}_orig_cdf_diff" for col in self.cols]
+
+    def compute(self, df: pd.DataFrame) -> pd.DataFrame:
+        out: dict[str, pd.Series] = {}
+        for col in self.cols:
+            x = df[col].to_numpy(dtype="float64")
+            observed = ~np.isnan(x)
+            vals = np.full(len(df), np.nan)
+            refs = self._refs[col]
+            # 우측 포함 CDF: F(x) = #{ref <= x} / n. (레시피의 side="right")
+            f0 = np.searchsorted(refs[0], x[observed], side="right") / len(refs[0])
+            f1 = np.searchsorted(refs[1], x[observed], side="right") / len(refs[1])
+            vals[observed] = f0 - f1
+            out[f"{col}_orig_cdf_diff"] = pd.Series(vals, index=df.index, dtype="float64")
+        return pd.DataFrame(out, index=df.index)
+
+
+# KDE 대역폭 규칙(레시피 그대로): Silverman 0.9·scale·n^(-1/5)를 [0.10, 1.00]으로
+# 자르고, 관측값이 둘보다 적으면(또는 scale이 전부 0이면) 0.30을 쓴다.
+_KDE_BW_CLIP = (0.10, 1.00)
+_KDE_BW_FALLBACK = 0.30
+_KDE_LLR_CLIP = 20.0
+
+
+def _silverman_bandwidth(vals: np.ndarray) -> float:
+    if len(vals) < 2:
+        return _KDE_BW_FALLBACK
+    # 골든 대역폭 검산(#84) 결과 클래스 내 scale은 표본 표준편차(ddof=1) 기준이다.
+    std = float(vals.std(ddof=1))
+    iqr = float(np.subtract(*np.percentile(vals, [75, 25])))
+    candidates = [s for s in (std, iqr / 1.34) if np.isfinite(s) and s > 0]
+    if not candidates:
+        return _KDE_BW_FALLBACK
+    return float(np.clip(0.9 * min(candidates) * len(vals) ** (-1 / 5), *_KDE_BW_CLIP))
+
+
+class OriginalKdeLogRatio:
+    """row-wise 제공자: 원본 프록시의 클래스별 1차원 가우시안 KDE 로그밀도비. (#84가 연 #87)
+
+    kodaifukuda 레시피의 커널 밀도 로그우도비 재현이다. 열을 프록시 전체의 평균과
+    모집단 표준편차(ddof=0)로 표준화하고, 클래스별 Silverman 대역폭의 가우시안
+    KernelDensity를 맞춘 뒤 log p(x|1) - log p(x|0)를 [-20, 20]으로 잘라 준다.
+    입력 결측은 NaN 유지. 중복 제거 생략 근거는 OriginalClassCdfDiff와 같다.
+    새 컬럼 이름은 <col>_orig_kde_lr.
+    """
+
+    uses_target = False
+
+    def __init__(
+        self,
+        path: str,
+        cols: list[str],
+        sha256: str = ORIGINAL_PROXY_SHA256,
+    ) -> None:
+        from sklearn.neighbors import KernelDensity
+
+        self.cols = list(cols)
+        proxy = _load_locked_proxy(path, sha256, self.cols)
+        non_numeric = [c for c in self.cols if not pd.api.types.is_numeric_dtype(proxy[c])]
+        if non_numeric:
+            raise ValueError(f"KDE는 수치 열 전용이다. 수치가 아닌 열: {non_numeric}")
+        self._standardize: dict[str, tuple[float, float]] = {}
+        self._kdes: dict[str, dict[int, KernelDensity]] = {}
+        for col in self.cols:
+            full = proxy[col].dropna().to_numpy(dtype="float64")
+            mu, sd = float(full.mean()), float(full.std(ddof=0))
+            if sd == 0 or not np.isfinite(sd):
+                raise ValueError(f"프록시 열 {col}의 표준편차가 0이거나 정의되지 않아 표준화할 수 없다.")
+            self._standardize[col] = (mu, sd)
+            self._kdes[col] = {}
+            for cls, vals in _class_values(proxy, col).items():
+                z = (vals - mu) / sd
+                kde = KernelDensity(kernel="gaussian", bandwidth=_silverman_bandwidth(z))
+                kde.fit(z.reshape(-1, 1))
+                self._kdes[col][cls] = kde
+
+    def columns(self) -> list[str]:
+        return [f"{col}_orig_kde_lr" for col in self.cols]
+
+    def compute(self, df: pd.DataFrame) -> pd.DataFrame:
+        out: dict[str, pd.Series] = {}
+        for col in self.cols:
+            mu, sd = self._standardize[col]
+            x = df[col].to_numpy(dtype="float64")
+            vals = np.full(len(df), np.nan)
+            # 값 격자가 성기므로 고유값에서만 채점해 행으로 되돌린다(결과는 행별 채점과 동일).
+            unique, inverse = np.unique(x[~np.isnan(x)], return_inverse=True)
+            if len(unique):
+                z = ((unique - mu) / sd).reshape(-1, 1)
+                llr = self._kdes[col][1].score_samples(z) - self._kdes[col][0].score_samples(z)
+                llr = np.clip(llr, -_KDE_LLR_CLIP, _KDE_LLR_CLIP)
+                vals[~np.isnan(x)] = llr[inverse]
+            out[f"{col}_orig_kde_lr"] = pd.Series(vals, index=df.index, dtype="float64")
+        return pd.DataFrame(out, index=df.index)
 
 
 class ConstrainedImputeAux:
