@@ -846,6 +846,96 @@ class ConstrainedImputeAux:
         return pd.DataFrame(out, index=df.index)[self.columns()]
 
 
+# tomasa2 노트북이 공개한 조건부 복원기의 모형 설정. 레시피 재현이 목적이라 상수로 둔다.
+# (docs/research/kaggle-synthetic-forensics-increment.md, enable_categorical은 fit에서 상시 켠다)
+XGB_IMPUTE_PARAMS = {
+    "n_estimators": 400,
+    "learning_rate": 0.08,
+    "max_depth": 6,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "min_child_weight": 20,
+    "tree_method": "hist",
+}
+
+
+class XgbImputeAux:
+    """fold-fit 제공자: 각 결측 수치 열을 나머지 열로 예측한 XGBoost 조건부 복원 열. (#86)
+
+    tomasa2 레시피(docs/research/kaggle-synthetic-forensics-increment.md)를 이 저장소의
+    fold 규율로 옮긴 것이다. 열마다 XGBRegressor를 학습 fold에서 그 열이 관측된 행으로만
+    fit하고(예측 입력은 나머지 수치 열과 범주 열, 타깃 미사용), 결측 셀에만 예측값을 채운
+    <col>_xgb_recon 열을 준다. 관측 셀은 원시 값 그대로다(원시 열 대체와 별도 결측 표시
+    열은 지도의 배제 경계). 수치 예측 입력의 NaN은 XGBoost native 결측 처리에 맡긴다.
+
+    원 레시피는 train+test 결합 피처로 복원기를 맞추지만(전이 학습), 그 변형은 훈련 부분
+    전용인 이 판정이 통과한 뒤에만 별도로 비교한다(#86의 단계 조건). 제약 결측 재구성
+    (constrained_impute_aux)과 별개 계열이므로 산술 경계 클리핑은 하지 않는다.
+    """
+
+    uses_target = False
+
+    def __init__(self, cols: list[str], cat_cols: list[str] = []) -> None:
+        forbidden = {ID, TARGET, PLACEBO} & (set(cols) | set(cat_cols))
+        if forbidden:
+            raise ValueError(f"복원 대상과 예측 입력에 쓸 수 없는 열: {sorted(forbidden)}")
+        if len(set(cols)) != len(cols):
+            raise ValueError(f"cols에 중복이 있다: {cols}")
+        if len(set(cat_cols)) != len(cat_cols):
+            raise ValueError(f"cat_cols에 중복이 있다: {cat_cols}")
+        overlap = set(cols) & set(cat_cols)
+        if overlap:
+            raise ValueError(f"cols와 cat_cols가 겹친다: {sorted(overlap)}")
+        if len(cols) - 1 + len(cat_cols) < 1:
+            raise ValueError("복원 대상 열마다 예측 입력이 하나 이상 필요하다(cols 2개 이상 또는 cat_cols).")
+        self.cols = list(cols)
+        self.cat_cols = list(cat_cols)
+
+    def columns(self) -> list[str]:
+        return [f"{c}_xgb_recon" for c in self.cols]
+
+    def _predictors(self, target_col: str) -> list[str]:
+        return [c for c in self.cols if c != target_col] + self.cat_cols
+
+    def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
+        from xgboost import XGBRegressor
+
+        non_numeric = [c for c in self.cols if not pd.api.types.is_numeric_dtype(train_fold[c])]
+        if non_numeric:
+            raise ValueError(f"조건부 복원은 수치 열 전용이다. 수치가 아닌 열: {non_numeric}")
+        bad_cat = [
+            c
+            for c in self.cat_cols
+            if not isinstance(train_fold[c].dtype, pd.CategoricalDtype)
+        ]
+        if bad_cat:
+            raise ValueError(
+                f"cat_cols는 category dtype이어야 한다(코드 정렬을 align_categories가 보장): {bad_cat}"
+            )
+        self.models_: dict[str, XGBRegressor] = {}
+        for c in self.cols:
+            observed = train_fold[c].notna()
+            if not observed.any():
+                raise ValueError(f"학습 fold에서 {c}의 관측 행이 없어 복원기를 만들 수 없다.")
+            model = XGBRegressor(
+                **XGB_IMPUTE_PARAMS, enable_categorical=True, random_state=seed
+            )
+            model.fit(
+                train_fold.loc[observed, self._predictors(c)], train_fold.loc[observed, c]
+            )
+            self.models_[c] = model
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        out: dict[str, pd.Series] = {}
+        for c in self.cols:
+            rec = df[c].astype("float64").copy()
+            m = rec.isna()
+            if m.any():
+                rec[m] = self.models_[c].predict(df.loc[m, self._predictors(c)]).astype("float64")
+            out[f"{c}_xgb_recon"] = rec
+        return pd.DataFrame(out, index=df.index)[self.columns()]
+
+
 class MedianImputeAux:
     """fold-fit 제공자: 원시 NaN 열을 유지한 채 중앙값 대체본을 보조 열로 추가한다. (#49)
 

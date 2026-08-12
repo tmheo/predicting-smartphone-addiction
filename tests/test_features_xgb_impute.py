@@ -1,0 +1,138 @@
+"""XGBoost 조건부 결측 복원 제공자 테스트. (#86)
+
+- 적재 거부: 금지 열(id, 타깃, 플라시보), 중복, cols/cat_cols 겹침, 예측 입력이 비는 구성.
+- fit 거부: 수치가 아닌 복원 대상, category dtype이 아닌 cat_cols, 관측 행 없는 열.
+- 관측 셀은 원시 값 그대로, 결측 셀만 복원값(기록 대역으로 검증).
+- 복원기는 대상 열이 관측된 행으로만 fit하고 예측 입력에서 대상 열 자신은 뺀다.
+- 실데이터 성질: 같은 seed는 같은 산출(결정성), 산출은 전 셀 비결측 float64.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+import pytest
+
+from pipeline.data import ID, TARGET
+from pipeline.features import PLACEBO, XgbImputeAux
+
+COLS = ["daily_screen_time_hours", "sleep_hours"]
+CATS = ["stress_level"]
+
+
+def make_df(n: int = 90) -> pd.DataFrame:
+    rng = np.random.default_rng(0)
+    df = pd.DataFrame(
+        {
+            "daily_screen_time_hours": rng.uniform(1, 10, n).round(1),
+            "sleep_hours": rng.uniform(4, 9, n).round(1),
+            "stress_level": pd.Categorical(rng.choice(["low", "mid", "high"], n)),
+        }
+    )
+    df.loc[::5, "daily_screen_time_hours"] = np.nan
+    df.loc[1::7, "sleep_hours"] = np.nan
+    return df
+
+
+class RecordingRegressor:
+    """fit/predict 입력을 기록하고 상수를 돌려주는 대역."""
+
+    instances: list["RecordingRegressor"] = []
+
+    def __init__(self, **params) -> None:
+        self.params = params
+        self.fit_X: pd.DataFrame | None = None
+        self.fit_y: pd.Series | None = None
+        RecordingRegressor.instances.append(self)
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
+        self.fit_X, self.fit_y = X, y
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        return np.full(len(X), 7.0)
+
+
+@pytest.fixture
+def recording(monkeypatch) -> type[RecordingRegressor]:
+    RecordingRegressor.instances = []
+    monkeypatch.setattr("xgboost.XGBRegressor", RecordingRegressor)
+    return RecordingRegressor
+
+
+@pytest.mark.parametrize(
+    "kwargs, match",
+    [
+        ({"cols": [ID, *COLS]}, "쓸 수 없는 열"),
+        ({"cols": COLS, "cat_cols": [TARGET]}, "쓸 수 없는 열"),
+        ({"cols": [PLACEBO, *COLS]}, "쓸 수 없는 열"),
+        ({"cols": [*COLS, COLS[0]]}, "중복"),
+        ({"cols": COLS, "cat_cols": [*CATS, *CATS]}, "중복"),
+        ({"cols": COLS, "cat_cols": [COLS[0]]}, "겹친다"),
+        ({"cols": [COLS[0]]}, "예측 입력이 하나 이상"),
+    ],
+)
+def test_init_rejections(kwargs, match):
+    with pytest.raises(ValueError, match=match):
+        XgbImputeAux(**kwargs)
+
+
+def test_single_col_with_cat_predictor_is_allowed():
+    provider = XgbImputeAux(cols=[COLS[0]], cat_cols=CATS)
+    assert provider.columns() == [f"{COLS[0]}_xgb_recon"]
+
+
+def test_fit_rejects_non_numeric_target_and_non_category_cat(recording):
+    df = make_df()
+    df["stress_str"] = df["stress_level"].astype(str)
+    with pytest.raises(ValueError, match="수치 열 전용"):
+        XgbImputeAux(cols=["stress_str", *COLS]).fit(df, seed=42)
+    with pytest.raises(ValueError, match="category dtype"):
+        XgbImputeAux(cols=COLS, cat_cols=["stress_str"]).fit(df, seed=42)
+
+
+def test_fit_rejects_column_without_observed_rows(recording):
+    df = make_df()
+    df["daily_screen_time_hours"] = np.nan
+    with pytest.raises(ValueError, match="관측 행이 없어"):
+        XgbImputeAux(cols=COLS, cat_cols=CATS).fit(df, seed=42)
+
+
+def test_fit_uses_only_observed_rows_and_excludes_target_column(recording):
+    df = make_df()
+    provider = XgbImputeAux(cols=COLS, cat_cols=CATS)
+    provider.fit(df, seed=42)
+    assert len(recording.instances) == len(COLS)
+    for col, model in zip(COLS, recording.instances):
+        assert model.params["random_state"] == 42
+        assert model.params["enable_categorical"] is True
+        assert not model.fit_y.isna().any()  # 대상 열 관측 행 전용
+        assert len(model.fit_y) == df[col].notna().sum()
+        expected = [c for c in COLS if c != col] + CATS
+        assert list(model.fit_X.columns) == expected  # 대상 열 자신은 예측 입력에서 뺀다
+
+
+def test_observed_cells_keep_raw_and_missing_cells_get_predictions(recording):
+    df = make_df()
+    provider = XgbImputeAux(cols=COLS, cat_cols=CATS)
+    provider.fit(df, seed=42)
+    out = provider.transform(df)
+    assert list(out.columns) == provider.columns()
+    for col in COLS:
+        observed = df[col].notna()
+        rec = out[f"{col}_xgb_recon"]
+        assert (rec[observed] == df.loc[observed, col]).all()
+        assert (rec[~observed] == 7.0).all()  # 결측 셀만 복원값
+        assert rec.dtype == "float64"
+
+
+def test_fit_transform_is_deterministic_per_seed():
+    df = make_df()
+
+    def run() -> pd.DataFrame:
+        provider = XgbImputeAux(cols=COLS, cat_cols=CATS)
+        provider.fit(df, seed=42)
+        return provider.transform(df)
+
+    first, second = run(), run()
+    pd.testing.assert_frame_equal(first, second)
+    assert first.notna().all().all()

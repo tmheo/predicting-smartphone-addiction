@@ -118,6 +118,10 @@ def all_kind_providers(proxy_path: str, proxy_sha: str) -> list[dict]:
             ],
             "max_iter": 5,
         },
+        {
+            "kind": "xgb_impute_aux",
+            "cols": ["daily_screen_time_hours", "social_media_hours"],
+        },
     ]
 
 
