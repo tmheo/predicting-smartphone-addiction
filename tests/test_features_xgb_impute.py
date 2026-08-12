@@ -5,6 +5,7 @@
 - 관측 셀은 원시 값 그대로, 결측 셀만 복원값(기록 대역으로 검증).
 - 복원기는 대상 열이 관측된 행으로만 fit하고 예측 입력에서 대상 열 자신은 뺀다.
 - 실데이터 성질: 같은 seed는 같은 산출(결정성), 산출은 전 셀 비결측 float64.
+- compositions(#90): 이름·입력 열 검증, 복원 행렬 위 식 계산, emit 복원 열 값 불변.
 """
 
 from __future__ import annotations
@@ -72,6 +73,13 @@ def recording(monkeypatch) -> type[RecordingRegressor]:
         ({"cols": COLS, "emit": ["age"]}, "cols에 없는 열"),
         ({"cols": COLS, "emit": []}, "비어 있지 않은 목록"),
         ({"cols": COLS, "emit": [COLS[0], COLS[0]]}, "비어 있지 않은 목록"),
+        ({"cols": COLS, "compositions": ["nope"]}, "알 수 없는 composition"),
+        ({"cols": COLS, "compositions": []}, "비어 있지 않은 목록"),
+        (
+            {"cols": COLS, "compositions": ["awake_screen_frac", "awake_screen_frac"]},
+            "비어 있지 않은 목록",
+        ),
+        ({"cols": COLS, "compositions": ["resid"]}, "cols에 없다"),
     ],
 )
 def test_init_rejections(kwargs, match):
@@ -207,6 +215,39 @@ def test_transductive_rejects_unseen_category_values(recording, tmp_path):
     )
     with pytest.raises(ValueError, match="train에 없는 값"):
         provider.fit(df, seed=42)
+
+
+def test_composition_columns_computed_on_recon_matrix(recording):
+    df = make_df()
+    provider = XgbImputeAux(
+        cols=COLS, cat_cols=CATS, emit=[COLS[0]], compositions=["awake_screen_frac"]
+    )
+    provider.fit(df, seed=42)
+    out = provider.transform(df)
+    # emit 복원 열 다음에 조성 열. sleep은 emit에 없어도 조성 입력이라 복원기를 만든다.
+    assert list(out.columns) == [f"{COLS[0]}_xgb_recon", "imp_awake_screen_frac"]
+    assert len(recording.instances) == 2
+    recon = {c: df[c].astype("float64").fillna(7.0) for c in COLS}
+    expected = recon["daily_screen_time_hours"] / (24 - recon["sleep_hours"])
+    pd.testing.assert_series_equal(
+        out["imp_awake_screen_frac"], expected, check_names=False
+    )
+    assert out["imp_awake_screen_frac"].dtype == "float64"
+
+
+def test_emitted_recon_values_are_unchanged_by_compositions():
+    # 조성이 sleep 복원기를 추가해도 열마다 독립 fit이므로 emit 복원 열 값은 같아야 한다.
+    # (#86 채택 열의 보존 근거, #90)
+    df = make_df()
+    plain = XgbImputeAux(cols=COLS, cat_cols=CATS, emit=[COLS[0]])
+    plain.fit(df, seed=42)
+    with_comp = XgbImputeAux(
+        cols=COLS, cat_cols=CATS, emit=[COLS[0]], compositions=["awake_screen_frac"]
+    )
+    with_comp.fit(df, seed=42)
+    pd.testing.assert_frame_equal(
+        plain.transform(df), with_comp.transform(df)[plain.columns()]
+    )
 
 
 def test_fit_transform_is_deterministic_per_seed():

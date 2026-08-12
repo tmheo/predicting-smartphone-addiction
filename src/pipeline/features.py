@@ -858,6 +858,46 @@ XGB_IMPUTE_PARAMS = {
     "tree_method": "hist",
 }
 
+_IMP_D = "daily_screen_time_hours"
+_IMP_S = "social_media_hours"
+_IMP_G = "gaming_hours"
+_IMP_W = "work_study_hours"
+_IMP_WK = "weekend_screen_time"
+_IMP_SL = "sleep_hours"
+_IMP_N = "notifications_per_day"
+_IMP_O = "app_opens_per_day"
+
+# tomasa2 노트북 fe()의 조성 피처. 복원 행렬(관측 원시 값 + 결측 복원값) 위에서 계산하며,
+# 이름과 식은 공개 소스 재현 범위로 한정한다(#90 결정 경계). name -> (필요 열, 계산식).
+XGB_IMPUTE_COMPOSITIONS: dict[
+    str, tuple[list[str], Callable[[pd.DataFrame], pd.Series]]
+] = {
+    "resid": (
+        [_IMP_D, _IMP_S, _IMP_G, _IMP_W],
+        lambda r: r[_IMP_D] - (r[_IMP_S] + r[_IMP_G] + r[_IMP_W]),
+    ),
+    "leisure": ([_IMP_D, _IMP_W], lambda r: r[_IMP_D] - r[_IMP_W]),
+    "social_frac": ([_IMP_S, _IMP_D], lambda r: r[_IMP_S] / r[_IMP_D]),
+    "work_frac": ([_IMP_W, _IMP_D], lambda r: r[_IMP_W] / r[_IMP_D]),
+    "leisure_frac": (
+        [_IMP_D, _IMP_W],
+        lambda r: (r[_IMP_D] - r[_IMP_W]) / r[_IMP_D],
+    ),
+    "resid_frac": (
+        [_IMP_D, _IMP_S, _IMP_G, _IMP_W],
+        lambda r: (r[_IMP_D] - (r[_IMP_S] + r[_IMP_G] + r[_IMP_W])) / r[_IMP_D],
+    ),
+    "wk_ratio": ([_IMP_WK, _IMP_D], lambda r: r[_IMP_WK] / r[_IMP_D]),
+    "week_total": ([_IMP_D, _IMP_WK], lambda r: 5 * r[_IMP_D] + 2 * r[_IMP_WK]),
+    "awake_screen_frac": ([_IMP_D, _IMP_SL], lambda r: r[_IMP_D] / (24 - r[_IMP_SL])),
+    "free_time": (
+        [_IMP_SL, _IMP_D, _IMP_W],
+        lambda r: 24 - r[_IMP_SL] - r[_IMP_D] - r[_IMP_W],
+    ),
+    "notif_per_open": ([_IMP_N, _IMP_O], lambda r: r[_IMP_N] / r[_IMP_O]),
+    "min_per_open": ([_IMP_D, _IMP_O], lambda r: r[_IMP_D] * 60 / r[_IMP_O]),
+}
+
 
 class XgbImputeAux:
     """fold-fit 제공자: 각 결측 수치 열을 나머지 열로 예측한 XGBoost 조건부 복원 열. (#86)
@@ -877,8 +917,13 @@ class XgbImputeAux:
 
     emit은 실제로 복원 열을 내보낼 cols의 부분집합이다(기본은 전부). 일부 복원 열이
     게이트 미달로 빠져도 예측 입력은 cols 전체로 유지되므로, 남는 복원 열의 모델
-    입력이 전체 구성과 완전히 같아 같은 seed에서 같은 복원값이 보존된다. 내보내지
-    않는 열의 복원기는 만들지 않는다.
+    입력이 전체 구성과 완전히 같아 같은 seed에서 같은 복원값이 보존된다. 복원기는
+    emit 열과 compositions가 요구하는 열에만 만든다.
+
+    compositions는 복원 행렬 위에서 계산하는 tomasa2 조성 피처(XGB_IMPUTE_COMPOSITIONS)
+    의 부분집합이다(#90). 열 이름은 imp_<name>. 조성이 요구하는 열의 복원기는 emit에
+    없어도 추가로 만들지만, 열마다 독립으로 fit하므로 emit 복원 열의 값은 조성 유무와
+    무관하게 같다(#86 채택 열의 보존 근거).
     """
 
     uses_target = False
@@ -888,6 +933,7 @@ class XgbImputeAux:
         cols: list[str],
         cat_cols: list[str] = [],
         emit: list[str] | None = None,
+        compositions: list[str] | None = None,
         transductive_test_path: str | None = None,
         transductive_test_sha256: str | None = None,
     ) -> None:
@@ -933,9 +979,39 @@ class XgbImputeAux:
             if len(set(emit)) != len(emit) or not emit:
                 raise ValueError(f"emit은 중복 없는 비어 있지 않은 목록이어야 한다: {emit}")
             self.emit = list(emit)
+        if compositions is None:
+            self.compositions: list[str] = []
+        else:
+            unknown = sorted(set(compositions) - set(XGB_IMPUTE_COMPOSITIONS))
+            if unknown:
+                raise ValueError(
+                    f"알 수 없는 composition: {unknown}. "
+                    f"등록된 이름: {', '.join(XGB_IMPUTE_COMPOSITIONS)}"
+                )
+            if len(set(compositions)) != len(compositions) or not compositions:
+                raise ValueError(
+                    f"compositions는 중복 없는 비어 있지 않은 목록이어야 한다: {compositions}"
+                )
+            need = {
+                c for name in compositions for c in XGB_IMPUTE_COMPOSITIONS[name][0]
+            }
+            outside = sorted(need - set(cols))
+            if outside:
+                raise ValueError(
+                    f"compositions가 요구하는 열 {outside}이 cols에 없다. "
+                    "조성은 복원 행렬 위에서만 계산한다."
+                )
+            self.compositions = list(compositions)
+        comp_need = {
+            c for name in self.compositions for c in XGB_IMPUTE_COMPOSITIONS[name][0]
+        }
+        # 복원기를 만들 열. cols 순서를 유지해 fit 순서가 결정적이다.
+        self._recon_cols = [c for c in self.cols if c in ({*self.emit} | comp_need)]
 
     def columns(self) -> list[str]:
-        return [f"{c}_xgb_recon" for c in self.emit]
+        return [f"{c}_xgb_recon" for c in self.emit] + [
+            f"imp_{name}" for name in self.compositions
+        ]
 
     def _predictors(self, target_col: str) -> list[str]:
         return [c for c in self.cols if c != target_col] + self.cat_cols
@@ -971,7 +1047,7 @@ class XgbImputeAux:
                 [train_fold[[*self.cols, *self.cat_cols]], test], ignore_index=True
             )
         self.models_: dict[str, XGBRegressor] = {}
-        for c in self.emit:
+        for c in self._recon_cols:
             observed = fit_df[c].notna()
             if not observed.any():
                 raise ValueError(f"학습 fold에서 {c}의 관측 행이 없어 복원기를 만들 수 없다.")
@@ -984,13 +1060,16 @@ class XgbImputeAux:
             self.models_[c] = model
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
-        out: dict[str, pd.Series] = {}
-        for c in self.emit:
+        recon = pd.DataFrame(index=df.index)
+        for c in self._recon_cols:
             rec = df[c].astype("float64").copy()
             m = rec.isna()
             if m.any():
                 rec[m] = self.models_[c].predict(df.loc[m, self._predictors(c)]).astype("float64")
-            out[f"{c}_xgb_recon"] = rec
+            recon[c] = rec
+        out: dict[str, pd.Series] = {f"{c}_xgb_recon": recon[c] for c in self.emit}
+        for name in self.compositions:
+            out[f"imp_{name}"] = XGB_IMPUTE_COMPOSITIONS[name][1](recon).astype("float64")
         return pd.DataFrame(out, index=df.index)[self.columns()]
 
 
