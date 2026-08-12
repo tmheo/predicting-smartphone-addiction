@@ -309,6 +309,31 @@ wheels = [
 ]
 
 [[package]]
+name = "catboost"
+version = "1.2.10"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "graphviz" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "plotly" },
+    { name = "scipy" },
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e9/0e/09e8fa0858570fda88090bc3f441b69c18ea3d6f4a02fd41aa5426c157bf/catboost-1.2.10.tar.gz", hash = "sha256:26ae6d423acaf0e9d8160f2477a990431057ed04522d993c2f42dac62743b4f7", size = 39925863, upload-time = "2026-02-18T16:13:29.092Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2d/02/3c5f08a7c7969eaa2509d804461db26752fe1c7ecb8ad8510cab51a95fd2/catboost-1.2.10-cp313-cp313-macosx_11_0_universal2.whl", hash = "sha256:bd3d3b344894f61b5f70124658f302148bb9a51c41d0d5b6c453a72e9dfefc49", size = 28829400, upload-time = "2026-02-18T16:12:23.682Z" },
+    { url = "https://files.pythonhosted.org/packages/98/fd/63be2ff7aa9f6a7d63e342f42948259a028bfa50203d5ff687c84804ffb7/catboost-1.2.10-cp313-cp313-manylinux2014_aarch64.whl", hash = "sha256:59aa166f075f0a5ea57b0ba46e5060bd6a22e849e91e4142f16c2df11295b184", size = 96680675, upload-time = "2026-02-18T16:12:28.407Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/2c/fa0479bd79226f037b495a30696b70741beb198f65227c975005e213aa8e/catboost-1.2.10-cp313-cp313-manylinux2014_x86_64.whl", hash = "sha256:42c1b6c7ae5c18cdbe00c8b9493987cc13338fe328baaf1a0b98ddaf58db96a2", size = 97111368, upload-time = "2026-02-18T16:12:32.456Z" },
+    { url = "https://files.pythonhosted.org/packages/69/71/a9e9a06418832fbea9d7cefda585d53395358d498537b6bdd3cf7364cd29/catboost-1.2.10-cp313-cp313-win_amd64.whl", hash = "sha256:5ede858e634d6d0f521bf6dd6fad9374f23d37049ee48e0779ccd2a372632cb1", size = 100201430, upload-time = "2026-02-18T16:12:36.731Z" },
+    { url = "https://files.pythonhosted.org/packages/56/58/f370f6c64db5e7da92e3b88ab62e2df72f113cf5a1eee35b48f69d54accd/catboost-1.2.10-cp314-cp314-macosx_11_0_universal2.whl", hash = "sha256:3efc5e4d414b7c13bff6dd0d6c938cf09bb1445097283c7790e54b8ee461820b", size = 28840256, upload-time = "2026-02-18T16:12:40.153Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/74/18597f0b2923e3660cd44f942fe9e7cddaa99afc252bc745c48f79566330/catboost-1.2.10-cp314-cp314-manylinux2014_aarch64.whl", hash = "sha256:bad9a70890cdc591080a908d54a3cd70002ab1e48b2017adff84726da0b3e16d", size = 96688527, upload-time = "2026-02-18T16:12:43.534Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/ac/7effae0e47fd9586e46a796f5af61b730c572570cedee333ee9ba8db85a8/catboost-1.2.10-cp314-cp314-manylinux2014_x86_64.whl", hash = "sha256:7b8cc4ea3a6ac4a8d05f3a79c8ee5454360a0a710fa12444963865ad3f0ddfec", size = 97119495, upload-time = "2026-02-18T16:12:47.557Z" },
+    { url = "https://files.pythonhosted.org/packages/da/b7/8f9e284a9cdd034f01f017dc5dab0da03dc3eac171a2be205745da3becb6/catboost-1.2.10-cp314-cp314-win_amd64.whl", hash = "sha256:951c5bdf27b8edb6ca624f41134888c666ae68275488803d3c91ce83e154f0c5", size = 101749687, upload-time = "2026-02-18T16:12:51.736Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2026.7.22"
 source = { registry = "https://pypi.org/simple" }
@@ -896,6 +921,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d1/13/98fbf8d67552f102488ffc16c6f559ce71ea15f6294728d33928ab5ff14d/graphql-relay-3.2.0.tar.gz", hash = "sha256:1ff1c51298356e481a0be009ccdff249832ce53f30559c1338f22a0e0d17250c", size = 50027, upload-time = "2022-04-16T11:03:45.447Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/74/16/a4cf06adbc711bd364a73ce043b0b08d8fa5aae3df11b6ee4248bcdad2e0/graphql_relay-3.2.0-py3-none-any.whl", hash = "sha256:c9b22bd28b170ba1fe674c74384a8ff30a76c8e26f88ac3aa1584dd3179953e5", size = 16940, upload-time = "2022-04-16T11:03:43.895Z" },
+]
+
+[[package]]
+name = "graphviz"
+version = "0.21"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/b3/3ac91e9be6b761a4b30d66ff165e54439dcd48b83f4e20d644867215f6ca/graphviz-0.21.tar.gz", hash = "sha256:20743e7183be82aaaa8ad6c93f8893c923bd6658a04c32ee115edb3c8a835f78", size = 200434, upload-time = "2025-06-15T09:35:05.824Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/4c/e0ce1ef95d4000ebc1c11801f9b944fa5910ecc15b5e351865763d8657f8/graphviz-0.21-py3-none-any.whl", hash = "sha256:54f33de9f4f911d7e84e4191749cac8cc5653f815b06738c54db9a15ab8b1e42", size = 47300, upload-time = "2025-06-15T09:35:04.433Z" },
 ]
 
 [[package]]
@@ -1989,6 +2023,15 @@ wheels = [
 ]
 
 [[package]]
+name = "nvidia-nccl-cu13"
+version = "2.31.2"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/52/a0/530efd7db8857c0436868bb7df9764f09fde2bd4d1f0bae546eec9fc40d0/nvidia_nccl_cu13-2.31.2-py3-none-manylinux_2_18_aarch64.whl", hash = "sha256:b5563f8e2534f363d93ace022670ba016d3717e190ac4eba564d05fbbe8495b1", size = 252479893, upload-time = "2026-08-11T23:22:01.53Z" },
+    { url = "https://files.pythonhosted.org/packages/14/fb/94933e00bb3dcfdf66ea3456739c6a51d322353f7cc64fa1f5f660e695ac/nvidia_nccl_cu13-2.31.2-py3-none-manylinux_2_18_x86_64.whl", hash = "sha256:0bcaf0308854cb55fcc35af72e2c83143f3b71e65a4e865e2c586b1cdcdb5ae0", size = 252442223, upload-time = "2026-08-11T23:22:40.341Z" },
+]
+
+[[package]]
 name = "opentelemetry-api"
 version = "1.44.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2187,6 +2230,19 @@ wheels = [
 ]
 
 [[package]]
+name = "plotly"
+version = "6.9.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "narwhals" },
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/96/07/795c79dbce40c39bece88e69d049babbd23ffa95b5d117f248db8ea03abb/plotly-6.9.0.tar.gz", hash = "sha256:967ad33e8c704fed051800d11d985eb206a9c795c14206b30a6f463ed9c67d0d", size = 6919903, upload-time = "2026-07-09T14:55:59.982Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/24/18/d8544811ab076f876c4892b3714f5b0dad335e1dc33aef826df431b8325d/plotly-6.9.0-py3-none-any.whl", hash = "sha256:36bebe2f1bb13884774fe61689c329071446f6ce4a8927fb1f0d6fb24f581236", size = 9909646, upload-time = "2026-07-09T14:55:55.421Z" },
+]
+
+[[package]]
 name = "pluggy"
 version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2200,6 +2256,7 @@ name = "predicting-smartphone-addiction"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "catboost" },
     { name = "ipykernel" },
     { name = "jupyterlab" },
     { name = "kaggle" },
@@ -2212,6 +2269,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "scikit-learn" },
     { name = "seaborn" },
+    { name = "xgboost" },
 ]
 
 [package.dev-dependencies]
@@ -2221,6 +2279,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "catboost", specifier = ">=1.2.10" },
     { name = "ipykernel", specifier = ">=7.3.0" },
     { name = "jupyterlab", specifier = ">=4.6.2" },
     { name = "kaggle", specifier = ">=2.2.4" },
@@ -2233,6 +2292,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "scikit-learn", specifier = ">=1.9.0" },
     { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "xgboost", specifier = ">=3.4.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -3275,6 +3335,25 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/dd/b2/381be8cfdee792dd117872481b6e378f85c957dd7c5bca38897b08f765fd/werkzeug-3.1.8.tar.gz", hash = "sha256:9bad61a4268dac112f1c5cd4630a56ede601b6ed420300677a869083d70a4c44", size = 875852, upload-time = "2026-04-02T18:49:14.268Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/93/8c/2e650f2afeb7ee576912636c23ddb621c91ac6a98e66dc8d29c3c69446e1/werkzeug-3.1.8-py3-none-any.whl", hash = "sha256:63a77fb8892bf28ebc3178683445222aa500e48ebad5ec77b0ad80f8726b1f50", size = 226459, upload-time = "2026-04-02T18:49:12.72Z" },
+]
+
+[[package]]
+name = "xgboost"
+version = "3.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "nvidia-nccl-cu13", marker = "sys_platform == 'linux'" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7d/11/2b1de4cb9b7eeb042ca49c7d3b3ed2b77e7645ee6c0f99cf616716f3e8d7/xgboost-3.4.0.tar.gz", hash = "sha256:a6b5d114e7186b5a68c5b08b42297fc76c8c5d7292294220cdb12a6efd59977e", size = 1231819, upload-time = "2026-08-04T11:14:57.216Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3e/27/3172bd833a41815ffed3757be5077bbb66a34afb389393606518b1889741/xgboost-3.4.0-py3-none-macosx_10_15_x86_64.whl", hash = "sha256:bc7aeee7c72e827f6406e8dc1f56c4c13d2ff2470fc6b4093b07c1e84b6c3920", size = 2541629, upload-time = "2026-08-04T11:13:50.234Z" },
+    { url = "https://files.pythonhosted.org/packages/b6/0f/a4628c03bcc85b16dced3854af2bcb8f3bb8deac718c1bcb5e12740ec5d5/xgboost-3.4.0-py3-none-macosx_12_0_arm64.whl", hash = "sha256:7c328ab0fe446883271aab194ce1e4f49b37b4bd919a258a3ca74fb83e64029c", size = 2365529, upload-time = "2026-08-04T11:13:53.05Z" },
+    { url = "https://files.pythonhosted.org/packages/69/49/49d43a6244877904eb3df40d064303114a7f921d4bf730ab55b169e1f9dc/xgboost-3.4.0-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:1aaf7fb7af8ab306b1ef20f9576dbc1a06a7a42d2a366169650d024138d39638", size = 57196337, upload-time = "2026-08-04T11:14:09.981Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/1b/d631cf47b046ba9fae9c86bf2dba88bec3c2f42173d5216fe81fb9be729c/xgboost-3.4.0-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:ba132153e3c696f090be808bc42b8e4248932ab9a4ee66441154c954789b507c", size = 57615296, upload-time = "2026-08-04T11:14:30.855Z" },
+    { url = "https://files.pythonhosted.org/packages/89/97/838165ec9399aa5e6add044f05b64d877d45125adeda15869021b9e625ce/xgboost-3.4.0-py3-none-win_amd64.whl", hash = "sha256:23c62770c38fb9acd8b40d6c7df6de8fa077ef7afcb84aafd898faabbec639f9", size = 48935508, upload-time = "2026-08-04T11:14:50.954Z" },
+    { url = "https://files.pythonhosted.org/packages/56/84/92c3af9c167815a15cfa09e5579d6cc604dc6f08b1ae061b3756274cf530/xgboost-3.4.0-py3-none-win_arm64.whl", hash = "sha256:9cdc68b992e55717438122174e2b3d9527c59882818fb954a329a62786012709", size = 2094191, upload-time = "2026-08-04T11:14:55.472Z" },
 ]
 
 [[package]]
