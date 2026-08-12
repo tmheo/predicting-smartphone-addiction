@@ -28,3 +28,6 @@ run-logs/
 
 # Humanize-Korean Skill workspace
 _workspace/
+
+# 생성기 지문 진단 작업 디렉터리 (이슈 #89, 표본·측정값 로컬 보존)
+run-genfp/
