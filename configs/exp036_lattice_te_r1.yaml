@@ -8,8 +8,10 @@
 # seed 42 스크리닝(run 4cf4f9f5)은 -0.00050 미달로 기각. 원문 측정과 방향 일치
 # (0.1 해상도는 LightGBM에 무효). 카나리아 placebo_noise__age_latf_te가 플라시보를
 # 4% 상회해 판정 불가 처리했으나 AUC 미달만으로도 결론은 같다. 후속 실행 없음.
+# 번호 이력: 스크리닝은 exp034_lattice_te_r1 이름으로 실행됐으나 exp036으로 재번호
+# (#80이 같은 시각 exp033 번호를 선점해 뒤 번호를 비웠다).
 
-name: exp034_lattice_te_r1
+name: exp036_lattice_te_r1
 
 data:
   train: data/train.csv
