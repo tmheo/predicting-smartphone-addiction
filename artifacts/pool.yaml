@@ -94,3 +94,19 @@ members:
     ensemble_auc_with: 0.9677517186433671
     ensemble_auc_without: 0.9676591285688336
     contribution: 9.259007453343848e-05
+- run_id: c34f1da180544c3ba022140d394cb055
+  config: exp033_recon_orig_mean_top3_raw
+  oof_auc: 0.9676202184993681
+  seeds: 42,43,44
+  entered_at: '2026-08-12'
+  reason: '이슈 #80: exp032의 평활 제거(m=0) 변형. champion 교체는 +0.00007로 문턱 미달·work_study
+    새 피처 게이트 미달 기각(3/3 시드 개선), 최근접 exp032와 스피어만 0.99795로 중복 아님, 표준 평가 앙상블 기여 +0.00004'
+  evidence:
+    champion_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+    champion_oof_auc: 0.9675476423592995
+    floor_margin: 0.010072576140068623
+    nearest_run_id: b1bd4b08386946c9a4e05b755dbd5f26
+    nearest_spearman: 0.9979461305118936
+    ensemble_auc_with: 0.96779600305279
+    ensemble_auc_without: 0.9677517186433671
+    contribution: 4.4284409422945537e-05
