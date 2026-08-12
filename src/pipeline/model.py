@@ -149,7 +149,13 @@ class XGBoostAdapter:
             enable_categorical=True,
             early_stopping_rounds=self._fit["early_stopping_rounds"],
         )
-        self._model.fit(X_tr, y_tr, eval_set=[(X_va, y_va)], verbose=False)
+        # LightGBM처럼 학습 과정이 실행 로그에 남게 200라운드마다 검증 지표를 찍고,
+        # fold의 종착점(best iteration)을 한 줄로 요약한다.
+        self._model.fit(X_tr, y_tr, eval_set=[(X_va, y_va)], verbose=200)
+        print(
+            f"[xgboost] early stopping: best_iteration={self._model.best_iteration} "
+            f"best_score={self._model.best_score:.6f}"
+        )
         return self._model.predict_proba(X_va)[:, 1]
 
     def predict(
@@ -216,13 +222,20 @@ class CatBoostAdapter:
             cat_features=cat_cols,
             allow_writing_files=False,
         )
+        # LightGBM처럼 학습 과정이 실행 로그에 남게 200라운드마다 검증 지표를 찍고,
+        # fold의 종착점(best iteration)을 한 줄로 요약한다.
         self._model.fit(
             X_tr,
             y_tr,
             eval_set=(X_va, y_va),
             early_stopping_rounds=self._fit["early_stopping_rounds"],
             use_best_model=True,
-            verbose=False,
+            verbose=200,
+        )
+        best_score = self._model.get_best_score().get("validation", {})
+        print(
+            f"[catboost] early stopping: best_iteration={self._model.get_best_iteration()} "
+            f"best_score={best_score}"
         )
         return self._model.predict_proba(X_va)[:, 1]
 
@@ -277,6 +290,8 @@ class HistGradientBoostingAdapter:
             categorical_features="from_dtype",
         )
         self._model.fit(X_tr, y_tr)
+        # 내부 분할 조기 종료의 종착점을 실행 로그에 남긴다(반복별 로그는 없음).
+        print(f"[hist_gradient_boosting] n_iter={self._model.n_iter_}")
         self._X_va, self._y_va = X_va, y_va
         return self._model.predict_proba(X_va)[:, 1]
 
