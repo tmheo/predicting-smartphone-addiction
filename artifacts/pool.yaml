@@ -126,23 +126,6 @@ members:
     ensemble_auc_with: 0.967876902064954
     ensemble_auc_without: 0.96779600305279
     contribution: 8.089901216401518e-05
-- run_id: 737f4dae278c4615ba294372352ac5bb
-  config: exp043_cat_depth6
-  oof_auc: 0.9682023830256766
-  seeds: 42,43,44
-  entered_at: '2026-08-12'
-  reason: '이슈 #59: 새 champion exp043_cat_depth6의 3시드 평균본(CatBoost 계열 첫 구성원). git_dirty
-    게이트는 예외 등록: 동일 커밋 코드의 클린 seed 42 스크리닝 run 0ef09037이 이 run의 seed 42 OOF AUC와 전체
-    정밀도 일치(0.9680149229578536)해 재현성을 입증'
-  evidence:
-    champion_run_id: 737f4dae278c4615ba294372352ac5bb
-    champion_oof_auc: 0.9682023830256766
-    floor_margin: 0.010000000000000009
-    nearest_run_id: c34f1da180544c3ba022140d394cb055
-    nearest_spearman: 0.9927529783507469
-    ensemble_auc_with: 0.9680122021547373
-    ensemble_auc_without: 0.967876902064954
-    contribution: 0.00013530008978324126
 - run_id: e2c432b487564df990a4cc3baf3d6fc0
   config: exp045_xgb_depth8
   oof_auc: 0.9679360495201849
@@ -159,3 +142,19 @@ members:
     ensemble_auc_with: 0.968060668424677
     ensemble_auc_without: 0.9680122021547373
     contribution: 4.8466269939706486e-05
+- run_id: 2c6150364304443c813302d6fa19528d
+  config: exp052_cat_xgb_impute_pass5
+  oof_auc: 0.9683570261226153
+  seeds: 42,43,44
+  entered_at: '2026-08-13'
+  reason: '이슈 #86: champion 교체본(XGBoost 조건부 복원 5열). 기존 champion exp043과 스피어만 0.99930
+    중복이라 성능 높은 쪽으로 교체, 표준 평가 앙상블 기여 +0.00013'
+  evidence:
+    champion_run_id: 2c6150364304443c813302d6fa19528d
+    champion_oof_auc: 0.9683570261226153
+    floor_margin: 0.010000000000000009
+    nearest_run_id: 737f4dae278c4615ba294372352ac5bb
+    nearest_spearman: 0.9992966434513832
+    ensemble_auc_with: 0.9680831470571793
+    ensemble_auc_without: 0.9679512385405152
+    contribution: 0.0001319085166641143

@@ -1,18 +1,18 @@
-run_id: 737f4dae278c4615ba294372352ac5bb
-oof_auc: 0.9682023830256766
+run_id: 2c6150364304443c813302d6fa19528d
+oof_auc: 0.9683570261226153
 seed_aucs:
-  42: 0.9680149229578536
-  43: 0.9680411609054022
-  44: 0.9680231202181973
+  42: 0.9681761276627798
+  43: 0.9681589919850573
+  44: 0.9681845608828253
 fold_aucs:
-  0: 0.9675489048732316
-  1: 0.9682803084313298
-  2: 0.9683646658825489
-  3: 0.9688438013780986
-  4: 0.9679735888994025
-config: exp043_cat_depth6
-features: academic_work_impact,age,age_te,app_opens_per_day,app_opens_per_day_te,daily_screen_time_hours,daily_screen_time_hours_recon,daily_screen_time_hours_te,gaming_hours,gaming_hours_recon,gender,notifications_per_day,notifications_per_day_te,other_screen,placebo_noise,placebo_noise_te,screen_slack,sleep_hours,sleep_hours_te,social_media_hours,social_media_hours_recon,social_media_hours_te,stress_level,weekend_screen_time,weekend_screen_time_te,work_study_hours,work_study_hours_recon,work_study_hours_te
-git_commit: d02e4b87879be020e1b7d3fc28395c3fd366ef62
-adopted_at: '2026-08-12'
-reason: '이슈 #59: 동일 피처 세트에서 학습기를 CatBoost depth 6으로 바꿔 3시드 +0.00065, 3/3 시드, 5/5 fold
-  개선. 계열 내 변형(depth 8, lr 0.03) 대비 최고'
+  0: 0.967687557302332
+  1: 0.968500167368032
+  2: 0.9684266422210883
+  3: 0.9690134606248588
+  4: 0.9681594855579441
+config: exp052_cat_xgb_impute_pass5
+features: academic_work_impact,age,age_te,app_opens_per_day,app_opens_per_day_te,daily_screen_time_hours,daily_screen_time_hours_recon,daily_screen_time_hours_te,daily_screen_time_hours_xgb_recon,gaming_hours,gaming_hours_recon,gaming_hours_xgb_recon,gender,notifications_per_day,notifications_per_day_te,other_screen,placebo_noise,placebo_noise_te,screen_slack,sleep_hours,sleep_hours_te,social_media_hours,social_media_hours_recon,social_media_hours_te,social_media_hours_xgb_recon,stress_level,weekend_screen_time,weekend_screen_time_te,weekend_screen_time_xgb_recon,work_study_hours,work_study_hours_recon,work_study_hours_te,work_study_hours_xgb_recon
+git_commit: 82e84a838d0a3f10b7a61de65b08476c2075454e
+adopted_at: '2026-08-13'
+reason: '이슈 #86: 훈련 부분 전용 XGBoost 조건부 결측 복원 보조 열 5개 추가로 3시드 +0.00015, 3/3 시드, 5/5
+  fold 개선. 첫 대리 스크리닝 통과 후보로 LightGBM 대리와 CatBoost 공식의 방향 일치 확인'
