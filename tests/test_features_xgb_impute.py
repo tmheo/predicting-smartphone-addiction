@@ -155,6 +155,60 @@ def test_observed_cells_keep_raw_and_missing_cells_get_predictions(recording):
         assert rec.dtype == "float64"
 
 
+def write_test_csv(tmp_path, df: pd.DataFrame) -> tuple[str, str]:
+    import hashlib
+
+    path = tmp_path / "toy_test.csv"
+    df.to_csv(path, index=False)
+    return str(path), hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def test_transductive_requires_matching_hash(tmp_path):
+    test_df = make_df(30).drop(columns=["stress_level"]).assign(stress_level="low")
+    path, sha = write_test_csv(tmp_path, test_df)
+    with pytest.raises(ValueError, match="해시 고정"):
+        XgbImputeAux(cols=COLS, cat_cols=CATS, transductive_test_path=path)
+    with pytest.raises(ValueError, match="해시 불일치"):
+        XgbImputeAux(
+            cols=COLS, cat_cols=CATS, transductive_test_path=path,
+            transductive_test_sha256="0" * 64,
+        )
+    with pytest.raises(ValueError, match="없이 쓸 수 없다"):
+        XgbImputeAux(cols=COLS, cat_cols=CATS, transductive_test_sha256=sha)
+
+
+def test_transductive_fit_adds_test_observed_rows_with_aligned_categories(
+    recording, tmp_path
+):
+    df = make_df()
+    test_df = make_df(40).drop(columns=["stress_level"]).assign(stress_level="low")
+    test_df.loc[0, "stress_level"] = "high"
+    path, sha = write_test_csv(tmp_path, test_df)
+    provider = XgbImputeAux(
+        cols=COLS, cat_cols=CATS,
+        transductive_test_path=path, transductive_test_sha256=sha,
+    )
+    provider.fit(df, seed=42)
+    for col, model in zip(COLS, recording.instances):
+        # 학습 표본 = 훈련 부분 관측 행 + test 관측 행(검증 fold 행은 없음).
+        assert len(model.fit_y) == df[col].notna().sum() + test_df[col].notna().sum()
+        cat = model.fit_X["stress_level"]
+        assert isinstance(cat.dtype, pd.CategoricalDtype)
+        assert list(cat.dtype.categories) == list(df["stress_level"].dtype.categories)
+
+
+def test_transductive_rejects_unseen_category_values(recording, tmp_path):
+    df = make_df()
+    test_df = make_df(20).drop(columns=["stress_level"]).assign(stress_level="unknown")
+    path, sha = write_test_csv(tmp_path, test_df)
+    provider = XgbImputeAux(
+        cols=COLS, cat_cols=CATS,
+        transductive_test_path=path, transductive_test_sha256=sha,
+    )
+    with pytest.raises(ValueError, match="train에 없는 값"):
+        provider.fit(df, seed=42)
+
+
 def test_fit_transform_is_deterministic_per_seed():
     df = make_df()
 

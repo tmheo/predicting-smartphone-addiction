@@ -1,0 +1,85 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #86: 훈련 부분 전용 복원(exp052)이 채택돼 단계 조건이 열린 전이 학습 변형.
+# champion exp052와 피처 집합이 같고, 복원기 학습 표본에 해시 고정 test의
+# 무목표값 피처 행만 더한다(검증 fold 행은 여전히 학습 표본 밖). 변환 유무의
+# OOF 차이가 전이 학습의 한계 기여다. 피처 집합이 같아 대리 스크리닝의 부분집합
+# 요건이 성립하지 않으므로 champion 계열 seed 42 스크리닝으로 직접 판정한다.
+name: exp053_cat_xgb_impute_pass5_trans
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [other_screen, screen_slack]
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      cat_cols: [gender, stress_level, academic_work_impact]
+      transductive_test_path: data/test.csv
+      transductive_test_sha256: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+
+model:
+  kind: catboost
+  params:
+    iterations: 10000
+    depth: 6
+    learning_rate: 0.05
+    eval_metric: AUC
+  fit:
+    early_stopping_rounds: 200
+
+cv:
+  seeds: [42]

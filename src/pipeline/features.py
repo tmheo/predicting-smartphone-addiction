@@ -868,8 +868,11 @@ class XgbImputeAux:
     <col>_xgb_recon 열을 준다. 관측 셀은 원시 값 그대로다(원시 열 대체와 별도 결측 표시
     열은 지도의 배제 경계). 수치 예측 입력의 NaN은 XGBoost native 결측 처리에 맡긴다.
 
-    원 레시피는 train+test 결합 피처로 복원기를 맞추지만(전이 학습), 그 변형은 훈련 부분
-    전용인 이 판정이 통과한 뒤에만 별도로 비교한다(#86의 단계 조건). 제약 결측 재구성
+    원 레시피는 train+test 결합 피처로 복원기를 맞춘다(전이 학습). 훈련 부분 전용
+    판정이 통과해(#86의 단계 조건) transductive_test_path로 그 변형을 연다: 해시 고정
+    test CSV의 무목표값 피처 행을 복원기 학습 표본에 합쳐, 변환 유무의 OOF 차이로
+    전이 학습의 한계 기여를 분리한다. test에는 타깃이 없고 검증 fold 행은 여전히
+    학습 표본에 들어가지 않으므로 라벨 누출 경로는 없다. 제약 결측 재구성
     (constrained_impute_aux)과 별개 계열이므로 산술 경계 클리핑은 하지 않는다.
 
     emit은 실제로 복원 열을 내보낼 cols의 부분집합이다(기본은 전부). 일부 복원 열이
@@ -885,6 +888,8 @@ class XgbImputeAux:
         cols: list[str],
         cat_cols: list[str] = [],
         emit: list[str] | None = None,
+        transductive_test_path: str | None = None,
+        transductive_test_sha256: str | None = None,
     ) -> None:
         all_cols = [*cols, *cat_cols]
         forbidden = {ID, TARGET, PLACEBO} & set(all_cols)
@@ -898,6 +903,27 @@ class XgbImputeAux:
             raise ValueError("복원 대상 열마다 예측 입력이 하나 이상 필요하다(cols 2개 이상 또는 cat_cols).")
         self.cols = list(cols)
         self.cat_cols = list(cat_cols)
+        self._test: pd.DataFrame | None = None
+        if transductive_test_path is not None:
+            from pathlib import Path
+
+            if transductive_test_sha256 is None:
+                raise ValueError(
+                    "전이 학습 test는 해시 고정이 필요하다: transductive_test_sha256을 함께 줄 것."
+                )
+            actual = file_sha256(Path(transductive_test_path))
+            if actual != transductive_test_sha256:
+                raise ValueError(
+                    f"전이 학습 test 해시 불일치: {transductive_test_path}\n"
+                    f"기대 {transductive_test_sha256}\n실제 {actual}"
+                )
+            test = pd.read_csv(transductive_test_path)
+            missing = sorted(c for c in all_cols if c not in test.columns)
+            if missing:
+                raise ValueError(f"전이 학습 test에 없는 열 {missing}.")
+            self._test = test[all_cols]
+        elif transductive_test_sha256 is not None:
+            raise ValueError("transductive_test_sha256은 transductive_test_path 없이 쓸 수 없다.")
         if emit is None:
             self.emit = list(cols)
         else:
@@ -929,16 +955,31 @@ class XgbImputeAux:
             raise ValueError(
                 f"cat_cols는 category dtype이어야 한다(코드 정렬을 align_categories가 보장): {bad_cat}"
             )
+        fit_df = train_fold
+        if self._test is not None:
+            # 전이 학습: test의 무목표값 피처 행을 복원기 학습 표본에 합친다.
+            # CSV로 읽힌 test의 범주 열을 train_fold의 카테고리 체계로 정렬해
+            # 코드 배정이 어긋나지 않게 한다(합집합 정렬이므로 미지 값은 없어야 한다).
+            test = self._test.copy()
+            for c in self.cat_cols:
+                cats = train_fold[c].dtype.categories
+                unseen = sorted(set(test[c].dropna()) - set(cats))
+                if unseen:
+                    raise ValueError(f"전이 학습 test의 {c}에 train에 없는 값 {unseen}이 있다.")
+                test[c] = pd.Categorical(test[c], categories=cats)
+            fit_df = pd.concat(
+                [train_fold[[*self.cols, *self.cat_cols]], test], ignore_index=True
+            )
         self.models_: dict[str, XGBRegressor] = {}
         for c in self.emit:
-            observed = train_fold[c].notna()
+            observed = fit_df[c].notna()
             if not observed.any():
                 raise ValueError(f"학습 fold에서 {c}의 관측 행이 없어 복원기를 만들 수 없다.")
             model = XGBRegressor(
                 **XGB_IMPUTE_PARAMS, enable_categorical=True, random_state=seed
             )
             model.fit(
-                train_fold.loc[observed, self._predictors(c)], train_fold.loc[observed, c]
+                fit_df.loc[observed, self._predictors(c)], fit_df.loc[observed, c]
             )
             self.models_[c] = model
 
