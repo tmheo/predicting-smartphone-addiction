@@ -1,8 +1,9 @@
-"""개선 판정. champion(artifacts/champion.yaml)과 challenger(MLflow run)를 비교한다. (#19, #70)
+"""개선 판정. champion 또는 대리 기준 실행과 challenger를 비교한다. (#19, #70, #87)
 
 사용법:
     uv run python -m pipeline.compare <challenger_run_id>
     uv run python -m pipeline.compare <challenger_run_id> --adopt --reason "채택 사유"
+    uv run python -m pipeline.compare <challenger_run_id> --proxy-baseline <baseline_run_id>
 
 판정 규칙은 ADR 0001 계열 1(특성·단일 모델 challenger)의 2단계 판정이다.
 challenger run의 시드가 어느 단계인지 결정한다: [42]면 스크리닝, [42, 43, 44]면 확정 재검증.
@@ -28,6 +29,12 @@ champion의 원본은 커밋되는 artifacts/champion.yaml이다. mlflow.db는 �
 "무엇이 champion인가"라는 결정은 git 이력에 남긴다. 시드별·fold별 AUC도 함께 기록해
 확정 재검증이 mlflow.db 없이도 판정 가능하게 한다. --adopt가 이 파일을 고쳐 쓰고
 사용자는 커밋만 한다. 파일이 없으면 --adopt는 첫 champion 부트스트랩으로 동작한다.
+
+대리 스크리닝은 느린 champion 모델 계열에서 특성을 판정하기 전에 빠른 모델 계열의
+동일 조건 기준 실행과 짝지어 후보를 거르는 선별 절차다. 공식 스크리닝이나 확정
+재검증을 대신하지 않는다. 기준 실행과 challenger 모두 seed 42의 동일한 모델 설정과
+입력 자료를 사용해야 하며, challenger에는 새 특성만 추가돼야 한다. OOF AUC가 악화되지
+않고 모든 새 특성의 importance가 플라시보보다 높을 때만 공식 스크리닝으로 넘긴다.
 """
 
 from __future__ import annotations
@@ -35,7 +42,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import pandas as pd
@@ -66,6 +73,8 @@ class RunFacts:
     fold_aucs: dict[int, float]  # auc_fold_* metric (시드 평균본 기준).
     git_commit: str
     importance: pd.DataFrame  # feature, fold, seed, gain
+    model_params: dict[str, str] = field(default_factory=dict)
+    input_hashes: dict[str, str] = field(default_factory=dict)
 
 
 def load_run_facts(run_id: str) -> RunFacts:
@@ -74,6 +83,23 @@ def load_run_facts(run_id: str) -> RunFacts:
     client = mlflow.tracking.MlflowClient(tracking_uri=TRACKING_URI)
     run = client.get_run(run_id)
     importance_path = client.download_artifacts(run_id, "feature_importance.parquet")
+    config_artifacts = [
+        item.path for item in client.list_artifacts(run_id) if item.path.endswith((".yaml", ".yml"))
+    ]
+    if len(config_artifacts) != 1:
+        sys.exit(
+            f"run {run_id}의 루트에서 설정 YAML 하나를 찾지 못했다: {config_artifacts}"
+        )
+    config_path = client.download_artifacts(run_id, config_artifacts[0])
+    with Path(config_path).open() as f:
+        config = yaml.safe_load(f)
+    model_params = {"model.kind": str(config["model"]["kind"])}
+    model_params.update(
+        {f"model.params.{key}": str(value) for key, value in config["model"]["params"].items()}
+    )
+    model_params.update(
+        {f"model.fit.{key}": str(value) for key, value in config["model"]["fit"].items()}
+    )
     metrics = run.data.metrics
     return RunFacts(
         run_id=run_id,
@@ -93,6 +119,10 @@ def load_run_facts(run_id: str) -> RunFacts:
         },
         git_commit=run.data.tags["git_commit"],
         importance=pd.read_parquet(importance_path),
+        model_params=model_params,
+        input_hashes={
+            key: value for key, value in run.data.tags.items() if key.startswith("sha256.")
+        },
     )
 
 
@@ -170,6 +200,52 @@ def judge_screening(champion: dict, challenger: RunFacts) -> tuple[bool, list[st
         lines.append(
             "확정 재검증 자격 획득: 설정의 cv.seeds를 [42, 43, 44]로 바꿔 재실행한 뒤 "
             "그 run으로 다시 판정할 것. 스크리닝 통과는 채택이 아니다."
+        )
+    return passed, lines
+
+
+def judge_proxy_screening(
+    baseline: RunFacts, challenger: RunFacts
+) -> tuple[bool, list[str]]:
+    """동일한 빠른 모델 계열 안에서 새 특성의 공식 스크리닝 진입 자격을 판정한다."""
+    if baseline.seeds != SCREENING_SEEDS or challenger.seeds != SCREENING_SEEDS:
+        sys.exit(
+            f"대리 스크리닝은 기준 실행과 challenger 모두 시드가 {SCREENING_SEEDS}여야 한다. "
+            f"(기준 실행: {baseline.seeds}, challenger: {challenger.seeds})"
+        )
+    if not baseline.features < challenger.features:
+        sys.exit(
+            "대리 스크리닝 challenger는 기준 실행의 모든 특성을 유지하고 새 특성을 "
+            "하나 이상 추가해야 한다."
+        )
+    if baseline.model_params != challenger.model_params:
+        sys.exit(
+            "대리 스크리닝의 모델 설정이 기준 실행과 다르다. "
+            f"기준 실행={baseline.model_params}, challenger={challenger.model_params}"
+        )
+    if baseline.input_hashes != challenger.input_hashes:
+        sys.exit(
+            "대리 스크리닝의 입력 자료 해시가 기준 실행과 다르다. "
+            f"기준 실행={baseline.input_hashes}, challenger={challenger.input_hashes}"
+        )
+
+    lines: list[str] = []
+    delta = challenger.auc_oof - baseline.auc_oof
+    auc_ok = delta >= 0.0
+    lines.append(
+        f"대리 스크리닝(seed 42 짝지은 비교) OOF AUC: 기준 실행 {baseline.auc_oof:.5f} → "
+        f"challenger {challenger.auc_oof:.5f} (delta {delta:+.5f}, 문턱 개선 >= 0) "
+        f"→ {'통과' if auc_ok else '미달'}"
+    )
+    canary_ok = check_canaries(challenger, lines)
+    importance_ok = check_new_features(
+        {"features": ",".join(sorted(baseline.features))}, challenger, lines
+    )
+    passed = auc_ok and canary_ok and importance_ok
+    if passed:
+        lines.append(
+            "공식 스크리닝 진입 자격 획득: champion 모델 계열의 seed 42 설정으로 "
+            "같은 특성을 실행한 뒤 공식 개선 판정을 수행할 것. 대리 스크리닝 통과는 채택이 아니다."
         )
     return passed, lines
 
@@ -256,14 +332,30 @@ def _require_confirmation_facts(champion: dict, challenger: RunFacts) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="champion 대 challenger 개선 판정 (ADR 0001 계열 1)")
     parser.add_argument("run_id", help="challenger의 MLflow run_id")
+    parser.add_argument(
+        "--proxy-baseline",
+        help="대리 스크리닝에 사용할 동일 모델·입력·seed 42 기준 실행의 MLflow run_id",
+    )
     parser.add_argument("--adopt", action="store_true", help="확정 재검증 통과 시 champion.yaml을 갱신")
     parser.add_argument("--reason", help="--adopt에 기록할 한 줄 채택 사유")
     args = parser.parse_args()
 
     if args.adopt and not args.reason:
         sys.exit("--adopt에는 --reason \"한 줄 사유\"가 필요하다.")
+    if args.proxy_baseline and (args.adopt or args.reason):
+        sys.exit("대리 스크리닝은 champion 채택이 아니므로 --adopt와 --reason을 쓸 수 없다.")
 
     challenger = load_run_facts(args.run_id)
+
+    if args.proxy_baseline:
+        baseline = load_run_facts(args.proxy_baseline)
+        print(f"대리 기준 실행: {baseline.experiment} run {baseline.run_id}")
+        print(f"challenger   : {challenger.experiment} run {challenger.run_id}")
+        passed, lines = judge_proxy_screening(baseline, challenger)
+        for line in lines:
+            print(line)
+        print(f"판정: {'대리 스크리닝 통과' if passed else '대리 스크리닝 미달'}")
+        return
 
     if not CHAMPION_PATH.exists():
         print(f"{CHAMPION_PATH} 없음: 첫 champion 부트스트랩 모드.")

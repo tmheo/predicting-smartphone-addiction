@@ -65,6 +65,7 @@ def log_start_records(client, run_id: str, cfg: ExperimentConfig) -> None:
     """
     client.log_param(run_id, "experiment", cfg.name)
     client.log_param(run_id, "seeds", ",".join(map(str, cfg.seeds)))
+    client.log_param(run_id, "model.kind", cfg.model.kind)
     for key, value in cfg.model.params.items():
         client.log_param(run_id, f"model.{key}", value)
     if cfg.initial_score is not None:
