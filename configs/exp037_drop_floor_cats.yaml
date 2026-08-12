@@ -3,6 +3,8 @@
 # 플라시보보다 낮았던 raw 카테고리 3종(gender, stress_level, academic_work_impact)을
 # features.exclude로 학습 행렬에서 뺀다. categorical 선언도 같이 비운다.
 # 그 외는 champion exp026과 동일. 피처 제거 실험이라 새 피처 게이트는 해당 없음.
+# seed 42 스크리닝(run f4c48b42)은 +0.00003으로 통과. 변형 3종 중 최고라
+# 이 변형만 3시드 확정 재검증으로 보낸다(b는 +0.00001, c는 -0.00003 미달).
 
 name: exp037_drop_floor_cats
 
@@ -61,4 +63,4 @@ model:
     early_stopping_rounds: 200
 
 cv:
-  seeds: [42]
+  seeds: [42, 43, 44]

@@ -3,6 +3,8 @@
 # 경계선 미달(플라시보의 0.97배)이던 work_study_hours_te를 TE 목록에서 뺀다.
 # raw work_study_hours는 통과(1.63배)이므로 유지한다.
 # 그 외는 champion exp026과 동일. 피처 제거 실험이라 새 피처 게이트는 해당 없음.
+# seed 42 스크리닝(run ad7dcf7b)은 -0.00003으로 미달 기각. 경계선(0.97배)이던
+# work_study_hours_te도 빼면 성능이 깎여, 잉여가 아니라 실신호를 나눠 갖는 열이다.
 
 name: exp039_drop_floor_wste
 
