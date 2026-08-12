@@ -2,6 +2,8 @@
 # 이슈 #59: exp041_cat_depth8(+0.00065 스크리닝 통과)의 용량 축소 변형. CatBoost 기본
 # depth 6(대칭 64 leaves)이 depth 8보다 나은지 작은 범위 용량 비교로 확인한다.
 # 피처 세트는 champion exp026과 동일.
+# seed 42 스크리닝(run 0ef09037)은 +0.00080으로 계열 내 최고(depth 8 +0.00065,
+# lr 0.03 +0.00071). 3시드 확정 재검증으로 전환한다.
 name: exp043_cat_depth6
 
 data:
@@ -56,4 +58,4 @@ model:
     early_stopping_rounds: 200
 
 cv:
-  seeds: [42]
+  seeds: [42, 43, 44]

@@ -2,6 +2,8 @@
 # 이슈 #59: exp040_xgb_lossguide(+0.00008 스크리닝 통과)의 성장 정책 변형. depthwise
 # max_depth 8이 lossguide 255 leaves보다 나은지 작은 범위 용량 비교로 확인한다.
 # 피처 세트는 champion exp026과 동일.
+# seed 42 스크리닝(run 33b3b37f)은 +0.00038로 계열 내 최고. exp043 진입 가정의 풀에서
+# 한계 기여 +0.00005, exp043과 스피어만 0.99070. 다양성 구성원 후보로 3시드 전환한다.
 name: exp045_xgb_depth8
 
 data:
@@ -58,4 +60,4 @@ model:
     early_stopping_rounds: 200
 
 cv:
-  seeds: [42]
+  seeds: [42, 43, 44]
