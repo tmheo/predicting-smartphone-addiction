@@ -871,28 +871,45 @@ class XgbImputeAux:
     원 레시피는 train+test 결합 피처로 복원기를 맞추지만(전이 학습), 그 변형은 훈련 부분
     전용인 이 판정이 통과한 뒤에만 별도로 비교한다(#86의 단계 조건). 제약 결측 재구성
     (constrained_impute_aux)과 별개 계열이므로 산술 경계 클리핑은 하지 않는다.
+
+    emit은 실제로 복원 열을 내보낼 cols의 부분집합이다(기본은 전부). 일부 복원 열이
+    게이트 미달로 빠져도 예측 입력은 cols 전체로 유지되므로, 남는 복원 열의 모델
+    입력이 전체 구성과 완전히 같아 같은 seed에서 같은 복원값이 보존된다. 내보내지
+    않는 열의 복원기는 만들지 않는다.
     """
 
     uses_target = False
 
-    def __init__(self, cols: list[str], cat_cols: list[str] = []) -> None:
-        forbidden = {ID, TARGET, PLACEBO} & (set(cols) | set(cat_cols))
+    def __init__(
+        self,
+        cols: list[str],
+        cat_cols: list[str] = [],
+        emit: list[str] | None = None,
+    ) -> None:
+        all_cols = [*cols, *cat_cols]
+        forbidden = {ID, TARGET, PLACEBO} & set(all_cols)
         if forbidden:
             raise ValueError(f"복원 대상과 예측 입력에 쓸 수 없는 열: {sorted(forbidden)}")
-        if len(set(cols)) != len(cols):
-            raise ValueError(f"cols에 중복이 있다: {cols}")
-        if len(set(cat_cols)) != len(cat_cols):
-            raise ValueError(f"cat_cols에 중복이 있다: {cat_cols}")
-        overlap = set(cols) & set(cat_cols)
-        if overlap:
-            raise ValueError(f"cols와 cat_cols가 겹친다: {sorted(overlap)}")
+        # 목록 사이 겹침도 목록 안 중복도 열 하나가 두 역할을 갖는 같은 오류다.
+        duplicated = sorted({c for c in all_cols if all_cols.count(c) > 1})
+        if duplicated:
+            raise ValueError(f"cols/cat_cols에 겹치는 열이 있다: {duplicated}")
         if len(cols) - 1 + len(cat_cols) < 1:
             raise ValueError("복원 대상 열마다 예측 입력이 하나 이상 필요하다(cols 2개 이상 또는 cat_cols).")
         self.cols = list(cols)
         self.cat_cols = list(cat_cols)
+        if emit is None:
+            self.emit = list(cols)
+        else:
+            unknown = sorted(set(emit) - set(cols))
+            if unknown:
+                raise ValueError(f"emit은 cols의 부분집합이어야 한다. cols에 없는 열: {unknown}")
+            if len(set(emit)) != len(emit) or not emit:
+                raise ValueError(f"emit은 중복 없는 비어 있지 않은 목록이어야 한다: {emit}")
+            self.emit = list(emit)
 
     def columns(self) -> list[str]:
-        return [f"{c}_xgb_recon" for c in self.cols]
+        return [f"{c}_xgb_recon" for c in self.emit]
 
     def _predictors(self, target_col: str) -> list[str]:
         return [c for c in self.cols if c != target_col] + self.cat_cols
@@ -913,7 +930,7 @@ class XgbImputeAux:
                 f"cat_cols는 category dtype이어야 한다(코드 정렬을 align_categories가 보장): {bad_cat}"
             )
         self.models_: dict[str, XGBRegressor] = {}
-        for c in self.cols:
+        for c in self.emit:
             observed = train_fold[c].notna()
             if not observed.any():
                 raise ValueError(f"학습 fold에서 {c}의 관측 행이 없어 복원기를 만들 수 없다.")
@@ -927,7 +944,7 @@ class XgbImputeAux:
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         out: dict[str, pd.Series] = {}
-        for c in self.cols:
+        for c in self.emit:
             rec = df[c].astype("float64").copy()
             m = rec.isna()
             if m.any():

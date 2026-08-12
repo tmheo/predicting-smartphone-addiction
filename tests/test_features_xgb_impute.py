@@ -65,10 +65,13 @@ def recording(monkeypatch) -> type[RecordingRegressor]:
         ({"cols": [ID, *COLS]}, "쓸 수 없는 열"),
         ({"cols": COLS, "cat_cols": [TARGET]}, "쓸 수 없는 열"),
         ({"cols": [PLACEBO, *COLS]}, "쓸 수 없는 열"),
-        ({"cols": [*COLS, COLS[0]]}, "중복"),
-        ({"cols": COLS, "cat_cols": [*CATS, *CATS]}, "중복"),
-        ({"cols": COLS, "cat_cols": [COLS[0]]}, "겹친다"),
+        ({"cols": [*COLS, COLS[0]]}, "겹치는 열"),
+        ({"cols": COLS, "cat_cols": [*CATS, *CATS]}, "겹치는 열"),
+        ({"cols": COLS, "cat_cols": [COLS[0]]}, "겹치는 열"),
         ({"cols": [COLS[0]]}, "예측 입력이 하나 이상"),
+        ({"cols": COLS, "emit": ["age"]}, "cols에 없는 열"),
+        ({"cols": COLS, "emit": []}, "비어 있지 않은 목록"),
+        ({"cols": COLS, "emit": [COLS[0], COLS[0]]}, "비어 있지 않은 목록"),
     ],
 )
 def test_init_rejections(kwargs, match):
@@ -109,6 +112,33 @@ def test_fit_uses_only_observed_rows_and_excludes_target_column(recording):
         assert len(model.fit_y) == df[col].notna().sum()
         expected = [c for c in COLS if c != col] + CATS
         assert list(model.fit_X.columns) == expected  # 대상 열 자신은 예측 입력에서 뺀다
+
+
+def test_emit_subset_keeps_full_predictor_inputs_and_skips_non_emitted_models(recording):
+    df = make_df()
+    df["age"] = np.arange(len(df), dtype="float64")
+    provider = XgbImputeAux(cols=[*COLS, "age"], cat_cols=CATS, emit=COLS)
+    provider.fit(df, seed=42)
+    out = provider.transform(df)
+    assert list(out.columns) == [f"{c}_xgb_recon" for c in COLS]  # age 복원 열은 없다
+    assert len(recording.instances) == len(COLS)  # 내보내지 않는 열의 복원기는 만들지 않는다
+    for col, model in zip(COLS, recording.instances):
+        # 예측 입력은 emit이 아니라 cols 전체 기준이다(대상 열 자신만 뺀다).
+        assert list(model.fit_X.columns) == [c for c in [*COLS, "age"] if c != col] + CATS
+
+
+def test_emitted_recon_values_are_identical_to_full_emit_run():
+    # 게이트 미달 열을 emit에서 빼도 예측 입력이 cols 전체로 같으므로,
+    # 남는 복원 열의 값은 전체 구성과 동일해야 한다. (#86 축소 변형의 근거)
+    df = make_df()
+    df["age"] = np.arange(len(df), dtype="float64") % 23
+    full = XgbImputeAux(cols=[*COLS, "age"], cat_cols=CATS)
+    full.fit(df, seed=42)
+    reduced = XgbImputeAux(cols=[*COLS, "age"], cat_cols=CATS, emit=COLS)
+    reduced.fit(df, seed=42)
+    pd.testing.assert_frame_equal(
+        full.transform(df)[reduced.columns()], reduced.transform(df)
+    )
 
 
 def test_observed_cells_keep_raw_and_missing_cells_get_predictions(recording):
