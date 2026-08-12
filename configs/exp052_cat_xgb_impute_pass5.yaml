@@ -4,6 +4,8 @@
 # 상회로 통과해 공식 판정을 연다. 피처 세트는 champion exp043 구성 위에
 # 복원 열 5개(emit)만 더한 것이고, 복원기 입력은 수치 9열 전체다.
 # 첫 대리 통과 후보이므로 이 판정으로 LightGBM과 CatBoost의 방향 일치도 교차 확인한다.
+# seed 42 스크리닝(run 65d35e10)은 +0.00016 통과, 새 피처 5개 전부 플라시보 상회.
+# 대리(+0.00013)와 방향·규모가 일치해 3시드 확정 재검증으로 전환한다.
 name: exp052_cat_xgb_impute_pass5
 
 data:
@@ -80,4 +82,4 @@ model:
     early_stopping_rounds: 200
 
 cv:
-  seeds: [42]
+  seeds: [42, 43, 44]
