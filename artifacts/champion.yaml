@@ -1,18 +1,18 @@
-run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
-oof_auc: 0.9675476423592995
+run_id: 737f4dae278c4615ba294372352ac5bb
+oof_auc: 0.9682023830256766
 seed_aucs:
-  42: 0.9672173234483032
-  43: 0.9671895385083535
-  44: 0.9672339687662443
+  42: 0.9680149229578536
+  43: 0.9680411609054022
+  44: 0.9680231202181973
 fold_aucs:
-  0: 0.9668697312692528
-  1: 0.9675781014016
-  2: 0.9677566611316597
-  3: 0.9682564722367888
-  4: 0.9672919853249142
-config: exp026_constrained_impute_nowidth
+  0: 0.9675489048732316
+  1: 0.9682803084313298
+  2: 0.9683646658825489
+  3: 0.9688438013780986
+  4: 0.9679735888994025
+config: exp043_cat_depth6
 features: academic_work_impact,age,age_te,app_opens_per_day,app_opens_per_day_te,daily_screen_time_hours,daily_screen_time_hours_recon,daily_screen_time_hours_te,gaming_hours,gaming_hours_recon,gender,notifications_per_day,notifications_per_day_te,other_screen,placebo_noise,placebo_noise_te,screen_slack,sleep_hours,sleep_hours_te,social_media_hours,social_media_hours_recon,social_media_hours_te,stress_level,weekend_screen_time,weekend_screen_time_te,work_study_hours,work_study_hours_recon,work_study_hours_te
-git_commit: 837e63dcadb99e3c5db10913e2b164e4bf9aa54f
-adopted_at: '2026-08-11'
-reason: '이슈 #74: 생성 규칙을 산술 경계로 쓰는 제약 결측 재구성 recon 4열이 3시드 +0.00015, 3/3 시드, 5/5 fold
-  개선. 이득은 결측 있는 층에 집중(기제 확인)'
+git_commit: d02e4b87879be020e1b7d3fc28395c3fd366ef62
+adopted_at: '2026-08-12'
+reason: '이슈 #59: 동일 피처 세트에서 학습기를 CatBoost depth 6으로 바꿔 3시드 +0.00065, 3/3 시드, 5/5 fold
+  개선. 계열 내 변형(depth 8, lr 0.03) 대비 최고'
