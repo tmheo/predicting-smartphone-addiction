@@ -25,6 +25,9 @@ class FeatureConfig:
     # 순서 있는 컬럼 제공자 목록. 항목은 {kind: ..., 그 외 팩토리 인자}.
     # kind와 적용 단계는 plan.REGISTRY가 소유하고, 같은 단계 안에서는 이 목록 순서가 컬럼 순서다.
     providers: list[dict] = field(default_factory=list)
+    # base에서 뺄 raw 컬럼. 학습 행렬에서만 빠지고 제공자 입력(원본 frame)에는 남으므로
+    # 제외한 raw 컬럼의 파생 표현(예: age 제외 + age_te 유지)이 가능하다. (#79)
+    exclude: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

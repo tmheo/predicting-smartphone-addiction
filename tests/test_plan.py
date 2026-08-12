@@ -42,8 +42,13 @@ def toy_frames(n: int = 60) -> tuple[pd.DataFrame, pd.DataFrame]:
     return train, test
 
 
-def make_config(providers: list[dict]) -> FeatureConfig:
-    return FeatureConfig(base="raw", categorical=["stress_level"], providers=providers)
+def make_config(providers: list[dict], exclude: list[str] | None = None) -> FeatureConfig:
+    return FeatureConfig(
+        base="raw",
+        categorical=["stress_level"],
+        providers=providers,
+        exclude=exclude or [],
+    )
 
 
 def toy_proxy_file(tmp_path: Path) -> tuple[str, str]:
@@ -150,6 +155,55 @@ def test_stage_order_invariant_ignores_config_interleaving():
         "work_study_hours_ce",  # fold-fit, 목록 등장 순서
         "placebo_noise_te",
     ]
+
+
+def test_exclude_removes_raw_from_matrix_but_provider_input_keeps_it():
+    """제외한 raw 컬럼은 행렬에서 빠지되 제공자 입력에는 남는다: age 제외 + age_te 유지 시나리오. (#79)"""
+    plan = FeaturePlan.from_config(
+        make_config(
+            [{"kind": "target_encoding", "inner_folds": 3, "cols": ["gaming_hours", PLACEBO]}],
+            exclude=["gaming_hours"],
+        )
+    )
+    train, test = toy_frames()
+    train, test = plan.apply_dataset_wide(train, test)
+    assert "gaming_hours" not in plan.matrix_columns()
+    assert "gaming_hours_te" in plan.all_columns()
+
+    X = plan.build_matrix(train, seed=7)
+    assert "gaming_hours" not in X.columns
+    df_ff = pd.concat([train, X[[c for c in X.columns if c not in train.columns]]], axis=1)
+    for t in plan.fold_fit_transformers():
+        t.fit(df_ff.iloc[:40], seed=7)
+    X_full = plan.add_fold_fit_columns(X, df_ff)
+    assert "gaming_hours_te" in X_full.columns
+    assert list(X_full.columns) == plan.all_columns()
+
+
+def test_exclude_overlapping_categorical_is_rejected():
+    with pytest.raises(ValueError, match="categorical"):
+        FeaturePlan.from_config(make_config([], exclude=["stress_level"]))
+
+
+def test_exclude_placebo_is_rejected():
+    with pytest.raises(ValueError, match=PLACEBO):
+        FeaturePlan.from_config(make_config([], exclude=[PLACEBO]))
+
+
+def test_exclude_provider_column_is_rejected():
+    with pytest.raises(ValueError, match="raw 컬럼 전용"):
+        FeaturePlan.from_config(
+            make_config(
+                [{"kind": "derived", "names": ["other_screen"]}], exclude=["other_screen"]
+            )
+        )
+
+
+def test_exclude_unknown_raw_column_fails_at_apply():
+    plan = FeaturePlan.from_config(make_config([], exclude=["no_such_column"]))
+    train, test = toy_frames()
+    with pytest.raises(AssertionError, match="raw에 없는 컬럼"):
+        plan.apply_dataset_wide(train, test)
 
 
 def test_target_provider_without_placebo_spec_is_rejected():

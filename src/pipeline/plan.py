@@ -120,8 +120,9 @@ def _base_columns_of(df: pd.DataFrame) -> list[str]:
 class FeaturePlan:
     """실험이 학습할 컬럼 전체의 선언. run.py가 설정에서 한 번 만들어 cv에 주입한다."""
 
-    def __init__(self, stages: dict[str, list[tuple[str, Any]]]) -> None:
+    def __init__(self, stages: dict[str, list[tuple[str, Any]]], exclude: list[str]) -> None:
         self._stages = stages  # stage -> [(kind, provider), ...] providers 목록 순서 유지
+        self._exclude = exclude  # base에서 뺄 raw 컬럼. 제공자 입력에는 남는다. (#79)
         self._base_columns: list[str] | None = None
 
     @classmethod
@@ -131,6 +132,17 @@ class FeaturePlan:
             raise ValueError(
                 f"features.base는 'raw'만 지원한다(받은 값: {cfg.base!r}). "
                 "명시적 컬럼 목록은 필요가 생길 때 추가한다. (#71)"
+            )
+        if PLACEBO in cfg.exclude:
+            raise ValueError(
+                f"features.exclude에 {PLACEBO}를 넣을 수 없다. "
+                "placebo 상시 포함은 계획의 내장 불변식이다. (ADR 0001)"
+            )
+        overlap = set(cfg.exclude) & set(cfg.categorical)
+        if overlap:
+            raise ValueError(
+                f"features.exclude와 categorical이 겹친다: {sorted(overlap)}. "
+                "제외한 컬럼은 학습 행렬에 없으므로 categorical 선언도 같이 뺄 것."
             )
         stages: dict[str, list[tuple[str, Any]]] = {stage: [] for stage in STAGE_ORDER}
         for i, spec in enumerate(cfg.providers):
@@ -147,7 +159,7 @@ class FeaturePlan:
             except (TypeError, ValueError) as exc:
                 raise ValueError(f"providers[{i}] {kind}: {exc}") from exc
             stages[entry.stage].append((kind, provider))
-        plan = cls(stages)
+        plan = cls(stages, list(cfg.exclude))
         plan._validate_declarations()
         return plan
 
@@ -172,6 +184,12 @@ class FeaturePlan:
                             f"선언 컬럼 충돌: {col} ({declared[col]}와 {kind}가 같이 선언)"
                         )
                     declared[col] = kind
+        provider_overlap = set(self._exclude) & set(declared)
+        if provider_overlap:
+            raise ValueError(
+                f"features.exclude는 raw 컬럼 전용인데 제공자 컬럼이 섞였다: "
+                f"{sorted(provider_overlap)}. 제공자 컬럼을 빼려면 provider 선언을 고칠 것."
+            )
 
     # ------------------------------------------------------------- 적용
 
@@ -182,12 +200,15 @@ class FeaturePlan:
 
         base 컬럼(raw)이 여기서 확정된다. build_matrix보다 먼저 불려야 한다.
         """
-        base = _base_columns_of(train)
-        assert _base_columns_of(test) == base, "train/test의 raw 컬럼이 다르다."
+        raw = _base_columns_of(train)
+        assert _base_columns_of(test) == raw, "train/test의 raw 컬럼이 다르다."
+        unknown = set(self._exclude) - set(raw)
+        assert not unknown, f"features.exclude에 raw에 없는 컬럼이 있다: {sorted(unknown)}"
         provider_cols = {c for cols in self._declared_by_stage().values() for c in cols}
-        overlap = provider_cols & set(base)
+        overlap = provider_cols & set(raw)
         assert not overlap, f"제공자 선언 컬럼이 raw 컬럼과 충돌: {sorted(overlap)}"
-        self._base_columns = base
+        # 제외는 학습 행렬(base)에서만 적용한다. 원본 frame에는 남아 제공자 입력이 된다.
+        self._base_columns = [c for c in raw if c not in self._exclude]
         for kind, provider in self._stages[DATASET_WIDE]:
             new_train, new_test = provider.compute(train, test)
             for name, source, new in (("train", train, new_train), ("test", test, new_test)):
@@ -273,9 +294,12 @@ class FeaturePlan:
     def describe(self, raw_columns: list[str]) -> list[tuple[str, str, list[str], bool]]:
         """--plan 출력용 (단계, kind, 산출 컬럼, 타깃 참조) 표. 데이터 적재 없이 쓸 수 있게
         raw 컬럼(CSV 헤더)을 밖에서 받는다."""
-        rows: list[tuple[str, str, list[str], bool]] = [
-            ("base", "raw", [c for c in raw_columns if c not in (ID, TARGET, "fold")], False)
+        base = [
+            c for c in raw_columns if c not in (ID, TARGET, "fold") and c not in self._exclude
         ]
+        rows: list[tuple[str, str, list[str], bool]] = [("base", "raw", base, False)]
+        if self._exclude:
+            rows.append(("base", "exclude(제외)", list(self._exclude), False))
         for stage in STAGE_ORDER:
             if stage == FOLD_FIT:
                 rows.append(("placebo", "(내장)", [PLACEBO], False))
