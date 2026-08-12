@@ -118,9 +118,203 @@ class LightGBMAdapter:
         )
 
 
+class XGBoostAdapter:
+    """XGBoost 이진 분류 adapter. (#59)
+
+    범주형은 category dtype 그대로 native 학습한다(enable_categorical).
+    importance는 LightGBM gain과 같은 축척인 total_gain을 쓴다.
+    """
+
+    def __init__(self, params: dict, fit: dict, seed: int) -> None:
+        self._params = params
+        self._fit = fit
+        self._seed = seed
+        self._model = None
+
+    def fit(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
+    ) -> np.ndarray:
+        import xgboost as xgb
+
+        _reject_initial_score("xgboost", initial_score_tr, initial_score_va)
+        self._model = xgb.XGBClassifier(
+            **self._params,
+            random_state=self._seed,
+            enable_categorical=True,
+            early_stopping_rounds=self._fit["early_stopping_rounds"],
+        )
+        self._model.fit(X_tr, y_tr, eval_set=[(X_va, y_va)], verbose=False)
+        return self._model.predict_proba(X_va)[:, 1]
+
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray:
+        _reject_initial_score("xgboost", initial_score, None)
+        return self._model.predict_proba(X)[:, 1]
+
+    def importance(self) -> pd.DataFrame:
+        booster = self._model.get_booster()
+        gain = booster.get_score(importance_type="total_gain")
+        # get_score는 분기에 안 쓰인 피처를 생략하므로 0으로 채워 전 피처를 돌려준다.
+        names = list(self._model.feature_names_in_)
+        return pd.DataFrame(
+            {"feature": names, "gain": [gain.get(n, 0.0) for n in names]}
+        )
+
+
+class CatBoostAdapter:
+    """CatBoost 이진 분류 adapter. (#59)
+
+    CatBoost는 cat 피처의 NaN을 거부하므로 category dtype 컬럼을 결측 sentinel이
+    포함된 문자열로 바꿔 native categorical로 학습한다(행 단위 결정적 변환).
+    importance는 gain이 없어 PredictionValuesChange를 gain 컬럼으로 돌려준다.
+    """
+
+    _MISSING = "__missing__"
+
+    def __init__(self, params: dict, fit: dict, seed: int) -> None:
+        self._params = params
+        self._fit = fit
+        self._seed = seed
+        self._model = None
+
+    @classmethod
+    def _prepare(cls, X: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+        out = X.copy()
+        cat_cols = [
+            c for c in out.columns if isinstance(out[c].dtype, pd.CategoricalDtype)
+        ]
+        for c in cat_cols:
+            out[c] = (
+                out[c].cat.add_categories([cls._MISSING]).fillna(cls._MISSING).astype(str)
+            )
+        return out, cat_cols
+
+    def fit(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
+    ) -> np.ndarray:
+        from catboost import CatBoostClassifier
+
+        _reject_initial_score("catboost", initial_score_tr, initial_score_va)
+        X_tr, cat_cols = self._prepare(X_tr)
+        X_va, _ = self._prepare(X_va)
+        self._model = CatBoostClassifier(
+            **self._params,
+            random_seed=self._seed,
+            cat_features=cat_cols,
+            allow_writing_files=False,
+        )
+        self._model.fit(
+            X_tr,
+            y_tr,
+            eval_set=(X_va, y_va),
+            early_stopping_rounds=self._fit["early_stopping_rounds"],
+            use_best_model=True,
+            verbose=False,
+        )
+        return self._model.predict_proba(X_va)[:, 1]
+
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray:
+        _reject_initial_score("catboost", initial_score, None)
+        X, _ = self._prepare(X)
+        return self._model.predict_proba(X)[:, 1]
+
+    def importance(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "feature": self._model.feature_names_,
+                "gain": self._model.get_feature_importance(type="PredictionValuesChange"),
+            }
+        )
+
+
+class HistGradientBoostingAdapter:
+    """scikit-learn HistGradientBoosting 이진 분류 adapter. (#59)
+
+    외부 eval set 조기 종료가 없어 early stopping 설정은 params로 받는다
+    (학습 fold 내부 분할만 쓰므로 검증 fold 누출은 없다).
+    gain importance가 없어 검증 fold permutation importance(AUC 하락 폭)를
+    gain 컬럼으로 돌려준다(#59 코멘트의 계열 무관 중요도 규약).
+    """
+
+    def __init__(self, params: dict, fit: dict, seed: int) -> None:
+        self._params = params
+        self._fit = fit
+        self._seed = seed
+        self._model = None
+        self._X_va: pd.DataFrame | None = None
+        self._y_va: pd.Series | None = None
+
+    def fit(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
+    ) -> np.ndarray:
+        from sklearn.ensemble import HistGradientBoostingClassifier
+
+        _reject_initial_score("hist_gradient_boosting", initial_score_tr, initial_score_va)
+        self._model = HistGradientBoostingClassifier(
+            **self._params,
+            random_state=self._seed,
+            categorical_features="from_dtype",
+        )
+        self._model.fit(X_tr, y_tr)
+        self._X_va, self._y_va = X_va, y_va
+        return self._model.predict_proba(X_va)[:, 1]
+
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray:
+        _reject_initial_score("hist_gradient_boosting", initial_score, None)
+        return self._model.predict_proba(X)[:, 1]
+
+    def importance(self) -> pd.DataFrame:
+        from sklearn.inspection import permutation_importance
+
+        result = permutation_importance(
+            self._model,
+            self._X_va,
+            self._y_va,
+            scoring="roc_auc",
+            n_repeats=3,
+            random_state=self._seed,
+        )
+        return pd.DataFrame(
+            {"feature": list(self._X_va.columns), "gain": result.importances_mean}
+        )
+
+
+def _reject_initial_score(
+    kind: str, initial_score_tr: pd.Series | None, initial_score_va: pd.Series | None
+) -> None:
+    if initial_score_tr is not None or initial_score_va is not None:
+        raise ValueError(f"{kind} adapter는 초기 점수를 지원하지 않는다.")
+
+
 # kind -> adapter 팩토리. 인스턴스는 (params, fit, seed)로 만든다.
 MODEL_REGISTRY: dict[str, Callable[[dict, dict, int], ModelAdapter]] = {
     "lightgbm": LightGBMAdapter,
+    "xgboost": XGBoostAdapter,
+    "catboost": CatBoostAdapter,
+    "hist_gradient_boosting": HistGradientBoostingAdapter,
 }
 
 
