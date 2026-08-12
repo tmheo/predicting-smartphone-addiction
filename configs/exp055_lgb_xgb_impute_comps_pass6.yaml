@@ -1,15 +1,11 @@
 # 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
-# 이슈 #90: 복원 행렬 기반 비율·차이(composition) 피처의 LightGBM 대리 스크리닝.
-# tomasa2 레시피의 나머지 절반: 채택된 xgb_impute_aux의 복원 행렬(관측 원시 값 +
-# 결측 셀 복원값) 위에서 공개 소스 fe()의 조성 12개를 재현한다. 식 목록은
-# features.XGB_IMPUTE_COMPOSITIONS가 소유하며 근거 없는 일반 비율 전개는 하지 않는다.
-# 기준 실행은 exp051(champion 피처 세트의 LightGBM 판, run f139eeec4b2c495a9aeab56aba3ec665).
-# exp026 기준 실행이 아니라 exp051과 짝짓는 이유: 복원 5열은 이미 champion에 채택돼
-# 있으므로, 조성의 한계 기여는 복원 5열을 포함한 동일 조건 위에서만 분리된다.
-# 결과(run ee3339dd): OOF +0.00019였지만 12열 중 6열(awake_screen_frac, leisure,
-# min_per_open, notif_per_open, resid, wk_ratio)이 플라시보 미달이라 블록 전체 미달.
-# #74·#86 전례대로 플라시보 상회 6열만 남긴 exp055로 줄인다.
-name: exp054_lgb_xgb_impute_comps
+# 이슈 #90: 복원 행렬 조성 피처의 축소 재시도 대리 스크리닝. exp054(run ee3339dd)가
+# OOF +0.00019에도 12열 중 6열 플라시보 미달로 블록 미달이라, #74·#86 전례대로
+# 플라시보 상회 6열(social_frac, work_frac, leisure_frac, resid_frac, week_total,
+# free_time)만 남긴다. 조성은 복원 행렬에서 행 단위로 계산하므로 부분집합의 값이
+# 전체 구성과 같다(복원기 입력도 cols 전체로 동일). 기준 실행은 exp054와 같은
+# exp051(run f139eeec4b2c495a9aeab56aba3ec665).
+name: exp055_lgb_xgb_impute_comps_pass6
 
 data:
   train: data/train.csv
@@ -74,18 +70,12 @@ features:
         ]
       compositions:
         [
-          resid,
-          leisure,
           social_frac,
           work_frac,
           leisure_frac,
           resid_frac,
-          wk_ratio,
           week_total,
-          awake_screen_frac,
           free_time,
-          notif_per_open,
-          min_per_open,
         ]
       cat_cols: [gender, stress_level, academic_work_impact]
 
