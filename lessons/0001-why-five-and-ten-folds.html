@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>왜 outer 5-fold 안에서 다시 inner 10-fold로 나눌까?</title>
+  <link rel="stylesheet" href="../assets/lesson.css">
+  <script src="../assets/lesson.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">수업 0001 · 5분</p>
+    <h1>왜 outer 5-fold 안에서<br>다시 inner 10-fold로 나눌까?</h1>
+    <p class="lead">fold가 두 단계로 나뉘는 이유는 같은 검증을 두 번 해서가 아니라, 각 단계의 역할이 다르기 때문입니다.</p>
+
+    <div class="answer">
+      outer 5-fold는 모델의 성능을 측정합니다.<br>
+      inner 10-fold는 target encoding을 만들 때 자기 정답이 섞이지 않도록 합니다.
+    </div>
+
+    <h2>1. outer 5-fold는 모델 평가용이다</h2>
+    <p>전체 학습 데이터를 다섯 교실로 나눴다고 생각해 보세요.</p>
+    <p>한 번 실행할 때마다 네 교실의 데이터로 모델을 학습하고, 남은 한 교실의 데이터로 성능을 측정합니다.</p>
+    <p>검증에 사용할 교실을 바꿔 가며 다섯 번 반복하면 모든 행이 정확히 한 번씩 검증 데이터가 됩니다.</p>
+    <div class="fold-map" aria-label="outer 5-fold 중 하나를 validation fold로 사용하는 모습">
+      <div>학습</div>
+      <div>학습</div>
+      <div>학습</div>
+      <div>학습</div>
+      <div class="held-out">검증</div>
+    </div>
+    <p>이렇게 만든 다섯 번의 검증 예측을 합친 것이 OOF 예측이며, 그 AUC로 모델의 성능을 평가합니다.</p>
+
+    <h2>2. inner 10-fold는 target encoding의 누수를 막는다</h2>
+    <p>이 프로젝트는 나이처럼 같은 값을 가진 행들의 정답 평균을 target encoding feature로 만들어 모델에 넣습니다.</p>
+    <p>그런데 한 학습 행의 target encoding을 계산할 때 그 행의 정답까지 평균에 포함하면, feature에 정답 정보가 새어 들어갑니다.</p>
+    <p>특히 같은 값이 드물면 모델이 일반적인 패턴 대신 개별 정답을 외울 수 있습니다.</p>
+    <p>이를 막기 위해 outer fold의 학습 데이터 80%를 다시 10개 fold로 나눕니다.</p>
+    <p>각 inner fold의 target encoding은 나머지 9개 fold의 정답만 사용해서 만듭니다.</p>
+    <div class="inner-map" aria-label="inner 10-fold 중 9개 fold로 나머지 1개 fold의 target encoding을 만드는 모습">
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <p class="small">연한 9개 fold로 진한 1개 fold의 target encoding을 만듭니다. 진한 fold를 바꿔 가며 이 과정을 반복하면 모든 학습 행에 자기 정답이 빠진 값이 들어갑니다.</p>
+
+    <h2>3. 그러면 실제로 무엇이 몇 번 학습될까?</h2>
+    <p>LightGBM은 seed 하나당 outer fold 수만큼인 5개를 학습합니다.</p>
+    <p>inner 10-fold에서는 LightGBM을 추가로 학습하지 않습니다. target encoding feature를 만들기 위한 평균값만 fold별로 계산합니다.</p>
+    <p>현재 champion 설정은 seed가 3개이므로 LightGBM은 모두 15개를 학습합니다.</p>
+
+    <h2>4. 왜 inner fold도 5개가 아니라 10개일까?</h2>
+    <p>10-fold를 사용하면 각 학습 행의 target encoding을 계산할 때 outer 학습 데이터의 90%를 사용할 수 있습니다.</p>
+    <p>5-fold에서는 80%만 사용합니다. 따라서 10-fold로 만든 값이 outer 학습 데이터 전체로 계산한 값에 더 가깝고, 드문 값도 평균 계산에 남을 가능성이 큽니다.</p>
+    <p>대신 계산량이 늘어납니다. 10-fold가 언제나 최선이라는 뜻은 아닙니다.</p>
+    <p>이 프로젝트의 10은 exact-value target encoding에 지정한 설정값입니다. hyperparameter tuning을 위한 별도의 inner CV가 아닙니다.</p>
+
+    <section class="quiz" data-quiz>
+      <h2>기억에서 꺼내 보기</h2>
+      <p>inner 10-fold의 주된 목적은 무엇일까요?</p>
+      <button type="button" data-correct="false">성능 측정</button>
+      <button type="button" data-correct="true">누수 방지</button>
+      <p class="feedback" data-feedback aria-live="polite"></p>
+    </section>
+
+    <h2>한 줄 결론</h2>
+    <p><strong>outer 5-fold는 모델을 평가하고, inner 10-fold는 누수 없이 target encoding feature를 만듭니다.</strong></p>
+    <p><a href="../reference/0001-outer-inner-folds.html">빠른 참고표 보기</a></p>
+
+    <footer>
+      <p>주요 자료: <a href="https://scikit-learn.org/stable/auto_examples/preprocessing/plot_target_encoder_cross_val.html">scikit-learn Target Encoder의 cross-fitting 공식 예제</a></p>
+      <p>프로젝트 근거: <code>src/pipeline/cv.py</code>, <code>src/pipeline/features.py</code>, <code>configs/exp026_constrained_impute_nowidth.yaml</code></p>
+      <p>헷갈리는 부분이 있으면 언제든 이어서 질문해 주세요.</p>
+    </footer>
+  </main>
+</body>
+</html>

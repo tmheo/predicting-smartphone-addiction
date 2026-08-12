@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>outer 5-fold와 inner 10-fold 빠른 참고표</title>
+  <link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+  <main>
+    <p class="eyebrow">빠른 참고표</p>
+    <h1>outer fold는 평가,<br>inner fold는 누수 방지</h1>
+    <div class="comparison">
+      <article>
+        <h3>outer 5-fold</h3>
+        <p>전체 학습 데이터를 5등분한다.</p>
+        <p>매번 4개로 모델을 학습하고 남은 1개로 성능을 잰다.</p>
+        <p>각 행이 정확히 한 번 모델의 검증 대상이 된다.</p>
+      </article>
+      <article>
+        <h3>inner 10-fold</h3>
+        <p>outer fold의 학습 데이터만 다시 10등분한다.</p>
+        <p>각 행의 target encoding을 만들 때 그 행의 정답을 제외한다.</p>
+        <p>모델 성능을 다시 평가하는 절차가 아니다.</p>
+      </article>
+    </div>
+    <div class="answer">
+      기억할 한 문장: outer 5-fold는 모델을 평가하고, inner 10-fold는 누수 없이 target encoding feature를 만든다.
+    </div>
+    <p><a href="../lessons/0001-why-five-and-ten-folds.html">짧은 수업으로 돌아가기</a></p>
+  </main>
+</body>
+</html>
