@@ -110,3 +110,19 @@ members:
     ensemble_auc_with: 0.96779600305279
     ensemble_auc_without: 0.9677517186433671
     contribution: 4.4284409422945537e-05
+- run_id: c62a9ad334bf486cb46d738474ccd767
+  config: exp035_lattice_te
+  oof_auc: 0.9672897196399213
+  seeds: 42,43,44
+  entered_at: '2026-08-12'
+  reason: '이슈 #75: 전 쌍 격자 TE 블록. champion 교체는 스크리닝 미달(-0.00037)이나 스피어만 0.99412로 풀
+    내 최저 중복, 표준 평가 앙상블 기여 +0.00008'
+  evidence:
+    champion_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+    champion_oof_auc: 0.9675476423592995
+    floor_margin: 0.00974207728062182
+    nearest_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+    nearest_spearman: 0.9941216333051414
+    ensemble_auc_with: 0.967876902064954
+    ensemble_auc_without: 0.96779600305279
+    contribution: 8.089901216401518e-05
