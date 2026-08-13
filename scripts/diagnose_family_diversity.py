@@ -20,12 +20,11 @@ import sys
 
 import numpy as np
 import pandas as pd
-import yaml
 
-from pipeline.judgment import CHAMPION_PATH
 from pipeline.cv import score_predictions
 from pipeline.data import ID, labels
 from pipeline.judgment import rank_ensemble_auc, spearman
+from pipeline.ledger import Champion
 from pipeline.runs import MlflowRunStore, RunStore
 
 FOLDS_PATH = "artifacts/folds.parquet"
@@ -41,10 +40,9 @@ def main() -> None:
     if not run_ids:
         sys.exit("사용법: diagnose_family_diversity.py <run_id> [<run_id> ...]")
 
-    with CHAMPION_PATH.open() as f:
-        champion = yaml.safe_load(f)
+    champion = Champion.load()
     store = MlflowRunStore()
-    champ_pred = store.oof_of(champion["run_id"])
+    champ_pred = store.oof_of(champion.run_id)
     y = labels(champ_pred.index)
     folds = pd.read_parquet(FOLDS_PATH).set_index(ID)["fold"].reindex(champ_pred.index)
     assert folds.notna().all(), "folds.parquet의 id가 champion OOF와 일치하지 않는다."
@@ -52,7 +50,7 @@ def main() -> None:
     champ_resid = champ_pred.to_numpy() - y.to_numpy()
 
     print(
-        f"champion: {champion['config']} run {champion['run_id']} "
+        f"champion: {champion.config} run {champion.run_id} "
         f"(auc_oof {champ_fold_aucs['auc_oof']:.5f})"
     )
     for run_id in run_ids:

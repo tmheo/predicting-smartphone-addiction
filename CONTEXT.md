@@ -194,6 +194,20 @@ _Avoid_: ablation, 기여도 분석
 3시드 평균본이고, git_dirty가 아니고, 커밋된 folds와 sha256이 일치해야 하며, 검사의 소스는 판정 module 한 곳이다.
 _Avoid_: 등록 조건, 제출 자격
 
+**판정 장부**:
+개선 판정의 결과를 git에 커밋해 남기는 기록의 원본으로, champion 장부(artifacts/champion.yaml)와 풀 장부(artifacts/pool.yaml) 두 장이다.
+mlflow.db 없이도 "무엇이 champion인가"와 "무엇이 풀에 있는가"를 git 이력으로 재구성할 수 있게 하며, YAML 모양의 해석과 기록은 장부 module 한 곳이 소유한다.
+_Avoid_: yaml 파일, dict 장부
+
+**풀 장부**:
+후보 풀의 판정 장부로, 구성원별 성능·시드·진입 사유와 진입 근거를 진입 순서대로 담는다.
+_Avoid_: pool.yaml dict, 멤버 리스트
+
+**진입 근거**:
+풀 진입 판정 당시의 champion(run과 OOF AUC)과 판정 값(하한 여유 폭, 최근접 상관, 앙상블 기여)을 담아 풀 장부에 남기는 진입 시점 스냅샷.
+champion이 교체되어도 재평가하거나 갱신하지 않으며, 당시 champion의 OOF AUC를 함께 기록하므로 그 run이 장부에서 사라져도 스스로 완결된다.
+_Avoid_: evidence dict, 진입 증거
+
 **표준 평가 앙상블**:
 후보 풀 전체의 순위 평균으로 만든, 구성원의 제외 전후 기여를 재는 기준 앙상블.
 _Avoid_: 베이스라인 앙상블

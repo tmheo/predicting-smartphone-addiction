@@ -46,6 +46,8 @@ compare --adopt와 pool --admit이 같은 검사를 공유하고, submit도 같�
 
 metric 이름 규약(auc_oof_seed_*, auc_fold_*)의 의미 해석도 이 module 소관이다.
 실행 저장소(runs)는 기록 원형을 그대로 돌려주고, 여기의 파싱 helper가 해석한다.
+판정의 기준이 되는 장부(champion·후보 풀)의 원본과 YAML 해석은 ledger module
+소관이며(#96), 판정 함수는 그 타입을 읽기만 한다.
 """
 
 from __future__ import annotations
@@ -58,6 +60,7 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 
 from .features import PLACEBO
+from .ledger import Champion, Pool
 from .runs import RunStore
 
 AUC_THRESHOLD = 0.0001  # 확정 문턱. 이 미만의 개선은 CV 잡음으로 본다. (#15, ADR 0001)
@@ -68,7 +71,6 @@ SEED_WIN_MIN = 2  # 3시드 중 시드별 개선이 필요한 최소 시드 수.
 FOLD_WIN_MIN = 3  # 경계 구간에서 5개 fold 중 필요한 최소 승리 수.
 ENTRY_FLOOR_MARGIN = 0.01  # champion − 0.01이 풀 진입 하한. (ADR 0001)
 DUPLICATE_SPEARMAN = 0.998  # 이 이상이면 중복으로 본다. (ADR 0001)
-CHAMPION_PATH = Path("artifacts/champion.yaml")
 FOLDS_PATH = Path("artifacts/folds.parquet")
 
 
@@ -295,22 +297,20 @@ class ConfirmationVerdict:
     passed: bool
 
 
-def judge_screening(champion: dict, challenger: RunFacts) -> ScreeningVerdict:
+def judge_screening(champion: Champion, challenger: RunFacts) -> ScreeningVerdict:
     """스크리닝: 같은 시드끼리 짝지어 개선 >= 0이면 확정 재검증 자격. (ADR 0001, #74 개정)"""
     seed = SCREENING_SEEDS[0]
-    if "seed_aucs" not in champion or seed not in {int(k) for k in champion["seed_aucs"]}:
+    if seed not in champion.seed_aucs:
         raise JudgmentError(
             f"champion.yaml에 seed_aucs[{seed}]가 없어 짝지은 스크리닝 비교를 할 수 없다. "
             "동일 설정·시드로 champion을 재실행해 시드별 지표를 백필할 것."
         )
-    baseline = {int(k): v for k, v in champion["seed_aucs"].items()}[seed]
+    baseline = champion.seed_aucs[seed]
     delta = challenger.auc_oof - baseline
     auc_ok = delta >= 0.0
     mean_gain = mean_gain_of(challenger.importance)
     canary = check_canaries(challenger.features, mean_gain)
-    new_features = check_new_features(
-        set(champion["features"].split(",")), challenger.features, mean_gain
-    )
+    new_features = check_new_features(champion.features, challenger.features, mean_gain)
     return ScreeningVerdict(
         seed=seed,
         baseline_auc=baseline,
@@ -364,7 +364,7 @@ def judge_proxy_screening(
     )
 
 
-def require_confirmation_facts(champion: dict, challenger: RunFacts) -> None:
+def require_confirmation_facts(champion: Champion, challenger: RunFacts) -> None:
     """확정 재검증에 필요한 시드별·fold별 기준값이 양쪽에 있는지 검증한다."""
     missing = [s for s in CONFIRM_SEEDS if s not in challenger.seed_aucs]
     if missing:
@@ -373,27 +373,26 @@ def require_confirmation_facts(champion: dict, challenger: RunFacts) -> None:
             f"challenger run에 시드별 OOF AUC 지표({names})가 없다. "
             "판정 계약(#70) 이전 실행이므로 갱신된 파이프라인으로 재실행할 것."
         )
-    if "seed_aucs" not in champion or "fold_aucs" not in champion:
+    if not champion.seed_aucs or not champion.fold_aucs:
         raise JudgmentError(
             "champion.yaml에 seed_aucs/fold_aucs가 없다. 판정 계약(#70) 이전 champion이므로 "
             "동일 설정·시드로 champion을 재실행해 시드별 지표를 백필한 뒤 판정할 것."
         )
 
 
-def judge_confirmation(champion: dict, challenger: RunFacts) -> ConfirmationVerdict:
+def judge_confirmation(champion: Champion, challenger: RunFacts) -> ConfirmationVerdict:
     """확정 재검증: 시드 평균본 문턱 + 2/3 시드 개선 + 경계 구간 fold 승리 게이트. (ADR 0001)"""
     require_confirmation_facts(champion, challenger)
-    delta = challenger.auc_oof - champion["oof_auc"]
+    delta = challenger.auc_oof - champion.oof_auc
     auc_ok = delta >= AUC_THRESHOLD
 
-    champion_seed_aucs = {int(k): v for k, v in champion["seed_aucs"].items()}
     seed_comparisons = []
     for seed in CONFIRM_SEEDS:
-        seed_delta = challenger.seed_aucs[seed] - champion_seed_aucs[seed]
+        seed_delta = challenger.seed_aucs[seed] - champion.seed_aucs[seed]
         seed_comparisons.append(
             SeedComparison(
                 seed=seed,
-                champion_auc=champion_seed_aucs[seed],
+                champion_auc=champion.seed_aucs[seed],
                 challenger_auc=challenger.seed_aucs[seed],
                 delta=seed_delta,
                 win=seed_delta > 0,
@@ -402,20 +401,17 @@ def judge_confirmation(champion: dict, challenger: RunFacts) -> ConfirmationVerd
     seed_wins = sum(c.win for c in seed_comparisons)
     seed_ok = seed_wins >= SEED_WIN_MIN
 
-    champion_fold_aucs = {int(k): v for k, v in champion["fold_aucs"].items()}
     fold_wins = sum(
-        challenger.fold_aucs[f] > champion_fold_aucs[f] for f in sorted(champion_fold_aucs)
+        challenger.fold_aucs[f] > champion.fold_aucs[f] for f in sorted(champion.fold_aucs)
     )
     boundary = AUC_THRESHOLD <= delta < BOUNDARY_UPPER
     fold_ok = fold_wins >= FOLD_WIN_MIN if boundary else True
 
     mean_gain = mean_gain_of(challenger.importance)
     canary = check_canaries(challenger.features, mean_gain)
-    new_features = check_new_features(
-        set(champion["features"].split(",")), challenger.features, mean_gain
-    )
+    new_features = check_new_features(champion.features, challenger.features, mean_gain)
     return ConfirmationVerdict(
-        champion_auc=champion["oof_auc"],
+        champion_auc=champion.oof_auc,
         challenger_auc=challenger.auc_oof,
         delta=delta,
         auc_ok=auc_ok,
@@ -423,7 +419,7 @@ def judge_confirmation(champion: dict, challenger: RunFacts) -> ConfirmationVerd
         seed_wins=seed_wins,
         seed_ok=seed_ok,
         fold_wins=fold_wins,
-        fold_total=len(champion_fold_aucs),
+        fold_total=len(champion.fold_aucs),
         boundary=boundary,
         fold_ok=fold_ok,
         canary=canary,
@@ -506,7 +502,7 @@ class EntryVerdict:
 
 
 def judge_entry(
-    pool: dict, candidate: PoolCandidate, champion: dict, store: RunStore, y: pd.Series
+    pool: Pool, candidate: PoolCandidate, champion: Champion, store: RunStore, y: pd.Series
 ) -> EntryVerdict:
     """풀 진입 판정: 진입 하한 + 중복 게이트 + 기여 판정. (ADR 0001 계열 2)
 
@@ -514,17 +510,17 @@ def judge_entry(
     더 높으면 그 자리에서 탈락이고, 후보가 더 높으면 교체 대상만 정한 뒤 진입 여부는
     진입 하한과 기여 판정이 정한다.
     """
-    floor = champion["oof_auc"] - ENTRY_FLOOR_MARGIN
+    floor = champion.oof_auc - ENTRY_FLOOR_MARGIN
     floor_ok = candidate.auc_oof >= floor
     base = dict(
-        champion_run_id=champion["run_id"],
-        champion_auc=float(champion["oof_auc"]),
+        champion_run_id=champion.run_id,
+        champion_auc=champion.oof_auc,
         candidate_auc=candidate.auc_oof,
         floor=floor,
         floor_ok=floor_ok,
     )
 
-    members = pool["members"]
+    members = pool.members
     if not members:
         return EntryVerdict(
             **base, duplicate=None, drop_run_id=None, contribution=None, admit=floor_ok
@@ -532,20 +528,20 @@ def judge_entry(
 
     cand_pred = candidate.oof
     member_preds = {
-        m["run_id"]: store.oof_of(m["run_id"]).reindex(cand_pred.index) for m in members
+        m.run_id: store.oof_of(m.run_id).reindex(cand_pred.index) for m in members
     }
     for run_id, pred in member_preds.items():
         assert pred.notna().all(), f"구성원 {run_id}의 OOF id가 후보와 일치하지 않는다."
 
     corrs = {run_id: spearman(cand_pred, pred) for run_id, pred in member_preds.items()}
     nearest_id = max(corrs, key=corrs.get)
-    nearest = next(m for m in members if m["run_id"] == nearest_id)
+    nearest = next(m for m in members if m.run_id == nearest_id)
     is_duplicate = corrs[nearest_id] >= DUPLICATE_SPEARMAN
-    replace = is_duplicate and candidate.auc_oof > nearest["oof_auc"]
+    replace = is_duplicate and candidate.auc_oof > nearest.oof_auc
     duplicate = DuplicateCheck(
         nearest_run_id=nearest_id,
         nearest_spearman=float(corrs[nearest_id]),
-        nearest_auc=float(nearest["oof_auc"]),
+        nearest_auc=float(nearest.oof_auc),
         duplicate=is_duplicate,
         replace=replace,
     )

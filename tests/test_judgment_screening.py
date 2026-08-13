@@ -7,11 +7,14 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 import pandas as pd
 import pytest
 
 from pipeline.features import PLACEBO
 from pipeline.judgment import JudgmentError, RunFacts, judge_screening
+from pipeline.ledger import Champion
 
 
 def make_challenger(auc_oof: float) -> RunFacts:
@@ -37,12 +40,18 @@ def make_challenger(auc_oof: float) -> RunFacts:
     )
 
 
-def make_champion() -> dict:
-    return {
-        "oof_auc": 0.96740,
-        "seed_aucs": {42: 0.96705, 43: 0.96702, 44: 0.96709},
-        "features": "age,age_te,placebo_noise,placebo_noise_te",
-    }
+def make_champion() -> Champion:
+    return Champion(
+        run_id="champ",
+        oof_auc=0.96740,
+        seed_aucs={42: 0.96705, 43: 0.96702, 44: 0.96709},
+        fold_aucs={},
+        config="exp_champ",
+        features={"age", "age_te", PLACEBO, f"{PLACEBO}_te"},
+        git_commit="cafebabe",
+        adopted_at="2026-08-13",
+        reason="테스트 champion",
+    )
 
 
 def test_screening_pairs_same_seed_baseline():
@@ -59,7 +68,7 @@ def test_screening_fails_below_paired_baseline():
 
 
 def test_screening_requires_seed_aucs_backfill():
-    champion = make_champion()
-    del champion["seed_aucs"]
+    # 판정 계약(#70) 이전 champion은 seed_aucs가 비어 있다.
+    champion = dataclasses.replace(make_champion(), seed_aucs={})
     with pytest.raises(JudgmentError, match="백필"):
         judge_screening(champion, make_challenger(0.96721))

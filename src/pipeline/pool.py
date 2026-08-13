@@ -14,8 +14,10 @@
   코멘트로만 남긴다.
 
 풀 장부의 원본은 커밋되는 artifacts/pool.yaml이다. champion.yaml과 같은 이유로
-"무엇이 풀에 있는가"라는 결정과 진입 근거를 git 이력에 남긴다. 일괄 재심사는
-P3 풀 점검(#63)과 P4 앙상블 구성 단계의 소관이다. nested OOF 평가기는 P4에서 만든다.
+"무엇이 풀에 있는가"라는 결정과 진입 근거를 git 이력에 남긴다. 장부의 타입과
+YAML 해석은 ledger module 소관이며(#96), 진입 근거는 진입 시점 스냅샷이라
+champion이 교체되어도 갱신하지 않는다. 일괄 재심사는 P3 풀 점검(#63)과
+P4 앙상블 구성 단계의 소관이다. nested OOF 평가기는 P4에서 만든다.
 """
 
 from __future__ import annotations
@@ -23,13 +25,9 @@ from __future__ import annotations
 import argparse
 import datetime
 import sys
-from pathlib import Path
-
-import yaml
 
 from .data import file_sha256, labels
 from .judgment import (
-    CHAMPION_PATH,
     CONFIRM_SEEDS,
     DUPLICATE_SPEARMAN,
     ENTRY_FLOOR_MARGIN,
@@ -39,21 +37,8 @@ from .judgment import (
     judge_entry,
     load_candidate,
 )
+from .ledger import CHAMPION_PATH, POOL_PATH, Champion, EntryEvidence, Pool, PoolMember
 from .runs import MlflowRunStore, RunStore, RunStoreError
-
-POOL_PATH = Path("artifacts/pool.yaml")
-
-
-def load_pool() -> dict:
-    if not POOL_PATH.exists():
-        return {"members": []}
-    with POOL_PATH.open() as f:
-        return yaml.safe_load(f)
-
-
-def save_pool(pool: dict) -> None:
-    with POOL_PATH.open("w") as f:
-        yaml.safe_dump(pool, f, allow_unicode=True, sort_keys=False)
 
 
 def render_entry(verdict: EntryVerdict) -> list[str]:
@@ -93,30 +78,25 @@ def render_entry(verdict: EntryVerdict) -> list[str]:
     return lines
 
 
-def entry_evidence(verdict: EntryVerdict) -> dict:
-    """장부에 남길 진입 근거. 스키마의 최종 모양은 장부 타입화(#96)에서 다듬는다."""
-    evidence: dict = {
-        "champion_run_id": verdict.champion_run_id,
-        "champion_oof_auc": verdict.champion_auc,
-        "floor_margin": float(verdict.candidate_auc - verdict.floor),
-    }
+def entry_evidence(verdict: EntryVerdict) -> EntryEvidence:
+    """진입 근거 조립: 판정의 근거 값(EntryVerdict)을 진입 시점 스냅샷 기록으로 옮긴다."""
     dup = verdict.duplicate
-    evidence.update(
+    con = verdict.contribution
+    return EntryEvidence(
+        champion_run_id=verdict.champion_run_id,
+        champion_oof_auc=verdict.champion_auc,
+        floor_margin=float(verdict.candidate_auc - verdict.floor),
         nearest_run_id=dup.nearest_run_id if dup else None,
         nearest_spearman=dup.nearest_spearman if dup else None,
-    )
-    con = verdict.contribution
-    evidence.update(
         ensemble_auc_with=con.auc_with if con else None,
         ensemble_auc_without=con.auc_without if con else None,
         contribution=con.contribution if con else None,
     )
-    return evidence
 
 
-def _drop_member(pool: dict, run_id: str, reason: str, store: RunStore) -> None:
+def _drop_member(pool: Pool, run_id: str, reason: str, store: RunStore) -> None:
     """장부에서 지우고 실행 저장소의 태그로만 탈락을 남긴다. (ADR 0001)"""
-    pool["members"] = [m for m in pool["members"] if m["run_id"] != run_id]
+    pool.members = [m for m in pool.members if m.run_id != run_id]
     store.annotate(
         run_id,
         tags={
@@ -139,16 +119,15 @@ def main() -> None:
     if not CHAMPION_PATH.exists():
         sys.exit(f"{CHAMPION_PATH} 없음: 진입 하한의 기준 champion이 필요하다.")
 
-    with CHAMPION_PATH.open() as f:
-        champion = yaml.safe_load(f)
-    pool = load_pool()
+    champion = Champion.load()
+    pool = Pool.load()
     store = MlflowRunStore()
     try:
         candidate = load_candidate(args.run_id, store)
     except RunStoreError as exc:
         sys.exit(str(exc))
 
-    if any(m["run_id"] == candidate.run_id for m in pool["members"]):
+    if any(m.run_id == candidate.run_id for m in pool.members):
         sys.exit(f"run {candidate.run_id}는 이미 풀 구성원이다.")
 
     print(f"후보: {candidate.experiment} run {candidate.run_id} "
@@ -184,17 +163,16 @@ def main() -> None:
             store,
         )
 
-    pool["members"].append({
-        "run_id": candidate.run_id,
-        "config": candidate.experiment,
-        # 판정이 +0.0001 단위 비교이므로 반올림 없이 전체 정밀도로 남긴다.
-        "oof_auc": float(candidate.auc_oof),
-        "seeds": ",".join(map(str, candidate.seeds)),
-        "entered_at": datetime.date.today().isoformat(),
-        "reason": args.reason,
-        "evidence": entry_evidence(verdict),
-    })
-    save_pool(pool)
+    pool.members.append(PoolMember(
+        run_id=candidate.run_id,
+        config=candidate.experiment,
+        oof_auc=candidate.auc_oof,
+        seeds=candidate.seeds,
+        entered_at=datetime.date.today().isoformat(),
+        reason=args.reason,
+        evidence=entry_evidence(verdict),
+    ))
+    pool.save()
     print(f"풀 등록: run {candidate.run_id} → {POOL_PATH}. 커밋할 것.")
 
 

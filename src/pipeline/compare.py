@@ -12,8 +12,9 @@ challenger run의 시드로 단계를 결정하고([42]면 스크리닝, [42, 43
 
 champion의 원본은 커밋되는 artifacts/champion.yaml이다. mlflow.db는 로컬 전용이므로
 "무엇이 champion인가"라는 결정은 git 이력에 남긴다. 시드별·fold별 AUC도 함께 기록해
-확정 재검증이 mlflow.db 없이도 판정 가능하게 한다. --adopt가 이 파일을 고쳐 쓰고
-사용자는 커밋만 한다. 파일이 없으면 --adopt는 첫 champion 부트스트랩으로 동작한다.
+확정 재검증이 mlflow.db 없이도 판정 가능하게 한다. 장부의 타입과 YAML 해석은
+ledger module 소관이고(#96), --adopt가 채택 기록을 조립해 save를 부르면 사용자는
+커밋만 한다. 파일이 없으면 --adopt는 첫 champion 부트스트랩으로 동작한다.
 """
 
 from __future__ import annotations
@@ -22,13 +23,10 @@ import argparse
 import datetime
 import sys
 
-import yaml
-
 from .data import file_sha256
 from .judgment import (
     AUC_THRESHOLD,
     BOUNDARY_UPPER,
-    CHAMPION_PATH,
     CONFIRM_SEEDS,
     FOLD_WIN_MIN,
     FOLDS_PATH,
@@ -47,6 +45,7 @@ from .judgment import (
     judge_screening,
     load_run_facts,
 )
+from .ledger import CHAMPION_PATH, Champion
 from .runs import MlflowRunStore, RunStoreError
 
 
@@ -153,21 +152,17 @@ def require_adoption_eligibility(challenger: RunFacts) -> None:
 
 
 def write_champion(challenger: RunFacts, reason: str) -> None:
-    record = {
-        "run_id": challenger.run_id,
-        # 판정이 +0.0001 단위 비교이므로 반올림 없이 전체 정밀도로 남긴다.
-        "oof_auc": float(challenger.auc_oof),
-        # 확정 재검증의 시드별 비교와 경계 구간 fold 승리 게이트의 기준값. (ADR 0001)
-        "seed_aucs": {s: float(challenger.seed_aucs[s]) for s in sorted(challenger.seed_aucs)},
-        "fold_aucs": {f: float(challenger.fold_aucs[f]) for f in sorted(challenger.fold_aucs)},
-        "config": challenger.experiment,
-        "features": ",".join(sorted(challenger.features)),
-        "git_commit": challenger.git_commit,
-        "adopted_at": datetime.date.today().isoformat(),
-        "reason": reason,
-    }
-    with CHAMPION_PATH.open("w") as f:
-        yaml.safe_dump(record, f, allow_unicode=True, sort_keys=False)
+    Champion(
+        run_id=challenger.run_id,
+        oof_auc=challenger.auc_oof,
+        seed_aucs=challenger.seed_aucs,
+        fold_aucs=challenger.fold_aucs,
+        config=challenger.experiment,
+        features=challenger.features,
+        git_commit=challenger.git_commit,
+        adopted_at=datetime.date.today().isoformat(),
+        reason=reason,
+    ).save()
 
 
 def main() -> None:
@@ -215,12 +210,11 @@ def main() -> None:
                 print("--adopt --reason \"...\"으로 이 run을 첫 champion으로 기록한다.")
             return
 
-        with CHAMPION_PATH.open() as f:
-            champion = yaml.safe_load(f)
-        if champion["run_id"] == challenger.run_id:
+        champion = Champion.load()
+        if champion.run_id == challenger.run_id:
             sys.exit("challenger가 현재 champion과 같은 run이다.")
 
-        print(f"champion  : {champion['config']} run {champion['run_id']}")
+        print(f"champion  : {champion.config} run {champion.run_id}")
         print(f"challenger: {challenger.experiment} run {challenger.run_id}")
 
         if challenger.seeds == SCREENING_SEEDS:

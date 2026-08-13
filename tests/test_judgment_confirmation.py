@@ -13,18 +13,24 @@ import pytest
 
 from pipeline.features import PLACEBO
 from pipeline.judgment import JudgmentError, judge_confirmation, load_run_facts
+from pipeline.ledger import Champion
 from pipeline.runs import InMemoryRunStore
 
 FEATURES = f"age,{PLACEBO}"
 
 
-def make_champion() -> dict:
-    return {
-        "oof_auc": 0.96700,
-        "seed_aucs": {42: 0.96690, 43: 0.96700, 44: 0.96710},
-        "fold_aucs": {f: 0.96700 for f in range(5)},
-        "features": FEATURES,
-    }
+def make_champion() -> Champion:
+    return Champion(
+        run_id="champ",
+        oof_auc=0.96700,
+        seed_aucs={42: 0.96690, 43: 0.96700, 44: 0.96710},
+        fold_aucs={f: 0.96700 for f in range(5)},
+        config="exp_champ",
+        features=set(FEATURES.split(",")),
+        git_commit="cafebabe",
+        adopted_at="2026-08-13",
+        reason="테스트 champion",
+    )
 
 
 def make_challenger(

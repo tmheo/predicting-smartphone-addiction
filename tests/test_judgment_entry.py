@@ -17,6 +17,7 @@ from pipeline.judgment import (
     judge_entry,
     load_candidate,
 )
+from pipeline.ledger import Champion, EntryEvidence, Pool, PoolMember
 from pipeline.runs import InMemoryRunStore
 
 IDS = list(range(1, 9))
@@ -50,12 +51,44 @@ def make_candidate(
     return load_candidate("cand", store)
 
 
-def make_champion() -> dict:
-    return {"run_id": "champ", "oof_auc": 0.97000}
+def make_champion() -> Champion:
+    return Champion(
+        run_id="champ",
+        oof_auc=0.97000,
+        seed_aucs={},
+        fold_aucs={},
+        config="exp_champ",
+        features=set(),
+        git_commit="cafebabe",
+        adopted_at="2026-08-13",
+        reason="테스트 champion",
+    )
 
 
-def pool_with(members: list[dict]) -> dict:
-    return {"members": members}
+def member(run_id: str, oof_auc: float) -> PoolMember:
+    """진입 판정이 읽는 건 run_id와 oof_auc뿐이고, 나머지는 장부 기록 형식 채우기다."""
+    return PoolMember(
+        run_id=run_id,
+        config=f"exp_{run_id}",
+        oof_auc=oof_auc,
+        seeds=[42, 43, 44],
+        entered_at="2026-08-11",
+        reason="테스트 구성원",
+        evidence=EntryEvidence(
+            champion_run_id="champ",
+            champion_oof_auc=0.97000,
+            floor_margin=0.0,
+            nearest_run_id=None,
+            nearest_spearman=None,
+            ensemble_auc_with=None,
+            ensemble_auc_without=None,
+            contribution=None,
+        ),
+    )
+
+
+def pool_with(members: list[PoolMember]) -> Pool:
+    return Pool(members=members)
 
 
 @pytest.mark.parametrize(("auc_oof", "admit"), [(0.96000, True), (0.95999, False)])
@@ -74,7 +107,7 @@ def test_entry_positive_contribution_admits():
     store = make_store_with_member(IMPERFECT)
     candidate = make_candidate(store, auc_oof=0.96900, preds=PERFECT)
     verdict = judge_entry(
-        pool_with([{"run_id": "m1", "oof_auc": 0.96500}]), candidate, make_champion(), store, Y
+        pool_with([member("m1", 0.96500)]), candidate, make_champion(), store, Y
     )
     assert not verdict.duplicate.duplicate
     assert verdict.contribution.contribution > 0
@@ -87,7 +120,7 @@ def test_entry_negative_contribution_rejects():
     store = make_store_with_member(IMPERFECT)
     candidate = make_candidate(store, auc_oof=0.96900, preds=PERFECT[::-1])
     verdict = judge_entry(
-        pool_with([{"run_id": "m1", "oof_auc": 0.96500}]), candidate, make_champion(), store, Y
+        pool_with([member("m1", 0.96500)]), candidate, make_champion(), store, Y
     )
     assert not verdict.duplicate.duplicate
     assert verdict.contribution.contribution < 0
@@ -99,7 +132,7 @@ def test_entry_duplicate_with_lower_auc_is_early_rejection():
     store = make_store_with_member(IMPERFECT)
     candidate = make_candidate(store, auc_oof=0.96400, preds=IMPERFECT)
     verdict = judge_entry(
-        pool_with([{"run_id": "m1", "oof_auc": 0.96500}]), candidate, make_champion(), store, Y
+        pool_with([member("m1", 0.96500)]), candidate, make_champion(), store, Y
     )
     assert verdict.duplicate.duplicate and not verdict.duplicate.replace
     assert verdict.drop_run_id is None
@@ -113,7 +146,7 @@ def test_entry_duplicate_with_higher_auc_replaces_member():
     store = make_store_with_member(IMPERFECT)
     candidate = make_candidate(store, auc_oof=0.96600, preds=IMPERFECT)
     verdict = judge_entry(
-        pool_with([{"run_id": "m1", "oof_auc": 0.96500}]), candidate, make_champion(), store, Y
+        pool_with([member("m1", 0.96500)]), candidate, make_champion(), store, Y
     )
     assert verdict.duplicate.replace
     assert verdict.drop_run_id == "m1"
@@ -126,10 +159,7 @@ def test_entry_replacement_measures_contribution_against_remaining_pool():
     store = make_store_with_member(IMPERFECT)
     store.add_run("m2", oof=oof_frame([0.2, 0.1, 0.4, 0.3, 0.6, 0.5, 0.8, 0.7]))
     candidate = make_candidate(store, auc_oof=0.96600, preds=IMPERFECT)
-    members = [
-        {"run_id": "m1", "oof_auc": 0.96500},
-        {"run_id": "m2", "oof_auc": 0.96300},
-    ]
+    members = [member("m1", 0.96500), member("m2", 0.96300)]
     verdict = judge_entry(pool_with(members), candidate, make_champion(), store, Y)
     assert verdict.drop_run_id == "m1"
     assert verdict.contribution is not None
