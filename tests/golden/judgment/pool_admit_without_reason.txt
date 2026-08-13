@@ -1,0 +1,5 @@
+$ python -m pipeline.pool e2b76edd9d204290810e39a7457c4c48 --admit
+exit: 1
+--- stdout ---
+--- stderr ---
+--admit에는 --reason "한 줄 사유"가 필요하다.

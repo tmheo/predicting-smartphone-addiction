@@ -1,0 +1,5 @@
+$ python -m pipeline.pool 3d5239b07c6e475baa7dde03fb0b99bc
+exit: 1
+--- stdout ---
+--- stderr ---
+run 3d5239b07c6e475baa7dde03fb0b99bc는 이미 풀 구성원이다.

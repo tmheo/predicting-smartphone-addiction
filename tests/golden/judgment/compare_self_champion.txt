@@ -1,0 +1,5 @@
+$ python -m pipeline.compare 3d5239b07c6e475baa7dde03fb0b99bc
+exit: 1
+--- stdout ---
+--- stderr ---
+challenger가 현재 champion과 같은 run이다.

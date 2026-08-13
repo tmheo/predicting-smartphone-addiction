@@ -1,0 +1,5 @@
+$ python -m pipeline.compare dd1369ef67ba4f768a0819e97f8fdf0a --adopt
+exit: 1
+--- stdout ---
+--- stderr ---
+--adopt에는 --reason "한 줄 사유"가 필요하다.

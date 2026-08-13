@@ -1,0 +1,6 @@
+$ python -m pipeline.compare 2c6150364304443c813302d6fa19528d
+exit: 0
+--- stdout ---
+artifacts/champion.yaml 없음: 첫 champion 부트스트랩 모드.
+--adopt --reason "..."으로 이 run을 첫 champion으로 기록한다.
+--- stderr ---

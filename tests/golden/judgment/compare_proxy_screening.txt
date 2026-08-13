@@ -1,0 +1,15 @@
+$ python -m pipeline.compare 32d5caccd76045d8b624f636c548a075 --proxy-baseline f139eeec4b2c495a9aeab56aba3ec665
+exit: 0
+--- stdout ---
+대리 기준 실행: exp051_lgb_xgb_impute_pass5 run f139eeec4b2c495a9aeab56aba3ec665
+challenger   : exp056_lgb_xgb_impute_comps5 run 32d5caccd76045d8b624f636c548a075
+대리 스크리닝(seed 42 짝지은 비교) OOF AUC: 기준 실행 0.96735 → challenger 0.96754 (delta +0.00019, 문턱 개선 >= 0) → 통과
+카나리아 placebo_noise_te: 평균 gain 3765.9 vs 플라시보 21370.1 → 통과
+새 피처 imp_leisure_frac: 평균 gain 24588.6 vs 플라시보 21370.1 → 통과
+새 피처 imp_resid_frac: 평균 gain 39276.3 vs 플라시보 21370.1 → 통과
+새 피처 imp_social_frac: 평균 gain 251026.4 vs 플라시보 21370.1 → 통과
+새 피처 imp_week_total: 평균 gain 2674725.1 vs 플라시보 21370.1 → 통과
+새 피처 imp_work_frac: 평균 gain 29611.2 vs 플라시보 21370.1 → 통과
+공식 스크리닝 진입 자격 획득: champion 모델 계열의 seed 42 설정으로 같은 특성을 실행한 뒤 공식 개선 판정을 수행할 것. 대리 스크리닝 통과는 채택이 아니다.
+판정: 대리 스크리닝 통과
+--- stderr ---

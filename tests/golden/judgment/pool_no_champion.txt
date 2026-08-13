@@ -1,0 +1,5 @@
+$ python -m pipeline.pool e2b76edd9d204290810e39a7457c4c48
+exit: 1
+--- stdout ---
+--- stderr ---
+artifacts/champion.yaml 없음: 진입 하한의 기준 champion이 필요하다.

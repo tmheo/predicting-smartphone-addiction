@@ -1,0 +1,5 @@
+$ python -m pipeline.compare 32d5caccd76045d8b624f636c548a075 --proxy-baseline f139eeec4b2c495a9aeab56aba3ec665 --adopt --reason 골든 박제: 거부 경로
+exit: 1
+--- stdout ---
+--- stderr ---
+대리 스크리닝은 champion 채택이 아니므로 --adopt와 --reason을 쓸 수 없다.

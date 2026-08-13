@@ -1,0 +1,8 @@
+$ python -m pipeline.pool aa9010fe9afe4f6aaa4913146fb6bb97
+exit: 0
+--- stdout ---
+후보: exp022_orig_knn run aa9010fe9afe4f6aaa4913146fb6bb97 (auc_oof 0.96694, 시드 [42])
+진입 하한: OOF AUC 0.96694 vs champion − 0.01 = 0.95854 → 통과
+중복 게이트: 최근접 52e9c12bcfb94ee9912e4bb7f43e3f09 스피어만 0.99850 >= 0.998, 기존 구성원이 더 높다(0.96733 >= 0.96694) → 진입 탈락
+판정: 진입 아님
+--- stderr ---
