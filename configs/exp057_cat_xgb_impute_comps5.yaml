@@ -3,6 +3,8 @@
 # LightGBM 대리 exp056(run 32d5cacc)이 +0.00019에 새 5열 전부 플라시보 상회로
 # 통과해 공식 판정을 연다. 피처 세트는 champion exp052 구성에 조성 5열
 # (social_frac, work_frac, leisure_frac, resid_frac, week_total)만 더한 것이다.
+# seed 42 스크리닝(run dd1369ef)은 +0.00016 통과, 새 피처 5개 전부 플라시보 상회.
+# 대리(+0.00019)와 방향·규모가 일치해 3시드 확정 재검증으로 전환한다.
 name: exp057_cat_xgb_impute_comps5
 
 data:
@@ -87,4 +89,4 @@ model:
     early_stopping_rounds: 200
 
 cv:
-  seeds: [42]
+  seeds: [42, 43, 44]
