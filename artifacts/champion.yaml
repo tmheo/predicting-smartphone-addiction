@@ -1,19 +1,19 @@
-run_id: 3d5239b07c6e475baa7dde03fb0b99bc
-oof_auc: 0.968542903240823
+run_id: b951fac51b6b44298f7fdb0b543caba6
+oof_auc: 0.9689221785328946
 seed_aucs:
-  42: 0.9683330157462904
-  43: 0.9683281413364369
-  44: 0.9683809547807676
+  42: 0.9685219458836516
+  43: 0.9685479868581301
+  44: 0.9685732045514481
 fold_aucs:
-  0: 0.9679400506678786
-  1: 0.9687255670331913
-  2: 0.9685857165401761
-  3: 0.9691893413297427
-  4: 0.9682756507351887
-config: exp057_cat_xgb_impute_comps5
-features: academic_work_impact,age,age_te,app_opens_per_day,app_opens_per_day_te,daily_screen_time_hours,daily_screen_time_hours_recon,daily_screen_time_hours_te,daily_screen_time_hours_xgb_recon,gaming_hours,gaming_hours_recon,gaming_hours_xgb_recon,gender,imp_leisure_frac,imp_resid_frac,imp_social_frac,imp_week_total,imp_work_frac,notifications_per_day,notifications_per_day_te,other_screen,placebo_noise,placebo_noise_te,screen_slack,sleep_hours,sleep_hours_te,social_media_hours,social_media_hours_recon,social_media_hours_te,social_media_hours_xgb_recon,stress_level,weekend_screen_time,weekend_screen_time_te,weekend_screen_time_xgb_recon,work_study_hours,work_study_hours_recon,work_study_hours_te,work_study_hours_xgb_recon
-git_commit: b9e4b2641e30603617fc02a554101854501cae23
-adopted_at: '2026-08-13'
-reason: '이슈 #90: 복원 행렬 조성 피처 5열(social_frac, work_frac, leisure_frac, resid_frac,
-  week_total) 추가로 3시드 +0.00019, 3/3 시드, 5/5 fold 개선. tomasa2 레시피의 비율·차이 절반을 공개 소스
-  식 재현 범위로 채택'
+  0: 0.9683091142315264
+  1: 0.968915634342221
+  2: 0.9691297145614881
+  3: 0.9696079262640018
+  4: 0.9687135944987364
+config: exp059_lookup_transformer
+features: academic_work_impact,age,app_opens_per_day,daily_screen_time_hours,gaming_hours,gender,notifications_per_day,placebo_noise,screen_slack,sgw_frac,sgw_sum,slack_frac,sleep_hours,social_media_hours,stress_level,weekend_screen_time,wk_minus_sgw,wk_other,work_study_hours
+git_commit: 495cc49df87e1de625da99f440b7d7fb80ac4f33
+adopted_at: '2026-08-14'
+reason: '이슈 #58: Lookup-Transformer(정확값 lookup embedding + PLR + Transformer, 원문 tamerlanomralinov
+  재현)를 5-fold·학습 fold 전용 어휘로 재현. 3시드 +0.00038, 3/3 시드, 5/5 fold, 원문 예산 토큰 6종 전부 플라시보
+  상회'

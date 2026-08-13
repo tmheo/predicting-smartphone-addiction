@@ -174,3 +174,19 @@ members:
     ensemble_auc_with: 0.9681324114087981
     ensemble_auc_without: 0.9681168962972342
     contribution: 1.551511156394625e-05
+- run_id: b951fac51b6b44298f7fdb0b543caba6
+  config: exp059_lookup_transformer
+  oof_auc: 0.9689221785328946
+  seeds: 42,43,44
+  entered_at: '2026-08-14'
+  reason: '이슈 #58: 신경망 계열 첫 구성원. 풀 내 최근접 스피어만 0.98149(exp045)로 최저 수준 중복, 표준 평가 앙상블
+    기여로 진입'
+  evidence:
+    champion_run_id: b951fac51b6b44298f7fdb0b543caba6
+    champion_oof_auc: 0.9689221785328946
+    floor_margin: 0.010000000000000009
+    nearest_run_id: e2c432b487564df990a4cc3baf3d6fc0
+    nearest_spearman: 0.9814932318570025
+    ensemble_auc_with: 0.9683856530124514
+    ensemble_auc_without: 0.9681324114087981
+    contribution: 0.00025324160365325366
