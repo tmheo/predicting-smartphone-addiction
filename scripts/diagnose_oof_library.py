@@ -30,7 +30,8 @@ from scipy.special import logit
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 
-from pipeline.pool import POOL_PATH, _member_pred
+from pipeline.pool import POOL_PATH
+from pipeline.runs import MlflowRunStore
 
 LIB = Path("data/external/s6e8-oof-library")
 TRAIN_PATH = Path("data/train.csv")
@@ -133,9 +134,10 @@ def main() -> None:
     # 우리 풀 구성원의 OOF를 train 행 순서로 정렬해 로드한다.
     with POOL_PATH.open() as f:
         pool = yaml.safe_load(f)
+    store = MlflowRunStore()
     ours: dict[str, np.ndarray] = {}
     for m in pool["members"]:
-        pred = _member_pred(m["run_id"]).reindex(train["id"])
+        pred = store.oof_of(m["run_id"]).reindex(train["id"])
         assert pred.notna().all(), f"구성원 {m['config']}의 OOF id가 train과 어긋난다"
         ours[m["config"]] = pred.to_numpy()
 

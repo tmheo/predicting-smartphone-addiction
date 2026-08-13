@@ -49,6 +49,7 @@ import pandas as pd
 import yaml
 
 from .features import PLACEBO
+from .runs import MlflowRunStore, RunStore, RunStoreError
 
 AUC_THRESHOLD = 0.0001  # 확정 문턱. 이 미만의 개선은 CV 잡음으로 본다. (#15, ADR 0001)
 BOUNDARY_UPPER = 0.0002  # 이 미만의 개선 폭은 경계 구간으로 fold 승리 게이트를 추가한다.
@@ -57,7 +58,6 @@ CONFIRM_SEEDS = [42, 43, 44]  # 확정 재검증 시드. 고정. (ADR 0001)
 SEED_WIN_MIN = 2  # 3시드 중 시드별 개선이 필요한 최소 시드 수.
 FOLD_WIN_MIN = 3  # 경계 구간에서 5개 fold 중 필요한 최소 승리 수.
 CHAMPION_PATH = Path("artifacts/champion.yaml")
-TRACKING_URI = "sqlite:///mlflow.db"
 
 
 @dataclass(frozen=True)
@@ -77,22 +77,9 @@ class RunFacts:
     input_hashes: dict[str, str] = field(default_factory=dict)
 
 
-def load_run_facts(run_id: str) -> RunFacts:
-    import mlflow
-
-    client = mlflow.tracking.MlflowClient(tracking_uri=TRACKING_URI)
-    run = client.get_run(run_id)
-    importance_path = client.download_artifacts(run_id, "feature_importance.parquet")
-    config_artifacts = [
-        item.path for item in client.list_artifacts(run_id) if item.path.endswith((".yaml", ".yml"))
-    ]
-    if len(config_artifacts) != 1:
-        sys.exit(
-            f"run {run_id}의 루트에서 설정 YAML 하나를 찾지 못했다: {config_artifacts}"
-        )
-    config_path = client.download_artifacts(run_id, config_artifacts[0])
-    with Path(config_path).open() as f:
-        config = yaml.safe_load(f)
+def load_run_facts(run_id: str, store: RunStore) -> RunFacts:
+    meta = store.facts_of(run_id)
+    config = store.config_of(run_id)
     model_params = {"model.kind": str(config["model"]["kind"])}
     model_params.update(
         {f"model.params.{key}": str(value) for key, value in config["model"]["params"].items()}
@@ -100,28 +87,27 @@ def load_run_facts(run_id: str) -> RunFacts:
     model_params.update(
         {f"model.fit.{key}": str(value) for key, value in config["model"]["fit"].items()}
     )
-    metrics = run.data.metrics
     return RunFacts(
         run_id=run_id,
-        experiment=run.data.params["experiment"],
-        auc_oof=metrics["auc_oof"],
-        features=set(run.data.params["features"].split(",")),
-        seeds=[int(s) for s in run.data.params["seeds"].split(",")],
+        experiment=meta.params["experiment"],
+        auc_oof=meta.metrics["auc_oof"],
+        features=set(meta.params["features"].split(",")),
+        seeds=[int(s) for s in meta.params["seeds"].split(",")],
         seed_aucs={
             int(k.rsplit("_", 1)[1]): v
-            for k, v in metrics.items()
+            for k, v in meta.metrics.items()
             if k.startswith("auc_oof_seed_")
         },
         fold_aucs={
             int(k.rsplit("_", 1)[1]): v
-            for k, v in metrics.items()
+            for k, v in meta.metrics.items()
             if k.startswith("auc_fold_")
         },
-        git_commit=run.data.tags["git_commit"],
-        importance=pd.read_parquet(importance_path),
+        git_commit=meta.tags["git_commit"],
+        importance=store.importance_of(run_id),
         model_params=model_params,
         input_hashes={
-            key: value for key, value in run.data.tags.items() if key.startswith("sha256.")
+            key: value for key, value in meta.tags.items() if key.startswith("sha256.")
         },
     )
 
@@ -345,10 +331,14 @@ def main() -> None:
     if args.proxy_baseline and (args.adopt or args.reason):
         sys.exit("대리 스크리닝은 champion 채택이 아니므로 --adopt와 --reason을 쓸 수 없다.")
 
-    challenger = load_run_facts(args.run_id)
+    store = MlflowRunStore()
+    try:
+        challenger = load_run_facts(args.run_id, store)
+        baseline = load_run_facts(args.proxy_baseline, store) if args.proxy_baseline else None
+    except RunStoreError as exc:
+        sys.exit(str(exc))
 
-    if args.proxy_baseline:
-        baseline = load_run_facts(args.proxy_baseline)
+    if baseline is not None:
         print(f"대리 기준 실행: {baseline.experiment} run {baseline.run_id}")
         print(f"challenger   : {challenger.experiment} run {challenger.run_id}")
         passed, lines = judge_proxy_screening(baseline, challenger)

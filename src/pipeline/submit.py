@@ -25,8 +25,9 @@ import datetime
 import sys
 import time
 
+from .runs import MlflowRunStore, RunStoreError
+
 COMPETITION = "playground-series-s6e8"
-TRACKING_URI = "sqlite:///mlflow.db"
 SCORE_POLL_SECONDS = 5
 SCORE_TIMEOUT_SECONDS = 300
 
@@ -62,26 +63,28 @@ def main() -> None:
     parser.add_argument("--force", action="store_true", help="이미 제출된 run의 재제출을 허용")
     args = parser.parse_args()
 
-    import mlflow
     from kaggle.api.kaggle_api_extended import KaggleApi
 
-    client = mlflow.tracking.MlflowClient(tracking_uri=TRACKING_URI)
-    run = client.get_run(args.run_id)
+    store = MlflowRunStore()
+    try:
+        meta = store.facts_of(args.run_id)
+    except RunStoreError as exc:
+        sys.exit(str(exc))
 
-    if run.data.tags.get("git_dirty") == "True":
+    if meta.tags.get("git_dirty") == "True":
         sys.exit("제출 거부: git_dirty=True로 기록된 run이다. 우회 옵션은 없다. 커밋 후 재실행할 것.")
 
-    already_scored = "public_auc" in run.data.metrics
-    already_submitted = "submitted_at" in run.data.tags
+    already_scored = "public_auc" in meta.metrics
+    already_submitted = "submitted_at" in meta.tags
     if already_scored and not args.force:
         sys.exit(
-            f"제출 거부: 이 run에는 이미 public_auc={run.data.metrics['public_auc']}가 있다. "
+            f"제출 거부: 이 run에는 이미 public_auc={meta.metrics['public_auc']}가 있다. "
             "재제출하려면 --force."
         )
 
-    auc_oof = run.data.metrics["auc_oof"]
+    auc_oof = meta.metrics["auc_oof"]
     message = submission_message(
-        run.info.run_name, args.run_id, run.data.tags["git_commit"], auc_oof
+        meta.run_name, args.run_id, meta.tags["git_commit"], auc_oof
     )
 
     api = KaggleApi()
@@ -89,19 +92,22 @@ def main() -> None:
 
     if already_submitted and not args.force:
         # 앞선 실행이 제출 후 점수 회수에서 끊긴 경우: 제출 없이 회수만 재시도.
-        print(f"이미 제출된 run({run.data.tags['submitted_at']}): 점수 회수만 다시 시도한다.")
+        print(f"이미 제출된 run({meta.tags['submitted_at']}): 점수 회수만 다시 시도한다.")
     else:
-        path = client.download_artifacts(args.run_id, "submission.csv")
+        try:
+            path = store.submission_path_of(args.run_id)
+        except RunStoreError as exc:
+            sys.exit(str(exc))
         print(f"제출: {COMPETITION} ← run {args.run_id[:8]}")
         print(f"메시지: {message}")
-        result = api.competition_submit(path, message, COMPETITION, quiet=True)
+        result = api.competition_submit(str(path), message, COMPETITION, quiet=True)
         if result.message == api.COMPETITION_SUBMIT_UPLOAD_FAILED_MESSAGE:
             sys.exit(f"제출 실패: {result.message}")
         submitted_at = datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")
-        client.set_tag(args.run_id, "submitted_at", submitted_at)
+        store.annotate(args.run_id, tags={"submitted_at": submitted_at})
 
     public_score = fetch_public_score(api, message)
-    client.log_metric(args.run_id, "public_auc", float(public_score))
+    store.annotate(args.run_id, metrics={"public_auc": float(public_score)})
     print(f"public_auc={public_score} (oof_auc={auc_oof:.5f}) → run에 기록 완료.")
 
 

@@ -22,21 +22,18 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from pipeline.compare import CHAMPION_PATH, TRACKING_URI
+from pipeline.compare import CHAMPION_PATH
 from pipeline.cv import score_predictions
-from pipeline.data import ID, TARGET
-from pipeline.pool import _load_labels, _member_pred, rank_ensemble_auc, spearman
+from pipeline.data import ID, labels
+from pipeline.pool import rank_ensemble_auc, spearman
+from pipeline.runs import MlflowRunStore, RunStore
 
 FOLDS_PATH = "artifacts/folds.parquet"
 
 
-def load_run(run_id: str) -> tuple[str, pd.Series]:
+def load_run(run_id: str, store: RunStore) -> tuple[str, pd.Series]:
     """run의 실험 이름과 OOF 예측(id 인덱스)을 돌려준다."""
-    import mlflow
-
-    client = mlflow.tracking.MlflowClient(tracking_uri=TRACKING_URI)
-    run = client.get_run(run_id)
-    return run.data.params["experiment"], _member_pred(run_id)
+    return store.facts_of(run_id).params["experiment"], store.oof_of(run_id)
 
 
 def main() -> None:
@@ -46,8 +43,9 @@ def main() -> None:
 
     with CHAMPION_PATH.open() as f:
         champion = yaml.safe_load(f)
-    champ_pred = _member_pred(champion["run_id"])
-    y = _load_labels(champ_pred.index)
+    store = MlflowRunStore()
+    champ_pred = store.oof_of(champion["run_id"])
+    y = labels(champ_pred.index)
     folds = pd.read_parquet(FOLDS_PATH).set_index(ID)["fold"].reindex(champ_pred.index)
     assert folds.notna().all(), "folds.parquet의 id가 champion OOF와 일치하지 않는다."
     champ_fold_aucs = score_predictions(y, folds, champ_pred.to_numpy())
@@ -58,7 +56,7 @@ def main() -> None:
         f"(auc_oof {champ_fold_aucs['auc_oof']:.5f})"
     )
     for run_id in run_ids:
-        name, pred = load_run(run_id)
+        name, pred = load_run(run_id, store)
         pred = pred.reindex(champ_pred.index)
         assert pred.notna().all(), f"run {run_id}의 OOF id가 champion과 일치하지 않는다."
         fold_aucs = score_predictions(y, folds, pred.to_numpy())

@@ -29,8 +29,9 @@ from .cv import CVResult
 from .data import ID, TARGET
 from .features import PLACEBO
 
-# 상대 경로 URI이므로 저장소 루트에서 실행하는 것이 전제다.
-TRACKING_URI = "sqlite:///mlflow.db"
+# 실행이 어디 있는가는 실행 저장소(runs)의 지식이다. 기록기는 그 위치에 쓴다.
+from .runs import TRACKING_URI
+
 EXPERIMENT_NAME = "predicting-smartphone-addiction"
 
 

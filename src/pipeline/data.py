@@ -13,6 +13,14 @@ import pandas as pd
 
 TARGET = "addicted_label"
 ID = "id"
+TRAIN_PATH = Path("data/train.csv")
+
+
+def labels(index: pd.Index, train_path: Path = TRAIN_PATH) -> pd.Series:
+    """train 라벨을 주어진 id 순서로 정렬해 돌려준다. id가 어긋나면 즉시 실패한다."""
+    aligned = pd.read_csv(train_path, usecols=[ID, TARGET]).set_index(ID)[TARGET].reindex(index)
+    assert aligned.notna().all(), "요청한 id가 train과 일치하지 않는다."
+    return aligned
 
 
 def file_sha256(path: Path) -> str:

@@ -34,19 +34,19 @@ import pandas as pd
 import yaml
 from sklearn.metrics import roc_auc_score
 
-from .compare import CHAMPION_PATH, CONFIRM_SEEDS, TRACKING_URI
-from .data import ID, TARGET, file_sha256
+from .compare import CHAMPION_PATH, CONFIRM_SEEDS
+from .data import file_sha256, labels
+from .runs import MlflowRunStore, RunStore, RunStoreError
 
 ENTRY_FLOOR_MARGIN = 0.01  # champion − 0.01이 진입 하한. (ADR 0001)
 DUPLICATE_SPEARMAN = 0.998  # 이 이상이면 중복으로 본다. (ADR 0001)
 POOL_PATH = Path("artifacts/pool.yaml")
 FOLDS_PATH = Path("artifacts/folds.parquet")
-TRAIN_PATH = Path("data/train.csv")
 
 
 @dataclass(frozen=True)
 class PoolCandidate:
-    """진입 판정에 필요한 MLflow run의 단면."""
+    """진입 판정에 필요한 실행의 단면."""
 
     run_id: str
     experiment: str
@@ -54,27 +54,19 @@ class PoolCandidate:
     seeds: list[int]
     git_dirty: bool
     folds_sha256: str
-    oof: pd.DataFrame  # columns: id, fold, pred
+    oof: pd.Series  # id 인덱스의 OOF 예측.
 
 
-def _client():
-    import mlflow
-
-    return mlflow.tracking.MlflowClient(tracking_uri=TRACKING_URI)
-
-
-def load_candidate(run_id: str) -> PoolCandidate:
-    client = _client()
-    run = client.get_run(run_id)
-    oof_path = client.download_artifacts(run_id, "oof.parquet")
+def load_candidate(run_id: str, store: RunStore) -> PoolCandidate:
+    meta = store.facts_of(run_id)
     return PoolCandidate(
         run_id=run_id,
-        experiment=run.data.params["experiment"],
-        auc_oof=run.data.metrics["auc_oof"],
-        seeds=[int(s) for s in run.data.params["seeds"].split(",")],
-        git_dirty=run.data.tags["git_dirty"] == "True",
-        folds_sha256=run.data.tags["sha256.folds"],
-        oof=pd.read_parquet(oof_path),
+        experiment=meta.params["experiment"],
+        auc_oof=meta.metrics["auc_oof"],
+        seeds=[int(s) for s in meta.params["seeds"].split(",")],
+        git_dirty=meta.tags["git_dirty"] == "True",
+        folds_sha256=meta.tags["sha256.folds"],
+        oof=store.oof_of(run_id),
     )
 
 
@@ -88,20 +80,6 @@ def load_pool() -> dict:
 def save_pool(pool: dict) -> None:
     with POOL_PATH.open("w") as f:
         yaml.safe_dump(pool, f, allow_unicode=True, sort_keys=False)
-
-
-def _member_pred(run_id: str) -> pd.Series:
-    """구성원 run의 OOF 예측을 id 인덱스 Series로 돌려준다."""
-    oof = pd.read_parquet(_client().download_artifacts(run_id, "oof.parquet"))
-    return oof.set_index(ID)["pred"]
-
-
-def _load_labels(index: pd.Index) -> pd.Series:
-    """train 라벨을 OOF의 id 순서로 정렬해 돌려준다. id가 어긋나면 즉시 실패한다."""
-    labels = pd.read_csv(TRAIN_PATH, usecols=[ID, TARGET]).set_index(ID)[TARGET]
-    aligned = labels.reindex(index)
-    assert aligned.notna().all(), "OOF의 id가 train과 일치하지 않는다."
-    return aligned
 
 
 def spearman(a: pd.Series, b: pd.Series) -> float:
@@ -123,7 +101,9 @@ class EntryVerdict:
     lines: list[str]
 
 
-def judge_entry(pool: dict, candidate: PoolCandidate, champion: dict) -> EntryVerdict:
+def judge_entry(
+    pool: dict, candidate: PoolCandidate, champion: dict, store: RunStore
+) -> EntryVerdict:
     lines: list[str] = []
     evidence: dict = {
         "champion_run_id": champion["run_id"],
@@ -145,9 +125,9 @@ def judge_entry(pool: dict, candidate: PoolCandidate, champion: dict) -> EntryVe
         lines.append("풀이 비어 있다: 중복 게이트와 기여 판정은 묻지 않는다.")
         return EntryVerdict(floor_ok, None, evidence, lines)
 
-    cand_pred = candidate.oof.set_index(ID)["pred"]
-    y = _load_labels(cand_pred.index)
-    member_preds = {m["run_id"]: _member_pred(m["run_id"]).reindex(cand_pred.index) for m in members}
+    cand_pred = candidate.oof
+    y = labels(cand_pred.index)
+    member_preds = {m["run_id"]: store.oof_of(m["run_id"]).reindex(cand_pred.index) for m in members}
     for run_id, pred in member_preds.items():
         assert pred.notna().all(), f"구성원 {run_id}의 OOF id가 후보와 일치하지 않는다."
 
@@ -201,12 +181,16 @@ def judge_entry(pool: dict, candidate: PoolCandidate, champion: dict) -> EntryVe
     return EntryVerdict(floor_ok and contribution_ok, drop_run_id, evidence, lines)
 
 
-def _drop_member(pool: dict, run_id: str, reason: str) -> None:
-    """장부에서 지우고 MLflow 태그로만 탈락을 남긴다. (ADR 0001)"""
+def _drop_member(pool: dict, run_id: str, reason: str, store: RunStore) -> None:
+    """장부에서 지우고 실행 저장소의 태그로만 탈락을 남긴다. (ADR 0001)"""
     pool["members"] = [m for m in pool["members"] if m["run_id"] != run_id]
-    client = _client()
-    client.set_tag(run_id, "pool.dropped_at", datetime.date.today().isoformat())
-    client.set_tag(run_id, "pool.dropped_reason", reason)
+    store.annotate(
+        run_id,
+        tags={
+            "pool.dropped_at": datetime.date.today().isoformat(),
+            "pool.dropped_reason": reason,
+        },
+    )
     print(f"구성원 탈락: run {run_id} ({reason}) - 티켓 코멘트로도 남길 것.")
 
 
@@ -225,14 +209,18 @@ def main() -> None:
     with CHAMPION_PATH.open() as f:
         champion = yaml.safe_load(f)
     pool = load_pool()
-    candidate = load_candidate(args.run_id)
+    store = MlflowRunStore()
+    try:
+        candidate = load_candidate(args.run_id, store)
+    except RunStoreError as exc:
+        sys.exit(str(exc))
 
     if any(m["run_id"] == candidate.run_id for m in pool["members"]):
         sys.exit(f"run {candidate.run_id}는 이미 풀 구성원이다.")
 
     print(f"후보: {candidate.experiment} run {candidate.run_id} "
           f"(auc_oof {candidate.auc_oof:.5f}, 시드 {candidate.seeds})")
-    verdict = judge_entry(pool, candidate, champion)
+    verdict = judge_entry(pool, candidate, champion, store)
     for line in verdict.lines:
         print(line)
     print(f"판정: {'진입' if verdict.admit else '진입 아님'}")
@@ -254,6 +242,7 @@ def main() -> None:
         _drop_member(
             pool, verdict.drop_run_id,
             f"중복 교체: run {candidate.run_id}와 스피어만 {verdict.evidence['nearest_spearman']:.5f}",
+            store,
         )
 
     pool["members"].append({
