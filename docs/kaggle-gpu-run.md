@@ -50,11 +50,17 @@ GPU 주간 할당은 30시간, 배치 실행 상한은 GPU 약 9시간이다.
 
    run = lambda cmd: subprocess.run(cmd, shell=True, check=True)
    run("git clone https://github.com/tmheo/predicting-smartphone-addiction.git repo")
-   run(f"cd repo && git checkout {COMMIT} && pip install -e . -q")
+   run(f"cd repo && git checkout {COMMIT}")
+   # pip install -e .는 안 된다: mlflow의 pandas<3 선언과 이 프로젝트의 pandas 3
+   # 강제(override-dependencies)를 pip은 해석하지 못해 ResolutionImpossible이 난다.
+   # uv sync가 uv.lock 그대로 로컬과 동일한 환경(.python-version의 3.13 포함)을 만든다.
+   run("pip install uv -q")
+   run("cd repo && uv sync --frozen --no-dev -q")
+   run("mkdir -p repo/data")
    for name in ("train.csv", "test.csv", "sample_submission.csv"):
        run(f"ln -sf /kaggle/input/playground-series-s6e8/{name} repo/data/{name}")
    out = subprocess.run(
-       f"cd repo && python -m pipeline.run {CONFIG}",
+       f"cd repo && uv run --no-sync python -m pipeline.run {CONFIG}",
        shell=True, check=True, capture_output=True, text=True,
    )
    print(out.stdout)
@@ -62,8 +68,12 @@ GPU 주간 할당은 30시간, 배치 실행 상한은 GPU 약 9시간이다.
        line.split("=", 1)[1].split()[0]
        for line in out.stdout.splitlines() if line.startswith("run_id=")
    )
-   run(f"cd repo && python -m pipeline.bundle export {run_id} --out /kaggle/working/exp0NN.bundle.zip")
+   run(f"cd repo && uv run --no-sync python -m pipeline.bundle export {run_id} --out /kaggle/working/exp0NN.bundle.zip")
    ```
+
+   저장소가 비공개면 커널의 익명 git clone이 실패한다. 실행 전 저장소가 public인지
+   확인한다(#58에서 public 전환). 추가 자료가 필요한 실험은 해당 파일을 담은 Kaggle
+   데이터셋을 `dataset_sources`로 연결하고 저장소 경로에 심볼릭 링크한다.
 
 2. 실행을 밀어 넣는다. `--accelerator`로 GPU 종류를 고른다.
 
