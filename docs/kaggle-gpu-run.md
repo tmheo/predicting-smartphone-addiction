@@ -22,63 +22,31 @@ push(업로드 + 즉시 배치 실행), status(폴링), logs(실행 로그), out
 전제: API 토큰 설정, 계정 전화번호 인증(GPU·인터넷 커널 요건), 대회 규칙 동의.
 GPU 주간 할당은 30시간, 배치 실행 상한은 GPU 약 9시간이다.
 
-1. 커널 폴더를 저장소에 둔다(예: `kaggle/exp0NN/`). 내용물은 두 파일이다.
+1. 커널 폴더를 만든다: `kaggle/exp0NN/`(템플릿)을 `kaggle/expNNN/`으로 복사하고
+   `run.py`의 `COMMIT`·`CONFIG`·`BUNDLE`, `kernel-metadata.json`의 `id`·`title`만 바꾼다.
+   내용물은 `kernel-metadata.json`과 `run.py`(노트북일 필요 없이 plain 스크립트) 두 파일이다.
 
-   `kernel-metadata.json`:
+   템플릿 스크립트는 커밋 고정 클론 → `uv sync --frozen` → 대회 자료 심볼릭 링크 →
+   `pipeline.run` → `pipeline.bundle export` 순서로 돌며, 다음 세 가지를 지킨다(#99).
 
-   ```json
-   {
-     "id": "tmheo/exp0NN-gpu-run",
-     "title": "exp0NN gpu run",
-     "code_file": "run.py",
-     "language": "python",
-     "kernel_type": "script",
-     "is_private": true,
-     "enable_gpu": true,
-     "enable_internet": true,
-     "competition_sources": ["playground-series-s6e8"]
-   }
-   ```
-
-   `run.py` (노트북일 필요 없이 plain 스크립트면 된다):
-
-   ```python
-   import subprocess
-
-   COMMIT = "<실행할 config가 포함된 커밋>"
-   CONFIG = "configs/exp0NN_*.yaml"
-
-   run = lambda cmd: subprocess.run(cmd, shell=True, check=True)
-   run("git clone https://github.com/tmheo/predicting-smartphone-addiction.git repo")
-   run(f"cd repo && git checkout {COMMIT}")
-   # pip install -e .는 안 된다: mlflow의 pandas<3 선언과 이 프로젝트의 pandas 3
-   # 강제(override-dependencies)를 pip은 해석하지 못해 ResolutionImpossible이 난다.
-   # uv sync가 uv.lock 그대로 로컬과 동일한 환경(.python-version의 3.13 포함)을 만든다.
-   run("pip install uv -q")
-   run("cd repo && uv sync --frozen --no-dev -q")
-   run("mkdir -p repo/data")
-   for name in ("train.csv", "test.csv", "sample_submission.csv"):
-       run(f"ln -sf /kaggle/input/playground-series-s6e8/{name} repo/data/{name}")
-   out = subprocess.run(
-       f"cd repo && uv run --no-sync python -m pipeline.run {CONFIG}",
-       shell=True, check=True, capture_output=True, text=True,
-   )
-   print(out.stdout)
-   run_id = next(
-       line.split("=", 1)[1].split()[0]
-       for line in out.stdout.splitlines() if line.startswith("run_id=")
-   )
-   run(f"cd repo && uv run --no-sync python -m pipeline.bundle export {run_id} --out /kaggle/working/exp0NN.bundle.zip")
-   ```
+   - repo는 `/kaggle/working` 밖(`/tmp/repo`)에 클론한다.
+     working 아래에 두면 `.venv`까지 커널 산출물 다운로드에 딸려 온다(#58에서 겪은 문제).
+     bundle zip만 `/kaggle/working`에 남긴다.
+   - `pipeline.run` 출력은 capture하지 않고 tee 방식으로 실시간 커널 로그에 흘린다.
+     실행 중에도 `kaggle kernels logs`로 epoch 진행을 볼 수 있고, `run_id=` 줄 파싱은 유지된다.
+   - `nvidia-smi -L`로 GPU 수를 세어 여럿이면 `PIPELINE_SEED_GPUS`(예: `0,1`)를 설정한다.
+     그러면 `pipeline.run`이 시드 단위 워커 프로세스로 GPU를 나눠 쓴다(아래 참조).
 
    저장소가 비공개면 커널의 익명 git clone이 실패한다. 실행 전 저장소가 public인지
    확인한다(#58에서 public 전환). 추가 자료가 필요한 실험은 해당 파일을 담은 Kaggle
-   데이터셋을 `dataset_sources`로 연결하고 저장소 경로에 심볼릭 링크한다.
+   데이터셋을 `dataset_sources`로 연결하고 저장소 경로에 심볼릭 링크한다
+   (예: `kaggle/exp060`의 원본 프록시).
 
 2. 실행을 밀어 넣는다. `--accelerator`로 GPU 종류를 고른다.
+   T4는 2개가 붙으므로 시드 병렬이 켜지고, P100은 1개라 자동으로 순차 실행이 된다.
 
    ```bash
-   uv run kaggle kernels push -p kaggle/exp0NN --accelerator <gpu>
+   uv run kaggle kernels push -p kaggle/expNNN --accelerator <gpu>
    ```
 
 3. 완료를 폴링하고 로그를 확인한다.
@@ -97,6 +65,23 @@ GPU 주간 할당은 30시간, 배치 실행 상한은 GPU 약 9시간이다.
 
 push → status 폴링 → output → import 네 단계를 감싸는 드라이버 스크립트를 만들면
 "config 커밋 후 명령 한 번"이 된다.
+
+### 시드 병렬 실행 (T4 x2, #99)
+
+`PIPELINE_SEED_GPUS`(쉼표로 구분한 GPU 번호, 예: `0,1`)가 설정돼 있고 시드가 여럿이면
+`pipeline.run`이 시드 단위로 워커 프로세스를 띄워 GPU를 나눠 쓴다(`pipeline/seed_parallel.py`).
+환경 변수가 없으면(로컬, P100) 기존 순차 실행 그대로다.
+
+- 재현성: 모든 adapter가 fold 학습 시작 때 자기 시드로 전역 RNG를 다시 심으므로
+  시드 간 실행 순서로 상태가 흐르지 않고, 같은 GPU 모델(T4 x2)이면 병렬 결과가
+  순차 실행과 동일하다. 순차·병렬 동등성은 `tests/test_seed_parallel.py`가 검증한다.
+- 워커는 시작 직후 `CUDA_VISIBLE_DEVICES`로 GPU 하나를 배정받으므로
+  adapter의 `device="cuda"`가 그대로 그 GPU로 해석된다. adapter 수정은 없다.
+- 진행 기록: 병렬 경로는 시드별 단계가 겹치므로 `training` 단계 하나로 묶이고
+  (`time.feature_build/training_seconds`의 시드별 step 기록 없음),
+  fold 완료 통지(`progress.*`)는 워커 큐로 받아 그대로 기록된다.
+- 3시드 x T4 2개면 시드 2개 분량의 벽시계 시간이 들어, 실험당 약 1/3이 준다
+  (#58 기준 5.5~6시간 → 약 4시간). GPU 사용량(주 30시간 할당) 절약은 아니다.
 
 ## 수동 실행 (노트북, 대안)
 

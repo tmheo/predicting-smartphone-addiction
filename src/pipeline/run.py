@@ -17,7 +17,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-from . import cv, data, initial_score, tracking
+from . import cv, data, initial_score, seed_parallel, tracking
 from .config import load_config
 from .plan import FeaturePlan
 
@@ -72,7 +72,8 @@ def main() -> None:
         observer.data_loaded(seed_total=len(cfg.seeds), fold_total=n_folds)
 
         # 시드 반복: 예측은 평균, metric은 평균 예측 기준으로 다시 계산. (#15)
-        results = [cv.run_cv(cfg, plan, train, test, seed, recorder=observer) for seed in cfg.seeds]
+        # PIPELINE_SEED_GPUS가 있으면 시드 단위 프로세스 병렬로 GPU를 나눠 쓴다. (#99)
+        results = seed_parallel.run_seeds(cfg, plan, train, test, recorder=observer)
 
         observer.stage("evaluation")
         # 시드별 OOF AUC는 평균 재채점으로 fold_aucs가 덮이기 전에 확보한다. (ADR 0001)
