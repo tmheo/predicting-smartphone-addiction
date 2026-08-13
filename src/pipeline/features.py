@@ -43,6 +43,27 @@ def _screen_slack(df: pd.DataFrame) -> pd.Series:
     return df[SCREEN_TOTAL] - df[SCREEN_PARTS].sum(axis=1)
 
 
+def _sgw_sum(df: pd.DataFrame) -> pd.Series:
+    # 관측된 성분(social+gaming+work)의 합. 전성분 결측 행은 0이다(#58 원문 규약 유지).
+    return df[SCREEN_PARTS].sum(axis=1)
+
+
+def _sgw_frac(df: pd.DataFrame) -> pd.Series:
+    return _sgw_sum(df) / df[SCREEN_TOTAL].clip(lower=0.1)
+
+
+def _slack_frac(df: pd.DataFrame) -> pd.Series:
+    return _screen_slack(df) / df[SCREEN_TOTAL].clip(lower=0.1)
+
+
+def _wk_minus_sgw(df: pd.DataFrame) -> pd.Series:
+    return df["weekend_screen_time"] - _sgw_sum(df)
+
+
+def _wk_other(df: pd.DataFrame) -> pd.Series:
+    return df["weekend_screen_time"] - _screen_slack(df)
+
+
 def _screen_slack_n_obs(df: pd.DataFrame) -> pd.Series:
     # slack에서 실제로 뺀 성분 개수. slack의 해석 짝이므로 slack이 정의되는 행(daily 관측)
     # 에서만 값을 준다. 일반 결측 개수 피처는 지도에서 배제 대상이라 범위를 이렇게 좁힌다.
@@ -74,6 +95,12 @@ DERIVED_REGISTRY: dict[str, Callable[[pd.DataFrame], pd.Series]] = {
     "other_screen": _other_screen,
     "screen_slack": _screen_slack,
     "screen_slack_n_obs": _screen_slack_n_obs,
+    # #58 Lookup-Transformer 원문의 예산 토큰 재현: sgw 합·비율과 주말 대비 잔차.
+    "sgw_sum": _sgw_sum,
+    "sgw_frac": _sgw_frac,
+    "slack_frac": _slack_frac,
+    "wk_minus_sgw": _wk_minus_sgw,
+    "wk_other": _wk_other,
     **{f"{c}_dec1": _first_decimal(c) for c in DECIMAL_GRID_COLS},
 }
 

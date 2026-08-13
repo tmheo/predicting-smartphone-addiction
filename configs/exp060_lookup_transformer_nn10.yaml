@@ -1,0 +1,58 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #58 + #54 후속: 기본 구성(exp059)에 orig_nn10_mean 열 하나를 더한 변형.
+# #54의 "orig_knn은 정확값 TE와 중복" 기각은 트리 모델 기준이라, 정확값 조회
+# embedding을 가진 이 계열이 원본 프록시의 국소 라벨 구조를 따로 담는지 별도
+# 판정한다(#58 코멘트). orig_nn10_mean은 PLR 전용 토큰(lookup_cols 밖)이다.
+# 다른 모든 구성은 exp059와 같다. Kaggle GPU 실행 대상(docs/kaggle-gpu-run.md).
+name: exp060_lookup_transformer_nn10
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: original_knn
+      path: data/external/Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      ks: [10]
+
+model:
+  kind: lookup_transformer
+  params:
+    lookup_cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+  fit: {}
+
+cv:
+  seeds: [42, 43, 44]
