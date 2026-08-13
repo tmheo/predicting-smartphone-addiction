@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from pipeline.compare import CHAMPION_PATH
+from pipeline.judgment import CHAMPION_PATH
 from pipeline.cv import score_predictions
 from pipeline.data import ID, labels
 from pipeline.pool import rank_ensemble_auc, spearman

@@ -25,6 +25,7 @@ import matplotlib.pyplot as plt
 from .config import ExperimentConfig
 from .cv import CVResult
 from .features import PLACEBO
+from .judgment import fold_aucs_of
 
 TOP_N = 30
 
@@ -99,7 +100,7 @@ def build_html(
 ) -> str:
     """배치: 실행 메타 -> 단계별 소요 시간 -> 로그 축 gain 그림 -> 전체 순위표. (#41)"""
     placebo = set(_placebo_features(table["feature"]))
-    fold_total = sum(k.startswith("auc_fold_") for k in result.fold_aucs)
+    fold_total = len(fold_aucs_of(result.fold_aucs))
 
     def table_rows() -> str:
         rows = []

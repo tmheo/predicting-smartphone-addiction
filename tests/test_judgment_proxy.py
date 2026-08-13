@@ -5,8 +5,8 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from pipeline.compare import RunFacts, judge_proxy_screening
 from pipeline.features import PLACEBO
+from pipeline.judgment import JudgmentError, RunFacts, judge_proxy_screening
 
 
 MODEL_PARAMS = {
@@ -63,10 +63,10 @@ def test_proxy_screening_requires_nonnegative_delta_and_new_feature_importance()
         features={"age", "new_feature", PLACEBO, f"{PLACEBO}_te"},
     )
 
-    passed, lines = judge_proxy_screening(baseline, challenger)
+    verdict = judge_proxy_screening(baseline, challenger)
 
-    assert passed
-    assert any("delta +0.00001" in line for line in lines)
+    assert verdict.passed
+    assert verdict.delta == pytest.approx(0.00001)
 
 
 @pytest.mark.parametrize(
@@ -84,9 +84,9 @@ def test_proxy_screening_rejects_auc_loss_or_below_placebo_feature(auc, new_gain
         new_gain=new_gain,
     )
 
-    passed, _ = judge_proxy_screening(baseline, challenger)
+    verdict = judge_proxy_screening(baseline, challenger)
 
-    assert not passed
+    assert not verdict.passed
 
 
 def test_proxy_screening_rejects_different_model_settings():
@@ -100,5 +100,5 @@ def test_proxy_screening_rejects_different_model_settings():
         model_params={"model.learning_rate": "0.1"},
     )
 
-    with pytest.raises(SystemExit, match="모델 설정"):
+    with pytest.raises(JudgmentError, match="모델 설정"):
         judge_proxy_screening(baseline, challenger)

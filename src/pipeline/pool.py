@@ -34,7 +34,7 @@ import pandas as pd
 import yaml
 from sklearn.metrics import roc_auc_score
 
-from .compare import CHAMPION_PATH, CONFIRM_SEEDS
+from .judgment import CHAMPION_PATH, CONFIRM_SEEDS
 from .data import file_sha256, labels
 from .runs import MlflowRunStore, RunStore, RunStoreError
 
