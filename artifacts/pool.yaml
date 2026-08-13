@@ -158,3 +158,19 @@ members:
     ensemble_auc_with: 0.9681168962972342
     ensemble_auc_without: 0.9679512385405152
     contribution: 0.000165657756718951
+- run_id: e2b76edd9d204290810e39a7457c4c48
+  config: exp058_logreg_onehot
+  oof_auc: 0.9596583963715687
+  seeds: 42,43,44
+  entered_at: '2026-08-13'
+  reason: '이슈 #56: 정확값 one-hot 로지스틱 회귀. 단독 OOF 0.95966으로 진입 하한 상회, 최근접 스피어만 0.97042로
+    풀 내 최저 중복(새 오차 계열), 표준 평가 앙상블 기여 +0.00002'
+  evidence:
+    champion_run_id: 3d5239b07c6e475baa7dde03fb0b99bc
+    champion_oof_auc: 0.968542903240823
+    floor_margin: 0.0011154931307456595
+    nearest_run_id: 3d5239b07c6e475baa7dde03fb0b99bc
+    nearest_spearman: 0.970421463174947
+    ensemble_auc_with: 0.9681324114087981
+    ensemble_auc_without: 0.9681168962972342
+    contribution: 1.551511156394625e-05
