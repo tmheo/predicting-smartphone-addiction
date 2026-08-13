@@ -49,7 +49,7 @@ def main() -> None:
             mark = "타깃 참조" if uses_target else "-"
             print(f"  [{stage}] {kind}: {', '.join(columns)} ({mark})")
         print("기록될 것   : params(feature 목록, 모델 파라미터), metrics(auc_fold_*, auc_oof, auc_oof_seed_*),")
-        print("             progress.*/time.* 진행 기록, artifacts(설정 yaml, oof.parquet,")
+        print("             progress.*/time.* 진행 기록, artifacts(설정 yaml, oof.parquet, oof_seed_*.parquet,")
         print("             test_pred.parquet, feature_importance.parquet, submission.csv,")
         print("             summary.html 등 결과 요약, logs/run.log)")
         return
@@ -77,6 +77,8 @@ def main() -> None:
         observer.stage("evaluation")
         # 시드별 OOF AUC는 평균 재채점으로 fold_aucs가 덮이기 전에 확보한다. (ADR 0001)
         seed_aucs = {seed: r.fold_aucs["auc_oof"] for seed, r in zip(cfg.seeds, results)}
+        # 시드별 OOF도 평균 대입으로 results[0].oof가 덮이기 전에 확보한다. (#98 기록 규약)
+        seed_oofs = {seed: r.oof.copy() for seed, r in zip(cfg.seeds, results)}
         final = results[0]
         # 선언 = 실제: 학습에 쓴 컬럼이 계획의 선언과 다르면 기록 전에 실패한다.
         # feature 목록 param은 이 검증을 거친 선언 기준 목록이 된다. (#71)
@@ -95,7 +97,7 @@ def main() -> None:
             final.fold_aucs[f"auc_oof_seed_{seed}"] = auc
 
         observer.stage("artifacts")
-        observer.log_final(final)
+        observer.log_final(final, seed_oofs)
         tracking.warn_below_placebo(final.importance)
         print(f"run_id={observer.run_id} auc_oof={final.fold_aucs['auc_oof']:.5f}")
         observer.succeed()

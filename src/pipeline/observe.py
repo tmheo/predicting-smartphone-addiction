@@ -20,6 +20,8 @@ import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pandas as pd
+
 from . import cleanup, summary, tracking
 from .config import ExperimentConfig
 from .cv import CVResult
@@ -245,10 +247,13 @@ class RunObserver:
         """지금까지 끝난 단계의 (stage, step, seconds). 요약 생성기의 입력이다. (#41, #43)"""
         return list(self._durations)
 
-    def log_final(self, result: CVResult) -> None:
-        """최종 지표·원본 산출물·결과 요약을 활성 실행 안에 기록한다. artifacts 단계 소관."""
+    def log_final(self, result: CVResult, seed_oofs: dict[int, pd.DataFrame]) -> None:
+        """최종 지표·원본 산출물·결과 요약을 활성 실행 안에 기록한다. artifacts 단계 소관.
+
+        seed_oofs는 시드 평균 전의 시드별 OOF다(기록 규약 #98).
+        """
         with self._mlflow_lock:
-            tracking.log_final_records(self._client, self.run_id, self.cfg, result)
+            tracking.log_final_records(self._client, self.run_id, self.cfg, result, seed_oofs)
             summary.generate_and_log(
                 self._client, self.run_id, self.cfg, result, self.stage_durations()
             )

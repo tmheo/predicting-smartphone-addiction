@@ -11,8 +11,10 @@ artifact는 로컬 mlartifacts/ 아래 파일로 남으므로 소비 방식은 �
 - params: 실험 이름, 시드, 모델 파라미터(시작 시점), feature 목록(CV 후 확정되므로 최종 시점).
 - metrics: auc_fold_0..4, auc_oof, auc_oof_seed_*. 시드 반복 시 시드 평균본이 대표 metric이고
   auc_oof_seed_*가 시드별 OOF AUC다(확정 재검증의 시드별 비교 근거, ADR 0001).
-- artifacts: 설정 원본(yaml, 시작 시점), oof.parquet, test_pred.parquet, submission.csv,
+- artifacts: 설정 원본(yaml, 시작 시점), oof.parquet, oof_seed_<seed>.parquet(시드별 OOF,
+  묶음 반입의 시드별 재채점 근거, #98), test_pred.parquet, submission.csv,
   feature_importance.parquet(feature, fold, seed, gain 스키마의 fold별 gain importance). (#19)
+  test_pred는 라벨이 없어 재채점 가치가 없으므로 시드 평균본만 남긴다. (#98)
 - tags: git_commit, git_dirty, 입력 파일 sha256. dirty 실행은 앙상블 후보에서 제외하는 관행. (#14)
 """
 
@@ -36,11 +38,11 @@ from .runs import TRACKING_URI
 EXPERIMENT_NAME = "predicting-smartphone-addiction"
 
 
-def mlflow_client():
+def mlflow_client(tracking_uri: str = TRACKING_URI):
     """(MlflowClient, experiment_id)를 돌려준다. 실험이 없으면 만든다."""
     from mlflow.tracking import MlflowClient
 
-    client = MlflowClient(tracking_uri=TRACKING_URI)
+    client = MlflowClient(tracking_uri=tracking_uri)
     experiment = client.get_experiment_by_name(EXPERIMENT_NAME)
     experiment_id = (
         experiment.experiment_id if experiment else client.create_experiment(EXPERIMENT_NAME)
@@ -95,8 +97,23 @@ def build_submission(cfg: ExperimentConfig, test_pred: pd.DataFrame) -> pd.DataF
     return sample.merge(pred, on=ID, how="left", validate="one_to_one")
 
 
-def log_final_records(client, run_id: str, cfg: ExperimentConfig, result: CVResult) -> None:
-    """종료 직전 기록: feature 목록 param, 최종 지표, 원본 산출물."""
+def oof_seed_artifact(seed: int) -> str:
+    """시드별 OOF 산출물 이름. 묶음 반입의 재채점이 같은 이름으로 읽는다. (#98)"""
+    return f"oof_seed_{seed}.parquet"
+
+
+def log_final_records(
+    client,
+    run_id: str,
+    cfg: ExperimentConfig,
+    result: CVResult,
+    seed_oofs: dict[int, pd.DataFrame],
+) -> None:
+    """종료 직전 기록: feature 목록 param, 최종 지표, 원본 산출물.
+
+    seed_oofs는 시드 평균 전의 시드별 OOF(id, fold, pred)다. 시드 평균에서
+    auc_oof_seed_*를 역산할 수 없으므로 시드별 예측을 산출물로 보존한다. (#98)
+    """
     submission = build_submission(cfg, result.test_pred)
     assert submission[TARGET].notna().all(), "제출 파일에 예측이 없는 id가 있다."
 
@@ -105,16 +122,15 @@ def log_final_records(client, run_id: str, cfg: ExperimentConfig, result: CVResu
         client.log_metric(run_id, name, value)
     with tempfile.TemporaryDirectory() as tmp:
         tmp_dir = Path(tmp)
+        names = ["oof.parquet", "test_pred.parquet", "feature_importance.parquet", "submission.csv"]
         result.oof.to_parquet(tmp_dir / "oof.parquet", index=False)
         result.test_pred.to_parquet(tmp_dir / "test_pred.parquet", index=False)
         result.importance.to_parquet(tmp_dir / "feature_importance.parquet", index=False)
         submission.to_csv(tmp_dir / "submission.csv", index=False)
-        for name in (
-            "oof.parquet",
-            "test_pred.parquet",
-            "feature_importance.parquet",
-            "submission.csv",
-        ):
+        for seed, oof in seed_oofs.items():
+            names.append(oof_seed_artifact(seed))
+            oof.to_parquet(tmp_dir / oof_seed_artifact(seed), index=False)
+        for name in names:
             client.log_artifact(run_id, str(tmp_dir / name))
 
 
