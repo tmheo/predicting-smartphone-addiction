@@ -3,7 +3,8 @@ name = "predicting-smartphone-addiction"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+# Kaggle 커널 이미지가 Python 3.12라 하한을 3.12로 둔다(#58 GPU 실행 경로).
+requires-python = ">=3.12"
 dependencies = [
     "catboost>=1.2.10",
     "ipykernel>=7.3.0",
