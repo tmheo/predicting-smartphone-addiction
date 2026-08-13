@@ -16,6 +16,7 @@
 
 후보 실행 하나 = champion 피처 + 해당 쌍 TE + 해당 쌍 CE + 쌍 카나리아 TE.
 쌍 카나리아(placebo_noise × weekend_screen_time)의 gain이 플라시보를 넘으면 그 실행은 무효다.
+유효성은 pipeline.judgment의 플라시보 게이트로 판정한다: 플라시보 gain 미기록은 실패다. (#94)
 
 결과는 run-logs/pair_screen.csv에 증분 기록한다. 이미 기록된 쌍은 건너뛴다(중단 재개용).
 """
@@ -36,6 +37,7 @@ from pipeline import data, model as model_mod
 from pipeline.config import FeatureConfig, ModelConfig
 from pipeline.cv import _with_built_columns
 from pipeline.features import PLACEBO
+from pipeline.judgment import check_canaries
 from pipeline.plan import FeaturePlan
 
 SEED = 42
@@ -184,9 +186,11 @@ def main() -> None:
         plan = make_plan(te_cols, pair)
         train_c, _ = plan.apply_dataset_wide(train, test)
         auc, gain = quick_run(plan, train_c)
-        placebo_gain = float(gain.get(PLACEBO, 0.0))
-        canary_gain = float(gain.get(canary_name, 0.0))
-        valid = canary_gain < placebo_gain
+        # 약식 검증은 fold 하나라 gain이 곧 평균 gain이다. 게이트 대상은 쌍 카나리아뿐.
+        report = check_canaries({canary_name}, gain)
+        placebo_gain = report.placebo_gain
+        canary_gain = report.checks[0].gain
+        valid = report.ok
         record(
             name,
             auc,
@@ -196,7 +200,8 @@ def main() -> None:
                 "te_gain": f"{gain.get(name + '_te', 0.0):.1f}",
                 "ce_gain": f"{gain.get(name + '_ce', 0.0):.1f}",
                 "canary_gain": f"{canary_gain:.1f}",
-                "placebo_gain": f"{placebo_gain:.1f}",
+                # 플라시보 미기록이면 값 대신 빈칸을 남긴다(게이트는 이미 실패 처리됨).
+                "placebo_gain": f"{placebo_gain:.1f}" if placebo_gain is not None else "",
                 "valid": str(valid),
                 "elapsed": f"{time.time() - t0:.0f}",
             },

@@ -21,6 +21,9 @@ compare·pool CLI는 이 module의 caller다. 판정 함수는 통과 여부와 
   확정 재검증의 게이트이며, 스크리닝에서는 참고로만 쓴다.
 - 플라시보 파생 카나리아(placebo_noise_te 등)의 중요도가 플라시보 원본보다 높으면
   누수로 보고 그 run은 어느 단계에서도 판정에 쓰지 않는다. (#33)
+- 플라시보 게이트의 기준값은 플라시보 원본의 평균 gain 하나뿐이고, 기준값 미기록은
+  실패다. 판정 게이트는 이 module의 _gate가 유일한 소스다(#94). tracking의 경고와
+  summary의 요약표는 게이트가 아니므로 평균 gain·기준값 helper만 공유한다.
 - 대리 스크리닝: 느린 champion 모델 계열에 앞서 빠른 모델 계열의 동일 조건
   기준 실행과 짝지어 후보를 거른다. 기준 실행과 challenger 모두 seed 42의 동일한
   모델 설정과 입력 자료여야 하고 challenger에는 새 특성만 추가돼야 한다.
@@ -127,11 +130,6 @@ def _is_canary(feature: str) -> bool:
     return feature.startswith(f"{PLACEBO}_")
 
 
-def _mean_gain(importance: pd.DataFrame) -> pd.Series:
-    """feature별 fold×seed 평균 gain."""
-    return importance.groupby("feature")["gain"].mean()
-
-
 @dataclass(frozen=True)
 class GainCheck:
     """피처 하나의 평균 gain을 플라시보 기준값과 비교한 결과."""
@@ -139,6 +137,33 @@ class GainCheck:
     feature: str
     gain: float | None  # 미기록이면 None. 카나리아는 미기록을 0.0으로 본다.
     ok: bool
+
+
+def mean_gain_of(importance: pd.DataFrame) -> pd.Series:
+    """feature별 fold×seed 평균 gain. 게이트·경고·요약표가 공유하는 유일한 정의다."""
+    return importance.groupby("feature")["gain"].mean()
+
+
+def placebo_gain_of(mean_gain: pd.Series) -> float | None:
+    """플라시보 게이트의 기준값: 플라시보 원본의 평균 gain. 미기록이면 None."""
+    gain = mean_gain.get(PLACEBO)
+    return float(gain) if gain is not None else None
+
+
+def _gate(
+    feature: str, gain: float | None, placebo_gain: float | None, *, above: bool
+) -> GainCheck:
+    """플라시보 게이트 한 건. 기준값 미기록(None)이나 gain 미기록(None)은 실패다.
+
+    above=True면 기준값 초과(새 피처의 기여 증거), False면 기준값 미만(카나리아 무해)이
+    통과다.
+    """
+    ok = (
+        placebo_gain is not None
+        and gain is not None
+        and (gain > placebo_gain if above else gain < placebo_gain)
+    )
+    return GainCheck(feature, gain, ok)
 
 
 @dataclass(frozen=True)
@@ -160,34 +185,32 @@ class NewFeatureReport:
     ok: bool
 
 
-def check_canaries(challenger: RunFacts) -> CanaryReport:
-    mean_gain = _mean_gain(challenger.importance)
-    placebo_gain = mean_gain.get(PLACEBO)
-    placebo_gain = float(placebo_gain) if placebo_gain is not None else None
+def check_canaries(features: set[str], mean_gain: pd.Series) -> CanaryReport:
+    placebo_gain = placebo_gain_of(mean_gain)
     checks = []
-    for canary in sorted(f for f in challenger.features if _is_canary(f)):
+    for canary in sorted(f for f in features if _is_canary(f)):
+        # 카나리아 미기록은 0.0으로 본다: 모델이 완전히 무시했다는 뜻이라 무해하다.
         gain = float(mean_gain.get(canary, 0.0))
-        checks.append(
-            GainCheck(canary, gain, placebo_gain is not None and gain < placebo_gain)
-        )
+        checks.append(_gate(canary, gain, placebo_gain, above=False))
     return CanaryReport(placebo_gain, checks, all(c.ok for c in checks))
 
 
-def check_new_features(base_features: set[str], challenger: RunFacts) -> NewFeatureReport:
+def check_new_features(
+    base_features: set[str], features: set[str], mean_gain: pd.Series
+) -> NewFeatureReport:
     new_features = sorted(
-        f for f in challenger.features - base_features - {PLACEBO} if not _is_canary(f)
+        f for f in features - base_features - {PLACEBO} if not _is_canary(f)
     )
     if not new_features:
         return NewFeatureReport([], None, [], ok=True)
-    mean_gain = _mean_gain(challenger.importance)
-    if PLACEBO not in mean_gain.index:
+    placebo_gain = placebo_gain_of(mean_gain)
+    if placebo_gain is None:
         return NewFeatureReport(new_features, None, [], ok=False)
-    placebo_gain = float(mean_gain[PLACEBO])
     checks = []
     for feature in new_features:
         gain = mean_gain.get(feature)
         gain = float(gain) if gain is not None else None
-        checks.append(GainCheck(feature, gain, gain is not None and gain > placebo_gain))
+        checks.append(_gate(feature, gain, placebo_gain, above=True))
     return NewFeatureReport(new_features, placebo_gain, checks, all(c.ok for c in checks))
 
 
@@ -260,8 +283,11 @@ def judge_screening(champion: dict, challenger: RunFacts) -> ScreeningVerdict:
     baseline = {int(k): v for k, v in champion["seed_aucs"].items()}[seed]
     delta = challenger.auc_oof - baseline
     auc_ok = delta >= 0.0
-    canary = check_canaries(challenger)
-    new_features = check_new_features(set(champion["features"].split(",")), challenger)
+    mean_gain = mean_gain_of(challenger.importance)
+    canary = check_canaries(challenger.features, mean_gain)
+    new_features = check_new_features(
+        set(champion["features"].split(",")), challenger.features, mean_gain
+    )
     return ScreeningVerdict(
         seed=seed,
         baseline_auc=baseline,
@@ -301,8 +327,9 @@ def judge_proxy_screening(
 
     delta = challenger.auc_oof - baseline.auc_oof
     auc_ok = delta >= 0.0
-    canary = check_canaries(challenger)
-    new_features = check_new_features(baseline.features, challenger)
+    mean_gain = mean_gain_of(challenger.importance)
+    canary = check_canaries(challenger.features, mean_gain)
+    new_features = check_new_features(baseline.features, challenger.features, mean_gain)
     return ProxyScreeningVerdict(
         baseline_auc=baseline.auc_oof,
         challenger_auc=challenger.auc_oof,
@@ -359,8 +386,11 @@ def judge_confirmation(champion: dict, challenger: RunFacts) -> ConfirmationVerd
     boundary = AUC_THRESHOLD <= delta < BOUNDARY_UPPER
     fold_ok = fold_wins >= FOLD_WIN_MIN if boundary else True
 
-    canary = check_canaries(challenger)
-    new_features = check_new_features(set(champion["features"].split(",")), challenger)
+    mean_gain = mean_gain_of(challenger.importance)
+    canary = check_canaries(challenger.features, mean_gain)
+    new_features = check_new_features(
+        set(champion["features"].split(",")), challenger.features, mean_gain
+    )
     return ConfirmationVerdict(
         champion_auc=champion["oof_auc"],
         challenger_auc=challenger.auc_oof,

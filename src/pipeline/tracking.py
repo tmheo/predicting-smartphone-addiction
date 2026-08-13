@@ -28,6 +28,7 @@ from .config import ExperimentConfig
 from .cv import CVResult
 from .data import ID, TARGET
 from .features import PLACEBO
+from .judgment import mean_gain_of, placebo_gain_of
 
 # 실행이 어디 있는가는 실행 저장소(runs)의 지식이다. 기록기는 그 위치에 쓴다.
 from .runs import TRACKING_URI
@@ -122,12 +123,13 @@ def warn_below_placebo(importance: pd.DataFrame) -> None:
 
     이 경고는 판정이 아니라 관찰이다. 채택 판정은 pipeline.compare가 새 피처에만 묻는다.
     """
-    mean_gain = importance.groupby("feature")["gain"].mean()
-    if PLACEBO not in mean_gain.index:
+    mean_gain = mean_gain_of(importance)
+    placebo_gain = placebo_gain_of(mean_gain)
+    if placebo_gain is None:
         return
-    below = mean_gain[mean_gain < mean_gain[PLACEBO]].drop(PLACEBO, errors="ignore")
+    below = mean_gain[mean_gain < placebo_gain].drop(PLACEBO, errors="ignore")
     for feature, gain in below.sort_values().items():
         print(
             f"경고: {feature}의 평균 gain importance({gain:.1f})가 "
-            f"플라시보({mean_gain[PLACEBO]:.1f})보다 낮다."
+            f"플라시보({placebo_gain:.1f})보다 낮다."
         )

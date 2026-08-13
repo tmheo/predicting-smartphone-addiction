@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 from .config import ExperimentConfig
 from .cv import CVResult
 from .features import PLACEBO
-from .judgment import fold_aucs_of
+from .judgment import fold_aucs_of, mean_gain_of
 
 TOP_N = 30
 
@@ -40,8 +40,12 @@ def _placebo_features(features) -> list[str]:
 
 def build_summary_table(importance: pd.DataFrame) -> pd.DataFrame:
     """(feature, fold, seed, gain) -> 특성별 요약표. 순위는 평균 gain 내림차순. (#41)"""
-    g = importance.groupby("feature")["gain"]
-    table = pd.DataFrame({"gain_mean": g.mean(), "gain_std": g.std()})
+    table = pd.DataFrame(
+        {
+            "gain_mean": mean_gain_of(importance),
+            "gain_std": importance.groupby("feature")["gain"].std(),
+        }
+    )
     table["gain_share_pct"] = table["gain_mean"] / table["gain_mean"].sum() * 100
     # 플라시보 기준값은 플라시보 특성들의 평균 gain 최댓값. (#41)
     placebo_ref = table.loc[_placebo_features(table.index), "gain_mean"].max()
