@@ -142,19 +142,19 @@ members:
     ensemble_auc_with: 0.968060668424677
     ensemble_auc_without: 0.9680122021547373
     contribution: 4.8466269939706486e-05
-- run_id: 2c6150364304443c813302d6fa19528d
-  config: exp052_cat_xgb_impute_pass5
-  oof_auc: 0.9683570261226153
+- run_id: 3d5239b07c6e475baa7dde03fb0b99bc
+  config: exp057_cat_xgb_impute_comps5
+  oof_auc: 0.968542903240823
   seeds: 42,43,44
   entered_at: '2026-08-13'
-  reason: '이슈 #86: champion 교체본(XGBoost 조건부 복원 5열). 기존 champion exp043과 스피어만 0.99930
-    중복이라 성능 높은 쪽으로 교체, 표준 평가 앙상블 기여 +0.00013'
+  reason: '이슈 #90: 새 champion exp057_cat_xgb_impute_comps5의 3시드 평균본. 구 champion exp052와
+    스피어만 0.99884 중복이라 교체, 표준 평가 앙상블 기여 +0.00017'
   evidence:
-    champion_run_id: 2c6150364304443c813302d6fa19528d
-    champion_oof_auc: 0.9683570261226153
+    champion_run_id: 3d5239b07c6e475baa7dde03fb0b99bc
+    champion_oof_auc: 0.968542903240823
     floor_margin: 0.010000000000000009
-    nearest_run_id: 737f4dae278c4615ba294372352ac5bb
-    nearest_spearman: 0.9992966434513832
-    ensemble_auc_with: 0.9680831470571793
+    nearest_run_id: 2c6150364304443c813302d6fa19528d
+    nearest_spearman: 0.9988427738757063
+    ensemble_auc_with: 0.9681168962972342
     ensemble_auc_without: 0.9679512385405152
-    contribution: 0.0001319085166641143
+    contribution: 0.000165657756718951
