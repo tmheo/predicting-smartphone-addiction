@@ -1,0 +1,22 @@
+import subprocess
+
+COMMIT = "dbeb5fe9990141f99ec06fdd4d3c003ba1f5d031"
+CONFIG = "configs/exp059_lookup_transformer.yaml"
+BUNDLE = "/kaggle/working/exp059.bundle.zip"
+
+run = lambda cmd: subprocess.run(cmd, shell=True, check=True)
+run("git clone https://github.com/tmheo/predicting-smartphone-addiction.git repo")
+run(f"cd repo && git checkout {COMMIT} && pip install -e . -q")
+run("mkdir -p repo/data")
+for name in ("train.csv", "test.csv", "sample_submission.csv"):
+    run(f"ln -sf /kaggle/input/playground-series-s6e8/{name} repo/data/{name}")
+out = subprocess.run(
+    f"cd repo && python -m pipeline.run {CONFIG}",
+    shell=True, check=True, capture_output=True, text=True,
+)
+print(out.stdout)
+run_id = next(
+    line.split("=", 1)[1].split()[0]
+    for line in out.stdout.splitlines() if line.startswith("run_id=")
+)
+run(f"cd repo && python -m pipeline.bundle export {run_id} --out {BUNDLE}")
