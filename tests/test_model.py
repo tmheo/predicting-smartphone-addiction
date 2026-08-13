@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.metrics import roc_auc_score
 
 from pipeline import cv, model as model_mod
 from pipeline.config import DataConfig, ExperimentConfig, FeatureConfig, ModelConfig
@@ -278,6 +279,49 @@ def test_hist_gradient_boosting_adapter_smoke():
     assert isinstance(adapter, model_mod.HistGradientBoostingAdapter)
     X, y = _smoke_data()
     _assert_adapter_contract(adapter, X, y)
+
+
+def test_logistic_onehot_adapter_smoke():
+    cfg = ModelConfig(
+        kind="logistic_onehot",
+        params={"C": 1.0, "max_iter": 200, "onehot_max_card": 10},
+        fit={},
+    )
+    adapter = model_mod.create(cfg, seed=SEED)
+    assert isinstance(adapter, model_mod.LogisticOnehotAdapter)
+    # _smoke_data의 수치 2열은 카디널리티가 onehot_max_card를 넘어 표준화 통과,
+    # 결측 있는 category 열은 결측 지시자를 포함한 one-hot이 된다.
+    X, y = _smoke_data()
+    _assert_adapter_contract(adapter, X, y)
+
+
+def test_logistic_onehot_encodes_exact_values_without_leaking_unseen():
+    """정확값 one-hot: 학습 fold 값 집합만 카테고리가 되고, 검증에만 있는 값과
+    학습에 결측이 없던 컬럼의 검증 결측은 영벡터 블록으로 처리된다."""
+    rng = np.random.default_rng(3)
+    n = 300
+    values = rng.choice([1.5, 2.5, 3.5, 4.5], size=n)
+    X = pd.DataFrame({"v": values, "w": rng.choice([0.1, 0.2], size=n)})
+    y = pd.Series((values > 2.5).astype(int) ^ (rng.uniform(size=n) < 0.1).astype(int))
+    adapter = model_mod.create(
+        ModelConfig(kind="logistic_onehot", params={"max_iter": 200}, fit={}), seed=SEED
+    )
+    va_pred = adapter.fit(X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:])
+    assert ((va_pred >= 0) & (va_pred <= 1)).all()
+    # 값별 라벨 평균을 학습했으므로 값이 다르면 예측이 갈린다.
+    assert roc_auc_score(y.iloc[240:], va_pred) > 0.8
+
+    unseen = pd.DataFrame({"v": [9.9, np.nan], "w": [0.1, 0.2]})
+    pred = adapter.predict(unseen)
+    assert pred.shape == (2,)
+    assert np.isfinite(pred).all()
+
+    imp = adapter.importance()
+    assert list(imp["feature"]) == ["v", "w"]
+    assert (imp["gain"] >= 0).all()
+    assert imp.loc[imp["feature"] == "v", "gain"].item() > imp.loc[
+        imp["feature"] == "w", "gain"
+    ].item()
 
 
 def test_lightgbm_adapter_adds_initial_score_back_to_predictions():

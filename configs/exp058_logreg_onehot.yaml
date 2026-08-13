@@ -1,0 +1,29 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #56: 정확값 one-hot 로지스틱 회귀의 다양성 기여 결정.
+# raw 9개 수치열과 범주 3열의 정확값 전부를 학습 fold 값 집합 기준 one-hot으로
+# 표현해(placebo는 연속 잡음이라 표준화 통과) L2 로지스틱 회귀를 학습한다.
+# champion 교체가 아니라 다양성 구성원 판정이 목적이라 단독 OOF가 낮은 것을 허용한다.
+# C는 fold 0 약식 스윕(0.1~1000)에서 0.95911로 정점인 100을 쓴다.
+name: exp058_logreg_onehot
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers: []
+
+model:
+  kind: logistic_onehot
+  params:
+    C: 100.0
+    max_iter: 3000
+    onehot_max_card: 5000
+  fit: {}
+
+cv:
+  seeds: [42, 43, 44]

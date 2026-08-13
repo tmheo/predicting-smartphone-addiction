@@ -317,6 +317,123 @@ class HistGradientBoostingAdapter:
         )
 
 
+class LogisticOnehotAdapter:
+    """정확값 one-hot 로지스틱 회귀 adapter. (#56)
+
+    각 컬럼의 학습 fold 정확값을 그대로 카테고리로 보고 one-hot한 희소 행렬에
+    L2 로지스틱 회귀를 학습한다. 인코딩은 학습 fold 값 집합만 쓰므로 누출이 없고,
+    검증·테스트에만 있는 값은 해당 컬럼 블록이 영벡터가 된다.
+    결측은 학습 fold에 결측이 있는 컬럼에 한해 별도 지시자 카테고리가 된다.
+    카디널리티가 onehot_max_card를 넘는 컬럼(placebo 등 연속 잡음)은 학습 fold
+    평균·표준편차로 표준화한 수치 열로 통과시키고 결측은 0(평균)으로 둔다.
+    importance는 컬럼 블록별 선형 기여(학습 fold 점수 조각)의 표준편차를 gain으로
+    돌려준다. 표준화 수치 열에서는 |coef|와 같아 블록 간 축척이 맞는다.
+    """
+
+    def __init__(self, params: dict, fit: dict, seed: int) -> None:
+        params = dict(params)
+        self._C = float(params.pop("C", 1.0))
+        self._max_iter = int(params.pop("max_iter", 2000))
+        self._max_card = int(params.pop("onehot_max_card", 10000))
+        if params:
+            raise ValueError(f"logistic_onehot이 모르는 params: {sorted(params)}")
+        self._fit = fit
+        self._seed = seed
+        self._model = None
+        self._columns: list[str] | None = None
+        # 컬럼별 인코딩 스펙: one-hot이면 ("onehot", 카테고리 목록, 결측 지시자 여부),
+        # 통과 수치면 ("numeric", 평균, 표준편차). 블록 오프셋은 인코딩 때 계산한다.
+        self._specs: dict[str, tuple] = {}
+        self._train_matrix = None  # importance용 학습 fold 인코딩 행렬.
+
+    def fit(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
+    ) -> np.ndarray:
+        from sklearn.linear_model import LogisticRegression
+
+        _reject_initial_score("logistic_onehot", initial_score_tr, initial_score_va)
+        self._columns = list(X_tr.columns)
+        self._specs = {}
+        for col in self._columns:
+            values = X_tr[col]
+            distinct = pd.unique(values.dropna())
+            if len(distinct) <= self._max_card:
+                self._specs[col] = ("onehot", list(distinct), bool(values.isna().any()))
+            else:
+                mean = float(values.mean())
+                std = float(values.std())
+                self._specs[col] = ("numeric", mean, std if std > 0 else 1.0)
+        self._train_matrix = self._encode(X_tr)
+        self._model = LogisticRegression(
+            C=self._C, max_iter=self._max_iter, solver="lbfgs", random_state=self._seed
+        )
+        self._model.fit(self._train_matrix, y_tr)
+        print(
+            f"[logistic_onehot] n_features={self._train_matrix.shape[1]} "
+            f"n_iter={int(self._model.n_iter_[0])}"
+        )
+        return self._model.predict_proba(self._encode(X_va))[:, 1]
+
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray:
+        _reject_initial_score("logistic_onehot", initial_score, None)
+        return self._model.predict_proba(self._encode(X))[:, 1]
+
+    def _block_widths(self) -> list[int]:
+        widths = []
+        for col in self._columns:
+            spec = self._specs[col]
+            widths.append(1 if spec[0] == "numeric" else len(spec[1]) + int(spec[2]))
+        return widths
+
+    def _encode(self, X: pd.DataFrame):
+        from scipy import sparse
+
+        assert list(X.columns) == self._columns, "인코딩 입력 컬럼이 학습 때와 다르다."
+        blocks = []
+        for col in self._columns:
+            spec = self._specs[col]
+            if spec[0] == "numeric":
+                _, mean, std = spec
+                dense = ((X[col] - mean) / std).fillna(0.0).to_numpy(dtype="float64")
+                blocks.append(sparse.csr_matrix(dense.reshape(-1, 1)))
+                continue
+            _, categories, has_nan = spec
+            width = len(categories) + int(has_nan)
+            values = X[col]
+            if isinstance(values.dtype, pd.CategoricalDtype):
+                values = values.astype(object)
+            codes = pd.Categorical(values, categories=categories).codes.astype("int64")
+            if has_nan:
+                codes = np.where(values.isna().to_numpy(), len(categories), codes)
+            seen = codes >= 0  # 미관측 값(그리고 지시자 없는 결측)은 영벡터 블록.
+            rows = np.flatnonzero(seen)
+            block = sparse.csr_matrix(
+                (np.ones(len(rows)), (rows, codes[seen])), shape=(len(X), width)
+            )
+            blocks.append(block)
+        return sparse.hstack(blocks, format="csr")
+
+    def importance(self) -> pd.DataFrame:
+        coef = self._model.coef_[0]
+        gains = []
+        offset = 0
+        for width in self._block_widths():
+            contribution = self._train_matrix[:, offset : offset + width] @ coef[
+                offset : offset + width
+            ]
+            gains.append(float(np.std(contribution)))
+            offset += width
+        return pd.DataFrame({"feature": self._columns, "gain": gains})
+
+
 def _reject_initial_score(
     kind: str, initial_score_tr: pd.Series | None, initial_score_va: pd.Series | None
 ) -> None:
@@ -330,6 +447,7 @@ MODEL_REGISTRY: dict[str, Callable[[dict, dict, int], ModelAdapter]] = {
     "xgboost": XGBoostAdapter,
     "catboost": CatBoostAdapter,
     "hist_gradient_boosting": HistGradientBoostingAdapter,
+    "logistic_onehot": LogisticOnehotAdapter,
 }
 
 
