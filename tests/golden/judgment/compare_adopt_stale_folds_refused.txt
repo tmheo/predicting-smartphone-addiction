@@ -1,0 +1,20 @@
+$ python -m pipeline.compare 3d5239b07c6e475baa7dde03fb0b99bc --adopt --reason 골든 박제: 채택 자격 거부 경로
+exit: 1
+--- stdout ---
+champion  : exp052_cat_xgb_impute_pass5 run 2c6150364304443c813302d6fa19528d
+challenger: exp057_cat_xgb_impute_comps5 run 3d5239b07c6e475baa7dde03fb0b99bc
+시드 평균본 OOF AUC: champion 0.96836 → challenger 0.96854 (delta +0.00019, 문턱 +0.0001) → 통과
+시드 42: champion 0.96818 → challenger 0.96833 (delta +0.00016) → 개선
+시드 43: champion 0.96816 → challenger 0.96833 (delta +0.00017) → 개선
+시드 44: champion 0.96818 → challenger 0.96838 (delta +0.00020) → 개선
+시드별 개선 3/3 (최소 2) → 통과
+경계 구간(+0.0001 이상 +0.0002 미만): fold 승리 5/5 (최소 3) → 통과
+카나리아 placebo_noise_te: 평균 gain 0.2 vs 플라시보 0.4 → 통과
+새 피처 imp_leisure_frac: 평균 gain 1.0 vs 플라시보 0.4 → 통과
+새 피처 imp_resid_frac: 평균 gain 1.8 vs 플라시보 0.4 → 통과
+새 피처 imp_social_frac: 평균 gain 8.0 vs 플라시보 0.4 → 통과
+새 피처 imp_week_total: 평균 gain 13.9 vs 플라시보 0.4 → 통과
+새 피처 imp_work_frac: 평균 gain 1.0 vs 플라시보 0.4 → 통과
+판정: 개선(확정)
+--- stderr ---
+채택 거부: 이 run의 folds sha256이 커밋된 artifacts/folds.parquet과 다르다.

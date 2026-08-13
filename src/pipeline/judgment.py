@@ -30,6 +30,20 @@ compare·pool CLI는 이 module의 caller다. 판정 함수는 통과 여부와 
 - 단일 시드 개선 폭이 +0.0003을 넘으면 그대로 채택하던 SINGLE_SEED_MARGIN 규칙은
   폐기됐다. champion은 항상 3시드 평균본이라는 불변식을 지킨다. (ADR 0001)
 
+계열 2(다양성 구성원)의 풀 진입 판정도 이 module 소관이다(#95).
+
+- 진입 하한: 시드 평균본 OOF AUC가 진입 시점 champion − 0.01 이상. 하한은 진입
+  시점에만 적용하고 champion 갱신 때마다 재심사하지 않는다.
+- 중복 게이트: 풀 내 최근접 구성원과 OOF 예측의 스피어만 순위 상관이 0.998 이상이면
+  중복으로 보고 성능이 높은 쪽만 유지한다. 상관은 중복 제거 전용이다.
+- 기여 판정: 표준 평가 앙상블(풀 전체의 순위 평균)의 OOF AUC에서 해당 구성원을
+  제외했을 때 AUC가 하락해야 유지된다. 풀이 비어 있으면 기여 판정은 묻지 않는다.
+
+채택 자격(장부에 오르는 실행의 기록 조건)도 여기가 단일 소스다: 3시드 평균본이고,
+git_dirty가 아니고, 커밋된 folds와 sha256이 일치해야 한다. (#14 관행)
+compare --adopt와 pool --admit이 같은 검사를 공유하고, submit도 같은 함수를 쓸 수
+있는 시그니처지만 대회 막판이라 전환하지 않았다(설계 호환만 확보, 지도 #91).
+
 metric 이름 규약(auc_oof_seed_*, auc_fold_*)의 의미 해석도 이 module 소관이다.
 실행 저장소(runs)는 기록 원형을 그대로 돌려주고, 여기의 파싱 helper가 해석한다.
 """
@@ -39,7 +53,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
+from sklearn.metrics import roc_auc_score
 
 from .features import PLACEBO
 from .runs import RunStore
@@ -50,7 +66,10 @@ SCREENING_SEEDS = [42]  # 스크리닝 시드. 고정. (ADR 0001)
 CONFIRM_SEEDS = [42, 43, 44]  # 확정 재검증 시드. 고정. (ADR 0001)
 SEED_WIN_MIN = 2  # 3시드 중 시드별 개선이 필요한 최소 시드 수.
 FOLD_WIN_MIN = 3  # 경계 구간에서 5개 fold 중 필요한 최소 승리 수.
+ENTRY_FLOOR_MARGIN = 0.01  # champion − 0.01이 풀 진입 하한. (ADR 0001)
+DUPLICATE_SPEARMAN = 0.998  # 이 이상이면 중복으로 본다. (ADR 0001)
 CHAMPION_PATH = Path("artifacts/champion.yaml")
+FOLDS_PATH = Path("artifacts/folds.parquet")
 
 
 class JudgmentError(Exception):
@@ -96,6 +115,8 @@ class RunFacts:
     importance: pd.DataFrame  # feature, fold, seed, gain
     model_params: dict[str, str] = field(default_factory=dict)
     input_hashes: dict[str, str] = field(default_factory=dict)
+    git_dirty: bool = False  # 채택 자격 검사용. load_run_facts는 항상 태그에서 채운다.
+    folds_sha256: str = ""
 
 
 def load_run_facts(run_id: str, store: RunStore) -> RunFacts:
@@ -122,6 +143,8 @@ def load_run_facts(run_id: str, store: RunStore) -> RunFacts:
         input_hashes={
             key: value for key, value in meta.tags.items() if key.startswith("sha256.")
         },
+        git_dirty=meta.tags["git_dirty"] == "True",
+        folds_sha256=meta.tags["sha256.folds"],
     )
 
 
@@ -406,4 +429,181 @@ def judge_confirmation(champion: dict, challenger: RunFacts) -> ConfirmationVerd
         canary=canary,
         new_features=new_features,
         passed=auc_ok and seed_ok and fold_ok and canary.ok and new_features.ok,
+    )
+
+
+@dataclass(frozen=True)
+class PoolCandidate:
+    """풀 진입 판정에 필요한 실행의 단면."""
+
+    run_id: str
+    experiment: str
+    auc_oof: float
+    seeds: list[int]
+    git_dirty: bool
+    folds_sha256: str
+    oof: pd.Series  # id 인덱스의 OOF 예측.
+
+
+def load_candidate(run_id: str, store: RunStore) -> PoolCandidate:
+    meta = store.facts_of(run_id)
+    return PoolCandidate(
+        run_id=run_id,
+        experiment=meta.params["experiment"],
+        auc_oof=meta.metrics["auc_oof"],
+        seeds=[int(s) for s in meta.params["seeds"].split(",")],
+        git_dirty=meta.tags["git_dirty"] == "True",
+        folds_sha256=meta.tags["sha256.folds"],
+        oof=store.oof_of(run_id),
+    )
+
+
+def spearman(a: pd.Series, b: pd.Series) -> float:
+    """OOF 예측 두 벌의 스피어만 순위 상관. 동순위는 평균 순위로 처리한다."""
+    return float(np.corrcoef(a.rank().to_numpy(), b.rank().to_numpy())[0, 1])
+
+
+def rank_ensemble_auc(preds: list[pd.Series], y: pd.Series) -> float:
+    """표준 평가 앙상블: 구성원별 예측을 순위(백분위)로 바꿔 평균한 뒤 채점한다."""
+    ranks = np.mean([p.rank(pct=True).to_numpy() for p in preds], axis=0)
+    return float(roc_auc_score(y.to_numpy(), ranks))
+
+
+@dataclass(frozen=True)
+class DuplicateCheck:
+    """중복 게이트: 최근접(상관 최대) 구성원 하나와만 비교한다. (ADR 0001)"""
+
+    nearest_run_id: str
+    nearest_spearman: float
+    nearest_auc: float
+    duplicate: bool  # 상관이 문턱 이상인가.
+    replace: bool  # 중복이되 후보가 더 높아 기존 구성원을 교체하는가.
+
+
+@dataclass(frozen=True)
+class ContributionCheck:
+    """기여 판정: 표준 평가 앙상블에 후보를 넣었을 때 OOF AUC가 올라야 유지된다."""
+
+    auc_without: float
+    auc_with: float
+    contribution: float
+    ok: bool
+
+
+@dataclass(frozen=True)
+class EntryVerdict:
+    """풀 진입 판정의 근거 값."""
+
+    champion_run_id: str
+    champion_auc: float
+    candidate_auc: float
+    floor: float  # champion − ENTRY_FLOOR_MARGIN.
+    floor_ok: bool
+    duplicate: DuplicateCheck | None  # 풀이 비어 있으면 None.
+    drop_run_id: str | None  # 중복 교체로 탈락시킬 기존 구성원.
+    contribution: ContributionCheck | None  # 묻지 않으면 None.
+    admit: bool
+
+
+def judge_entry(
+    pool: dict, candidate: PoolCandidate, champion: dict, store: RunStore, y: pd.Series
+) -> EntryVerdict:
+    """풀 진입 판정: 진입 하한 + 중복 게이트 + 기여 판정. (ADR 0001 계열 2)
+
+    중복 게이트는 최종 논리곱이 아니라 탈락의 조기 확정이다: 중복인데 기존 구성원이
+    더 높으면 그 자리에서 탈락이고, 후보가 더 높으면 교체 대상만 정한 뒤 진입 여부는
+    진입 하한과 기여 판정이 정한다.
+    """
+    floor = champion["oof_auc"] - ENTRY_FLOOR_MARGIN
+    floor_ok = candidate.auc_oof >= floor
+    base = dict(
+        champion_run_id=champion["run_id"],
+        champion_auc=float(champion["oof_auc"]),
+        candidate_auc=candidate.auc_oof,
+        floor=floor,
+        floor_ok=floor_ok,
+    )
+
+    members = pool["members"]
+    if not members:
+        return EntryVerdict(
+            **base, duplicate=None, drop_run_id=None, contribution=None, admit=floor_ok
+        )
+
+    cand_pred = candidate.oof
+    member_preds = {
+        m["run_id"]: store.oof_of(m["run_id"]).reindex(cand_pred.index) for m in members
+    }
+    for run_id, pred in member_preds.items():
+        assert pred.notna().all(), f"구성원 {run_id}의 OOF id가 후보와 일치하지 않는다."
+
+    corrs = {run_id: spearman(cand_pred, pred) for run_id, pred in member_preds.items()}
+    nearest_id = max(corrs, key=corrs.get)
+    nearest = next(m for m in members if m["run_id"] == nearest_id)
+    is_duplicate = corrs[nearest_id] >= DUPLICATE_SPEARMAN
+    replace = is_duplicate and candidate.auc_oof > nearest["oof_auc"]
+    duplicate = DuplicateCheck(
+        nearest_run_id=nearest_id,
+        nearest_spearman=float(corrs[nearest_id]),
+        nearest_auc=float(nearest["oof_auc"]),
+        duplicate=is_duplicate,
+        replace=replace,
+    )
+    if is_duplicate and not replace:
+        return EntryVerdict(
+            **base, duplicate=duplicate, drop_run_id=None, contribution=None, admit=False
+        )
+    drop_run_id = nearest_id if replace else None
+
+    # 기여 판정: 교체로 빠질 구성원은 제외한 풀 기준으로 잰다.
+    base_preds = [p for run_id, p in member_preds.items() if run_id != drop_run_id]
+    if not base_preds:
+        return EntryVerdict(
+            **base, duplicate=duplicate, drop_run_id=drop_run_id, contribution=None,
+            admit=floor_ok,
+        )
+
+    auc_without = rank_ensemble_auc(base_preds, y)
+    auc_with = rank_ensemble_auc(base_preds + [cand_pred], y)
+    delta = auc_with - auc_without
+    contribution = ContributionCheck(
+        auc_without=auc_without, auc_with=auc_with, contribution=delta, ok=delta > 0
+    )
+    return EntryVerdict(
+        **base, duplicate=duplicate, drop_run_id=drop_run_id, contribution=contribution,
+        admit=floor_ok and contribution.ok,
+    )
+
+
+@dataclass(frozen=True)
+class AdoptionEligibility:
+    """채택 자격 검사의 근거 값: 장부(champion·후보 풀)에 오르는 실행의 기록 조건."""
+
+    seeds: list[int]
+    seeds_ok: bool  # 3시드 평균본인가.
+    git_dirty: bool
+    folds_sha256: str
+    committed_folds_sha256: str
+    folds_ok: bool  # 커밋된 folds와 sha256이 일치하는가.
+    ok: bool
+
+
+def check_adoption_eligibility(
+    *, seeds: list[int], git_dirty: bool, folds_sha256: str, committed_folds_sha256: str
+) -> AdoptionEligibility:
+    """채택 자격 검사: 3시드 평균본, git_dirty 아님, folds sha256 일치. (#14 관행)
+
+    compare --adopt와 pool --admit이 공유한다. 인자를 기록 원형으로 받으므로 submit도
+    태그만으로 같은 검사를 쓸 수 있지만, 대회 막판이라 전환하지 않았다(지도 #91).
+    """
+    seeds_ok = seeds == CONFIRM_SEEDS
+    folds_ok = folds_sha256 == committed_folds_sha256
+    return AdoptionEligibility(
+        seeds=seeds,
+        seeds_ok=seeds_ok,
+        git_dirty=git_dirty,
+        folds_sha256=folds_sha256,
+        committed_folds_sha256=committed_folds_sha256,
+        folds_ok=folds_ok,
+        ok=seeds_ok and not git_dirty and folds_ok,
     )

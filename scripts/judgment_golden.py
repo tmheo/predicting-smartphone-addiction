@@ -36,6 +36,7 @@ import argparse
 import difflib
 import os
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -73,6 +74,23 @@ def _use_pool_before_exp058(sandbox: Path) -> None:
 
 def _remove_champion(sandbox: Path) -> None:
     (sandbox / "artifacts" / "champion.yaml").unlink()
+
+
+def _adopt_dirty_run(sandbox: Path) -> None:
+    """채택 자격 검사(#95)용: champion을 되감고 challenger를 git_dirty=True로 바꾼다."""
+    _use_champion_exp052(sandbox)
+    with sqlite3.connect(sandbox / "mlflow.db") as conn:
+        conn.execute(
+            "UPDATE tags SET value = 'True' WHERE key = 'git_dirty' AND run_uuid = ?",
+            (RUN["exp057_confirm"],),
+        )
+
+
+def _adopt_stale_folds(sandbox: Path) -> None:
+    """채택 자격 검사(#95)용: champion을 되감고 folds 사본을 한 바이트 늘려 sha256을 어긋낸다."""
+    _use_champion_exp052(sandbox)
+    folds = sandbox / "artifacts" / "folds.parquet"
+    folds.write_bytes(folds.read_bytes() + b"\0")
 
 
 @dataclass(frozen=True)
@@ -127,6 +145,16 @@ SCENARIOS = [
         "compare_bootstrap_seed_violation",
         ["pipeline.compare", RUN["exp057_screen"]],
         setup=_remove_champion,
+    ),
+    Scenario(
+        "compare_adopt_dirty_refused",
+        ["pipeline.compare", RUN["exp057_confirm"], "--adopt", "--reason", "골든 박제: 채택 자격 거부 경로"],
+        setup=_adopt_dirty_run,
+    ),
+    Scenario(
+        "compare_adopt_stale_folds_refused",
+        ["pipeline.compare", RUN["exp057_confirm"], "--adopt", "--reason", "골든 박제: 채택 자격 거부 경로"],
+        setup=_adopt_stale_folds,
     ),
     # --- pool: 판정 리포트 경로 ---
     Scenario(

@@ -25,7 +25,7 @@ import yaml
 from pipeline.judgment import CHAMPION_PATH
 from pipeline.cv import score_predictions
 from pipeline.data import ID, labels
-from pipeline.pool import rank_ensemble_auc, spearman
+from pipeline.judgment import rank_ensemble_auc, spearman
 from pipeline.runs import MlflowRunStore, RunStore
 
 FOLDS_PATH = "artifacts/folds.parquet"

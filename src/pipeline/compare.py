@@ -24,12 +24,14 @@ import sys
 
 import yaml
 
+from .data import file_sha256
 from .judgment import (
     AUC_THRESHOLD,
     BOUNDARY_UPPER,
     CHAMPION_PATH,
     CONFIRM_SEEDS,
     FOLD_WIN_MIN,
+    FOLDS_PATH,
     SCREENING_SEEDS,
     SEED_WIN_MIN,
     CanaryReport,
@@ -39,6 +41,7 @@ from .judgment import (
     ProxyScreeningVerdict,
     RunFacts,
     ScreeningVerdict,
+    check_adoption_eligibility,
     judge_confirmation,
     judge_proxy_screening,
     judge_screening,
@@ -133,6 +136,22 @@ def render_confirmation(verdict: ConfirmationVerdict) -> list[str]:
     return lines
 
 
+def require_adoption_eligibility(challenger: RunFacts) -> None:
+    """채택 자격 검사(#14 관행)의 미달을 종료 메시지로 번역한다. pool --admit과 규칙을 공유한다."""
+    eligibility = check_adoption_eligibility(
+        seeds=challenger.seeds,
+        git_dirty=challenger.git_dirty,
+        folds_sha256=challenger.folds_sha256,
+        committed_folds_sha256=file_sha256(FOLDS_PATH),
+    )
+    if not eligibility.seeds_ok:
+        sys.exit(f"채택 거부: champion은 항상 3시드 평균본이다. (이 run의 시드: {challenger.seeds})")
+    if eligibility.git_dirty:
+        sys.exit("채택 거부: git_dirty 실행은 champion으로 채택하지 않는다. 커밋 후 재실행할 것. (#14)")
+    if not eligibility.folds_ok:
+        sys.exit("채택 거부: 이 run의 folds sha256이 커밋된 artifacts/folds.parquet과 다르다.")
+
+
 def write_champion(challenger: RunFacts, reason: str) -> None:
     record = {
         "run_id": challenger.run_id,
@@ -189,6 +208,7 @@ def main() -> None:
             if challenger.seeds != CONFIRM_SEEDS:
                 sys.exit(f"champion은 항상 3시드 평균본이다: cv.seeds를 {CONFIRM_SEEDS}로 재실행할 것.")
             if args.adopt:
+                require_adoption_eligibility(challenger)
                 write_champion(challenger, args.reason)
                 print(f"champion 기록: run {challenger.run_id} (auc_oof {challenger.auc_oof:.5f}). 커밋할 것.")
             else:
@@ -230,6 +250,7 @@ def main() -> None:
         return
     if not verdict.passed:
         sys.exit("채택 거부: 확정 재검증이 개선이 아니다.")
+    require_adoption_eligibility(challenger)
     write_champion(challenger, args.reason)
     print(f"champion 갱신: run {challenger.run_id} (auc_oof {challenger.auc_oof:.5f}). 커밋할 것.")
 

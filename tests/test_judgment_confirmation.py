@@ -41,7 +41,7 @@ def make_challenger(
         "challenger",
         params={"experiment": "exp_test", "features": FEATURES, "seeds": "42,43,44"},
         metrics=metrics,
-        tags={"git_commit": "deadbeef"},
+        tags={"git_commit": "deadbeef", "git_dirty": "False", "sha256.folds": "folds-sha"},
         importance=pd.DataFrame(
             {
                 "feature": ["age", PLACEBO],
