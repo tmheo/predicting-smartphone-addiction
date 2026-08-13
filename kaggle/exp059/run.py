@@ -1,6 +1,6 @@
 import subprocess
 
-COMMIT = "dbeb5fe9990141f99ec06fdd4d3c003ba1f5d031"
+COMMIT = "495cc49df87e1de625da99f440b7d7fb80ac4f33"
 CONFIG = "configs/exp059_lookup_transformer.yaml"
 BUNDLE = "/kaggle/working/exp059.bundle.zip"
 

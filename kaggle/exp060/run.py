@@ -1,6 +1,6 @@
 import subprocess
 
-COMMIT = "dbeb5fe9990141f99ec06fdd4d3c003ba1f5d031"
+COMMIT = "495cc49df87e1de625da99f440b7d7fb80ac4f33"
 CONFIG = "configs/exp060_lookup_transformer_nn10.yaml"
 BUNDLE = "/kaggle/working/exp060.bundle.zip"
 # 원본 프록시(jayjoshi37 판본 1과 동일 파일). features.OriginalKnnColumns의
