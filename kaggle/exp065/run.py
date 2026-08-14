@@ -16,7 +16,7 @@ import subprocess
 
 COMMIT = "9b4da0715010744119e6d6db0718e86dac5ee06b"
 CONFIG = "configs/exp065_*.yaml"
-STAGE = "screen"  # pipeline.run --stage. 시드는 판정 계약이 정한다. (#103)
+STAGE = "confirm"  # 스크리닝(run ebc2de27, OOF 0.96819) 통과 후 3시드 확정 승격. (#103)
 BUNDLE = "/kaggle/working/exp065.bundle.zip"
 REPO = "/tmp/repo"  # /kaggle/working에 두면 repo(.venv 포함)가 산출물에 딸려온다. (#99)
 
