@@ -17,7 +17,7 @@
 "무엇이 풀에 있는가"라는 결정과 진입 근거를 git 이력에 남긴다. 장부의 타입과
 YAML 해석은 ledger module 소관이며(#96), 진입 근거는 진입 시점 스냅샷이라
 champion이 교체되어도 갱신하지 않는다. 일괄 재심사는 P3 풀 점검(#63)과
-P4 앙상블 구성 단계의 소관이다. nested OOF 평가기는 P4에서 만든다.
+P4 앙상블 구성 단계의 소관이다. nested OOF 평가는 ensemble module 소관이다(#104).
 """
 
 from __future__ import annotations

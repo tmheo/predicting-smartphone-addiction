@@ -1,0 +1,22 @@
+구성원 3명 (config → run_id):
+  exp_alpha → run-alpha
+  exp_beta → run-beta
+  exp_gamma → run-gamma
+전략 rank_mean (복잡도 서열 1): nested OOF AUC 0.96638
+  outer fold AUC: 0=0.92857 1=1.00000 2=1.00000 3=1.00000 4=0.92929
+  구성원별 선택 빈도·평균 가중치:
+    exp_alpha: 5/5, +0.33333
+    exp_beta: 5/5, +0.33333
+    exp_gamma: 5/5, +0.33333
+전략 ridge_logit (복잡도 서열 4): nested OOF AUC 0.97866
+  outer fold AUC: 0=0.98810 1=1.00000 2=1.00000 3=0.97917 4=0.92929
+  구성원별 선택 빈도·평균 가중치:
+    exp_alpha: 5/5, +0.26314
+    exp_beta: 5/5, +0.10582
+    exp_gamma: 5/5, +0.03943
+fold 승리 (보조 증거): ridge_logit 1/5, rank_mean 1/5
+계열 3 판정: champion OOF AUC 0.90000 대비 문턱 +0.0001
+  ridge_logit: nested 0.97866 (delta +0.07866) → 채택 가능
+  rank_mean: nested 0.96638 (delta +0.06638) → 채택 가능
+동률 그룹 (1위와 차이 0.0001 미만): ridge_logit
+판정: ridge_logit 채택 추천 (동률 그룹에서 복잡도 서열 최저)

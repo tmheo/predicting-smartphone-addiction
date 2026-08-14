@@ -30,6 +30,18 @@ compare·pool CLI는 이 module의 caller다. 판정 함수는 통과 여부와 
 - 단일 시드 개선 폭이 +0.0003을 넘으면 그대로 채택하던 SINGLE_SEED_MARGIN 규칙은
   폐기됐다. champion은 항상 3시드 평균본이라는 불변식을 지킨다. (ADR 0001)
 
+계열 3(앙상블)의 판정도 이 module 소관이다(#104).
+
+- 채택 가능: 결합 전략의 nested OOF AUC가 champion(3시드 평균본) OOF AUC 대비
+  +0.0001 이상.
+- 동률 그룹: 1위 고정 기준으로, 1위와의 차이가 0.0001 미만인 채택 가능 전략만
+  포함한다(연쇄 확장 없음).
+- 확정: 동률 그룹 안에서 복잡도 서열이 가장 낮은 1개를 추천 전략으로 확정한다.
+  복잡도 서열은 ADR 0001의 "구성원 수와 선택 자유도가 적은 더 단순한 방식"을
+  각 결합 전략 adapter의 선언으로 기계화한 것이다.
+  채택 가능 전략이 없으면 "채택 없음, 단독 champion 유지"다.
+- 전략 간 fold별 승리 수는 보조 증거로 기록만 한다. (ADR 0001)
+
 계열 2(다양성 구성원)의 풀 진입 판정도 이 module 소관이다(#95).
 
 - 진입 하한: 시드 평균본 OOF AUC가 진입 시점 champion − 0.01 이상. 하한은 진입
@@ -59,6 +71,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
+from .ensemble import rank_mean
 from .features import PLACEBO
 from .ledger import Champion, Pool
 from .runs import RunStore
@@ -460,9 +473,12 @@ def spearman(a: pd.Series, b: pd.Series) -> float:
 
 
 def rank_ensemble_auc(preds: list[pd.Series], y: pd.Series) -> float:
-    """표준 평가 앙상블: 구성원별 예측을 순위(백분위)로 바꿔 평균한 뒤 채점한다."""
-    ranks = np.mean([p.rank(pct=True).to_numpy() for p in preds], axis=0)
-    return float(roc_auc_score(y.to_numpy(), ranks))
+    """표준 평가 앙상블: 구성원별 예측을 순위(백분위)로 바꿔 평균한 뒤 채점한다.
+
+    수식은 ensemble의 균등 순위 평균 adapter가 소유한다(#104). 기여 판정은
+    "블록=전체 OOF"인 특수 사례라 같은 수식을 그대로 쓴다.
+    """
+    return float(roc_auc_score(y.to_numpy(), rank_mean(pd.concat(preds, axis=1))))
 
 
 @dataclass(frozen=True)
@@ -569,6 +585,100 @@ def judge_entry(
         **base, duplicate=duplicate, drop_run_id=drop_run_id, contribution=contribution,
         admit=floor_ok and contribution.ok,
     )
+
+
+@dataclass(frozen=True)
+class StrategyOutcome:
+    """계열 3 판정의 평문 입력 한 건: 결합 전략 하나의 nested 평가 결과. (#104)
+
+    check_adoption_eligibility가 기록 원형을 평문으로 받는 무늬 그대로, ensemble의
+    평가 타입이 아닌 값(전략 이름, 복잡도 서열, nested OOF AUC, outer fold별 AUC)만
+    받는다.
+    """
+
+    name: str
+    complexity: int  # 복잡도 서열(선택 자유도 순위). 낮을수록 단순하다.
+    nested_auc: float
+    fold_aucs: dict[int, float]  # outer fold별 AUC.
+
+
+@dataclass(frozen=True)
+class StrategyAssessment:
+    """결합 전략 하나의 계열 3 판정 근거 값."""
+
+    name: str
+    complexity: int
+    nested_auc: float
+    delta: float  # champion 대비.
+    eligible: bool  # 채택 가능한가(delta >= AUC_THRESHOLD).
+    fold_wins: int  # 전략 간 fold별 승리 수. 보조 증거로 기록만 한다. (ADR 0001)
+
+
+@dataclass(frozen=True)
+class EnsembleVerdict:
+    """계열 3 판정의 근거 값."""
+
+    champion_auc: float
+    assessments: list[StrategyAssessment]  # nested OOF AUC 내림차순.
+    tie_group: list[str]  # 채택 가능 전략이 없으면 빈 목록.
+    recommended: str | None  # None이면 채택 없음, 단독 champion 유지.
+
+
+def judge_ensemble(
+    outcomes: list[StrategyOutcome], champion_auc: float
+) -> EnsembleVerdict:
+    """계열 3 판정: 채택 문턱 + 동률 그룹 + 복잡도 서열 확정. (ADR 0001, #104)
+
+    복잡도 서열 최저 선택은 ADR 0001의 "동률이면 구성원 수와 선택 자유도가 적은
+    더 단순한 방식" 규정을 adapter 선언 값으로 기계 판정한 것이다.
+    """
+    if not outcomes:
+        raise JudgmentError("판정할 결합 전략이 없다.")
+    names = [outcome.name for outcome in outcomes]
+    if len(set(names)) != len(names):
+        raise JudgmentError(f"결합 전략 이름이 중복된다: {names}")
+    folds = set(outcomes[0].fold_aucs)
+    if any(set(outcome.fold_aucs) != folds for outcome in outcomes):
+        raise JudgmentError(
+            "전략 간 outer fold 구성이 다르다: 같은 fold 배정으로 평가한 결과만 비교한다."
+        )
+
+    # fold 승리: 그 fold에서 유일한 최고 AUC인 전략만 승리로 센다.
+    wins = dict.fromkeys(names, 0)
+    for fold in folds:
+        best = max(outcome.fold_aucs[fold] for outcome in outcomes)
+        winners = [o.name for o in outcomes if o.fold_aucs[fold] == best]
+        if len(winners) == 1:
+            wins[winners[0]] += 1
+
+    assessments = sorted(
+        (
+            StrategyAssessment(
+                name=outcome.name,
+                complexity=outcome.complexity,
+                nested_auc=outcome.nested_auc,
+                delta=outcome.nested_auc - champion_auc,
+                eligible=outcome.nested_auc - champion_auc >= AUC_THRESHOLD,
+                fold_wins=wins[outcome.name],
+            )
+            for outcome in outcomes
+        ),
+        key=lambda a: (-a.nested_auc, a.complexity, a.name),
+    )
+
+    top = assessments[0]
+    if not top.eligible:
+        return EnsembleVerdict(champion_auc, assessments, [], None)
+    tie_group = [
+        a.name
+        for a in assessments
+        if a.eligible and top.nested_auc - a.nested_auc < AUC_THRESHOLD
+    ]
+    recommended = min(
+        (a for a in assessments if a.name in tie_group),
+        key=lambda a: (a.complexity, a.name),
+    ).name
+    return EnsembleVerdict(champion_auc, assessments, tie_group, recommended)
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,21 @@
+구성원 3명 (config → run_id):
+  exp_alpha → run-alpha
+  exp_beta → run-beta
+  exp_gamma → run-gamma
+전략 rank_mean (복잡도 서열 1): nested OOF AUC 0.60067
+  outer fold AUC: 0=0.43434 1=0.53535 2=0.63281 3=0.65152 4=0.69048
+  구성원별 선택 빈도·평균 가중치:
+    exp_alpha: 5/5, +0.33333
+    exp_beta: 5/5, +0.33333
+    exp_gamma: 5/5, +0.33333
+전략 ridge_logit (복잡도 서열 4): nested OOF AUC 0.55443
+  outer fold AUC: 0=0.69697 1=0.71717 2=0.79688 3=0.71717 4=0.44048
+  구성원별 선택 빈도·평균 가중치:
+    exp_alpha: 5/5, -0.03888
+    exp_beta: 5/5, -0.02705
+    exp_gamma: 5/5, +0.12217
+fold 승리 (보조 증거): rank_mean 1/5, ridge_logit 4/5
+계열 3 판정: champion OOF AUC 0.99000 대비 문턱 +0.0001
+  rank_mean: nested 0.60067 (delta -0.38933) → 미달
+  ridge_logit: nested 0.55443 (delta -0.43557) → 미달
+판정: 채택 없음, 단독 champion 유지
