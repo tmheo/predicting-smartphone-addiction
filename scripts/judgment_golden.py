@@ -67,6 +67,28 @@ def _use_champion_exp052(sandbox: Path) -> None:
     shutil.copy2(FIXTURES / "champion_exp052.yaml", sandbox / "artifacts" / "champion.yaml")
 
 
+def _use_champion_exp057(sandbox: Path) -> None:
+    """champion을 박제 당시(#92, exp057)로 고정한다.
+
+    champion을 고정하지 않은 시나리오는 이후 채택(#58 exp059)마다 출력이 드리프트해
+    특성화 기준선이 무너진다. 판정 경로가 champion 값에 의존하는 시나리오는 전부
+    이 고정본 위에서 돈다. (#103에서 드리프트 발견)
+    """
+    shutil.copy2(FIXTURES / "champion_exp057.yaml", sandbox / "artifacts" / "champion.yaml")
+
+
+def _use_champion_exp057_and_pool_before_exp058(sandbox: Path) -> None:
+    _use_champion_exp057(sandbox)
+    _use_pool_before_exp058(sandbox)
+
+
+def _use_champion_exp057_and_pool_before_exp059(sandbox: Path) -> None:
+    """champion과 풀 장부를 모두 박제 당시(#95)로 고정한다. 기여 판정처럼 풀 구성
+    전체가 출력에 들어가는 시나리오는 풀 장부 드리프트(#58 exp059 등록)도 막아야 한다."""
+    _use_champion_exp057(sandbox)
+    shutil.copy2(FIXTURES / "pool_before_exp059.yaml", sandbox / "artifacts" / "pool.yaml")
+
+
 def _use_pool_before_exp058(sandbox: Path) -> None:
     """풀 장부를 이슈 #56 등록 직전(exp058 제외 10명)으로 되감는다."""
     shutil.copy2(FIXTURES / "pool_before_exp058.yaml", sandbox / "artifacts" / "pool.yaml")
@@ -105,10 +127,12 @@ SCENARIOS = [
     Scenario(
         "compare_screening",
         ["pipeline.compare", RUN["exp057_screen"]],
+        setup=_use_champion_exp057,
     ),
     Scenario(
         "compare_confirmation_not_improved",
         ["pipeline.compare", RUN["exp052_confirm"]],
+        setup=_use_champion_exp057,
     ),
     Scenario(
         "compare_confirmation_adopt",
@@ -123,6 +147,7 @@ SCENARIOS = [
     Scenario(
         "compare_screening_adopt_refused",
         ["pipeline.compare", RUN["exp057_screen"], "--adopt", "--reason", "골든 박제: 거부 경로"],
+        setup=_use_champion_exp057,
     ),
     Scenario(
         "compare_adopt_without_reason",
@@ -135,6 +160,7 @@ SCENARIOS = [
     Scenario(
         "compare_self_champion",
         ["pipeline.compare", RUN["exp057_confirm"]],
+        setup=_use_champion_exp057,
     ),
     Scenario(
         "compare_bootstrap_hint",
@@ -160,19 +186,22 @@ SCENARIOS = [
     Scenario(
         "pool_report_reject_contribution",
         ["pipeline.pool", RUN["exp037_3seed"]],
+        setup=_use_champion_exp057_and_pool_before_exp059,
     ),
     Scenario(
         "pool_report_reject_duplicate",
         ["pipeline.pool", RUN["exp043_3seed"]],
+        setup=_use_champion_exp057,
     ),
     Scenario(
         "pool_report_single_seed",
         ["pipeline.pool", RUN["exp022_screen"]],
+        setup=_use_champion_exp057,
     ),
     Scenario(
         "pool_admit_replay_exp058",
         ["pipeline.pool", RUN["exp058_confirm"], "--admit", "--reason", "골든 박제: 이슈 #56 등록 재현"],
-        setup=_use_pool_before_exp058,
+        setup=_use_champion_exp057_and_pool_before_exp058,
     ),
     # --- pool: 오류·거부 경로 ---
     Scenario(
