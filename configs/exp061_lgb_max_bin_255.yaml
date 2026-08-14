@@ -1,0 +1,61 @@
+# 이슈 #100: LightGBM 구간 수 확대 트랙의 seed 42 짝비교 기준 실행.
+# exp026의 피처 계획과 모델 파라미터를 유지하고 기본값 max_bin=255를 명시한다.
+
+name: exp061_lgb_max_bin_255
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [other_screen, screen_slack]
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.05
+    num_leaves: 255
+    n_estimators: 10000
+    max_bin: 255
+    force_row_wise: true
+  fit:
+    early_stopping_rounds: 200
+
+cv:
+  seeds: [42]
