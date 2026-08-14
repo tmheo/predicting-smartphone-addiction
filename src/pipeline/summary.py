@@ -21,6 +21,7 @@ import pandas as pd
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib import font_manager
 
 from .config import ExperimentConfig
 from .cv import CVResult
@@ -29,7 +30,14 @@ from .judgment import fold_aucs_of, mean_gain_of
 
 TOP_N = 30
 
-plt.rcParams["font.family"] = "AppleGothic"
+# 글리프 단위 폴백(matplotlib 3.6+): 숫자·기호는 DejaVu, 한글은 설치된 한글 폰트가 맡는다.
+# 한글 폰트는 macOS의 AppleGothic, Kaggle/리눅스의 나눔·Noto 계열 중 설치된 것만 넣는다
+# (미설치 폰트를 목록에 남기면 findfont 경고가 그림마다 쏟아진다).
+_KOREAN_FONTS = ("AppleGothic", "NanumGothic", "Noto Sans CJK KR", "NanumBarunGothic")
+_available = {f.name for f in font_manager.fontManager.ttflist}
+plt.rcParams["font.family"] = [
+    "DejaVu Sans", *(f for f in _KOREAN_FONTS if f in _available), "sans-serif"
+]
 plt.rcParams["axes.unicode_minus"] = False
 
 
@@ -53,7 +61,9 @@ def build_summary_table(importance: pd.DataFrame) -> pd.DataFrame:
     table["below_placebo"] = table["gain_mean"] < placebo_ref
     table = table.sort_values("gain_mean", ascending=False).reset_index()
     table.insert(0, "rank", range(1, len(table) + 1))
-    return table.round({"gain_mean": 1, "gain_std": 1, "gain_share_pct": 2, "vs_placebo": 2})
+    # gain은 계열마다 축척이 다르다(트리 gain은 수백, permutation은 1e-4 안팎, #97).
+    # 반올림하면 작은 축척이 0으로 뭉개지므로 원값을 유지하고 표시 단계에서 유효숫자로 줄인다.
+    return table.round({"gain_share_pct": 2, "vs_placebo": 2})
 
 
 def plot_top_gain(table: pd.DataFrame, out: Path) -> None:
@@ -73,7 +83,7 @@ def plot_top_gain(table: pd.DataFrame, out: Path) -> None:
     ax.set_xscale("log")
     ax.axvline(placebo_line, color="#d62728", linestyle="--", linewidth=1)
     ax.annotate(
-        f"플라시보 기준 {placebo_line:,.1f}",
+        f"플라시보 기준 {placebo_line:.3g}",
         xy=(placebo_line, -0.5),
         xytext=(6, 0),
         textcoords="offset points",
@@ -116,7 +126,7 @@ def build_html(
             )
             rows.append(
                 f"<tr{cls}><td>{r['rank']}</td><td>{r['feature']}</td>"
-                f"<td>{r['gain_mean']:,.1f}</td><td>{r['gain_std']:,.1f}</td>"
+                f"<td>{r['gain_mean']:.4g}</td><td>{r['gain_std']:.4g}</td>"
                 f"<td>{r['gain_share_pct']:.2f}%</td><td>{r['vs_placebo']:.2f}×</td></tr>"
             )
         return "\n".join(rows)
@@ -179,7 +189,7 @@ def generate_and_log(
     table = build_summary_table(result.importance)
     with tempfile.TemporaryDirectory() as tmp:
         tmp_dir = Path(tmp)
-        table.to_csv(tmp_dir / "feature_importance_summary.csv", index=False)
+        table.to_csv(tmp_dir / "feature_importance_summary.csv", index=False, float_format="%.6g")
         durations.to_csv(tmp_dir / "stage_durations.csv", index=False)
         plot_top_gain(table, tmp_dir / "top30_gain.png")
         html = build_html(cfg, run_id, result, table, durations, tmp_dir / "top30_gain.png")
