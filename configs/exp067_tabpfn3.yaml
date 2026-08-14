@@ -3,8 +3,10 @@
 # fold 0 스모크에서 원시 판은 AUC 0.94645로 품질 게이트에 미달했지만,
 # exp052 채택 피처 판은 AUC 0.96651·5-fold 예상 6917초로 두 게이트를 통과했다.
 # 따라서 정식 실행은 스모크를 통과한 exp052 피처 계획을 그대로 쓴다.
-# fit_with_cache와 1000행 예측 청크, OOM 시 memory_saving_mode=True 후퇴도
-# 스모크와 같다. permutation importance는 1000행 결정적 부분표본으로 측정한다.
+# fit_with_cache와 OOM 시 memory_saving_mode=True 후퇴는 스모크와 같다.
+# 5090 스모크의 1000행 최대 메모리가 26.3/32.6GB였으므로 정식 실행은 2000행
+# 청크로 남은 메모리를 써서 예측 호출 수를 줄인다. permutation importance는
+# 500행 결정적 부분표본으로 측정한다.
 # The TABPFN-3 Model is licensed by Prior Labs GmbH under the
 # TABPFN-3 Non-Commercial License.
 name: exp067_tabpfn3
@@ -79,7 +81,7 @@ model:
     device: cuda
     fit_mode: fit_with_cache
     memory_saving_mode: auto
-    chunk_rows: 1000
+    chunk_rows: 2000
     perm_repeats: 1
-    perm_sample: 1000
+    perm_sample: 500
   fit: {}
