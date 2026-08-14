@@ -1,0 +1,108 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #107: CatBoost 수치 정확값 범주 복제의 성능·다양성 기여 결정.
+# 기준은 현재 채택 CatBoost 피처 계획 exp057_cat_xgb_impute_comps5다
+# (남은 실험 공간 전수 재점검 2순위 절의 채택 설정 링크가 이 판이고, exp052는
+# 풀에서 exp057로 교체 탈락한 구판이다). 수치 아홉 열을 원본 유지 그대로
+# categorical_copies로 손실 없는 범주 키에 복제한다(범주 값은 CatBoost adapter가
+# float64 왕복 가능한 str(repr) 키로 넘긴다). 첫 실행은 수동 TE를 유지하고
+# 범주 조합 CTR을 막기 위해 max_ctr_complexity=1로 고정한다(티켓 설계 3항).
+# 짝지은 비교 기준: exp057 seed 42 스크리닝 run dd1369ef(OOF 0.96833).
+# max_ctr_complexity 추가로 모델 설정이 기준 실행과 달라 compare의 대리 스크리닝
+# 전제(동일 모델 설정)에 안 걸리므로, 판정은 judgment 함수(check_canaries,
+# check_new_features)를 exp057 피처 기준으로 직접 호출해 기록한다.
+name: exp070_cat_exact_cats
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: categorical_copies
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: derived
+      names: [other_screen, screen_slack]
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions:
+        [
+          social_frac,
+          work_frac,
+          leisure_frac,
+          resid_frac,
+          week_total,
+        ]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: catboost
+  params:
+    iterations: 10000
+    depth: 6
+    learning_rate: 0.05
+    eval_metric: AUC
+    max_ctr_complexity: 1
+  fit:
+    early_stopping_rounds: 200
