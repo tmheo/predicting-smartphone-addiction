@@ -190,3 +190,20 @@ members:
     ensemble_auc_with: 0.9683856530124514
     ensemble_auc_without: 0.9681324114087981
     contribution: 0.00025324160365325366
+- run_id: df2023d4bd71429b88a8026d52f5258c
+  config: exp065_tabm
+  oof_auc: 0.9683261181773571
+  seeds: 42,43,44
+  entered_at: '2026-08-14'
+  reason: '이슈 #61: TabM(pytabkit tabm-mini-normal, fold 내 3시드 평균) 원문 레시피의 fold 규율판.
+    champion 교체는 3시드 -0.00060 미달이나 최근접 스피어만 0.99345로 트리·lookup 계열과 독립인 오류 계열, 표준 평가
+    앙상블 기여 +0.00008'
+  evidence:
+    champion_run_id: b951fac51b6b44298f7fdb0b543caba6
+    champion_oof_auc: 0.9689221785328946
+    floor_margin: 0.009403939644462511
+    nearest_run_id: e2c432b487564df990a4cc3baf3d6fc0
+    nearest_spearman: 0.9934466938168667
+    ensemble_auc_with: 0.968468467459211
+    ensemble_auc_without: 0.9683856530124514
+    contribution: 8.281444675961591e-05
