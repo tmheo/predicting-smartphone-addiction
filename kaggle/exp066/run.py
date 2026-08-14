@@ -1,0 +1,71 @@
+"""Kaggle GPU 실행 커널 템플릿. 새 실험은 이 폴더를 kaggle/expNNN으로 복사해
+COMMIT·CONFIG·STAGE·BUNDLE과 kernel-metadata.json의 id·title만 바꾼다.
+
+단계는 config가 아니라 STAGE가 정하므로(#103), 스크리닝 → 확정 재검증 승격은
+같은 COMMIT·CONFIG에서 STAGE만 바꿔 다시 밀어 넣으면 된다(config 재커밋 불필요).
+
+절차와 원칙은 docs/kaggle-gpu-run.md를 따른다. #99의 세 가지 개선 반영:
+- repo를 /kaggle/working 밖(/tmp)에 클론해 .venv가 산출물 다운로드에 딸려오지 않는다.
+- pipeline.run 출력을 실시간으로 흘리면서(tee) run_id= 줄 파싱도 유지한다.
+- GPU가 여럿이면(T4 x2) PIPELINE_SEED_GPUS로 시드 단위 프로세스 병렬을 켠다.
+"""
+
+import glob
+import os
+import subprocess
+
+COMMIT = "9b4da0715010744119e6d6db0718e86dac5ee06b"
+CONFIG = "configs/exp066_*.yaml"
+STAGE = "screen"  # pipeline.run --stage. 시드는 판정 계약이 정한다. (#103)
+BUNDLE = "/kaggle/working/exp066.bundle.zip"
+REPO = "/tmp/repo"  # /kaggle/working에 두면 repo(.venv 포함)가 산출물에 딸려온다. (#99)
+
+run = lambda cmd: subprocess.run(cmd, shell=True, check=True)
+
+
+def find_input(name: str) -> str:
+    """/kaggle/input 아래에서 파일을 찾는다. 이미지에 따라 마운트 경로가 다르다."""
+    hits = glob.glob(f"/kaggle/input/**/{name}", recursive=True)
+    if not hits:
+        raise SystemExit(f"{name}을 찾지 못했다. /kaggle/input = {os.listdir('/kaggle/input')}")
+    return hits[0]
+
+
+run(f"git clone https://github.com/tmheo/predicting-smartphone-addiction.git {REPO}")
+run(f"cd {REPO} && git checkout {COMMIT}")
+# pip은 override-dependencies(pandas 3 강제)를 해석하지 못하므로 uv.lock 그대로
+# 로컬과 동일한 환경을 재현한다(.python-version의 3.13 포함).
+run("pip install uv -q")
+run(f"cd {REPO} && uv sync --frozen --no-dev -q")
+run(f"mkdir -p {REPO}/data")
+for name in ("train.csv", "test.csv", "sample_submission.csv"):
+    run(f"ln -sf {find_input(name)} {REPO}/data/{name}")
+# 원본 프록시(jayjoshi37 판본 1과 동일 파일). features.OriginalKnnColumns의
+# sha256 게이트가 실행 시점에 일치를 다시 검증한다(exp060과 같은 연결).
+PROXY_NAME = "Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv"
+run(f"mkdir -p {REPO}/data/external")
+run(f"ln -sf {find_input(PROXY_NAME)} {REPO}/data/external/{PROXY_NAME}")
+
+env = dict(os.environ)
+gpus = subprocess.run(
+    "nvidia-smi -L", shell=True, capture_output=True, text=True
+).stdout.strip().splitlines()
+if len(gpus) > 1:
+    # 시드 단위 프로세스 병렬(#99). 같은 GPU 모델 x N이므로 순차 실행과 결과가 같다.
+    env["PIPELINE_SEED_GPUS"] = ",".join(str(i) for i in range(len(gpus)))
+
+# capture 대신 tee: 학습 로그를 실시간으로 커널 로그에 흘리면서 run_id 파싱용으로 보관.
+proc = subprocess.Popen(
+    f"cd {REPO} && uv run --no-sync python -m pipeline.run {CONFIG} --stage {STAGE}",
+    shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env,
+)
+lines = []
+for line in proc.stdout:
+    print(line, end="", flush=True)
+    lines.append(line)
+if proc.wait() != 0:
+    raise SystemExit(proc.returncode)
+run_id = next(
+    line.split("=", 1)[1].split()[0] for line in lines if line.startswith("run_id=")
+)
+run(f"cd {REPO} && uv run --no-sync python -m pipeline.bundle export {run_id} --out {BUNDLE}")

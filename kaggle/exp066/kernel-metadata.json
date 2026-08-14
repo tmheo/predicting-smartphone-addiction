@@ -1,0 +1,12 @@
+{
+  "id": "tmheo74/exp066-gpu-run",
+  "title": "exp066 gpu run",
+  "code_file": "run.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "competition_sources": ["playground-series-s6e8"],
+  "dataset_sources": ["jayjoshi37/smartphone-usage-and-addiction-prediction"]
+}

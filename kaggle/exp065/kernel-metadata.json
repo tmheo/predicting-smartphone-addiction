@@ -1,0 +1,11 @@
+{
+  "id": "tmheo74/exp065-gpu-run",
+  "title": "exp065 gpu run",
+  "code_file": "run.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "competition_sources": ["playground-series-s6e8"]
+}
