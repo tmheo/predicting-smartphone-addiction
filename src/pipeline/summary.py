@@ -21,7 +21,6 @@ import pandas as pd
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib import font_manager
 
 from .config import ExperimentConfig
 from .cv import CVResult
@@ -30,15 +29,8 @@ from .judgment import fold_aucs_of, mean_gain_of
 
 TOP_N = 30
 
-# 글리프 단위 폴백(matplotlib 3.6+): 숫자·기호는 DejaVu, 한글은 설치된 한글 폰트가 맡는다.
-# 한글 폰트는 macOS의 AppleGothic, Kaggle/리눅스의 나눔·Noto 계열 중 설치된 것만 넣는다
-# (미설치 폰트를 목록에 남기면 findfont 경고가 그림마다 쏟아진다).
-_KOREAN_FONTS = ("AppleGothic", "NanumGothic", "Noto Sans CJK KR", "NanumBarunGothic")
-_available = {f.name for f in font_manager.fontManager.ttflist}
-plt.rcParams["font.family"] = [
-    "DejaVu Sans", *(f for f in _KOREAN_FONTS if f in _available), "sans-serif"
-]
-plt.rcParams["axes.unicode_minus"] = False
+# 차트 텍스트는 영문만 쓴다: 실행 환경(macOS·Kaggle 리눅스)마다 한글 폰트가 달라
+# 폰트 탐색·깨짐 문제를 만들 이유가 없다. 기본 DejaVu로 충분하다.
 
 
 def _placebo_features(features) -> list[str]:
@@ -83,7 +75,7 @@ def plot_top_gain(table: pd.DataFrame, out: Path) -> None:
     ax.set_xscale("log")
     ax.axvline(placebo_line, color="#d62728", linestyle="--", linewidth=1)
     ax.annotate(
-        f"플라시보 기준 {placebo_line:.3g}",
+        f"placebo ref {placebo_line:.3g}",
         xy=(placebo_line, -0.5),
         xytext=(6, 0),
         textcoords="offset points",
@@ -91,8 +83,8 @@ def plot_top_gain(table: pd.DataFrame, out: Path) -> None:
         fontsize=9,
         va="bottom",
     )
-    ax.set_title(f"상위 {TOP_N} 특성 평균 gain (fold×seed 표준편차, 로그 축)")
-    ax.set_xlabel("평균 gain (로그 축)")
+    ax.set_title(f"Top {TOP_N} features by mean gain (fold x seed std, log scale)")
+    ax.set_xlabel("mean gain (log scale)")
     ax.margins(y=0.02)
     fig.tight_layout()
     fig.savefig(out, dpi=150)
