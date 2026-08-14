@@ -1,0 +1,57 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #106: Lookup-Transformer에서 채택 복원 특성의 한계 기여 결정(정확값 TE 분리 실행).
+# 기준 exp059_lookup_transformer의 피처 세트를 그대로 두고 champion(exp057)의
+# 내부 OOF 정확값 TE 블록만 더한다. Lookup 임베딩이 이미 값별 목표값 표면을
+# 학습하므로 중복 가능성이 높다는 감사 문서의 추론을 복원 블록(exp067)과 분리해
+# 검증하기 위한 실행이다. TE 열은 lookup_cols 밖이라 PLR 전용 토큰이 된다.
+# exp067과 exp068 중 어느 한쪽이 단독 통과할 때만 결합 실행(exp069 예약)을 연다.
+# seed 42 스크리닝이 기준 이상이고 새 열 전부 플라시보 상회일 때만 3시드 확정으로 간다.
+# 원격 GPU 실행 대상: 주 실행 환경 Runpod RTX A5000(#116), 운영 명세 #118.
+name: exp068_lookup_exact_te
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+
+model:
+  kind: lookup_transformer
+  params:
+    lookup_cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+  fit: {}
