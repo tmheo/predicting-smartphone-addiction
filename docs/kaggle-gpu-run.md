@@ -6,10 +6,13 @@ GPU가 필요한 실험(#58 Lookup-Transformer 등)을 Kaggle에서 실행하고
 
 ## 원칙
 
-- Kaggle에서도 `pipeline.run <config>`를 그대로 실행한다.
+- Kaggle에서도 `pipeline.run <config> --stage screen|confirm`을 그대로 실행한다.
   노트북 자체 학습 루프는 만들지 않는다(두 번째 CV 루프 divergence 금지).
 - config는 실행 전에 main에 커밋돼 있어야 한다.
   반입이 "실행의 git_commit에 그 config가 그대로 존재하는가"를 검증한다.
+- 단계(스크리닝·확정 재검증)는 config가 아니라 `--stage`가 정한다(#103).
+  같은 커밋의 같은 config로 두 단계를 모두 실행할 수 있으므로,
+  스크리닝 통과 후 승격에 config 편집·재커밋·재클론이 필요 없다.
 - 커널은 인터넷을 켠 상태로 실행한다(GPU 실험 커널은 허용, 제출 노트북 아님).
 - 자동으로 돌아온 결과도 반입 게이트(입력 해시·출처·재채점)가 검증하므로,
   실행 경로가 자동화됐다고 신뢰를 더 얹지 않는다.
@@ -23,7 +26,7 @@ push(업로드 + 즉시 배치 실행), status(폴링), logs(실행 로그), out
 GPU 주간 할당은 30시간, 배치 실행 상한은 GPU 약 9시간이다.
 
 1. 커널 폴더를 만든다: `kaggle/exp0NN/`(템플릿)을 `kaggle/expNNN/`으로 복사하고
-   `run.py`의 `COMMIT`·`CONFIG`·`BUNDLE`, `kernel-metadata.json`의 `id`·`title`만 바꾼다.
+   `run.py`의 `COMMIT`·`CONFIG`·`STAGE`·`BUNDLE`, `kernel-metadata.json`의 `id`·`title`만 바꾼다.
    내용물은 `kernel-metadata.json`과 `run.py`(노트북일 필요 없이 plain 스크립트) 두 파일이다.
 
    템플릿 스크립트는 커밋 고정 클론 → `uv sync --frozen` → 대회 자료 심볼릭 링크 →
@@ -109,7 +112,7 @@ push → status 폴링 → output → import 네 단계를 감싸는 드라이�
    stdout의 `run_id=`를 확보한다.
 
    ```bash
-   !python -m pipeline.run configs/expNNN_*.yaml
+   !python -m pipeline.run configs/expNNN_*.yaml --stage <screen|confirm>
    ```
 
 4. 마지막 셀에서 묶음을 export하고 노트북 산출물에서 zip을 내려받는다.

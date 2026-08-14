@@ -41,6 +41,3 @@ model:
         academic_work_impact,
       ]
   fit: {}
-
-cv:
-  seeds: [42, 43, 44]

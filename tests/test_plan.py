@@ -308,14 +308,35 @@ def test_legacy_configs_are_rejected_and_current_schema_loads():
     for path in sorted((REPO / "configs").glob("*.yaml")):
         if int(path.name[3:6]) in LEGACY_CONFIG_NUMBERS:
             with pytest.raises(ValueError, match="#71 이전"):
-                load_config(path)
+                load_config(path, "screen")
         else:
-            load_config(path)
+            load_config(path, "screen")
+
+
+def test_stage_fills_seeds_from_judgment_constants():
+    """시드 정책의 유일 출처는 judgment다: stage가 시드를 채우고 config에는 없다. (#103)"""
+    from pipeline.judgment import CONFIRM_SEEDS, SCREENING_SEEDS
+
+    path = REPO / "configs" / "exp011_resid_pair.yaml"
+    assert load_config(path, "screen").seeds == SCREENING_SEEDS
+    assert load_config(path, "confirm").seeds == CONFIRM_SEEDS
+    assert load_config(path, "confirm").stage == "confirm"
+    with pytest.raises(ValueError, match="알 수 없는 stage"):
+        load_config(path, "final")
+
+
+def test_config_with_cv_block_is_rejected(tmp_path):
+    """cv.seeds 잔재는 명확한 오류로 거부한다: 단계는 --stage로 지정한다. (#103)"""
+    source = (REPO / "configs" / "exp011_resid_pair.yaml").read_text()
+    path = tmp_path / "exp011_with_cv.yaml"
+    path.write_text(source + "\ncv:\n  seeds: [42]\n")
+    with pytest.raises(ValueError, match="--stage"):
+        load_config(path, "screen")
 
 
 def test_exp011_declared_columns_golden():
     """champion 계보 exp011의 선언 컬럼 골든 테스트. 순서까지 고정한다."""
-    cfg = load_config(REPO / "configs" / "exp011_resid_pair.yaml")
+    cfg = load_config(REPO / "configs" / "exp011_resid_pair.yaml", "confirm")
     plan = FeaturePlan.from_config(cfg.features)
     train_header = pd.read_csv(REPO / cfg.data.train, nrows=0)
     test_header = pd.read_csv(REPO / cfg.data.test, nrows=0)

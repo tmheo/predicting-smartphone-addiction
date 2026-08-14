@@ -1,5 +1,8 @@
 """Kaggle GPU 실행 커널 템플릿. 새 실험은 이 폴더를 kaggle/expNNN으로 복사해
-COMMIT·CONFIG·BUNDLE과 kernel-metadata.json의 id·title만 바꾼다.
+COMMIT·CONFIG·STAGE·BUNDLE과 kernel-metadata.json의 id·title만 바꾼다.
+
+단계는 config가 아니라 STAGE가 정하므로(#103), 스크리닝 → 확정 재검증 승격은
+같은 COMMIT·CONFIG에서 STAGE만 바꿔 다시 밀어 넣으면 된다(config 재커밋 불필요).
 
 절차와 원칙은 docs/kaggle-gpu-run.md를 따른다. #99의 세 가지 개선 반영:
 - repo를 /kaggle/working 밖(/tmp)에 클론해 .venv가 산출물 다운로드에 딸려오지 않는다.
@@ -13,6 +16,7 @@ import subprocess
 
 COMMIT = "<실행할 config가 포함된 main 커밋>"
 CONFIG = "configs/exp0NN_*.yaml"
+STAGE = "<screen|confirm>"  # pipeline.run --stage. 시드는 판정 계약이 정한다. (#103)
 BUNDLE = "/kaggle/working/exp0NN.bundle.zip"
 REPO = "/tmp/repo"  # /kaggle/working에 두면 repo(.venv 포함)가 산출물에 딸려온다. (#99)
 
@@ -49,7 +53,7 @@ if len(gpus) > 1:
 
 # capture 대신 tee: 학습 로그를 실시간으로 커널 로그에 흘리면서 run_id 파싱용으로 보관.
 proc = subprocess.Popen(
-    f"cd {REPO} && uv run --no-sync python -m pipeline.run {CONFIG}",
+    f"cd {REPO} && uv run --no-sync python -m pipeline.run {CONFIG} --stage {STAGE}",
     shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env,
 )
 lines = []

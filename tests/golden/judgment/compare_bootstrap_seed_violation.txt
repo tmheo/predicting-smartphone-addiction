@@ -3,4 +3,4 @@ exit: 1
 --- stdout ---
 artifacts/champion.yaml 없음: 첫 champion 부트스트랩 모드.
 --- stderr ---
-champion은 항상 3시드 평균본이다: cv.seeds를 [42, 43, 44]로 재실행할 것.
+champion은 항상 3시드 평균본이다: --stage confirm으로 재실행할 것.

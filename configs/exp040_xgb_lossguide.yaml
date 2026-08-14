@@ -60,6 +60,3 @@ model:
     eval_metric: auc
   fit:
     early_stopping_rounds: 200
-
-cv:
-  seeds: [42]

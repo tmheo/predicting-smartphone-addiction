@@ -36,6 +36,7 @@ def experiment_config(kind: str, params: dict) -> ExperimentConfig:
         model=ModelConfig(kind=kind, params=params, fit={}),
         initial_score=None,
         seeds=SEEDS,
+        stage="confirm",
         source_path=Path("unused"),
     )
 

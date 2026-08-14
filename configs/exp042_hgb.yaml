@@ -59,6 +59,3 @@ model:
     n_iter_no_change: 50
     scoring: loss
   fit: {}
-
-cv:
-  seeds: [42]

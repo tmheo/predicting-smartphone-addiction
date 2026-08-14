@@ -77,6 +77,3 @@ initial_score:
     n_splits: 5
     early_stopping_rounds: 100
     clip: 0.000001
-
-cv:
-  seeds: [42, 43, 44]

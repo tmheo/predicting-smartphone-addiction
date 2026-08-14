@@ -85,7 +85,7 @@ def render_screening(verdict: ScreeningVerdict) -> list[str]:
         lines.append("참고: 새 피처 importance는 확정 재검증의 게이트다. 이대로면 3시드 재실행이 낭비된다.")
     if verdict.passed:
         lines.append(
-            "확정 재검증 자격 획득: 설정의 cv.seeds를 [42, 43, 44]로 바꿔 재실행한 뒤 "
+            "확정 재검증 자격 획득: 같은 config를 --stage confirm으로 재실행한 뒤 "
             "그 run으로 다시 판정할 것. 스크리닝 통과는 채택이 아니다."
         )
     return lines
@@ -201,7 +201,7 @@ def main() -> None:
         if not CHAMPION_PATH.exists():
             print(f"{CHAMPION_PATH} 없음: 첫 champion 부트스트랩 모드.")
             if challenger.seeds != CONFIRM_SEEDS:
-                sys.exit(f"champion은 항상 3시드 평균본이다: cv.seeds를 {CONFIRM_SEEDS}로 재실행할 것.")
+                sys.exit("champion은 항상 3시드 평균본이다: --stage confirm으로 재실행할 것.")
             if args.adopt:
                 require_adoption_eligibility(challenger)
                 write_champion(challenger, args.reason)

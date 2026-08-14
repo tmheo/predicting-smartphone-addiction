@@ -50,6 +50,3 @@ initial_score:
   kind: known_original_rule
   params:
     clip: 0.001
-
-cv:
-  seeds: [42]

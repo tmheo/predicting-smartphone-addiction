@@ -63,6 +63,3 @@ model:
     force_row_wise: true
   fit:
     early_stopping_rounds: 200
-
-cv:
-  seeds: [42, 43, 44]

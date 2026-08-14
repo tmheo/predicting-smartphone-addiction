@@ -84,6 +84,7 @@ def fake_experiment_config() -> ExperimentConfig:
         model=ModelConfig(kind="fake", params={"p": 1}, fit={"f": 2}),
         initial_score=None,
         seeds=[SEED],
+        stage="screen",
         source_path=Path("unused"),
     )
 

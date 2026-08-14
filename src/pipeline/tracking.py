@@ -8,7 +8,8 @@ artifact는 로컬 mlartifacts/ 아래 파일로 남으므로 소비 방식은 �
 이 모듈은 활성 실행 안에서 위임 호출되는 기록 헬퍼만 남긴다.
 
 실행당 기록 규약:
-- params: 실험 이름, 시드, 모델 파라미터(시작 시점), feature 목록(CV 후 확정되므로 최종 시점).
+- params: 실험 이름, 시드, 단계(stage, 관찰용 - 판정은 seeds param 추론이 진실, #103),
+  모델 파라미터(시작 시점), feature 목록(CV 후 확정되므로 최종 시점).
 - metrics: auc_fold_0..4, auc_oof, auc_oof_seed_*. 시드 반복 시 시드 평균본이 대표 metric이고
   auc_oof_seed_*가 시드별 OOF AUC다(확정 재검증의 시드별 비교 근거, ADR 0001).
 - artifacts: 설정 원본(yaml, 시작 시점), oof.parquet, oof_seed_<seed>.parquet(시드별 OOF,
@@ -69,6 +70,7 @@ def log_start_records(client, run_id: str, cfg: ExperimentConfig) -> None:
     """
     client.log_param(run_id, "experiment", cfg.name)
     client.log_param(run_id, "seeds", ",".join(map(str, cfg.seeds)))
+    client.log_param(run_id, "stage", cfg.stage)
     client.log_param(run_id, "model.kind", cfg.model.kind)
     for key, value in cfg.model.params.items():
         client.log_param(run_id, f"model.{key}", value)

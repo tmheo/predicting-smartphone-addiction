@@ -24,6 +24,3 @@ model:
     max_iter: 3000
     onehot_max_card: 5000
   fit: {}
-
-cv:
-  seeds: [42, 43, 44]

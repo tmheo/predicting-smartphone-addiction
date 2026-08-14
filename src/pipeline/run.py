@@ -1,10 +1,13 @@
 """실행 진입점.
 
 사용법:
-    uv run python -m pipeline.run configs/exp001_lgbm_baseline.yaml
-    uv run python -m pipeline.run configs/exp001_lgbm_baseline.yaml --plan  # 실행 계획만 출력
+    uv run python -m pipeline.run configs/exp018_orig_mean.yaml --stage screen
+    uv run python -m pipeline.run configs/exp018_orig_mean.yaml --stage confirm
+    uv run python -m pipeline.run configs/exp018_orig_mean.yaml --stage screen --plan  # 실행 계획만 출력
 
-실험 하나 = 설정 파일 하나 = MLflow run 하나.
+실험 하나 = 설정 파일 하나 = MLflow run 하나. 단계(스크리닝·확정 재검증)는 config가
+아니라 --stage가 정하므로, 같은 config 하나로 두 단계를 config diff 없이 실행한다(#103).
+--stage는 필수이고 기본값이 없다: 단계 착오 하나가 GPU 몇 시간짜리 재실행이다.
 관찰 규약(#43): 설정 적재 성공 직후, 데이터 적재보다 먼저 observe.RunObserver가
 MLflow 실행을 만들고 수명주기를 소유한다. 진입점은 단계 전환과 결과만 통지한다.
 """
@@ -18,24 +21,31 @@ import numpy as np
 import pandas as pd
 
 from . import cv, data, initial_score, seed_parallel, tracking
-from .config import load_config
+from .config import STAGES, load_config
 from .plan import FeaturePlan
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="CV 파이프라인 실행")
     parser.add_argument("config", help="실험 설정 YAML 경로")
+    parser.add_argument(
+        "--stage",
+        required=True,
+        choices=STAGES,
+        help="실행 단계. 시드는 판정 계약(judgment)의 단계별 시드 상수로 정해진다. (#103)",
+    )
     parser.add_argument("--plan", action="store_true", help="학습 없이 실행 계획만 출력")
     args = parser.parse_args()
 
     # 검증된 설정 파일 = ExperimentConfig 생성 성공. 피처 계획의 누출 규율 검증 포함. (#43, #71)
-    cfg = load_config(args.config)
+    cfg = load_config(args.config, args.stage)
     plan = FeaturePlan.from_config(cfg.features)
 
     if args.plan:
         # 계획 출력은 MLflow 실행도 실행 로그 파일도 만들지 않는다. (#43 시나리오 5)
         print(f"experiment : {cfg.name}")
         print(f"config     : {cfg.source_path}")
+        print(f"stage      : {cfg.stage}")
         print(f"seeds      : {cfg.seeds}")
         print(f"model      : {cfg.model.kind} {cfg.model.params}")
         if cfg.initial_score is not None:
