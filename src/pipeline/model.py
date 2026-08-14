@@ -410,7 +410,9 @@ class LogisticOnehotAdapter:
             values = X[col]
             if isinstance(values.dtype, pd.CategoricalDtype):
                 values = values.astype(object)
-            codes = pd.Categorical(values, categories=categories).codes.astype("int64")
+            # Index.get_indexer는 학습 fold에 없던 값과 결측을 -1로 돌려준다.
+            # pandas 4에서 금지될 미지 값을 가진 Categorical 생성을 피한다.
+            codes = pd.Index(categories).get_indexer(values).astype("int64")
             if has_nan:
                 codes = np.where(values.isna().to_numpy(), len(categories), codes)
             seen = codes >= 0  # 미관측 값(그리고 지시자 없는 결측)은 영벡터 블록.

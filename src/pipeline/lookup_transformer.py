@@ -64,7 +64,9 @@ class _LookupTransformer(nn.Module):
         enc = nn.TransformerEncoderLayer(
             d, heads, d * 2, drop, activation="gelu", batch_first=True, norm_first=True
         )
-        self.tr = nn.TransformerEncoder(enc, layers)
+        # norm_first=True에서는 PyTorch 중첩 텐서 최적화를 쓸 수 없다.
+        # 자동 시도 경고를 피하고 실제로 쓰는 일반 텐서 경로를 명시한다.
+        self.tr = nn.TransformerEncoder(enc, layers, enable_nested_tensor=False)
         self.head = nn.Sequential(
             nn.LayerNorm(d), nn.Linear(d, d), nn.GELU(), nn.Dropout(drop), nn.Linear(d, 1)
         )

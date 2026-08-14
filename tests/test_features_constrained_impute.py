@@ -9,9 +9,12 @@
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.exceptions import ConvergenceWarning
 
 from pipeline.features import SCREEN_PARTS, SCREEN_TOTAL, ConstrainedImputeAux
 
@@ -140,7 +143,11 @@ def test_fit_transform_respects_feasible_intervals():
     df = df.mask(pd.DataFrame(mask, columns=df.columns))
 
     provider = ConstrainedImputeAux(cols=COLS)
-    provider.fit(df, seed=42)
+    # 무작위 소형 표본은 제한 반복 안에 수렴하지 않을 수 있다.
+    # 이 테스트는 대체값의 정확도가 아니라 산술 경계 클리핑을 검증한다.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", ConvergenceWarning)
+        provider.fit(df, seed=42)
     out = provider.transform(df)
 
     obs_sum = df[SCREEN_PARTS].sum(axis=1)
