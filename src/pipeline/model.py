@@ -476,6 +476,47 @@ class LookupTransformerAdapter:
         return self._impl.importance()
 
 
+class TabMAdapter:
+    """TabM(pytabkit) adapter. (#61)
+
+    구현은 pytabkit이 필요한 tabm 모듈에 있고 여기서 lazy import한다.
+    수치 열의 남은 NaN 중앙값 대체는 학습 fold 통계만 쓰고(outer fold 규율),
+    fold 안 시드 평균(원문 N_SEEDS=3)으로 예측 하나를 만든다. gain importance가
+    없어 검증 fold permutation importance(AUC 하락 폭)를 gain 컬럼으로 돌려준다
+    (ADR 0001 #97의 계열 무관 중요도). 환산은 시드로 결정적이다.
+    """
+
+    def __init__(self, params: dict, fit: dict, seed: int) -> None:
+        self._params = params
+        self._fit = fit
+        self._seed = seed
+        self._impl = None
+
+    def fit(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
+    ) -> np.ndarray:
+        from . import tabm
+
+        _reject_initial_score("tabm", initial_score_tr, initial_score_va)
+        self._impl = tabm.TabMFold(self._params, self._seed)
+        return self._impl.fit(X_tr, y_tr, X_va, y_va)
+
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray:
+        _reject_initial_score("tabm", initial_score, None)
+        return self._impl.predict(X)
+
+    def importance(self) -> pd.DataFrame:
+        return self._impl.importance()
+
+
 def _reject_initial_score(
     kind: str, initial_score_tr: pd.Series | None, initial_score_va: pd.Series | None
 ) -> None:
@@ -491,6 +532,7 @@ MODEL_REGISTRY: dict[str, Callable[[dict, dict, int], ModelAdapter]] = {
     "hist_gradient_boosting": HistGradientBoostingAdapter,
     "logistic_onehot": LogisticOnehotAdapter,
     "lookup_transformer": LookupTransformerAdapter,
+    "tabm": TabMAdapter,
 }
 
 
