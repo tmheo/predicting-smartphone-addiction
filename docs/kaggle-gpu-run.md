@@ -45,11 +45,13 @@ GPU 주간 할당은 30시간, 배치 실행 상한은 GPU 약 9시간이다.
    데이터셋을 `dataset_sources`로 연결하고 저장소 경로에 심볼릭 링크한다
    (예: `kaggle/exp060`의 원본 프록시).
 
-2. 실행을 밀어 넣는다. `--accelerator`로 GPU 종류를 고른다.
-   T4는 2개가 붙으므로 시드 병렬이 켜지고, P100은 1개라 자동으로 순차 실행이 된다.
+2. 실행을 밀어 넣는다. `--accelerator`의 유효값은 CLI enum 문자열 `NvidiaTeslaT4`·
+   `NvidiaTeslaP100`이다(#61). 잘못된 문자열은 오류 없이 무시되고 기본 P100이 배정되는데,
+   torch 2.13 wheel은 sm_75 미만을 지원하지 않아 P100에서는 CUDA 커널 이미지 오류로
+   즉시 죽는다. 항상 T4를 쓴다. T4는 2개가 붙으므로 시드가 여럿이면 시드 병렬이 켜진다.
 
    ```bash
-   uv run kaggle kernels push -p kaggle/expNNN --accelerator <gpu>
+   uv run kaggle kernels push -p kaggle/expNNN --accelerator NvidiaTeslaT4
    ```
 
 3. 완료를 폴링하고 로그를 확인한다.
