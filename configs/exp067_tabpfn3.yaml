@@ -1,0 +1,85 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #102: TabPFN-3 다양성 기여 판정의 정식 경로.
+# fold 0 스모크에서 원시 판은 AUC 0.94645로 품질 게이트에 미달했지만,
+# exp052 채택 피처 판은 AUC 0.96651·5-fold 예상 6917초로 두 게이트를 통과했다.
+# 따라서 정식 실행은 스모크를 통과한 exp052 피처 계획을 그대로 쓴다.
+# fit_with_cache와 1000행 예측 청크, OOM 시 memory_saving_mode=True 후퇴도
+# 스모크와 같다. permutation importance는 1000행 결정적 부분표본으로 측정한다.
+# The TABPFN-3 Model is licensed by Prior Labs GmbH under the
+# TABPFN-3 Non-Commercial License.
+name: exp067_tabpfn3
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [other_screen, screen_slack]
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: tabpfn3
+  params:
+    n_estimators: 8
+    device: cuda
+    fit_mode: fit_with_cache
+    memory_saving_mode: auto
+    chunk_rows: 1000
+    perm_repeats: 1
+    perm_sample: 1000
+  fit: {}
