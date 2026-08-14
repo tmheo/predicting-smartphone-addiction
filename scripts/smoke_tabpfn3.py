@@ -71,11 +71,18 @@ def parse_args() -> argparse.Namespace:
         "--predict-rows", type=int, default=0, help="0이면 fold 0 전체. 양수면 앞에서 자른다(연결 검증용)."
     )
     parser.add_argument("--memory-saving", default="auto", choices=["auto", "on"])
+    parser.add_argument(
+        "--sample-train",
+        type=int,
+        default=0,
+        help="0이면 train 전체. 양수면 앞 N행만 사용(연결 검증 전용, 실측 무효).",
+    )
     return parser.parse_args()
 
 
 def build_features(
     variant: str,
+    sample_train: int = 0,
 ) -> tuple[pd.DataFrame, pd.Series, pd.Series, pd.Series, dict[str, float]]:
     """변형별 학습 행렬을 만든다. 반환: (X, y, fold, id, 단계별 초).
 
@@ -91,6 +98,8 @@ def build_features(
 
     if variant == "raw":
         train = data.attach_folds(train, cfg.data.folds)
+        if sample_train > 0:
+            train = train.iloc[:sample_train]
         raw_cols = [c for c in train.columns if c not in (ID, TARGET, "fold")]
         X = train[raw_cols].copy()
     else:
@@ -98,6 +107,8 @@ def build_features(
         plan = FeaturePlan.from_config(cfg.features)
         train, test = plan.apply_dataset_wide(train, test)
         train = data.attach_folds(train, cfg.data.folds)
+        if sample_train > 0:
+            train = train.iloc[:sample_train]
         X = plan.build_matrix(train, SEED)
         transformers = plan.fold_fit_transformers()
         if transformers:
@@ -134,7 +145,7 @@ def main() -> None:
     # torch(및 tabpfn)는 피처 구축이 끝난 뒤에 불러온다. champion 판의 fold-fit이
     # XGBoost를 쓰는데, macOS에서 torch가 먼저 올라와 있으면 OpenMP 중복 적재로
     # segfault가 난다.
-    X, y, fold, ids, feature_times = build_features(args.variant)
+    X, y, fold, ids, feature_times = build_features(args.variant, args.sample_train)
     feature_build_s = feature_times["feature_total"]
     X, cat_indices = encode_categorical(X)
     print(f"[{args.variant}] feature build {feature_build_s / 60:.1f}m"
