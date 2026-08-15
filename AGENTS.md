@@ -21,3 +21,9 @@ See `docs/agents/discussion-update.md`.
 
 Single-context layout: one `CONTEXT.md` and `docs/adr/` at the repo root.
 See `docs/agents/domain.md`.
+
+### Remote GPU file transfer
+
+The company security software on the local Mac blocks `scp` file reads even when ordinary SSH commands work.
+For Runpod and Vast.ai, never use `scp`, `sftp`, or browser upload as the normal file-transfer path.
+Use the SSH standard-stream procedure with SHA-256 verification described in `docs/agents/remote-gpu-transfer.md`.
