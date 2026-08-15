@@ -1,19 +1,18 @@
-run_id: b951fac51b6b44298f7fdb0b543caba6
-oof_auc: 0.9689221785328946
+run_id: 2bd55026ae63430aa774bce20a359b4a
+oof_auc: 0.9690978395195489
 seed_aucs:
-  42: 0.9685219458836516
-  43: 0.9685479868581301
-  44: 0.9685732045514481
+  42: 0.9687625596953652
+  43: 0.9687690370378296
+  44: 0.9687786853742242
 fold_aucs:
-  0: 0.9683091142315264
-  1: 0.968915634342221
-  2: 0.9691297145614881
-  3: 0.9696079262640018
-  4: 0.9687135944987364
-config: exp059_lookup_transformer
-features: academic_work_impact,age,app_opens_per_day,daily_screen_time_hours,gaming_hours,gender,notifications_per_day,placebo_noise,screen_slack,sgw_frac,sgw_sum,slack_frac,sleep_hours,social_media_hours,stress_level,weekend_screen_time,wk_minus_sgw,wk_other,work_study_hours
-git_commit: 495cc49df87e1de625da99f440b7d7fb80ac4f33
-adopted_at: '2026-08-14'
-reason: '이슈 #58: Lookup-Transformer(정확값 lookup embedding + PLR + Transformer, 원문 tamerlanomralinov
-  재현)를 5-fold·학습 fold 전용 어휘로 재현. 3시드 +0.00038, 3/3 시드, 5/5 fold, 원문 예산 토큰 6종 전부 플라시보
-  상회'
+  0: 0.9685285490759296
+  1: 0.9691572770088221
+  2: 0.9693118025161984
+  3: 0.9696190675987406
+  4: 0.9689007236127615
+config: exp067_lookup_xgb_impute_comps5
+features: academic_work_impact,age,app_opens_per_day,daily_screen_time_hours,daily_screen_time_hours_recon,daily_screen_time_hours_xgb_recon,gaming_hours,gaming_hours_recon,gaming_hours_xgb_recon,gender,imp_leisure_frac,imp_resid_frac,imp_social_frac,imp_week_total,imp_work_frac,notifications_per_day,placebo_noise,screen_slack,sgw_frac,sgw_sum,slack_frac,sleep_hours,social_media_hours,social_media_hours_recon,social_media_hours_xgb_recon,stress_level,weekend_screen_time,weekend_screen_time_xgb_recon,wk_minus_sgw,wk_other,work_study_hours,work_study_hours_recon,work_study_hours_xgb_recon
+git_commit: fa10f4c60a549e5588d612f1d418b6ccc9040d43
+adopted_at: '2026-08-15'
+reason: '이슈 #106: Lookup-Transformer에 복원 블록을 추가해 3시드 평균 +0.00018, 시드 3/3, fold 5/5,
+  새 특성 14개 게이트 통과'
