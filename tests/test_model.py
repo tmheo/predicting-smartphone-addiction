@@ -197,6 +197,8 @@ def test_lightgbm_adapter_smoke():
             "num_leaves": 7,
             "learning_rate": 0.1,
             "verbosity": -1,
+            "max_bin": 31,
+            "max_bin_by_feature": {"a": 63},
         },
         fit={"early_stopping_rounds": 5},
     )
@@ -211,6 +213,35 @@ def test_lightgbm_adapter_smoke():
     imp = adapter.importance()
     assert list(imp.columns) == ["feature", "gain"]
     assert list(imp["feature"]) == ["a", "b"]
+
+
+def test_lightgbm_max_bin_by_feature_resolves_names_in_matrix_order():
+    params = {
+        "max_bin": 1023,
+        "max_bin_by_feature": {"screen": 1439, "weekend": 2047},
+    }
+
+    resolved = model_mod._resolve_lightgbm_params(
+        params, ["age", "screen", "derived", "weekend"]
+    )
+
+    assert resolved["max_bin_by_feature"] == [1023, 1439, 1023, 2047]
+    assert params["max_bin_by_feature"] == {"screen": 1439, "weekend": 2047}
+
+
+def test_lightgbm_max_bin_by_feature_rejects_unknown_feature():
+    with pytest.raises(ValueError, match="학습 행렬에 없는 열.*typo"):
+        model_mod._resolve_lightgbm_params(
+            {"max_bin": 1023, "max_bin_by_feature": {"typo": 1439}}, ["screen"]
+        )
+
+
+@pytest.mark.parametrize("value", [1, 1.5, True])
+def test_lightgbm_max_bin_by_feature_rejects_invalid_bin_count(value):
+    with pytest.raises(ValueError, match="2 이상의 정수"):
+        model_mod._resolve_lightgbm_params(
+            {"max_bin": 1023, "max_bin_by_feature": {"screen": value}}, ["screen"]
+        )
 
 
 def _smoke_data() -> tuple[pd.DataFrame, pd.Series]:

@@ -63,7 +63,8 @@ class LightGBMAdapter:
         # 무거운 의존성은 실제 학습 시점에만 import한다. --plan 실행은 이 모듈이 필요 없다.
         import lightgbm as lgb
 
-        self._model = lgb.LGBMClassifier(**self._params, random_state=self._seed)
+        params = _resolve_lightgbm_params(self._params, list(X_tr.columns))
+        self._model = lgb.LGBMClassifier(**params, random_state=self._seed)
         if (initial_score_tr is None) != (initial_score_va is None):
             raise ValueError("학습과 검증 초기 점수는 함께 주거나 함께 생략해야 한다.")
         self._uses_initial_score = initial_score_tr is not None
@@ -116,6 +117,41 @@ class LightGBMAdapter:
                 "gain": booster.feature_importance(importance_type="gain"),
             }
         )
+
+
+def _resolve_lightgbm_params(params: dict, feature_names: list[str]) -> dict:
+    """열 이름별 max_bin 재정의를 LightGBM의 위치 목록으로 바꾼다.
+
+    LightGBM 자체의 ``max_bin_by_feature``는 최종 행렬 순서와 길이가 같은 정수
+    목록만 받는다. 설정에서는 ``{열 이름: max_bin}`` 매핑도 허용해 피처 계획의
+    열 순서가 바뀌어도 다른 열에 조용히 적용되지 않게 한다. 목록 입력은 LightGBM
+    원형을 써야 하는 경우를 위해 그대로 통과시킨다.
+    """
+    resolved = dict(params)
+    by_feature = resolved.get("max_bin_by_feature")
+    if not isinstance(by_feature, dict):
+        return resolved
+    if "max_bin" not in resolved:
+        raise ValueError("열 이름별 max_bin_by_feature에는 기본값 max_bin이 필요하다.")
+
+    unknown = sorted(set(by_feature) - set(feature_names))
+    if unknown:
+        raise ValueError(
+            "max_bin_by_feature에 학습 행렬에 없는 열이 있다: " + ", ".join(unknown)
+        )
+    invalid = {
+        name: value
+        for name, value in by_feature.items()
+        if isinstance(value, bool) or not isinstance(value, int) or value < 2
+    }
+    if invalid:
+        raise ValueError(f"max_bin_by_feature 값은 2 이상의 정수여야 한다: {invalid}")
+
+    default = resolved["max_bin"]
+    resolved["max_bin_by_feature"] = [
+        by_feature.get(name, default) for name in feature_names
+    ]
+    return resolved
 
 
 class XGBoostAdapter:
