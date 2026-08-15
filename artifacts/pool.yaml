@@ -237,3 +237,19 @@ members:
     ensemble_auc_with: 0.9685239354095936
     ensemble_auc_without: 0.9685009893536075
     contribution: 2.29460559860728e-05
+- run_id: d55d1cd49c194eb8bf7b5128e548df81
+  config: exp081_lookup_fold_initialization_avg3
+  oof_auc: 0.9691957618114269
+  seeds: 42,43,44
+  entered_at: '2026-08-15'
+  reason: '이슈 #127: Lookup-Transformer fold 내 초기화 3개 평균. champion 교체 문턱에 0.00000208
+    미달했으나 3/3 시드·5/5 fold 개선, 최근접 exp059와 스피어만 0.99142로 중복 아님, 표준 평가 앙상블 기여 +0.00017'
+  evidence:
+    champion_run_id: 2bd55026ae63430aa774bce20a359b4a
+    champion_oof_auc: 0.9690978395195489
+    floor_margin: 0.010097922291878003
+    nearest_run_id: b951fac51b6b44298f7fdb0b543caba6
+    nearest_spearman: 0.9914216868322491
+    ensemble_auc_with: 0.9686675325224675
+    ensemble_auc_without: 0.9685009893536075
+    contribution: 0.00016654316886000053

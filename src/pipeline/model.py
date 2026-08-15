@@ -479,6 +479,8 @@ class LookupTransformerAdapter:
     어휘·rank-gauss 분위는 학습 fold에서만 fit하고(outer fold 규율), gain
     importance가 없어 검증 fold permutation importance(AUC 하락 폭)를 gain
     컬럼으로 돌려준다(ADR 0001 #97의 계열 무관 중요도). 환산은 시드로 결정적이다.
+    fold_seed_offsets가 여러 개면 파이프라인 시드에 각 offset을 더한 초기화로
+    같은 fold를 학습하고 확률 예측을 평균한다(#127).
     """
 
     def __init__(self, params: dict, fit: dict, seed: int) -> None:
