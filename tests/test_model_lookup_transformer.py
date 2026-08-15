@@ -193,3 +193,30 @@ def test_lookup_transformer_rejects_invalid_fold_gpu_assignment(monkeypatch, gpu
 
     with pytest.raises(ValueError, match="PIPELINE_FOLD_GPUS"):
         lookup_transformer.LookupTransformerFold._parallel_devices(3)
+
+
+@pytest.mark.skipif(
+    lookup_transformer.torch.cuda.device_count() < 3,
+    reason="실제 fold 구성원 병렬 검사는 CUDA GPU 3개가 필요하다.",
+)
+def test_lookup_transformer_trains_fold_members_on_three_gpus(monkeypatch):
+    """원격 실행 전 검사: 초기화가 다른 세 구성원을 GPU별로 실제 학습한다."""
+    monkeypatch.setenv("PIPELINE_FOLD_GPUS", "0,1,2")
+    X, y = _data(96)
+    params = dict(
+        SMALL_PARAMS,
+        epochs=2,
+        patience=2,
+        perm_repeats=1,
+        fold_seed_offsets=[0, 1000, 2000],
+    )
+    cfg = ModelConfig(kind="lookup_transformer", params=params, fit={})
+    adapter = model_mod.create(cfg, seed=SEED)
+
+    val_pred = adapter.fit(X.iloc[:72], y.iloc[:72], X.iloc[72:], y.iloc[72:])
+    test_pred = adapter.predict(X.iloc[:12])
+
+    assert val_pred.shape == (24,)
+    assert test_pred.shape == (12,)
+    assert np.isfinite(val_pred).all()
+    assert np.isfinite(test_pred).all()
