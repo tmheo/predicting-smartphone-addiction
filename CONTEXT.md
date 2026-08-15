@@ -135,6 +135,10 @@ _Avoid_: 피처 함수, 트랜스포머(fold-fit 한정 용어로만 유지)
 파라미터 해석, 시드 적용, early stopping 등 학습 세부를 소유하고 cv 루프에는 예측과 importance만 돌려준다.
 _Avoid_: 모델 종류, 알고리즘
 
+**조회 어휘 미등록값**:
+Lookup-Transformer의 각 fold에서 결측은 아니지만 해당 학습 fold의 정확값 어휘에 없어 미등록 식별자로 처리되는 검증 또는 테스트 값.
+_Avoid_: UNK, 미관측값
+
 **실행 저장소**:
 완료된 실험 실행의 사실(params·metrics·tags)과 산출물을 읽고, 뒤늦은 주석(태그·지표 추가)을 남기는 유일한 통로.
 MLflow는 이 저장소의 adapter 하나일 뿐이며, 기록 규약의 의미 해석(metric 이름 파싱 등)은 판정 쪽 소관이다.
