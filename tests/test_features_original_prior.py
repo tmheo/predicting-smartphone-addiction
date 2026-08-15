@@ -77,7 +77,9 @@ def test_statistics_golden_values(small_proxy):
     np.testing.assert_allclose(out["age_orig_mean"], [2 / 3, 0.25])
     # woe = logit(p) - logit(0.5) = logit(p)
     np.testing.assert_allclose(out["age_orig_woe"], [np.log(2), np.log(0.25 / 0.75)])
-    ent = lambda p: -(p * np.log(p) + (1 - p) * np.log(1 - p))
+    def ent(p):
+        return -(p * np.log(p) + (1 - p) * np.log(1 - p))
+
     np.testing.assert_allclose(out["age_orig_entropy"], [ent(2 / 3), ent(0.25)])
     np.testing.assert_allclose(out["age_orig_count"], [np.log1p(4), np.log1p(2)])
 
