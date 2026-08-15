@@ -41,7 +41,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/pipeline"]
+packages = ["src/pipeline", "src/remote_ops"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

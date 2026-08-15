@@ -1,0 +1,54 @@
+name: Vast.ai termination guard
+
+on:
+  schedule:
+    - cron: "2/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 실행 방식
+        required: true
+        default: observe
+        type: choice
+        options:
+          - observe
+          - process
+          - force-alert
+      expected_job_id:
+        description: 확인하거나 고의 실패시킬 원격 실행 작업 식별자
+        required: false
+        type: string
+
+permissions:
+  actions: write
+  contents: read
+  issues: write
+
+concurrency:
+  group: vast-ai-termination-guard
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    name: Check fixed Vast.ai targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: vast-termination
+    env:
+      ALERT_ASSIGNEE: ${{ github.repository_owner }}
+      GITHUB_TOKEN: ${{ github.token }}
+      PYTHONPATH: src
+      VAST_TERMINATION_API_KEY: ${{ secrets.VAST_TERMINATION_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read schedules and enforce termination
+        shell: bash
+        env:
+          DISPATCH_MODE: ${{ inputs.mode }}
+          EXPECTED_JOB_ID: ${{ inputs.expected_job_id }}
+        run: |
+          mode="${DISPATCH_MODE:-process}"
+          python -m remote_ops.vast_termination \
+            --mode "$mode" \
+            --expected-job-id "$EXPECTED_JOB_ID"
