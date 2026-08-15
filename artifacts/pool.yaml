@@ -222,3 +222,18 @@ members:
     ensemble_auc_with: 0.9685009893536075
     ensemble_auc_without: 0.968472626439248
     contribution: 2.8362914359481017e-05
+- run_id: 11aa2873a39f477781bb13dcadaea42c
+  config: exp074_lgb_kitopl_d2_bundle
+  oof_auc: 0.9683985636972386
+  seeds: 42,43,44
+  entered_at: '2026-08-15'
+  reason: 저용량·규제·표본추출 묶음이 스피어만 0.99738, 표준 평가 앙상블 기여 +0.00002로 다양성 게이트를 통과
+  evidence:
+    champion_run_id: 2bd55026ae63430aa774bce20a359b4a
+    champion_oof_auc: 0.9690978395195489
+    floor_margin: 0.00930072417768979
+    nearest_run_id: e2c432b487564df990a4cc3baf3d6fc0
+    nearest_spearman: 0.9973766686509109
+    ensemble_auc_with: 0.9685239354095936
+    ensemble_auc_without: 0.9685009893536075
+    contribution: 2.29460559860728e-05
