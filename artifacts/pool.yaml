@@ -222,7 +222,7 @@ members:
     ensemble_auc_with: 0.9685009893536075
     ensemble_auc_without: 0.968472626439248
     contribution: 2.8362914359481017e-05
-- run_id: 11aa2873a39f477781bb13dcadaea42c
+- run_id: 446a90bedd2a4d8bafad56f308b2b999
   config: exp074_lgb_kitopl_d2_bundle
   oof_auc: 0.9683985636972386
   seeds: 42,43,44
