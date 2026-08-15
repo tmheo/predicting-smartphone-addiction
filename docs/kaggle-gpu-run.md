@@ -1,7 +1,11 @@
 # Kaggle GPU 실행 절차 (#98)
 
-GPU가 필요한 실험(#58 Lookup-Transformer 등)을 Kaggle에서 실행하고,
-그 결과를 실행 기록 묶음으로 로컬 판정 경로에 반입하는 절차다.
+이 문서는 과거 Kaggle GPU 실행을 재현하거나, 사용자가 명시적으로 요청한 사람이 지켜보는 호환성 확인과 진단에만 사용하는 절차다.
+[Vast.ai 중심 원격 실험 운영 전환](https://github.com/tmheo/predicting-smartphone-addiction/issues/123) 이후 S6E8 외부 GPU 실행의 주 실행 환경은 Vast.ai이고 예비 실행 환경은 Runpod이다.
+GPU가 필요하다는 이유만으로 이 경로를 자동 선택하지 않으며, Kaggle 실행 결과는 개선 판정에 포함하지 않는다.
+현재 공급자 선택과 전환 규칙은 `docs/agents/vast-resource-control.md`를 따른다.
+
+Kaggle에서 실행한 결과를 실행 기록 묶음으로 로컬에 반입하는 기술 절차는 아래에 보존한다.
 용어는 CONTEXT.md의 "실행 기록 묶음"과 "묶음 반입"을 따른다.
 
 ## 원칙

@@ -32,3 +32,12 @@ Use the SSH standard-stream procedure with SHA-256 verification described in `do
 
 Use the credential, lifecycle, cleanup, and evidence rules in `docs/agents/vast-resource-control.md`.
 The accepted baseline is recorded in `docs/agents/vast-control-acceptance-2026-08-15.md`.
+
+### Remote GPU provider selection
+
+For S6E8 external GPU runs, Vast.ai is the primary execution environment and Runpod is the fallback execution environment.
+If the user does not name a provider, start with Vast.ai and follow `docs/agents/vast-resource-control.md` before creating any paid resource.
+Use Runpod only when the switch conditions in that document are met.
+Do not select Kaggle or Colab for an improvement-judgment run.
+Kaggle and Colab are limited to human-observed compatibility checks and diagnostics, and an agent must not choose them merely because a model needs a GPU.
+This policy comes from GitHub issues 123 and 126 and supersedes older Kaggle and Runpod execution precedents.

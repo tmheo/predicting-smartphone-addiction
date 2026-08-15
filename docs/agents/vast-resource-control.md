@@ -3,6 +3,20 @@
 Vast.ai에서 매물을 찾고 계산 자원을 생성한 뒤 상태, 비용, 삭제와 과금 중지를 확인할 때 따르는 운영 절차다.
 계산 자원 안에서 명령을 실행하거나 파일을 전송하는 절차는 이 문서의 범위가 아니다.
 
+## 실행 환경 선택
+
+S6E8 외부 GPU 실행의 주 실행 환경은 Vast.ai이고 예비 실행 환경은 Runpod이다.
+사용자가 공급자를 지정하지 않으면 Vast.ai에서 시작한다.
+이 선택은 [Vast.ai 중심 원격 실험 운영 전환](https://github.com/tmheo/predicting-smartphone-addiction/issues/123)과 [Vast.ai 주 실행 환경의 비용·전환·재평가 규칙 확정](https://github.com/tmheo/predicting-smartphone-addiction/issues/126)을 따른다.
+
+적합한 Vast.ai 매물을 제한 시간 안에 확보하지 못하거나, 서로 다른 호스트의 생성 시도 두 번이 SSH 접속 또는 사전 검사에 실패하거나, 독립 종료 예약을 등록·재조회할 수 없거나, 공급 환경 장애가 발생하거나, 같은 작업의 Runpod 예상 총비용보다 Vast.ai가 비쌀 때만 Runpod으로 전환한다.
+전환할 때는 Vast.ai의 실제 비용을 먼저 정산하고 미사용 비용 예약을 해제한 뒤 Runpod 비용을 새로 예약한다.
+같은 비교에 속한 기준 실행과 후보 실행은 같은 공급자와 같은 GPU 등급에서 수행하며, Vast.ai와 Runpod 결과를 섞어 개선 판정을 내리지 않는다.
+
+Kaggle과 Colab은 사람이 지켜보는 호환성 확인과 진단에만 사용할 수 있고 개선 판정에는 포함하지 않는다.
+모델에 GPU가 필요하다는 이유만으로 Kaggle이나 Colab을 자동 선택하지 않는다.
+`docs/kaggle-gpu-run.md`는 과거 실행의 재현과 명시적으로 요청된 호환성 진단을 위한 절차이며 현재 공급자 우선순위를 정하지 않는다.
+
 ## 승인된 제어 경로
 
 평상시 기본 경로는 승인된 고정 판본의 공식 `vastai` 명령줄 도구와 `--raw` JSON 출력이다.
