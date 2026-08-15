@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>champion 모델, Lookup-Transformer는 무엇을 하는가</title>
+  <link rel="stylesheet" href="../assets/lesson.css">
+  <script src="../assets/lesson.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">수업 0002 · 7분</p>
+    <h1>champion 모델,<br>Lookup-Transformer는<br>무엇을 하는가</h1>
+    <p class="lead">exp059는 이 프로젝트 최초의 신경망 champion입니다. 핵심 아이디어는 하나입니다: 수치를 숫자가 아니라 단어처럼 다룹니다.</p>
+
+    <div class="answer">
+      합성 데이터에서는 4.7 같은 정확값이 여러 행에 반복해서 나타납니다.<br>
+      그래서 각 정확값에 단어처럼 embedding 벡터를 부여해 조회(lookup)하고,<br>
+      Transformer로 컬럼들 사이의 상호작용을 학습합니다.
+    </div>
+
+    <h2>1. 왜 "Lookup"인가: 합성 데이터의 반복 키</h2>
+    <p>이 대회 데이터는 실제 설문이 아니라 생성기가 만든 합성 데이터입니다.</p>
+    <p>생성 과정의 특성상 <code>daily_screen_time_hours = 4.7</code> 같은 정확값이 수백 행에 그대로 반복되고, 같은 값을 가진 행들은 정답 분포도 비슷합니다.</p>
+    <p>즉 정확값 자체가 하나의 신원(key)입니다. 이 프로젝트가 exact-value target encoding으로 이미 활용해 온 바로 그 성질입니다 (<a href="0001-why-five-and-ten-folds.html">수업 0001</a> 참고).</p>
+    <p>Lookup-Transformer는 같은 성질을 다른 방식으로 씁니다. 정답 평균을 계산해 feature로 넣는 대신, 정확값마다 학습되는 embedding 벡터를 부여합니다. NLP에서 단어마다 word embedding을 두는 것과 같은 구조입니다.</p>
+
+    <h2>2. 컬럼 하나가 토큰 하나가 된다</h2>
+    <p>문장의 단어들이 토큰이 되듯, 여기서는 행의 각 컬럼이 토큰 하나가 됩니다.</p>
+    <p>각 토큰은 두 채널의 합입니다.</p>
+    <div class="token-sum" aria-label="컬럼 토큰은 lookup embedding과 PLR embedding의 합">
+      <div class="lookup-chip"><strong>lookup embedding</strong>정확값의 신원. "4.7이라는 그 값"을 기억</div>
+      <span>+</span>
+      <div class="plr-chip"><strong>PLR 수치 embedding</strong>값의 크기. "4.7은 5.0보다 조금 작다"는 연속 추세</div>
+    </div>
+    <p><strong>lookup 채널</strong>: 학습 fold에 나타난 컬럼별 정확값마다 id를 부여하고 embedding 표에서 조회합니다. 원시 12컬럼(<code>age</code>부터 <code>academic_work_impact</code>까지)이 대상입니다.</p>
+    <p><strong>PLR 채널</strong>: 수치를 rank-gauss(분위 기반 정규분포화)로 변환한 뒤, 학습되는 Fourier 주파수의 sin·cos로 펼쳐 선형 변환합니다. 반복이 거의 없는 연속 파생 6컬럼(<code>screen_slack</code> 등)은 이 채널만 사용합니다.</p>
+    <p>두 채널이 함께 있어야 "정확히 그 값"의 암기와 "값이 크고 작음"의 일반화를 동시에 잡습니다.</p>
+
+    <h2>3. 전체 흐름</h2>
+    <div class="flow" aria-label="입력 행에서 예측 확률까지의 데이터 흐름">
+      <div><strong>행 1개</strong>18컬럼</div>
+      <span>→</span>
+      <div><strong>토큰 18개</strong>lookup + PLR</div>
+      <span>→</span>
+      <div><strong>CLS 추가</strong>요약 전용 토큰</div>
+      <span>→</span>
+      <div><strong>Transformer 4층</strong>d=128, 8-head</div>
+      <span>→</span>
+      <div><strong>CLS 출력</strong>MLP head</div>
+      <span>→</span>
+      <div><strong>중독 확률</strong>sigmoid</div>
+    </div>
+    <p>Transformer의 self-attention이 토큰들, 즉 컬럼들 사이의 상호작용을 학습합니다. "screen time이 이 정확값이면서 sleep이 저 정확값인 조합"을 트리의 분기 없이 직접 표현합니다.</p>
+    <p>CLS는 값이 비어 있는 요약 전용 토큰으로, encoder를 통과하며 모든 컬럼 토큰의 정보를 모읍니다. 분류는 이 CLS의 출력만 사용합니다.</p>
+
+    <h2>4. 결측이 많은 데이터를 위한 장치</h2>
+    <p>이 데이터는 결측이 많고, 테스트에는 학습에 없던 정확값도 나타납니다. 구현(<code>src/pipeline/lookup_transformer.py</code>)은 이를 세 가지로 처리합니다.</p>
+    <p><strong>NA id</strong>: 결측은 컬럼별 전용 embedding으로 표현하고 PLR 채널은 mask로 끕니다. 결측 자체가 신호가 될 수 있습니다.</p>
+    <p><strong>UNK id</strong>: 학습 fold에 없던 값은 결측과 구분되는 별도 id로 보냅니다. "값이 없다"와 "처음 보는 값이다"는 다른 정보입니다.</p>
+    <p><strong>value dropout</strong>: 학습 중 배치마다 값의 10%를 일부러 NA로 숨깁니다. 모든 결측 패턴을 미리 겪게 하는 증강입니다.</p>
+
+    <h2>5. 왜 champion이 되었나</h2>
+    <p>exp059의 OOF AUC는 0.96892로, 이슈 #58에서 CatBoost 계열 champion을 밀어내고 채택되었습니다.</p>
+    <p>단독 점수보다 중요한 것은 다양성입니다. 정확값을 트리와 전혀 다른 경로로 소비하기 때문에 오류가 트리 모델들과 겹치지 않고, 앙상블 기여가 역대 최대였습니다.</p>
+    <p>원문(공개 노트북, LB 0.97041)과 달리 이 재현은 5-fold 규율을 지키고, 어휘와 분위 함수를 학습 fold에서만 적합해 테스트 분포 누수를 막습니다.</p>
+
+    <section class="quiz" data-quiz
+      data-right="맞았습니다. 합성 데이터의 반복되는 정확값이 lookup embedding의 근거입니다."
+      data-wrong="다시 생각해 보세요. 이 데이터는 생성기가 만든 합성 데이터이고, 정확값이 반복되기 때문에 조회가 통합니다.">
+      <h2>기억에서 꺼내 보기 1</h2>
+      <p>정확값 lookup embedding이 이 대회에서 통하는 근본 이유는 무엇일까요?</p>
+      <button type="button" data-correct="true">합성 데이터라 같은 값이 반복된다</button>
+      <button type="button" data-correct="false">수치 데이터라 모든 값이 연속된다</button>
+      <p class="feedback" data-feedback aria-live="polite"></p>
+    </section>
+
+    <section class="quiz" data-quiz
+      data-right="맞았습니다. 결측은 NA id, 학습 fold에 없던 새 값은 UNK id로 서로 구분합니다."
+      data-wrong="다시 생각해 보세요. UNK는 학습 fold에 없던 새 값의 자리이고, 결측은 NA id가 맡습니다.">
+      <h2>기억에서 꺼내 보기 2</h2>
+      <p>값이 결측인 컬럼의 lookup 채널은 무엇으로 표현될까요?</p>
+      <button type="button" data-correct="false">컬럼별 UNK embedding</button>
+      <button type="button" data-correct="true">컬럼별 NA embedding</button>
+      <p class="feedback" data-feedback aria-live="polite"></p>
+    </section>
+
+    <h2>한 줄 결론</h2>
+    <p><strong>Lookup-Transformer는 반복되는 정확값을 단어처럼 embedding하고, 연속 추세는 PLR로 보완하며, Transformer로 컬럼 간 상호작용을 학습하는 분류기입니다.</strong></p>
+    <p><a href="../reference/0002-lookup-transformer-cheatsheet.html">아키텍처 참고표 보기</a> · <a href="0001-why-five-and-ten-folds.html">수업 0001: fold 구조</a></p>
+
+    <footer>
+      <p>주요 자료: <a href="https://www.kaggle.com/code/tamerlanomralinov/s6e8-lookup-transformer-insights-lb-0-97041">원문 노트북: S6E8 Lookup-Transformer + Insights (tamerlanomralinov, LB 0.97041)</a></p>
+      <p>PLR embedding의 출처: <a href="https://arxiv.org/abs/2203.05556">Gorishniy et al., "On Embeddings for Numerical Features in Tabular Deep Learning" (NeurIPS 2022)</a></p>
+      <p>프로젝트 근거: <code>src/pipeline/lookup_transformer.py</code>, <code>configs/exp059_lookup_transformer.yaml</code></p>
+      <p>헷갈리는 부분이 있으면 언제든 이어서 질문해 주세요.</p>
+    </footer>
+  </main>
+</body>
+</html>

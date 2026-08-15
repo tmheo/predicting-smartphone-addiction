@@ -54,7 +54,9 @@
     <p>대신 계산량이 늘어납니다. 10-fold가 언제나 최선이라는 뜻은 아닙니다.</p>
     <p>이 프로젝트의 10은 exact-value target encoding에 지정한 설정값입니다. hyperparameter tuning을 위한 별도의 inner CV가 아닙니다.</p>
 
-    <section class="quiz" data-quiz>
+    <section class="quiz" data-quiz
+      data-right="맞았습니다. inner 10-fold는 누수 없이 target encoding을 만듭니다."
+      data-wrong="다시 생각해 보세요. 실제 모델 성능은 outer 5-fold로 측정합니다.">
       <h2>기억에서 꺼내 보기</h2>
       <p>inner 10-fold의 주된 목적은 무엇일까요?</p>
       <button type="button" data-correct="false">성능 측정</button>

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lookup-Transformer 참고표</title>
+  <link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+  <main>
+    <p class="eyebrow">참고 0002</p>
+    <h1>Lookup-Transformer<br>참고표</h1>
+    <p class="lead">exp059(champion, OOF AUC 0.96892)의 아키텍처·인코딩·학습 레시피 압축본. 근거: <code>src/pipeline/lookup_transformer.py</code>, <code>configs/exp059_lookup_transformer.yaml</code>.</p>
+
+    <h2>한 행의 여정</h2>
+    <div class="flow">
+      <div><strong>행 1개</strong>원시 12 + 파생 6</div>
+      <span>→</span>
+      <div><strong>토큰 18개</strong>lookup + PLR 합</div>
+      <span>→</span>
+      <div><strong>CLS + pos</strong>19 토큰</div>
+      <span>→</span>
+      <div><strong>encoder 4층</strong>pre-norm, GELU</div>
+      <span>→</span>
+      <div><strong>head</strong>LN, Linear, GELU, Linear</div>
+      <span>→</span>
+      <div><strong>logit 1개</strong>BCE 학습</div>
+    </div>
+
+    <h2>컬럼별 인코딩 규칙</h2>
+    <table>
+      <thead><tr><th>컬럼 종류</th><th>lookup 채널</th><th>PLR 채널</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>lookup_cols (원시 12컬럼)</td>
+          <td>학습 fold의 정확값마다 id. id 0 = NA, 마지막 id = UNK</td>
+          <td>수치 컬럼이면 rank-gauss 값으로 켬. 결측·범주는 mask로 끔</td>
+        </tr>
+        <tr>
+          <td>그 외 (연속 파생 6컬럼)</td>
+          <td>컬럼 상수 embedding 하나 (어휘 크기 1)</td>
+          <td>항상 사용. 이 채널이 정보의 전부</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="small">어휘와 분위 함수는 학습 fold에서만 적합한다. 검증·테스트의 새 값은 UNK로, 결측은 NA로 간다. 이 둘은 다른 embedding이다.</p>
+
+    <h2>하이퍼파라미터 (exp059 = 원문 그대로)</h2>
+    <table>
+      <thead><tr><th>항목</th><th>값</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td>d_model / heads / layers</td><td>128 / 8 / 4</td><td>FFN은 d_model의 2배</td></tr>
+        <tr><td>PLR k</td><td>24</td><td>컬럼별 학습 Fourier 주파수 수</td></tr>
+        <tr><td>epochs / batch</td><td>32 / 2048</td><td>val AUC patience 5로 조기 종료</td></tr>
+        <tr><td>optimizer</td><td>AdamW, lr 2e-3</td><td>OneCycle, pct_start 0.15</td></tr>
+        <tr><td>weight decay</td><td>1e-5 (본체) / 3e-4 (embedding)</td><td>embedding만 강하게 규제</td></tr>
+        <tr><td>value dropout</td><td>0.10</td><td>배치마다 값 10%를 NA로 숨김</td></tr>
+        <tr><td>EMA</td><td>0.999</td><td>평가·최종 가중치는 EMA 사본</td></tr>
+        <tr><td>dropout</td><td>0.1</td><td>embedding 뒤·encoder·head 공통</td></tr>
+      </tbody>
+    </table>
+
+    <h2>용어</h2>
+    <table>
+      <thead><tr><th>용어</th><th>뜻</th></tr></thead>
+      <tbody>
+        <tr><td>lookup embedding</td><td>정확값 id로 조회하는 학습 벡터. 합성 데이터의 반복 키를 암기</td></tr>
+        <tr><td>PLR</td><td>Periodic-Linear embedding. sin·cos로 펼친 수치를 선형 변환해 연속 추세를 표현</td></tr>
+        <tr><td>rank-gauss</td><td>분위(순위) 기반으로 수치를 정규분포 모양으로 바꾸는 변환</td></tr>
+        <tr><td>CLS 토큰</td><td>분류 요약 전용 토큰. encoder 통과 후 이 토큰의 출력만 head로 감</td></tr>
+        <tr><td>NA / UNK</td><td>NA는 결측, UNK는 학습 fold에 없던 새 값. 컬럼별로 분리된 id</td></tr>
+        <tr><td>EMA</td><td>가중치의 지수이동평균. 학습 노이즈를 걸러 평가를 안정화</td></tr>
+      </tbody>
+    </table>
+
+    <h2>원문과 이 재현의 차이</h2>
+    <table>
+      <thead><tr><th>항목</th><th>원문 (LB 0.97041)</th><th>이 프로젝트 (exp059)</th></tr></thead>
+      <tbody>
+        <tr><td>fold</td><td>10/11-fold 혼재</td><td>커밋된 5-fold (artifacts/folds.parquet)</td></tr>
+        <tr><td>어휘·분위 적합</td><td>train + test 전체</td><td>학습 fold 전용 (누수 차단)</td></tr>
+        <tr><td>새 값 처리</td><td>없음 (전체 어휘라 불필요)</td><td>컬럼별 UNK id (NA와 구분)</td></tr>
+        <tr><td>제출 형태</td><td>트리 모델과 blend</td><td>단독 실행 후 pipeline.ensemble에서 결합</td></tr>
+      </tbody>
+    </table>
+
+    <footer>
+      <p>수업: <a href="../lessons/0002-lookup-transformer-champion.html">0002 champion 모델, Lookup-Transformer는 무엇을 하는가</a></p>
+      <p>원문: <a href="https://www.kaggle.com/code/tamerlanomralinov/s6e8-lookup-transformer-insights-lb-0-97041">tamerlanomralinov의 공개 노트북</a> · PLR: <a href="https://arxiv.org/abs/2203.05556">Gorishniy et al. 2022</a></p>
+    </footer>
+  </main>
+</body>
+</html>
