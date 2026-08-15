@@ -131,7 +131,7 @@ def main() -> None:
           f"max|dev|={per_bin['dev_from_global'].abs().max():.5f}")
 
     # 2. 구간별 적대적 AUC ------------------------------------------------------
-    print(f"\n== 2. 구간별 train-vs-test 적대적 AUC (test에서 구간 크기만큼 표본) ==")
+    print("\n== 2. 구간별 train-vs-test 적대적 AUC (test에서 구간 크기만큼 표본) ==")
     for fill in (False, True):
         label = "filled" if fill else "raw"
         aucs = []
@@ -149,7 +149,7 @@ def main() -> None:
         print(f"전역 train-vs-test [{label}]: {adversarial_auc(sub, test, fill, stats):.4f}")
 
     # 3. 전역 적대적 모델의 P(test)를 구간별 평균 -------------------------------
-    print(f"\n== 3. 전역 적대적 모델 P(test)의 train 구간별 평균 ==")
+    print("\n== 3. 전역 적대적 모델 P(test)의 train 구간별 평균 ==")
     x = pd.concat([prepare(train, True, stats), prepare(test, True, stats)],
                   ignore_index=True)
     y = np.r_[np.zeros(len(train)), np.ones(len(test))]
@@ -166,7 +166,7 @@ def main() -> None:
     print(f"corr(id_bin, P(test))={corr:.5f}  (양수면 꼬리 구간이 test에 더 가까움)")
 
     # 4. train 내부 위치 적대적 검증 -------------------------------------------
-    print(f"\n== 4. train 내부 위치 적대적 AUC ==")
+    print("\n== 4. train 내부 위치 적대적 AUC ==")
     half = len(train) // 2
     fifth = len(train) // 5
     for name, a, b in [
@@ -178,7 +178,7 @@ def main() -> None:
             print(f"{name} [{label}]: {adversarial_auc(a, b, fill, stats):.4f}")
 
     # 5. 고정 5-fold의 구간 구성 ------------------------------------------------
-    print(f"\n== 5. 고정 Stratified 5-fold x id 구간 구성 ==")
+    print("\n== 5. 고정 Stratified 5-fold x id 구간 구성 ==")
     comp = pd.crosstab(train["fold"], train["id_bin"], normalize="index")
     print(comp.to_string(float_format=lambda v: f"{v:.4f}"))
     fold_rate = train.groupby("fold")[TARGET].mean()

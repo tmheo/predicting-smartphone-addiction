@@ -15,7 +15,8 @@ import pandas as pd
 import pytest
 from sklearn.metrics import roc_auc_score
 
-from pipeline import cv, model as model_mod
+from pipeline import cv
+from pipeline import model as model_mod
 from pipeline.config import DataConfig, ExperimentConfig, FeatureConfig, ModelConfig
 from pipeline.features import PLACEBO
 from pipeline.plan import FeaturePlan

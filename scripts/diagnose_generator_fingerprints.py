@@ -180,7 +180,6 @@ def _offgrid_metrics(vals: np.ndarray, grid: np.ndarray) -> dict:
 
 
 def _freq_metrics(vals: np.ndarray, ref: dict, col: str) -> dict:
-    grid = ref["grids"][col]
     proxy_cnt = ref["counts"][col]
     scale = 7500.0 / max(vals.size, 1)
     cnt = pd.Series(vals).value_counts()
@@ -426,8 +425,11 @@ def sdv_metadata(proxy: pd.DataFrame):
 
 
 def make_synthesizer(cand: str, md, fit_seed: int):
-    from sdv.single_table import (CTGANSynthesizer, GaussianCopulaSynthesizer,
-                                  TVAESynthesizer)
+    from sdv.single_table import (
+        CTGANSynthesizer,
+        GaussianCopulaSynthesizer,
+        TVAESynthesizer,
+    )
     rounding = cand.endswith("_r1")
     if cand.startswith("gc_beta"):
         return GaussianCopulaSynthesizer(
@@ -745,9 +747,15 @@ def phase_report(workdir: Path) -> None:
 
     core_kept = [m for m in kept if is_core(m) and m in comp
                  and not np.isnan(comp[m]["mean"])]
-    lines = ["# 지문 판정 리포트", "",
-             f"- 전체 지표 {len(metrics)}, 모의 식별 통과 {len(kept)}, "
-             f"판정용 핵심 지표 {len(core_kept)}", ""]
+    lines = [
+        "# 지문 판정 리포트",
+        "",
+        (
+            f"- 전체 지표 {len(metrics)}, 모의 식별 통과 {len(kept)}, "
+            f"판정용 핵심 지표 {len(core_kept)}"
+        ),
+        "",
+    ]
     verdicts = {}
     for cand, tab in cands.items():
         row = {}

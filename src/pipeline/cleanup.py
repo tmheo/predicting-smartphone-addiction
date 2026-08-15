@@ -19,7 +19,7 @@ import argparse
 import os
 import socket
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from . import tracking
@@ -90,7 +90,7 @@ def cleanup_stale(client, experiment_id: str, dry_run: bool = False) -> None:
         client.set_tag(
             run_id,
             "cleanup.performed_at",
-            datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            datetime.now(UTC).isoformat(timespec="seconds"),
         )
         leftover = RUN_LOGS_ROOT / run_id / "run.log"
         if leftover.exists():

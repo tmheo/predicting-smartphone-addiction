@@ -129,7 +129,7 @@ class FeaturePlan:
         self._base_columns: list[str] | None = None
 
     @classmethod
-    def from_config(cls, cfg: FeatureConfig) -> "FeaturePlan":
+    def from_config(cls, cfg: FeatureConfig) -> FeaturePlan:
         """설정을 계획으로 만든다. 누출 규율과 선언 충돌은 여기서, 즉 적재 시점에 거부한다."""
         if cfg.base != "raw":
             raise ValueError(

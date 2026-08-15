@@ -69,8 +69,11 @@ def test_rejects_invalid_construction(kwargs: dict) -> None:
         LatticePairTargetEncoder(**kwargs)
 
 
-def fit_small(resolutions: list[str] = ["floor"]) -> tuple[LatticePairTargetEncoder, pd.DataFrame]:
+def fit_small(
+    resolutions: list[str] | None = None,
+) -> tuple[LatticePairTargetEncoder, pd.DataFrame]:
     train = make_train()
+    resolutions = ["floor"] if resolutions is None else resolutions
     enc = LatticePairTargetEncoder(cols=COLS, resolutions=resolutions, inner_folds=2)
     enc.fit(train, seed=0)
     return enc, train

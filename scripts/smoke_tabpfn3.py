@@ -195,7 +195,7 @@ def main() -> None:
         clf.fit(X_tr, y_tr)
     except torch.cuda.OutOfMemoryError:
         # 티켓의 후퇴 경로: OOM이면 memory_saving_mode=True로 한 번 재시도한다.
-        assert memory_saving != True, "memory_saving_mode=True에서도 fit OOM"  # noqa: E712
+        assert memory_saving != True, "memory_saving_mode=True에서도 fit OOM"
         memory_saving = True
         torch.cuda.empty_cache()
         clf = make_clf(memory_saving)
@@ -214,7 +214,7 @@ def main() -> None:
         try:
             preds[sl] = clf.predict_proba(X_va.iloc[sl])[:, 1]
         except torch.cuda.OutOfMemoryError:
-            assert memory_saving != True, "memory_saving_mode=True에서도 predict OOM"  # noqa: E712
+            assert memory_saving != True, "memory_saving_mode=True에서도 predict OOM"
             memory_saving = True
             torch.cuda.empty_cache()
             clf = make_clf(memory_saving)
@@ -244,7 +244,8 @@ def main() -> None:
 
     # 정식 스크리닝 환산: fold마다 문맥 재인코딩(fit) 후 검증 fold 전체 + 테스트 전체를 예측한다.
     steady = float(np.median(chunk_times[1:])) if len(chunk_times) > 1 else float(chunk_times[0])
-    n_test = sum(1 for _ in open(Path("data/test.csv"), "rb")) - 1
+    with Path("data/test.csv").open("rb") as test_file:
+        n_test = sum(1 for _ in test_file) - 1
     va_full = int(va_mask.sum())
     per_fold_pred_s = steady * ((va_full + n_test) / chunk)
     # fold-fit은 정식 스크리닝에서 fold마다 반복된다. 나머지 피처 구축은 한 번.
@@ -261,8 +262,8 @@ def main() -> None:
         "n_features": int(X.shape[1]),
         "features": list(X.columns),
         "categorical_indices": cat_indices,
-        "n_context_rows": int(len(X_tr)),
-        "n_predict_rows_total": int(len(X_va)),
+        "n_context_rows": len(X_tr),
+        "n_predict_rows_total": len(X_va),
         "n_predict_rows_done": int(done_rows),
         "aborted_over_budget": aborted,
         "n_estimators": args.n_estimators,

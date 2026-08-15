@@ -43,8 +43,10 @@ from .runs import MlflowRunStore, RunStore, RunStoreError
 
 def render_entry(verdict: EntryVerdict) -> list[str]:
     lines = [
-        f"진입 하한: OOF AUC {verdict.candidate_auc:.5f} vs champion − {ENTRY_FLOOR_MARGIN} = "
-        f"{verdict.floor:.5f} → {'통과' if verdict.floor_ok else '미달'}"
+        (
+            f"진입 하한: OOF AUC {verdict.candidate_auc:.5f} vs champion − {ENTRY_FLOOR_MARGIN} = "
+            f"{verdict.floor:.5f} → {'통과' if verdict.floor_ok else '미달'}"
+        )
     ]
     if verdict.duplicate is None:
         lines.append("풀이 비어 있다: 중복 게이트와 기여 판정은 묻지 않는다.")
@@ -100,7 +102,7 @@ def _drop_member(pool: Pool, run_id: str, reason: str, store: RunStore) -> None:
     store.annotate(
         run_id,
         tags={
-            "pool.dropped_at": datetime.date.today().isoformat(),
+            "pool.dropped_at": datetime.datetime.now(datetime.UTC).date().isoformat(),
             "pool.dropped_reason": reason,
         },
     )
@@ -168,7 +170,7 @@ def main() -> None:
         config=candidate.experiment,
         oof_auc=candidate.auc_oof,
         seeds=candidate.seeds,
-        entered_at=datetime.date.today().isoformat(),
+        entered_at=datetime.datetime.now(datetime.UTC).date().isoformat(),
         reason=args.reason,
         evidence=entry_evidence(verdict),
     ))

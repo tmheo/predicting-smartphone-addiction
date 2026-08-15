@@ -8,7 +8,6 @@ import pytest
 from pipeline.features import PLACEBO
 from pipeline.judgment import JudgmentError, RunFacts, judge_proxy_screening
 
-
 MODEL_PARAMS = {
     "model.force_row_wise": "True",
     "model.learning_rate": "0.05",

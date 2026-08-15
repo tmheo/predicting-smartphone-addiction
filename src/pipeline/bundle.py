@@ -34,7 +34,7 @@ import subprocess
 import sys
 import tempfile
 import zipfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -107,7 +107,7 @@ def export_bundle(
             "config_artifact": config_names[0],
             "config_path": f"configs/{config_names[0]}",
             "config_sha256": file_sha256(art_dir / config_names[0]),
-            "exported_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "exported_at": datetime.now(UTC).isoformat(timespec="seconds"),
             "environment": {
                 "hostname": socket.gethostname(),
                 "kaggle": "KAGGLE_KERNEL_RUN_TYPE" in os.environ,
@@ -130,7 +130,9 @@ def export_bundle(
 def _git_commit_exists(commit: str) -> bool:
     return (
         subprocess.run(
-            ["git", "cat-file", "-e", f"{commit}^{{commit}}"], capture_output=True
+            ["git", "cat-file", "-e", f"{commit}^{{commit}}"],
+            capture_output=True,
+            check=False,
         ).returncode
         == 0
     )
@@ -138,7 +140,9 @@ def _git_commit_exists(commit: str) -> bool:
 
 def _git_file_sha256(commit: str, path: str) -> str | None:
     """커밋 시점 파일 내용의 sha256. 그 커밋에 파일이 없으면 None."""
-    shown = subprocess.run(["git", "show", f"{commit}:{path}"], capture_output=True)
+    shown = subprocess.run(
+        ["git", "show", f"{commit}:{path}"], capture_output=True, check=False
+    )
     if shown.returncode != 0:
         return None
     return hashlib.sha256(shown.stdout).hexdigest()
@@ -272,7 +276,7 @@ def import_bundle(zip_path: Path, tracking_uri: str = TRACKING_URI) -> str:
         client.set_tag(
             run_id,
             "import.imported_at",
-            datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            datetime.now(UTC).isoformat(timespec="seconds"),
         )
         client.log_artifacts(run_id, str(bundle_dir / ARTIFACTS_DIR))
         client.log_artifact(run_id, str(manifest_path), artifact_path="bundle")

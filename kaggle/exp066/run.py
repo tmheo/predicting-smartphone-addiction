@@ -48,7 +48,7 @@ run(f"ln -sf {find_input(PROXY_NAME)} {REPO}/data/external/{PROXY_NAME}")
 
 env = dict(os.environ)
 gpus = subprocess.run(
-    "nvidia-smi -L", shell=True, capture_output=True, text=True
+    "nvidia-smi -L", shell=True, capture_output=True, text=True, check=False
 ).stdout.strip().splitlines()
 if len(gpus) > 1:
     # 시드 단위 프로세스 병렬(#99). 같은 GPU 모델 x N이므로 순차 실행과 결과가 같다.

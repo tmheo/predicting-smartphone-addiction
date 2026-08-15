@@ -528,13 +528,13 @@ def judge_entry(
     """
     floor = champion.oof_auc - ENTRY_FLOOR_MARGIN
     floor_ok = candidate.auc_oof >= floor
-    base = dict(
-        champion_run_id=champion.run_id,
-        champion_auc=champion.oof_auc,
-        candidate_auc=candidate.auc_oof,
-        floor=floor,
-        floor_ok=floor_ok,
-    )
+    base = {
+        "champion_run_id": champion.run_id,
+        "champion_auc": champion.oof_auc,
+        "candidate_auc": candidate.auc_oof,
+        "floor": floor,
+        "floor_ok": floor_ok,
+    }
 
     members = pool.members
     if not members:

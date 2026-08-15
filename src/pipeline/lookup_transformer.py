@@ -22,8 +22,8 @@ import math
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn as nn
 from sklearn.metrics import roc_auc_score
+from torch import nn
 
 _NA = 0  # 컬럼별 local id 0은 결측 전용. lookup 컬럼의 마지막 id는 UNK.
 

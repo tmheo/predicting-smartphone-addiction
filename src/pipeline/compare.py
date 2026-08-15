@@ -75,9 +75,11 @@ def _new_feature_lines(report: NewFeatureReport) -> list[str]:
 
 def render_screening(verdict: ScreeningVerdict) -> list[str]:
     lines = [
-        f"스크리닝(seed {verdict.seed} 짝지은 비교) OOF AUC: champion {verdict.baseline_auc:.5f} → "
-        f"challenger {verdict.challenger_auc:.5f} (delta {verdict.delta:+.5f}, 문턱 개선 >= 0) "
-        f"→ {'통과' if verdict.auc_ok else '미달'}"
+        (
+            f"스크리닝(seed {verdict.seed} 짝지은 비교) OOF AUC: champion {verdict.baseline_auc:.5f} → "
+            f"challenger {verdict.challenger_auc:.5f} (delta {verdict.delta:+.5f}, 문턱 개선 >= 0) "
+            f"→ {'통과' if verdict.auc_ok else '미달'}"
+        )
     ]
     lines += _canary_lines(verdict.canary)
     lines += _new_feature_lines(verdict.new_features)
@@ -93,9 +95,11 @@ def render_screening(verdict: ScreeningVerdict) -> list[str]:
 
 def render_proxy_screening(verdict: ProxyScreeningVerdict) -> list[str]:
     lines = [
-        f"대리 스크리닝(seed 42 짝지은 비교) OOF AUC: 기준 실행 {verdict.baseline_auc:.5f} → "
-        f"challenger {verdict.challenger_auc:.5f} (delta {verdict.delta:+.5f}, 문턱 개선 >= 0) "
-        f"→ {'통과' if verdict.auc_ok else '미달'}"
+        (
+            f"대리 스크리닝(seed 42 짝지은 비교) OOF AUC: 기준 실행 {verdict.baseline_auc:.5f} → "
+            f"challenger {verdict.challenger_auc:.5f} (delta {verdict.delta:+.5f}, 문턱 개선 >= 0) "
+            f"→ {'통과' if verdict.auc_ok else '미달'}"
+        )
     ]
     lines += _canary_lines(verdict.canary)
     lines += _new_feature_lines(verdict.new_features)
@@ -109,9 +113,11 @@ def render_proxy_screening(verdict: ProxyScreeningVerdict) -> list[str]:
 
 def render_confirmation(verdict: ConfirmationVerdict) -> list[str]:
     lines = [
-        f"시드 평균본 OOF AUC: champion {verdict.champion_auc:.5f} → "
-        f"challenger {verdict.challenger_auc:.5f} (delta {verdict.delta:+.5f}, 문턱 +{AUC_THRESHOLD}) "
-        f"→ {'통과' if verdict.auc_ok else '미달'}"
+        (
+            f"시드 평균본 OOF AUC: champion {verdict.champion_auc:.5f} → "
+            f"challenger {verdict.challenger_auc:.5f} (delta {verdict.delta:+.5f}, 문턱 +{AUC_THRESHOLD}) "
+            f"→ {'통과' if verdict.auc_ok else '미달'}"
+        )
     ]
     for comparison in verdict.seed_comparisons:
         lines.append(
@@ -160,7 +166,7 @@ def write_champion(challenger: RunFacts, reason: str) -> None:
         config=challenger.experiment,
         features=challenger.features,
         git_commit=challenger.git_commit,
-        adopted_at=datetime.date.today().isoformat(),
+        adopted_at=datetime.datetime.now(datetime.UTC).date().isoformat(),
         reason=reason,
     ).save()
 

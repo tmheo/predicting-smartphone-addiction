@@ -40,9 +40,9 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
 
 REPO = Path(__file__).resolve().parent.parent
 GOLDEN_DIR = REPO / "tests" / "golden" / "judgment"
@@ -248,6 +248,7 @@ def run_scenario(scenario: Scenario) -> str:
             env=env,
             capture_output=True,
             text=True,
+            check=False,
         )
     return (
         f"$ python -m {' '.join(scenario.argv)}\n"

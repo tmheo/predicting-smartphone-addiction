@@ -17,7 +17,7 @@ import sys
 import threading
 import time
 import traceback
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -38,7 +38,7 @@ class TerminationRequested(Exception):
 
 
 def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 class _LogCapture:
@@ -123,7 +123,7 @@ class RunObserver:
     # ------------------------------------------------------------------ 생성
 
     @classmethod
-    def begin(cls, cfg: ExperimentConfig) -> "RunObserver":
+    def begin(cls, cfg: ExperimentConfig) -> RunObserver:
         client, experiment_id = tracking.mlflow_client()
         # 실행 생성 전에 스테일 실행을 자동 정리한다. (#42)
         cleanup.cleanup_stale(client, experiment_id)
@@ -175,7 +175,7 @@ class RunObserver:
         while not self._stop_heartbeat.wait(HEARTBEAT_SECONDS):
             try:
                 self._beat()
-            except Exception as exc:  # 생존 신호 실패가 실험을 죽여서는 안 된다.
+            except Exception as exc:  # noqa: BLE001 - 관측 실패가 실험을 죽여서는 안 된다.
                 print(f"경고: 생존 신호 기록 실패: {exc}", file=sys.stderr)
 
     def _beat(self) -> None:
@@ -292,7 +292,7 @@ class RunObserver:
         if self._capture is not None:
             try:
                 self._capture.stop()
-            except Exception as stop_exc:
+            except Exception as stop_exc:  # noqa: BLE001 - 나머지 종료 단계를 계속한다.
                 print(f"경고: 실행 로그 닫기 실패: {stop_exc}", file=sys.stderr)
 
         # 3) 닫힌 로그를 MLflow 산출물 logs/run.log로 보존한다. (#39)
@@ -300,7 +300,7 @@ class RunObserver:
         try:
             self._client.log_artifact(self.run_id, str(self._log_path), artifact_path="logs")
             uploaded = True
-        except Exception as upload_exc:
+        except Exception as upload_exc:  # noqa: BLE001 - 로컬 로그를 남기고 종료를 계속한다.
             print(f"경고: 실행 로그 보존 실패, 로컬 파일을 남긴다: {upload_exc}", file=sys.stderr)
 
         # 4) 오류 태그. (#42)
@@ -310,13 +310,13 @@ class RunObserver:
                 self._client.set_tag(self.run_id, "error.stage", error_stage or "")
                 self._client.set_tag(self.run_id, "error.type", type(exc).__name__)
                 self._client.set_tag(self.run_id, "error.message", message)
-            except Exception as tag_exc:
+            except Exception as tag_exc:  # noqa: BLE001 - 상태 종료를 계속 시도한다.
                 print(f"경고: 오류 태그 기록 실패: {tag_exc}", file=sys.stderr)
 
         # 5) 상태 종료. 종료 시각은 기본값인 현재 시각. (#42)
         try:
             self._client.set_terminated(self.run_id, status=status)
-        except Exception as term_exc:
+        except Exception as term_exc:  # noqa: BLE001 - 종료 경로에서 더 전파할 곳이 없다.
             print(f"경고: 실행 상태 종료 실패: {term_exc}", file=sys.stderr)
 
         # 산출물 보존이 성공한 뒤에만 로컬 로그와 빈 디렉터리를 정리한다. (#39)

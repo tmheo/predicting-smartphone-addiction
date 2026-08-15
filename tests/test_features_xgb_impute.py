@@ -10,6 +10,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -38,7 +40,7 @@ def make_df(n: int = 90) -> pd.DataFrame:
 class RecordingRegressor:
     """fit/predict 입력을 기록하고 상수를 돌려주는 대역."""
 
-    instances: list["RecordingRegressor"] = []
+    instances: ClassVar[list[RecordingRegressor]] = []
 
     def __init__(self, **params) -> None:
         self.params = params

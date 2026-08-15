@@ -77,7 +77,7 @@ def test_statistics_golden_values(small_proxy):
     np.testing.assert_allclose(out["age_orig_mean"], [2 / 3, 0.25])
     # woe = logit(p) - logit(0.5) = logit(p)
     np.testing.assert_allclose(out["age_orig_woe"], [np.log(2), np.log(0.25 / 0.75)])
-    ent = lambda p: -(p * np.log(p) + (1 - p) * np.log(1 - p))  # noqa: E731
+    ent = lambda p: -(p * np.log(p) + (1 - p) * np.log(1 - p))
     np.testing.assert_allclose(out["age_orig_entropy"], [ent(2 / 3), ent(0.25)])
     np.testing.assert_allclose(out["age_orig_count"], [np.log1p(4), np.log1p(2)])
 
@@ -85,7 +85,13 @@ def test_statistics_golden_values(small_proxy):
 def test_unknown_keys_nan_vs_global(small_proxy):
     path, sha = small_proxy
     df = pd.DataFrame({"age": [25.0, np.nan]})  # 25는 프록시에 없는 값, NaN은 결측 키
-    kw = dict(path=path, cols=["age"], stats=["mean", "count"], smoothing=2.0, sha256=sha)
+    kw = {
+        "path": path,
+        "cols": ["age"],
+        "stats": ["mean", "count"],
+        "smoothing": 2.0,
+        "sha256": sha,
+    }
     out_nan = OriginalPriorColumns(unknown="nan", **kw).compute(df)
     assert out_nan.isna().all().all()
     out_global = OriginalPriorColumns(unknown="global", **kw).compute(df)

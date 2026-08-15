@@ -306,10 +306,11 @@ class LatticePairTargetEncoder:
     def __init__(
         self,
         cols: list[str],
-        resolutions: list[str] = ["floor"],
+        resolutions: list[str] | None = None,
         inner_folds: int = 4,
         smoothing: float = 20.0,
     ) -> None:
+        resolutions = ["floor"] if resolutions is None else resolutions
         if len(cols) < 2:
             raise ValueError(f"격자 쌍에는 컬럼이 2개 이상 필요하다(받은 값: {cols})")
         if len(set(cols)) != len(cols):
@@ -509,11 +510,12 @@ class OriginalPriorColumns:
         self,
         path: str,
         cols: list[ColumnSpec],
-        stats: list[str] = ["mean"],
+        stats: list[str] | None = None,
         smoothing: float = 20.0,
         unknown: str = "nan",
         sha256: str = ORIGINAL_PROXY_SHA256,
     ) -> None:
+        stats = ["mean"] if stats is None else stats
         unknown_stats = [s for s in stats if s not in self.STATS]
         if unknown_stats:
             raise ValueError(f"알 수 없는 stat {unknown_stats}. 지원: {', '.join(self.STATS)}")
@@ -602,9 +604,10 @@ class OriginalKnnColumns:
         self,
         path: str,
         cols: list[str],
-        ks: list[int] = [1],
+        ks: list[int] | None = None,
         sha256: str = ORIGINAL_PROXY_SHA256,
     ) -> None:
+        ks = [1] if ks is None else ks
         if not ks or any(not isinstance(k, int) or k < 1 for k in ks):
             raise ValueError(f"ks는 1 이상의 정수 목록이어야 한다(받은 값: {ks})")
         if len(set(ks)) != len(ks):
@@ -958,12 +961,13 @@ class XgbImputeAux:
     def __init__(
         self,
         cols: list[str],
-        cat_cols: list[str] = [],
+        cat_cols: list[str] | None = None,
         emit: list[str] | None = None,
         compositions: list[str] | None = None,
         transductive_test_path: str | None = None,
         transductive_test_sha256: str | None = None,
     ) -> None:
+        cat_cols = [] if cat_cols is None else cat_cols
         all_cols = [*cols, *cat_cols]
         forbidden = {ID, TARGET, PLACEBO} & set(all_cols)
         if forbidden:

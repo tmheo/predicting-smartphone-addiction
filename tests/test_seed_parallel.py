@@ -11,13 +11,12 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
+from test_model import FakeAdapter, SpyRecorder, toy_train_test
 
 from pipeline import model as model_mod
 from pipeline import seed_parallel
 from pipeline.config import DataConfig, ExperimentConfig, FeatureConfig, ModelConfig
 from pipeline.plan import FeaturePlan
-
-from test_model import FakeAdapter, SpyRecorder, toy_train_test
 
 N_FOLDS = 3
 SEEDS = [7, 11, 13]

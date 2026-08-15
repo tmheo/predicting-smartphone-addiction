@@ -112,7 +112,7 @@ def main() -> None:
         tracking.warn_below_placebo(final.importance)
         print(f"run_id={observer.run_id} auc_oof={final.fold_aucs['auc_oof']:.5f}")
         observer.succeed()
-    except BaseException as exc:
+    except BaseException as exc:  # noqa: BLE001 - 중단 신호까지 관찰 기록 후 종료한다.
         observer.fail(exc)
         sys.exit(130 if isinstance(exc, KeyboardInterrupt) else 1)
 
