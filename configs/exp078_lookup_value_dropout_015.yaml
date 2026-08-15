@@ -2,6 +2,7 @@
 # 이슈 #108: Lookup-Transformer 제한 규제 재검증의 값 가리기 증가 후보.
 # champion exp067의 피처 계획과 모든 학습 설정을 유지하고 value_dropout만
 # 0.10에서 0.15로 높인다. seed 42 스크리닝이 기준 이상일 때만 3시드 확정으로 간다.
+# seed 42 OOF AUC는 0.968750으로 기준보다 0.000013 낮아 스크리닝에서 기각했다.
 name: exp078_lookup_value_dropout_015
 
 data:

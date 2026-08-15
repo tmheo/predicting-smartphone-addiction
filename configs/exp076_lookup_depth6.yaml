@@ -2,6 +2,7 @@
 # 이슈 #108: Lookup-Transformer 제한 용량 재검증의 깊이 증가 후보.
 # champion exp067의 피처 계획과 모든 학습 설정을 유지하고 layers만 4에서
 # 6으로 늘린다. seed 42 스크리닝이 기준 이상일 때만 3시드 확정으로 간다.
+# seed 42 OOF AUC는 0.968757로 기준보다 0.000006 낮아 스크리닝에서 기각했다.
 name: exp076_lookup_depth6
 
 data:
