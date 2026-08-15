@@ -553,6 +553,45 @@ class TabMAdapter:
         return self._impl.importance()
 
 
+class TabPFN3Adapter:
+    """TabPFN-3 adapter. (#102)
+
+    구현은 GPU와 gated 가중치가 필요한 tabpfn3 모듈에 있고 여기서 lazy import한다.
+    fold 학습 문맥은 캐시하고 검증·테스트는 작은 청크로 예측한다. gain importance가
+    없어 검증 fold 부분표본 permutation importance를 gain 컬럼으로 돌려준다.
+    """
+
+    def __init__(self, params: dict, fit: dict, seed: int) -> None:
+        self._params = params
+        self._fit = fit
+        self._seed = seed
+        self._impl = None
+
+    def fit(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
+    ) -> np.ndarray:
+        from . import tabpfn3
+
+        _reject_initial_score("tabpfn3", initial_score_tr, initial_score_va)
+        self._impl = tabpfn3.TabPFN3Fold(self._params, self._seed)
+        return self._impl.fit(X_tr, y_tr, X_va, y_va)
+
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray:
+        _reject_initial_score("tabpfn3", initial_score, None)
+        return self._impl.predict(X)
+
+    def importance(self) -> pd.DataFrame:
+        return self._impl.importance()
+
+
 def _reject_initial_score(
     kind: str, initial_score_tr: pd.Series | None, initial_score_va: pd.Series | None
 ) -> None:
@@ -569,6 +608,7 @@ MODEL_REGISTRY: dict[str, Callable[[dict, dict, int], ModelAdapter]] = {
     "logistic_onehot": LogisticOnehotAdapter,
     "lookup_transformer": LookupTransformerAdapter,
     "tabm": TabMAdapter,
+    "tabpfn3": TabPFN3Adapter,
 }
 
 

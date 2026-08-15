@@ -207,3 +207,18 @@ members:
     ensemble_auc_with: 0.968472626439248
     ensemble_auc_without: 0.9683825832579194
     contribution: 9.00431813286584e-05
+- run_id: 85b09132aae543aab16e69dea5906a30
+  config: exp067_tabpfn3
+  oof_auc: 0.9672432266679856
+  seeds: 42,43,44
+  entered_at: '2026-08-15'
+  reason: 3시드 OOF 0.967243, 최근접 스피어만 0.99505, 표준 앙상블 기여 +0.00003
+  evidence:
+    champion_run_id: 2bd55026ae63430aa774bce20a359b4a
+    champion_oof_auc: 0.9690978395195489
+    floor_margin: 0.008145387148436711
+    nearest_run_id: df2023d4bd71429b88a8026d52f5258c
+    nearest_spearman: 0.9950493919425348
+    ensemble_auc_with: 0.9685009893536075
+    ensemble_auc_without: 0.968472626439248
+    contribution: 2.8362914359481017e-05
