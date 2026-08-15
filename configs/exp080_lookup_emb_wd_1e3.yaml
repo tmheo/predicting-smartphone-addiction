@@ -1,0 +1,79 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #108: Lookup-Transformer 제한 규제 재검증의 임베딩 감쇠 증가 후보.
+# champion exp067의 피처 계획과 모든 학습 설정을 유지하고 emb_weight_decay만
+# 3e-4에서 1e-3으로 높인다. seed 42 스크리닝이 기준 이상일 때만 3시드 확정으로 간다.
+# seed 42 OOF AUC는 0.968763258로 기준보다 0.000000698 높아 3시드로 확정했다.
+# 3시드 OOF AUC는 0.969089123으로 champion 0.969097840보다 0.000008716 낮았다.
+# 시드별 개선은 2/3이지만 대표 OOF 개선 문턱을 넘지 못해 기각했다.
+name: exp080_lookup_emb_wd_1e3
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions: [social_frac, work_frac, leisure_frac, resid_frac, week_total]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: lookup_transformer
+  params:
+    lookup_cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+    emb_weight_decay: 1.0e-3
+  fit: {}
