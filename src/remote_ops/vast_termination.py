@@ -17,7 +17,6 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 REGISTRY_VARIABLE = "VAST_TERMINATION_SCHEDULES"
-LAST_SUCCESS_VARIABLE = "VAST_TERMINATION_LAST_SUCCESS"
 ALERT_LABEL = "ready-for-human"
 JOB_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 TRANSIENT_STATUS = {429, 502, 503, 504}
@@ -331,44 +330,6 @@ class GitHubApi:
         self.assignee = assignee
         self.api = JsonApi("https://api.github.com", token, "s6e8-vast-termination/1")
 
-    def get_variable(self, name: str) -> str:
-        response = self.api.request(
-            "GET", f"/repos/{self.repository}/actions/variables/{name}", allow_not_found=True
-        )
-        if not isinstance(response, dict) or not isinstance(response.get("value"), str):
-            raise TerminationError(f"repository variable {name} is missing")
-        return response["value"]
-
-    def set_variable(self, name: str, value: str) -> None:
-        path = f"/repos/{self.repository}/actions/variables/{name}"
-        existing = self.api.request("GET", path, allow_not_found=True)
-        if existing is None:
-            self.api.request(
-                "POST",
-                f"/repos/{self.repository}/actions/variables",
-                payload={"name": name, "value": value},
-            )
-        else:
-            self.api.request("PATCH", path, payload={"name": name, "value": value})
-
-    def remove_completed(self, completed: set[Schedule]) -> None:
-        current = parse_registry(self.get_variable(REGISTRY_VARIABLE))
-        remaining = [schedule for schedule in current if schedule not in completed]
-        self.set_variable(REGISTRY_VARIABLE, encode_registry(remaining))
-
-    def record_success(self, mode: str, event_name: str, run_url: str) -> None:
-        value = json.dumps(
-            {
-                "at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
-                "event": event_name,
-                "mode": mode,
-                "run_url": run_url,
-            },
-            separators=(",", ":"),
-            sort_keys=True,
-        )
-        self.set_variable(LAST_SUCCESS_VARIABLE, value)
-
     def alert(
         self,
         schedule: Schedule,
@@ -481,7 +442,7 @@ def _observe(schedules: list[Schedule], expected_job_id: str) -> None:
 
 def run(mode: str, expected_job_id: str = "") -> int:
     github = _github_from_environment()
-    schedules = parse_registry(github.get_variable(REGISTRY_VARIABLE))
+    schedules = parse_registry(os.environ.get(REGISTRY_VARIABLE, ""))
     run_url = _run_url()
 
     if mode == "observe":
@@ -509,7 +470,6 @@ def run(mode: str, expected_job_id: str = "") -> int:
     due = [schedule for schedule in schedules if schedule.terminate_at <= now]
     if not due:
         print(f"no due schedules registry_count={len(schedules)}")
-        github.record_success(mode, os.environ.get("GITHUB_EVENT_NAME", "unknown"), run_url)
         return 0
 
     try:
@@ -559,10 +519,10 @@ def run(mode: str, expected_job_id: str = "") -> int:
             )
 
     if completed:
-        github.remove_completed(completed)
+        completed_ids = ",".join(sorted(schedule.job_id for schedule in completed))
+        print(f"completed schedules require local registry removal job_ids={completed_ids}")
     if failed:
         return 1
-    github.record_success(mode, os.environ.get("GITHUB_EVENT_NAME", "unknown"), run_url)
     return 0
 
 

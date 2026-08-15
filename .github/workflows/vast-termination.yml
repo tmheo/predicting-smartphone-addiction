@@ -20,7 +20,6 @@ on:
         type: string
 
 permissions:
-  actions: write
   contents: read
   issues: write
 
@@ -38,9 +37,10 @@ jobs:
       ALERT_ASSIGNEE: ${{ github.repository_owner }}
       GITHUB_TOKEN: ${{ github.token }}
       PYTHONPATH: src
+      VAST_TERMINATION_SCHEDULES: ${{ vars.VAST_TERMINATION_SCHEDULES }}
       VAST_TERMINATION_API_KEY: ${{ secrets.VAST_TERMINATION_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Read schedules and enforce termination
         shell: bash
