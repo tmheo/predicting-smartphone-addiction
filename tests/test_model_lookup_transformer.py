@@ -132,9 +132,10 @@ def test_lookup_transformer_fold_initialization_average_derives_seeds(monkeypatc
     created_seeds = []
 
     class FakeMember:
-        def __init__(self, params, seed):
+        def __init__(self, params, seed, device=None, init_barrier=None):
             assert params == {"lookup_cols": ["v"], "perm_repeats": 1}
             self._seed = seed
+            self._device = device or "cpu"
             created_seeds.append(seed)
 
         def fit(self, X_tr, y_tr, X_va, y_va):
@@ -170,3 +171,25 @@ def test_lookup_transformer_rejects_invalid_fold_seed_offsets(offsets):
         lookup_transformer.LookupTransformerFold(
             {"lookup_cols": ["v"], "fold_seed_offsets": offsets}, seed=SEED
         )
+
+
+def test_lookup_transformer_fold_gpu_assignment(monkeypatch):
+    monkeypatch.setenv("PIPELINE_FOLD_GPUS", "0,2,1")
+    monkeypatch.setattr(lookup_transformer.torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(lookup_transformer.torch.cuda, "device_count", lambda: 3)
+
+    assert lookup_transformer.LookupTransformerFold._parallel_devices(3) == [
+        "cuda:0",
+        "cuda:2",
+        "cuda:1",
+    ]
+
+
+@pytest.mark.parametrize("gpu_ids", ["0,0,1", "0,1", "0,1,nope"])
+def test_lookup_transformer_rejects_invalid_fold_gpu_assignment(monkeypatch, gpu_ids):
+    monkeypatch.setenv("PIPELINE_FOLD_GPUS", gpu_ids)
+    monkeypatch.setattr(lookup_transformer.torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(lookup_transformer.torch.cuda, "device_count", lambda: 3)
+
+    with pytest.raises(ValueError, match="PIPELINE_FOLD_GPUS"):
+        lookup_transformer.LookupTransformerFold._parallel_devices(3)

@@ -22,6 +22,9 @@ torch가 필요하므로 model.py의 adapter가 이 모듈을 lazy import한다.
 from __future__ import annotations
 
 import math
+import os
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import pandas as pd
@@ -30,6 +33,7 @@ from sklearn.metrics import roc_auc_score
 from torch import nn
 
 _NA = 0  # 컬럼별 local id 0은 결측 전용. lookup 컬럼의 마지막 id는 UNK.
+_TORCH_INIT_LOCK = threading.Lock()
 
 
 def _sigmoid(logit: np.ndarray) -> np.ndarray:
@@ -86,7 +90,13 @@ class _LookupTransformer(nn.Module):
 class _LookupTransformerMember:
     """초기화 시드 하나에 해당하는 fold 학습·예측·중요도 상태."""
 
-    def __init__(self, params: dict, seed: int) -> None:
+    def __init__(
+        self,
+        params: dict,
+        seed: int,
+        device: str | None = None,
+        init_barrier: threading.Barrier | None = None,
+    ) -> None:
         params = dict(params)
         self._lookup_cols = list(params.pop("lookup_cols"))
         self._lookup_max_card = int(params.pop("lookup_max_card", 5000))
@@ -109,17 +119,22 @@ class _LookupTransformerMember:
         if self._d_model % self._heads:
             raise ValueError(f"d_model {self._d_model}은 heads {self._heads}의 배수여야 한다.")
         self._seed = seed
-        self._device = "cuda" if torch.cuda.is_available() else "cpu"
+        self._device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self._init_barrier = init_barrier
         if self._device == "cpu":
             # macOS에서 lightgbm·xgboost의 libomp와 torch의 libomp가 같이 적재되면
             # CPU 연산의 OpenMP fork가 교착한다. CPU 경로(로컬 테스트)는 단일 스레드로 돈다.
             torch.set_num_threads(1)
         # T4/P100은 bf16이 없어 fp16 + GradScaler, Ampere 이상은 bf16을 쓴다(원문 동일).
-        self._amp_dtype = (
-            torch.bfloat16
-            if self._device == "cuda" and torch.cuda.is_bf16_supported()
-            else torch.float16
-        )
+        if self._device.startswith("cuda"):
+            with torch.cuda.device(self._device):
+                self._amp_dtype = (
+                    torch.bfloat16
+                    if torch.cuda.is_bf16_supported()
+                    else torch.float16
+                )
+        else:
+            self._amp_dtype = torch.float16
         self._columns: list[str] | None = None
         self._specs: dict[str, tuple] = {}  # 컬럼별 ("lookup", vocab, qt|None) 또는 ("plr", qt)
         self._offsets: np.ndarray | None = None
@@ -215,7 +230,6 @@ class _LookupTransformerMember:
     def fit(
         self, X_tr: pd.DataFrame, y_tr: pd.Series, X_va: pd.DataFrame, y_va: pd.Series
     ) -> np.ndarray:
-        torch.manual_seed(self._seed)
         torch.backends.cuda.matmul.allow_tf32 = True
         self._fit_specs(X_tr)
         dev = self._device
@@ -225,15 +239,19 @@ class _LookupTransformerMember:
         y_va_np = y_va.to_numpy(dtype="float64")
         na_ids = torch.from_numpy(self._offsets).to(dev)  # 컬럼별 global NA id
 
-        model = _LookupTransformer(
-            self._total_vocab,
-            len(self._columns),
-            self._d_model,
-            self._plr_k,
-            self._layers,
-            self._heads,
-            self._dropout,
-        ).to(dev)
+        # torch의 모델 초기화 난수는 프로세스 전역이므로 여러 GPU thread에서도
+        # 초기화만 직렬화한다. 학습은 GPU별 난수 상태를 다시 고정한 뒤 병렬로 돈다.
+        with _TORCH_INIT_LOCK:
+            torch.manual_seed(self._seed)
+            model = _LookupTransformer(
+                self._total_vocab,
+                len(self._columns),
+                self._d_model,
+                self._plr_k,
+                self._layers,
+                self._heads,
+                self._dropout,
+            ).to(dev)
         self._model = model
         emb_params = [p for n_, p in model.named_parameters() if n_.startswith("emb")]
         rest = [p for n_, p in model.named_parameters() if not n_.startswith("emb")]
@@ -249,12 +267,20 @@ class _LookupTransformerMember:
         sched = torch.optim.lr_scheduler.OneCycleLR(
             opt, self._lr, total_steps=steps, pct_start=0.15
         )
-        use_scaler = dev == "cuda" and self._amp_dtype == torch.float16
-        scaler = torch.amp.GradScaler(dev, enabled=use_scaler)
+        device_type = "cuda" if dev.startswith("cuda") else "cpu"
+        use_scaler = device_type == "cuda" and self._amp_dtype == torch.float16
+        scaler = torch.amp.GradScaler(device_type, enabled=use_scaler)
         loss_fn = nn.BCEWithLogitsLoss()
         params_list = list(model.parameters())
         ema = [p.detach().clone() for p in params_list]
         g = torch.Generator().manual_seed(self._seed)
+        if self._init_barrier is not None:
+            # 모든 구성원의 torch.manual_seed 호출이 끝난 다음 각 GPU의 dropout
+            # 난수 상태를 해당 초기화 시드로 복원한다. 제한 시간은 실패 시 교착 방지용이다.
+            self._init_barrier.wait(timeout=600)
+            with torch.cuda.device(dev):
+                torch.cuda.manual_seed(self._seed)
+            self._init_barrier.wait(timeout=60)
 
         best_auc, best_weights, bad = 0.0, None, 0
         eval_start = min(5, self._epochs - 1)
@@ -294,7 +320,8 @@ class _LookupTransformerMember:
                 else:
                     bad += 1
                 print(
-                    f"[lookup_transformer] ep{ep:3d} valAUC={auc:.5f} best={best_auc:.5f}",
+                    f"[lookup_transformer] seed={self._seed} ep{ep:3d} "
+                    f"valAUC={auc:.5f} best={best_auc:.5f}",
                     flush=True,
                 )
                 with torch.no_grad():
@@ -313,7 +340,7 @@ class _LookupTransformerMember:
         return _sigmoid(val_logit)
 
     def _autocast(self):
-        if self._device == "cuda":
+        if self._device.startswith("cuda"):
             return torch.autocast("cuda", dtype=self._amp_dtype)
         import contextlib
 
@@ -374,12 +401,43 @@ class LookupTransformerFold:
 
         self._seed = seed
         self._perm_repeats = int(params.get("perm_repeats", 3))
+        devices = self._parallel_devices(len(offsets))
+        init_barrier = threading.Barrier(len(offsets)) if devices is not None else None
         self._members = [
-            _LookupTransformerMember(params, seed + offset) for offset in offsets
+            _LookupTransformerMember(
+                params,
+                seed + offset,
+                device=devices[index] if devices is not None else None,
+                init_barrier=init_barrier,
+            )
+            for index, offset in enumerate(offsets)
         ]
+        self._parallel = devices is not None
         self._columns: list[str] | None = None
         self._val: tuple[pd.DataFrame, np.ndarray] | None = None
         self._val_auc: float | None = None
+
+    @staticmethod
+    def _parallel_devices(member_count: int) -> list[str] | None:
+        raw = os.environ.get("PIPELINE_FOLD_GPUS", "").strip()
+        if not raw:
+            return None
+        try:
+            gpu_ids = [int(part.strip()) for part in raw.split(",")]
+        except ValueError as exc:
+            raise ValueError("PIPELINE_FOLD_GPUS는 쉼표로 구분한 GPU 번호여야 한다.") from exc
+        if len(gpu_ids) != member_count or len(set(gpu_ids)) != member_count:
+            raise ValueError(
+                f"PIPELINE_FOLD_GPUS는 구성원 {member_count}개와 같은 수의 "
+                f"서로 다른 GPU여야 한다: {gpu_ids}"
+            )
+        if not torch.cuda.is_available() or any(
+            gpu_id < 0 or gpu_id >= torch.cuda.device_count() for gpu_id in gpu_ids
+        ):
+            raise ValueError(
+                f"PIPELINE_FOLD_GPUS가 사용 가능한 CUDA 장치 범위를 벗어난다: {gpu_ids}"
+            )
+        return [f"cuda:{gpu_id}" for gpu_id in gpu_ids]
 
     def fit(
         self, X_tr: pd.DataFrame, y_tr: pd.Series, X_va: pd.DataFrame, y_va: pd.Series
@@ -390,10 +448,22 @@ class LookupTransformerFold:
         for index, member in enumerate(self._members, start=1):
             print(
                 f"[lookup_transformer] member {index}/{len(self._members)} "
-                f"seed={member._seed}",
+                f"seed={member._seed} device={member._device}",
                 flush=True,
             )
-            member_pred = member.fit(X_tr, y_tr, X_va, y_va)
+        if self._parallel:
+            with ThreadPoolExecutor(max_workers=len(self._members)) as executor:
+                member_preds = list(
+                    executor.map(
+                        lambda member: member.fit(X_tr, y_tr, X_va, y_va),
+                        self._members,
+                    )
+                )
+        else:
+            member_preds = [
+                member.fit(X_tr, y_tr, X_va, y_va) for member in self._members
+            ]
+        for member_pred in member_preds:
             val_pred += member_pred / len(self._members)
         self._val = (X_va.copy(), y_va_np)
         self._val_auc = roc_auc_score(y_va_np, val_pred)
