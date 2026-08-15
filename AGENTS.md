@@ -27,3 +27,8 @@ See `docs/agents/domain.md`.
 The company security software on the local Mac blocks `scp` file reads even when ordinary SSH commands work.
 For Runpod and Vast.ai, never use `scp`, `sftp`, or browser upload as the normal file-transfer path.
 Use the SSH standard-stream procedure with SHA-256 verification described in `docs/agents/remote-gpu-transfer.md`.
+
+### Vast.ai resource control
+
+Use the credential, lifecycle, cleanup, and evidence rules in `docs/agents/vast-resource-control.md`.
+The accepted baseline is recorded in `docs/agents/vast-control-acceptance-2026-08-15.md`.
