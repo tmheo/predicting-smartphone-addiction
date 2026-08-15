@@ -13,6 +13,7 @@ import pandas as pd
 import pytest
 from sklearn.metrics import roc_auc_score
 
+from pipeline import lookup_transformer
 from pipeline import model as model_mod
 from pipeline.config import ModelConfig
 
@@ -124,3 +125,48 @@ def test_lookup_transformer_rejects_unknown_params():
     X, y = _data(80)
     with pytest.raises(ValueError, match="no_such_param"):
         adapter.fit(X.iloc[:60], y.iloc[:60], X.iloc[60:], y.iloc[60:])
+
+
+def test_lookup_transformer_fold_initialization_average_derives_seeds(monkeypatch):
+    """파이프라인 시드에 offset을 더한 구성원 예측을 fold 안에서 평균한다."""
+    created_seeds = []
+
+    class FakeMember:
+        def __init__(self, params, seed):
+            assert params == {"lookup_cols": ["v"], "perm_repeats": 1}
+            self._seed = seed
+            created_seeds.append(seed)
+
+        def fit(self, X_tr, y_tr, X_va, y_va):
+            return np.full(len(X_va), self._seed / 10_000, dtype="float64")
+
+        def predict(self, X):
+            return np.full(len(X), self._seed / 10_000, dtype="float64")
+
+    monkeypatch.setattr(lookup_transformer, "_LookupTransformerMember", FakeMember)
+    fold = lookup_transformer.LookupTransformerFold(
+        {
+            "lookup_cols": ["v"],
+            "perm_repeats": 1,
+            "fold_seed_offsets": [0, 1000, 2000],
+        },
+        seed=SEED,
+    )
+    X = pd.DataFrame({"v": [1.0, 2.0, 3.0, 4.0]})
+    y = pd.Series([0, 1, 0, 1])
+
+    val_pred = fold.fit(X, y, X, y)
+
+    assert created_seeds == [7, 1007, 2007]
+    assert np.allclose(val_pred, 0.1007)
+    assert np.allclose(fold.predict(X.iloc[:2]), 0.1007)
+    importance = fold.importance()
+    assert importance.to_dict("records") == [{"feature": "v", "gain": 0.0}]
+
+
+@pytest.mark.parametrize("offsets", [[], [0, 0], [0, 1.5], "0,1000"])
+def test_lookup_transformer_rejects_invalid_fold_seed_offsets(offsets):
+    with pytest.raises(ValueError, match="fold_seed_offsets"):
+        lookup_transformer.LookupTransformerFold(
+            {"lookup_cols": ["v"], "fold_seed_offsets": offsets}, seed=SEED
+        )

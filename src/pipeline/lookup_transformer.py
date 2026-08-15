@@ -12,6 +12,10 @@ rank-gauss 수치 embedding(PLR, 완만한 연속 추세)을 더해 Transformer 
 - lookup 대상 컬럼은 설정의 lookup_cols로 명시한다. 나머지 컬럼(연속 파생·placebo
   등)은 원문의 파생 토큰처럼 PLR 전용 토큰이 된다.
 
+티켓 #127의 fold 내 초기화 평균은 파이프라인 시드와 구분되는
+fold_seed_offsets로 설정한다. 파이프라인 시드 s와 offset o의 합을 초기화 시드로
+쓰고, 같은 fold에서 학습한 구성원의 확률 예측을 평균해 fold 예측 하나를 만든다.
+
 torch가 필요하므로 model.py의 adapter가 이 모듈을 lazy import한다.
 """
 
@@ -79,8 +83,8 @@ class _LookupTransformer(nn.Module):
         return self.head(self.tr(self.edrop(t))[:, 0]).squeeze(-1)
 
 
-class LookupTransformerFold:
-    """fold 하나의 인코딩·학습·예측·중요도 상태. adapter가 params 해석과 함께 소유한다."""
+class _LookupTransformerMember:
+    """초기화 시드 하나에 해당하는 fold 학습·예측·중요도 상태."""
 
     def __init__(self, params: dict, seed: int) -> None:
         params = dict(params)
@@ -351,5 +355,75 @@ class LookupTransformerFold:
                 num_p[:, j] = num[perm, j]
                 mask_p[:, j] = mask[perm, j]
                 drops.append(base - roc_auc_score(y_va, self._predict_tensors(ids_p, num_p, mask_p)))
+            gains.append(float(np.mean(drops)))
+        return pd.DataFrame({"feature": self._columns, "gain": gains})
+
+
+class LookupTransformerFold:
+    """fold 하나의 초기화 평균 학습·예측·중요도 상태. adapter가 소유한다."""
+
+    def __init__(self, params: dict, seed: int) -> None:
+        params = dict(params)
+        offsets = params.pop("fold_seed_offsets", [0])
+        if not isinstance(offsets, (list, tuple)) or not offsets:
+            raise ValueError("fold_seed_offsets는 비어 있지 않은 정수 목록이어야 한다.")
+        if any(isinstance(offset, bool) or not isinstance(offset, int) for offset in offsets):
+            raise ValueError("fold_seed_offsets는 비어 있지 않은 정수 목록이어야 한다.")
+        if len(set(offsets)) != len(offsets):
+            raise ValueError(f"fold_seed_offsets에 중복이 있다: {offsets}")
+
+        self._seed = seed
+        self._perm_repeats = int(params.get("perm_repeats", 3))
+        self._members = [
+            _LookupTransformerMember(params, seed + offset) for offset in offsets
+        ]
+        self._columns: list[str] | None = None
+        self._val: tuple[pd.DataFrame, np.ndarray] | None = None
+        self._val_auc: float | None = None
+
+    def fit(
+        self, X_tr: pd.DataFrame, y_tr: pd.Series, X_va: pd.DataFrame, y_va: pd.Series
+    ) -> np.ndarray:
+        self._columns = list(X_va.columns)
+        y_va_np = y_va.to_numpy(dtype="float64")
+        val_pred = np.zeros(len(X_va), dtype="float64")
+        for index, member in enumerate(self._members, start=1):
+            print(
+                f"[lookup_transformer] member {index}/{len(self._members)} "
+                f"seed={member._seed}",
+                flush=True,
+            )
+            member_pred = member.fit(X_tr, y_tr, X_va, y_va)
+            val_pred += member_pred / len(self._members)
+        self._val = (X_va.copy(), y_va_np)
+        self._val_auc = roc_auc_score(y_va_np, val_pred)
+        if len(self._members) > 1:
+            print(
+                f"[lookup_transformer] fold initialization-avg "
+                f"valAUC={self._val_auc:.5f}",
+                flush=True,
+            )
+        return val_pred
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        pred = np.zeros(len(X), dtype="float64")
+        for member in self._members:
+            pred += member.predict(X) / len(self._members)
+        return pred
+
+    def importance(self) -> pd.DataFrame:
+        if len(self._members) == 1:
+            return self._members[0].importance()
+
+        X_va, y_va = self._val
+        base = self._val_auc
+        gains = []
+        for j, col in enumerate(self._columns):
+            drops = []
+            for r in range(self._perm_repeats):
+                rng = np.random.default_rng(self._seed * 10007 + j * 101 + r)
+                X_p = X_va.copy()
+                X_p[col] = X_va[col].take(rng.permutation(len(X_va))).set_axis(X_p.index)
+                drops.append(base - roc_auc_score(y_va, self.predict(X_p)))
             gains.append(float(np.mean(drops)))
         return pd.DataFrame({"feature": self._columns, "gain": gains})
