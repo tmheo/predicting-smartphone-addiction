@@ -199,6 +199,25 @@ ssh \
 
 묶음 해시와 내부 파일 해시를 모두 통과해야 원격 실행을 시작할 수 있다.
 
+## 입력 자료를 저장소에 연결하기
+
+저장소가 `data/`처럼 디렉터리 형태만 무시할 때는 외부 입력 디렉터리 전체를 같은 이름의 심볼릭 링크로 만들지 않는다.
+Git은 디렉터리 심볼릭 링크를 디렉터리로 취급하지 않으므로 `data/` 무시 규칙이 적용되지 않고 작업 폴더에 추적되지 않은 `data` 항목이 생길 수 있다.
+저장소 안에 실제 `data` 디렉터리를 만든 뒤 필요한 입력 파일을 그 안에 각각 심볼릭 링크로 연결한다.
+연결 직후 입력 파일을 읽을 수 있는지와 `git status --porcelain=v1` 결과가 비어 있는지를 모두 확인하고 나서 Python 준비 관문을 시작한다.
+
+```bash
+mkdir data
+ln -s "$GPU_REMOTE_INPUT/data/train.csv" data/train.csv
+ln -s "$GPU_REMOTE_INPUT/data/test.csv" data/test.csv
+ln -s "$GPU_REMOTE_INPUT/data/sample_submission.csv" data/sample_submission.csv
+
+test -s data/train.csv
+test -s data/test.csv
+test -s data/sample_submission.csv
+test -z "$(git status --porcelain=v1)"
+```
+
 ## Python 준비와 실행
 
 유료 원격 자원을 만들기 전에 새 Git 작업 폴더에서 README의 환경 관문 사전 확인을 통과해야 한다.
