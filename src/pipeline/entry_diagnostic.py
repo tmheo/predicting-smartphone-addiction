@@ -436,6 +436,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--fold", type=int, default=DEFAULT_FOLD)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument(
+        "--champion-fold-auc",
+        type=float,
+        default=None,
+        help=(
+            "같은 seed의 저장 예측처럼 장부의 대표 fold AUC와 다른 기준을 고정할 때 쓴다. "
+            "생략하면 champion.yaml의 fold 값을 읽는다."
+        ),
+    )
+    parser.add_argument(
         "--max-5fold-hours",
         type=float,
         default=None,
@@ -477,7 +486,11 @@ def main() -> None:
         test,
         fold=args.fold,
         seed=args.seed,
-        champion_fold_auc=_champion_fold_auc(args.fold),
+        champion_fold_auc=(
+            _champion_fold_auc(args.fold)
+            if args.champion_fold_auc is None
+            else args.champion_fold_auc
+        ),
         limit_hours=args.max_5fold_hours,
         prior_timings={"setup": setup_seconds, "data_load": data_load_seconds},
     )

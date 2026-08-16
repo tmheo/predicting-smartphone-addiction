@@ -14,6 +14,7 @@ from pipeline.entry_diagnostic import (
     IMPORTANCE_NAME,
     PREDICTIONS_NAME,
     RESULT_NAME,
+    parse_args,
     run_fold_diagnostic,
     write_diagnostic,
 )
@@ -93,6 +94,22 @@ def _data() -> tuple[pd.DataFrame, pd.DataFrame]:
     test = train.drop(columns=["addicted_label", "fold"]).iloc[:12].copy()
     test["id"] += n
     return train, test
+
+
+def test_cli_accepts_same_seed_champion_fold_auc(monkeypatch):
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "entry_diagnostic",
+            "configs/exp085.yaml",
+            "--out-dir",
+            "artifacts/entry-exp085",
+            "--champion-fold-auc",
+            "0.9682949113893268",
+        ],
+    )
+    args = parse_args()
+    assert args.champion_fold_auc == 0.9682949113893268
 
 
 def test_fold_zero_is_deterministic_and_does_not_modify_ledgers(monkeypatch, tmp_path):
