@@ -41,6 +41,25 @@ uv run kaggle competitions download -c playground-series-s6e8 -p data
 unzip -o data/playground-series-s6e8.zip -d data && rm data/playground-series-s6e8.zip
 ```
 
+### 새 작업 폴더의 환경 관문 사전 확인
+
+새 Git 작업 폴더에서 시험이나 원격 실행 작업을 시작하기 전에 다음 명령을 한 번 실행한다.
+이 명령이 통과하기 전에는 모델 계산이나 유료 원격 자원 생성을 시작하지 않는다.
+
+```bash
+cd /absolute/path/to/new-worktree
+scripts/verify_environment_gates.sh \
+  --source-root /absolute/path/to/verified-worktree
+```
+
+명령은 검증 목록의 비커밋 입력을 준비하고 다시 확인한 뒤, 전체 시험 수집에서 PyTorch 조기 적재가 없는지 검사한다.
+이어서 Docker의 외부 관리 Python 환경에서 잠긴 가상환경과 `pipeline.entry_diagnostic` 시작 경계를 검증하고 전체 시험을 실행한다.
+Docker를 사용할 수 없거나 어느 관문이든 실패하면 후속 단계로 진행하지 않는다.
+이미 검증된 `data/`가 있는 작업 폴더에서 다시 실행할 때는 `--source-root`를 생략할 수 있다.
+
+실제 Vast.ai 또는 Runpod 계산 자원에서는 이 사전 확인 명령을 다시 실행하지 않는다.
+입력 전송과 해시 검증을 마친 뒤 아래의 원격 Python 실행 관문으로 진입하며, 해당 관문이 실패하면 모델 명령을 시작하지 않고 자원을 정리한다.
+
 ### 새 Git 작업 폴더의 비커밋 입력 준비
 
 새 Git 작업 폴더에서 자료가 필요한 명령을 실행하기 전에 저장소의 검증 목록으로 비커밋 입력을 준비한다.
@@ -105,7 +124,8 @@ uv run jupyter lab
 ├── notebooks/
 │   └── eda.ipynb          # 탐색적 데이터 분석
 ├── scripts/
-│   └── run_remote_python.sh  # 원격 Python 준비 및 실행 관문
+│   ├── run_remote_python.sh          # 원격 Python 준비 및 실행 관문
+│   └── verify_environment_gates.sh  # 유료 자원 생성 전 환경 관문 사전 확인
 ├── docs/
 │   ├── adr/               # 아키텍처 결정 기록
 │   └── agents/            # 에이전트 스킬 설정 (이슈 트래커, 트리아지 라벨 등)

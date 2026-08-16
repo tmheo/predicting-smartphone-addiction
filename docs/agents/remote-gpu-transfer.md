@@ -199,6 +199,19 @@ ssh \
 
 ## Python 준비와 실행
 
+유료 원격 자원을 만들기 전에 새 Git 작업 폴더에서 README의 환경 관문 사전 확인을 통과해야 한다.
+검증된 입력이 있는 기존 작업 폴더를 원본으로 지정해 다음 단일 진입점을 실행한다.
+
+```bash
+cd /absolute/path/to/new-worktree
+scripts/verify_environment_gates.sh \
+  --source-root /absolute/path/to/verified-worktree
+```
+
+이 명령은 비커밋 입력 준비와 전체 시험 수집을 확인하고, 외부 관리 Python 원격 유사 환경에서 가상환경 준비와 `pipeline.entry_diagnostic` 시작까지 검증한 뒤 전체 시험을 실행한다.
+Docker를 사용할 수 없거나 어느 관문이든 실패하면 유료 원격 자원을 만들지 않는다.
+이 로컬 사전 확인은 실제 공급자 자원 안의 준비 경계를 대신하지 않는다.
+
 묶음 해시와 내부 파일 해시를 확인한 다음 모델 코드를 실행하기 전에 저장소의 공통 Python 준비 관문을 통과해야 한다.
 입력 전송 묶음에는 `pyproject.toml`, `uv.lock`, `src/`, `scripts/run_remote_python.sh`와 `scripts/record_remote_python.py`를 포함한다.
 작업별 `run-logs/` 실행 파일에서 시스템 Python 패키지 설치를 직접 구현하지 않는다.

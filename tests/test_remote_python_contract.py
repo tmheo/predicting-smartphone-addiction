@@ -19,7 +19,7 @@ PEP668_IMAGE = "node@sha256:f32b81066cde10a75dbac96646099533316d94bac4150c55da16
 def test_remote_runner_uses_a_locked_virtual_environment_under_pep668(tmp_path: Path) -> None:
     evidence = tmp_path / "environment.json"
     trace = tmp_path / "system-python.trace"
-    model_marker = tmp_path / "model-entered"
+    entry_marker = tmp_path / "entry-diagnostic-started"
     container_script = """
 set -eu
 apt-get update -qq
@@ -37,7 +37,9 @@ SYSTEM_PYTHON_TRACE=/result/system-python.trace \
     --venv /tmp/contract-venv \
     --evidence /result/environment.json \
     -- \
-    -c 'from pathlib import Path; import idna, sys; assert idna.__version__ == "3.10"; assert sys.prefix == "/tmp/contract-venv"; Path("/result/model-entered").touch()'
+    -m pipeline.entry_diagnostic \
+    --marker /result/entry-diagnostic-started \
+    --expected-python-prefix /tmp/contract-venv
 """
 
     completed = subprocess.run(
@@ -62,7 +64,7 @@ SYSTEM_PYTHON_TRACE=/result/system-python.trace \
     )
 
     assert completed.returncode == 0, completed.stdout + completed.stderr
-    assert model_marker.exists()
+    assert entry_marker.exists()
     assert trace.read_text().splitlines() == ["-m venv /tmp/contract-venv"]
     recorded = json.loads(evidence.read_text())
     assert recorded["python_executable"] == "/tmp/contract-venv/bin/python"

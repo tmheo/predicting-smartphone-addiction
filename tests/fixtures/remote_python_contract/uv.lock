@@ -14,7 +14,7 @@ wheels = [
 [[package]]
 name = "remote-python-contract-fixture"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "idna" },
 ]
