@@ -34,9 +34,9 @@ Kaggle 목록 API의 최신 실행 시각은 각각 2026-08-15 16:43:01 UTC와 2
 대신 [공개 출력](https://www.kaggle.com/code/ern711/contextualized-deep-univariate-spline-transformer/output)에는 691,369행 OOF, fold별 시험 예측, fold 지표와 두 제출 파일이 실제로 남아 있다.
 
 두 노트북 소스는 `numpy`, `pandas`, `scipy`, `scikit-learn`, `torch`처럼 실행 환경에 이미 있는 패키지만 가져오고 별도 설치나 버전 고정을 하지 않는다.
-두 노트북의 내려받기 메타데이터와 소스에는 노트북 코드 자체의 명시적 라이선스가 없다.
-첫 노트북은 작성자의 OOF 자료 하나를 CC0라고 본문에 명시하지만, 나머지 17개 입력 자료와 노트북 코드 전체의 사용 조건을 대신하지 않는다.
-따라서 구현을 그대로 복사하는 후속 작업은 명시적 사용 조건을 먼저 확인해야 한다.
+두 노트북의 내려받기 메타데이터와 소스 파일 안에는 사용 조건 문구가 없지만, Kaggle 공개 노트북 소스는 공개 시 Apache License 2.0이 적용된다.
+따라서 사용 조건과 고지 의무를 지키면 노트북 코드를 참고하거나 재사용할 수 있다.
+첫 노트북이 입력으로 쓰는 OOF 자료 하나에 표시한 CC0를 비롯해 입력 자료, 사전 학습 모형, 외부 패키지와 출력 파일의 사용 조건은 노트북 소스와 별도로 확인해야 한다.
 
 ## 167-model 앙상블의 정확한 방법
 
@@ -144,7 +144,7 @@ fold가 달라 엄밀한 차이는 아니지만 공개 spline OOF는 이 값들�
 
 새 티켓은 만들지 않는다.
 167-model 노트북에서 재사용할 검사는 이슈 63과 이슈 64의 기존 질문 안에 들어가며 외부 예측 자체는 지도 규칙으로 제외된다.
-단변량 spline 모델은 공개 실행이 완주되고 계산 가능하지만, 고정 fold 불일치, 전이식 범주 어휘, 낮은 단일 OOF, 사용 조건 불명확과 핵심 제거 실험 부재가 동시에 남는다.
+단변량 spline 모델은 공개 실행이 완주되고 계산 가능하지만, 고정 fold 불일치, 전이식 범주 어휘, 낮은 단일 OOF와 핵심 제거 실험 부재가 동시에 남는다.
 
 향후 원저자나 다른 1차 자료가 학습 fold 전용 어휘와 seed 42 공통 fold로 만든 id 정렬 OOF를 공개하고, 단변량 spline 핵심을 뺀 대조 대비 전체 OOF `+0.0001` 이상과 현재 Lookup·TabM 계열 대비 중복 문턱 `0.998` 미만을 함께 보일 때만 새 진입 진단을 다시 검토한다.
 그 전에는 외부 OOF를 가져오거나 전체 모델을 재구현하지 않는다.
@@ -153,8 +153,8 @@ fold가 달라 엄밀한 차이는 아니지만 공개 spline OOF는 이 값들�
 
 ### 갱신된 결론
 
-공개 노트북 코드는 명시적 사용 허가가 없으므로 그대로 복사하지 않는다.
-그러나 누출 경계와 공통 fold를 바로잡아 전체 모델 구조를 독립 구현한 fold 0 진입 진단은 열 가치가 있다.
+공개 노트북 코드는 Apache License 2.0의 조건과 고지 의무를 지키며 참고하거나 재사용할 수 있다.
+누출 경계와 공통 fold를 바로잡아 전체 모델 구조를 이 저장소의 실행 경계에 맞게 구현한 fold 0 진입 진단은 열 가치가 있다.
 공개 실행의 약 710만 학습 매개변수는 모델 한 개 안에서 학습되는 숫자값의 개수이며, 69만 행 자료와 T4 fold 0 실행 시간 25.2분을 고려하면 그 규모 자체는 탈락 사유가 아니다.
 최초 검토의 "원저자가 공통 fold 제거 실험을 공개할 때까지 기다린다"는 조건은 지나치게 강했다.
 우리 [실험 채택 판정 계약](../adr/0001-experiment-adoption-contract.md)과 [공통 fold](../../artifacts/folds.parquet) 안에서 직접 대조하면 외부 자료가 대신 해결해 줄 필요가 없는 질문이기 때문이다.
@@ -165,8 +165,9 @@ fold가 달라 엄밀한 차이는 아니지만 공개 spline OOF는 이 값들�
 
 ### 최초 기각 근거에서 유지할 것과 고칠 것
 
-- seed 21 fold, 학습·검증·시험을 합친 범주 어휘, 구성 요소 제거 실험 부재와 코드 사용 조건 불명확은 [판본 3 코드](https://www.kaggle.com/code/ern711/contextualized-deep-univariate-spline-transformer/versions/3)를 그대로 실행하거나 공개 OOF를 채택할 수 없다는 근거로는 타당하다.
-- 이 네 항목은 자체 구현에서 공통 fold, 학습 fold 전용 어휘, 사전 고정 제거 대조와 독립 구현으로 고칠 수 있으므로 구조 자체를 기각하는 근거로 쓰면 안 된다.
+- seed 21 fold, 학습·검증·시험을 합친 범주 어휘와 구성 요소 제거 실험 부재는 [판본 3 코드](https://www.kaggle.com/code/ern711/contextualized-deep-univariate-spline-transformer/versions/3)를 그대로 실행하거나 공개 OOF를 채택할 수 없다는 근거로는 타당하다.
+- 이 세 항목은 저장소 구현에서 공통 fold, 학습 fold 전용 어휘와 사전 고정 제거 대조로 고칠 수 있으므로 구조 자체를 기각하는 근거로 쓰면 안 된다.
+- 코드 사용 조건은 기각 근거가 아니며, Kaggle 공개 노트북에 적용되는 Apache License 2.0의 조건과 고지 의무를 따르면 된다.
 - 같은 검증 fold에서 checkpoint를 고르고 그 fold AUC를 보고하는 방식은 약한 선택 편향을 남기지만, 현재 [Lookup-Transformer 구현](../../src/pipeline/lookup_transformer.py)도 검증 fold early stopping을 사용하므로 후보와 기준을 같은 규약으로 맞추는 문제이지 이 구조만의 탈락 사유가 아니다.
 - 공개 최종 OOF `0.9665204982`는 현재 champion `0.9690978395`보다 낮지만 정식 판정이 아닌 수치 비교로는 [후보 풀](../../artifacts/pool.yaml)의 진입 하한인 champion 대비 `-0.01` 안에 있고, 단독 OOF `0.9596584`인 정확값 one-hot 모델도 작은 양수 기여로 유지된 전례가 있어 낮은 단독 점수만으로 다양성 가치를 닫을 수 없다.
 - 공개 최종 경로와 가산 경로의 차이 `+0.004389`는 여러 구성 요소가 한꺼번에 바뀐 결과라 spline의 효과량으로 읽을 수 없다는 최초 지적은 그대로 유효하다.
@@ -204,18 +205,19 @@ fold가 달라 엄밀한 차이는 아니지만 공개 spline OOF는 이 값들�
 - [새 딥러닝 아키텍처 후보 지도](https://github.com/tmheo/predicting-smartphone-addiction/issues/135)는 TabR-S, TabICLv2, AMFormer와 Trompt라는 전체 모형 후보를 이미 골랐지만, 이번 후보는 S6E8에서 직접 완주한 전체 구조를 약 1 GPU 시간의 fold 0 진입 진단으로 먼저 거르므로 그 포트폴리오를 다시 여는 일이 아니다.
 - [최초 노트북 검토](https://github.com/tmheo/predicting-smartphone-addiction/issues/148)의 공개 구현 감사 결과는 유지하되, 공개 구현의 결함을 자체 구현 가능한 구조의 탈락 사유로 확장한 결론만 고친다.
 
-### 누출, 재현성과 독립 구현 경계
+### 누출, 재현성과 구현 경계
 
 자체 구현은 [exp067 피처 계획](../../configs/exp067_lookup_xgb_impute_comps5.yaml), [공통 fold](../../artifacts/folds.parquet)와 seed 42를 그대로 사용해야 한다.
 표준화, knot, 범주 어휘와 모든 전처리는 outer 학습 부분에서만 맞추고, 검증·시험의 미등록값은 학습되지 않은 개별 embedding이 아니라 공통 미등록 식별자로 보낸다.
 첫 진입 진단에서는 노트북의 12개 정확값 목표 인코딩과 12개 빈도 인코딩을 빼야 한다.
 정확값 목표 인코딩은 [Lookup 복원·정확값 목표 인코딩 결정](https://github.com/tmheo/predicting-smartphone-addiction/issues/106)에서 카나리아가 실패했고, 빈도 인코딩은 앞선 [단일 열 빈도와 추가 정확값 표현 결정](https://github.com/tmheo/predicting-smartphone-addiction/issues/49)에서 기각됐으므로 핵심 구조의 효과와 섞을 이유가 없다.
-노트북 코드에는 명시적 사용 허가가 없으므로 코드를 복사하지 않고, 공개된 알고리즘 설명과 사용 조건이 분명한 [수치 임베딩 공식 구현](https://github.com/yandex-research/rtdl-num-embeddings)을 참고해 독립 구현해야 한다.
+노트북 코드는 Apache License 2.0의 조건과 고지 의무를 지키며 참고하거나 재사용할 수 있다.
+[수치 임베딩 공식 구현](https://github.com/yandex-research/rtdl-num-embeddings)도 해당 MIT 사용 조건을 지키며 참고하고, 두 출처의 구현을 누출 없는 `ModelAdapter`와 피처 계획 경계에 맞게 옮긴다.
 
 ### 전체 5-fold 전에 할 저비용 진입 진단
 
 진입 진단의 기준은 exp067의 seed 42, fold 0 저장 예측으로 고정하고 다시 학습하지 않는다.
-첫 후보 `M0`는 exp067의 피처 계획을 사용하면서 노트북의 전체 모델 순서를 보존한 독립 구현이다.
+첫 후보 `M0`는 exp067의 피처 계획을 사용하면서 노트북의 전체 모델 순서를 이 저장소의 실행 경계에 맞게 보존한 구현이다.
 각 연속 열은 다중 해상도 조각선형, 거친 조각선형, 작은 MLP와 원시값 전문가를 동적으로 결합하고 열별 잔차 블록을 통과한다.
 전체 수치 행의 작은 사전 문맥 보정, 열별 가산 보조 손실, 1층 attention, 정확값 범주 embedding과 원래 token·attention token·가산 점수를 함께 받는 최종 MLP도 유지한다.
 노트북의 목표·빈도 인코딩만 이전 자체 실험에서 이미 기각된 입력 피처이므로 제외하며, 이는 모델 구조를 줄이는 변경이 아니라 학습기 비교를 위해 입력 피처 계획을 exp067로 고정하는 변경이다.
@@ -240,13 +242,14 @@ id와 목표값을 맞춘 뒤 현재 후보 풀 16개와 비교한 결과, 공�
 ### 최종 판정
 
 [P3 보강: contextualized deep univariate spline Transformer의 성능·다양성 기여 결정](https://github.com/tmheo/predicting-smartphone-addiction/issues/149)을 실제 실험 티켓으로 열었다.
-티켓의 질문은 "문제를 고쳐 독립 구현한 전체 contextualized deep univariate spline Transformer가 공통 fold에서 현재 Lookup보다 강하거나 후보 풀에 다른 오차를 더하며, 그 효과에서 조각선형 경로가 실제로 기여하는가"여야 한다.
+티켓의 질문은 "문제를 고쳐 저장소 실행 경계에 맞게 구현한 전체 contextualized deep univariate spline Transformer가 공통 fold에서 현재 Lookup보다 강하거나 후보 풀에 다른 오차를 더하며, 그 효과에서 조각선형 경로가 실제로 기여하는가"여야 한다.
 champion 교체 가능성은 낮음에서 중간이고, 다양성 구성원 가능성은 중간으로 본다.
 공개 OOF가 약하지만 풀 하한 안에 있고 Lookup과 처리 순서가 다르기 때문에 다양성 가능성은 남아 있으며, TabM의 PWL과 겹치고 최신 spline 비교가 분류에서 일관된 우위를 보이지 않기 때문에 champion 교체 가능성은 더 낮다.
 전체 구조 진입 진단이 실패하면 해상도 수, 동적 결합 방식, 목표·빈도 인코딩이나 최종 MLP 크기를 따로 조정하는 후속 탐색은 열지 않는다.
 
 ## 출처
 
+- [Kaggle 공식 Meta Kaggle Code](https://www.kaggle.com/datasets/kaggle/meta-kaggle-code)는 Kaggle 공개 노트북 소스가 Apache License 2.0으로 공개된다는 근거다.
 - [S6E8 167 Models Diversity Beats Strength 최신 공개 페이지](https://www.kaggle.com/code/adarsh1077/s6e8-167-models-diversity-beats-strength)는 코드, 서술, 입력 자료와 Public LB 보고치의 1차 출처다.
 - [Contextualized Deep Univariate Spline Transformer 최신 공개 페이지](https://www.kaggle.com/code/ern711/contextualized-deep-univariate-spline-transformer)는 구조, 학습 코드와 fold 규율의 1차 출처다.
 - [Contextualized Deep Univariate Spline Transformer 공개 출력](https://www.kaggle.com/code/ern711/contextualized-deep-univariate-spline-transformer/output)은 OOF, fold 지표, 시험 예측과 실행 시간의 1차 출처다.
