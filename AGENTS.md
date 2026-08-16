@@ -17,6 +17,12 @@ See `docs/agents/triage-labels.md`.
 S6E8 디스커션의 새 글과 코멘트를 `docs/research/discussion-insights.md`에 반영하는 반복 절차.
 See `docs/agents/discussion-update.md`.
 
+### Kaggle public notebook licensing
+
+Kaggle public notebook source is released under the Apache License 2.0.
+When reviewing, adapting, or reusing a public notebook, follow the license and provenance procedure in `docs/agents/kaggle-public-notebook-licensing.md`.
+Verify licenses for input datasets, pretrained models, packages, and external assets separately.
+
 ### Domain docs
 
 Single-context layout: one `CONTEXT.md` and `docs/adr/` at the repo root.
