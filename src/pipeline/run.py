@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -23,6 +24,7 @@ import pandas as pd
 from . import cv, data, initial_score, seed_parallel, tracking
 from .config import STAGES, load_config
 from .plan import FeaturePlan
+from .recovery import FoldRecovery
 
 
 def main() -> None:
@@ -35,6 +37,11 @@ def main() -> None:
         help="실행 단계. 시드는 판정 계약(judgment)의 단계별 시드 상수로 정해진다. (#103)",
     )
     parser.add_argument("--plan", action="store_true", help="학습 없이 실행 계획만 출력")
+    parser.add_argument(
+        "--recovery-dir",
+        type=Path,
+        help="fold 복구 디렉터리. 기본값은 run-recovery/<실험>-<단계>다.",
+    )
     args = parser.parse_args()
 
     # 검증된 설정 파일 = ExperimentConfig 생성 성공. 피처 계획의 누출 규율 검증 포함. (#43, #71)
@@ -62,6 +69,7 @@ def main() -> None:
         print("             progress.*/time.* 진행 기록, artifacts(설정 yaml, oof.parquet, oof_seed_*.parquet,")
         print("             test_pred.parquet, feature_importance.parquet, submission.csv,")
         print("             summary.html 등 결과 요약, logs/run.log)")
+        print(f"fold 복구    : {args.recovery_dir or _default_recovery_dir(cfg)}")
         return
 
     from .observe import RunObserver
@@ -69,7 +77,14 @@ def main() -> None:
     observer = RunObserver.begin(cfg)
     try:
         observer.stage("setup")
-        observer.record_input_hashes(_input_hashes(cfg))
+        input_hashes = _input_hashes(cfg)
+        observer.record_input_hashes(input_hashes)
+        recovery = FoldRecovery.for_run(
+            args.recovery_dir or _default_recovery_dir(cfg),
+            cfg,
+            input_hashes,
+            git_commit=tracking.git_state()["git_commit"],
+        )
 
         observer.stage("data_load")
         train = data.load_csv(cfg.data.train)
@@ -83,7 +98,9 @@ def main() -> None:
 
         # 시드 반복: 예측은 평균, metric은 평균 예측 기준으로 다시 계산. (#15)
         # PIPELINE_SEED_GPUS가 있으면 시드 단위 프로세스 병렬로 GPU를 나눠 쓴다. (#99)
-        results = seed_parallel.run_seeds(cfg, plan, train, test, recorder=observer)
+        results = seed_parallel.run_seeds(
+            cfg, plan, train, test, recorder=observer, recovery=recovery
+        )
 
         observer.stage("evaluation")
         # 시드별 OOF AUC는 평균 재채점으로 fold_aucs가 덮이기 전에 확보한다. (ADR 0001)
@@ -103,6 +120,9 @@ def main() -> None:
                 train[data.TARGET], train["fold"], final.oof["pred"].to_numpy()
             )
             final.importance = pd.concat([r.importance for r in results], ignore_index=True)
+        final.recovery_evidence = [
+            item for result in results for item in result.recovery_evidence
+        ]
         # 확정 재검증의 시드별 비교를 위해 대표 metric과 함께 기록된다. (ADR 0001)
         for seed, auc in seed_aucs.items():
             final.fold_aucs[f"auc_oof_seed_{seed}"] = auc
@@ -127,6 +147,10 @@ def _input_hashes(cfg) -> dict[str, str]:
         {name: data.file_sha256(path) for name, path in initial_score.input_paths(cfg.initial_score).items()}
     )
     return hashes
+
+
+def _default_recovery_dir(cfg) -> Path:
+    return Path("run-recovery") / f"{cfg.name}-{cfg.stage}"
 
 
 if __name__ == "__main__":

@@ -17,6 +17,7 @@ from pipeline import model as model_mod
 from pipeline import seed_parallel
 from pipeline.config import DataConfig, ExperimentConfig, FeatureConfig, ModelConfig
 from pipeline.plan import FeaturePlan
+from pipeline.recovery import FoldRecovery
 
 N_FOLDS = 3
 SEEDS = [7, 11, 13]
@@ -71,7 +72,7 @@ def test_without_env_runs_sequentially_with_per_seed_stages(monkeypatch):
     ]
 
 
-def test_parallel_execution_matches_sequential_and_forwards_folds(monkeypatch):
+def test_parallel_execution_matches_sequential_and_forwards_folds(monkeypatch, tmp_path):
     cfg = experiment_config("logistic_onehot", {"onehot_max_card": 10})
     plan, train, test = prepared_inputs(cfg)
 
@@ -80,7 +81,10 @@ def test_parallel_execution_matches_sequential_and_forwards_folds(monkeypatch):
 
     monkeypatch.setenv(seed_parallel.ENV_GPUS, "0,1")
     recorder = SpyRecorder()
-    parallel = seed_parallel.run_seeds(cfg, plan, train, test, recorder=recorder)
+    recovery = FoldRecovery(tmp_path / "recovery", {"execution": "parallel-test"})
+    parallel = seed_parallel.run_seeds(
+        cfg, plan, train, test, recorder=recorder, recovery=recovery
+    )
 
     # 시드 순서와 예측·지표·중요도가 순차 실행과 동일하다(같은 시드 재심기 계약).
     assert len(parallel) == len(sequential) == len(SEEDS)
@@ -90,6 +94,12 @@ def test_parallel_execution_matches_sequential_and_forwards_folds(monkeypatch):
         pd.testing.assert_frame_equal(seq.importance, par.importance)
         assert seq.fold_aucs == par.fold_aucs
         assert seq.feature_names == par.feature_names
+        assert len(par.recovery_evidence) == N_FOLDS
+        assert not any(item["reused"] for item in par.recovery_evidence)
+
+    assert sorted(path.name for path in (tmp_path / "recovery").iterdir()) == sorted(
+        f"seed_{seed}" for seed in SEEDS
+    )
 
     # 병렬 경로의 단계 기록은 training 하나로 묶이고, fold 완료는 전부 도착한다
     # (시드 간 순서는 비결정적이라 집합으로 비교).

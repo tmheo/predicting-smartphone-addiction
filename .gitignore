@@ -17,6 +17,9 @@ mlartifacts/
 # 실행 로그 로컬 사본 (issue #39: 보존 성공 시 삭제, 실패 시 잔존)
 run-logs/
 
+# 정식 CV fold 복구 상태 (issue #141)
+run-recovery/
+
 # OS
 .DS_Store
 

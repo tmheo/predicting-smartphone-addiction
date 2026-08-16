@@ -14,13 +14,15 @@ artifact는 로컬 mlartifacts/ 아래 파일로 남으므로 소비 방식은 �
   auc_oof_seed_*가 시드별 OOF AUC다(확정 재검증의 시드별 비교 근거, ADR 0001).
 - artifacts: 설정 원본(yaml, 시작 시점), oof.parquet, oof_seed_<seed>.parquet(시드별 OOF,
   묶음 반입의 시드별 재채점 근거, #98), test_pred.parquet, submission.csv,
-  feature_importance.parquet(feature, fold, seed, gain 스키마의 fold별 gain importance). (#19)
+  feature_importance.parquet(feature, fold, seed, gain 스키마의 fold별 gain importance),
+  fold_recovery.json(완료 fold의 해시와 재사용 여부). (#19, #141)
   test_pred는 라벨이 없어 재채점 가치가 없으므로 시드 평균본만 남긴다. (#98)
 - tags: git_commit, git_dirty, 입력 파일 sha256. dirty 실행은 앙상블 후보에서 제외하는 관행. (#14)
 """
 
 from __future__ import annotations
 
+import json
 import subprocess
 import tempfile
 from pathlib import Path
@@ -32,6 +34,7 @@ from .cv import CVResult
 from .data import ID, TARGET
 from .features import PLACEBO
 from .judgment import mean_gain_of, placebo_gain_of
+from .recovery import EVIDENCE_NAME, recovery_evidence
 
 # 실행이 어디 있는가는 실행 저장소(runs)의 지식이다. 기록기는 그 위치에 쓴다.
 from .runs import TRACKING_URI
@@ -129,6 +132,17 @@ def log_final_records(
         result.test_pred.to_parquet(tmp_dir / "test_pred.parquet", index=False)
         result.importance.to_parquet(tmp_dir / "feature_importance.parquet", index=False)
         submission.to_csv(tmp_dir / "submission.csv", index=False)
+        (tmp_dir / EVIDENCE_NAME).write_text(
+            json.dumps(
+                recovery_evidence(result.recovery_evidence),
+                ensure_ascii=False,
+                allow_nan=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n"
+        )
+        names.append(EVIDENCE_NAME)
         for seed, oof in seed_oofs.items():
             names.append(oof_seed_artifact(seed))
             oof.to_parquet(tmp_dir / oof_seed_artifact(seed), index=False)
