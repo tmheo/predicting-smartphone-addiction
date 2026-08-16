@@ -22,6 +22,31 @@ ssh \
 Vast.ai 후속 실행에서도 실행 스크립트와 약 11MB의 입력 묶음을 같은 방식으로 전송하고 원격 SHA-256과 파일 크기를 검증했다.
 이 제약은 공급자가 아니라 로컬 보안 솔루션에서 생기므로 Runpod과 Vast.ai에 동일하게 적용한다.
 
+## 대회 전용 SSH 접속 키
+
+S6E8 동안 Vast.ai와 Runpod은 공급자별로 분리한 고정 Ed25519 키 쌍을 사용한다.
+개별 원격 실행 작업마다 키를 만들거나 계정에 등록하고 삭제하지 않는다.
+개인 기본 SSH 키나 두 공급자가 함께 쓰는 키도 사용하지 않는다.
+
+- Vast.ai 개인 키: `/Users/taemyungheo/.ssh/predicting-smartphone-addiction-vast-ed25519`
+- Vast.ai 공개 키 지문: `SHA256:8AgBh2VtIo6dOWddsToBBf/GRkHVWgOPiq+EoZz19Os`
+- Runpod 개인 키: `/Users/taemyungheo/.ssh/predicting-smartphone-addiction-runpod-ed25519`
+- Runpod 공개 키 지문: `SHA256:SLzTJ8I/aiTM3teG0Nw90iowaDfUiAyayOyMkUyGKJ0`
+
+2026년 8월 16일 두 공급자 계정에서 각 공개 키와 로컬 공개 키가 정확히 일치하는 항목이 하나씩 등록됐음을 확인했다.
+Runpod의 이전 대회용 고아 공개 키와 종료된 이슈 102·106의 작업 전용 키는 계정에서 제거했다.
+
+개인 키 권한은 `0600`, 공개 키 권한은 `0644`로 유지한다.
+공개 키는 각 공급자 계정에 한 번 등록하고 대회가 끝날 때까지 유지한다.
+대회 종료, 해당 공급자 사용 종료, 로컬 장비 분실 또는 키 유출 의심 때만 계정 등록과 로컬 키 쌍을 함께 폐기한다.
+
+유료 자원을 만들기 전에 공급자 계정의 공개 키가 로컬 공개 키와 정확히 일치하는지 읽기 전용으로 확인한다.
+등록값이 없거나 다르면 유료 자원을 만들지 않고 계정 설정 경로에서 복구한다.
+계정 공개 키를 새로 등록한 뒤에는 그 전에 만들어 둔 계산 자원이 자동으로 갱신된다고 가정하지 않고 새 계산 자원을 만든다.
+
+접속에 사용하는 클라이언트 키를 고정해도 원격 서버의 SSH 호스트 키는 계산 자원마다 별도로 검증해야 한다.
+각 원격 실행 작업은 전용 `known_hosts` 파일에 해당 계산 자원의 호스트 키를 고정하고 `StrictHostKeyChecking=yes`를 사용한다.
+
 ## 필수 규칙
 
 1. `scp`, `sftp`, 브라우저 파일 업로드를 평상시 전송 경로로 사용하지 않는다.
@@ -34,7 +59,8 @@ Vast.ai 후속 실행에서도 실행 스크립트와 약 11MB의 입력 묶음�
 8. 결과 회수도 로컬 `.part` 경로에 먼저 받은 뒤 원격 해시와 일치할 때만 최종 이름으로 바꾼다.
 9. 전송 실패나 연결 중단 뒤에는 부분 파일을 결과나 입력으로 사용하지 않는다.
 10. SSH 호스트 키를 미리 확인하고 `StrictHostKeyChecking=yes`를 사용한다.
-11. SSH 키는 원격 실행 작업별로 분리하며, 다른 작업이 같은 키를 참조하는지 확인하지 않고 삭제하지 않는다.
+11. 공급자별 대회 전용 SSH 접속 키를 사용하고 원격 실행 작업별 키를 만들거나 삭제하지 않는다.
+12. SSH 호스트 키와 `known_hosts` 파일은 원격 실행 작업별로 분리한다.
 
 ## 접속 변수
 
@@ -42,7 +68,7 @@ Vast.ai 후속 실행에서도 실행 스크립트와 약 11MB의 입력 묶음�
 비밀 값과 SSH 개인 키를 저장소에 기록하지 않는다.
 
 ```bash
-GPU_SSH_KEY=/absolute/path/to/task-specific-key
+GPU_SSH_KEY=/absolute/path/to/provider-specific-competition-key
 GPU_SSH_PORT=12345
 GPU_SSH_TARGET=root@example-host
 GPU_REMOTE_ROOT=/workspace/example-job
