@@ -9,6 +9,9 @@ __pycache__/
 # Competition data (downloaded via kaggle CLI, not committed)
 data/
 
+# 공개 사전학습 가중치 (원격 실행 명세의 SHA-256으로 검증, 커밋하지 않음)
+artifacts/checkpoints/
+
 # MLflow local tracking (issue #14/#17)
 mlflow.db
 mlruns/
