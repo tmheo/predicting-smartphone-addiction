@@ -779,6 +779,45 @@ class TromptAdapter:
         return self._impl.entry_abort_reason()
 
 
+class AMFormerAdapter:
+    """논문 수식으로 독립 구현한 AMFormer adapter. (#144)"""
+
+    def __init__(self, params: dict, fit: dict, seed: int) -> None:
+        self._params = params
+        self._fit = fit
+        self._seed = seed
+        self._impl = None
+
+    def fit(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
+    ) -> np.ndarray:
+        from . import amformer
+
+        _reject_initial_score("amformer", initial_score_tr, initial_score_va)
+        if self._fit:
+            raise ValueError(f"amformer가 모르는 fit 설정: {sorted(self._fit)}")
+        self._impl = amformer.AMFormerFold(self._params, self._seed)
+        return self._impl.fit(X_tr, y_tr, X_va, y_va)
+
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray:
+        _reject_initial_score("amformer", initial_score, None)
+        return self._impl.predict(X)
+
+    def importance(self) -> pd.DataFrame:
+        return self._impl.importance()
+
+    def entry_diagnostics(self) -> AdapterDiagnostics:
+        return self._impl.entry_diagnostics()
+
+
 def _reject_initial_score(
     kind: str, initial_score_tr: pd.Series | None, initial_score_va: pd.Series | None
 ) -> None:
@@ -799,6 +838,7 @@ MODEL_REGISTRY: dict[str, Callable[[dict, dict, int], ModelAdapter]] = {
     "tabr_s": TabRSAdapter,
     "tabiclv2": TabICLv2Adapter,
     "trompt": TromptAdapter,
+    "amformer": AMFormerAdapter,
 }
 
 

@@ -1,0 +1,93 @@
+# 이슈 #144: AMFormer의 champion 교체 및 후보 풀 다양성 기여 결정.
+# exp067 Lookup-Transformer champion의 33개 피처에 원시 수치 열 9개의 결측 표시를
+# 내부 token으로 더해 총 42개 token을 사용한다.
+# GPL-3.0 공식 코드는 동작 대조에만 쓰고 모델은 논문 수식에서 독립 구현한다.
+name: exp085_amformer
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions: [social_frac, work_frac, leisure_frac, resid_frac, week_total]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: amformer
+  params:
+    missing_indicator_cols:
+      [
+        age,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+      ]
+    layers: 3
+    d_model: 128
+    heads: 8
+    groups: [42, 42, 42]
+    prod_num_per_group: [4, 4, 4]
+    cluster: true
+    target_mode: mix
+    token_descent: false
+    use_prod: true
+    use_cls_token: true
+    lr: 0.0001
+    weight_decay: 0.00001
+    attention_dropout: 0.2
+    dropout: 0.1
+    epochs: 50
+    patience: 5
+    batch_size: 512
+    eval_batch_size: 8192
+    perm_sample: 8192
+    perm_repeats: 1
+    device: cuda
+  fit: {}
