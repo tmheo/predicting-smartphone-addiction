@@ -1,7 +1,7 @@
 # 이슈 #145: Trompt의 champion 교체 및 후보 풀 다양성 기여 결정.
 # champion의 33개 특성에 Trompt 전용 결측 표시 9열을 더한다.
 # 중앙값 대치와 표준화는 outer 학습 fold 안에서 adapter가 수행한다.
-name: exp085_trompt
+name: exp086_trompt
 
 data:
   train: data/train.csv
