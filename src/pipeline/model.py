@@ -562,6 +562,64 @@ class LookupTransformerAdapter:
         return self._impl.importance()
 
 
+class ContextualizedSplineTransformerAdapter:
+    """단변량 선행 학습과 얕은 상호작용을 결합한 모델 adapter. (#149)
+
+    구현은 torch가 필요한 contextualized_spline_transformer 모듈에 있고 여기서
+    지연 import한다. 수치 표준화, knot와 정확값 어휘는 outer 학습 부분에서만
+    맞추며, ``numeric_mode``로 M0 조각선형 경로와 A0 주기 제거 대조를 고른다.
+    """
+
+    def __init__(self, params: dict, fit: dict, seed: int) -> None:
+        mode = params.get("numeric_mode", "spline")
+        if mode not in {"spline", "periodic"}:
+            raise ValueError(
+                f"numeric_mode는 ['periodic', 'spline'] 중 하나여야 한다: {mode!r}"
+            )
+        self._params = params
+        self._fit = fit
+        self._seed = seed
+        self._impl = None
+
+    def fit(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
+    ) -> np.ndarray:
+        from . import contextualized_spline_transformer
+
+        _reject_initial_score(
+            "contextualized_spline_transformer", initial_score_tr, initial_score_va
+        )
+        if self._fit:
+            raise ValueError(
+                "contextualized_spline_transformer가 모르는 fit 설정: "
+                f"{sorted(self._fit)}"
+            )
+        self._impl = (
+            contextualized_spline_transformer.ContextualizedSplineTransformerFold(
+                self._params, self._seed
+            )
+        )
+        return self._impl.fit(X_tr, y_tr, X_va, y_va)
+
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray:
+        _reject_initial_score("contextualized_spline_transformer", initial_score, None)
+        return self._impl.predict(X)
+
+    def importance(self) -> pd.DataFrame:
+        return self._impl.importance()
+
+    def entry_diagnostics(self) -> AdapterDiagnostics:
+        return self._impl.entry_diagnostics()
+
+
 class TabMAdapter:
     """TabM(pytabkit) adapter. (#61)
 
@@ -735,6 +793,7 @@ MODEL_REGISTRY: dict[str, Callable[[dict, dict, int], ModelAdapter]] = {
     "hist_gradient_boosting": HistGradientBoostingAdapter,
     "logistic_onehot": LogisticOnehotAdapter,
     "lookup_transformer": LookupTransformerAdapter,
+    "contextualized_spline_transformer": ContextualizedSplineTransformerAdapter,
     "tabm": TabMAdapter,
     "tabpfn3": TabPFN3Adapter,
     "tabr_s": TabRSAdapter,
