@@ -59,6 +59,16 @@ uv run --frozen python -m pipeline.private_inputs check
 누락, 해시 불일치, 일반 파일이 아닌 입력, 심볼릭 링크, 쓰기 가능 상태 또는 목록 밖 입력이 있으면 명령은 종료 코드가 0이 아닌 값으로 끝난다.
 새 입력이 필요하면 `data/` 전체를 연결하거나 임의로 복사하지 말고 검증된 SHA-256과 함께 목록을 변경한다.
 
+### 시험 실행
+
+```bash
+uv run pytest
+```
+
+`test_model_*.py`에 있는 모형 시험 파일은 macOS OpenMP 충돌을 막기 위해 파일마다 별도 Python 프로세스에서 실행된다.
+시험 모듈을 수집하는 동안 `torch`를 적재하면 전체 수집이 명확한 오류로 중단된다.
+PyTorch와 XGBoost 또는 LightGBM을 한 시험에서 함께 확인해야 하면 위험한 실행 순서 전체를 명시적인 자식 프로세스 안에 둔다.
+
 ### 노트북 실행
 
 ```bash
