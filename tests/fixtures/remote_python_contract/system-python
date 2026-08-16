@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+printf '%s\n' "$*" >> "${SYSTEM_PYTHON_TRACE:?}"
+exec /usr/bin/python3 "$@"

@@ -69,6 +69,27 @@ uv run pytest
 시험 모듈을 수집하는 동안 `torch`를 적재하면 전체 수집이 명확한 오류로 중단된다.
 PyTorch와 XGBoost 또는 LightGBM을 한 시험에서 함께 확인해야 하면 위험한 실행 순서 전체를 명시적인 자식 프로세스 안에 둔다.
 
+### 원격 Python 실행
+
+Vast.ai와 Runpod에서 모형 명령을 실행할 때는 시스템 Python에 패키지를 설치하지 않고 공통 실행 명령을 사용한다.
+입력 전송 묶음에는 `pyproject.toml`, `uv.lock`, `src/`, `scripts/run_remote_python.sh`와 `scripts/record_remote_python.py`를 함께 넣는다.
+
+```bash
+scripts/run_remote_python.sh \
+  --system-python python3 \
+  --project /workspace/job/input \
+  --venv /workspace/job/python-env \
+  --evidence /workspace/job/results/python-environment.json \
+  -- \
+  -m pipeline.entry_diagnostic configs/expNNN.yaml \
+  --out-dir /workspace/job/results/entry-expNNN
+```
+
+`--` 뒤에는 `python` 명령 자체가 아니라 가상환경 Python에 전달할 인수만 둔다.
+실행 명령은 존재하지 않는 작업 전용 가상환경 경로만 받아들이고, 그 안에 `uv==0.11.7`을 설치한 뒤 저장소의 의존성 선언과 `uv.lock`이 일치하는지 확인하며 정확히 잠긴 판본을 설치한다.
+준비가 끝나면 Python 실행 파일, Python 판본, 설치 도구 판본과 설치된 모든 패키지 판본을 지정한 JSON 파일에 기록한다.
+가상환경 생성, 잠금 확인, 의존성 설치 또는 증거 기록이 실패하면 사용자 명령에는 진입하지 않는다.
+
 ### 노트북 실행
 
 ```bash
@@ -81,6 +102,8 @@ uv run jupyter lab
 ├── data/                  # 대회 데이터 (gitignore)
 ├── notebooks/
 │   └── eda.ipynb          # 탐색적 데이터 분석
+├── scripts/
+│   └── run_remote_python.sh  # 원격 Python 준비 및 실행 관문
 ├── docs/
 │   ├── adr/               # 아키텍처 결정 기록
 │   └── agents/            # 에이전트 스킬 설정 (이슈 트래커, 트리아지 라벨 등)

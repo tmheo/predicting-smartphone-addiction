@@ -197,6 +197,38 @@ ssh \
 
 묶음 해시와 내부 파일 해시를 모두 통과해야 원격 실행을 시작할 수 있다.
 
+## Python 준비와 실행
+
+묶음 해시와 내부 파일 해시를 확인한 다음 모델 코드를 실행하기 전에 저장소의 공통 Python 준비 관문을 통과해야 한다.
+입력 전송 묶음에는 `pyproject.toml`, `uv.lock`, `src/`, `scripts/run_remote_python.sh`와 `scripts/record_remote_python.py`를 포함한다.
+작업별 `run-logs/` 실행 파일에서 시스템 Python 패키지 설치를 직접 구현하지 않는다.
+`pip install --break-system-packages`도 사용하지 않는다.
+
+다음 명령을 공급자와 관계없이 같은 형식으로 사용한다.
+경로와 Python 인수는 원격 실행 명세에 고정한 값으로 바꾼다.
+
+```bash
+GPU_REMOTE_PROJECT="$GPU_REMOTE_ROOT/input"
+GPU_REMOTE_VENV="$GPU_REMOTE_ROOT/python-env"
+GPU_REMOTE_EVIDENCE="$GPU_REMOTE_ROOT/results/python-environment.json"
+
+"$GPU_REMOTE_PROJECT/scripts/run_remote_python.sh" \
+  --system-python python3 \
+  --project "$GPU_REMOTE_PROJECT" \
+  --venv "$GPU_REMOTE_VENV" \
+  --evidence "$GPU_REMOTE_EVIDENCE" \
+  -- \
+  -m pipeline.entry_diagnostic configs/expNNN.yaml \
+  --out-dir "$GPU_REMOTE_ROOT/results/entry-expNNN"
+```
+
+`--` 뒤는 가상환경 Python에 전달할 인수이며 별도의 `python` 또는 `pip` 실행 파일을 지정하지 않는다.
+가상환경 경로는 존재하지 않는 작업 전용 경로여야 한다.
+관문은 시스템 Python을 가상환경 생성에만 사용하고, 이후 설치와 사용자 명령은 가상환경 실행 파일로 수행한다.
+고정한 `uv` 판본으로 선언과 `uv.lock`의 일치를 검사한 뒤 잠긴 의존성만 설치한다.
+Python 실행 파일, Python 판본, 설치 도구 판본과 설치된 패키지 판본은 증거 JSON에 기록되므로 실행 기록 묶음에 포함해 회수한다.
+준비 단계가 실패하면 모델 명령을 시작하지 않고 해당 원격 실행 작업을 실패로 확정한 뒤 결과 회수와 자원 정리 절차를 따른다.
+
 ## 결과 회수
 
 원격에서 결과 묶음과 SHA-256을 먼저 만든다.
