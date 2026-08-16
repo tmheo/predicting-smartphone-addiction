@@ -16,6 +16,10 @@ from sklearn.metrics import roc_auc_score
 from pipeline.data import ID
 from pipeline.ensemble import (
     COMBINER_REGISTRY,
+    CombinerConvergenceError,
+    EmpiricalCDFTransformer,
+    LogisticLinearCombiner,
+    PerformanceWeightedRankMeanCombiner,
     RankMeanCombiner,
     RidgeLogitCombiner,
     evaluate_nested,
@@ -46,10 +50,33 @@ def make_labels(seed: int = 1) -> pd.Series:
     return pd.Series(rng.integers(0, 2, N), index=make_index())
 
 
-def test_registry_holds_reference_adapters():
-    assert list(COMBINER_REGISTRY) == ["rank_mean", "ridge_logit"]
-    # 복잡도 서열: 무학습 < 학습. #64의 두 전략이 사이(2·3)에 선언된다.
-    assert COMBINER_REGISTRY["rank_mean"].complexity < COMBINER_REGISTRY["ridge_logit"].complexity
+def test_registry_holds_reference_and_issue_64_adapters():
+    assert list(COMBINER_REGISTRY) == [
+        "rank_mean",
+        "performance_weighted_rank_mean",
+        "logit_logistic",
+        "rank_logistic",
+        "ridge_logit_alpha_0p01",
+        "ridge_logit_alpha_0p1",
+        "ridge_logit",
+        "ridge_logit_alpha_10",
+        "ridge_logit_alpha_100",
+        "rank_gauss_logistic",
+        "rank_logit_logistic",
+    ]
+    # 복잡도 서열: 무학습 < 제한 가중 < 계수 학습 < 이중 표현.
+    assert (
+        COMBINER_REGISTRY["rank_mean"].complexity
+        < COMBINER_REGISTRY["ridge_logit"].complexity
+    )
+    assert (
+        COMBINER_REGISTRY["performance_weighted_rank_mean"].complexity
+        < COMBINER_REGISTRY["logit_logistic"].complexity
+    )
+    assert (
+        COMBINER_REGISTRY["rank_logit_logistic"].complexity
+        > COMBINER_REGISTRY["logit_logistic"].complexity
+    )
 
 
 def test_rank_ensemble_auc_uses_rank_mean_formula():
@@ -82,6 +109,36 @@ def test_rank_mean_combiner_fit_is_identity_and_summary_uniform():
     fitted = RankMeanCombiner().fit(preds, make_labels())
     assert fitted.summary() == {c: pytest.approx(1 / 3) for c in preds.columns}
     np.testing.assert_array_equal(fitted.predict(preds.iloc[:10]), rank_mean(preds.iloc[:10]))
+
+
+def test_performance_weighted_rank_mean_uses_inner_auc_advantage():
+    y = make_labels()
+    preds = pd.DataFrame(
+        {
+            "strong": 0.1 + 0.8 * y,
+            "weak": 0.4 + 0.2 * y,
+            "inverse": 0.9 - 0.8 * y,
+        },
+        index=make_index(),
+    )
+    fitted = PerformanceWeightedRankMeanCombiner().fit(preds, y)
+    assert fitted.summary() == {
+        "strong": pytest.approx(0.5),
+        "weak": pytest.approx(0.5),
+        "inverse": 0.0,
+    }
+    outer = preds.iloc[:10].iloc[::-1]
+    expected = outer.rank(pct=True).to_numpy() @ np.array([0.5, 0.5, 0.0])
+    np.testing.assert_array_equal(fitted.predict(outer), expected)
+
+
+def test_performance_weighted_rank_mean_falls_back_when_no_member_beats_random():
+    y = make_labels()
+    preds = pd.DataFrame(
+        {"inverse": 1.0 - y, "constant": np.full(N, 0.5)}, index=make_index()
+    )
+    fitted = PerformanceWeightedRankMeanCombiner().fit(preds, y)
+    assert fitted.summary() == {"inverse": 0.5, "constant": 0.5}
 
 
 def test_ridge_logit_learns_informative_member():
@@ -118,6 +175,83 @@ def test_ridge_logit_alpha_is_constructor_argument():
     loose = RidgeLogitCombiner(alpha=0.001).fit(preds, y).summary()
     tight = RidgeLogitCombiner(alpha=1000.0).fit(preds, y).summary()
     assert sum(abs(w) for w in tight.values()) < sum(abs(w) for w in loose.values())
+
+
+@pytest.mark.parametrize(
+    "representation", ["rank", "logit", "rank_gauss", "rank_logit"]
+)
+def test_logistic_linear_representations_fit_and_predict_float64(representation):
+    rng = np.random.default_rng(7)
+    y = make_labels()
+    preds = pd.DataFrame(
+        {
+            "informative": np.clip(0.2 + 0.6 * y + rng.normal(0, 0.05, N), 0.0, 1.0),
+            "noise": rng.random(N),
+        },
+        index=make_index(),
+    )
+    fitted = LogisticLinearCombiner(
+        f"test_{representation}", representation, 9
+    ).fit(preds, y)
+    prediction = fitted.predict(preds.iloc[:10])
+    assert prediction.dtype == np.float64
+    assert np.isfinite(prediction).all()
+    assert set(fitted.summary()) == {"informative", "noise"}
+    assert int(np.max(fitted.model.n_iter_)) < fitted.model.max_iter
+
+
+def test_rank_transform_is_fitted_only_on_inner_rows():
+    y = make_labels()
+    inner = pd.DataFrame(
+        {"a": np.linspace(0.2, 0.8, N), "b": np.linspace(0.1, 0.9, N)},
+        index=make_index(),
+    )
+    fitted = LogisticLinearCombiner("rank_test", "rank", 9).fit(inner, y)
+    assert fitted.quantiles is not None
+    assert fitted.quantiles.sorted_columns is not None
+    np.testing.assert_array_equal(
+        fitted.quantiles.sorted_columns[0][[0, -1]], [0.2, 0.8]
+    )
+    np.testing.assert_array_equal(
+        fitted.quantiles.sorted_columns[1][[0, -1]], [0.1, 0.9]
+    )
+    outer = pd.DataFrame({"a": [-100.0, 100.0], "b": [-100.0, 100.0]})
+    assert np.isfinite(fitted.predict(outer)).all()
+
+
+def test_empirical_cdf_uses_midranks_and_clips_outer_extremes():
+    inner = np.array([[0.0], [1.0], [1.0], [3.0]], dtype=np.float64)
+    transformer = EmpiricalCDFTransformer("uniform").fit(inner)
+    np.testing.assert_array_equal(
+        transformer.transform(inner).ravel(), [0.125, 0.5, 0.5, 0.875]
+    )
+    outer = np.array([[-10.0], [10.0]], dtype=np.float64)
+    np.testing.assert_array_equal(transformer.transform(outer).ravel(), [0.125, 0.875])
+
+    normal = EmpiricalCDFTransformer("normal").fit(inner).transform(outer)
+    assert np.isfinite(normal).all()
+    assert normal[0, 0] < 0 < normal[1, 0]
+
+
+def test_logistic_linear_rejects_non_convergence():
+    preds = make_preds(members=8)
+    y = make_labels()
+    combiner = LogisticLinearCombiner(
+        "will_not_converge", "rank_logit", 9, max_iter=1
+    )
+    with pytest.raises(CombinerConvergenceError, match=r"max\(n_iter_\)=1"):
+        combiner.fit(preds, y)
+
+
+def test_nested_evaluation_reports_non_convergent_outer_fold():
+    preds = make_preds(members=8)
+    y = make_labels()
+    fold_of = pd.Series(np.arange(N) % 5, index=make_index())
+    combiner = LogisticLinearCombiner(
+        "will_not_converge", "rank_logit", 9, max_iter=1
+    )
+    with pytest.raises(CombinerConvergenceError, match="outer fold 0에서 미수렴"):
+        evaluate_nested(combiner, preds, fold_of, y)
 
 
 class SpyCombiner:

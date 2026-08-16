@@ -19,6 +19,7 @@ dependencies = [
     "pytabkit>=1.7.3",
     "pyyaml>=6.0.3",
     "scikit-learn>=1.9.0",
+    "scipy>=1.16.1",
     "seaborn>=0.13.2",
     "tabicl==2.1.1",
     "tabpfn==8.3.0",
