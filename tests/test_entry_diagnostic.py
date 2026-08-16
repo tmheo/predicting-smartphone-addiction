@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -193,4 +194,32 @@ def test_wrong_validation_row_count_is_saved_as_stop_result(monkeypatch):
     assert run.result["rows"]["validation_predictions"] == 19
     assert run.result["validation"]["row_count_ok"] is False
     assert run.result["validation"]["auc"] is None
+    assert run.result["decision"]["status"] == "stop"
+
+
+def test_tabr_s_cuda_memory_above_ninety_percent_stops_promotion(monkeypatch):
+    from pipeline import entry_diagnostic as diagnostic_mod
+
+    monkeypatch.setitem(model_mod.MODEL_REGISTRY, "tabr_s", DiagnosticFakeAdapter)
+    monkeypatch.setattr(diagnostic_mod, "_reset_cuda_peak", lambda: True)
+    monkeypatch.setattr(
+        diagnostic_mod,
+        "_cuda_peak",
+        lambda enabled: {
+            "available": True,
+            "source": "test",
+            "max_allocated_bytes": 94,
+            "max_reserved_bytes": 91,
+            "device_total_bytes": 100,
+        },
+    )
+    cfg = replace(_config(), model=ModelConfig(kind="tabr_s", params={}, fit={}))
+    plan = FeaturePlan.from_config(cfg.features)
+    train, test = _data()
+    train, test = plan.apply_dataset_wide(train, test)
+
+    run = run_fold_diagnostic(cfg, plan, train, test, champion_fold_auc=0.5)
+
+    assert run.result["decision"]["checks"]["cuda_memory_limit"] is False
+    assert run.result["projection"]["cuda_memory_fraction"] == 0.91
     assert run.result["decision"]["status"] == "stop"
