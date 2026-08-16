@@ -14,14 +14,14 @@ import argparse
 import json
 import shutil
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_auc_score
 import yaml
+from sklearn.metrics import roc_auc_score
 
 from . import data, initial_score, model, tracking
 from .config import ExperimentConfig, load_config
