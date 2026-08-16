@@ -81,6 +81,8 @@ Vast.ai 명령줄 도구 v1.5.4의 `create ssh-key`는 위치 인수로 받은 �
 등록 뒤에는 계정 값을 다시 조회해 로컬 공개 키와 정확히 일치하는지 확인한다.
 
 계산 자원이 `running`이 된 뒤에도 SSH 서버의 인증 준비가 끝나지 않았을 수 있다.
+접속 주소와 포트는 `show instance`의 `ssh_host`와 `ssh_port`를 직접 조합하지 않고 공식 `vastai ssh-url <인스턴스 ID>` 결과로 결정한다.
+Jupyter 실행 유형에서는 실제 SSH 포트가 원시 `ssh_port`와 다를 수 있다.
 작업별 호스트 키를 고정한 뒤 `BatchMode=yes`, `IdentitiesOnly=yes`와 Vast.ai 대회 전용 개인 키로 `ssh ... true`가 성공할 때까지 제한된 간격으로 최대 5분 동안 확인한다.
 실제 SSH 인증을 통과해야 입력 전송과 환경 검사를 시작한다.
 

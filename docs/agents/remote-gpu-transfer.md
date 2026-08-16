@@ -66,6 +66,8 @@ Runpod의 이전 대회용 고아 공개 키와 종료된 이슈 102·106의 작
 
 아래 값은 공급자 화면이나 공식 명령줄 도구로 확인한 실제 값으로 설정한다.
 비밀 값과 SSH 개인 키를 저장소에 기록하지 않는다.
+Vast.ai에서는 `show instance`의 원시 SSH 필드를 직접 조합하지 않고 `vastai ssh-url <인스턴스 ID>` 결과에서 대상과 포트를 가져온다.
+Jupyter 실행 유형에서는 명령줄 도구가 원시 `ssh_port`를 보정하므로 이 경로를 우회하면 잘못된 포트에 접속할 수 있다.
 
 ```bash
 GPU_SSH_KEY=/absolute/path/to/provider-specific-competition-key
