@@ -189,6 +189,10 @@ def run_fold_diagnostic(
         initial_scores.train.loc[va_idx] if initial_scores is not None else None,
     )
     timings["fit_and_validation_predict"] = _seconds(clock, started)
+    started = clock()
+    adapter_diagnostics = model.collect_entry_diagnostics(adapter)
+    adapter_abort_reason = model.collect_entry_abort_reason(adapter)
+    timings["adapter_diagnostics"] = _seconds(clock, started)
 
     validation_pred = np.asarray(raw_validation_pred, dtype="float64")
     row_count_ok = validation_pred.shape == (len(va_idx),)
@@ -212,25 +216,34 @@ def run_fold_diagnostic(
         else None
     )
 
-    started = clock()
-    test_pred = np.asarray(
-        adapter.predict(
-            X_test_fold,
-            initial_scores.test if initial_scores is not None else None,
-        ),
-        dtype="float64",
-    )
-    timings["test_predict"] = _seconds(clock, started)
-    test_prediction_ok = test_pred.shape == (len(test),) and bool(np.isfinite(test_pred).all())
+    if adapter_abort_reason is None:
+        started = clock()
+        test_pred = np.asarray(
+            adapter.predict(
+                X_test_fold,
+                initial_scores.test if initial_scores is not None else None,
+            ),
+            dtype="float64",
+        )
+        timings["test_predict"] = _seconds(clock, started)
+        test_prediction_ok = test_pred.shape == (len(test),) and bool(
+            np.isfinite(test_pred).all()
+        )
 
-    started = clock()
-    importance = adapter.importance().copy()
-    _validate_importance(importance, list(X_fold.columns))
-    timings["importance"] = _seconds(clock, started)
-
-    started = clock()
-    adapter_diagnostics = model.collect_entry_diagnostics(adapter)
-    timings["adapter_diagnostics"] = _seconds(clock, started)
+        started = clock()
+        importance = adapter.importance().copy()
+        _validate_importance(importance, list(X_fold.columns))
+        timings["importance"] = _seconds(clock, started)
+    else:
+        test_prediction_ok = False
+        importance = pd.DataFrame(
+            {
+                "feature": pd.Series(dtype="object"),
+                "gain": pd.Series(dtype="float64"),
+            }
+        )
+        timings["test_predict"] = 0.0
+        timings["importance"] = 0.0
     cuda = _cuda_peak(cuda_enabled)
 
     fold_seconds = sum(
@@ -256,6 +269,13 @@ def run_fold_diagnostic(
         }
     )
     projected_seconds = one_time_seconds + 5 * fold_seconds
+    adapter_projected_seconds = adapter_diagnostics.observations.get(
+        "projected_5fold_training_seconds"
+    )
+    if isinstance(adapter_projected_seconds, (int, float)) and np.isfinite(
+        adapter_projected_seconds
+    ):
+        projected_seconds = max(projected_seconds, float(adapter_projected_seconds))
     timings["total"] = (
         sum(prior_timings.values()) + _seconds(clock, total_started)
         if prior_timings
@@ -290,6 +310,7 @@ def run_fold_diagnostic(
         "validation_predictions_finite": finite_ok,
         "test_prediction_shape_and_finiteness": test_prediction_ok,
         "adapter_assertions": all(adapter_diagnostics.assertions.values()),
+        "adapter_entry_abort": adapter_abort_reason is None,
         "fold_auc_floor": auc is not None and auc >= auc_floor,
         "fold_time_limit": fold_time_ok,
         "cuda_memory_limit": cuda_memory_ok,
@@ -307,6 +328,8 @@ def run_fold_diagnostic(
     for name, passed in adapter_diagnostics.assertions.items():
         if not passed:
             reasons.append(f"모델 assertion 실패: {name}")
+    if adapter_abort_reason is not None:
+        reasons.append(f"모델 진입 중단: {adapter_abort_reason}")
     if not checks["fold_auc_floor"]:
         reasons.append(f"fold {fold} AUC가 승격 하한 {auc_floor:.6f}보다 낮다.")
     if not checks["fold_time_limit"]:
@@ -360,6 +383,7 @@ def run_fold_diagnostic(
         "adapter": {
             "assertions": adapter_diagnostics.assertions,
             "observations": adapter_diagnostics.observations,
+            "abort_reason": adapter_abort_reason,
         },
         "projection": {
             "seed": seed,

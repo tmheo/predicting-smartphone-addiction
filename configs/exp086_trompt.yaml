@@ -80,4 +80,5 @@ model:
     patience: 5
     perm_sample: 8192
     perm_repeats: 1
+    max_projected_5fold_hours: 24
   fit: {}

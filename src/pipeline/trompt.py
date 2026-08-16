@@ -301,11 +301,20 @@ class TromptFold:
         self._patience = int(params.pop("patience", 5))
         self._perm_sample = int(params.pop("perm_sample", 8192))
         self._perm_repeats = int(params.pop("perm_repeats", 1))
+        raw_projected_limit = params.pop("max_projected_5fold_hours", None)
+        self._max_projected_5fold_hours = (
+            None if raw_projected_limit is None else float(raw_projected_limit)
+        )
         self._device_name = params.pop("device", None)
         if params:
             raise ValueError(f"trompt가 모르는 params: {sorted(params)}")
         if self._prompts < 2 or self._prompts % 2:
             raise ValueError("prompts는 2 이상의 짝수여야 한다.")
+        if (
+            self._max_projected_5fold_hours is not None
+            and self._max_projected_5fold_hours <= 0
+        ):
+            raise ValueError("max_projected_5fold_hours는 양수여야 한다.")
         if (
             min(
                 self._width,
@@ -339,6 +348,11 @@ class TromptFold:
         self._capacity_attempts: list[dict[str, object]] = []
         self._effective_prompts = self._prompts
         self._effective_batch_size = self._batch_size
+        self._effective_eval_batch_size = min(
+            self._eval_batch_size, self._effective_batch_size
+        )
+        self._projected_5fold_training_seconds: float | None = None
+        self._entry_abort_reason: str | None = None
 
     def _new_model(self, prompts: int) -> _Trompt:
         return _Trompt(
@@ -463,6 +477,7 @@ class TromptFold:
             if within_limit:
                 self._effective_prompts = prompts
                 self._effective_batch_size = batch_size
+                self._effective_eval_batch_size = min(self._eval_batch_size, batch_size)
                 self._probe = {
                     **first,
                     "deterministic": deterministic,
@@ -478,8 +493,10 @@ class TromptFold:
         self._model.eval()
         predictions: list[np.ndarray] = []
         with torch.inference_mode():
-            for start in range(0, len(encoded.numeric), self._eval_batch_size):
-                stop = start + self._eval_batch_size
+            for start in range(
+                0, len(encoded.numeric), self._effective_eval_batch_size
+            ):
+                stop = start + self._effective_eval_batch_size
                 x_numeric = encoded.numeric[start:stop].to(self._device)
                 x_categorical = (
                     None
@@ -548,6 +565,9 @@ class TromptFold:
             self._training_losses.append(training_loss)
             self._validation_aucs.append(auc)
             self._epoch_seconds.append(seconds)
+            self._projected_5fold_training_seconds = (
+                float(np.mean(self._epoch_seconds)) * self._epochs * 5
+            )
             if auc > best_auc:
                 best_auc = auc
                 self._best_epoch = epoch + 1
@@ -564,6 +584,18 @@ class TromptFold:
                 f"seconds={seconds:.1f} stale={stale_epochs}/{self._patience}",
                 flush=True,
             )
+            if (
+                self._max_projected_5fold_hours is not None
+                and self._projected_5fold_training_seconds
+                > self._max_projected_5fold_hours * 3600
+            ):
+                projected_hours = self._projected_5fold_training_seconds / 3600
+                self._entry_abort_reason = (
+                    f"Trompt 5-fold 학습 예상 {projected_hours:.2f}시간이 "
+                    f"한도 {self._max_projected_5fold_hours:.2f}시간을 넘는다."
+                )
+                print(f"[trompt] entry-stop {self._entry_abort_reason}", flush=True)
+                break
             if stale_epochs >= self._patience:
                 break
         assert best_state is not None
@@ -598,6 +630,9 @@ class TromptFold:
             gains.append(float(np.mean(drops)))
         return pd.DataFrame({"feature": self._encoder.columns, "gain": gains})
 
+    def entry_abort_reason(self) -> str | None:
+        return self._entry_abort_reason
+
     def entry_diagnostics(self):
         from . import model
 
@@ -611,6 +646,8 @@ class TromptFold:
                 "cells": self._cells,
                 "requested_batch_size": self._batch_size,
                 "effective_batch_size": self._effective_batch_size,
+                "requested_eval_batch_size": self._eval_batch_size,
+                "effective_eval_batch_size": self._effective_eval_batch_size,
                 "numeric_columns": len(self._encoder.numeric_columns),
                 "categorical_columns": len(self._encoder.categorical_columns),
                 "input_columns": len(self._encoder.columns),
@@ -620,6 +657,9 @@ class TromptFold:
                 "epoch_validation_aucs": self._validation_aucs,
                 "epoch_seconds": self._epoch_seconds,
                 "best_epoch": self._best_epoch,
+                "projected_5fold_training_seconds": self._projected_5fold_training_seconds,
+                "max_projected_5fold_hours": self._max_projected_5fold_hours,
+                "entry_abort_reason": self._entry_abort_reason,
                 "torch_version": torch.__version__,
                 "torch_cuda_version": torch.version.cuda,
                 "cublas_workspace_config": os.environ["CUBLAS_WORKSPACE_CONFIG"],

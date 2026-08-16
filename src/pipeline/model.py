@@ -68,6 +68,12 @@ class EntryDiagnosticAdapter(Protocol):
     def entry_diagnostics(self) -> AdapterDiagnostics: ...
 
 
+class EntryDiagnosticAbortAdapter(Protocol):
+    """진입 진단의 비싼 후속 단계를 생략해야 하는 모델 계약."""
+
+    def entry_abort_reason(self) -> str | None: ...
+
+
 def collect_entry_diagnostics(adapter: ModelAdapter) -> AdapterDiagnostics:
     """선택 계약을 구현한 adapter의 진단을 공통 스키마로 검증해 돌려준다."""
     provider = getattr(adapter, "entry_diagnostics", None)
@@ -88,6 +94,17 @@ def collect_entry_diagnostics(adapter: ModelAdapter) -> AdapterDiagnostics:
     except (TypeError, ValueError) as exc:
         raise TypeError("adapter 진단 observations는 유한한 JSON 값이어야 한다.") from exc
     return diagnostics
+
+
+def collect_entry_abort_reason(adapter: ModelAdapter) -> str | None:
+    """모델이 측정 중 확정한 진입 중단 사유를 검증해 돌려준다."""
+    provider = getattr(adapter, "entry_abort_reason", None)
+    if provider is None:
+        return None
+    reason = provider()
+    if reason is not None and (not isinstance(reason, str) or not reason.strip()):
+        raise TypeError("entry_abort_reason()은 비어 있지 않은 문자열 또는 None이어야 한다.")
+    return reason
 
 
 class LightGBMAdapter:
@@ -757,6 +774,9 @@ class TromptAdapter:
 
     def entry_diagnostics(self) -> AdapterDiagnostics:
         return self._impl.entry_diagnostics()
+
+    def entry_abort_reason(self) -> str | None:
+        return self._impl.entry_abort_reason()
 
 
 def _reject_initial_score(

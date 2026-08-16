@@ -197,6 +197,44 @@ def test_wrong_validation_row_count_is_saved_as_stop_result(monkeypatch):
     assert run.result["decision"]["status"] == "stop"
 
 
+def test_adapter_runtime_abort_skips_expensive_followup_steps(monkeypatch):
+    class RuntimeAbortAdapter(DiagnosticFakeAdapter):
+        def predict(
+            self, X: pd.DataFrame, initial_score: pd.Series | None = None
+        ) -> np.ndarray:
+            raise AssertionError("진입 중단 뒤 test 예측을 호출하면 안 된다.")
+
+        def importance(self) -> pd.DataFrame:
+            raise AssertionError("진입 중단 뒤 중요도 계산을 호출하면 안 된다.")
+
+        def entry_diagnostics(self) -> model_mod.AdapterDiagnostics:
+            return model_mod.AdapterDiagnostics(
+                observations={"projected_5fold_training_seconds": 25 * 3600}
+            )
+
+        def entry_abort_reason(self) -> str:
+            return "5-fold 예상 시간이 24시간을 넘는다."
+
+    monkeypatch.setitem(
+        model_mod.MODEL_REGISTRY, "diagnostic_fake", RuntimeAbortAdapter
+    )
+    cfg = _config()
+    plan = FeaturePlan.from_config(cfg.features)
+    train, test = _data()
+    train, test = plan.apply_dataset_wide(train, test)
+
+    run = run_fold_diagnostic(
+        cfg, plan, train, test, champion_fold_auc=0.5, limit_hours=24
+    )
+
+    assert run.result["validation"]["auc"] == 0.5
+    assert run.result["decision"]["checks"]["adapter_entry_abort"] is False
+    assert run.result["decision"]["checks"]["projected_time_limit"] is False
+    assert run.result["projection"]["seed_5fold_seconds"] == 25 * 3600
+    assert run.result["adapter"]["abort_reason"] is not None
+    assert run.importance.empty
+
+
 def test_tabr_s_cuda_memory_above_ninety_percent_stops_promotion(monkeypatch):
     from pipeline import entry_diagnostic as diagnostic_mod
 

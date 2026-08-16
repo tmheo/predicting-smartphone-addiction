@@ -80,6 +80,8 @@ def test_trompt_adapter_contract_and_determinism():
     assert diagnostics.observations["batch_probe"]["cell_output_shape"] == [64, 2, 2]
     assert diagnostics.observations["batch_probe"]["deterministic"] is True
     assert diagnostics.observations["input_columns"] == 4
+    assert diagnostics.observations["requested_eval_batch_size"] == 128
+    assert diagnostics.observations["effective_eval_batch_size"] == 64
     assert (
         diagnostics.observations["training_losses"][-1]
         < diagnostics.observations["training_losses"][0]
@@ -105,10 +107,23 @@ def test_trompt_learns_public_breast_cancer_binary_dataset():
     assert roc_auc_score(y.iloc[450:], prediction) > 0.5
 
 
+def test_trompt_stops_after_first_epoch_when_runtime_projection_exceeds_limit():
+    X, y = _data()
+    adapter = _adapter(epochs=3, max_projected_5fold_hours=1e-9)
+    prediction = adapter.fit(X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:])
+
+    diagnostics = adapter.entry_diagnostics().observations
+    assert prediction.shape == (80,)
+    assert len(diagnostics["epoch_seconds"]) == 1
+    assert diagnostics["projected_5fold_training_seconds"] > 0
+    assert adapter.entry_abort_reason() is not None
+
+
 @pytest.mark.parametrize(
     ("overrides", "message"),
     [
         ({"prompts": 3}, "짝수"),
+        ({"max_projected_5fold_hours": 0}, "양수"),
         ({"unknown": 1}, "모르는 params"),
     ],
 )
