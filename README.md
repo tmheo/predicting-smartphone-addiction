@@ -82,7 +82,9 @@ scripts/run_remote_python.sh \
   --evidence /workspace/job/results/python-environment.json \
   -- \
   -m pipeline.entry_diagnostic configs/expNNN.yaml \
-  --out-dir /workspace/job/results/entry-expNNN
+  --out-dir /workspace/job/results/entry-expNNN \
+  --reference \
+  --expected-baseline-auc 0.968294911389327
 ```
 
 `--` 뒤에는 `python` 명령 자체가 아니라 가상환경 Python에 전달할 인수만 둔다.
@@ -126,14 +128,47 @@ uv run mlflow ui --backend-store-uri sqlite:///mlflow.db
 
 새 모델 계열은 정식 스크리닝 전에 공통 fold 진입 진단을 실행한다.
 기본값은 커밋된 fold 0과 seed 42이며, 정식 실행과 같은 설정 파일, 피처 계획과 모델 adapter를 사용한다.
+먼저 현재 champion 설정으로 동등 단계 기준 실행을 저장한다.
+
+```bash
+uv run python -m pipeline.entry_diagnostic configs/exp067_lookup_xgb_impute_comps5.yaml \
+  --out-dir artifacts/entry-exp067-fold0-seed42 \
+  --reference \
+  --expected-baseline-auc 0.968294911389327
+```
+
+`--expected-baseline-auc`에는 저장된 같은 단계 champion의 fold 0·seed 42 AUC를 전체 정밀도로 넣는다.
+기준 재실행 값이 이 값과 `1e-9`보다 크게 다르면 기준 산출물은 중단 상태로 저장되어 challenger에 사용할 수 없다.
+
+challenger는 기준 진단 JSON과 검증 예측을 모두 명시적으로 입력받는다.
+같은 모델 계열의 개선 후보는 비교 대상인 모델 설정 축만 `--allow-model-diff`로 허용하고 짝지은 AUC 차이 0 이상을 승격 문턱으로 쓴다.
 
 ```bash
 uv run python -m pipeline.entry_diagnostic configs/expNNN.yaml \
-  --out-dir artifacts/entry-expNNN
+  --out-dir artifacts/entry-expNNN \
+  --baseline-diagnostic artifacts/entry-exp067-fold0-seed42/entry_diagnostic.json \
+  --baseline-predictions artifacts/entry-exp067-fold0-seed42/validation_predictions.parquet \
+  --comparison-mode champion-improvement \
+  --allow-model-diff params.learning_rate
 ```
 
-결과 디렉터리에는 공통 JSON, 검증 예측과 피처 중요도가 저장된다.
-JSON에는 행 정렬과 유한성 검사, fold AUC, 단계별 시간, CUDA 최고 메모리, seed 42 5-fold 예상 시간, 모델별 assertion과 통과 또는 중단 근거가 들어간다.
+새 모델 계열은 `new-model-family` 모드를 사용하며 기존 `champion - 0.01` 진입 하한을 유지한다.
+모델 계열과 설정 묶음 전체가 비교 축이면 각각 명시적으로 허용한다.
+
+```bash
+uv run python -m pipeline.entry_diagnostic configs/expNNN.yaml \
+  --out-dir artifacts/entry-expNNN \
+  --baseline-diagnostic artifacts/entry-exp067-fold0-seed42/entry_diagnostic.json \
+  --baseline-predictions artifacts/entry-exp067-fold0-seed42/validation_predictions.parquet \
+  --comparison-mode new-model-family \
+  --allow-model-diff kind \
+  --allow-model-diff params \
+  --allow-model-diff fit
+```
+
+결과 디렉터리에는 공통 JSON, 목표값을 포함한 검증 예측과 피처 중요도가 저장된다.
+JSON에는 입력 해시, fold와 시드, 피처 계획, 의존성 판본, 허용 모델 차이, 행 정렬과 목표값 검사, 같은 저장 예측에서 다시 계산한 두 AUC와 차이, 단계별 시간, CUDA 최고 메모리, seed 42 5-fold 예상 시간, 모델별 assertion과 통과 또는 중단 근거가 들어간다.
+기준 저장 AUC가 기준 예측 재채점과 다르거나 실행 정체성과 검증 행이 짝을 이루지 않으면 challenger 판정을 시작하지 않는다.
 진입 진단은 MLflow 실행을 만들지 않으며 `artifacts/champion.yaml`과 `artifacts/pool.yaml`을 변경하지 않는다.
 
 ## 정식 CV 실행 복구

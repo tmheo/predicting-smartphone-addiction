@@ -219,8 +219,13 @@ GPU_REMOTE_EVIDENCE="$GPU_REMOTE_ROOT/results/python-environment.json"
   --evidence "$GPU_REMOTE_EVIDENCE" \
   -- \
   -m pipeline.entry_diagnostic configs/expNNN.yaml \
-  --out-dir "$GPU_REMOTE_ROOT/results/entry-expNNN"
+  --out-dir "$GPU_REMOTE_ROOT/results/entry-expNNN" \
+  --reference \
+  --expected-baseline-auc 0.968294911389327
 ```
+
+위 예시는 현재 champion의 동등 단계 기준 실행을 만드는 명령이다.
+challenger 원격 실행은 `README.md`의 모델 진입 진단 절에 따라 기준 진단 JSON과 검증 예측, 비교 모드와 허용 모델 차이 축을 원격 실행 명세에 함께 고정한다.
 
 `--` 뒤는 가상환경 Python에 전달할 인수이며 별도의 `python` 또는 `pip` 실행 파일을 지정하지 않는다.
 가상환경 경로는 존재하지 않는 작업 전용 경로여야 한다.
