@@ -71,6 +71,20 @@ uv run mlflow ui --backend-store-uri sqlite:///mlflow.db
 
 브라우저에서 <http://127.0.0.1:5000> 에 접속하면 run 목록을 시작 시각 순으로 보고 metric·artifact를 확인할 수 있다.
 
+## 모델 진입 진단
+
+새 모델 계열은 정식 스크리닝 전에 공통 fold 진입 진단을 실행한다.
+기본값은 커밋된 fold 0과 seed 42이며, 정식 실행과 같은 설정 파일, 피처 계획과 모델 adapter를 사용한다.
+
+```bash
+uv run python -m pipeline.entry_diagnostic configs/expNNN.yaml \
+  --out-dir artifacts/entry-expNNN
+```
+
+결과 디렉터리에는 공통 JSON, 검증 예측과 피처 중요도가 저장된다.
+JSON에는 행 정렬과 유한성 검사, fold AUC, 단계별 시간, CUDA 최고 메모리, seed 42 5-fold 예상 시간, 모델별 assertion과 통과 또는 중단 근거가 들어간다.
+진입 진단은 MLflow 실행을 만들지 않으며 `artifacts/champion.yaml`과 `artifacts/pool.yaml`을 변경하지 않는다.
+
 ## 제출
 
 제출은 마일스톤 단위 건전성 점검 용도다.
