@@ -1,0 +1,30 @@
+# 이슈 #160 2단계: 15% 선형 상승 뒤 선형 감소와 고정 momentum 계수를 사용한다.
+name: exp093_lookup_warmup_linear
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols: [age, daily_screen_time_hours, social_media_hours, gaming_hours, work_study_hours, sleep_hours, notifications_per_day, app_opens_per_day, weekend_screen_time]
+    - kind: xgb_impute_aux
+      cols: [age, daily_screen_time_hours, social_media_hours, gaming_hours, work_study_hours, sleep_hours, notifications_per_day, app_opens_per_day, weekend_screen_time]
+      emit: [daily_screen_time_hours, social_media_hours, gaming_hours, work_study_hours, weekend_screen_time]
+      compositions: [social_frac, work_frac, leisure_frac, resid_frac, week_total]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: lookup_transformer
+  params:
+    lookup_cols: [age, gender, daily_screen_time_hours, social_media_hours, gaming_hours, work_study_hours, sleep_hours, notifications_per_day, app_opens_per_day, weekend_screen_time, stress_level, academic_work_impact]
+    lr_schedule: warmup_linear
+  fit: {}
