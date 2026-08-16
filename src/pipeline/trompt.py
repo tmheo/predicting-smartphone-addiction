@@ -9,12 +9,19 @@ Trompt는 행마다 prompt와 열 임베딩으로 특성 중요도를 계산하�
 from __future__ import annotations
 
 import math
+import os
 import random
 import time
 from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+
+# PyTorch requires this process-level setting before the first CUDA CuBLAS call
+# when deterministic algorithms are enabled.
+if os.environ.get("CUBLAS_WORKSPACE_CONFIG") not in {":4096:8", ":16:8"}:
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+
 import torch
 from sklearn.metrics import roc_auc_score
 from torch import Tensor, nn
@@ -615,5 +622,6 @@ class TromptFold:
                 "best_epoch": self._best_epoch,
                 "torch_version": torch.__version__,
                 "torch_cuda_version": torch.version.cuda,
+                "cublas_workspace_config": os.environ["CUBLAS_WORKSPACE_CONFIG"],
             },
         )

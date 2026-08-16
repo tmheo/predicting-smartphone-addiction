@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -82,6 +84,11 @@ def test_trompt_adapter_contract_and_determinism():
         diagnostics.observations["training_losses"][-1]
         < diagnostics.observations["training_losses"][0]
     )
+    assert diagnostics.observations["cublas_workspace_config"] in {
+        ":4096:8",
+        ":16:8",
+    }
+    assert os.environ["CUBLAS_WORKSPACE_CONFIG"] in {":4096:8", ":16:8"}
 
 
 def test_trompt_learns_public_breast_cancer_binary_dataset():
