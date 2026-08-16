@@ -68,7 +68,7 @@ def main() -> None:
         print("기록될 것   : params(feature 목록, 모델 파라미터), metrics(auc_fold_*, auc_oof, auc_oof_seed_*),")
         print("             progress.*/time.* 진행 기록, artifacts(설정 yaml, oof.parquet, oof_seed_*.parquet,")
         print("             test_pred.parquet, feature_importance.parquet, submission.csv,")
-        print("             summary.html 등 결과 요약, logs/run.log)")
+        print("             model_training_diagnostics.json, summary.html 등 결과 요약, logs/run.log)")
         print(f"fold 복구    : {args.recovery_dir or _default_recovery_dir(cfg)}")
         return
 
@@ -120,6 +120,9 @@ def main() -> None:
                 train[data.TARGET], train["fold"], final.oof["pred"].to_numpy()
             )
             final.importance = pd.concat([r.importance for r in results], ignore_index=True)
+            final.model_training_diagnostics = [
+                item for result in results for item in result.model_training_diagnostics
+            ]
         final.recovery_evidence = [
             item for result in results for item in result.recovery_evidence
         ]

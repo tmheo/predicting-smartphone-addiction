@@ -107,6 +107,21 @@ def collect_entry_abort_reason(adapter: ModelAdapter) -> str | None:
     return reason
 
 
+def collect_training_diagnostics(adapter: ModelAdapter) -> dict[str, object] | None:
+    """선택 계약의 fold 학습 관측을 유한한 JSON 객체로 검증한다."""
+    provider = getattr(adapter, "training_diagnostics", None)
+    if provider is None:
+        return None
+    diagnostics = provider()
+    if not isinstance(diagnostics, dict):
+        raise TypeError("training_diagnostics()는 dict를 돌려줘야 한다.")
+    try:
+        json.dumps(diagnostics, allow_nan=False)
+    except (TypeError, ValueError) as exc:
+        raise TypeError("학습 관측은 유한한 JSON 값이어야 한다.") from exc
+    return diagnostics
+
+
 class LightGBMAdapter:
     """LightGBM 이진 분류 adapter."""
 
@@ -577,6 +592,12 @@ class LookupTransformerAdapter:
 
     def importance(self) -> pd.DataFrame:
         return self._impl.importance()
+
+    def training_diagnostics(self) -> dict[str, object]:
+        return self._impl.training_diagnostics()
+
+    def entry_diagnostics(self) -> AdapterDiagnostics:
+        return AdapterDiagnostics(observations=self.training_diagnostics())
 
 
 class ContextualizedSplineTransformerAdapter:

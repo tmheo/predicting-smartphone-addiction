@@ -15,7 +15,8 @@ artifact는 로컬 mlartifacts/ 아래 파일로 남으므로 소비 방식은 �
 - artifacts: 설정 원본(yaml, 시작 시점), oof.parquet, oof_seed_<seed>.parquet(시드별 OOF,
   묶음 반입의 시드별 재채점 근거, #98), test_pred.parquet, submission.csv,
   feature_importance.parquet(feature, fold, seed, gain 스키마의 fold별 gain importance),
-  fold_recovery.json(완료 fold의 해시와 재사용 여부). (#19, #141)
+  fold_recovery.json(완료 fold의 해시와 재사용 여부),
+  model_training_diagnostics.json(모델별 구조화 학습 관측). (#19, #141, #160)
   test_pred는 라벨이 없어 재채점 가치가 없으므로 시드 평균본만 남긴다. (#98)
 - tags: git_commit, git_dirty, 입력 파일 sha256. dirty 실행은 앙상블 후보에서 제외하는 관행. (#14)
 """
@@ -143,6 +144,18 @@ def log_final_records(
             + "\n"
         )
         names.append(EVIDENCE_NAME)
+        diagnostics_name = "model_training_diagnostics.json"
+        (tmp_dir / diagnostics_name).write_text(
+            json.dumps(
+                result.model_training_diagnostics,
+                ensure_ascii=False,
+                allow_nan=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n"
+        )
+        names.append(diagnostics_name)
         for seed, oof in seed_oofs.items():
             names.append(oof_seed_artifact(seed))
             oof.to_parquet(tmp_dir / oof_seed_artifact(seed), index=False)

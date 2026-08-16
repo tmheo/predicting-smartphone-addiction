@@ -42,6 +42,7 @@ class CVResult:
     feature_names: list[str]
     importance: pd.DataFrame  # columns: feature, fold, seed, gain (#19)
     recovery_evidence: list[dict[str, object]] = field(default_factory=list)
+    model_training_diagnostics: list[dict[str, object]] = field(default_factory=list)
 
 
 def score_predictions(y: pd.Series, folds: pd.Series, pred: np.ndarray) -> dict[str, float]:
@@ -103,6 +104,7 @@ def run_cv(
     n_folds = int(train["fold"].max()) + 1
     importances: list[pd.DataFrame] = []
     recovery_records: list[dict[str, object]] = []
+    model_training_diagnostics: list[dict[str, object]] = []
     feature_names = list(X.columns)
 
     # fold 안의 fold-fit 변환 fit도 training 단계에 포함한다. (#40)
@@ -146,6 +148,8 @@ def run_cv(
             test_pred += checkpoint.test_predictions["pred"].to_numpy() / n_folds
             importances.append(checkpoint.importance)
             recovery_records.append(checkpoint.evidence(reused=True))
+            if checkpoint.model_training_diagnostics is not None:
+                model_training_diagnostics.append(checkpoint.model_training_diagnostics)
             if recorder is not None:
                 recorder.fold_completed(cfg.seeds.index(seed), fold, checkpoint.auc)
             continue
@@ -174,6 +178,19 @@ def run_cv(
         fold_importance = adapter.importance().assign(fold=fold, seed=seed)
         fold_importance["gain"] = fold_importance["gain"].astype("float64")
         importances.append(fold_importance)
+        adapter_training_diagnostics = model_mod.collect_training_diagnostics(adapter)
+        fold_training_diagnostics = (
+            {
+                "model_kind": cfg.model.kind,
+                "seed": seed,
+                "fold": fold,
+                "details": adapter_training_diagnostics,
+            }
+            if adapter_training_diagnostics is not None
+            else None
+        )
+        if fold_training_diagnostics is not None:
+            model_training_diagnostics.append(fold_training_diagnostics)
         fold_auc = roc_auc_score(y.loc[va_idx], va_pred)
         if recovery is not None:
             checkpoint = recovery.save(
@@ -188,6 +205,7 @@ def run_cv(
                 test_ids=test[ID],
                 importance=fold_importance,
                 feature_names=feature_names,
+                model_training_diagnostics=fold_training_diagnostics,
             )
             recovery_records.append(checkpoint.evidence(reused=False))
         if recorder is not None:
@@ -204,4 +222,5 @@ def run_cv(
         feature_names=feature_names,
         importance=pd.concat(importances, ignore_index=True),
         recovery_evidence=recovery_records,
+        model_training_diagnostics=model_training_diagnostics,
     )

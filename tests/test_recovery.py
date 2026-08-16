@@ -70,6 +70,9 @@ class RecoveryFakeAdapter:
             }
         )
 
+    def training_diagnostics(self) -> dict[str, object]:
+        return {"fake_fold": self.fold, "losses": [0.5, 0.4]}
+
 
 @pytest.fixture
 def recovery_env(tmp_path, monkeypatch):
@@ -199,6 +202,7 @@ def test_interrupted_run_reuses_completed_fold_and_matches_uninterrupted_mlflow(
     pd.testing.assert_frame_equal(resumed.test_pred, uninterrupted.test_pred, check_exact=True)
     pd.testing.assert_frame_equal(resumed.importance, uninterrupted.importance, check_exact=True)
     assert resumed.fold_aucs == uninterrupted.fold_aucs
+    assert resumed.model_training_diagnostics == uninterrupted.model_training_diagnostics
 
     resumed_meta, resumed_artifacts, resumed_uri, resumed_run_id = _log_final(
         tmp_path, "resumed", cfg, resumed
@@ -212,6 +216,7 @@ def test_interrupted_run_reuses_completed_fold_and_matches_uninterrupted_mlflow(
         "test_pred.parquet",
         "feature_importance.parquet",
         "submission.csv",
+        "model_training_diagnostics.json",
     ):
         assert (resumed_artifacts / artifact).read_bytes() == (full_artifacts / artifact).read_bytes()
     evidence = json.loads((resumed_artifacts / recovery_mod.EVIDENCE_NAME).read_text())

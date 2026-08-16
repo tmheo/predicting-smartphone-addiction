@@ -21,6 +21,7 @@ torch가 필요하므로 model.py의 adapter가 이 모듈을 lazy import한다.
 
 from __future__ import annotations
 
+import json
 import math
 import os
 import threading
@@ -34,11 +35,139 @@ from torch import nn
 
 _NA = 0  # 컬럼별 local id 0은 결측 전용. lookup 컬럼의 마지막 id는 UNK.
 _TORCH_INIT_LOCK = threading.Lock()
+_OPTIMIZERS = {"adamw", "radam", "nadam"}
+_LR_SCHEDULES = {
+    "one_cycle",
+    "one_cycle_fixed_momentum",
+    "warmup_cosine",
+    "warmup_linear",
+    "warmup_constant",
+    "warmup_plateau",
+}
+_WARMUP_FRACTION = 0.15
+_START_DIVISOR = 25.0
+_FINAL_DIVISOR = 250_000.0
+_GRADIENT_CLIP_NORM = 1.0
 
 
 def _sigmoid(logit: np.ndarray) -> np.ndarray:
     """다른 adapter들과 같은 확률 축으로 돌려준다(AUC는 순위 기반이라 영향 없음)."""
     return 1.0 / (1.0 + np.exp(-np.clip(logit, -60, 60)))
+
+
+def _create_optimizer(
+    name: str,
+    parameter_groups: list[dict[str, object]],
+    lr: float,
+) -> torch.optim.Optimizer:
+    """가중치 감쇠 그룹을 보존한 Adam 계열 최적화 알고리즘을 만든다."""
+    if name == "adamw":
+        return torch.optim.AdamW(parameter_groups, lr=lr)
+    if name == "radam":
+        return torch.optim.RAdam(
+            parameter_groups,
+            lr=lr,
+            decoupled_weight_decay=True,
+        )
+    if name == "nadam":
+        return torch.optim.NAdam(
+            parameter_groups,
+            lr=lr,
+            decoupled_weight_decay=True,
+        )
+    raise ValueError(f"optimizer는 {sorted(_OPTIMIZERS)} 중 하나여야 한다: {name!r}")
+
+
+class _LearningRateController:
+    """배치 일정과 검증 AUC 기반 일정을 같은 좁은 계약으로 감싼다."""
+
+    def __init__(
+        self,
+        optimizer: torch.optim.Optimizer,
+        *,
+        name: str,
+        max_lr: float,
+        total_steps: int,
+    ) -> None:
+        if name not in _LR_SCHEDULES:
+            raise ValueError(f"lr_schedule은 {sorted(_LR_SCHEDULES)} 중 하나여야 한다: {name!r}")
+        if total_steps <= 0:
+            raise ValueError("학습률 일정의 total_steps는 양수여야 한다.")
+        self.optimizer = optimizer
+        self.name = name
+        self.max_lr = max_lr
+        self.total_steps = total_steps
+        self.completed_steps = 0
+        self.warmup_steps = max(1, math.ceil(total_steps * _WARMUP_FRACTION))
+        self.min_lr = max_lr / _FINAL_DIVISOR
+        self._one_cycle = None
+        self._plateau = None
+
+        if name in {"one_cycle", "one_cycle_fixed_momentum"}:
+            self._one_cycle = torch.optim.lr_scheduler.OneCycleLR(
+                optimizer,
+                max_lr,
+                total_steps=total_steps,
+                pct_start=_WARMUP_FRACTION,
+                cycle_momentum=name == "one_cycle",
+                div_factor=_START_DIVISOR,
+                final_div_factor=_FINAL_DIVISOR / _START_DIVISOR,
+            )
+        else:
+            self._set_lr(max_lr / _START_DIVISOR)
+            if name == "warmup_plateau":
+                self._plateau = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                    optimizer,
+                    mode="max",
+                    factor=0.3,
+                    patience=1,
+                    threshold=0.0,
+                    threshold_mode="abs",
+                    min_lr=self.min_lr,
+                )
+
+    def _set_lr(self, value: float) -> None:
+        for group in self.optimizer.param_groups:
+            group["lr"] = value
+
+    def _scheduled_lr(self, completed_steps: int) -> float:
+        if completed_steps <= self.warmup_steps:
+            progress = completed_steps / self.warmup_steps
+            start = self.max_lr / _START_DIVISOR
+            return start + (self.max_lr - start) * progress
+        if self.name in {"warmup_constant", "warmup_plateau"}:
+            return self.learning_rate
+        decay_steps = max(1, self.total_steps - self.warmup_steps)
+        progress = min(1.0, (completed_steps - self.warmup_steps) / decay_steps)
+        if self.name == "warmup_linear":
+            return self.max_lr + (self.min_lr - self.max_lr) * progress
+        if self.name == "warmup_cosine":
+            cosine = 0.5 * (1.0 + math.cos(math.pi * progress))
+            return self.min_lr + (self.max_lr - self.min_lr) * cosine
+        raise AssertionError(f"배치 일정을 계산할 수 없다: {self.name}")
+
+    def step_batch(self) -> None:
+        self.completed_steps += 1
+        if self._one_cycle is not None:
+            self._one_cycle.step()
+            return
+        if self.completed_steps <= self.warmup_steps:
+            self._set_lr(self._scheduled_lr(self.completed_steps))
+        elif self.name in {"warmup_cosine", "warmup_linear"}:
+            self._set_lr(self._scheduled_lr(self.completed_steps))
+
+    def step_validation(self, auc: float) -> None:
+        if self._plateau is not None and self.completed_steps >= self.warmup_steps:
+            self._plateau.step(auc)
+
+    @property
+    def learning_rate(self) -> float:
+        return float(self.optimizer.param_groups[0]["lr"])
+
+    @property
+    def beta1(self) -> float | None:
+        betas = self.optimizer.param_groups[0].get("betas")
+        return float(betas[0]) if betas is not None else None
 
 
 class _PLR(nn.Module):
@@ -108,6 +237,8 @@ class _LookupTransformerMember:
         self._epochs = int(params.pop("epochs", 32))
         self._batch_size = int(params.pop("batch_size", 2048))
         self._lr = float(params.pop("lr", 2e-3))
+        self._optimizer_name = str(params.pop("optimizer", "adamw")).lower()
+        self._lr_schedule = str(params.pop("lr_schedule", "one_cycle")).lower()
         self._value_dropout = float(params.pop("value_dropout", 0.10))
         self._weight_decay = float(params.pop("weight_decay", 1e-5))
         self._emb_weight_decay = float(params.pop("emb_weight_decay", 3e-4))
@@ -116,6 +247,18 @@ class _LookupTransformerMember:
         self._perm_repeats = int(params.pop("perm_repeats", 3))
         if params:
             raise ValueError(f"lookup_transformer가 모르는 params: {sorted(params)}")
+        if self._optimizer_name not in _OPTIMIZERS:
+            raise ValueError(
+                f"optimizer는 {sorted(_OPTIMIZERS)} 중 하나여야 한다: "
+                f"{self._optimizer_name!r}"
+            )
+        if self._lr_schedule not in _LR_SCHEDULES:
+            raise ValueError(
+                f"lr_schedule은 {sorted(_LR_SCHEDULES)} 중 하나여야 한다: "
+                f"{self._lr_schedule!r}"
+            )
+        if self._epochs <= 0 or self._batch_size <= 0 or self._lr <= 0:
+            raise ValueError("epochs, batch_size와 lr은 양수여야 한다.")
         if self._d_model % self._heads:
             raise ValueError(f"d_model {self._d_model}은 heads {self._heads}의 배수여야 한다.")
         self._seed = seed
@@ -141,6 +284,7 @@ class _LookupTransformerMember:
         self._model: _LookupTransformer | None = None
         self._val: tuple[torch.Tensor, torch.Tensor, torch.Tensor, np.ndarray] | None = None
         self._val_auc: float | None = None
+        self._training_diagnostics: dict[str, object] | None = None
 
     # ---- 인코딩: 어휘·분위 fit은 학습 fold 전용, transform은 어디에나 적용 ----
 
@@ -225,7 +369,7 @@ class _LookupTransformerMember:
             ids[:, j] += self._offsets[j]
         return torch.from_numpy(ids), torch.from_numpy(num), torch.from_numpy(mask)
 
-    # ---- 학습: AdamW(embedding만 강한 weight decay) + OneCycle + EMA + 값 dropout ----
+    # ---- 학습: 분리형 가중치 감쇠 + 학습률 일정 + EMA + 값 dropout ----
 
     def fit(
         self, X_tr: pd.DataFrame, y_tr: pd.Series, X_va: pd.DataFrame, y_va: pd.Series
@@ -255,17 +399,21 @@ class _LookupTransformerMember:
         self._model = model
         emb_params = [p for n_, p in model.named_parameters() if n_.startswith("emb")]
         rest = [p for n_, p in model.named_parameters() if not n_.startswith("emb")]
-        opt = torch.optim.AdamW(
+        opt = _create_optimizer(
+            self._optimizer_name,
             [
                 {"params": rest, "weight_decay": self._weight_decay},
                 {"params": emb_params, "weight_decay": self._emb_weight_decay},
             ],
-            lr=self._lr,
+            self._lr,
         )
         n_tr = len(X_tr)
         steps = math.ceil(n_tr / self._batch_size) * self._epochs + 10
-        sched = torch.optim.lr_scheduler.OneCycleLR(
-            opt, self._lr, total_steps=steps, pct_start=0.15
+        schedule = _LearningRateController(
+            opt,
+            name=self._lr_schedule,
+            max_lr=self._lr,
+            total_steps=steps,
         )
         device_type = "cuda" if dev.startswith("cuda") else "cpu"
         use_scaler = device_type == "cuda" and self._amp_dtype == torch.float16
@@ -282,11 +430,19 @@ class _LookupTransformerMember:
                 torch.cuda.manual_seed(self._seed)
             self._init_barrier.wait(timeout=60)
 
-        best_auc, best_weights, bad = 0.0, None, 0
+        best_auc, best_weights, best_epoch, bad = 0.0, None, None, 0
+        evaluations: list[dict[str, object]] = []
         eval_start = min(5, self._epochs - 1)
+        end_epoch = -1
         for ep in range(self._epochs):
+            end_epoch = ep
             model.train()
             perm = torch.randperm(n_tr, generator=g).to(dev)
+            epoch_loss_sum = torch.zeros((), dtype=torch.float32, device=dev)
+            epoch_gradient_norm_sum = torch.zeros((), dtype=torch.float32, device=dev)
+            epoch_clipped_steps = torch.zeros((), dtype=torch.float32, device=dev)
+            epoch_rows = 0
+            epoch_steps = 0
             for i in range(0, n_tr, self._batch_size):
                 sl = perm[i : i + self._batch_size]
                 ids_b, mask_b = ids_tr[sl], mask_tr[sl]
@@ -300,10 +456,20 @@ class _LookupTransformerMember:
                 opt.zero_grad(set_to_none=True)
                 scaler.scale(loss).backward()
                 scaler.unscale_(opt)
-                torch.nn.utils.clip_grad_norm_(params_list, 1.0)
+                gradient_norm = torch.nn.utils.clip_grad_norm_(
+                    params_list, _GRADIENT_CLIP_NORM
+                )
                 scaler.step(opt)
                 scaler.update()
-                sched.step()
+                schedule.step_batch()
+                rows = len(sl)
+                epoch_loss_sum += loss.detach().float() * rows
+                epoch_gradient_norm_sum += gradient_norm.detach().float()
+                epoch_clipped_steps += (
+                    gradient_norm.detach() > _GRADIENT_CLIP_NORM
+                ).float()
+                epoch_rows += rows
+                epoch_steps += 1
                 with torch.no_grad():
                     torch._foreach_mul_(ema, self._ema_decay)
                     torch._foreach_add_(
@@ -316,12 +482,43 @@ class _LookupTransformerMember:
                         p.copy_(e)
                 auc = roc_auc_score(y_va_np, self._predict_tensors(ids_va, num_va, mask_va))
                 if auc > best_auc:
-                    best_auc, best_weights, bad = auc, [e.clone() for e in ema], 0
+                    best_auc, best_weights, best_epoch, bad = (
+                        auc,
+                        [e.clone() for e in ema],
+                        ep,
+                        0,
+                    )
                 else:
                     bad += 1
+                lr_before_update = schedule.learning_rate
+                beta1_before_update = schedule.beta1
+                schedule.step_validation(auc)
+                observation = {
+                    "epoch": ep,
+                    "learning_rate": lr_before_update,
+                    "learning_rate_after_validation": schedule.learning_rate,
+                    "beta1": beta1_before_update,
+                    "training_loss": float((epoch_loss_sum / epoch_rows).item()),
+                    "validation_auc": float(auc),
+                    "best_epoch": best_epoch,
+                    "best_validation_auc": float(best_auc),
+                    "gradient_norm_mean": float(
+                        (epoch_gradient_norm_sum / epoch_steps).item()
+                    ),
+                    "gradient_clip_fraction": float(
+                        (epoch_clipped_steps / epoch_steps).item()
+                    ),
+                }
+                evaluations.append(observation)
                 print(
                     f"[lookup_transformer] seed={self._seed} ep{ep:3d} "
-                    f"valAUC={auc:.5f} best={best_auc:.5f}",
+                    f"valAUC={auc:.5f} best={best_auc:.5f} "
+                    f"lr={lr_before_update:.8g} beta1={beta1_before_update}",
+                    flush=True,
+                )
+                print(
+                    "[lookup_transformer.training] "
+                    + json.dumps(observation, ensure_ascii=False, allow_nan=False),
                     flush=True,
                 )
                 with torch.no_grad():
@@ -337,7 +534,28 @@ class _LookupTransformerMember:
         val_logit = self._predict_tensors(ids_va, num_va, mask_va)
         self._val = (ids_va, num_va, mask_va, y_va_np)
         self._val_auc = roc_auc_score(y_va_np, val_logit)
+        self._training_diagnostics = {
+            "initialization_seed": self._seed,
+            "optimizer": self._optimizer_name,
+            "lr_schedule": self._lr_schedule,
+            "max_learning_rate": self._lr,
+            "start_learning_rate": self._lr / _START_DIVISOR,
+            "nominal_min_learning_rate": self._lr / _FINAL_DIVISOR,
+            "warmup_fraction": _WARMUP_FRACTION,
+            "gradient_clip_norm": _GRADIENT_CLIP_NORM,
+            "evaluations": evaluations,
+            "best_epoch": best_epoch,
+            "best_validation_auc": float(best_auc),
+            "end_epoch": end_epoch,
+            "completed_steps": schedule.completed_steps,
+            "planned_total_steps": steps,
+        }
         return _sigmoid(val_logit)
+
+    def training_diagnostics(self) -> dict[str, object]:
+        if self._training_diagnostics is None:
+            raise RuntimeError("training_diagnostics는 fit 뒤에 호출해야 한다.")
+        return self._training_diagnostics
 
     def _autocast(self):
         if self._device.startswith("cuda"):
@@ -497,3 +715,10 @@ class LookupTransformerFold:
                 drops.append(base - roc_auc_score(y_va, self.predict(X_p)))
             gains.append(float(np.mean(drops)))
         return pd.DataFrame({"feature": self._columns, "gain": gains})
+
+    def training_diagnostics(self) -> dict[str, object]:
+        return {
+            "fold_initialization_members": [
+                member.training_diagnostics() for member in self._members
+            ]
+        }

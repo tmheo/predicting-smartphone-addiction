@@ -26,7 +26,7 @@ from sklearn.metrics import roc_auc_score
 from .config import ExperimentConfig
 from .data import ID, file_sha256
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 EVIDENCE_SCHEMA_VERSION = 1
 EVIDENCE_NAME = "fold_recovery.json"
 MANIFEST_NAME = "manifest.json"
@@ -46,6 +46,7 @@ class FoldCheckpoint:
     test_predictions: pd.DataFrame
     importance: pd.DataFrame
     auc: float
+    model_training_diagnostics: dict[str, object] | None
     manifest: dict[str, object]
 
     def evidence(self, reused: bool) -> dict[str, object]:
@@ -217,6 +218,7 @@ class FoldRecovery:
         test_ids: pd.Series,
         importance: pd.DataFrame,
         feature_names: list[str],
+        model_training_diagnostics: dict[str, object] | None = None,
     ) -> FoldCheckpoint:
         self._validate_seed_layout(seed)
         final_dir = self._fold_dir(seed, fold)
@@ -240,6 +242,7 @@ class FoldRecovery:
                 test_ids,
                 feature_names,
             )
+            self._validate_model_training_diagnostics(model_training_diagnostics)
             validation_path = staging / VALIDATION_NAME
             test_path = staging / TEST_NAME
             importance_path = staging / IMPORTANCE_NAME
@@ -258,6 +261,7 @@ class FoldRecovery:
                     IMPORTANCE_NAME: self._artifact_record(importance_path, importance),
                 },
                 "metrics": {"auc": auc},
+                "model_training_diagnostics": model_training_diagnostics,
             }
             manifest["manifest_content_sha256"] = _content_sha256(manifest)
             manifest_path = staging / MANIFEST_NAME
@@ -311,6 +315,7 @@ class FoldRecovery:
                 test_predictions=pd.read_parquet(fold_dir / TEST_NAME),
                 importance=pd.read_parquet(fold_dir / IMPORTANCE_NAME),
                 auc=float(metrics.get("auc", float("nan"))),
+                model_training_diagnostics=manifest.get("model_training_diagnostics"),
                 manifest=manifest,
             )
         except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
@@ -343,6 +348,7 @@ class FoldRecovery:
             raise RecoveryError("fold 복구 실행 정체성 내용 해시가 일치하지 않는다.")
         if manifest.get("seed") != seed or manifest.get("fold") != fold:
             raise RecoveryError("fold 복구 manifest의 seed 또는 fold 번호가 요청과 다르다.")
+        self._validate_model_training_diagnostics(checkpoint.model_training_diagnostics)
 
         frames = {
             VALIDATION_NAME: checkpoint.validation_predictions,
@@ -419,6 +425,17 @@ class FoldRecovery:
     def _require_columns(frame: pd.DataFrame, expected: list[str], name: str) -> None:
         if list(frame.columns) != expected:
             raise RecoveryError(f"{name} 열 순서가 다르다: {list(frame.columns)} != {expected}")
+
+    @staticmethod
+    def _validate_model_training_diagnostics(value: dict[str, object] | None) -> None:
+        if value is None:
+            return
+        if not isinstance(value, dict):
+            raise RecoveryError("fold 학습 관측은 객체여야 한다.")
+        try:
+            json.dumps(value, ensure_ascii=False, allow_nan=False)
+        except (TypeError, ValueError) as exc:
+            raise RecoveryError("fold 학습 관측은 유한한 JSON 값이어야 한다.") from exc
 
     @staticmethod
     def _require_order(actual: pd.Series, expected: pd.Series, name: str) -> None:

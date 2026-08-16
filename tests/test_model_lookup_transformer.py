@@ -103,6 +103,26 @@ def test_lookup_transformer_adapter_contract_and_learning():
     imp2 = adapter.importance()
     assert np.allclose(imp["gain"], imp2["gain"])
 
+    diagnostics = adapter.entry_diagnostics().observations
+    member = diagnostics["fold_initialization_members"][0]
+    assert member["optimizer"] == "adamw"
+    assert member["lr_schedule"] == "one_cycle"
+    assert member["best_epoch"] is not None
+    assert member["end_epoch"] >= member["best_epoch"]
+    assert member["evaluations"]
+    assert set(member["evaluations"][0]) == {
+        "epoch",
+        "learning_rate",
+        "learning_rate_after_validation",
+        "beta1",
+        "training_loss",
+        "validation_auc",
+        "best_epoch",
+        "best_validation_auc",
+        "gradient_norm_mean",
+        "gradient_clip_fraction",
+    }
+
     with pytest.raises(ValueError, match="초기 점수"):
         adapter.fit(
             X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:],
@@ -147,6 +167,121 @@ def test_lookup_transformer_rejects_unknown_params():
     X, y = _data(80)
     with pytest.raises(ValueError, match="no_such_param"):
         adapter.fit(X.iloc[:60], y.iloc[:60], X.iloc[60:], y.iloc[60:])
+
+
+@pytest.mark.parametrize(
+    ("param", "value", "message"),
+    [
+        ("optimizer", "sgd", "optimizer"),
+        ("lr_schedule", "exponential", "lr_schedule"),
+        ("lr", 0.0, "양수"),
+    ],
+)
+def test_lookup_transformer_rejects_invalid_training_configuration(
+    param, value, message
+):
+    params = dict(SMALL_PARAMS, **{param: value})
+    cfg = ModelConfig(kind="lookup_transformer", params=params, fit={})
+    adapter = model_mod.create(cfg, seed=SEED)
+    X, y = _data(80)
+    with pytest.raises(ValueError, match=message):
+        adapter.fit(X.iloc[:60], y.iloc[:60], X.iloc[60:], y.iloc[60:])
+
+
+@pytest.mark.parametrize("name", ["adamw", "radam", "nadam"])
+def test_lookup_transformer_optimizer_preserves_weight_decay_groups(
+    name, lookup_transformer_module
+):
+    parameter = lookup_transformer_module.torch.nn.Parameter(
+        lookup_transformer_module.torch.tensor(1.0)
+    )
+    optimizer = lookup_transformer_module._create_optimizer(
+        name,
+        [{"params": [parameter], "weight_decay": 3e-4}],
+        2e-3,
+    )
+
+    assert optimizer.param_groups[0]["weight_decay"] == pytest.approx(3e-4)
+    if name in {"radam", "nadam"}:
+        assert optimizer.defaults["decoupled_weight_decay"] is True
+
+
+@pytest.mark.parametrize(
+    "name", ["warmup_cosine", "warmup_linear", "warmup_constant"]
+)
+def test_lookup_transformer_warmup_schedules_start_at_one_twenty_fifth(
+    name, lookup_transformer_module
+):
+    parameter = lookup_transformer_module.torch.nn.Parameter(
+        lookup_transformer_module.torch.tensor(1.0)
+    )
+    optimizer = lookup_transformer_module.torch.optim.AdamW([parameter], lr=2e-3)
+    schedule = lookup_transformer_module._LearningRateController(
+        optimizer,
+        name=name,
+        max_lr=2e-3,
+        total_steps=20,
+    )
+
+    assert schedule.learning_rate == pytest.approx(2e-3 / 25)
+    for _ in range(schedule.warmup_steps):
+        optimizer.step()
+        schedule.step_batch()
+    assert schedule.learning_rate == pytest.approx(2e-3)
+
+    for _ in range(20 - schedule.warmup_steps):
+        optimizer.step()
+        schedule.step_batch()
+    expected = 2e-3 if name == "warmup_constant" else 2e-3 / 250_000
+    assert schedule.learning_rate == pytest.approx(expected)
+
+
+def test_lookup_transformer_plateau_reduces_after_two_bad_evaluations(
+    lookup_transformer_module,
+):
+    parameter = lookup_transformer_module.torch.nn.Parameter(
+        lookup_transformer_module.torch.tensor(1.0)
+    )
+    optimizer = lookup_transformer_module.torch.optim.AdamW([parameter], lr=2e-3)
+    schedule = lookup_transformer_module._LearningRateController(
+        optimizer,
+        name="warmup_plateau",
+        max_lr=2e-3,
+        total_steps=20,
+    )
+    for _ in range(schedule.warmup_steps):
+        optimizer.step()
+        schedule.step_batch()
+
+    schedule.step_validation(0.8)
+    schedule.step_validation(0.7)
+    assert schedule.learning_rate == pytest.approx(2e-3)
+    schedule.step_validation(0.6)
+    assert schedule.learning_rate == pytest.approx(2e-3 * 0.3)
+
+
+def test_lookup_transformer_one_cycle_can_disable_momentum_cycle(
+    lookup_transformer_module,
+):
+    betas = []
+    for name in ("one_cycle", "one_cycle_fixed_momentum"):
+        parameter = lookup_transformer_module.torch.nn.Parameter(
+            lookup_transformer_module.torch.tensor(1.0)
+        )
+        optimizer = lookup_transformer_module.torch.optim.AdamW([parameter], lr=2e-3)
+        schedule = lookup_transformer_module._LearningRateController(
+            optimizer,
+            name=name,
+            max_lr=2e-3,
+            total_steps=20,
+        )
+        before = schedule.beta1
+        optimizer.step()
+        schedule.step_batch()
+        betas.append((before, schedule.beta1))
+
+    assert betas[0][0] != betas[0][1]
+    assert betas[1] == pytest.approx((0.9, 0.9))
 
 
 def test_lookup_transformer_fold_initialization_average_derives_seeds(
