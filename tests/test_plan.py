@@ -73,6 +73,7 @@ def all_kind_providers(proxy_path: str, proxy_sha: str) -> list[dict]:
         {"kind": "categorical_copies", "cols": ["gaming_hours"]},
         {"kind": "pair_ce", "pairs": [["gaming_hours", "stress_level"]]},
         {"kind": "derived", "names": ["other_screen", "screen_slack"]},
+        {"kind": "missing_indicators", "cols": ["social_media_hours"]},
         {
             "kind": "original_prior",
             "path": proxy_path,

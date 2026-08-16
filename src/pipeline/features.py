@@ -125,6 +125,36 @@ class DerivedColumns:
         return pd.DataFrame({name: DERIVED_REGISTRY[name](df) for name in self.names})
 
 
+class MissingIndicators:
+    """row-wise 제공자: 지정한 열의 결측 여부를 0/1 수치 열로 만든다. (#145)
+
+    Trompt는 원시 NaN을 직접 처리하지 않으므로 학습 fold 중앙값 대치와 짝을 이루는
+    입력 계약으로만 사용한다.
+    일반적인 결측 표시 특성 탐색을 여는 제공자가 아니다.
+    """
+
+    uses_target = False
+
+    def __init__(self, cols: list[str]) -> None:
+        if not cols:
+            raise ValueError("cols는 하나 이상의 열을 가져야 한다.")
+        if len(set(cols)) != len(cols):
+            raise ValueError("cols에 중복 열이 있다.")
+        self.cols = list(cols)
+
+    def columns(self) -> list[str]:
+        return [f"{col}_missing" for col in self.cols]
+
+    def compute(self, df: pd.DataFrame) -> pd.DataFrame:
+        missing = [col for col in self.cols if col not in df.columns]
+        if missing:
+            raise ValueError(f"결측 표시 입력 열이 없다: {missing}")
+        return pd.DataFrame(
+            {f"{col}_missing": df[col].isna().astype("float32") for col in self.cols},
+            index=df.index,
+        )
+
+
 class CategoricalCopies:
     """dataset-wide 제공자: 수치 컬럼은 그대로 두고 <col>_cat 범주형 복제 컬럼을 만든다.
 

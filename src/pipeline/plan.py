@@ -102,6 +102,7 @@ REGISTRY: dict[str, ProviderKind] = {
     "categorical_copies": ProviderKind(DATASET_WIDE, features.CategoricalCopies),
     "pair_ce": ProviderKind(DATASET_WIDE, features.PairCE),
     "derived": ProviderKind(ROW_WISE, features.DerivedColumns),
+    "missing_indicators": ProviderKind(ROW_WISE, features.MissingIndicators),
     "original_prior": ProviderKind(ROW_WISE, features.OriginalPriorColumns),
     "original_knn": ProviderKind(ROW_WISE, features.OriginalKnnColumns),
     "original_cdf_diff": ProviderKind(ROW_WISE, features.OriginalClassCdfDiff),

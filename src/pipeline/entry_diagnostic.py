@@ -276,6 +276,14 @@ def run_fold_diagnostic(
         or cuda_memory_fraction is None
         or cuda_memory_fraction <= memory_fraction_limit
     )
+    cuda_memory_limit_bytes = None
+    if cfg.model.kind == "trompt" and cuda["available"]:
+        device_total = int(cuda["device_total_bytes"])
+        cuda_memory_limit_bytes = (14 if device_total <= 20 * 1024**3 else 20) * 1024**3
+        cuda_memory_ok = (
+            cuda_memory_ok
+            and int(cuda["max_reserved_bytes"]) <= cuda_memory_limit_bytes
+        )
     checks = {
         "validation_row_count": row_count_ok,
         "validation_row_order": row_order_ok,
@@ -306,10 +314,16 @@ def run_fold_diagnostic(
             f"fold {fold} 시간이 모델 한도 {fold_limit_hours:.1f}시간을 넘는다."
         )
     if not checks["cuda_memory_limit"]:
-        reasons.append(
-            f"최고 CUDA 예약 메모리 비율 {cuda_memory_fraction:.3f}이 "
-            f"모델 한도 {memory_fraction_limit:.2f}를 넘는다."
-        )
+        if cuda_memory_limit_bytes is not None:
+            reasons.append(
+                f"최고 CUDA 예약 메모리 {int(cuda['max_reserved_bytes'])}바이트가 "
+                f"Trompt 한도 {cuda_memory_limit_bytes}바이트를 넘는다."
+            )
+        else:
+            reasons.append(
+                f"최고 CUDA 예약 메모리 비율 {cuda_memory_fraction:.3f}이 "
+                f"모델 한도 {memory_fraction_limit:.2f}를 넘는다."
+            )
     if not checks["projected_time_limit"]:
         reasons.append(
             f"seed 42 5-fold 예상 시간이 모델 한도 {limit_hours:.1f}시간을 넘는다."
@@ -355,6 +369,7 @@ def run_fold_diagnostic(
             "fold_limit_hours": fold_limit_hours,
             "cuda_memory_fraction": cuda_memory_fraction,
             "cuda_memory_fraction_limit": memory_fraction_limit,
+            "cuda_memory_limit_bytes": cuda_memory_limit_bytes,
             "formula": "one_time_stages + 5 * fold_stages",
         },
         "decision": {

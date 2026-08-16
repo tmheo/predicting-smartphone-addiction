@@ -223,3 +223,32 @@ def test_tabr_s_cuda_memory_above_ninety_percent_stops_promotion(monkeypatch):
     assert run.result["decision"]["checks"]["cuda_memory_limit"] is False
     assert run.result["projection"]["cuda_memory_fraction"] == 0.91
     assert run.result["decision"]["status"] == "stop"
+
+
+def test_trompt_cuda_memory_above_absolute_limit_stops_promotion(monkeypatch):
+    from pipeline import entry_diagnostic as diagnostic_mod
+
+    gib = 1024**3
+    monkeypatch.setitem(model_mod.MODEL_REGISTRY, "trompt", DiagnosticFakeAdapter)
+    monkeypatch.setattr(diagnostic_mod, "_reset_cuda_peak", lambda: True)
+    monkeypatch.setattr(
+        diagnostic_mod,
+        "_cuda_peak",
+        lambda enabled: {
+            "available": True,
+            "source": "test",
+            "max_allocated_bytes": 14 * gib,
+            "max_reserved_bytes": 15 * gib,
+            "device_total_bytes": 16 * gib,
+        },
+    )
+    cfg = replace(_config(), model=ModelConfig(kind="trompt", params={}, fit={}))
+    plan = FeaturePlan.from_config(cfg.features)
+    train, test = _data()
+    train, test = plan.apply_dataset_wide(train, test)
+
+    run = run_fold_diagnostic(cfg, plan, train, test, champion_fold_auc=0.5)
+
+    assert run.result["decision"]["checks"]["cuda_memory_limit"] is False
+    assert run.result["projection"]["cuda_memory_limit_bytes"] == 14 * gib
+    assert run.result["decision"]["status"] == "stop"
