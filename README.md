@@ -41,6 +41,24 @@ uv run kaggle competitions download -c playground-series-s6e8 -p data
 unzip -o data/playground-series-s6e8.zip -d data && rm data/playground-series-s6e8.zip
 ```
 
+### 새 Git 작업 폴더의 비커밋 입력 준비
+
+새 Git 작업 폴더에서 자료가 필요한 명령을 실행하기 전에 저장소의 검증 목록으로 비커밋 입력을 준비한다.
+원본은 이미 검증된 입력을 가진 기존 작업 폴더의 절대 경로로 지정한다.
+대상 작업 폴더에는 `data/`가 없어야 하며, 기존 `data/`를 덮어쓰는 방식은 허용하지 않는다.
+
+```bash
+cd /absolute/path/to/new-worktree
+uv run --frozen python -m pipeline.private_inputs prepare \
+  --source-root /absolute/path/to/verified-worktree
+uv run --frozen python -m pipeline.private_inputs check
+```
+
+`prepare`는 `private-inputs.sha256`에 선언된 파일만 복사한다.
+원본과 임시 사본의 SHA-256을 확인한 뒤 완성된 `data/`를 대상에 옮기고, 준비된 파일의 권한을 읽기 전용으로 고정한다.
+누락, 해시 불일치, 일반 파일이 아닌 입력, 심볼릭 링크, 쓰기 가능 상태 또는 목록 밖 입력이 있으면 명령은 종료 코드가 0이 아닌 값으로 끝난다.
+새 입력이 필요하면 `data/` 전체를 연결하거나 임의로 복사하지 말고 검증된 SHA-256과 함께 목록을 변경한다.
+
 ### 노트북 실행
 
 ```bash
