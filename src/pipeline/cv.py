@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol
 
 import numpy as np
@@ -20,6 +20,7 @@ from . import model as model_mod
 from .config import ExperimentConfig
 from .data import ID, TARGET
 from .plan import FeaturePlan
+from .recovery import FoldRecovery
 
 
 class RunRecorder(Protocol):
@@ -40,6 +41,7 @@ class CVResult:
     fold_aucs: dict[str, float]  # auc_fold_0..N, auc_oof
     feature_names: list[str]
     importance: pd.DataFrame  # columns: feature, fold, seed, gain (#19)
+    recovery_evidence: list[dict[str, object]] = field(default_factory=list)
 
 
 def score_predictions(y: pd.Series, folds: pd.Series, pred: np.ndarray) -> dict[str, float]:
@@ -68,6 +70,7 @@ def run_cv(
     test: pd.DataFrame,
     seed: int,
     recorder: RunRecorder | None = None,
+    recovery: FoldRecovery | None = None,
 ) -> CVResult:
     """커밋된 fold 배정대로 학습하고 OOF와 테스트 예측을 만든다.
 
@@ -99,6 +102,7 @@ def run_cv(
     test_pred = np.zeros(len(test))
     n_folds = int(train["fold"].max()) + 1
     importances: list[pd.DataFrame] = []
+    recovery_records: list[dict[str, object]] = []
     feature_names = list(X.columns)
 
     # fold 안의 fold-fit 변환 fit도 training 단계에 포함한다. (#40)
@@ -127,26 +131,70 @@ def run_cv(
                 assert list(X_fold.columns) == feature_names, (
                     f"fold {fold}의 컬럼 집합이 fold 0과 다르다."
                 )
+        checkpoint = None
+        if recovery is not None:
+            checkpoint = recovery.load(
+                seed,
+                fold,
+                validation_ids=train.loc[va_idx, ID],
+                validation_labels=y.loc[va_idx],
+                test_ids=test[ID],
+                feature_names=feature_names,
+            )
+        if checkpoint is not None:
+            oof_pred[va_idx] = checkpoint.validation_predictions["pred"].to_numpy()
+            test_pred += checkpoint.test_predictions["pred"].to_numpy() / n_folds
+            importances.append(checkpoint.importance)
+            recovery_records.append(checkpoint.evidence(reused=True))
+            if recorder is not None:
+                recorder.fold_completed(cfg.seeds.index(seed), fold, checkpoint.auc)
+            continue
+
         adapter = model_mod.create(cfg.model, seed)
-        va_pred = adapter.fit(
-            X_fold.loc[tr_idx],
-            y.loc[tr_idx],
-            X_fold.loc[va_idx],
-            y.loc[va_idx],
-            initial_scores.train.loc[tr_idx] if initial_scores is not None else None,
-            initial_scores.train.loc[va_idx] if initial_scores is not None else None,
+        va_pred = np.asarray(
+            adapter.fit(
+                X_fold.loc[tr_idx],
+                y.loc[tr_idx],
+                X_fold.loc[va_idx],
+                y.loc[va_idx],
+                initial_scores.train.loc[tr_idx] if initial_scores is not None else None,
+                initial_scores.train.loc[va_idx] if initial_scores is not None else None,
+            ),
+            dtype="float64",
         )
         oof_pred[va_idx] = va_pred
-        test_pred += adapter.predict(
-            X_test_fold,
-            initial_scores.test if initial_scores is not None else None,
-        ) / n_folds
-        importances.append(adapter.importance().assign(fold=fold, seed=seed))
+        fold_test_pred = np.asarray(
+            adapter.predict(
+                X_test_fold,
+                initial_scores.test if initial_scores is not None else None,
+            ),
+            dtype="float64",
+        )
+        test_pred += fold_test_pred / n_folds
+        fold_importance = adapter.importance().assign(fold=fold, seed=seed)
+        fold_importance["gain"] = fold_importance["gain"].astype("float64")
+        importances.append(fold_importance)
+        fold_auc = roc_auc_score(y.loc[va_idx], va_pred)
+        if recovery is not None:
+            checkpoint = recovery.save(
+                seed,
+                fold,
+                validation_predictions=pd.DataFrame(
+                    {ID: train.loc[va_idx, ID], "fold": fold, "pred": va_pred}
+                ),
+                validation_ids=train.loc[va_idx, ID],
+                validation_labels=y.loc[va_idx],
+                test_predictions=pd.DataFrame({ID: test[ID], "pred": fold_test_pred}),
+                test_ids=test[ID],
+                importance=fold_importance,
+                feature_names=feature_names,
+            )
+            recovery_records.append(checkpoint.evidence(reused=False))
         if recorder is not None:
             # 실행 중 fold AUC는 해당 시드의 fold 예측 기준. 최종 auc_fold_*는
             # 시드 평균 예측으로 평가 단계에서 다시 채점한다. (#40)
             recorder.fold_completed(
-                cfg.seeds.index(seed), fold, roc_auc_score(y.loc[va_idx], va_pred)
+                cfg.seeds.index(seed), fold, fold_auc
             )
 
     return CVResult(
@@ -155,4 +203,5 @@ def run_cv(
         fold_aucs=score_predictions(y, train["fold"], oof_pred),
         feature_names=feature_names,
         importance=pd.concat(importances, ignore_index=True),
+        recovery_evidence=recovery_records,
     )

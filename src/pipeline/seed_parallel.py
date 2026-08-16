@@ -27,6 +27,7 @@ import pandas as pd
 from . import cv
 from .config import ExperimentConfig
 from .plan import FeaturePlan
+from .recovery import FoldRecovery
 
 ENV_GPUS = "PIPELINE_SEED_GPUS"
 
@@ -37,14 +38,16 @@ def run_seeds(
     train: pd.DataFrame,
     test: pd.DataFrame,
     recorder: cv.RunRecorder | None = None,
+    recovery: FoldRecovery | None = None,
 ) -> list[cv.CVResult]:
     """cfg.seeds 전체를 실행해 시드 순서대로 CVResult를 돌려준다."""
     gpus = [g.strip() for g in os.environ.get(ENV_GPUS, "").split(",") if g.strip()]
     if len(gpus) < 2 or len(cfg.seeds) < 2:
         return [
-            cv.run_cv(cfg, plan, train, test, seed, recorder=recorder) for seed in cfg.seeds
+            cv.run_cv(cfg, plan, train, test, seed, recorder=recorder, recovery=recovery)
+            for seed in cfg.seeds
         ]
-    return _run_parallel(cfg, plan, train, test, recorder, gpus)
+    return _run_parallel(cfg, plan, train, test, recorder, recovery, gpus)
 
 
 class _QueueRecorder:
@@ -65,8 +68,16 @@ def _pin_gpu(gpu_queue) -> None:
     os.environ["CUDA_VISIBLE_DEVICES"] = gpu_queue.get()
 
 
-def _run_seed(cfg, plan, train, test, seed, events) -> cv.CVResult:
-    return cv.run_cv(cfg, plan, train, test, seed, recorder=_QueueRecorder(events))
+def _run_seed(cfg, plan, train, test, seed, events, recovery) -> cv.CVResult:
+    return cv.run_cv(
+        cfg,
+        plan,
+        train,
+        test,
+        seed,
+        recorder=_QueueRecorder(events),
+        recovery=recovery,
+    )
 
 
 def _forward_events(events, recorder: cv.RunRecorder, done: threading.Event) -> None:
@@ -78,7 +89,9 @@ def _forward_events(events, recorder: cv.RunRecorder, done: threading.Event) -> 
         recorder.fold_completed(*item)
 
 
-def _run_parallel(cfg, plan, train, test, recorder, gpus: list[str]) -> list[cv.CVResult]:
+def _run_parallel(
+    cfg, plan, train, test, recorder, recovery: FoldRecovery | None, gpus: list[str]
+) -> list[cv.CVResult]:
     if recorder is not None:
         recorder.stage("training")
     # fork는 부모의 CUDA·MLflow 상태를 물려받으므로 spawn으로 깨끗하게 시작한다.
@@ -103,7 +116,7 @@ def _run_parallel(cfg, plan, train, test, recorder, gpus: list[str]) -> list[cv.
                 initargs=(gpu_queue,),
             ) as pool:
                 futures = [
-                    pool.submit(_run_seed, cfg, plan, train, test, seed, events)
+                    pool.submit(_run_seed, cfg, plan, train, test, seed, events, recovery)
                     for seed in cfg.seeds
                 ]
                 return [f.result() for f in futures]

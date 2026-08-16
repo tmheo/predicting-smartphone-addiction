@@ -8,12 +8,14 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
+
 import numpy as np
 import pandas as pd
 import pytest
 from sklearn.metrics import roc_auc_score
 
-from pipeline import lookup_transformer
 from pipeline import model as model_mod
 from pipeline.config import ModelConfig
 
@@ -32,6 +34,26 @@ SMALL_PARAMS = {
     "ema_decay": 0.7,
     "perm_repeats": 2,
 }
+
+
+def _cuda_device_count_in_subprocess() -> int:
+    """시험 수집 중 torch를 불러와 XGBoost의 OpenMP와 충돌시키지 않는다."""
+    completed = subprocess.run(
+        [sys.executable, "-c", "import torch; print(torch.cuda.device_count())"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        return 0
+    return int(completed.stdout.strip())
+
+
+@pytest.fixture
+def lookup_transformer_module():
+    from pipeline import lookup_transformer
+
+    return lookup_transformer
 
 
 def _data(n: int = 320) -> tuple[pd.DataFrame, pd.Series]:
@@ -127,7 +149,9 @@ def test_lookup_transformer_rejects_unknown_params():
         adapter.fit(X.iloc[:60], y.iloc[:60], X.iloc[60:], y.iloc[60:])
 
 
-def test_lookup_transformer_fold_initialization_average_derives_seeds(monkeypatch):
+def test_lookup_transformer_fold_initialization_average_derives_seeds(
+    monkeypatch, lookup_transformer_module
+):
     """파이프라인 시드에 offset을 더한 구성원 예측을 fold 안에서 평균한다."""
     created_seeds = []
 
@@ -144,8 +168,8 @@ def test_lookup_transformer_fold_initialization_average_derives_seeds(monkeypatc
         def predict(self, X):
             return np.full(len(X), self._seed / 10_000, dtype="float64")
 
-    monkeypatch.setattr(lookup_transformer, "_LookupTransformerMember", FakeMember)
-    fold = lookup_transformer.LookupTransformerFold(
+    monkeypatch.setattr(lookup_transformer_module, "_LookupTransformerMember", FakeMember)
+    fold = lookup_transformer_module.LookupTransformerFold(
         {
             "lookup_cols": ["v"],
             "perm_repeats": 1,
@@ -166,19 +190,21 @@ def test_lookup_transformer_fold_initialization_average_derives_seeds(monkeypatc
 
 
 @pytest.mark.parametrize("offsets", [[], [0, 0], [0, 1.5], "0,1000"])
-def test_lookup_transformer_rejects_invalid_fold_seed_offsets(offsets):
+def test_lookup_transformer_rejects_invalid_fold_seed_offsets(
+    offsets, lookup_transformer_module
+):
     with pytest.raises(ValueError, match="fold_seed_offsets"):
-        lookup_transformer.LookupTransformerFold(
+        lookup_transformer_module.LookupTransformerFold(
             {"lookup_cols": ["v"], "fold_seed_offsets": offsets}, seed=SEED
         )
 
 
-def test_lookup_transformer_fold_gpu_assignment(monkeypatch):
+def test_lookup_transformer_fold_gpu_assignment(monkeypatch, lookup_transformer_module):
     monkeypatch.setenv("PIPELINE_FOLD_GPUS", "0,2,1")
-    monkeypatch.setattr(lookup_transformer.torch.cuda, "is_available", lambda: True)
-    monkeypatch.setattr(lookup_transformer.torch.cuda, "device_count", lambda: 3)
+    monkeypatch.setattr(lookup_transformer_module.torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(lookup_transformer_module.torch.cuda, "device_count", lambda: 3)
 
-    assert lookup_transformer.LookupTransformerFold._parallel_devices(3) == [
+    assert lookup_transformer_module.LookupTransformerFold._parallel_devices(3) == [
         "cuda:0",
         "cuda:2",
         "cuda:1",
@@ -186,17 +212,19 @@ def test_lookup_transformer_fold_gpu_assignment(monkeypatch):
 
 
 @pytest.mark.parametrize("gpu_ids", ["0,0,1", "0,1", "0,1,nope"])
-def test_lookup_transformer_rejects_invalid_fold_gpu_assignment(monkeypatch, gpu_ids):
+def test_lookup_transformer_rejects_invalid_fold_gpu_assignment(
+    monkeypatch, gpu_ids, lookup_transformer_module
+):
     monkeypatch.setenv("PIPELINE_FOLD_GPUS", gpu_ids)
-    monkeypatch.setattr(lookup_transformer.torch.cuda, "is_available", lambda: True)
-    monkeypatch.setattr(lookup_transformer.torch.cuda, "device_count", lambda: 3)
+    monkeypatch.setattr(lookup_transformer_module.torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(lookup_transformer_module.torch.cuda, "device_count", lambda: 3)
 
     with pytest.raises(ValueError, match="PIPELINE_FOLD_GPUS"):
-        lookup_transformer.LookupTransformerFold._parallel_devices(3)
+        lookup_transformer_module.LookupTransformerFold._parallel_devices(3)
 
 
 @pytest.mark.skipif(
-    lookup_transformer.torch.cuda.device_count() < 3,
+    _cuda_device_count_in_subprocess() < 3,
     reason="실제 fold 구성원 병렬 검사는 CUDA GPU 3개가 필요하다.",
 )
 def test_lookup_transformer_trains_fold_members_on_three_gpus(monkeypatch):

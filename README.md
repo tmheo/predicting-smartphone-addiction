@@ -71,6 +71,37 @@ uv run mlflow ui --backend-store-uri sqlite:///mlflow.db
 
 브라우저에서 <http://127.0.0.1:5000> 에 접속하면 run 목록을 시작 시각 순으로 보고 metric·artifact를 확인할 수 있다.
 
+## 모델 진입 진단
+
+새 모델 계열은 정식 스크리닝 전에 공통 fold 진입 진단을 실행한다.
+기본값은 커밋된 fold 0과 seed 42이며, 정식 실행과 같은 설정 파일, 피처 계획과 모델 adapter를 사용한다.
+
+```bash
+uv run python -m pipeline.entry_diagnostic configs/expNNN.yaml \
+  --out-dir artifacts/entry-expNNN
+```
+
+결과 디렉터리에는 공통 JSON, 검증 예측과 피처 중요도가 저장된다.
+JSON에는 행 정렬과 유한성 검사, fold AUC, 단계별 시간, CUDA 최고 메모리, seed 42 5-fold 예상 시간, 모델별 assertion과 통과 또는 중단 근거가 들어간다.
+진입 진단은 MLflow 실행을 만들지 않으며 `artifacts/champion.yaml`과 `artifacts/pool.yaml`을 변경하지 않는다.
+
+## 정식 CV 실행 복구
+
+정식 CV 실행은 각 시드의 fold가 끝날 때 검증 예측, 테스트 예측, 중요도, AUC와 실행 정체성을 `run-recovery/<실험>-<단계>/`에 원자적으로 저장한다.
+같은 커밋, 설정 원문, 입력 해시, fold 파일, 시드, 실행 의존성 판본과 fold 번호가 모두 일치할 때만 완료된 fold를 다시 사용한다.
+
+```bash
+uv run python -m pipeline.run configs/expNNN.yaml --stage screen
+
+# 한 원격 실행 작업에 별도 복구 위치를 고정할 때
+uv run python -m pipeline.run configs/expNNN.yaml --stage confirm \
+  --recovery-dir /workspace/recovery/expNNN-confirm
+```
+
+불완전한 임시 상태, manifest 또는 산출물 해시 불일치, 행과 열 순서 불일치, 중복 fold가 있으면 재사용하지 않고 실행을 중단한다.
+완료 실행은 `fold_recovery.json`을 MLflow 산출물로 남기며, 실행 기록 묶음에도 최종 예측 및 중요도와 함께 포함된다.
+복구 디렉터리 자체와 임시 상태는 실행 기록 묶음에 포함하지 않는다.
+
 ## 제출
 
 제출은 마일스톤 단위 건전성 점검 용도다.

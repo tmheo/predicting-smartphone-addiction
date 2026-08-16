@@ -9,7 +9,9 @@ plan.REGISTRY와 같은 패턴: 새 모델 계열은 adapter를 구현하고 MOD
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import Protocol
 
 import numpy as np
@@ -40,6 +42,52 @@ class ModelAdapter(Protocol):
     def importance(self) -> pd.DataFrame:
         """학습된 모델의 importance를 (feature, gain) 프레임으로 돌려준다. (#19)"""
         ...
+
+
+@dataclass(frozen=True)
+class AdapterDiagnostics:
+    """진입 진단에 추가할 모델별 assertion과 관측값.
+
+    검색·문맥형 모델은 아래 ``ASSERT_*`` 이름을 써서 후보 저장소가 학습 행으로만
+    구성됐는지, 검증 라벨을 문맥에 쓰지 않았는지, 조회 결과에서 자기 행을 뺐는지
+    보고한다. 다른 모델은 같은 스키마의 observations에 필요한 측정값만 추가한다.
+    """
+
+    assertions: dict[str, bool] = field(default_factory=dict)
+    observations: dict[str, object] = field(default_factory=dict)
+
+
+ASSERT_CANDIDATE_STORE_TRAIN_ONLY = "candidate_store_training_only"
+ASSERT_VALIDATION_LABELS_EXCLUDED = "validation_labels_excluded_from_context"
+ASSERT_SELF_ROWS_EXCLUDED = "self_rows_excluded_from_candidates"
+
+
+class EntryDiagnosticAdapter(Protocol):
+    """모델별 진입 진단을 제공하는 선택 계약."""
+
+    def entry_diagnostics(self) -> AdapterDiagnostics: ...
+
+
+def collect_entry_diagnostics(adapter: ModelAdapter) -> AdapterDiagnostics:
+    """선택 계약을 구현한 adapter의 진단을 공통 스키마로 검증해 돌려준다."""
+    provider = getattr(adapter, "entry_diagnostics", None)
+    if provider is None:
+        return AdapterDiagnostics()
+    diagnostics = provider()
+    if not isinstance(diagnostics, AdapterDiagnostics):
+        raise TypeError("entry_diagnostics()는 AdapterDiagnostics를 돌려줘야 한다.")
+    invalid = {
+        name: value
+        for name, value in diagnostics.assertions.items()
+        if not isinstance(value, bool)
+    }
+    if invalid:
+        raise TypeError(f"adapter 진단 assertion 값은 bool이어야 한다: {invalid}")
+    try:
+        json.dumps(diagnostics.observations, allow_nan=False)
+    except (TypeError, ValueError) as exc:
+        raise TypeError("adapter 진단 observations는 유한한 JSON 값이어야 한다.") from exc
+    return diagnostics
 
 
 class LightGBMAdapter:
