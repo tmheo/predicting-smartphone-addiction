@@ -34,6 +34,8 @@ DEFAULT_FOLD = 0
 DEFAULT_SEED = 42
 DEFAULT_LIMIT_HOURS = 24.0
 MODEL_LIMIT_HOURS = {"tabr_s": 20.0}
+MODEL_FOLD_LIMIT_HOURS = {"tabr_s": 4.0}
+MODEL_CUDA_MEMORY_FRACTION = {"tabr_s": 0.90}
 AUC_FLOOR_MARGIN = 0.01
 RESULT_NAME = "entry_diagnostic.json"
 PREDICTIONS_NAME = "validation_predictions.parquet"
@@ -77,6 +79,7 @@ def _cuda_peak(enabled: bool) -> dict[str, object]:
             "source": "torch.cuda",
             "max_allocated_bytes": None,
             "max_reserved_bytes": None,
+            "device_total_bytes": None,
         }
     import torch
 
@@ -85,6 +88,7 @@ def _cuda_peak(enabled: bool) -> dict[str, object]:
         "source": "torch.cuda",
         "max_allocated_bytes": int(torch.cuda.max_memory_allocated()),
         "max_reserved_bytes": int(torch.cuda.max_memory_reserved()),
+        "device_total_bytes": int(torch.cuda.get_device_properties(0).total_memory),
     }
 
 
@@ -259,6 +263,19 @@ def run_fold_diagnostic(
     )
 
     auc_floor = float(champion_fold_auc - AUC_FLOOR_MARGIN)
+    fold_limit_hours = MODEL_FOLD_LIMIT_HOURS.get(cfg.model.kind)
+    memory_fraction_limit = MODEL_CUDA_MEMORY_FRACTION.get(cfg.model.kind)
+    fold_time_ok = fold_limit_hours is None or fold_seconds <= fold_limit_hours * 3600
+    cuda_memory_fraction = (
+        None
+        if not cuda["available"]
+        else float(int(cuda["max_reserved_bytes"]) / int(cuda["device_total_bytes"]))
+    )
+    cuda_memory_ok = (
+        memory_fraction_limit is None
+        or cuda_memory_fraction is None
+        or cuda_memory_fraction <= memory_fraction_limit
+    )
     checks = {
         "validation_row_count": row_count_ok,
         "validation_row_order": row_order_ok,
@@ -266,6 +283,8 @@ def run_fold_diagnostic(
         "test_prediction_shape_and_finiteness": test_prediction_ok,
         "adapter_assertions": all(adapter_diagnostics.assertions.values()),
         "fold_auc_floor": auc is not None and auc >= auc_floor,
+        "fold_time_limit": fold_time_ok,
+        "cuda_memory_limit": cuda_memory_ok,
         "projected_time_limit": projected_seconds <= limit_hours * 3600,
     }
     reasons: list[str] = []
@@ -282,6 +301,15 @@ def run_fold_diagnostic(
             reasons.append(f"모델 assertion 실패: {name}")
     if not checks["fold_auc_floor"]:
         reasons.append(f"fold {fold} AUC가 승격 하한 {auc_floor:.6f}보다 낮다.")
+    if not checks["fold_time_limit"]:
+        reasons.append(
+            f"fold {fold} 시간이 모델 한도 {fold_limit_hours:.1f}시간을 넘는다."
+        )
+    if not checks["cuda_memory_limit"]:
+        reasons.append(
+            f"최고 CUDA 예약 메모리 비율 {cuda_memory_fraction:.3f}이 "
+            f"모델 한도 {memory_fraction_limit:.2f}를 넘는다."
+        )
     if not checks["projected_time_limit"]:
         reasons.append(
             f"seed 42 5-fold 예상 시간이 모델 한도 {limit_hours:.1f}시간을 넘는다."
@@ -324,6 +352,9 @@ def run_fold_diagnostic(
             "seed_5fold_seconds": projected_seconds,
             "limit_hours": limit_hours,
             "limit_source": limit_source,
+            "fold_limit_hours": fold_limit_hours,
+            "cuda_memory_fraction": cuda_memory_fraction,
+            "cuda_memory_fraction_limit": memory_fraction_limit,
             "formula": "one_time_stages + 5 * fold_stages",
         },
         "decision": {
