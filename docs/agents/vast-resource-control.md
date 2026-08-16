@@ -32,15 +32,18 @@ Kaggle과 Colab은 사람이 지켜보는 호환성 확인과 진단에만 사�
 
 ## 자격 증명
 
-일상 실행 키에는 다음 권한만 부여한다.
+일상 실행 키에는 다음 범주와 제한한 SSH 키 경로만 부여한다.
 
 - `misc`
 - `instance_read`
 - `instance_write`
 - `user_read`
 - `billing_read`
+- `user_write` 범주 안의 `api.ssh.keys`와 `api.ssh.key`
 
-`user_write`, `billing_write`, 공급자 관리와 팀 관리 권한은 부여하지 않는다.
+`user_write` 전체 권한이나 그 밖의 경로, `billing_write`, 공급자 관리와 팀 관리 권한은 부여하지 않는다.
+SSH 키 경로는 최상위 `*`가 아니라 `user_write` 안에 제한해 넣어야 한다.
+검증한 정확한 권한 JSON은 `docs/agents/vast-control-permission-revalidation-2026-08-16.md`에 기록한다.
 외부 종료 안전장치는 일상 실행 키를 공유하지 않고 `instance_read`와 `instance_write`만 가진 별도 키를 사용한다.
 
 일상 실행 키는 macOS 키체인에 저장하고 실행할 자식 프로세스에만 `VAST_API_KEY` 환경 변수로 전달한다.
@@ -169,6 +172,7 @@ Vast.ai는 숫자 형태의 현재 과금 속도 0을 제공하지 않는다.
 API 키, `instance_api_key`, Jupyter 토큰, SSH 개인 키, 원문 API 응답과 실제 SSH 접속 주소는 기록하지 않는다.
 
 최초 전체 수명주기 합격 근거는 `docs/agents/vast-control-acceptance-2026-08-15.md`에 있다.
+작업용 키 권한 변경 뒤 등록·삭제 왕복과 전체 수명주기 재검증 근거는 `docs/agents/vast-control-permission-revalidation-2026-08-16.md`에 있다.
 결정 배경은 [GitHub 이슈 125](https://github.com/tmheo/predicting-smartphone-addiction/issues/125), 실제 합격 검증은 [GitHub 이슈 132](https://github.com/tmheo/predicting-smartphone-addiction/issues/132)에서 추적한다.
 
 ## 재검증 조건

@@ -1,0 +1,32 @@
+# 이슈 #143: TabICLv2 fold 0 메모리·시간 진입 확인.
+# 추정기 하나는 실행 가능성만 확인하며 정식 구성이나 개선 판정에 쓰지 않는다.
+name: exp083_tabiclv2_probe
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers: []
+
+model:
+  kind: tabiclv2
+  params:
+    n_estimators: 1
+    batch_size: 8
+    kv_cache: repr
+    device: cuda
+    offload_mode: auto
+    disk_offload_dir: run-logs/tabiclv2-offload
+    checkpoint_path: artifacts/checkpoints/tabicl-classifier-v2-20260212.ckpt
+    checkpoint_version: tabicl-classifier-v2-20260212.ckpt
+    checkpoint_sha256: bdc7dbd5e4ff21f8f0456fcf90c6b7cdf72dbea960f2d05b19bec19f9b3d4ed0
+    package_version: 2.1.1
+    source_revision: 59a957cd644be4e1f2e1582757203ecbd630afa2
+    perm_sample: 1000
+    perm_repeats: 1
+  fit: {}

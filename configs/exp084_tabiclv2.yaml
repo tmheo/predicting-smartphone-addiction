@@ -1,0 +1,32 @@
+# 이슈 #143: TabICLv2의 champion 교체 및 후보 풀 다양성 기여 결정.
+# 원래 12개 열과 공식 전처리, 공식 기본값인 추정기 8개를 사용한다.
+name: exp084_tabiclv2
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers: []
+
+model:
+  kind: tabiclv2
+  params:
+    n_estimators: 8
+    batch_size: 8
+    kv_cache: repr
+    device: cuda
+    offload_mode: auto
+    disk_offload_dir: run-logs/tabiclv2-offload
+    checkpoint_path: artifacts/checkpoints/tabicl-classifier-v2-20260212.ckpt
+    checkpoint_version: tabicl-classifier-v2-20260212.ckpt
+    checkpoint_sha256: bdc7dbd5e4ff21f8f0456fcf90c6b7cdf72dbea960f2d05b19bec19f9b3d4ed0
+    package_version: 2.1.1
+    source_revision: 59a957cd644be4e1f2e1582757203ecbd630afa2
+    perm_sample: 1000
+    perm_repeats: 1
+  fit: {}
