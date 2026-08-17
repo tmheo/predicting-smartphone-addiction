@@ -17,6 +17,8 @@ pytabkit(torch)이 필요하므로 model.py의 adapter가 이 모듈을 lazy imp
 
 from __future__ import annotations
 
+import re
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
@@ -40,6 +42,42 @@ _PYTABKIT_DEFAULTS = {
     "gradient_clipping_norm": None,
     "tfms": ["quantile_tabr"],
 }
+
+
+def _fit_with_selected_epoch(model, X_tr, y_tr, X_va, y_va) -> int:
+    """pytabkit의 숨은 최적 epoch를 학습 의미 변경 없이 기록한다.
+
+    pytabkit 1.7.3의 TabM은 조기 종료에서 선택한 epoch를 로거에는 남기지만
+    ``fit_params_``에는 보존하지 않는다. 공개 추정기가 만드는 로거를 호출 동안만
+    감싸 내부 결과 메시지를 수집하고, 0부터 시작하는 epoch를 학습 횟수로 바꾼다.
+    """
+    from pytabkit.models.sklearn import sklearn_base
+
+    original_logger = sklearn_base.StdoutLogger
+    messages: list[str] = []
+
+    class SelectedEpochLogger(original_logger):
+        def log(self, verbosity: int, content: str) -> None:
+            messages.append(str(content))
+            super().log(verbosity, content)
+
+    sklearn_base.StdoutLogger = SelectedEpochLogger
+    try:
+        model.fit(X_tr, y_tr, X_va, y_va)
+    finally:
+        sklearn_base.StdoutLogger = original_logger
+
+    selected = []
+    for message in messages:
+        match = re.search(r"['\"]epoch['\"]\s*:\s*(\d+)", message)
+        if match is not None:
+            selected.append(int(match.group(1)) + 1)
+    if len(selected) != 1:
+        raise RuntimeError(
+            "pytabkit TabM의 선택 epoch를 정확히 하나 기록하지 못했다: "
+            f"{selected}"
+        )
+    return selected[0]
 
 
 class TabMFold:
@@ -117,11 +155,18 @@ class TabMFold:
                 **extra,
                 **self._pytabkit,
             )
-            model.fit(X_tr_t, y_tr, X_va_t, y_va)
+            selected_epoch_count = _fit_with_selected_epoch(
+                model, X_tr_t, y_tr, X_va_t, y_va
+            )
             member_pred = model.predict_proba(X_va_t)[:, 1].astype("float64")
             val_pred += member_pred / self._n_seed_avg
             self._models.append(model)
-            fit_parameters.append(_json_value(model.fit_params_))
+            fit_parameters.append(
+                {
+                    "fit_parameters": _json_value(model.fit_params_),
+                    "selected_epoch_count": selected_epoch_count,
+                }
+            )
             print(
                 f"[tabm] member {s + 1}/{self._n_seed_avg} "
                 f"valAUC={roc_auc_score(y_va_np, member_pred):.5f}",

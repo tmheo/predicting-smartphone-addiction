@@ -68,6 +68,13 @@ def test_tabm_adapter_contract_and_learning():
     assert test_pred.shape == (10,)
     assert np.isfinite(test_pred).all()
 
+    diagnostics = adapter.training_diagnostics()
+    selected_epochs = [
+        member["selected_epoch_count"] for member in diagnostics["members"]
+    ]
+    assert len(selected_epochs) == SMALL_PARAMS["n_seed_avg"]
+    assert all(1 <= epoch <= SMALL_PARAMS["n_epochs"] for epoch in selected_epochs)
+
     imp = adapter.importance()
     assert list(imp.columns) == ["feature", "gain"]
     assert list(imp["feature"]) == list(X.columns)
