@@ -1,18 +1,17 @@
-run_id: 2bd55026ae63430aa774bce20a359b4a
-oof_auc: 0.9690978395195489
+run_id: d55d1cd49c194eb8bf7b5128e548df81
+oof_auc: 0.9691957618114269
 seed_aucs:
-  42: 0.9687625596953652
-  43: 0.9687690370378296
-  44: 0.9687786853742242
+  42: 0.9690874005101022
+  43: 0.969076340063991
+  44: 0.9690534027714975
 fold_aucs:
-  0: 0.9685285490759296
-  1: 0.9691572770088221
-  2: 0.9693118025161984
-  3: 0.9696190675987406
-  4: 0.9689007236127615
-config: exp067_lookup_xgb_impute_comps5
+  0: 0.9686333701540087
+  1: 0.9692767228647826
+  2: 0.9693573820992233
+  3: 0.9697279167290674
+  4: 0.9689973401304328
+config: exp081_lookup_fold_initialization_avg3
 features: academic_work_impact,age,app_opens_per_day,daily_screen_time_hours,daily_screen_time_hours_recon,daily_screen_time_hours_xgb_recon,gaming_hours,gaming_hours_recon,gaming_hours_xgb_recon,gender,imp_leisure_frac,imp_resid_frac,imp_social_frac,imp_week_total,imp_work_frac,notifications_per_day,placebo_noise,screen_slack,sgw_frac,sgw_sum,slack_frac,sleep_hours,social_media_hours,social_media_hours_recon,social_media_hours_xgb_recon,stress_level,weekend_screen_time,weekend_screen_time_xgb_recon,wk_minus_sgw,wk_other,work_study_hours,work_study_hours_recon,work_study_hours_xgb_recon
-git_commit: fa10f4c60a549e5588d612f1d418b6ccc9040d43
-adopted_at: '2026-08-15'
-reason: '이슈 #106: Lookup-Transformer에 복원 블록을 추가해 3시드 평균 +0.00018, 시드 3/3, fold 5/5,
-  새 특성 14개 게이트 통과'
+git_commit: 8c61ca1d588383955b73e1881422bbc1e6c442f3
+adopted_at: '2026-08-17'
+reason: '채택 문턱 +0.00002 적용: 기존 champion 대비 +0.00009792, 3/3 시드와 5/5 fold 개선'
