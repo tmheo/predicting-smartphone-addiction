@@ -173,18 +173,30 @@ def test_null_controls_are_reproducible_and_classify_each_retained_member():
     assert first.controls == second.controls
     assert first.controls.lower <= first.controls.upper
     assert first.controls.best_member == "m0"
-    retained_quality = [
-        quality for quality in first.quality if quality.config in first.retained_configs
-    ]
-    assert all(
-        quality.contribution is None or quality.contribution > 0
-        for quality in retained_quality
+    assert set(first.retained_configs) == {"m0", "m1", "m2"}
+    assert {quality.action for quality in first.quality} == {"유지"}
+
+
+def test_audit_keeps_negative_equal_rank_contributor_for_nested_evaluation():
+    context = make_context()
+    y = context.train[TARGET].to_numpy(dtype=np.float64)
+    rng = np.random.default_rng(21)
+    strong_a = np.clip(0.1 + 0.8 * y + rng.normal(0, 0.04, N), 0.001, 0.999)
+    strong_b = np.clip(0.1 + 0.8 * y + rng.normal(0, 0.06, N), 0.001, 0.999)
+    harmful = np.clip(0.9 - 0.8 * y + rng.normal(0, 0.04, N), 0.001, 0.999)
+    audit = audit_pool(
+        [
+            make_candidate(context, "strong_a", strong_a, rng.random(len(context.test))),
+            make_candidate(context, "strong_b", strong_b, rng.random(len(context.test))),
+            make_candidate(context, "harmful", harmful, rng.random(len(context.test))),
+        ],
+        context,
+        random_count=8,
     )
-    assert {quality.action for quality in first.quality} <= {
-        "유지",
-        "현행 기여 기준 탈락",
-        "영점 대역 제거 후보",
-    }
+    quality = {item.config: item for item in audit.quality}
+    assert quality["harmful"].contribution < 0
+    assert quality["harmful"].action == "유지"
+    assert set(audit.retained_configs) == {"strong_a", "strong_b", "harmful"}
 
 
 def test_audit_reports_fixed_missing_count_segments():

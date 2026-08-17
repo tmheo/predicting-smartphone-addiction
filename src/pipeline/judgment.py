@@ -13,9 +13,9 @@ compare·pool CLI는 이 module의 caller다. 판정 함수는 통과 여부와 
   같은 시드의 실재 개선을 걸러내므로 짝지은 비교여야 한다. (#74 개정)
   통과는 채택이 아니다.
 - 확정 재검증(3시드 평균본):
-  - 시드 평균본 OOF AUC가 champion 대비 +0.0001 이상.
+  - 시드 평균본 OOF AUC가 champion 대비 +0.00002 이상.
   - 3시드 중 2시드 이상에서 같은 시드의 champion 대비 시드별 OOF AUC 개선이 0보다 크다.
-  - 개선 폭이 +0.0001 이상 +0.0002 미만인 경계 구간이면 시드 평균 fold 점수 5개 중
+  - 개선 폭이 +0.00002 이상 +0.0002 미만인 경계 구간이면 시드 평균 fold 점수 5개 중
     3개 이상 승리를 추가로 요구한다. 그 외 구간에서 fold 승리 수는 보조 증거로 기록만 한다.
 - 새 피처는 fold별 gain importance 평균이 플라시보 평균보다 높아야 한다.
   확정 재검증의 게이트이며, 스크리닝에서는 참고로만 쓴다.
@@ -33,8 +33,8 @@ compare·pool CLI는 이 module의 caller다. 판정 함수는 통과 여부와 
 계열 3(앙상블)의 판정도 이 module 소관이다(#104).
 
 - 채택 가능: 결합 전략의 nested OOF AUC가 champion(3시드 평균본) OOF AUC 대비
-  +0.0001 이상.
-- 동률 그룹: 1위 고정 기준으로, 1위와의 차이가 0.0001 미만인 채택 가능 전략만
+  +0.00002 이상.
+- 동률 그룹: 1위 고정 기준으로, 1위와의 차이가 0.00002 미만인 채택 가능 전략만
   포함한다(연쇄 확장 없음).
 - 확정: 동률 그룹 안에서 복잡도 서열이 가장 낮은 1개를 추천 전략으로 확정한다.
   복잡도 서열은 ADR 0001의 "구성원 수와 선택 자유도가 적은 더 단순한 방식"을
@@ -48,8 +48,9 @@ compare·pool CLI는 이 module의 caller다. 판정 함수는 통과 여부와 
   시점에만 적용하고 champion 갱신 때마다 재심사하지 않는다.
 - 중복 게이트: 풀 내 최근접 구성원과 OOF 예측의 스피어만 순위 상관이 0.998 이상이면
   중복으로 보고 성능이 높은 쪽만 유지한다. 상관은 중복 제거 전용이다.
-- 기여 판정: 표준 평가 앙상블(풀 전체의 순위 평균)의 OOF AUC에서 해당 구성원을
-  제외했을 때 AUC가 하락해야 유지된다. 풀이 비어 있으면 기여 판정은 묻지 않는다.
+- 기여 참고값: 표준 평가 앙상블(풀 전체의 순위 평균)의 OOF AUC에서 해당 구성원을
+  제외했을 때의 변화를 기록한다. 특정 결합 방식의 한계만 보여 주므로 진입이나 제거
+  게이트로 쓰지 않는다. 풀이 비어 있으면 계산하지 않는다.
 
 채택 자격(장부에 오르는 실행의 기록 조건)도 여기가 단일 소스다: 3시드 평균본이고,
 git_dirty가 아니고, 커밋된 folds와 sha256이 일치해야 한다. (#14 관행)
@@ -76,7 +77,7 @@ from .features import PLACEBO
 from .ledger import Champion, Pool
 from .runs import RunStore
 
-AUC_THRESHOLD = 0.0001  # 확정 문턱. 이 미만의 개선은 CV 잡음으로 본다. (#15, ADR 0001)
+AUC_THRESHOLD = 0.00002  # 계열 1·3 공통 채택 문턱. (#15, #64, ADR 0001)
 BOUNDARY_UPPER = 0.0002  # 이 미만의 개선 폭은 경계 구간으로 fold 승리 게이트를 추가한다.
 SCREENING_SEEDS = [42]  # 스크리닝 시드. 고정. (ADR 0001)
 CONFIRM_SEEDS = [42, 43, 44]  # 확정 재검증 시드. 고정. (ADR 0001)
@@ -475,7 +476,7 @@ def spearman(a: pd.Series, b: pd.Series) -> float:
 def rank_ensemble_auc(preds: list[pd.Series], y: pd.Series) -> float:
     """표준 평가 앙상블: 구성원별 예측을 순위(백분위)로 바꿔 평균한 뒤 채점한다.
 
-    수식은 ensemble의 균등 순위 평균 adapter가 소유한다(#104). 기여 판정은
+    수식은 ensemble의 균등 순위 평균 adapter가 소유한다(#104). 기여 참고값은
     "블록=전체 OOF"인 특수 사례라 같은 수식을 그대로 쓴다.
     """
     return float(roc_auc_score(y.to_numpy(), rank_mean(pd.concat(preds, axis=1))))
@@ -494,7 +495,7 @@ class DuplicateCheck:
 
 @dataclass(frozen=True)
 class ContributionCheck:
-    """기여 판정: 표준 평가 앙상블에 후보를 넣었을 때 OOF AUC가 올라야 유지된다."""
+    """기여 참고값: 표준 평가 앙상블에 후보를 넣었을 때의 OOF AUC 변화."""
 
     auc_without: float
     auc_with: float
@@ -520,11 +521,11 @@ class EntryVerdict:
 def judge_entry(
     pool: Pool, candidate: PoolCandidate, champion: Champion, store: RunStore, y: pd.Series
 ) -> EntryVerdict:
-    """풀 진입 판정: 진입 하한 + 중복 게이트 + 기여 판정. (ADR 0001 계열 2)
+    """풀 진입 판정: 진입 하한 + 중복 게이트. (ADR 0001 계열 2)
 
     중복 게이트는 최종 논리곱이 아니라 탈락의 조기 확정이다: 중복인데 기존 구성원이
-    더 높으면 그 자리에서 탈락이고, 후보가 더 높으면 교체 대상만 정한 뒤 진입 여부는
-    진입 하한과 기여 판정이 정한다.
+    더 높으면 그 자리에서 탈락이고, 후보가 더 높으면 교체 대상만 정한다.
+    균등 순위 평균 기여는 참고값으로 계산하되 진입 여부에는 영향을 주지 않는다.
     """
     floor = champion.oof_auc - ENTRY_FLOOR_MARGIN
     floor_ok = candidate.auc_oof >= floor
@@ -567,7 +568,7 @@ def judge_entry(
         )
     drop_run_id = nearest_id if replace else None
 
-    # 기여 판정: 교체로 빠질 구성원은 제외한 풀 기준으로 잰다.
+    # 기여 참고값: 교체로 빠질 구성원은 제외한 풀 기준으로 잰다.
     base_preds = [p for run_id, p in member_preds.items() if run_id != drop_run_id]
     if not base_preds:
         return EntryVerdict(
@@ -583,7 +584,7 @@ def judge_entry(
     )
     return EntryVerdict(
         **base, duplicate=duplicate, drop_run_id=drop_run_id, contribution=contribution,
-        admit=floor_ok and contribution.ok,
+        admit=floor_ok,
     )
 
 

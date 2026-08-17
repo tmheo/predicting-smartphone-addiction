@@ -1,7 +1,7 @@
 """계열 3 판정(judge_ensemble)의 규칙 테스트. (ADR 0001 계열 3, #104)
 
-- 채택 가능: nested OOF AUC가 champion 대비 +0.0001 이상.
-- 동률 그룹: 1위 고정 기준, 1위와의 차이가 0.0001 미만인 채택 가능 전략만
+- 채택 가능: nested OOF AUC가 champion 대비 +0.00002 이상.
+- 동률 그룹: 1위 고정 기준, 1위와의 차이가 0.00002 미만인 채택 가능 전략만
   (연쇄 확장 없음).
 - 확정: 동률 그룹에서 복잡도 서열 최저 1개. 채택 가능 전략이 없으면 채택 없음.
 - 전략 간 fold별 승리 수는 보조 증거로 기록만 한다.
@@ -33,19 +33,19 @@ def outcome(
 
 def test_adoption_recommends_clear_winner():
     verdict = judge_ensemble(
-        [outcome("rank_mean", 1, 0.96905), outcome("ridge_logit", 4, 0.96930)],
+        [outcome("rank_mean", 1, 0.96901), outcome("ridge_logit", 4, 0.96905)],
         champion_auc=CHAMPION_AUC,
     )
     assert [a.name for a in verdict.assessments] == ["ridge_logit", "rank_mean"]
     assert verdict.assessments[0].eligible
-    assert not verdict.assessments[1].eligible  # +0.00005는 문턱 미만.
+    assert not verdict.assessments[1].eligible  # +0.00001은 문턱 미만.
     assert verdict.tie_group == ["ridge_logit"]
     assert verdict.recommended == "ridge_logit"
 
 
 def test_no_eligible_strategy_keeps_solo_champion():
     verdict = judge_ensemble(
-        [outcome("rank_mean", 1, 0.96880), outcome("ridge_logit", 4, 0.96905)],
+        [outcome("rank_mean", 1, 0.96880), outcome("ridge_logit", 4, 0.96901)],
         champion_auc=CHAMPION_AUC,
     )
     assert verdict.recommended is None
@@ -53,9 +53,9 @@ def test_no_eligible_strategy_keeps_solo_champion():
 
 
 def test_tie_resolved_by_lowest_complexity():
-    # 1위 ridge와 0.00005 차이(0.0001 미만)면 동률이고, 복잡도 서열이 낮은 쪽이 이긴다.
+    # 1위 ridge와 0.00001 차이(0.00002 미만)면 동률이고, 복잡도 서열이 낮은 쪽이 이긴다.
     verdict = judge_ensemble(
-        [outcome("rank_mean", 1, 0.96925), outcome("ridge_logit", 4, 0.96930)],
+        [outcome("rank_mean", 1, 0.96904), outcome("ridge_logit", 4, 0.96905)],
         champion_auc=CHAMPION_AUC,
     )
     assert verdict.tie_group == ["ridge_logit", "rank_mean"]
@@ -63,13 +63,13 @@ def test_tie_resolved_by_lowest_complexity():
 
 
 def test_tie_group_is_anchored_to_top_without_chaining():
-    # b는 1위 a와 0.00008 차이로 동률이지만, c는 1위와 0.00016 차이라 b와 가까워도
+    # b는 1위 a와 0.000015 차이로 동률이지만, c는 1위와 0.00003 차이라 b와 가까워도
     # 그룹에 들어가지 않는다(연쇄 확장 없음).
     verdict = judge_ensemble(
         [
-            outcome("a", 3, 0.96930),
-            outcome("b", 2, 0.96922),
-            outcome("c", 1, 0.96914),
+            outcome("a", 3, 0.96906),
+            outcome("b", 2, 0.969045),
+            outcome("c", 1, 0.96903),
         ],
         champion_auc=CHAMPION_AUC,
     )
@@ -78,9 +78,9 @@ def test_tie_group_is_anchored_to_top_without_chaining():
 
 
 def test_tie_group_holds_only_eligible_strategies():
-    # 1위와 0.0001 미만 차이라도 채택 가능 문턱에 못 미치면 동률 그룹에 못 든다.
+    # 1위와 0.00002 미만 차이라도 채택 가능 문턱에 못 미치면 동률 그룹에 못 든다.
     verdict = judge_ensemble(
-        [outcome("rank_mean", 1, 0.96905), outcome("ridge_logit", 4, 0.96912)],
+        [outcome("rank_mean", 1, 0.969015), outcome("ridge_logit", 4, 0.96903)],
         champion_auc=CHAMPION_AUC,
     )
     assert verdict.tie_group == ["ridge_logit"]

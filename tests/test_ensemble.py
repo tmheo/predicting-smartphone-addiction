@@ -80,7 +80,7 @@ def test_registry_holds_reference_and_issue_64_adapters():
 
 
 def test_rank_ensemble_auc_uses_rank_mean_formula():
-    # 기여 판정(계열 2)이 균등 순위 평균 adapter의 수식과 비트 동일해야 한다(#104 이관).
+    # 기여 참고값(계열 2)이 균등 순위 평균 adapter의 수식과 비트 동일해야 한다(#104 이관).
     preds = make_preds(members=11)
     y = make_labels()
     series = [preds[c].rename("pred") for c in preds.columns]

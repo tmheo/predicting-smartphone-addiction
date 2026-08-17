@@ -15,8 +15,8 @@
     exp_beta: 5/5, +0.12548
     exp_gamma: 5/5, +0.13167
 fold 승리 (보조 증거): rank_mean 0/5, ridge_logit 1/5
-계열 3 판정: champion OOF AUC 0.95000 대비 문턱 +0.0001
+계열 3 판정: champion OOF AUC 0.95000 대비 문턱 +2e-05
   rank_mean: nested 1.00000 (delta +0.05000) → 채택 가능
   ridge_logit: nested 1.00000 (delta +0.05000) → 채택 가능
-동률 그룹 (1위와 차이 0.0001 미만): rank_mean, ridge_logit
+동률 그룹 (1위와 차이 2e-05 미만): rank_mean, ridge_logit
 판정: rank_mean 채택 추천 (동률 그룹에서 복잡도 서열 최저)

@@ -59,7 +59,7 @@ from .runs import MlflowRunStore, RunStore, RunStoreError
 def rank_mean(preds: pd.DataFrame) -> np.ndarray:
     """균등 순위 평균의 수식 단일 소스: 블록 내 백분위 순위의 구성원 평균.
 
-    순위의 모집단은 전달된 블록 자신이다. judgment 계열 2 기여 판정의
+    순위의 모집단은 전달된 블록 자신이다. judgment 계열 2 기여 참고값의
     rank_ensemble_auc는 "블록=전체 OOF"인 특수 사례로 같은 수식을 쓴다.
     """
     return preds.rank(pct=True).to_numpy().mean(axis=1)

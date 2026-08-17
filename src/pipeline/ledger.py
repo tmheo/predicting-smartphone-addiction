@@ -57,7 +57,7 @@ class Champion:
     def save(self, path: Path = CHAMPION_PATH) -> None:
         record = {
             "run_id": self.run_id,
-            # 판정이 +0.0001 단위 비교이므로 반올림 없이 전체 정밀도로 남긴다.
+            # 작은 채택 문턱과 비교하므로 반올림 없이 전체 정밀도로 남긴다.
             "oof_auc": float(self.oof_auc),
             # 확정 재검증의 시드별 비교와 경계 구간 fold 승리 게이트의 기준값. (ADR 0001)
             "seed_aucs": {s: float(self.seed_aucs[s]) for s in sorted(self.seed_aucs)},
@@ -81,7 +81,7 @@ class EntryEvidence:
     floor_margin: float  # 후보 OOF AUC − 진입 하한. 진입 시점의 여유 폭.
     nearest_run_id: str | None  # 진입 당시 풀이 비어 있었으면 None.
     nearest_spearman: float | None
-    ensemble_auc_with: float | None  # 기여 판정을 묻지 않았으면 None.
+    ensemble_auc_with: float | None  # 기여 참고값을 계산하지 않았으면 None.
     ensemble_auc_without: float | None
     contribution: float | None
 
@@ -132,7 +132,7 @@ class Pool:
                 {
                     "run_id": member.run_id,
                     "config": member.config,
-                    # 판정이 +0.0001 단위 비교이므로 반올림 없이 전체 정밀도로 남긴다.
+                    # 작은 채택 문턱과 비교하므로 반올림 없이 전체 정밀도로 남긴다.
                     "oof_auc": float(member.oof_auc),
                     "seeds": ",".join(map(str, member.seeds)),
                     "entered_at": member.entered_at,

@@ -4,7 +4,7 @@
     uv run python -m pipeline.pool <run_id>                         # 진입 판정 리포트
     uv run python -m pipeline.pool <run_id> --admit --reason "..."  # 통과 시 장부 등록
 
-판정 규칙(진입 하한·중복 게이트·기여 판정)과 채택 자격 검사는 judgment module
+판정 규칙(진입 하한·중복 게이트)과 채택 자격 검사는 judgment module
 소관이다(ADR 0001 계열 2). 이 module은 EntryVerdict의 근거 값을 한국어 리포트로
 그려내고, --admit에서 장부 기록과 탈락 태그 주석을 처리하는 caller다.
 
@@ -49,7 +49,7 @@ def render_entry(verdict: EntryVerdict) -> list[str]:
         )
     ]
     if verdict.duplicate is None:
-        lines.append("풀이 비어 있다: 중복 게이트와 기여 판정은 묻지 않는다.")
+        lines.append("풀이 비어 있다: 중복 게이트와 기여 참고값은 계산하지 않는다.")
         return lines
 
     dup = verdict.duplicate
@@ -70,12 +70,12 @@ def render_entry(verdict: EntryVerdict) -> list[str]:
         )
 
     if verdict.contribution is None:
-        lines.append("교체 후 풀에 다른 구성원이 없다: 기여 판정은 묻지 않는다.")
+        lines.append("교체 후 풀에 다른 구성원이 없다: 기여 참고값은 계산하지 않는다.")
         return lines
     con = verdict.contribution
     lines.append(
-        f"기여 판정: 표준 평가 앙상블 OOF AUC {con.auc_without:.5f} → 포함 시 {con.auc_with:.5f} "
-        f"(기여 {con.contribution:+.5f}) → {'유지' if con.ok else '탈락 후보'}"
+        f"기여 참고값: 표준 평가 앙상블 OOF AUC {con.auc_without:.5f} → 포함 시 {con.auc_with:.5f} "
+        f"(변화 {con.contribution:+.5f}, 진입 판정에는 미사용)"
     )
     return lines
 

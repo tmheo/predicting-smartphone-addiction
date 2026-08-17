@@ -1,4 +1,4 @@
-"""후보 풀의 예측 무결성, 중복, 다양성과 기여 영점 대역 감사. (#63)
+"""후보 풀의 예측 무결성, 중복, 다양성과 기여 참고값 감사. (#63)
 
 사용법:
     uv run python -m pipeline.pool_audit
@@ -13,8 +13,8 @@
 4. 단독 OOF, 최근접 순위 상관, 잔차 상관, 결측 개수 층별 AUC를 측정한다.
 5. 고정 난수 순위와 각 구성원 복제로 표준 평가 앙상블 기여의 영점 대역을 잰다.
 
-영점 대역은 ADR 0001의 현행 `기여 > 0` 판정을 자동으로 바꾸지 않는다.
-대역 안의 양수 기여는 별도 결정이 필요한 제거 후보로만 분류한다.
+균등 순위 평균 기여와 영점 대역은 결합 방식 하나의 진단값일 뿐이다.
+무결성과 중복 검사를 통과한 후보를 제거하는 게이트로 쓰지 않는다.
 """
 
 from __future__ import annotations
@@ -112,15 +112,6 @@ class DuplicateDecision:
 
 
 @dataclass(frozen=True)
-class PruningDecision:
-    round: int
-    dropped: str
-    contribution: float
-    auc_before: float
-    auc_after: float
-
-
-@dataclass(frozen=True)
 class CandidateQuality:
     config: str
     auc: float
@@ -147,7 +138,6 @@ class NullControls:
 class PoolAudit:
     checks: tuple[CandidateCheck, ...]
     duplicate_decisions: tuple[DuplicateDecision, ...]
-    pruning_decisions: tuple[PruningDecision, ...]
     retained_configs: tuple[str, ...]
     initial_ensemble_auc: float
     full_ensemble_auc: float
@@ -436,31 +426,6 @@ def audit_pool(
         return float(roc_auc_score(y, all_ranked[:, columns].mean(axis=1)))
 
     initial_auc = subset_auc(active)
-    pruning_decisions = []
-    while len(active) > 1:
-        auc_before = subset_auc(active)
-        auc_without = {
-            column: subset_auc([other for other in active if other != column])
-            for column in active
-        }
-        contributions = {
-            column: auc_before - auc_without[column] for column in active
-        }
-        worst = min(contributions, key=contributions.get)
-        if contributions[worst] > 0:
-            break
-        auc_after = auc_without[worst]
-        pruning_decisions.append(
-            PruningDecision(
-                round=len(pruning_decisions) + 1,
-                dropped=initial_matrix.columns[worst],
-                contribution=contributions[worst],
-                auc_before=auc_before,
-                auc_after=auc_after,
-            )
-        )
-        active.remove(worst)
-
     matrix = initial_matrix.iloc[:, active]
     ranked = all_ranked[:, active]
     rank_sum = ranked.sum(axis=1)
@@ -471,9 +436,6 @@ def audit_pool(
     )
     segments = _segment_masks(context.train)
 
-    dropped_contribution = {
-        decision.dropped: decision.contribution for decision in pruning_decisions
-    }
     qualities: list[CandidateQuality] = []
     for member in initial_matrix:
         others = [name for name in initial_matrix if name != member]
@@ -489,39 +451,26 @@ def audit_pool(
                     initial_matrix[nearest].to_numpy() - y,
                 )[0, 1]
             )
-        if member in dropped_contribution:
-            contribution = dropped_contribution[member]
-        else:
-            final_others = [name for name in matrix if name != member]
-            contribution = (
-                full_auc
-                - float(
-                    roc_auc_score(
-                        y,
-                        ranked[
-                            :,
-                            [
-                                matrix.columns.get_loc(name)
-                                for name in final_others
-                            ],
-                        ].mean(axis=1),
-                    )
+        final_others = [name for name in matrix if name != member]
+        contribution = (
+            full_auc
+            - float(
+                roc_auc_score(
+                    y,
+                    ranked[
+                        :,
+                        [matrix.columns.get_loc(name) for name in final_others],
+                    ].mean(axis=1),
                 )
-                if final_others
-                else None
             )
+            if final_others
+            else None
+        )
         segment_aucs = {
             name: _auc_or_none(y, initial_matrix[member].to_numpy(), mask)
             for name, mask in segments.items()
         }
-        if member in dropped_contribution:
-            action = "현행 기여 기준 탈락"
-        elif contribution is None:
-            action = "유지"
-        elif contribution <= controls.upper:
-            action = "영점 대역 제거 후보"
-        else:
-            action = "유지"
+        action = "유지"
         qualities.append(
             CandidateQuality(
                 config=member,
@@ -538,7 +487,6 @@ def audit_pool(
     return PoolAudit(
         checks=tuple(checks),
         duplicate_decisions=tuple(duplicate_decisions),
-        pruning_decisions=tuple(pruning_decisions),
         retained_configs=tuple(matrix.columns),
         initial_ensemble_auc=initial_auc,
         full_ensemble_auc=full_auc,
@@ -557,8 +505,6 @@ def render_markdown(audit: PoolAudit) -> str:
     full_count = sum(check.seed_mean_status == "완전 확인" for check in audit.checks)
     legacy_count = sum(check.seed_mean_status == "기존 기록 부분 확인" for check in audit.checks)
     failed = [check.config for check in audit.checks if not check.valid]
-    null_candidates = [q.config for q in audit.quality if q.action == "영점 대역 제거 후보"]
-    current_drops = [q.config for q in audit.quality if q.action == "현행 기여 기준 탈락"]
     lines = [
         "# OOF 후보 풀 품질·다양성 감사",
         "",
@@ -566,22 +512,16 @@ def render_markdown(audit: PoolAudit) -> str:
         "",
         f"현재 장부 {len(audit.checks)}개 중 {valid_count}개가 계보, 정렬, fold, float64와 유한성 검사를 통과했다.",
         f"시드별 OOF 평균은 {full_count}개에서 재계산해 확인했고, #98 이전 실행 {legacy_count}개는 시드별 파일이 없어 기존 기록 부분 확인으로 남는다.",
-        f"정확·순위 중복과 현행 기여 기준의 반복 제거 뒤 {len(audit.retained_configs)}개가 남았다.",
-        f"표준 평가 앙상블 OOF AUC는 최초 `{audit.initial_ensemble_auc:.12f}`에서 최종 `{audit.full_ensemble_auc:.12f}`로 바뀌었다.",
+        f"정확·순위 중복 제거 뒤 {len(audit.retained_configs)}개가 남았고, 모두 nested OOF 평가 후보로 유지한다.",
+        f"전체 후보의 균등 순위 평균 OOF AUC는 `{audit.full_ensemble_auc:.12f}`다.",
         f"난수 {audit.controls.random_count}개와 구성원 복제 대조의 영점 대역은 `{audit.controls.lower:+.12f}`에서 `{audit.controls.upper:+.12f}`다.",
-        "영점 대역 상한은 ADR 0001의 현행 `기여 > 0` 규칙을 자동 변경하지 않으며, 대역 안의 양수 기여는 별도 결정이 필요한 제거 후보로만 분류한다.",
+        "균등 순위 평균의 제외 기여와 영점 대역은 참고값이며, 후보 진입이나 제거에 쓰지 않는다.",
         "",
     ]
     if failed:
         lines.append(f"무결성 실패 후보: {', '.join(failed)}.")
-    if current_drops:
-        lines.append(f"현행 기여 기준 탈락 후보: {', '.join(current_drops)}.")
-    if null_candidates:
-        lines.append(f"영점 대역 안의 양수 기여 후보: {', '.join(null_candidates)}.")
-    else:
-        lines.append("고정점 후보의 양수 기여는 모두 영점 대역 상한을 넘었다.")
-    if not failed and not current_drops and not null_candidates:
-        lines.append("무결성 실패, 현행 기여 기준 탈락, 영점 대역 제거 후보가 없다.")
+    if not failed:
+        lines.append("무결성 실패 후보가 없다.")
 
     lines.extend(
         [
@@ -626,23 +566,9 @@ def render_markdown(audit: PoolAudit) -> str:
     else:
         lines.append("OOF와 시험 예측이 모두 같은 정확 중복 및 스피어만 0.998 이상 중복이 없다.")
 
-    lines.extend(["", "## 현행 기여 기준 반복 제거", ""])
-    if audit.pruning_decisions:
-        lines.extend(
-            [
-                "각 단계에서 제외 기여가 가장 낮은 후보 하나를 제거하고 전 후보의 기여를 다시 계산했다.",
-                "",
-                "| 단계 | 제거 후보 | 제거 시점 기여 | 제거 전 AUC | 제거 후 AUC |",
-                "| ---: | --- | ---: | ---: | ---: |",
-            ]
-        )
-        for decision in audit.pruning_decisions:
-            lines.append(
-                f"| {decision.round} | {decision.dropped} | {decision.contribution:+.12f} | "
-                f"{decision.auc_before:.12f} | {decision.auc_after:.12f} |"
-            )
-    else:
-        lines.append("중복 제거 뒤 모든 후보의 제외 기여가 양수라 추가 제거가 없다.")
+    lines.extend(["", "## 후보 유지 정책", ""])
+    lines.append("무결성과 중복 검사를 통과한 후보는 균등 순위 평균 기여의 부호와 관계없이 모두 유지한다.")
+    lines.append("구성원 선택과 가중치는 outer fold 안에서 학습하는 nested OOF 평가가 결정한다.")
     lines.extend(
         [
             "",
@@ -655,7 +581,7 @@ def render_markdown(audit: PoolAudit) -> str:
             "",
             "## 품질과 다양성",
             "",
-            "탈락 후보의 기여는 반복 제거 당시 값이고, 고정점 후보의 기여는 최종 표준 평가 앙상블에서 제외한 값이다.",
+            "제외 기여는 전체 후보의 균등 순위 평균에서 각 후보 하나를 제외한 참고값이다.",
             "잔차 상관은 최근접 순위 상관 후보와의 피어슨 상관이다.",
             "",
             "| 후보 | 단독 OOF | 최근접 후보 | 스피어만 | 잔차 상관 | 제외 기여 | 판정 |",
@@ -713,8 +639,8 @@ def render_markdown(audit: PoolAudit) -> str:
             "",
             "OOF와 시험 예측 양쪽 배열 해시가 같은 후보는 정확 중복으로 제거한다.",
             "정확 중복 제거 뒤 OOF 스피어만 순위 상관이 0.998 이상인 후보끼리는 단독 OOF가 높은 후보만 유지한다.",
-            "제외 기여가 0 이하인 후보는 ADR 0001의 현행 규칙에 따라 탈락 후보다.",
-            "제외 기여가 양수지만 영점 대역 상한 이하인 후보는 새 정보의 근거가 부족한 제거 후보이며, 실제 장부 제거는 ADR 0001을 별도 결정으로 개정한 뒤 수행한다.",
+            "균등 순위 평균의 제외 기여와 영점 대역은 후보 제거 기준이 아니다.",
+            "무결성과 중복 검사를 통과한 후보는 모두 nested OOF 평가에 넘긴다.",
             "",
         ]
     )

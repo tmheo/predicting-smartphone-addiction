@@ -82,9 +82,9 @@ def test_confirmation_passes_outside_boundary_without_fold_gate():
 
 
 def test_confirmation_requires_seed_mean_threshold():
-    # 시드 평균본 delta +0.00005는 문턱 +0.0001 미만이라 CV 잡음으로 본다.
+    # 시드 평균본 delta +0.00001은 문턱 +0.00002 미만이다.
     challenger = make_challenger(
-        auc_oof=0.96705, seed_aucs=all_seeds_improved(), fold_aucs=folds(wins=5)
+        auc_oof=0.96701, seed_aucs=all_seeds_improved(), fold_aucs=folds(wins=5)
     )
     verdict = judge_confirmation(make_champion(), challenger)
     assert not verdict.auc_ok
