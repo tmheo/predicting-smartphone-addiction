@@ -515,7 +515,10 @@ def run_report(
         f"{a.name} {a.fold_wins}/{len(fold_of.unique())}" for a in verdict.assessments
     )
     print(f"fold 승리 (보조 증거): {wins}")
-    print(f"계열 3 판정: champion OOF AUC {verdict.champion_auc:.5f} 대비 문턱 +{AUC_THRESHOLD}")
+    print(
+        f"계열 3 판정: champion OOF AUC {verdict.champion_auc:.5f} 대비 "
+        f"문턱 +{AUC_THRESHOLD:.5f}"
+    )
     for assessment in verdict.assessments:
         print(
             f"  {assessment.name}: nested {assessment.nested_auc:.5f} "
@@ -524,7 +527,10 @@ def run_report(
     if verdict.recommended is None:
         print("판정: 채택 없음, 단독 champion 유지")
         return
-    print(f"동률 그룹 (1위와 차이 {AUC_THRESHOLD} 미만): {', '.join(verdict.tie_group)}")
+    print(
+        f"동률 그룹 (1위와 차이 {AUC_THRESHOLD:.5f} 미만): "
+        f"{', '.join(verdict.tie_group)}"
+    )
     print(f"판정: {verdict.recommended} 채택 추천 (동률 그룹에서 복잡도 서열 최저)")
 
 

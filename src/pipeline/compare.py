@@ -115,7 +115,7 @@ def render_confirmation(verdict: ConfirmationVerdict) -> list[str]:
     lines = [
         (
             f"시드 평균본 OOF AUC: champion {verdict.champion_auc:.5f} → "
-            f"challenger {verdict.challenger_auc:.5f} (delta {verdict.delta:+.5f}, 문턱 +{AUC_THRESHOLD}) "
+            f"challenger {verdict.challenger_auc:.5f} (delta {verdict.delta:+.5f}, 문턱 +{AUC_THRESHOLD:.5f}) "
             f"→ {'통과' if verdict.auc_ok else '미달'}"
         )
     ]
@@ -131,7 +131,7 @@ def render_confirmation(verdict: ConfirmationVerdict) -> list[str]:
     )
     if verdict.boundary:
         lines.append(
-            f"경계 구간(+{AUC_THRESHOLD} 이상 +{BOUNDARY_UPPER} 미만): fold 승리 "
+            f"경계 구간(+{AUC_THRESHOLD:.5f} 이상 +{BOUNDARY_UPPER} 미만): fold 승리 "
             f"{verdict.fold_wins}/{verdict.fold_total} (최소 {FOLD_WIN_MIN}) → {'통과' if verdict.fold_ok else '미달'}"
         )
     else:

@@ -3,7 +3,7 @@ exit: 0
 --- stdout ---
 champion  : exp057_cat_xgb_impute_comps5 run 3d5239b07c6e475baa7dde03fb0b99bc
 challenger: exp052_cat_xgb_impute_pass5 run 2c6150364304443c813302d6fa19528d
-시드 평균본 OOF AUC: champion 0.96854 → challenger 0.96836 (delta -0.00019, 문턱 +2e-05) → 미달
+시드 평균본 OOF AUC: champion 0.96854 → challenger 0.96836 (delta -0.00019, 문턱 +0.00002) → 미달
 시드 42: champion 0.96833 → challenger 0.96818 (delta -0.00016) → 악화
 시드 43: champion 0.96833 → challenger 0.96816 (delta -0.00017) → 악화
 시드 44: champion 0.96838 → challenger 0.96818 (delta -0.00020) → 악화

@@ -15,7 +15,7 @@
     exp_beta: 5/5, -0.02705
     exp_gamma: 5/5, +0.12217
 fold 승리 (보조 증거): rank_mean 1/5, ridge_logit 4/5
-계열 3 판정: champion OOF AUC 0.99000 대비 문턱 +2e-05
+계열 3 판정: champion OOF AUC 0.99000 대비 문턱 +0.00002
   rank_mean: nested 0.60067 (delta -0.38933) → 미달
   ridge_logit: nested 0.55443 (delta -0.43557) → 미달
 판정: 채택 없음, 단독 champion 유지
