@@ -12,6 +12,9 @@ data/
 # 공개 사전학습 가중치 (원격 실행 명세의 SHA-256으로 검증, 커밋하지 않음)
 artifacts/checkpoints/
 
+# 재생성 가능하고 MLflow에 보존되는 Kaggle 제출 파일
+artifacts/submissions/
+
 # MLflow local tracking (issue #14/#17)
 mlflow.db
 mlruns/
