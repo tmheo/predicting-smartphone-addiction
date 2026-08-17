@@ -44,6 +44,18 @@ class ModelAdapter(Protocol):
         ...
 
 
+class FullFitModelAdapter(Protocol):
+    """검증 fold 없이 전체 자료를 고정 학습 길이로 맞추는 선택 계약."""
+
+    def fit_full(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        training_budget: int | None,
+        initial_score: pd.Series | None = None,
+    ) -> None: ...
+
+
 @dataclass(frozen=True)
 class AdapterDiagnostics:
     """진입 진단에 추가할 모델별 assertion과 관측값.
@@ -122,6 +134,31 @@ def collect_training_diagnostics(adapter: ModelAdapter) -> dict[str, object] | N
     return diagnostics
 
 
+def fit_full(
+    adapter: ModelAdapter,
+    X: pd.DataFrame,
+    y: pd.Series,
+    training_budget: int | None,
+    initial_score: pd.Series | None = None,
+) -> None:
+    """adapter의 전체 자료 재학습 계약을 호출한다.
+
+    전체 자료 재학습은 검증 자료가 없으므로 조기 종료를 허용하지 않는다.
+    반복 학습기는 CV에서 미리 확정한 양의 정수 학습 길이를 받고, 반복 수 개념이
+    없는 계열은 ``None``을 받는다. 모델별 해석은 adapter가 소유한다.
+    """
+    provider = getattr(adapter, "fit_full", None)
+    if provider is None:
+        raise ValueError("이 model adapter는 전체 자료 재학습을 지원하지 않는다.")
+    if training_budget is not None and (
+        isinstance(training_budget, bool)
+        or not isinstance(training_budget, int)
+        or training_budget < 1
+    ):
+        raise ValueError("전체 자료 재학습 길이는 양의 정수 또는 None이어야 한다.")
+    provider(X, y, training_budget, initial_score)
+
+
 class LightGBMAdapter:
     """LightGBM 이진 분류 adapter."""
 
@@ -130,6 +167,7 @@ class LightGBMAdapter:
         self._fit = fit
         self._seed = seed
         self._model = None
+        self._uses_initial_score = False
 
     def fit(
         self,
@@ -163,6 +201,24 @@ class LightGBMAdapter:
             **kwargs,
         )
         return self._predict(X_va, initial_score_va)
+
+    def fit_full(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        training_budget: int | None,
+        initial_score: pd.Series | None = None,
+    ) -> None:
+        import lightgbm as lgb
+
+        if training_budget is None:
+            raise ValueError("lightgbm 전체 자료 재학습에는 고정 반복 수가 필요하다.")
+        params = _resolve_lightgbm_params(self._params, list(X.columns))
+        params["n_estimators"] = training_budget
+        self._model = lgb.LGBMClassifier(**params, random_state=self._seed)
+        self._uses_initial_score = initial_score is not None
+        kwargs = {"init_score": initial_score} if self._uses_initial_score else {}
+        self._model.fit(X, y, **kwargs)
 
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
@@ -274,6 +330,27 @@ class XGBoostAdapter:
         )
         return self._model.predict_proba(X_va)[:, 1]
 
+    def fit_full(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        training_budget: int | None,
+        initial_score: pd.Series | None = None,
+    ) -> None:
+        import xgboost as xgb
+
+        _reject_initial_score("xgboost", initial_score, None)
+        if training_budget is None:
+            raise ValueError("xgboost 전체 자료 재학습에는 고정 반복 수가 필요하다.")
+        params = dict(self._params)
+        params["n_estimators"] = training_budget
+        self._model = xgb.XGBClassifier(
+            **params,
+            random_state=self._seed,
+            enable_categorical=True,
+        )
+        self._model.fit(X, y, verbose=200)
+
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
     ) -> np.ndarray:
@@ -354,6 +431,29 @@ class CatBoostAdapter:
             f"best_score={best_score}"
         )
         return self._model.predict_proba(X_va)[:, 1]
+
+    def fit_full(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        training_budget: int | None,
+        initial_score: pd.Series | None = None,
+    ) -> None:
+        from catboost import CatBoostClassifier
+
+        _reject_initial_score("catboost", initial_score, None)
+        if training_budget is None:
+            raise ValueError("catboost 전체 자료 재학습에는 고정 반복 수가 필요하다.")
+        X, cat_cols = self._prepare(X)
+        params = dict(self._params)
+        params["iterations"] = training_budget
+        self._model = CatBoostClassifier(
+            **params,
+            random_seed=self._seed,
+            cat_features=cat_cols,
+            allow_writing_files=False,
+        )
+        self._model.fit(X, y, verbose=200)
 
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
@@ -471,9 +571,25 @@ class LogisticOnehotAdapter:
         initial_score_tr: pd.Series | None = None,
         initial_score_va: pd.Series | None = None,
     ) -> np.ndarray:
+        _reject_initial_score("logistic_onehot", initial_score_tr, initial_score_va)
+        self._fit_model(X_tr, y_tr)
+        return self._model.predict_proba(self._encode(X_va))[:, 1]
+
+    def fit_full(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        training_budget: int | None,
+        initial_score: pd.Series | None = None,
+    ) -> None:
+        _reject_initial_score("logistic_onehot", initial_score, None)
+        if training_budget is not None:
+            raise ValueError("logistic_onehot은 고정 반복 수 대신 수렴 조건으로 학습한다.")
+        self._fit_model(X, y)
+
+    def _fit_model(self, X_tr: pd.DataFrame, y_tr: pd.Series) -> None:
         from sklearn.linear_model import LogisticRegression
 
-        _reject_initial_score("logistic_onehot", initial_score_tr, initial_score_va)
         self._columns = list(X_tr.columns)
         self._specs = {}
         for col in self._columns:
@@ -494,7 +610,6 @@ class LogisticOnehotAdapter:
             f"[logistic_onehot] n_features={self._train_matrix.shape[1]} "
             f"n_iter={int(self._model.n_iter_[0])}"
         )
-        return self._model.predict_proba(self._encode(X_va))[:, 1]
 
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
@@ -583,6 +698,21 @@ class LookupTransformerAdapter:
         _reject_initial_score("lookup_transformer", initial_score_tr, initial_score_va)
         self._impl = lookup_transformer.LookupTransformerFold(self._params, self._seed)
         return self._impl.fit(X_tr, y_tr, X_va, y_va)
+
+    def fit_full(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        training_budget: int | None,
+        initial_score: pd.Series | None = None,
+    ) -> None:
+        from . import lookup_transformer
+
+        _reject_initial_score("lookup_transformer", initial_score, None)
+        if training_budget is None:
+            raise ValueError("lookup_transformer 전체 자료 재학습에는 고정 epoch 수가 필요하다.")
+        self._impl = lookup_transformer.LookupTransformerFold(self._params, self._seed)
+        self._impl.fit_full(X, y, training_budget)
 
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
@@ -689,6 +819,21 @@ class TabMAdapter:
         self._impl = tabm.TabMFold(self._params, self._seed)
         return self._impl.fit(X_tr, y_tr, X_va, y_va)
 
+    def fit_full(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        training_budget: int | None,
+        initial_score: pd.Series | None = None,
+    ) -> None:
+        from . import tabm
+
+        _reject_initial_score("tabm", initial_score, None)
+        if training_budget is None:
+            raise ValueError("tabm 전체 자료 재학습에는 고정 epoch 수가 필요하다.")
+        self._impl = tabm.TabMFold(self._params, self._seed)
+        self._impl.fit_full(X, y, training_budget)
+
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
     ) -> np.ndarray:
@@ -697,6 +842,9 @@ class TabMAdapter:
 
     def importance(self) -> pd.DataFrame:
         return self._impl.importance()
+
+    def training_diagnostics(self) -> dict[str, object]:
+        return self._impl.training_diagnostics()
 
 
 class TabPFN3Adapter:
@@ -727,6 +875,21 @@ class TabPFN3Adapter:
         _reject_initial_score("tabpfn3", initial_score_tr, initial_score_va)
         self._impl = tabpfn3.TabPFN3Fold(self._params, self._seed)
         return self._impl.fit(X_tr, y_tr, X_va, y_va)
+
+    def fit_full(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        training_budget: int | None,
+        initial_score: pd.Series | None = None,
+    ) -> None:
+        from . import tabpfn3
+
+        _reject_initial_score("tabpfn3", initial_score, None)
+        if training_budget is not None:
+            raise ValueError("tabpfn3는 CV에서 고를 반복 학습 길이가 없다.")
+        self._impl = tabpfn3.TabPFN3Fold(self._params, self._seed)
+        self._impl.fit_full(X, y)
 
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None

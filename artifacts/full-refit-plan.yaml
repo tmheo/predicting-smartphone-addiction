@@ -1,0 +1,91 @@
+schema_version: 1
+source_pool_sha256: bdf9e3f9654e9f1b8efc64a223cc2661cb71f2bd35e8ec0d7c17675b72ef868b
+protocol:
+  iteration_multiplier: 1.25
+  budget_statistic: median
+  budget_rounding: half_up
+  cv_model_weight: 5
+  full_model_weight: 1
+  combiner: missing_segmented_rank_logit
+
+members:
+  - config: exp006_te_drop_gaming
+    config_path: configs/refit/exp006_te_drop_gaming.yaml
+    run_id: 4aaddd505ade428588cf83659f205cf6
+    budget_source: fold_median
+    budgets: {42: 476, 43: 608, 44: 440}
+  - config: exp011_resid_pair
+    config_path: configs/exp011_resid_pair.yaml
+    run_id: e21d19af37bb461db5dc1a59b66411a6
+    budget_source: fold_median
+    budgets: {42: 436, 43: 388, 44: 466}
+  - config: exp022_orig_knn
+    config_path: configs/exp022_orig_knn.yaml
+    run_id: 52e9c12bcfb94ee9912e4bb7f43e3f09
+    budget_source: fold_median
+    budgets: {42: 450, 43: 545, 44: 463}
+  - config: exp023_orig_proxy_residual
+    config_path: configs/exp023_orig_proxy_residual.yaml
+    run_id: 202b7d47c3bd4b8e8904fa5c005c7423
+    budget_source: fold_median
+    budgets: {42: 455, 43: 514, 44: 470}
+  - config: exp026_constrained_impute_nowidth
+    config_path: configs/exp026_constrained_impute_nowidth.yaml
+    run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+    budget_source: fold_median
+    budgets: {42: 504, 43: 370, 44: 400}
+  - config: exp032_recon_orig_mean_top3
+    config_path: configs/exp032_recon_orig_mean_top3.yaml
+    run_id: b1bd4b08386946c9a4e05b755dbd5f26
+    budget_source: fold_median
+    budgets: {42: 468, 43: 400, 44: 461}
+  - config: exp033_recon_orig_mean_top3_raw
+    config_path: configs/exp033_recon_orig_mean_top3_raw.yaml
+    run_id: c34f1da180544c3ba022140d394cb055
+    budget_source: fold_median
+    budgets: {42: 483, 43: 446, 44: 460}
+  - config: exp035_lattice_te
+    config_path: configs/exp035_lattice_te.yaml
+    run_id: c62a9ad334bf486cb46d738474ccd767
+    budget_source: fold_median
+    budgets: {42: 258, 43: 239, 44: 255}
+  - config: exp045_xgb_depth8
+    config_path: configs/exp045_xgb_depth8.yaml
+    run_id: e2c432b487564df990a4cc3baf3d6fc0
+    budget_source: fold_median
+    budgets: {42: 1093, 43: 1004, 44: 995}
+  - config: exp058_logreg_onehot
+    config_path: configs/exp058_logreg_onehot.yaml
+    run_id: e2b76edd9d204290810e39a7457c4c48
+    budget_source: not_applicable
+    budgets: {42: null}
+  - config: exp059_lookup_transformer
+    config_path: configs/exp059_lookup_transformer.yaml
+    run_id: b951fac51b6b44298f7fdb0b543caba6
+    budget_source: fold_median
+    budgets: {42: 15, 43: 15, 44: 15}
+  - config: exp065_tabm
+    config_path: configs/exp065_tabm.yaml
+    run_id: df2023d4bd71429b88a8026d52f5258c
+    budget_source: configured_cap
+    budgets: {42: 188, 43: 188, 44: 188}
+  - config: exp070_cat_exact_cats
+    config_path: configs/exp070_cat_exact_cats.yaml
+    run_id: 6238d8c58beb42ee8102209ded92516e
+    budget_source: fold_median
+    budgets: {42: 5021, 43: 4960, 44: 5268}
+  - config: exp067_tabpfn3
+    config_path: configs/exp067_tabpfn3.yaml
+    run_id: 85b09132aae543aab16e69dea5906a30
+    budget_source: not_applicable
+    budgets: {42: null, 43: null, 44: null}
+  - config: exp074_lgb_kitopl_d2_bundle
+    config_path: configs/exp074_lgb_kitopl_d2_bundle.yaml
+    run_id: 446a90bedd2a4d8bafad56f308b2b999
+    budget_source: fold_median
+    budgets: {42: 3638, 43: 3788, 44: 3558}
+  - config: exp081_lookup_fold_initialization_avg3
+    config_path: configs/exp081_lookup_fold_initialization_avg3.yaml
+    run_id: d55d1cd49c194eb8bf7b5128e548df81
+    budget_source: fold_median
+    budgets: {42: 15, 43: 15, 44: 15}

@@ -26,6 +26,9 @@ run-logs/
 # 정식 CV fold 복구 상태 (issue #141)
 run-recovery/
 
+# 전체 자료 재학습의 모델별 중간 예측과 최종 제출 후보 (#66)
+artifacts/full-refit/
+
 # OS
 .DS_Store
 

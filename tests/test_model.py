@@ -62,6 +62,14 @@ class FakeAdapter:
         )
 
 
+class FakeFullAdapter:
+    def __init__(self) -> None:
+        self.arguments = None
+
+    def fit_full(self, X, y, training_budget, initial_score=None) -> None:
+        self.arguments = (X, y, training_budget, initial_score)
+
+
 class SpyRecorder:
     def __init__(self) -> None:
         self.stages: list[str] = []
@@ -133,6 +141,46 @@ def test_unregistered_kind_fails_with_clear_error():
     cfg = ModelConfig(kind="no_such_model", params={}, fit={})
     with pytest.raises(ValueError, match="알 수 없는 model.kind 'no_such_model'"):
         model_mod.create(cfg, seed=SEED)
+
+
+def test_fit_full_validates_budget_and_dispatches_optional_contract():
+    X = pd.DataFrame({"x": [0.0, 1.0]})
+    y = pd.Series([0, 1])
+    score = pd.Series([-0.2, 0.2])
+    adapter = FakeFullAdapter()
+
+    model_mod.fit_full(adapter, X, y, 17, score)
+
+    assert adapter.arguments[0] is X
+    assert adapter.arguments[1] is y
+    assert adapter.arguments[2] == 17
+    assert adapter.arguments[3] is score
+    for invalid in (0, -1, 1.5, True):
+        with pytest.raises(ValueError, match="양의 정수"):
+            model_mod.fit_full(adapter, X, y, invalid)
+    with pytest.raises(ValueError, match="지원하지 않는다"):
+        model_mod.fit_full(object(), X, y, None)
+
+
+def test_lightgbm_adapter_full_fit_uses_fixed_budget():
+    rng = np.random.default_rng(11)
+    X = pd.DataFrame({"a": rng.normal(size=120), "b": rng.normal(size=120)})
+    y = pd.Series((X["a"] > 0).astype(int))
+    adapter = model_mod.LightGBMAdapter(
+        {
+            "objective": "binary",
+            "n_estimators": 999,
+            "num_leaves": 7,
+            "verbosity": -1,
+        },
+        {"early_stopping_rounds": 5},
+        SEED,
+    )
+
+    model_mod.fit_full(adapter, X, y, 9)
+
+    assert adapter._model.n_estimators_ == 9
+    assert adapter.predict(X.iloc[:5]).shape == (5,)
 
 
 def test_run_cv_with_fake_adapter_verifies_loop_wiring(monkeypatch):

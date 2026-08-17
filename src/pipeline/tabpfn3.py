@@ -145,6 +145,12 @@ class TabPFN3Fold:
         )
         return self._va_pred
 
+    def fit_full(self, X: pd.DataFrame, y: pd.Series) -> None:
+        """검증 자료 없이 전체 훈련 자료를 TabPFN 문맥으로 고정한다."""
+        self._X_tr = self._prepare(X, fit=True)
+        self._y_tr = y.copy()
+        self._fit_model()
+
     def _predict_once(self, X: pd.DataFrame) -> np.ndarray:
         pred = np.empty(len(X), dtype="float64")
         for start in range(0, len(X), self._chunk_rows):

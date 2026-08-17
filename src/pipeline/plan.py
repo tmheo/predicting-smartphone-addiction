@@ -270,6 +270,36 @@ class FeaturePlan:
             out = pd.concat([out, new], axis=1)
         return out
 
+    def build_full_matrices(
+        self,
+        train: pd.DataFrame,
+        test: pd.DataFrame,
+        seed: int,
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """전체 학습 자료로 fold-fit 제공자를 맞춘 최종 학습·시험 행렬을 만든다.
+
+        타깃 인코더처럼 학습 행에 내부 OOF 값을 돌려주는 제공자의 계약은 그대로
+        유지한다. 따라서 전체 자료 재학습에서도 학습 행 표현은 자기 타깃을 직접
+        포함하지 않고, 시험 행은 전체 학습 자료로 맞춘 평균표를 쓴다.
+
+        ``apply_dataset_wide``를 먼저 호출한 frame 쌍을 받아야 한다.
+        """
+        X_train = self.build_matrix(train, seed)
+        X_test = self.build_matrix(test, seed)
+        transformers = self.fold_fit_transformers()
+        if transformers:
+            train_ff = prepare_fold_fit_input(train, X_train)
+            test_ff = prepare_fold_fit_input(test, X_test)
+            for transformer in transformers:
+                transformer.fit(train_ff, seed)
+            X_train = self.add_fold_fit_columns(X_train, train_ff)
+            X_test = self.add_fold_fit_columns(X_test, test_ff)
+        if list(X_train.columns) != list(X_test.columns):
+            raise ValueError("전체 자료 재학습의 train/test 피처 열이 다르다.")
+        if list(X_train.columns) != self.all_columns():
+            raise ValueError("전체 자료 재학습의 실제 피처 열이 계획 선언과 다르다.")
+        return X_train, X_test
+
     # ------------------------------------------------------------- 선언 조회
 
     def matrix_columns(self) -> list[str]:
@@ -310,3 +340,9 @@ class FeaturePlan:
             for kind, provider in self._stages[stage]:
                 rows.append((stage, kind, provider.columns(), provider.uses_target))
         return rows
+
+
+def prepare_fold_fit_input(df: pd.DataFrame, X: pd.DataFrame) -> pd.DataFrame:
+    """원본 frame에 행렬 생성 단계의 추가 열을 붙여 fold-fit 입력을 만든다."""
+    extra = [column for column in X.columns if column not in df.columns]
+    return pd.concat([df, X[extra]], axis=1) if extra else df

@@ -147,6 +147,24 @@ def test_lookup_transformer_handles_unseen_values_and_missing():
     assert np.isfinite(pred).all()
 
 
+def test_lookup_transformer_full_fit_uses_fixed_epochs():
+    X, y = _data(96)
+    params = dict(SMALL_PARAMS, epochs=99, patience=2, perm_repeats=1)
+    adapter = model_mod.create(
+        ModelConfig(kind="lookup_transformer", params=params, fit={}), seed=SEED
+    )
+
+    model_mod.fit_full(adapter, X, y, 2)
+
+    prediction = adapter.predict(X.iloc[:8])
+    assert prediction.shape == (8,)
+    assert np.isfinite(prediction).all()
+    member = adapter.training_diagnostics()["fold_initialization_members"][0]
+    assert member["full_fit"] is True
+    assert member["best_epoch"] == 1
+    assert member["end_epoch"] == 1
+
+
 def test_lookup_transformer_rejects_high_cardinality_lookup_col():
     """연속 컬럼을 lookup_cols에 넣으면 카디널리티 가드가 명확히 거부한다."""
     X, y = _data()

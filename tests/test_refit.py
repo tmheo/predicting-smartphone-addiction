@@ -1,0 +1,121 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pytest
+
+from pipeline import refit
+from pipeline.config import DataConfig, ExperimentConfig, FeatureConfig, ModelConfig
+from pipeline.refit import RefitMember, RefitPlan, mix_member_predictions
+
+
+def test_committed_refit_plan_matches_candidate_pool():
+    plan = RefitPlan.load(Path("artifacts/full-refit-plan.yaml"))
+
+    assert len(plan.members) == 16
+    assert plan.cv_model_weight == 5
+    assert plan.full_model_weight == 1
+
+
+def test_mix_member_predictions_uses_model_count_weights():
+    index = pd.Index([10, 11], name="id")
+    cv = pd.DataFrame({"a": [0.2, 0.8], "b": [0.4, 0.6]}, index=index)
+    full = pd.DataFrame({"a": [0.8, 0.2], "b": [1.0, 0.0]}, index=index)
+
+    mixed = mix_member_predictions(cv, full, cv_weight=5, full_weight=1)
+
+    assert mixed.to_numpy() == pytest.approx(
+        np.array([[0.3, 0.5], [0.7, 0.5]], dtype=np.float64)
+    )
+    assert all(dtype == np.dtype("float64") for dtype in mixed.dtypes)
+
+
+def test_mix_member_predictions_rejects_misaligned_inputs():
+    cv = pd.DataFrame({"a": [0.2]}, index=pd.Index([10], name="id"))
+    full = pd.DataFrame({"b": [0.8]}, index=pd.Index([10], name="id"))
+
+    with pytest.raises(ValueError, match="구성원 순서"):
+        mix_member_predictions(cv, full, cv_weight=5, full_weight=1)
+
+
+def test_run_member_writes_lineage_checkpoint_and_resumes(monkeypatch, tmp_path):
+    train = pd.DataFrame(
+        {
+            "id": [1, 2, 3, 4],
+            "x": [0.0, 1.0, 2.0, 3.0],
+            "social_media_hours": [0.5, 1.0, 1.5, 2.0],
+            "addicted_label": [0, 0, 1, 1],
+        }
+    )
+    test = pd.DataFrame(
+        {"id": [5, 6], "x": [0.5, 2.5], "social_media_hours": [0.75, 1.75]}
+    )
+    config_path = tmp_path / "fake.yaml"
+    config_path.write_text("name: fake\n")
+    cfg = ExperimentConfig(
+        name="fake",
+        data=DataConfig(
+            train=Path("train.csv"),
+            test=Path("test.csv"),
+            sample_submission=Path("sample.csv"),
+            folds=Path("folds.parquet"),
+        ),
+        features=FeatureConfig(base="raw", categorical=[]),
+        model=ModelConfig(kind="fake", params={}, fit={}),
+        initial_score=None,
+        seeds=[42, 43, 44],
+        stage="confirm",
+        source_path=config_path,
+    )
+    member = RefitMember(
+        config="fake",
+        config_path=config_path,
+        run_id="run-1",
+        budgets={42: 3},
+        budget_source="fold_median",
+    )
+    plan = RefitPlan(
+        source_path=tmp_path / "plan.yaml",
+        source_pool_sha256="pool-hash",
+        iteration_multiplier=1.25,
+        budget_statistic="median",
+        budget_rounding="half_up",
+        cv_model_weight=5,
+        full_model_weight=1,
+        combiner="missing_segmented_rank_logit",
+        members=(member,),
+    )
+
+    class FakeAdapter:
+        fit_calls = 0
+
+        def fit_full(self, X, y, training_budget, initial_score=None):
+            FakeAdapter.fit_calls += 1
+            assert training_budget == 3
+
+        def predict(self, X, initial_score=None):
+            return np.linspace(0.25, 0.75, len(X), dtype=np.float64)
+
+    monkeypatch.setattr(refit, "load_config", lambda path, stage: cfg)
+    monkeypatch.setattr(
+        refit.data,
+        "load_csv",
+        lambda path: train.copy() if path == cfg.data.train else test.copy(),
+    )
+    monkeypatch.setattr(refit.data, "file_sha256", lambda path: f"hash:{path}")
+    monkeypatch.setattr(
+        refit.tracking,
+        "git_state",
+        lambda: {"git_commit": "commit-1", "git_dirty": "False"},
+    )
+    monkeypatch.setattr(refit.model, "create", lambda model_cfg, seed: FakeAdapter())
+
+    first = refit.run_member(plan, member, tmp_path / "out")
+    second = refit.run_member(plan, member, tmp_path / "out")
+
+    assert first == second
+    assert FakeAdapter.fit_calls == 1
+    assert (first.parent / "test_pred_seed_42.json").is_file()
+    assert (first.parent / "manifest.json").is_file()
