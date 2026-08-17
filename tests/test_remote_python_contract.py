@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import uuid
 
 import pytest
 
@@ -23,7 +24,8 @@ def test_remote_runner_uses_a_locked_virtual_environment_under_pep668(tmp_path: 
     container_script = """
 set -eu
 apt-get update -qq
-apt-get install -y -qq python3 python3-pip python3-venv >/dev/null
+apt-get install -y -qq --no-install-recommends \
+    python3 python3-pip python3-venv >/dev/null
 if python3 -m pip install wheel >/tmp/system-pip.out 2>&1; then
     echo "system pip unexpectedly accepted an install" >&2
     exit 1
@@ -42,26 +44,38 @@ SYSTEM_PYTHON_TRACE=/result/system-python.trace \
     --expected-python-prefix /tmp/contract-venv
 """
 
-    completed = subprocess.run(
-        [
-            "docker",
-            "run",
-            "--rm",
-            "--volume",
-            f"{ROOT}:/repo:ro",
-            "--volume",
-            f"{FIXTURE}:/contract-fixture:ro",
-            "--volume",
-            f"{tmp_path}:/result",
-            PEP668_IMAGE,
-            "sh",
-            "-c",
-            container_script,
-        ],
-        text=True,
-        capture_output=True,
-        timeout=180,
-    )
+    container_name = f"remote-python-contract-{uuid.uuid4().hex}"
+    try:
+        completed = subprocess.run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--name",
+                container_name,
+                "--volume",
+                f"{ROOT}:/repo:ro",
+                "--volume",
+                f"{FIXTURE}:/contract-fixture:ro",
+                "--volume",
+                f"{tmp_path}:/result",
+                PEP668_IMAGE,
+                "sh",
+                "-c",
+                container_script,
+            ],
+            text=True,
+            capture_output=True,
+            timeout=180,
+        )
+    finally:
+        subprocess.run(
+            ["docker", "rm", "-f", container_name],
+            text=True,
+            capture_output=True,
+            timeout=30,
+            check=False,
+        )
 
     assert completed.returncode == 0, completed.stdout + completed.stderr
     assert entry_marker.exists()
