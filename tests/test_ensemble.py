@@ -16,9 +16,13 @@ from sklearn.metrics import roc_auc_score
 from pipeline.data import ID, TARGET
 from pipeline.ensemble import (
     COMBINER_REGISTRY,
+    BaggedGreedyRankMeanCombiner,
     CombinerConvergenceError,
     EmpiricalCDFTransformer,
+    GreedyRankMeanCombiner,
     LogisticLinearCombiner,
+    OptunaSubsetRankMeanCombiner,
+    OptunaSubsetRidgeLogitCombiner,
     PerformanceWeightedRankMeanCombiner,
     RankMeanCombiner,
     RidgeLogitCombiner,
@@ -65,6 +69,10 @@ def test_registry_holds_reference_and_issue_64_adapters():
         "ridge_logit_alpha_100",
         "rank_gauss_logistic",
         "rank_logit_logistic",
+        "greedy_rank_mean",
+        "bagged_greedy_rank_mean",
+        "optuna_subset_rank_mean",
+        "optuna_subset_ridge_logit",
     ]
 
 
@@ -97,7 +105,9 @@ def test_rank_mean_combiner_fit_is_identity_and_summary_uniform():
     preds = make_preds()
     fitted = RankMeanCombiner().fit(preds, make_labels())
     assert fitted.summary() == {c: pytest.approx(1 / 3) for c in preds.columns}
-    np.testing.assert_array_equal(fitted.predict(preds.iloc[:10]), rank_mean(preds.iloc[:10]))
+    np.testing.assert_array_equal(
+        fitted.predict(preds.iloc[:10]), rank_mean(preds.iloc[:10])
+    )
 
 
 def test_performance_weighted_rank_mean_uses_inner_auc_advantage():
@@ -128,6 +138,64 @@ def test_performance_weighted_rank_mean_falls_back_when_no_member_beats_random()
     )
     fitted = PerformanceWeightedRankMeanCombiner().fit(preds, y)
     assert fitted.summary() == {"inverse": 0.5, "constant": 0.5}
+
+
+def selection_fixture() -> tuple[pd.DataFrame, pd.Series]:
+    rng = np.random.default_rng(19)
+    y = make_labels(seed=13)
+    return (
+        pd.DataFrame(
+            {
+                "strong_a": np.clip(0.15 + 0.65 * y + rng.normal(0, 0.08, N), 0, 1),
+                "strong_b": np.clip(0.20 + 0.55 * y + rng.normal(0, 0.12, N), 0, 1),
+                "noise": rng.random(N),
+                "inverse": np.clip(0.85 - 0.65 * y + rng.normal(0, 0.08, N), 0, 1),
+            },
+            index=make_index(),
+        ),
+        y,
+    )
+
+
+def test_greedy_rank_mean_selects_sparse_subset_and_predicts_by_rank():
+    preds, y = selection_fixture()
+    fitted = GreedyRankMeanCombiner().fit(preds, y)
+    weights = fitted.summary()
+    assert sum(weight != 0.0 for weight in weights.values()) < len(preds.columns)
+    assert sum(weights.values()) == pytest.approx(1.0)
+    expected = preds.rank(pct=True).to_numpy() @ np.array(list(weights.values()))
+    np.testing.assert_array_equal(fitted.predict(preds), expected)
+
+
+def test_bagged_greedy_is_deterministic_and_averages_selection_frequencies():
+    preds, y = selection_fixture()
+    combiner = BaggedGreedyRankMeanCombiner(
+        bags=4, sample_fraction=0.6, seed=7, workers=2
+    )
+    first = combiner.fit(preds, y).summary()
+    second = combiner.fit(preds, y).summary()
+    assert first == second
+    assert sum(first.values()) == pytest.approx(1.0)
+    assert any(weight == 0.0 for weight in first.values())
+
+
+def test_optuna_subset_is_reproducible_and_keeps_full_member_summary():
+    preds, y = selection_fixture()
+    combiner = OptunaSubsetRankMeanCombiner(trials=8, seed=3)
+    first = combiner.fit(preds, y)
+    second = combiner.fit(preds, y)
+    assert first.summary() == second.summary()
+    assert set(first.summary()) == set(preds.columns)
+    assert sum(first.summary().values()) == pytest.approx(1.0)
+    assert np.isfinite(first.predict(preds)).all()
+
+
+def test_optuna_subset_ridge_zero_fills_unselected_member_summary():
+    preds, y = selection_fixture()
+    fitted = OptunaSubsetRidgeLogitCombiner(trials=8, seed=3).fit(preds, y)
+    assert set(fitted.summary()) == set(preds.columns)
+    assert any(weight == 0.0 for weight in fitted.summary().values())
+    assert np.isfinite(fitted.predict(preds)).all()
 
 
 def test_ridge_logit_learns_informative_member():
@@ -314,9 +382,7 @@ def test_member_matrix_uses_config_names_and_float64():
 def test_member_matrix_rejects_misaligned_ids():
     index = make_index()
     store = InMemoryRunStore()
-    store.add_run(
-        "run-a", oof=pd.DataFrame({ID: index[:-1], "pred": np.zeros(N - 1)})
-    )
+    store.add_run("run-a", oof=pd.DataFrame({ID: index[:-1], "pred": np.zeros(N - 1)}))
     with pytest.raises(AssertionError, match="일치하지"):
         member_matrix([("exp_a", "run-a")], store, index)
 
@@ -328,9 +394,7 @@ def test_member_test_matrix_uses_submission_artifacts_and_reference_order(tmp_pa
         path = tmp_path / f"{config}.csv"
         pd.DataFrame({ID: [101, 102, 103], TARGET: values}).to_csv(path, index=False)
         store.add_run(f"run-{config}", submission_path=path)
-    matrix = member_test_matrix(
-        [("exp_a", "run-a"), ("exp_b", "run-b")], store, index
-    )
+    matrix = member_test_matrix([("exp_a", "run-a"), ("exp_b", "run-b")], store, index)
     assert list(matrix.columns) == ["exp_a", "exp_b"]
     assert matrix.index.equals(index)
     assert (matrix.dtypes == np.float64).all()

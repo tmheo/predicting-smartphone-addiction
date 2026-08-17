@@ -38,6 +38,7 @@ from __future__ import annotations
 import argparse
 import sys
 import warnings
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Protocol
@@ -105,7 +106,9 @@ class FittedPerformanceWeightedRankMean:
     weights: pd.Series
 
     def predict(self, outer_preds: pd.DataFrame) -> np.ndarray:
-        ranks = outer_preds[self.weights.index].rank(pct=True).to_numpy(dtype=np.float64)
+        ranks = (
+            outer_preds[self.weights.index].rank(pct=True).to_numpy(dtype=np.float64)
+        )
         return ranks @ self.weights.to_numpy(dtype=np.float64)
 
     def summary(self) -> dict[str, float]:
@@ -128,7 +131,8 @@ class PerformanceWeightedRankMeanCombiner:
         advantages = pd.Series(
             {
                 member: max(
-                    float(roc_auc_score(y.to_numpy(), inner_preds[member].to_numpy())) - 0.5,
+                    float(roc_auc_score(y.to_numpy(), inner_preds[member].to_numpy()))
+                    - 0.5,
                     0.0,
                 )
                 for member in inner_preds.columns
@@ -142,6 +146,259 @@ class PerformanceWeightedRankMeanCombiner:
         else:
             weights = advantages / float(advantages.sum())
         return FittedPerformanceWeightedRankMean(weights)
+
+
+def _greedy_rank_weights(
+    preds: pd.DataFrame,
+    y: pd.Series,
+    *,
+    max_members: int,
+    min_improvement: float,
+) -> pd.Series:
+    """학습 블록에서 AUC가 오르는 동안 구성원을 중복 없이 하나씩 추가한다."""
+    ranks = preds.rank(pct=True).to_numpy(dtype=np.float64)
+    labels = y.to_numpy()
+    selected: list[int] = []
+    remaining = list(range(ranks.shape[1]))
+    running_sum = np.zeros(len(preds), dtype=np.float64)
+    best_auc = -np.inf
+
+    while remaining and len(selected) < max_members:
+        scores = [
+            float(
+                roc_auc_score(
+                    labels,
+                    (running_sum + ranks[:, candidate]) / (len(selected) + 1),
+                )
+            )
+            for candidate in remaining
+        ]
+        winner_position = int(np.argmax(scores))
+        winner = remaining[winner_position]
+        winner_auc = scores[winner_position]
+        if selected and winner_auc <= best_auc + min_improvement:
+            break
+        selected.append(winner)
+        remaining.remove(winner)
+        running_sum += ranks[:, winner]
+        best_auc = winner_auc
+
+    weights = pd.Series(0.0, index=preds.columns, dtype=np.float64)
+    weights.iloc[selected] = 1.0 / len(selected)
+    return weights
+
+
+class GreedyRankMeanCombiner:
+    """inner OOF의 균등 순위 평균 AUC를 탐욕적으로 높이는 부분집합 선택."""
+
+    name = "greedy_rank_mean"
+
+    def __init__(
+        self,
+        *,
+        max_members: int | None = None,
+        min_improvement: float = 1e-12,
+        name: str | None = None,
+    ) -> None:
+        self.max_members = max_members
+        self.min_improvement = min_improvement
+        self.name = name or type(self).name
+
+    def fit(
+        self, inner_preds: pd.DataFrame, y: pd.Series
+    ) -> FittedPerformanceWeightedRankMean:
+        weights = _greedy_rank_weights(
+            inner_preds,
+            y,
+            max_members=self.max_members or len(inner_preds.columns),
+            min_improvement=self.min_improvement,
+        )
+        return FittedPerformanceWeightedRankMean(weights)
+
+
+class BaggedGreedyRankMeanCombiner:
+    """층화 부분 표본의 탐욕 선택 빈도를 평균한 순위 결합."""
+
+    name = "bagged_greedy_rank_mean"
+
+    def __init__(
+        self,
+        *,
+        bags: int = 50,
+        sample_fraction: float = 0.5,
+        seed: int = 42,
+        workers: int = 4,
+        max_members: int | None = None,
+        min_improvement: float = 1e-12,
+        name: str | None = None,
+    ) -> None:
+        if bags < 1:
+            raise ValueError("bags는 1 이상이어야 한다.")
+        if not 0.0 < sample_fraction <= 1.0:
+            raise ValueError("sample_fraction은 0보다 크고 1 이하여야 한다.")
+        if workers < 1:
+            raise ValueError("workers는 1 이상이어야 한다.")
+        self.bags = bags
+        self.sample_fraction = sample_fraction
+        self.seed = seed
+        self.workers = workers
+        self.max_members = max_members
+        self.min_improvement = min_improvement
+        self.name = name or type(self).name
+
+    def fit(
+        self, inner_preds: pd.DataFrame, y: pd.Series
+    ) -> FittedPerformanceWeightedRankMean:
+        rng = np.random.default_rng(self.seed)
+        labels = y.to_numpy()
+        class_positions = [
+            np.flatnonzero(labels == value) for value in np.unique(labels)
+        ]
+        samples = [
+            np.sort(
+                np.concatenate(
+                    [
+                        rng.choice(
+                            positions,
+                            size=max(1, round(len(positions) * self.sample_fraction)),
+                            replace=False,
+                        )
+                        for positions in class_positions
+                    ]
+                )
+            )
+            for _ in range(self.bags)
+        ]
+
+        def select(sampled: np.ndarray) -> pd.Series:
+            return _greedy_rank_weights(
+                inner_preds.iloc[sampled],
+                y.iloc[sampled],
+                max_members=self.max_members or len(inner_preds.columns),
+                min_improvement=self.min_improvement,
+            )
+
+        with ThreadPoolExecutor(max_workers=self.workers) as executor:
+            bag_weights = list(executor.map(select, samples))
+        aggregate = sum(
+            bag_weights,
+            start=pd.Series(0.0, index=inner_preds.columns, dtype=np.float64),
+        )
+        weights = aggregate / float(aggregate.sum())
+        return FittedPerformanceWeightedRankMean(weights)
+
+
+def _optuna_rank_weights(
+    preds: pd.DataFrame,
+    y: pd.Series,
+    *,
+    trials: int,
+    seed: int,
+) -> pd.Series:
+    """Optuna TPE로 고른 이진 부분집합을 균등 가중치로 반환한다."""
+    import optuna
+
+    if trials < 2:
+        raise ValueError("trials는 2 이상이어야 한다.")
+    ranks = preds.rank(pct=True).to_numpy(dtype=np.float64)
+    labels = y.to_numpy()
+    members = list(preds.columns)
+
+    def objective(trial: optuna.Trial) -> float:
+        selected = np.array(
+            [
+                trial.suggest_categorical(f"member_{i}", [False, True])
+                for i in range(len(members))
+            ]
+        )
+        if not selected.any():
+            return 0.5
+        return float(roc_auc_score(labels, ranks[:, selected].mean(axis=1)))
+
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    sampler = optuna.samplers.TPESampler(
+        seed=seed,
+        n_startup_trials=min(32, max(1, trials // 4)),
+    )
+    study = optuna.create_study(direction="maximize", sampler=sampler)
+    greedy = _greedy_rank_weights(
+        preds,
+        y,
+        max_members=len(members),
+        min_improvement=1e-12,
+    )
+    study.enqueue_trial(
+        {f"member_{i}": bool(greedy.iloc[i] > 0.0) for i in range(len(members))}
+    )
+    study.enqueue_trial({f"member_{i}": True for i in range(len(members))})
+    study.optimize(objective, n_trials=trials, show_progress_bar=False)
+
+    selected = np.array(
+        [bool(study.best_params[f"member_{i}"]) for i in range(len(members))]
+    )
+    weights = pd.Series(0.0, index=members, dtype=np.float64)
+    weights.iloc[np.flatnonzero(selected)] = 1.0 / int(selected.sum())
+    return weights
+
+
+class OptunaSubsetRankMeanCombiner:
+    """inner OOF에서 Optuna가 고른 부분집합의 균등 순위 평균."""
+
+    name = "optuna_subset_rank_mean"
+
+    def __init__(
+        self, *, trials: int = 128, seed: int = 42, name: str | None = None
+    ) -> None:
+        self.trials = trials
+        self.seed = seed
+        self.name = name or type(self).name
+
+    def fit(
+        self, inner_preds: pd.DataFrame, y: pd.Series
+    ) -> FittedPerformanceWeightedRankMean:
+        return FittedPerformanceWeightedRankMean(
+            _optuna_rank_weights(inner_preds, y, trials=self.trials, seed=self.seed)
+        )
+
+
+@dataclass(frozen=True)
+class FittedSubsetRidgeLogit:
+    fitted: FittedRidgeLogit
+    all_members: list[str]
+
+    def predict(self, outer_preds: pd.DataFrame) -> np.ndarray:
+        return self.fitted.predict(outer_preds)
+
+    def summary(self) -> dict[str, float]:
+        selected = self.fitted.summary()
+        return {member: selected.get(member, 0.0) for member in self.all_members}
+
+
+class OptunaSubsetRidgeLogitCombiner:
+    """Optuna 부분집합을 고정한 뒤 inner OOF에서 Ridge 가중치를 학습한다."""
+
+    name = "optuna_subset_ridge_logit"
+
+    def __init__(
+        self,
+        *,
+        trials: int = 128,
+        seed: int = 42,
+        alpha: float = 100.0,
+        name: str | None = None,
+    ) -> None:
+        self.trials = trials
+        self.seed = seed
+        self.alpha = alpha
+        self.name = name or type(self).name
+
+    def fit(self, inner_preds: pd.DataFrame, y: pd.Series) -> FittedSubsetRidgeLogit:
+        weights = _optuna_rank_weights(
+            inner_preds, y, trials=self.trials, seed=self.seed
+        )
+        selected = list(weights[weights > 0.0].index)
+        fitted = RidgeLogitCombiner(alpha=self.alpha).fit(inner_preds[selected], y)
+        return FittedSubsetRidgeLogit(fitted, list(inner_preds.columns))
 
 
 def _logit(preds: pd.DataFrame, eps: float) -> np.ndarray:
@@ -216,9 +473,7 @@ class EmpiricalCDFTransformer:
             # 동률은 평균 순위로 두고, 학습 범위 밖 값도 유한한 정규 분위수가 되게
             # 양끝을 반 관측치만큼 안쪽으로 자른다.
             midpoint = (left + right) / (2.0 * count)
-            transformed[:, column] = np.clip(
-                midpoint, 0.5 / count, 1.0 - 0.5 / count
-            )
+            transformed[:, column] = np.clip(midpoint, 0.5 / count, 1.0 - 0.5 / count)
         if self.output_distribution == "normal":
             return ndtri(transformed)
         return transformed
@@ -348,6 +603,10 @@ COMBINER_REGISTRY: dict[str, Combiner] = {
         RidgeLogitCombiner(alpha=100.0, name="ridge_logit_alpha_100"),
         LogisticLinearCombiner("rank_gauss_logistic", "rank_gauss"),
         LogisticLinearCombiner("rank_logit_logistic", "rank_logit"),
+        GreedyRankMeanCombiner(),
+        BaggedGreedyRankMeanCombiner(),
+        OptunaSubsetRankMeanCombiner(),
+        OptunaSubsetRidgeLogitCombiner(),
     )
 }
 
@@ -478,7 +737,9 @@ def full_fit_predictions(
     if list(oof.columns) != list(test_preds.columns):
         raise ValueError("OOF와 시험 예측의 구성원 순서가 다르다.")
     fitted = combiner.fit(oof.astype(np.float64), y)
-    prediction = np.asarray(fitted.predict(test_preds.astype(np.float64)), dtype=np.float64)
+    prediction = np.asarray(
+        fitted.predict(test_preds.astype(np.float64)), dtype=np.float64
+    )
     if prediction.shape != (len(test_preds),) or not np.isfinite(prediction).all():
         raise ValueError("결합 시험 예측의 길이가 다르거나 유한하지 않다.")
     return prediction
@@ -555,9 +816,13 @@ def run_report(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="nested OOF 평가와 계열 3 판정 (ADR 0001 계열 3)")
+    parser = argparse.ArgumentParser(
+        description="nested OOF 평가와 계열 3 판정 (ADR 0001 계열 3)"
+    )
     parser.add_argument("--only", help="이 이름의 결합 전략만 평가 (개발·디버깅용)")
-    parser.add_argument("--submission", type=Path, help="--only 전략의 전체 OOF 학습 제출 파일 경로")
+    parser.add_argument(
+        "--submission", type=Path, help="--only 전략의 전체 OOF 학습 제출 파일 경로"
+    )
     args = parser.parse_args()
 
     if args.submission is not None and args.only is None:
@@ -566,7 +831,9 @@ def main() -> None:
     combiners = list(COMBINER_REGISTRY.values())
     if args.only is not None:
         if args.only not in COMBINER_REGISTRY:
-            sys.exit(f"결합 전략 없음: {args.only} (등록: {', '.join(COMBINER_REGISTRY)})")
+            sys.exit(
+                f"결합 전략 없음: {args.only} (등록: {', '.join(COMBINER_REGISTRY)})"
+            )
         combiners = [COMBINER_REGISTRY[args.only]]
 
     if not CHAMPION_PATH.exists():
