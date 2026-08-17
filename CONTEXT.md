@@ -151,6 +151,16 @@ _Avoid_: 피처 함수, 트랜스포머(fold-fit 한정 용어로만 유지)
 파라미터 해석, 시드 적용, early stopping 등 학습 세부를 소유하고 cv 루프에는 예측과 importance만 돌려준다.
 _Avoid_: 모델 종류, 알고리즘
 
+**표 합성곱망**:
+의미가 정의되지 않은 열 나열 위에 1차원 합성곱을 적용하는 모델 계열(`tab_cnn`).
+열 순서에 의미가 없으므로 합성곱의 기여는 제거 대조로 확인한 뒤에만 인정한다.
+_Avoid_: CNN 모델, TabCNN
+
+**스칼라 token Transformer**:
+수치 스칼라 입력을 여러 표현으로 token화해 attention으로 섞는 모델 계열(`scalar_token_transformer`).
+범주형 token만 attention에 넣는 원 논문 구조와 다르므로 TabTransformer라고 부르지 않는다.
+_Avoid_: TabTransformer
+
 **조회 어휘 미등록값**:
 Lookup-Transformer의 각 fold에서 결측은 아니지만 해당 학습 fold의 정확값 어휘에 없어 미등록 식별자로 처리되는 검증 또는 테스트 값.
 _Avoid_: UNK, 미관측값
