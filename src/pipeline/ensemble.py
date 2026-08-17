@@ -3,6 +3,7 @@
 사용법:
     uv run python -m pipeline.ensemble                    # registry 전 전략 평가·비교·판정
     uv run python -m pipeline.ensemble --only rank_mean   # 개발·디버깅용 부분 실행
+    uv run python -m pipeline.ensemble --only rank_mean --only ridge_logit
     uv run python -m pipeline.ensemble --only rank_logit_logistic --submission <path>
 
 이 module은 측정이다: outer fold 루프, float64 강제 캐스팅, 결합 전략 Protocol과
@@ -18,6 +19,8 @@ nested OOF 정의(ADR 0001 계열 3): outer fold k마다 나머지 4개 fold의 
 결합 전략 계약:
 - 순위 변환·logit 변환 같은 전처리는 각 전략이 소유한다. 평가기는 float64 원시
   예측만 건넨다.
+- 결측 개수처럼 목표값을 쓰지 않는 행 맥락도 필요한 전략이 소유한다. 평가기는
+  행 맥락을 해석하거나 구간을 고르지 않는다.
 - Fitted.predict는 outer fold 행만 받는다. 순위 변환의 모집단은 채점 블록 자신이다.
   제출 시점의 결합이 test 예측만으로 순위를 매기므로, 평가도 같은 조건이어야
   nested 점수가 제출 동작을 대변한다.
@@ -40,8 +43,9 @@ import sys
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
-from typing import Literal, Protocol
+from typing import Any, Literal, Protocol
 
 import numpy as np
 import pandas as pd
@@ -51,7 +55,7 @@ from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
 
-from .data import ID, TARGET, labels
+from .data import ID, TARGET, TRAIN_PATH, labels
 from .ledger import CHAMPION_PATH, Champion, Pool
 from .runs import MlflowRunStore, RunStore, RunStoreError
 
@@ -589,6 +593,331 @@ class LogisticLinearCombiner:
         )
 
 
+MISSINGNESS_TEST_PATH = Path("data/test.csv")
+MISSINGNESS_BAND_LABELS = (0, 1, 2)
+
+
+@lru_cache(maxsize=4)
+def missingness_bands(
+    train_path: Path = TRAIN_PATH,
+    test_path: Path = MISSINGNESS_TEST_PATH,
+) -> pd.Series:
+    """원시 특성의 결측 개수를 0-1, 2-3, 4개 이상 구간으로 고정한다.
+
+    목표값과 id는 결측 개수에서 제외한다.
+    train과 test를 함께 읽는 이유는 전체 OOF 학습 뒤 같은 결합 전략으로 시험 예측을
+    만들기 위해서다.
+    구간은 자료에서 학습하거나 목표값으로 고르지 않는다.
+    """
+    frames = []
+    feature_columns: list[str] | None = None
+    for path in (train_path, test_path):
+        frame = pd.read_csv(path)
+        current = [column for column in frame.columns if column not in {ID, TARGET}]
+        if feature_columns is None:
+            feature_columns = current
+        elif current != feature_columns:
+            raise ValueError("train과 test의 결측 개수 대상 특성 열이 다르다.")
+        counts = frame[current].isna().sum(axis=1)
+        bands = pd.Series(
+            np.select([counts <= 1, counts <= 3], [0, 1], default=2),
+            index=pd.Index(frame[ID], name=ID),
+            dtype=np.int8,
+        )
+        frames.append(bands)
+    combined = pd.concat(frames)
+    if combined.index.has_duplicates:
+        raise ValueError("train과 test의 id가 중복되어 결측 구간을 구분할 수 없다.")
+    return combined
+
+
+def _aligned_bands(band_of: pd.Series, index: pd.Index) -> pd.Series:
+    aligned = band_of.reindex(index)
+    if aligned.isna().any():
+        raise ValueError("결측 개수 구간에 요청한 id가 없다.")
+    unexpected = set(aligned.astype(int).unique()) - set(MISSINGNESS_BAND_LABELS)
+    if unexpected:
+        raise ValueError(f"알 수 없는 결측 개수 구간: {sorted(unexpected)}")
+    return aligned.astype(np.int8)
+
+
+@dataclass(frozen=True)
+class FittedMissingnessSegmentedLogistic:
+    models: dict[int, FittedLogisticLinear]
+    global_model: FittedLogisticLinear | None
+    band_of: pd.Series
+    summary_weights: dict[str, float]
+
+    def predict(self, outer_preds: pd.DataFrame) -> np.ndarray:
+        bands = _aligned_bands(self.band_of, outer_preds.index)
+        prediction = np.full(len(outer_preds), np.nan, dtype=np.float64)
+        for band in MISSINGNESS_BAND_LABELS:
+            mask = (bands == band).to_numpy()
+            if not mask.any():
+                continue
+            fitted = self.models.get(band, self.global_model)
+            if fitted is None:
+                raise ValueError(f"결측 개수 구간 {band}의 학습 모델이 없다.")
+            prediction[mask] = fitted.predict(outer_preds[mask])
+        if np.isnan(prediction).any():
+            raise ValueError("결측 개수 구간 결합 예측이 전 행을 덮지 않는다.")
+        return prediction
+
+    def summary(self) -> dict[str, float]:
+        return self.summary_weights
+
+
+class MissingnessSegmentedLogisticCombiner:
+    """결측 개수 구간별로 순위와 logit 이중 표현 선형 결합을 다시 맞춘다.
+
+    specialized_bands가 None이면 세 구간 모두 독립 모델을 쓴다.
+    값이 주어지면 나머지 구간은 전역 모델을 유지하고 지정 구간만 전용 모델로
+    교체한다.
+    """
+
+    name = "missing_segmented_rank_logit"
+
+    def __init__(
+        self,
+        *,
+        band_of: pd.Series | None = None,
+        specialized_bands: tuple[int, ...] | None = None,
+        name: str | None = None,
+    ) -> None:
+        if specialized_bands is not None and not set(specialized_bands) <= set(
+            MISSINGNESS_BAND_LABELS
+        ):
+            raise ValueError("전용 모델의 결측 개수 구간이 0, 1, 2 밖에 있다.")
+        self.band_of = band_of
+        self.specialized_bands = specialized_bands
+        self.name = name or type(self).name
+
+    def fit(
+        self, inner_preds: pd.DataFrame, y: pd.Series
+    ) -> FittedMissingnessSegmentedLogistic:
+        band_of = self.band_of if self.band_of is not None else missingness_bands()
+        bands = _aligned_bands(band_of, inner_preds.index)
+        specialized = (
+            MISSINGNESS_BAND_LABELS
+            if self.specialized_bands is None
+            else self.specialized_bands
+        )
+        global_model = None
+        if self.specialized_bands is not None:
+            global_model = LogisticLinearCombiner("global", "rank_logit").fit(
+                inner_preds, y
+            )
+        models = {}
+        for band in specialized:
+            mask = (bands == band).to_numpy()
+            if int(mask.sum()) < 2 or y[mask].nunique() < 2:
+                raise ValueError(f"결측 개수 구간 {band}에 두 목표값의 학습 행이 부족하다.")
+            models[band] = LogisticLinearCombiner(
+                f"missing_band_{band}", "rank_logit"
+            ).fit(inner_preds[mask], y[mask])
+
+        counts = bands.value_counts(normalize=True)
+        summaries = {}
+        for band in MISSINGNESS_BAND_LABELS:
+            fitted = models.get(band, global_model)
+            assert fitted is not None
+            summaries[band] = fitted.summary()
+        summary_weights = {
+            member: float(
+                sum(
+                    float(counts.get(band, 0.0)) * summaries[band][member]
+                    for band in MISSINGNESS_BAND_LABELS
+                )
+            )
+            for member in inner_preds.columns
+        }
+        return FittedMissingnessSegmentedLogistic(
+            models=models,
+            global_model=global_model,
+            band_of=band_of,
+            summary_weights=summary_weights,
+        )
+
+
+def _missingness_interaction_features(
+    preds: pd.DataFrame,
+    bands: pd.Series,
+    *,
+    quantiles: EmpiricalCDFTransformer | None,
+    fit: bool,
+) -> tuple[np.ndarray, EmpiricalCDFTransformer]:
+    base, fitted_quantiles = _linear_features(
+        preds,
+        "rank_logit",
+        quantiles=quantiles,
+        fit=fit,
+        eps=LogisticLinearCombiner.LOGIT_EPS,
+    )
+    assert fitted_quantiles is not None
+    indicators = np.column_stack(
+        [(bands.to_numpy() == band).astype(np.float64) for band in (1, 2)]
+    )
+    return (
+        np.column_stack(
+            (base, base * indicators[:, [0]], base * indicators[:, [1]], indicators)
+        ),
+        fitted_quantiles,
+    )
+
+
+@dataclass(frozen=True)
+class FittedMissingnessInteractionLogistic:
+    model: LogisticRegression
+    scaler: StandardScaler
+    quantiles: EmpiricalCDFTransformer
+    members: list[str]
+    band_of: pd.Series
+    summary_weights: dict[str, float]
+
+    def predict(self, outer_preds: pd.DataFrame) -> np.ndarray:
+        bands = _aligned_bands(self.band_of, outer_preds.index)
+        features, _ = _missingness_interaction_features(
+            outer_preds[self.members], bands, quantiles=self.quantiles, fit=False
+        )
+        return self.model.predict_proba(self.scaler.transform(features))[:, 1].astype(
+            np.float64, copy=False
+        )
+
+    def summary(self) -> dict[str, float]:
+        return self.summary_weights
+
+
+class MissingnessInteractionLogisticCombiner:
+    """전역 선형 결합에 결측 개수 구간별 계수 차이를 허용한다."""
+
+    name = "missing_interaction_rank_logit"
+
+    def __init__(
+        self, *, band_of: pd.Series | None = None, max_iter: int = 1_000
+    ) -> None:
+        self.band_of = band_of
+        self.max_iter = max_iter
+
+    def fit(
+        self, inner_preds: pd.DataFrame, y: pd.Series
+    ) -> FittedMissingnessInteractionLogistic:
+        band_of = self.band_of if self.band_of is not None else missingness_bands()
+        bands = _aligned_bands(band_of, inner_preds.index)
+        features, quantiles = _missingness_interaction_features(
+            inner_preds, bands, quantiles=None, fit=True
+        )
+        scaler = StandardScaler()
+        scaled = scaler.fit_transform(features).astype(np.float64, copy=False)
+        model = LogisticRegression(
+            C=1.0,
+            solver="lbfgs",
+            max_iter=self.max_iter,
+            random_state=0,
+        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", ConvergenceWarning)
+            model.fit(scaled, y.to_numpy())
+        iterations = int(np.max(model.n_iter_))
+        if iterations >= self.max_iter:
+            raise CombinerConvergenceError(
+                f"max(n_iter_)={iterations}, max_iter={self.max_iter}"
+            )
+
+        member_count = len(inner_preds.columns)
+        coefficients = model.coef_[0]
+        base = coefficients[: 2 * member_count]
+        band_1 = coefficients[2 * member_count : 4 * member_count]
+        band_2 = coefficients[4 * member_count : 6 * member_count]
+        frequencies = bands.value_counts(normalize=True)
+        effective = (
+            base
+            + float(frequencies.get(1, 0.0)) * band_1
+            + float(frequencies.get(2, 0.0)) * band_2
+        )
+        effective = effective[:member_count] + effective[member_count:]
+        summary_weights = {
+            member: float(coefficient)
+            for member, coefficient in zip(
+                inner_preds.columns, effective, strict=True
+            )
+        }
+        return FittedMissingnessInteractionLogistic(
+            model=model,
+            scaler=scaler,
+            quantiles=quantiles,
+            members=list(inner_preds.columns),
+            band_of=band_of,
+            summary_weights=summary_weights,
+        )
+
+
+@dataclass(frozen=True)
+class FittedXGBoostRankLogit:
+    model: Any
+    quantiles: EmpiricalCDFTransformer
+    members: list[str]
+
+    def predict(self, outer_preds: pd.DataFrame) -> np.ndarray:
+        features, _ = _linear_features(
+            outer_preds[self.members],
+            "rank_logit",
+            quantiles=self.quantiles,
+            fit=False,
+            eps=LogisticLinearCombiner.LOGIT_EPS,
+        )
+        return np.asarray(self.model.predict_proba(features)[:, 1], dtype=np.float64)
+
+    def summary(self) -> dict[str, float]:
+        importance = np.asarray(self.model.feature_importances_, dtype=np.float64)
+        member_count = len(self.members)
+        combined = importance[:member_count] + importance[member_count:]
+        return {
+            member: float(value)
+            for member, value in zip(self.members, combined, strict=True)
+        }
+
+
+class XGBoostRankLogitCombiner:
+    """결과에 맞춘 탐색 없이 고정한 얕은 XGBoost 2단 결합."""
+
+    name = "xgb_rank_logit"
+
+    def __init__(self, *, n_estimators: int = 200, n_jobs: int = 4) -> None:
+        self.n_estimators = n_estimators
+        self.n_jobs = n_jobs
+
+    def fit(self, inner_preds: pd.DataFrame, y: pd.Series) -> FittedXGBoostRankLogit:
+        from xgboost import XGBClassifier
+
+        features, quantiles = _linear_features(
+            inner_preds,
+            "rank_logit",
+            quantiles=None,
+            fit=True,
+            eps=LogisticLinearCombiner.LOGIT_EPS,
+        )
+        assert quantiles is not None
+        model = XGBClassifier(
+            n_estimators=self.n_estimators,
+            max_depth=2,
+            learning_rate=0.03,
+            min_child_weight=200,
+            subsample=1.0,
+            colsample_bytree=1.0,
+            reg_lambda=10.0,
+            reg_alpha=0.0,
+            objective="binary:logistic",
+            eval_metric="auc",
+            tree_method="hist",
+            max_bin=128,
+            n_jobs=self.n_jobs,
+            random_state=42,
+            verbosity=0,
+        )
+        model.fit(features, y.to_numpy())
+        return FittedXGBoostRankLogit(model, quantiles, list(inner_preds.columns))
+
+
 COMBINER_REGISTRY: dict[str, Combiner] = {
     combiner.name: combiner
     for combiner in (
@@ -607,6 +936,12 @@ COMBINER_REGISTRY: dict[str, Combiner] = {
         BaggedGreedyRankMeanCombiner(),
         OptunaSubsetRankMeanCombiner(),
         OptunaSubsetRidgeLogitCombiner(),
+        XGBoostRankLogitCombiner(),
+        MissingnessSegmentedLogisticCombiner(),
+        MissingnessInteractionLogisticCombiner(),
+        MissingnessSegmentedLogisticCombiner(
+            specialized_bands=(2,), name="missing_4plus_rank_logit"
+        ),
     )
 }
 
@@ -819,7 +1154,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="nested OOF 평가와 계열 3 판정 (ADR 0001 계열 3)"
     )
-    parser.add_argument("--only", help="이 이름의 결합 전략만 평가 (개발·디버깅용)")
+    parser.add_argument(
+        "--only",
+        action="append",
+        help="이 이름의 결합 전략만 평가. 여러 번 지정할 수 있다.",
+    )
     parser.add_argument(
         "--submission", type=Path, help="--only 전략의 전체 OOF 학습 제출 파일 경로"
     )
@@ -827,14 +1166,18 @@ def main() -> None:
 
     if args.submission is not None and args.only is None:
         sys.exit("--submission에는 제출 결합 전략을 고르는 --only가 필요하다.")
+    if args.submission is not None and len(args.only) != 1:
+        sys.exit("--submission에는 --only 전략을 정확히 하나 지정해야 한다.")
 
     combiners = list(COMBINER_REGISTRY.values())
     if args.only is not None:
-        if args.only not in COMBINER_REGISTRY:
+        missing = [name for name in args.only if name not in COMBINER_REGISTRY]
+        if missing:
             sys.exit(
-                f"결합 전략 없음: {args.only} (등록: {', '.join(COMBINER_REGISTRY)})"
+                f"결합 전략 없음: {', '.join(missing)} "
+                f"(등록: {', '.join(COMBINER_REGISTRY)})"
             )
-        combiners = [COMBINER_REGISTRY[args.only]]
+        combiners = [COMBINER_REGISTRY[name] for name in args.only]
 
     if not CHAMPION_PATH.exists():
         sys.exit(f"{CHAMPION_PATH} 없음: 계열 3 판정의 기준 champion이 필요하다.")

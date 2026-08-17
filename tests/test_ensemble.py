@@ -21,16 +21,20 @@ from pipeline.ensemble import (
     EmpiricalCDFTransformer,
     GreedyRankMeanCombiner,
     LogisticLinearCombiner,
+    MissingnessInteractionLogisticCombiner,
+    MissingnessSegmentedLogisticCombiner,
     OptunaSubsetRankMeanCombiner,
     OptunaSubsetRidgeLogitCombiner,
     PerformanceWeightedRankMeanCombiner,
     RankMeanCombiner,
     RidgeLogitCombiner,
+    XGBoostRankLogitCombiner,
     evaluate_nested,
     full_fit_predictions,
     member_matrix,
     member_stats,
     member_test_matrix,
+    missingness_bands,
     rank_mean,
 )
 from pipeline.judgment import rank_ensemble_auc
@@ -73,6 +77,10 @@ def test_registry_holds_reference_and_issue_64_adapters():
         "bagged_greedy_rank_mean",
         "optuna_subset_rank_mean",
         "optuna_subset_ridge_logit",
+        "xgb_rank_logit",
+        "missing_segmented_rank_logit",
+        "missing_interaction_rank_logit",
+        "missing_4plus_rank_logit",
     ]
 
 
@@ -298,6 +306,91 @@ def test_logistic_linear_rejects_non_convergence():
         combiner.fit(preds, y)
 
 
+def make_missingness_bands() -> pd.Series:
+    return pd.Series(np.tile([0, 1, 2], N // 3), index=make_index(), dtype=np.int8)
+
+
+def test_missingness_segmented_logistic_uses_every_band_and_predicts_float64():
+    preds = make_preds(members=2)
+    y = make_labels()
+    fitted = MissingnessSegmentedLogisticCombiner(
+        band_of=make_missingness_bands()
+    ).fit(preds, y)
+    assert set(fitted.models) == {0, 1, 2}
+    assert fitted.global_model is None
+    prediction = fitted.predict(preds)
+    assert prediction.dtype == np.float64
+    assert np.isfinite(prediction).all()
+    assert set(fitted.summary()) == set(preds.columns)
+
+
+def test_missingness_weak_band_combiner_keeps_global_fallback():
+    preds = make_preds(members=2)
+    y = make_labels()
+    fitted = MissingnessSegmentedLogisticCombiner(
+        band_of=make_missingness_bands(), specialized_bands=(2,)
+    ).fit(preds, y)
+    assert set(fitted.models) == {2}
+    assert fitted.global_model is not None
+    assert np.isfinite(fitted.predict(preds)).all()
+
+
+def test_missingness_segmented_logistic_rejects_missing_row_context():
+    preds = make_preds(members=2)
+    y = make_labels()
+    incomplete = make_missingness_bands().iloc[:-1]
+    with pytest.raises(ValueError, match="요청한 id"):
+        MissingnessSegmentedLogisticCombiner(band_of=incomplete).fit(preds, y)
+
+
+def test_missingness_bands_excludes_id_and_target(tmp_path):
+    train_path = tmp_path / "train.csv"
+    test_path = tmp_path / "test.csv"
+    pd.DataFrame(
+        {
+            ID: [1, 2, 3],
+            "a": [1.0, np.nan, np.nan],
+            "b": [2.0, 2.0, np.nan],
+            "c": [3.0, 3.0, np.nan],
+            "d": [4.0, 4.0, np.nan],
+            TARGET: [0, 1, 0],
+        }
+    ).to_csv(train_path, index=False)
+    pd.DataFrame(
+        {
+            ID: [4],
+            "a": [np.nan],
+            "b": [np.nan],
+            "c": [3.0],
+            "d": [4.0],
+        }
+    ).to_csv(test_path, index=False)
+    actual = missingness_bands(train_path, test_path)
+    assert actual.to_dict() == {1: 0, 2: 0, 3: 2, 4: 1}
+
+
+def test_missingness_interaction_logistic_predicts_float64():
+    preds = make_preds(members=2)
+    y = make_labels()
+    fitted = MissingnessInteractionLogisticCombiner(
+        band_of=make_missingness_bands()
+    ).fit(preds, y)
+    prediction = fitted.predict(preds)
+    assert prediction.dtype == np.float64
+    assert np.isfinite(prediction).all()
+    assert set(fitted.summary()) == set(preds.columns)
+
+
+def test_xgboost_rank_logit_is_deterministic_and_summarizes_members():
+    preds, y = selection_fixture()
+    combiner = XGBoostRankLogitCombiner(n_estimators=3, n_jobs=1)
+    first = combiner.fit(preds, y)
+    second = combiner.fit(preds, y)
+    np.testing.assert_array_equal(first.predict(preds), second.predict(preds))
+    assert set(first.summary()) == set(preds.columns)
+    assert first.predict(preds).dtype == np.float64
+
+
 def test_nested_evaluation_reports_non_convergent_outer_fold():
     preds = make_preds(members=8)
     y = make_labels()
@@ -407,3 +500,25 @@ def test_full_fit_predictions_fits_on_oof_and_predicts_test_block():
     test_preds = make_preds(seed=11).iloc[:10]
     actual = full_fit_predictions(RankMeanCombiner(), oof, y, test_preds)
     np.testing.assert_array_equal(actual, rank_mean(test_preds))
+
+
+def test_full_fit_predictions_supports_missingness_context_on_test_ids():
+    oof = make_preds(members=2)
+    y = make_labels()
+    test_index = pd.Index(np.arange(N, N + 6), name=ID)
+    test_preds = pd.DataFrame(
+        {"exp_0": np.linspace(0.1, 0.9, 6), "exp_1": np.linspace(0.2, 0.8, 6)},
+        index=test_index,
+    )
+    band_of = pd.concat(
+        [
+            make_missingness_bands(),
+            pd.Series([0, 1, 2, 0, 1, 2], index=test_index, dtype=np.int8),
+        ]
+    )
+    actual = full_fit_predictions(
+        MissingnessSegmentedLogisticCombiner(band_of=band_of), oof, y, test_preds
+    )
+    assert actual.shape == (6,)
+    assert actual.dtype == np.float64
+    assert np.isfinite(actual).all()
