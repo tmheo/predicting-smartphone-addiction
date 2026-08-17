@@ -3,6 +3,7 @@
 사용법:
     uv run python -m pipeline.ensemble                    # registry 전 전략 평가·비교·판정
     uv run python -m pipeline.ensemble --only rank_mean   # 개발·디버깅용 부분 실행
+    uv run python -m pipeline.ensemble --only rank_logit_logistic --submission <path>
 
 이 module은 측정이다: outer fold 루프, float64 강제 캐스팅, 결합 전략 Protocol과
 adapter, COMBINER_REGISTRY, 선택 빈도 집계, CLI. 계열 3 판정(judge_ensemble)은
@@ -20,8 +21,6 @@ nested OOF 정의(ADR 0001 계열 3): outer fold k마다 나머지 4개 fold의 
 - Fitted.predict는 outer fold 행만 받는다. 순위 변환의 모집단은 채점 블록 자신이다.
   제출 시점의 결합이 test 예측만으로 순위를 매기므로, 평가도 같은 조건이어야
   nested 점수가 제출 동작을 대변한다.
-- 각 adapter는 복잡도 서열(선택 자유도 순위)을 선언한다. 판정의 동률 해소가 이
-  서열로 기계 판정된다.
 - Fitted.summary()(구성원 이름 → 가중치/선택 여부)를 outer fold 5개에서 모아
   구성원별 선택 빈도·평균 가중치 표를 만든다. #62의 "선택 빈도와 fold별 승리 기록"
   요구를 adapter 추가만으로 감당하기 위한 규약이다.
@@ -29,10 +28,9 @@ nested OOF 정의(ADR 0001 계열 3): outer fold k마다 나머지 4개 fold의 
 구성원 예측 행렬의 컬럼 키는 config 이름이다(풀 장부가 유일성 보장). run_id 대응은
 리포트 머리에 한 번 출력한다.
 
-MLflow run을 만들지 않는다. stdout 리포트만 낸다(실험 하나 = run 하나 규약 유지).
-결과는 티켓 코멘트로 남기는 기존 관행 그대로. 제출 결합(전체 OOF로 fit한 전략을
-구성원 test 예측에 적용)은 이번 범위가 아니며, fit/predict 분리로 interface는 이미
-감당 가능하므로 #64에서 전략이 채택된 뒤에 짓는다.
+MLflow run을 만들지 않는다(실험 하나 = run 하나 규약 유지).
+평가 결과는 stdout으로 남기고, 채택 전략은 전체 OOF로 다시 학습해 구성원 시험 예측에
+적용한 제출 파일을 명시적 경로에 만들 수 있다.
 """
 
 from __future__ import annotations
@@ -41,6 +39,7 @@ import argparse
 import sys
 import warnings
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal, Protocol
 
 import numpy as np
@@ -51,7 +50,7 @@ from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
 
-from .data import ID, labels
+from .data import ID, TARGET, labels
 from .ledger import CHAMPION_PATH, Champion, Pool
 from .runs import MlflowRunStore, RunStore, RunStoreError
 
@@ -77,7 +76,6 @@ class FittedCombiner(Protocol):
 
 class Combiner(Protocol):
     name: str
-    complexity: int  # 복잡도 서열(선택 자유도 순위). 낮을수록 단순하다.
 
     def fit(self, inner_preds: pd.DataFrame, y: pd.Series) -> FittedCombiner: ...
 
@@ -97,7 +95,6 @@ class RankMeanCombiner:
     """균등 순위 평균: 무학습 전략의 대표. fit은 항등, summary는 전 구성원 1/N."""
 
     name = "rank_mean"
-    complexity = 1  # 무학습이라 선택 자유도가 가장 낮다.
 
     def fit(self, inner_preds: pd.DataFrame, y: pd.Series) -> FittedRankMean:
         return FittedRankMean(list(inner_preds.columns))
@@ -124,7 +121,6 @@ class PerformanceWeightedRankMeanCombiner:
     """
 
     name = "performance_weighted_rank_mean"
-    complexity = 2
 
     def fit(
         self, inner_preds: pd.DataFrame, y: pd.Series
@@ -177,8 +173,6 @@ class RidgeLogitCombiner:
     """
 
     name = "ridge_logit"
-    # #64의 두 전략(제한 가중 순위 평균, logit 로지스틱 회귀)이 2·3으로 사이에 선언된다.
-    complexity = 4
     LOGIT_EPS = 1e-6  # 0/1 포화 예측의 logit 발산을 막는 클리핑. adapter 소유 상수.
 
     def __init__(self, alpha: float = 1.0, *, name: str | None = None) -> None:
@@ -297,14 +291,12 @@ class LogisticLinearCombiner:
         self,
         name: str,
         representation: Representation,
-        complexity: int,
         *,
         c: float = 1.0,
         max_iter: int = 1_000,
     ) -> None:
         self.name = name
         self.representation = representation
-        self.complexity = complexity
         self.c = c
         self.max_iter = max_iter
 
@@ -347,15 +339,15 @@ COMBINER_REGISTRY: dict[str, Combiner] = {
     for combiner in (
         RankMeanCombiner(),
         PerformanceWeightedRankMeanCombiner(),
-        LogisticLinearCombiner("logit_logistic", "logit", 3),
-        LogisticLinearCombiner("rank_logistic", "rank", 3),
+        LogisticLinearCombiner("logit_logistic", "logit"),
+        LogisticLinearCombiner("rank_logistic", "rank"),
         RidgeLogitCombiner(alpha=0.01, name="ridge_logit_alpha_0p01"),
         RidgeLogitCombiner(alpha=0.1, name="ridge_logit_alpha_0p1"),
         RidgeLogitCombiner(),
         RidgeLogitCombiner(alpha=10.0, name="ridge_logit_alpha_10"),
         RidgeLogitCombiner(alpha=100.0, name="ridge_logit_alpha_100"),
-        LogisticLinearCombiner("rank_gauss_logistic", "rank_gauss", 4),
-        LogisticLinearCombiner("rank_logit_logistic", "rank_logit", 5),
+        LogisticLinearCombiner("rank_gauss_logistic", "rank_gauss"),
+        LogisticLinearCombiner("rank_logit_logistic", "rank_logit"),
     )
 }
 
@@ -374,7 +366,6 @@ class NestedEvaluation:
     """전략 하나의 nested OOF 평가 결과."""
 
     name: str
-    complexity: int
     nested_auc: float
     folds: list[FoldOutcome]
 
@@ -407,7 +398,6 @@ def evaluate_nested(
     assert not np.isnan(nested).any(), "fold 배정이 전 행을 덮지 않는다."
     return NestedEvaluation(
         name=combiner.name,
-        complexity=combiner.complexity,
         nested_auc=float(roc_auc_score(y.to_numpy(), nested)),
         folds=outcomes,
     )
@@ -456,6 +446,44 @@ def member_matrix(
     return pd.DataFrame(columns).astype(np.float64)
 
 
+def member_test_matrix(
+    members: list[tuple[str, str]], store: RunStore, index: pd.Index
+) -> pd.DataFrame:
+    """구성원 제출 산출물에서 시험 예측 행렬을 읽고 기준 id 순서로 맞춘다."""
+    columns = {}
+    for config, run_id in members:
+        submission = pd.read_csv(store.submission_path_of(run_id))
+        if list(submission.columns) != [ID, TARGET]:
+            raise ValueError(
+                f"구성원 {config}(run {run_id})의 제출 열이 다르다: {list(submission.columns)}"
+            )
+        if submission[ID].duplicated().any():
+            raise ValueError(f"구성원 {config}(run {run_id})의 제출 id가 중복된다.")
+        pred = submission.set_index(ID)[TARGET].reindex(index)
+        if pred.isna().any() or not np.isfinite(pred.to_numpy(dtype=np.float64)).all():
+            raise ValueError(
+                f"구성원 {config}(run {run_id})의 시험 예측이 기준 id와 맞지 않거나 유한하지 않다."
+            )
+        columns[config] = pred
+    return pd.DataFrame(columns, index=index).astype(np.float64)
+
+
+def full_fit_predictions(
+    combiner: Combiner,
+    oof: pd.DataFrame,
+    y: pd.Series,
+    test_preds: pd.DataFrame,
+) -> np.ndarray:
+    """전체 OOF로 결합 전략을 학습하고 시험 예측을 만든다."""
+    if list(oof.columns) != list(test_preds.columns):
+        raise ValueError("OOF와 시험 예측의 구성원 순서가 다르다.")
+    fitted = combiner.fit(oof.astype(np.float64), y)
+    prediction = np.asarray(fitted.predict(test_preds.astype(np.float64)), dtype=np.float64)
+    if prediction.shape != (len(test_preds),) or not np.isfinite(prediction).all():
+        raise ValueError("결합 시험 예측의 길이가 다르거나 유한하지 않다.")
+    return prediction
+
+
 def run_report(
     combiners: list[Combiner],
     members: list[tuple[str, str]],
@@ -482,10 +510,7 @@ def run_report(
         except CombinerConvergenceError as exc:
             excluded.append((combiner.name, str(exc)))
     for evaluation in evaluations:
-        print(
-            f"전략 {evaluation.name} (복잡도 서열 {evaluation.complexity}): "
-            f"nested OOF AUC {evaluation.nested_auc:.5f}"
-        )
+        print(f"전략 {evaluation.name}: nested OOF AUC {evaluation.nested_auc:.5f}")
         folds = " ".join(f"{o.fold}={o.auc:.5f}" for o in evaluation.folds)
         print(f"  outer fold AUC: {folds}")
         print("  구성원별 선택 빈도·평균 가중치:")
@@ -502,7 +527,6 @@ def run_report(
         [
             StrategyOutcome(
                 name=e.name,
-                complexity=e.complexity,
                 nested_auc=e.nested_auc,
                 fold_aucs={o.fold: o.auc for o in e.folds},
             )
@@ -527,17 +551,17 @@ def run_report(
     if verdict.recommended is None:
         print("판정: 채택 없음, 단독 champion 유지")
         return
-    print(
-        f"동률 그룹 (1위와 차이 {AUC_THRESHOLD:.5f} 미만): "
-        f"{', '.join(verdict.tie_group)}"
-    )
-    print(f"판정: {verdict.recommended} 채택 추천 (동률 그룹에서 복잡도 서열 최저)")
+    print(f"판정: {verdict.recommended} 채택 추천 (nested OOF AUC 최고)")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="nested OOF 평가와 계열 3 판정 (ADR 0001 계열 3)")
     parser.add_argument("--only", help="이 이름의 결합 전략만 평가 (개발·디버깅용)")
+    parser.add_argument("--submission", type=Path, help="--only 전략의 전체 OOF 학습 제출 파일 경로")
     args = parser.parse_args()
+
+    if args.submission is not None and args.only is None:
+        sys.exit("--submission에는 제출 결합 전략을 고르는 --only가 필요하다.")
 
     combiners = list(COMBINER_REGISTRY.values())
     if args.only is not None:
@@ -558,14 +582,26 @@ def main() -> None:
     y = labels(fold_of.index)
     store = MlflowRunStore()
     try:
+        members = [(member.config, member.run_id) for member in pool.members]
         run_report(
             combiners,
-            [(member.config, member.run_id) for member in pool.members],
+            members,
             store,
             fold_of,
             y,
             champion.oof_auc,
         )
+        if args.submission is not None:
+            oof = member_matrix(members, store, fold_of.index)
+            template = pd.read_csv("data/sample_submission.csv", usecols=[ID, TARGET])
+            test_index = pd.Index(template[ID], name=ID)
+            test_preds = member_test_matrix(members, store, test_index)
+            prediction = full_fit_predictions(combiners[0], oof, y, test_preds)
+            args.submission.parent.mkdir(parents=True, exist_ok=True)
+            pd.DataFrame({ID: test_index, TARGET: prediction}).to_csv(
+                args.submission, index=False
+            )
+            print(f"제출 파일 저장: {args.submission} ({len(prediction)}행, float64)")
     except RunStoreError as exc:
         sys.exit(str(exc))
 

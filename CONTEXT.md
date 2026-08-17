@@ -348,7 +348,7 @@ MLflow run을 만들지 않고 stdout 리포트만 낸다.
 _Avoid_: 앙상블 실험, 스태킹 평가
 
 **결합 전략**:
-구성원 OOF 예측 행렬을 하나의 예측으로 결합하는 절차로, fit/predict/summary 계약과 복잡도 서열(선택 자유도 순위) 선언을 갖는 adapter.
+구성원 OOF 예측 행렬을 하나의 예측으로 결합하는 fit/predict/summary 계약의 adapter.
 순위·logit 변환 같은 전처리는 전략이 소유하고, 평가기는 float64 원시 예측만 건넨다.
 _Avoid_: 블렌더, 결합 방법
 

@@ -13,7 +13,7 @@ import pandas as pd
 import pytest
 from sklearn.metrics import roc_auc_score
 
-from pipeline.data import ID
+from pipeline.data import ID, TARGET
 from pipeline.ensemble import (
     COMBINER_REGISTRY,
     CombinerConvergenceError,
@@ -23,8 +23,10 @@ from pipeline.ensemble import (
     RankMeanCombiner,
     RidgeLogitCombiner,
     evaluate_nested,
+    full_fit_predictions,
     member_matrix,
     member_stats,
+    member_test_matrix,
     rank_mean,
 )
 from pipeline.judgment import rank_ensemble_auc
@@ -64,19 +66,6 @@ def test_registry_holds_reference_and_issue_64_adapters():
         "rank_gauss_logistic",
         "rank_logit_logistic",
     ]
-    # 복잡도 서열: 무학습 < 제한 가중 < 계수 학습 < 이중 표현.
-    assert (
-        COMBINER_REGISTRY["rank_mean"].complexity
-        < COMBINER_REGISTRY["ridge_logit"].complexity
-    )
-    assert (
-        COMBINER_REGISTRY["performance_weighted_rank_mean"].complexity
-        < COMBINER_REGISTRY["logit_logistic"].complexity
-    )
-    assert (
-        COMBINER_REGISTRY["rank_logit_logistic"].complexity
-        > COMBINER_REGISTRY["logit_logistic"].complexity
-    )
 
 
 def test_rank_ensemble_auc_uses_rank_mean_formula():
@@ -190,9 +179,9 @@ def test_logistic_linear_representations_fit_and_predict_float64(representation)
         },
         index=make_index(),
     )
-    fitted = LogisticLinearCombiner(
-        f"test_{representation}", representation, 9
-    ).fit(preds, y)
+    fitted = LogisticLinearCombiner(f"test_{representation}", representation).fit(
+        preds, y
+    )
     prediction = fitted.predict(preds.iloc[:10])
     assert prediction.dtype == np.float64
     assert np.isfinite(prediction).all()
@@ -206,7 +195,7 @@ def test_rank_transform_is_fitted_only_on_inner_rows():
         {"a": np.linspace(0.2, 0.8, N), "b": np.linspace(0.1, 0.9, N)},
         index=make_index(),
     )
-    fitted = LogisticLinearCombiner("rank_test", "rank", 9).fit(inner, y)
+    fitted = LogisticLinearCombiner("rank_test", "rank").fit(inner, y)
     assert fitted.quantiles is not None
     assert fitted.quantiles.sorted_columns is not None
     np.testing.assert_array_equal(
@@ -236,9 +225,7 @@ def test_empirical_cdf_uses_midranks_and_clips_outer_extremes():
 def test_logistic_linear_rejects_non_convergence():
     preds = make_preds(members=8)
     y = make_labels()
-    combiner = LogisticLinearCombiner(
-        "will_not_converge", "rank_logit", 9, max_iter=1
-    )
+    combiner = LogisticLinearCombiner("will_not_converge", "rank_logit", max_iter=1)
     with pytest.raises(CombinerConvergenceError, match=r"max\(n_iter_\)=1"):
         combiner.fit(preds, y)
 
@@ -247,9 +234,7 @@ def test_nested_evaluation_reports_non_convergent_outer_fold():
     preds = make_preds(members=8)
     y = make_labels()
     fold_of = pd.Series(np.arange(N) % 5, index=make_index())
-    combiner = LogisticLinearCombiner(
-        "will_not_converge", "rank_logit", 9, max_iter=1
-    )
+    combiner = LogisticLinearCombiner("will_not_converge", "rank_logit", max_iter=1)
     with pytest.raises(CombinerConvergenceError, match="outer fold 0에서 미수렴"):
         evaluate_nested(combiner, preds, fold_of, y)
 
@@ -258,7 +243,6 @@ class SpyCombiner:
     """outer fold 루프의 계약 검증용: fold k는 학습에서 제외되고 fold k만 예측한다."""
 
     name = "spy"
-    complexity = 9
 
     def __init__(self) -> None:
         self.inner_ids: list[set[int]] = []
@@ -335,3 +319,27 @@ def test_member_matrix_rejects_misaligned_ids():
     )
     with pytest.raises(AssertionError, match="일치하지"):
         member_matrix([("exp_a", "run-a")], store, index)
+
+
+def test_member_test_matrix_uses_submission_artifacts_and_reference_order(tmp_path):
+    index = pd.Index([103, 101, 102], name=ID)
+    store = InMemoryRunStore()
+    for config, values in (("a", [0.1, 0.2, 0.3]), ("b", [0.4, 0.5, 0.6])):
+        path = tmp_path / f"{config}.csv"
+        pd.DataFrame({ID: [101, 102, 103], TARGET: values}).to_csv(path, index=False)
+        store.add_run(f"run-{config}", submission_path=path)
+    matrix = member_test_matrix(
+        [("exp_a", "run-a"), ("exp_b", "run-b")], store, index
+    )
+    assert list(matrix.columns) == ["exp_a", "exp_b"]
+    assert matrix.index.equals(index)
+    assert (matrix.dtypes == np.float64).all()
+    np.testing.assert_array_equal(matrix["exp_a"], [0.3, 0.1, 0.2])
+
+
+def test_full_fit_predictions_fits_on_oof_and_predicts_test_block():
+    oof = make_preds()
+    y = make_labels()
+    test_preds = make_preds(seed=11).iloc[:10]
+    actual = full_fit_predictions(RankMeanCombiner(), oof, y, test_preds)
+    np.testing.assert_array_equal(actual, rank_mean(test_preds))

@@ -34,11 +34,7 @@ compare·pool CLI는 이 module의 caller다. 판정 함수는 통과 여부와 
 
 - 채택 가능: 결합 전략의 nested OOF AUC가 champion(3시드 평균본) OOF AUC 대비
   +0.00002 이상.
-- 동률 그룹: 1위 고정 기준으로, 1위와의 차이가 0.00002 미만인 채택 가능 전략만
-  포함한다(연쇄 확장 없음).
-- 확정: 동률 그룹 안에서 복잡도 서열이 가장 낮은 1개를 추천 전략으로 확정한다.
-  복잡도 서열은 ADR 0001의 "구성원 수와 선택 자유도가 적은 더 단순한 방식"을
-  각 결합 전략 adapter의 선언으로 기계화한 것이다.
+- 확정: 채택 가능한 전략 중 nested OOF AUC가 가장 높은 전략을 추천한다.
   채택 가능 전략이 없으면 "채택 없음, 단독 champion 유지"다.
 - 전략 간 fold별 승리 수는 보조 증거로 기록만 한다. (ADR 0001)
 
@@ -593,12 +589,11 @@ class StrategyOutcome:
     """계열 3 판정의 평문 입력 한 건: 결합 전략 하나의 nested 평가 결과. (#104)
 
     check_adoption_eligibility가 기록 원형을 평문으로 받는 무늬 그대로, ensemble의
-    평가 타입이 아닌 값(전략 이름, 복잡도 서열, nested OOF AUC, outer fold별 AUC)만
+    평가 타입이 아닌 값(전략 이름, nested OOF AUC, outer fold별 AUC)만
     받는다.
     """
 
     name: str
-    complexity: int  # 복잡도 서열(선택 자유도 순위). 낮을수록 단순하다.
     nested_auc: float
     fold_aucs: dict[int, float]  # outer fold별 AUC.
 
@@ -608,7 +603,6 @@ class StrategyAssessment:
     """결합 전략 하나의 계열 3 판정 근거 값."""
 
     name: str
-    complexity: int
     nested_auc: float
     delta: float  # champion 대비.
     eligible: bool  # 채택 가능한가(delta >= AUC_THRESHOLD).
@@ -621,18 +615,13 @@ class EnsembleVerdict:
 
     champion_auc: float
     assessments: list[StrategyAssessment]  # nested OOF AUC 내림차순.
-    tie_group: list[str]  # 채택 가능 전략이 없으면 빈 목록.
     recommended: str | None  # None이면 채택 없음, 단독 champion 유지.
 
 
 def judge_ensemble(
     outcomes: list[StrategyOutcome], champion_auc: float
 ) -> EnsembleVerdict:
-    """계열 3 판정: 채택 문턱 + 동률 그룹 + 복잡도 서열 확정. (ADR 0001, #104)
-
-    복잡도 서열 최저 선택은 ADR 0001의 "동률이면 구성원 수와 선택 자유도가 적은
-    더 단순한 방식" 규정을 adapter 선언 값으로 기계 판정한 것이다.
-    """
+    """계열 3 판정: 채택 문턱을 넘은 nested OOF AUC 최고 전략 확정. (ADR 0001)"""
     if not outcomes:
         raise JudgmentError("판정할 결합 전략이 없다.")
     names = [outcome.name for outcome in outcomes]
@@ -656,7 +645,6 @@ def judge_ensemble(
         (
             StrategyAssessment(
                 name=outcome.name,
-                complexity=outcome.complexity,
                 nested_auc=outcome.nested_auc,
                 delta=outcome.nested_auc - champion_auc,
                 eligible=outcome.nested_auc - champion_auc >= AUC_THRESHOLD,
@@ -664,22 +652,13 @@ def judge_ensemble(
             )
             for outcome in outcomes
         ),
-        key=lambda a: (-a.nested_auc, a.complexity, a.name),
+        key=lambda a: (-a.nested_auc, a.name),
     )
 
     top = assessments[0]
     if not top.eligible:
-        return EnsembleVerdict(champion_auc, assessments, [], None)
-    tie_group = [
-        a.name
-        for a in assessments
-        if a.eligible and top.nested_auc - a.nested_auc < AUC_THRESHOLD
-    ]
-    recommended = min(
-        (a for a in assessments if a.name in tie_group),
-        key=lambda a: (a.complexity, a.name),
-    ).name
-    return EnsembleVerdict(champion_auc, assessments, tie_group, recommended)
+        return EnsembleVerdict(champion_auc, assessments, None)
+    return EnsembleVerdict(champion_auc, assessments, top.name)
 
 
 @dataclass(frozen=True)

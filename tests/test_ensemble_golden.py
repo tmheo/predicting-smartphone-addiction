@@ -48,7 +48,7 @@ def scenario_adopt():
 
 
 def scenario_tie_break():
-    """fold별 클래스가 균형이라 두 전략 모두 nested AUC 1.0: 동률을 복잡도 서열로 해소한다."""
+    """fold별 클래스가 균형이라 두 전략 모두 nested AUC 1.0이다."""
     index = pd.Index(np.arange(N), name=ID)
     y = pd.Series(np.arange(N) % 2, index=index)
     rng, index, fold_of, y = _base(105, y)
