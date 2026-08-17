@@ -71,6 +71,39 @@ def _screen_slack_n_obs(df: pd.DataFrame) -> pd.Series:
     return n.where(df[SCREEN_TOTAL].notna())
 
 
+# 화면 관계 7특성 블록(#181). 공개 스택 계보 조사(public-stack-provenance 3순위)의
+# beicicc 계약을 그대로 따른다: 차이 3개는 NaN을 자연 전파하고, 비율 4개는 분자·분모가
+# 유한하고 분모가 양수일 때만 정의한다. epsilon, 대체, 클리핑, 정의 여부 플래그는 쓰지 않는다.
+SCREEN_RELATION_DIFFS: dict[str, tuple[str, str]] = {
+    "gaming_minus_work": ("gaming_hours", "work_study_hours"),
+    "screen_minus_work": (SCREEN_TOTAL, "work_study_hours"),
+    "weekend_minus_daily": ("weekend_screen_time", SCREEN_TOTAL),
+}
+SCREEN_RELATION_RATIOS: dict[str, tuple[str, str]] = {
+    "social_share_screen": ("social_media_hours", SCREEN_TOTAL),
+    "gaming_share_screen": ("gaming_hours", SCREEN_TOTAL),
+    "work_share_screen": ("work_study_hours", SCREEN_TOTAL),
+    "screen_to_sleep": (SCREEN_TOTAL, "sleep_hours"),
+}
+
+
+def _difference(left: str, right: str) -> Callable[[pd.DataFrame], pd.Series]:
+    def f(df: pd.DataFrame) -> pd.Series:
+        return df[left] - df[right]
+
+    return f
+
+
+def _guarded_ratio(numerator: str, denominator: str) -> Callable[[pd.DataFrame], pd.Series]:
+    def f(df: pd.DataFrame) -> pd.Series:
+        num = df[numerator]
+        den = df[denominator]
+        defined = np.isfinite(num) & np.isfinite(den) & (den > 0)
+        return (num / den).where(defined)
+
+    return f
+
+
 # 소수 첫째 자리가 실제로 변하는 격자 컬럼(정수 격자인 age 등은 제외). (#49)
 DECIMAL_GRID_COLS = [
     "daily_screen_time_hours",
@@ -102,6 +135,9 @@ DERIVED_REGISTRY: dict[str, Callable[[pd.DataFrame], pd.Series]] = {
     "wk_minus_sgw": _wk_minus_sgw,
     "wk_other": _wk_other,
     **{f"{c}_dec1": _first_decimal(c) for c in DECIMAL_GRID_COLS},
+    # #181 화면 관계 7특성: 차이 3개 + 안전 비율 4개.
+    **{name: _difference(a, b) for name, (a, b) in SCREEN_RELATION_DIFFS.items()},
+    **{name: _guarded_ratio(n, d) for name, (n, d) in SCREEN_RELATION_RATIOS.items()},
 }
 
 
