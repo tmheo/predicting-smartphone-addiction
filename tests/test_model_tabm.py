@@ -108,3 +108,17 @@ def test_tabm_rejects_unknown_params():
     adapter = _adapter(no_such_param=1)
     with pytest.raises(ValueError, match="no_such_param"):
         adapter.fit(X.iloc[:60], y.iloc[:60], X.iloc[60:], y.iloc[60:])
+
+
+def test_tabm_full_fit_uses_all_rows_without_validation_split():
+    X, y = _data(96)
+    adapter = _adapter(n_seed_avg=1, n_epochs=2, patience=2)
+
+    model_mod.fit_full(adapter, X, y, 2)
+
+    prediction = adapter.predict(X.iloc[:8])
+    assert prediction.shape == (8,)
+    assert np.isfinite(prediction).all()
+    diagnostics = adapter.training_diagnostics()
+    assert diagnostics["full_fit"] is True
+    assert diagnostics["epochs"] == 2

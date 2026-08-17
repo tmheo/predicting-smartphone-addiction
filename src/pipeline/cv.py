@@ -19,7 +19,7 @@ from . import initial_score as initial_score_mod
 from . import model as model_mod
 from .config import ExperimentConfig
 from .data import ID, TARGET
-from .plan import FeaturePlan
+from .plan import FeaturePlan, prepare_fold_fit_input
 from .recovery import FoldRecovery
 
 
@@ -55,15 +55,6 @@ def score_predictions(y: pd.Series, folds: pd.Series, pred: np.ndarray) -> dict[
     return fold_aucs
 
 
-def _with_built_columns(df: pd.DataFrame, X: pd.DataFrame) -> pd.DataFrame:
-    """원본 df에 build_matrix가 만든 컬럼(placebo 등)을 더한 fold-fit 입력을 만든다.
-
-    placebo 카나리아를 타깃 인코딩하려면 fold-fit 입력에 placebo 컬럼이 있어야 한다. (#33 파급)
-    """
-    extra = [c for c in X.columns if c not in df.columns]
-    return pd.concat([df, X[extra]], axis=1) if extra else df
-
-
 def run_cv(
     cfg: ExperimentConfig,
     plan: FeaturePlan,
@@ -96,8 +87,8 @@ def run_cv(
     y = train[TARGET]
     transformers = plan.fold_fit_transformers()
     if transformers:
-        train_ff = _with_built_columns(train, X)
-        test_ff = _with_built_columns(test, X_test)
+        train_ff = prepare_fold_fit_input(train, X)
+        test_ff = prepare_fold_fit_input(test, X_test)
 
     oof_pred = np.zeros(len(train))
     test_pred = np.zeros(len(test))

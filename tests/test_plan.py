@@ -147,6 +147,31 @@ def test_declared_vs_actual_for_all_registered_kinds(tmp_path):
     assert list(X_full.columns) == plan.all_columns()
 
 
+def test_build_full_matrices_fits_fold_providers_on_all_training_rows():
+    plan = FeaturePlan.from_config(
+        make_config(
+            [
+                {
+                    "kind": "target_encoding",
+                    "inner_folds": 3,
+                    "cols": ["gaming_hours", PLACEBO],
+                }
+            ]
+        )
+    )
+    train, test = toy_frames()
+    train, test = plan.apply_dataset_wide(train, test)
+
+    X_train, X_test = plan.build_full_matrices(train, test, seed=7)
+
+    assert list(X_train.columns) == plan.all_columns()
+    assert list(X_test.columns) == plan.all_columns()
+    assert X_train.index.equals(train.index)
+    assert X_test.index.equals(test.index)
+    assert X_train[["gaming_hours_te", "placebo_noise_te"]].notna().all().all()
+    assert X_test[["gaming_hours_te", "placebo_noise_te"]].notna().all().all()
+
+
 def test_stage_order_invariant_ignores_config_interleaving():
     """providers 목록이 단계를 섞어 나열해도 적용 순서는 base 뒤 dataset-wide,
     row-wise, placebo, fold-fit 순서이고 같은 단계 안에서는 목록 순서다."""

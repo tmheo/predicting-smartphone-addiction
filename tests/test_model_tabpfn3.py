@@ -85,6 +85,26 @@ def test_tabpfn3_adapter_contract_chunking_and_importance(monkeypatch):
         adapter.predict(X.iloc[:2], pd.Series([0.0, 0.0]))
 
 
+def test_tabpfn3_full_fit_uses_all_rows_as_context(monkeypatch):
+    made: list[FakeTabPFN] = []
+
+    def fake_new(self: TabPFN3Fold) -> FakeTabPFN:
+        classifier = FakeTabPFN()
+        made.append(classifier)
+        return classifier
+
+    monkeypatch.setattr(TabPFN3Fold, "_new_classifier", fake_new)
+    adapter = model_mod.create(
+        ModelConfig(kind="tabpfn3", params={"chunk_rows": 17}, fit={}), seed=42
+    )
+    X, y = _data()
+
+    model_mod.fit_full(adapter, X, y, None)
+
+    assert len(made[0].train) == len(X)
+    assert adapter.predict(X.iloc[:5]).shape == (5,)
+
+
 def test_tabpfn3_retries_fit_once_with_memory_saving(monkeypatch):
     class FakeOOM(RuntimeError):
         pass

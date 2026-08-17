@@ -374,13 +374,38 @@ class _LookupTransformerMember:
     def fit(
         self, X_tr: pd.DataFrame, y_tr: pd.Series, X_va: pd.DataFrame, y_va: pd.Series
     ) -> np.ndarray:
+        result = self._fit(X_tr, y_tr, X_va, y_va, epochs=self._epochs)
+        assert result is not None
+        return result
+
+    def fit_full(self, X: pd.DataFrame, y: pd.Series, epochs: int) -> None:
+        if isinstance(epochs, bool) or not isinstance(epochs, int) or epochs < 1:
+            raise ValueError("Lookup-Transformer 전체 자료 재학습 epoch 수는 양의 정수여야 한다.")
+        self._fit(X, y, None, None, epochs=epochs)
+
+    def _fit(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame | None,
+        y_va: pd.Series | None,
+        *,
+        epochs: int,
+    ) -> np.ndarray | None:
         torch.backends.cuda.matmul.allow_tf32 = True
         self._fit_specs(X_tr)
         dev = self._device
         ids_tr, num_tr, mask_tr = (t.to(dev) for t in self._encode(X_tr))
-        ids_va, num_va, mask_va = (t.to(dev) for t in self._encode(X_va))
+        validation = X_va is not None
+        if validation:
+            assert y_va is not None
+            ids_va, num_va, mask_va = (t.to(dev) for t in self._encode(X_va))
+            y_va_np = y_va.to_numpy(dtype="float64")
+        else:
+            assert y_va is None
+            ids_va = num_va = mask_va = None
+            y_va_np = None
         y = torch.from_numpy(y_tr.to_numpy(dtype="float32")).to(dev)
-        y_va_np = y_va.to_numpy(dtype="float64")
         na_ids = torch.from_numpy(self._offsets).to(dev)  # 컬럼별 global NA id
 
         # torch의 모델 초기화 난수는 프로세스 전역이므로 여러 GPU thread에서도
@@ -408,7 +433,7 @@ class _LookupTransformerMember:
             self._lr,
         )
         n_tr = len(X_tr)
-        steps = math.ceil(n_tr / self._batch_size) * self._epochs + 10
+        steps = math.ceil(n_tr / self._batch_size) * epochs + 10
         schedule = _LearningRateController(
             opt,
             name=self._lr_schedule,
@@ -432,9 +457,9 @@ class _LookupTransformerMember:
 
         best_auc, best_weights, best_epoch, bad = 0.0, None, None, 0
         evaluations: list[dict[str, object]] = []
-        eval_start = min(5, self._epochs - 1)
+        eval_start = min(5, epochs - 1)
         end_epoch = -1
-        for ep in range(self._epochs):
+        for ep in range(epochs):
             end_epoch = ep
             model.train()
             perm = torch.randperm(n_tr, generator=g).to(dev)
@@ -475,7 +500,9 @@ class _LookupTransformerMember:
                     torch._foreach_add_(
                         ema, [p.detach() for p in params_list], alpha=1 - self._ema_decay
                     )
-            if ep >= eval_start and (ep % 2 == 1 or ep == self._epochs - 1):
+            if validation and ep >= eval_start and (ep % 2 == 1 or ep == epochs - 1):
+                assert ids_va is not None and num_va is not None and mask_va is not None
+                assert y_va_np is not None
                 backup = [p.detach().clone() for p in params_list]
                 with torch.no_grad():
                     for p, e in zip(params_list, ema):
@@ -526,14 +553,14 @@ class _LookupTransformerMember:
                         p.copy_(b)
                 if bad >= self._patience:
                     break
-        if best_weights is None:  # 평가 시점이 오기 전에 끝난 짧은 학습(테스트)용 방어선.
+        if best_weights is None:
+            # 전체 자료 재학습에는 검증 선택이 없으므로 마지막 EMA를 그대로 쓴다.
+            # 짧은 검증 학습에서 평가 시점 전에 끝나는 테스트 경로도 같은 방어선이다.
             best_weights = ema
+            best_epoch = end_epoch
         with torch.no_grad():
             for p, w in zip(params_list, best_weights):
                 p.copy_(w)
-        val_logit = self._predict_tensors(ids_va, num_va, mask_va)
-        self._val = (ids_va, num_va, mask_va, y_va_np)
-        self._val_auc = roc_auc_score(y_va_np, val_logit)
         self._training_diagnostics = {
             "initialization_seed": self._seed,
             "optimizer": self._optimizer_name,
@@ -545,11 +572,19 @@ class _LookupTransformerMember:
             "gradient_clip_norm": _GRADIENT_CLIP_NORM,
             "evaluations": evaluations,
             "best_epoch": best_epoch,
-            "best_validation_auc": float(best_auc),
+            "best_validation_auc": float(best_auc) if validation else None,
             "end_epoch": end_epoch,
             "completed_steps": schedule.completed_steps,
             "planned_total_steps": steps,
+            "full_fit": not validation,
         }
+        if not validation:
+            return None
+        assert ids_va is not None and num_va is not None and mask_va is not None
+        assert y_va_np is not None
+        val_logit = self._predict_tensors(ids_va, num_va, mask_va)
+        self._val = (ids_va, num_va, mask_va, y_va_np)
+        self._val_auc = roc_auc_score(y_va_np, val_logit)
         return _sigmoid(val_logit)
 
     def training_diagnostics(self) -> dict[str, object]:
@@ -692,6 +727,26 @@ class LookupTransformerFold:
                 flush=True,
             )
         return val_pred
+
+    def fit_full(self, X: pd.DataFrame, y: pd.Series, epochs: int) -> None:
+        """초기화 구성원 모두를 전체 자료에서 같은 고정 epoch 수로 학습한다."""
+        self._columns = list(X.columns)
+        for index, member in enumerate(self._members, start=1):
+            print(
+                f"[lookup_transformer] full member {index}/{len(self._members)} "
+                f"seed={member._seed} device={member._device} epochs={epochs}",
+                flush=True,
+            )
+        if self._parallel:
+            with ThreadPoolExecutor(max_workers=len(self._members)) as executor:
+                list(
+                    executor.map(
+                        lambda member: member.fit_full(X, y, epochs), self._members
+                    )
+                )
+        else:
+            for member in self._members:
+                member.fit_full(X, y, epochs)
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         pred = np.zeros(len(X), dtype="float64")
