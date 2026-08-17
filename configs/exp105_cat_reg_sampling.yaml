@@ -1,0 +1,116 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #182: CatBoost 규제·표본추출 묶음 짝비교. 앵커는 #181 판정의 승자
+# exp070_cat_exact_cats(seed 42 run beec9a15, OOF 0.9684083)이고, 피처 계획은
+# exp070과 완전히 동일하며 모델 규제·표본추출 파라미터만 사전 고정 묶음으로 바꾼다.
+# 사전 고정 묶음(실행 전 티켓에 등록, 사후 조정 금지):
+#   - l2_leaf_reg 3(기본) -> 5.0
+#   - bootstrap_type MVS(CPU 기본) -> Bernoulli, subsample 0.8(기본값과 동일 비율)
+#   - random_strength는 외부 출처 값 1.0이 CatBoost 기본과 같아 바꾸지 않는다.
+# 값의 출처는 공개 노트북 PS-S06E08: CatBoost
+# (https://www.kaggle.com/code/stephentarter/ps-s06e08-catboost, 2026-08-18 내려받음)의
+# 저장된 기본 설정이다. 코드 복사 없이 파라미터 값만 참조했다(licensing 절차 1항 기록).
+# 범위 제한: min_data_in_leaf는 SymmetricTree에서 지원되지 않고, grow_policy·depth·
+# 학습률·leaf_estimation은 #59에서 종결됐거나 규제·표본추출 범위 밖이라 제외한다.
+# 판정 경로(#182): seed 42 짝비교 1회, 문턱 +0.00002. 통과 시에만 3시드 확정과
+# 변형 확장을 열고, 미달이면 즉시 종료한다. 모델 설정이 앵커와 달라 compare의
+# 대리 스크리닝 전제에 안 걸리므로 판정은 OOF 직접 비교와 check_canaries로 기록한다
+# (피처 동일이라 새 피처 게이트는 없음, exp070 전례).
+name: exp105_cat_reg_sampling
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: categorical_copies
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: derived
+      names: [other_screen, screen_slack]
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions:
+        [
+          social_frac,
+          work_frac,
+          leisure_frac,
+          resid_frac,
+          week_total,
+        ]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: catboost
+  params:
+    iterations: 10000
+    depth: 6
+    learning_rate: 0.05
+    eval_metric: AUC
+    max_ctr_complexity: 1
+    l2_leaf_reg: 5.0
+    bootstrap_type: Bernoulli
+    subsample: 0.8
+  fit:
+    early_stopping_rounds: 200
