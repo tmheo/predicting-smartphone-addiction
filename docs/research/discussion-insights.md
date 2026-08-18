@@ -4,7 +4,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 스냅샷 기준일은 2026-08-10이고, 대회는 2026-08-31까지 진행되므로 이후 올라온 스레드는 반영되어 있지 않다.
 이후 올라오는 스레드는 증분 업데이트 절차(`docs/agents/discussion-update.md`)에 따라 이 문서에 반영한다.
 2026-08-18에 스레드 734005(코멘트 1개 → 9개)와 그 파생 노트북을 표적 재독해로 반영했다.
-같은 날 새 스레드 [735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861)(앙상블 다양성, 코멘트 1개)을 표적 반영했다.
+같은 날 새 스레드 [735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861)(앙상블 다양성, 코멘트 1개)과 [735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421)(spline Transformer, 코멘트 5개)을 표적 반영했다.
 전체 회차가 아니므로 다른 스레드의 코멘트 수는 2026-08-10 기준 그대로다.
 
 원자료는 세 개의 리딩 노트다.
@@ -240,7 +240,8 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
   SMOTE, 리샘플링, 재가중 모두 불필요하다 ([731764](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/731764)).
 - 0.968 OOF를 넘는 단일 모델이 실재한다.
   상위권(Tilii, 28위)이 CV 0.9687 초과 단일 모델을 5개 이상, 0.969 초과도 두어 개 보유하고 있다고 밝혔다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) 코멘트).
-- 강한 단일 모델의 구체적 후보로 [RealMLP 노트북](https://www.kaggle.com/code/omidbaghchehsaraei/realmlp-for-predicting-smartphone-addiction)과 [조회표 기반 transformer 노트북](https://www.kaggle.com/code/tamerlanomralinov/s6e8-lookup-transformer-insights-lb-0-97041)(LB 0.97041)이 지목됐고, 신경망 계열의 추가 후보는 [735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421)에 더 있다고 했다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) 코멘트).
+- 강한 단일 모델의 구체적 후보로 [RealMLP 노트북](https://www.kaggle.com/code/omidbaghchehsaraei/realmlp-for-predicting-smartphone-addiction)과 [조회표 기반 transformer 노트북](https://www.kaggle.com/code/tamerlanomralinov/s6e8-lookup-transformer-insights-lb-0-97041)(LB 0.97041)이 지목됐고, 신경망 계열의 추가 후보로 [735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421)의 spline Transformer가 있다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) 코멘트).
+  조회표 transformer는 우리 champion 계열(exp059/exp081)의 원문이고, RealMLP는 재실험 이슈 [#180](https://github.com/tmheo/predicting-smartphone-addiction/issues/180)이 열려 있다.
 - 공개 노트북에서 강한 단일 모델을 찾을 때는 CV 점수로 정렬하고 블렌드는 전부 건너뛴다.
   최상단의 블라인드 블렌딩 노트북을 그대로 베끼는 유혹은 피한다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) 코멘트).
 - 전 피처 one-hot 로지스틱 회귀도 0.96까지 나오므로, 해석용 보조 모델로 쓰거나 스태킹에 트리 모델과 다른 관점을 보태는 재료로 쓸 수 있다 ([733708](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733708) 코멘트).
@@ -263,6 +264,14 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
   OOF를 반으로 갈라 한쪽에서 가중치를 적합하고 다른 쪽에서 채점하기를 5회 평균한 실측에서, 최적화 가중치 0.96820이 균등 가중 0.96780을 t = +41.6으로 이겼고 전체 OOF 점수 0.96821과 거의 일치했다.
   즉 구성원이 몇 개 수준인 풀에서는 가중치 최적화가 과적합 없이 제값을 한다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861)).
 - 힐 클라이밍은 모든 모델이 같은 폴드 분할을 쓸 때 대체로 잘 작동한다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) 코멘트, Tilii).
+- 다양성 공급원으로 확인된 신경망이 둘 있다: 조회표 transformer(다양성 선두)와 [spline Transformer](https://www.kaggle.com/code/ern711/contextualized-deep-univariate-spline-transformer)(깊은 단변량 스플라인 인코더 + 얕은 self-attention)다.
+  상위권(Tilii)이 spline 판에 파생 변수를 더해 public LB 0.96982를 얻었고, 100개 초과 앙상블에 넣으면 상위권 LB 기준 약 +0.00005를 거의 확실히 만든다고 평가했다 ([735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421) 코멘트).
+  단, 이 수치들은 구성원 목록과 OOF가 비공개인 참가자 보고이며, 우리 자체 재검토와 제한 재개 결정은 [spline 재검토 문서](spline-comment-reassessment.md)([#166](https://github.com/tmheo/predicting-smartphone-addiction/issues/166))에 있다.
+  재개된 실험은 [#171](https://github.com/tmheo/predicting-smartphone-addiction/issues/171)(exp085 spline M0의 전체 OOF와 nested 결합 기여 결정)로 진행 중이다.
+- 모델 간 다양성은 확률 구간별 구조로 나타난다.
+  spline 예측과 TabM 예측의 누적분포 차이는 KS 0.118790이고, spline은 낮은 확률(0.2 이하)에서, TabM은 높은 확률(0.4 초과)에서 타깃을 더 잘 맞추며 중간 구간에서는 우위가 번갈아 나타난다.
+  같은 경향이 Tilii의 거의 모든 다른 모델과도 보였다고 하므로, 구간별 결합이 파고들 여지가 있다 ([735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421) 코멘트).
+- spline Transformer의 확장판(여러 깊이의 예측 경로 + 행별 혼합 + hypernetwork 보정, [노트북](https://www.kaggle.com/code/ern711/multi-level-deep-univariate-spline-transformer))은 CV 이득이 아주 작아 저자 스스로 복잡도 대비 가치를 확신하지 못한다고 밝혔다 ([735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421) 코멘트).
 - 스태킹의 이득은 풀의 다양성에 달린 것으로 보인다.
   같은 피처 결정에서 파생된 동질적인 자기 풀에서는 스태킹이 가중 평균 대비 +0.00003에 그쳤지만 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861)), 공개 노트북 예측을 메타 피처로 쓴 passthrough 스태킹은 0.970+를 냈다 ([733023](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733023)).
   의사 라벨링도 같은 스레드에서 -0.00004로 무익이 실측됐다.
@@ -319,6 +328,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 | id | 제목 | 코멘트 수 | 재방문 |
 | --- | --- | --- | --- |
 | [735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) | What actually creates a decorrelated model when you work alone? | 1 (2026-08-18) | O |
+| [735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421) | Contextualized Deep Univariate Spline Transformer | 5 (2026-08-18) | O |
 | [734063](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734063) | Decoding the Synthetic Generator: 0.9689+ via Stringified Target Encoding and Rank Averaging | 1 | O |
 | [734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005) | Changing the random seed moves you 60 places - what this leaderboard can and can't resolve | 9 (2026-08-18) | O |
 | [733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983) | A quarter of the rows describe people who can't exist - and LightGBM already knew | 0 | O |
