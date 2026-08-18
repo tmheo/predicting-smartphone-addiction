@@ -7,10 +7,15 @@ rank-gauss 수치 embedding(PLR, 완만한 연속 추세)을 더해 Transformer 
 
 원문과 다른 점(티켓 #58의 충돌 해소):
 - fold는 커밋된 artifacts/folds.parquet의 5-fold다(원문은 10/11-fold 혼재).
-- 어휘와 rank-gauss 분위 함수를 학습 fold에서만 fit한다(원문은 train+test 전체).
+- 기본 어휘와 rank-gauss 분위 함수는 학습 fold에서만 맞춘다.
   검증·테스트에만 있는 값은 컬럼별 UNK id로 보내 결측(NA id)과 구분한다.
+  목표값 비참조 train+test 결합 전처리는 명시적인 설정에서만 허용한다.
 - lookup 대상 컬럼은 설정의 lookup_cols로 명시한다. 나머지 컬럼(연속 파생·placebo
   등)은 원문의 파생 토큰처럼 PLR 전용 토큰이 된다.
+
+전처리 기준 집합은 preprocessing_scope로 고른다. 기본 fold_train은 기존 누출 규율을
+유지하고, train_test는 목표값을 보지 않는 train+test 결합 어휘와 분위 변환을 쓴다.
+validation_selection=final은 검증 점수를 관찰만 하고 고정 epoch 마지막 EMA를 선택한다.
 
 티켓 #127의 fold 내 초기화 평균은 파이프라인 시드와 구분되는
 fold_seed_offsets로 설정한다. 파이프라인 시드 s와 offset o의 합을 초기화 시드로
@@ -245,6 +250,12 @@ class _LookupTransformerMember:
         self._ema_decay = float(params.pop("ema_decay", 0.999))
         self._patience = int(params.pop("patience", 5))
         self._perm_repeats = int(params.pop("perm_repeats", 3))
+        self._preprocessing_scope = str(
+            params.pop("preprocessing_scope", "fold_train")
+        ).lower()
+        self._validation_selection = str(
+            params.pop("validation_selection", "best")
+        ).lower()
         if params:
             raise ValueError(f"lookup_transformer가 모르는 params: {sorted(params)}")
         if self._optimizer_name not in _OPTIMIZERS:
@@ -256,6 +267,16 @@ class _LookupTransformerMember:
             raise ValueError(
                 f"lr_schedule은 {sorted(_LR_SCHEDULES)} 중 하나여야 한다: "
                 f"{self._lr_schedule!r}"
+            )
+        if self._preprocessing_scope not in {"fold_train", "train_test"}:
+            raise ValueError(
+                "preprocessing_scope은 'fold_train' 또는 'train_test'여야 한다: "
+                f"{self._preprocessing_scope!r}"
+            )
+        if self._validation_selection not in {"best", "final"}:
+            raise ValueError(
+                "validation_selection은 'best' 또는 'final'이어야 한다: "
+                f"{self._validation_selection!r}"
             )
         if self._epochs <= 0 or self._batch_size <= 0 or self._lr <= 0:
             raise ValueError("epochs, batch_size와 lr은 양수여야 한다.")
@@ -285,8 +306,16 @@ class _LookupTransformerMember:
         self._val: tuple[torch.Tensor, torch.Tensor, torch.Tensor, np.ndarray] | None = None
         self._val_auc: float | None = None
         self._training_diagnostics: dict[str, object] | None = None
+        self._dataset_reference: tuple[pd.DataFrame, pd.DataFrame] | None = None
 
-    # ---- 인코딩: 어휘·분위 fit은 학습 fold 전용, transform은 어디에나 적용 ----
+    def set_dataset_reference(
+        self, X_train: pd.DataFrame, X_test: pd.DataFrame
+    ) -> None:
+        if list(X_train.columns) != list(X_test.columns):
+            raise ValueError("Lookup-Transformer 전처리 기준 집합의 train/test 열이 다르다.")
+        self._dataset_reference = (X_train, X_test)
+
+    # ---- 인코딩: 어휘·분위 fit 범위는 설정 계약, transform은 어디에나 적용 ----
 
     def _fit_specs(self, X_tr: pd.DataFrame) -> None:
         from sklearn.preprocessing import QuantileTransformer
@@ -296,8 +325,23 @@ class _LookupTransformerMember:
         if missing:
             raise ValueError(f"lookup_cols가 입력에 없다: {missing}")
         vocab_sizes = []
+        if self._preprocessing_scope == "train_test":
+            if self._dataset_reference is None:
+                raise ValueError(
+                    "preprocessing_scope='train_test'에는 train+test 전처리 기준 집합이 필요하다."
+                )
+            reference_train, reference_test = self._dataset_reference
+            if list(reference_train.columns) != self._columns:
+                raise ValueError("Lookup-Transformer 입력과 전처리 기준 집합의 열이 다르다.")
+
         for col in self._columns:
-            values = X_tr[col]
+            if self._preprocessing_scope == "train_test":
+                reference_train, reference_test = self._dataset_reference
+                values = pd.concat(
+                    [reference_train[col], reference_test[col]], ignore_index=True
+                )
+            else:
+                values = X_tr[col]
             if isinstance(values.dtype, pd.CategoricalDtype):
                 values = values.astype(object)
             is_numeric = pd.api.types.is_numeric_dtype(values)
@@ -511,7 +555,11 @@ class _LookupTransformerMember:
                 if auc > best_auc:
                     best_auc, best_weights, best_epoch, bad = (
                         auc,
-                        [e.clone() for e in ema],
+                        (
+                            [e.clone() for e in ema]
+                            if self._validation_selection == "best"
+                            else None
+                        ),
                         ep,
                         0,
                     )
@@ -551,18 +599,27 @@ class _LookupTransformerMember:
                 with torch.no_grad():
                     for p, b in zip(params_list, backup):
                         p.copy_(b)
-                if bad >= self._patience:
+                if self._validation_selection == "best" and bad >= self._patience:
                     break
-        if best_weights is None:
+        observed_best_epoch = best_epoch
+        if self._validation_selection == "final":
+            selected_weights = ema
+            selected_epoch = end_epoch
+        elif best_weights is None:
             # 전체 자료 재학습에는 검증 선택이 없으므로 마지막 EMA를 그대로 쓴다.
             # 짧은 검증 학습에서 평가 시점 전에 끝나는 테스트 경로도 같은 방어선이다.
-            best_weights = ema
-            best_epoch = end_epoch
+            selected_weights = ema
+            selected_epoch = end_epoch
+        else:
+            selected_weights = best_weights
+            selected_epoch = best_epoch
         with torch.no_grad():
-            for p, w in zip(params_list, best_weights):
+            for p, w in zip(params_list, selected_weights):
                 p.copy_(w)
         self._training_diagnostics = {
             "initialization_seed": self._seed,
+            "preprocessing_scope": self._preprocessing_scope,
+            "validation_selection": self._validation_selection,
             "optimizer": self._optimizer_name,
             "lr_schedule": self._lr_schedule,
             "max_learning_rate": self._lr,
@@ -571,7 +628,8 @@ class _LookupTransformerMember:
             "warmup_fraction": _WARMUP_FRACTION,
             "gradient_clip_norm": _GRADIENT_CLIP_NORM,
             "evaluations": evaluations,
-            "best_epoch": best_epoch,
+            "best_epoch": selected_epoch,
+            "observed_best_epoch": observed_best_epoch,
             "best_validation_auc": float(best_auc) if validation else None,
             "end_epoch": end_epoch,
             "completed_steps": schedule.completed_steps,
@@ -669,6 +727,13 @@ class LookupTransformerFold:
         self._columns: list[str] | None = None
         self._val: tuple[pd.DataFrame, np.ndarray] | None = None
         self._val_auc: float | None = None
+
+    def set_dataset_reference(
+        self, X_train: pd.DataFrame, X_test: pd.DataFrame
+    ) -> None:
+        """초기화 구성원들이 공유할 목표값 비참조 전처리 기준 집합을 건넨다."""
+        for member in self._members:
+            member.set_dataset_reference(X_train, X_test)
 
     @staticmethod
     def _parallel_devices(member_count: int) -> list[str] | None:

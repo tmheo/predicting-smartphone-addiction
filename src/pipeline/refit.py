@@ -216,6 +216,7 @@ def run_member(
                 else None
             )
             adapter = model.create(cfg.model, seed)
+            model.set_dataset_reference(adapter, X_train, X_test)
             model.fit_full(
                 adapter,
                 X_train,

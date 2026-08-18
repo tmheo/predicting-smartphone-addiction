@@ -70,6 +70,14 @@ class FakeFullAdapter:
         self.arguments = (X, y, training_budget, initial_score)
 
 
+class FakeDatasetReferenceAdapter:
+    def __init__(self) -> None:
+        self.reference = None
+
+    def set_dataset_reference(self, X_train, X_test) -> None:
+        self.reference = (X_train, X_test)
+
+
 class SpyRecorder:
     def __init__(self) -> None:
         self.stages: list[str] = []
@@ -160,6 +168,19 @@ def test_fit_full_validates_budget_and_dispatches_optional_contract():
             model_mod.fit_full(adapter, X, y, invalid)
     with pytest.raises(ValueError, match="지원하지 않는다"):
         model_mod.fit_full(object(), X, y, None)
+
+
+def test_set_dataset_reference_dispatches_optional_contract():
+    X_train = pd.DataFrame({"x": [1.0, 2.0]})
+    X_test = pd.DataFrame({"x": [3.0]})
+    adapter = FakeDatasetReferenceAdapter()
+
+    model_mod.set_dataset_reference(adapter, X_train, X_test)
+
+    assert adapter.reference == (X_train, X_test)
+    model_mod.set_dataset_reference(object(), X_train, X_test)
+    with pytest.raises(ValueError, match="train/test 열"):
+        model_mod.set_dataset_reference(adapter, X_train, pd.DataFrame({"y": [3.0]}))
 
 
 def test_lightgbm_adapter_full_fit_uses_fixed_budget():

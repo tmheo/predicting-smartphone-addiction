@@ -499,6 +499,7 @@ def run_fold_diagnostic(
     timings["fold_prepare"] = _seconds(clock, started)
 
     adapter = model.create(cfg.model, seed)
+    model.set_dataset_reference(adapter, X_fold, X_test_fold)
     cuda_enabled = _reset_cuda_peak()
 
     started = clock()
