@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -13,6 +14,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "tests" / "fixtures" / "remote_python_contract"
 RUNNER = ROOT / "scripts" / "run_remote_python.sh"
+IMAGE_CHECKER = ROOT / "scripts" / "verify_remote_image_python.sh"
 PEP668_IMAGE = "node@sha256:f32b81066cde10a75dbac96646099533316d94bac4150c55da1636e1f0ffdc46"
 
 
@@ -43,6 +45,79 @@ def _export_macos_keychain_certificates(output: Path) -> None:
             "macOS 키체인 공개 인증서를 내보내지 못했다: "
             + completed.stderr.decode(errors="replace")
         )
+
+
+def _fake_docker(tmp_path: Path) -> Path:
+    executable = tmp_path / "docker"
+    executable.write_text(
+        """#!/bin/sh
+set -eu
+if [ "$1" = info ]; then
+    exit 0
+fi
+printf '%s\\n' "$@" > "$DOCKER_TRACE"
+exit "${DOCKER_RUN_STATUS:-0}"
+"""
+    )
+    executable.chmod(0o755)
+    return executable
+
+
+def test_target_image_python_gate_checks_the_exact_image(tmp_path: Path) -> None:
+    _fake_docker(tmp_path)
+    trace = tmp_path / "docker.trace"
+    environment = {
+        "PATH": f"{tmp_path}:{os.environ['PATH']}",
+        "DOCKER_TRACE": str(trace),
+    }
+
+    completed = subprocess.run(
+        [
+            str(IMAGE_CHECKER),
+            "--platform",
+            "linux/amd64",
+            "registry.example/gpu@sha256:fixed",
+        ],
+        text=True,
+        capture_output=True,
+        env=environment,
+        timeout=10,
+    )
+
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    arguments = trace.read_text().splitlines()
+    assert arguments[:7] == [
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        "--entrypoint",
+        "sh",
+        "registry.example/gpu@sha256:fixed",
+    ]
+    assert arguments[7] == "-c"
+    probe = "\n".join(arguments[8:])
+    assert 'python3 -m venv "$probe_root"' in probe
+    assert '"$probe_root/bin/python" -m pip --version' in probe
+
+
+def test_target_image_python_gate_propagates_an_incompatible_image(tmp_path: Path) -> None:
+    _fake_docker(tmp_path)
+    environment = {
+        "PATH": f"{tmp_path}:{os.environ['PATH']}",
+        "DOCKER_TRACE": str(tmp_path / "docker.trace"),
+        "DOCKER_RUN_STATUS": "41",
+    }
+
+    completed = subprocess.run(
+        [str(IMAGE_CHECKER), "registry.example/gpu:missing-venv"],
+        text=True,
+        capture_output=True,
+        env=environment,
+        timeout=10,
+    )
+
+    assert completed.returncode == 41
 
 
 @pytest.mark.skipif(shutil.which("docker") is None, reason="Docker is required")
