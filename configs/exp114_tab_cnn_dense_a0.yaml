@@ -1,0 +1,78 @@
+# 이슈 #177 A0: M0의 합성곱·채널 재가중·전역 풀링을 제거한다.
+# 입력 표현, 원시 입력 우회, 학습 설정과 256차원 상호작용 출력은 M0와 같고,
+# 완전 연결 상호작용의 숨은 폭은 합성곱 경로의 학습 매개변수 수에 맞춰 계산한다.
+name: exp114_tab_cnn_dense_a0
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions: [social_frac, work_frac, leisure_frac, resid_frac, week_total]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: tab_cnn
+  params:
+    interaction_mode: dense
+    plr_bins: 12
+    periodic_dim: 12
+    periodic_sigma: 2.33
+    dropout: 0.08
+    head_samples: 5
+    head_dropout: 0.2
+    epochs: 30
+    patience: 15
+    batch_size: 128
+    eval_batch_size: 8192
+    lr: 0.002
+    weight_decay: 0.015
+    label_smoothing: 0.01
+    scheduler_t0: 15
+    n_quantiles: 1000
+    perm_sample: 8192
+    perm_repeats: 1
+    device: cuda
+  fit: {}

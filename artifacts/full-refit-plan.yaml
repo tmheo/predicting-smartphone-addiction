@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: 82ce95e501bf6686e5dd863c54026e016b0cdc8c6e9606e9d22f7522a3fb763c
+source_pool_sha256: 14b32b2bbceca8c3babbe9a13f4182090d080bda703a7d34fd258b3d595f3fbe
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -109,3 +109,13 @@ members:
     run_id: 547e7bc90b9f4c448307d406f053629a
     budget_source: configured_cap
     budgets: {42: 30, 43: 30, 44: 30}
+  - config: exp107_logreg_onehot_nn10
+    config_path: configs/exp107_logreg_onehot_nn10.yaml
+    run_id: c4c4c780acab4b83baf10d67b98cc85a
+    budget_source: not_applicable
+    budgets: {42: null}
+  - config: exp108_logreg_onehot_nn10_l1
+    config_path: configs/exp108_logreg_onehot_nn10_l1.yaml
+    run_id: 83f7977a87ef46679c26824c5b85f928
+    budget_source: not_applicable
+    budgets: {42: null}

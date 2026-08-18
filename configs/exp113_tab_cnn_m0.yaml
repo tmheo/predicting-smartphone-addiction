@@ -1,0 +1,78 @@
+# 이슈 #177 M0: 공개 표 합성곱망을 저장소 fold 규율로 옮긴다.
+# 정확값 목표·빈도 인코딩은 제외하고 champion exp081의 33열 피처 계획을 공유한다.
+# 학습 fold에서만 범주 어휘와 분위수 변환을 맞추며 최대 30 epoch로 진입 진단한다.
+name: exp113_tab_cnn_m0
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions: [social_frac, work_frac, leisure_frac, resid_frac, week_total]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: tab_cnn
+  params:
+    interaction_mode: convolution
+    plr_bins: 12
+    periodic_dim: 12
+    periodic_sigma: 2.33
+    dropout: 0.08
+    head_samples: 5
+    head_dropout: 0.2
+    epochs: 30
+    patience: 15
+    batch_size: 128
+    eval_batch_size: 8192
+    lr: 0.002
+    weight_decay: 0.015
+    label_smoothing: 0.01
+    scheduler_t0: 15
+    n_quantiles: 1000
+    perm_sample: 8192
+    perm_repeats: 1
+    device: cuda
+  fit: {}
