@@ -4,6 +4,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 스냅샷 기준일은 2026-08-10이고, 대회는 2026-08-31까지 진행되므로 이후 올라온 스레드는 반영되어 있지 않다.
 이후 올라오는 스레드는 증분 업데이트 절차(`docs/agents/discussion-update.md`)에 따라 이 문서에 반영한다.
 2026-08-18에 스레드 734005(코멘트 1개 → 9개)와 그 파생 노트북을 표적 재독해로 반영했다.
+같은 날 새 스레드 [735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861)(앙상블 다양성, 코멘트 1개)을 표적 반영했다.
 전체 회차가 아니므로 다른 스레드의 코멘트 수는 2026-08-10 기준 그대로다.
 
 원자료는 세 개의 리딩 노트다.
@@ -192,6 +193,9 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 
 - 트리가 분할을 거듭하면 스스로 만들 수 있는 경계를 다른 형태로 다시 써 주는 것에 불과한 피처(임계값, 선형 결합, 비율, 차이)는 실패한다.
   성공하는 피처는 트리가 한 번의 분할로는 만들 수 없는 컬럼 간 산술, 즉 데이터가 생성된 방식의 구조를 담은 것뿐이다 ([732223](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732223) 코멘트, [733730](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733730) 코멘트, [732256](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732256)).
+- 2-way(두 컬럼 조합) 타깃 인코딩도 같은 이유로 실패한다.
+  단독 AUC로는 1-D 조회 두 개의 합을 +0.028 이기지만, 모델에 넣으면 +0.00003에 그친다.
+  트리의 연속된 축 정렬 분할이 이미 상호작용을 만들고 있기 때문이다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861)).
 - EDA 시각화가 예쁜 피처와 모델에 유효한 피처는 다르다.
   KDE에서 클래스가 갈려 보인 sleep_deficit, 0.80 상관 컬럼을 합친 total_weekly_screen_time 모두 CV를 떨어뜨렸다 ([732223](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732223)).
 - `gaming_hours`와 `work_study_hours`는 단독으로는 중독 신호가 없는데도, 강한 컬럼과 조합되면 +0.00380을 기여한다.
@@ -234,6 +238,11 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 - Kaggle 환경의 LightGBM은 CUDA 빌드가 아니므로 GPU 가속은 XGBoost에서만 가능하다 ([732985](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732985) 코멘트).
 - 클래스 불균형(71/29)은 AUC 지표 하에서 무시해도 된다.
   SMOTE, 리샘플링, 재가중 모두 불필요하다 ([731764](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/731764)).
+- 0.968 OOF를 넘는 단일 모델이 실재한다.
+  상위권(Tilii, 28위)이 CV 0.9687 초과 단일 모델을 5개 이상, 0.969 초과도 두어 개 보유하고 있다고 밝혔다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) 코멘트).
+- 강한 단일 모델의 구체적 후보로 [RealMLP 노트북](https://www.kaggle.com/code/omidbaghchehsaraei/realmlp-for-predicting-smartphone-addiction)과 [조회표 기반 transformer 노트북](https://www.kaggle.com/code/tamerlanomralinov/s6e8-lookup-transformer-insights-lb-0-97041)(LB 0.97041)이 지목됐고, 신경망 계열의 추가 후보는 [735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421)에 더 있다고 했다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) 코멘트).
+- 공개 노트북에서 강한 단일 모델을 찾을 때는 CV 점수로 정렬하고 블렌드는 전부 건너뛴다.
+  최상단의 블라인드 블렌딩 노트북을 그대로 베끼는 유혹은 피한다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) 코멘트).
 - 전 피처 one-hot 로지스틱 회귀도 0.96까지 나오므로, 해석용 보조 모델로 쓰거나 스태킹에 트리 모델과 다른 관점을 보태는 재료로 쓸 수 있다 ([733708](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733708) 코멘트).
 - 예측이 피처 값과 같은 방향으로만 움직이는 모델(로지스틱 회귀, monotone 제약을 건 부스팅)은 addicted 비율이 중간에서 솟았다가 내려오는 이 데이터의 구조를 표현할 수 없다는 한계를 감안하고 쓴다 ([733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983)).
 
@@ -246,6 +255,17 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 - AUC 지표에서 모델 블렌딩은 순위 평균(rank averaging)이 산술 평균이나 SLSQP 가중 최적화보다 안전한 기본값이다.
   모델마다 확률값의 눈금이 달라서 생기는 문제를 순위로 바꿔 없애 주기 때문이다 ([734063](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734063)).
 - 시드 앙상블(여러 시드 평균)은 시드 노이즈(순위 ±60계단 수준)를 줄여 순위 안정화에 실질적으로 기여한다 ([734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005)).
+- 블렌드에 새 구성원이 편입되는 조건은 2차원이다: 방향이 충분히 달라야 하고(예측 상관이 낮아야 하고), 동시에 강도가 충분히 가까워야 한다.
+  실측: GBDT 대 임베딩 NN은 상관 0.974로 가중치 0.22를 받았지만, 같은 피처의 LightGBM 대 XGBoost는 상관 0.9972로 +0.00003, ExtraTrees는 상관 0.967로 방향은 달라도 단독 점수가 0.0064 모자라 가중치 0을 받았다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861)).
+- 같은 피처·전처리 결정에서 파생된 GBDT 변형끼리는 상관이 풀리지 않는다.
+  탈상관은 알고리즘 변형이 아니라 모델 계열 교체(신경망 등)에서 나온다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861), 코멘트도 신경망 아키텍처 다변화를 권함).
+- 블렌드 가중치는 표본 밖에서 검증한다.
+  OOF를 반으로 갈라 한쪽에서 가중치를 적합하고 다른 쪽에서 채점하기를 5회 평균한 실측에서, 최적화 가중치 0.96820이 균등 가중 0.96780을 t = +41.6으로 이겼고 전체 OOF 점수 0.96821과 거의 일치했다.
+  즉 구성원이 몇 개 수준인 풀에서는 가중치 최적화가 과적합 없이 제값을 한다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861)).
+- 힐 클라이밍은 모든 모델이 같은 폴드 분할을 쓸 때 대체로 잘 작동한다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) 코멘트, Tilii).
+- 스태킹의 이득은 풀의 다양성에 달린 것으로 보인다.
+  같은 피처 결정에서 파생된 동질적인 자기 풀에서는 스태킹이 가중 평균 대비 +0.00003에 그쳤지만 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861)), 공개 노트북 예측을 메타 피처로 쓴 passthrough 스태킹은 0.970+를 냈다 ([733023](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733023)).
+  의사 라벨링도 같은 스레드에서 -0.00004로 무익이 실측됐다.
 
 ## 6. 검증 위생과 실험 방법론
 
@@ -298,6 +318,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 
 | id | 제목 | 코멘트 수 | 재방문 |
 | --- | --- | --- | --- |
+| [735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) | What actually creates a decorrelated model when you work alone? | 1 (2026-08-18) | O |
 | [734063](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734063) | Decoding the Synthetic Generator: 0.9689+ via Stringified Target Encoding and Rank Averaging | 1 | O |
 | [734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005) | Changing the random seed moves you 60 places - what this leaderboard can and can't resolve | 9 (2026-08-18) | O |
 | [733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983) | A quarter of the rows describe people who can't exist - and LightGBM already knew | 0 | O |
