@@ -8,6 +8,9 @@
 # 모델 설정과 나머지 피처 계획은 exp074_lgb_kitopl_d2_bundle과 동일하다.
 # 판정 경로(#184): 같은 커밋의 exp074 seed 42 재실행과 짝지은 LightGBM 대리 스크리닝
 # 문턱 +0.0001, 통과 시 3시드 확정 문턱 +0.00002 후 pipeline.pool로 exp074 교체 판정.
+# 판정 결과(2026-08-18): 앵커 run 8d58b42f 0.9681975 → challenger run 327eee3a 0.9681327,
+# delta -0.0000647(fold 승리 1/5), 카나리아 통과. 대리 스크리닝 문턱 명백 미달로 즉시 종료.
+# 이 설정과 파생 특성·검증 테스트는 기각 근거의 재현 기록으로 남긴다(exp104 전례).
 name: exp106_lgb_kitopl_digit_identity
 
 data:
