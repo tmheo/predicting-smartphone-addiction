@@ -253,3 +253,19 @@ members:
     ensemble_auc_with: 0.9686675325224675
     ensemble_auc_without: 0.9685009893536075
     contribution: 0.00016654316886000053
+- run_id: ae829ae3d886402ab100a8e966c3131a
+  config: exp110_lgb_kitopl_no_te
+  oof_auc: 0.9673323106299934
+  seeds: 42,43,44
+  entered_at: '2026-08-18'
+  reason: '이슈 #183: 공개 스택 no-TE 뷰 LightGBM 판(exp074에서 TE 제거). 3시드 OOF 0.96733, 최근접
+    exp074 스피어만 0.99307, 표준 평가 앙상블 기여 +0.00007'
+  evidence:
+    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
+    champion_oof_auc: 0.9691957618114269
+    floor_margin: 0.008136548818566514
+    nearest_run_id: 446a90bedd2a4d8bafad56f308b2b999
+    nearest_spearman: 0.9930675784936236
+    ensemble_auc_with: 0.9687467202432362
+    ensemble_auc_without: 0.9686779787020444
+    contribution: 6.874154119174136e-05
