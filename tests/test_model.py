@@ -405,6 +405,86 @@ def test_logistic_onehot_encodes_exact_values_without_leaking_unseen():
     ].item()
 
 
+def test_logistic_onehot_penalty_variants():
+    """#200: l1·elasticnet은 saga로 학습되고, l1_ratio는 elasticnet 전용이다."""
+    rng = np.random.default_rng(5)
+    n = 300
+    values = rng.choice([1.5, 2.5, 3.5, 4.5], size=n)
+    X = pd.DataFrame({"v": values, "w": rng.choice([0.1, 0.2], size=n)})
+    y = pd.Series((values > 2.5).astype(int) ^ (rng.uniform(size=n) < 0.1).astype(int))
+    for params in (
+        {"penalty": "l1", "max_iter": 2000},
+        {"penalty": "elasticnet", "l1_ratio": 0.5, "max_iter": 2000},
+    ):
+        adapter = model_mod.create(
+            ModelConfig(kind="logistic_onehot", params=params, fit={}), seed=SEED
+        )
+        va_pred = adapter.fit(X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:])
+        assert roc_auc_score(y.iloc[240:], va_pred) > 0.8
+
+    with pytest.raises(ValueError, match="l1_ratio"):
+        model_mod.create(
+            ModelConfig(kind="logistic_onehot", params={"penalty": "l1", "l1_ratio": 0.5}, fit={}),
+            seed=SEED,
+        )
+    with pytest.raises(ValueError, match="penalty"):
+        model_mod.create(
+            ModelConfig(kind="logistic_onehot", params={"penalty": "none"}, fit={}), seed=SEED
+        )
+
+
+def test_logistic_onehot_cross_pairs_encode_train_fold_pairs_only():
+    """#200: 교차 블록은 학습 fold에서 cross_min_count 이상 관측된 쌍만 카테고리가
+    되고, 미관측 쌍·결측 포함 행은 영벡터, importance에 교차 feature가 붙는다."""
+    rng = np.random.default_rng(7)
+    n = 400
+    a = rng.choice([1.0, 2.0], size=n)
+    b = rng.choice([10.0, 20.0], size=n)
+    X = pd.DataFrame({"a": a, "b": b})
+    # 라벨이 a·b의 XOR 조합에 달려 있어 단일 컬럼 one-hot으로는 못 맞춘다.
+    y = pd.Series(
+        (((a == 2.0) ^ (b == 20.0)).astype(int) ^ (rng.uniform(size=n) < 0.05).astype(int))
+    )
+    plain = model_mod.create(
+        ModelConfig(kind="logistic_onehot", params={"max_iter": 300}, fit={}), seed=SEED
+    )
+    crossed = model_mod.create(
+        ModelConfig(
+            kind="logistic_onehot",
+            params={"max_iter": 300, "cross_pairs": [["a", "b"]], "cross_min_count": 2},
+            fit={},
+        ),
+        seed=SEED,
+    )
+    plain_auc = roc_auc_score(
+        y.iloc[320:], plain.fit(X.iloc[:320], y.iloc[:320], X.iloc[320:], y.iloc[320:])
+    )
+    crossed_auc = roc_auc_score(
+        y.iloc[320:], crossed.fit(X.iloc[:320], y.iloc[:320], X.iloc[320:], y.iloc[320:])
+    )
+    assert plain_auc < 0.6 < 0.9 < crossed_auc
+
+    # 학습 fold에 없던 쌍과 결측 포함 행은 교차 블록이 영벡터라 예측이 유한하다.
+    unseen = pd.DataFrame({"a": [9.0, np.nan], "b": [10.0, 20.0]})
+    assert np.isfinite(crossed.predict(unseen)).all()
+
+    imp = crossed.importance()
+    assert list(imp["feature"]) == ["a", "b", "a*b"]
+    assert imp.loc[imp["feature"] == "a*b", "gain"].item() > 0
+
+    # 관측 쌍 수가 cross_max_card를 넘으면 설정 오류다.
+    capped = model_mod.create(
+        ModelConfig(
+            kind="logistic_onehot",
+            params={"max_iter": 300, "cross_pairs": [["a", "b"]], "cross_max_card": 2},
+            fit={},
+        ),
+        seed=SEED,
+    )
+    with pytest.raises(ValueError, match="cross_max_card"):
+        capped.fit(X.iloc[:320], y.iloc[:320], X.iloc[320:], y.iloc[320:])
+
+
 def test_lightgbm_adapter_adds_initial_score_back_to_predictions():
     rng = np.random.default_rng(2)
     n = 240
