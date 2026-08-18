@@ -253,3 +253,20 @@ members:
     ensemble_auc_with: 0.9686675325224675
     ensemble_auc_without: 0.9685009893536075
     contribution: 0.00016654316886000053
+- run_id: c4c4c780acab4b83baf10d67b98cc85a
+  config: exp107_logreg_onehot_nn10
+  oof_auc: 0.9599906992621854
+  seeds: 42,43,44
+  entered_at: '2026-08-18'
+  reason: '이슈 #200: exp058 계열 orig_nn10_mean 열 추가 변형. 단독 OOF 0.95999로 exp058 대비 +0.00033(3/3
+    시드 개선), 최근접 exp058 스피어만 0.99647로 중복 아님. 개선이 결측 3개 이상 구간(+0.00168)에 집중돼 결측 구간 독립
+    결합(#67)이 활용 가능'
+  evidence:
+    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
+    champion_oof_auc: 0.9691957618114269
+    floor_margin: 0.0007949374507585372
+    nearest_run_id: e2b76edd9d204290810e39a7457c4c48
+    nearest_spearman: 0.9964707052198585
+    ensemble_auc_with: 0.9686192227064963
+    ensemble_auc_without: 0.9686779787020444
+    contribution: -5.875599554816535e-05
