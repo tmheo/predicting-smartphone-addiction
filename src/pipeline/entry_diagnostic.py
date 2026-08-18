@@ -44,6 +44,7 @@ MODEL_FOLD_LIMIT_HOURS = {"tabr_s": 4.0}
 MODEL_CUDA_MEMORY_FRACTION = {"tabr_s": 0.90}
 AUC_FLOOR_MARGIN = 0.01
 METRIC_TOLERANCE = 1e-9
+MAX_EXPLICIT_REFERENCE_TOLERANCE = 2e-4
 REFERENCE_MODE = "reference"
 CHAMPION_IMPROVEMENT_MODE = "champion-improvement"
 NEW_MODEL_FAMILY_MODE = "new-model-family"
@@ -76,22 +77,33 @@ class DiagnosticEvidenceError(ValueError):
 
 
 def apply_reference_reproduction_check(
-    run: DiagnosticRun, expected_auc: float
+    run: DiagnosticRun,
+    expected_auc: float,
+    *,
+    tolerance: float = METRIC_TOLERANCE,
 ) -> None:
     """기준 재실행이 저장된 같은 단계 champion AUC를 재현하는지 확인한다."""
     if not np.isfinite(expected_auc):
         raise ValueError("저장된 같은 단계 champion AUC는 유한해야 한다.")
+    if not np.isfinite(tolerance) or not 0 < tolerance <= MAX_EXPLICIT_REFERENCE_TOLERANCE:
+        raise ValueError(
+            "기준 AUC 허용 범위는 0보다 크고 "
+            f"{MAX_EXPLICIT_REFERENCE_TOLERANCE} 이하여야 한다."
+        )
     reproduced_auc = run.result["validation"]["auc"]
     matches = reproduced_auc is not None and abs(
         float(reproduced_auc) - expected_auc
-    ) <= METRIC_TOLERANCE
+    ) <= tolerance
     run.result["reference_reproduction"] = {
         "expected_auc": float(expected_auc),
         "reproduced_auc": reproduced_auc,
         "difference": (
             None if reproduced_auc is None else float(reproduced_auc) - expected_auc
         ),
-        "tolerance": METRIC_TOLERANCE,
+        "tolerance": float(tolerance),
+        "tolerance_source": (
+            "strict" if tolerance == METRIC_TOLERANCE else "explicit_hardware_environment"
+        ),
         "matches": matches,
     }
     checks = run.result["decision"]["checks"]
@@ -99,6 +111,10 @@ def apply_reference_reproduction_check(
     if not matches:
         run.result["decision"]["reasons"].append(
             "기준 재현 AUC가 저장된 같은 단계 champion 결과와 허용 범위 밖으로 다르다."
+        )
+    elif tolerance > METRIC_TOLERANCE:
+        run.result["decision"]["reasons"].append(
+            "기준 재현 AUC가 명시한 하드웨어 환경 허용 범위 안에 있다."
         )
     passed = all(checks.values())
     run.result["decision"]["passed"] = passed
@@ -767,6 +783,16 @@ def parse_args() -> argparse.Namespace:
         help="저장된 같은 단계 champion fold AUC. --reference 재현 검사에 필수다.",
     )
     parser.add_argument(
+        "--reference-auc-tolerance",
+        type=float,
+        default=None,
+        help=(
+            "다른 GPU 환경의 기준 재현에만 명시하는 AUC 허용 범위. "
+            f"기본값은 {METRIC_TOLERANCE}, 상한은 "
+            f"{MAX_EXPLICIT_REFERENCE_TOLERANCE}다."
+        ),
+    )
+    parser.add_argument(
         "--baseline-diagnostic",
         type=Path,
         help="--reference 기준 실행이 저장한 entry_diagnostic.json",
@@ -807,12 +833,21 @@ def parse_args() -> argparse.Namespace:
             parser.error("--reference에는 --allow-model-diff를 쓸 수 없다.")
         if args.expected_baseline_auc is None:
             parser.error("--reference에는 --expected-baseline-auc가 필요하다.")
+        if args.reference_auc_tolerance is not None and not (
+            0 < args.reference_auc_tolerance <= MAX_EXPLICIT_REFERENCE_TOLERANCE
+        ):
+            parser.error(
+                "--reference-auc-tolerance은 0보다 크고 "
+                f"{MAX_EXPLICIT_REFERENCE_TOLERANCE} 이하여야 한다."
+            )
     elif args.baseline_diagnostic is None or args.baseline_predictions is None:
         parser.error(
             "challenger 진단에는 --baseline-diagnostic과 --baseline-predictions가 모두 필요하다."
         )
     elif args.expected_baseline_auc is not None:
         parser.error("challenger 진단에는 --expected-baseline-auc를 쓸 수 없다.")
+    elif args.reference_auc_tolerance is not None:
+        parser.error("challenger 진단에는 --reference-auc-tolerance을 쓸 수 없다.")
     return args
 
 
@@ -885,7 +920,11 @@ def main() -> None:
         prior_timings={"setup": setup_seconds, "data_load": data_load_seconds},
     )
     if args.reference:
-        apply_reference_reproduction_check(run, args.expected_baseline_auc)
+        apply_reference_reproduction_check(
+            run,
+            args.expected_baseline_auc,
+            tolerance=args.reference_auc_tolerance or METRIC_TOLERANCE,
+        )
     elif baseline is not None:
         assert pairing is not None
         apply_paired_comparison(

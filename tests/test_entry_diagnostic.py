@@ -164,11 +164,14 @@ def test_cli_requires_explicit_reference_or_baseline_artifacts(monkeypatch):
             "--reference",
             "--expected-baseline-auc",
             "0.968294911389327",
+            "--reference-auc-tolerance",
+            "0.0002",
         ],
     )
     args = parse_args()
     assert args.reference is True
     assert args.expected_baseline_auc == 0.968294911389327
+    assert args.reference_auc_tolerance == 0.0002
 
 
 def test_cli_accepts_explicit_paired_comparison_inputs(monkeypatch):
@@ -270,6 +273,26 @@ def test_reference_reproduction_stops_outside_stored_champion_tolerance(monkeypa
         is False
     )
     assert run.result["decision"]["status"] == "stop"
+
+
+def test_reference_reproduction_accepts_explicit_hardware_tolerance(monkeypatch):
+    run, _, _ = _reference_run(monkeypatch)
+
+    apply_reference_reproduction_check(run, 0.50006, tolerance=2e-4)
+
+    reproduction = run.result["reference_reproduction"]
+    assert reproduction["matches"] is True
+    assert reproduction["tolerance"] == 2e-4
+    assert reproduction["tolerance_source"] == "explicit_hardware_environment"
+    assert run.result["decision"]["status"] == "pass"
+
+
+@pytest.mark.parametrize("tolerance", [0.0, -1e-9, 2.00001e-4, float("inf")])
+def test_reference_reproduction_rejects_unsafe_tolerance(monkeypatch, tolerance):
+    run, _, _ = _reference_run(monkeypatch)
+
+    with pytest.raises(ValueError, match="기준 AUC 허용 범위"):
+        apply_reference_reproduction_check(run, 0.5, tolerance=tolerance)
 
 
 def test_baseline_json_and_prediction_file_are_content_bound(monkeypatch, tmp_path):
