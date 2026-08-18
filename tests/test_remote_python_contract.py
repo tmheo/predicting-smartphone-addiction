@@ -16,16 +16,52 @@ RUNNER = ROOT / "scripts" / "run_remote_python.sh"
 PEP668_IMAGE = "node@sha256:f32b81066cde10a75dbac96646099533316d94bac4150c55da1636e1f0ffdc46"
 
 
+def _export_macos_keychain_certificates(output: Path) -> None:
+    """회사 TLS 검사 인증서를 Docker 안의 공개 CA 묶음에 보탤 수 있게 내보낸다."""
+    if sys.platform != "darwin" or shutil.which("security") is None:
+        return
+    keychains = [
+        Path.home() / "Library/Keychains/login.keychain-db",
+        Path("/Library/Keychains/System.keychain"),
+        Path("/System/Library/Keychains/SystemRootCertificates.keychain"),
+    ]
+    with output.open("wb") as stream:
+        completed = subprocess.run(
+            [
+                "security",
+                "find-certificate",
+                "-a",
+                "-p",
+                *(str(path) for path in keychains if path.exists()),
+            ],
+            stdout=stream,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    if completed.returncode != 0 or b"-----BEGIN CERTIFICATE-----" not in output.read_bytes():
+        pytest.fail(
+            "macOS 키체인 공개 인증서를 내보내지 못했다: "
+            + completed.stderr.decode(errors="replace")
+        )
+
+
 @pytest.mark.skipif(shutil.which("docker") is None, reason="Docker is required")
 def test_remote_runner_uses_a_locked_virtual_environment_under_pep668(tmp_path: Path) -> None:
     evidence = tmp_path / "environment.json"
     trace = tmp_path / "system-python.trace"
     entry_marker = tmp_path / "entry-diagnostic-started"
+    _export_macos_keychain_certificates(tmp_path / "host-keychain-ca.pem")
     container_script = """
 set -eu
 apt-get update -qq
 apt-get install -y -qq --no-install-recommends \
     python3 python3-pip python3-venv >/dev/null
+if [ -s /result/host-keychain-ca.pem ]; then
+    cat /etc/ssl/certs/ca-certificates.crt /result/host-keychain-ca.pem \
+        > /tmp/python-ca-certificates.pem
+    export PIP_CERT=/tmp/python-ca-certificates.pem
+    export SSL_CERT_FILE=/tmp/python-ca-certificates.pem
+fi
 if python3 -m pip install wheel >/tmp/system-pip.out 2>&1; then
     echo "system pip unexpectedly accepted an install" >&2
     exit 1
