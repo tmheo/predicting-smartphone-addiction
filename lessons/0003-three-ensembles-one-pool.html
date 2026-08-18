@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>상위 세 제출: 같은 재료, 세 가지 결합</title>
+  <link rel="stylesheet" href="../assets/lesson.css">
+  <script src="../assets/lesson.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">수업 0003 · 9분</p>
+    <h1>상위 세 제출:<br>같은 재료,<br>세 가지 결합</h1>
+    <p class="lead">Public 0.97055-0.97057의 세 제출은 서로 다른 모델이 아닙니다. 같은 후보 풀을 놓고 결합 방식만 세 번 바꾼 결과입니다.</p>
+
+    <div class="answer">
+      재료는 후보 풀의 구성원(트리 부스팅, 신경망, 선형 모델의 3시드 평균본)이고,<br>
+      결합은 ① 균등 순위 평균 → ② 순위·logit 이중 표현 로지스틱 회귀<br>
+      → ③ 같은 회귀를 결측 개수 구간별로 독립 학습, 순서로 발전했습니다.
+    </div>
+
+    <h2>1. 점수표부터 읽기</h2>
+    <table>
+      <thead>
+        <tr><th>제출 (MLflow run)</th><th>이슈</th><th>구성원</th><th>결합 방식</th><th>OOF AUC</th><th>Public</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>ensemble_rank_mean_issue63_pool3</code></td><td>#63</td><td>3</td><td>균등 순위 평균</td><td>0.96945</td><td>0.97055</td></tr>
+        <tr><td><code>ensemble_rank_logit_logistic_issue64_pool16</code></td><td>#64</td><td>16</td><td>순위+logit 로지스틱</td><td>0.96948 (nested)</td><td>0.97056</td></tr>
+        <tr><td><code>ensemble_missing_segmented_rank_logit_issue65_pool16</code></td><td>#65</td><td>16</td><td>결측 구간별 순위+logit 로지스틱</td><td>0.96951 (nested)</td><td><strong>0.97057</strong></td></tr>
+      </tbody>
+    </table>
+    <p>비교 기준: 단독 champion <code>exp081</code>은 OOF 0.96920, Public 0.97033입니다. 앙상블이 단독 최고 모델보다 Public 기준 +0.00024 높습니다.</p>
+    <p>이름의 <code>pool3</code>, <code>pool16</code>은 결합에 들어간 구성원 수입니다. 왜 3이었다가 16이 됐는지가 이 수업의 줄거리입니다.</p>
+
+    <h2>2. 재료: 후보 풀 16 구성원의 구조</h2>
+    <p>풀 장부(<code>artifacts/pool.yaml</code>)의 구성원은 전부 시드 42·43·44의 <strong>3시드 평균본</strong>이고, 동일한 outer 5-fold 배정(<a href="0001-why-five-and-ten-folds.html">수업 0001</a>)을 공유합니다. 모든 구성원이 같은 행에 대해 OOF 예측을 갖고 있어야 결합기를 학습할 수 있기 때문입니다.</p>
+    <table>
+      <thead>
+        <tr><th>계열</th><th>수</th><th>구성원</th><th>구조 요약</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>LightGBM</td><td>9</td><td>exp006, 011, 022, 023, 026, 032, 033, 035, 074</td><td>leaf-wise 트리 부스팅. 특성 조리법(target encoding, 원본 프록시, 복원 특성 등)을 바꿔 가며 오류 계열을 분산</td></tr>
+        <tr><td>XGBoost</td><td>1</td><td>exp045</td><td>depth 8 depthwise 트리. 같은 특성에서 학습기만 교차</td></tr>
+        <tr><td>CatBoost</td><td>1</td><td>exp070</td><td>수치 정확값을 범주 복제(CTR)로도 먹이는 ordered boosting</td></tr>
+        <tr><td>로지스틱 회귀</td><td>1</td><td>exp058</td><td>정확값 one-hot의 선형 모델. 단독 0.9597로 가장 약하지만 오차 계열이 가장 다름 (스피어만 0.9704)</td></tr>
+        <tr><td>Lookup-Transformer</td><td>2</td><td>exp059, exp081</td><td>정확값 lookup embedding + PLR Transformer (<a href="0002-lookup-transformer-champion.html">수업 0002</a>). exp081은 fold 내 초기화 3개 평균판</td></tr>
+        <tr><td>TabM</td><td>1</td><td>exp065</td><td>가중치를 일부 공유하는 MLP 다중 앙상블 (tabm-mini)</td></tr>
+        <tr><td>TabPFN</td><td>1</td><td>exp067_tabpfn3</td><td>사전학습 Transformer의 in-context 예측</td></tr>
+      </tbody>
+    </table>
+    <p>진입 기준이 "단독으로 강한가"가 아니라는 점이 핵심입니다. 진입은 <strong>중복 아님</strong>(풀 내 최근접 스피어만 상관)과 <strong>앙상블 기여</strong>(넣었을 때 vs 뺐을 때의 AUC 차이)로 판정합니다. exp058처럼 단독으로는 한참 약한 모델도, 다른 오류를 내기 때문에 자리가 있습니다.</p>
+
+    <h2>3. 결합 ①: 균등 순위 평균 (#63, pool3)</h2>
+    <p>가장 단순한 결합입니다. 각 구성원의 예측을 블록 내 <strong>백분위 순위</strong>로 바꾼 뒤 그냥 평균합니다 (<code>src/pipeline/ensemble.py</code>의 <code>rank_mean</code>).</p>
+    <p>왜 확률이 아니라 순위인가? 평가 지표 AUC는 예측의 <em>순서</em>만 봅니다. CatBoost는 0.9 근처에 몰린 확률을, 로지스틱은 넓게 퍼진 확률을 내는 식으로 구성원마다 눈금이 다른데, 순위 변환이 이 눈금 차이를 지워 공정하게 평균할 수 있게 합니다.</p>
+    <p><code>pool3</code>이 된 사연: #63의 풀 감사에서 "기여가 가장 낮은 후보를 빼고 다시 재는" 절차를 반복했더니, 고정점에 <strong>exp059(Lookup-Transformer), exp070(CatBoost), exp081(Lookup 초기화 평균)</strong> 세 개만 남았습니다. 균등 평균은 학습이 없어서 약한 구성원도 1/N의 발언권을 그대로 가지므로, 구성원을 골라내는 것이 곧 결합 최적화였던 셈입니다.</p>
+
+    <h2>4. 결합 ②: 순위·logit 이중 표현 로지스틱 회귀 (#64, pool16)</h2>
+    <p>#64에서 관점이 바뀝니다. "균등 평균에 대한 기여"로 구성원을 자르는 것은 결합 방식 하나에 종속된 판단이라, 검사를 통과한 16개를 전부 복원하고 <strong>가중치를 학습하는 결합기</strong>에게 선택을 맡겼습니다.</p>
+    <p>채택된 결합기는 구성원 하나당 특성 두 개를 만드는 로지스틱 회귀입니다.</p>
+    <div class="token-sum" aria-label="구성원 하나가 순위와 logit 두 특성이 된다">
+      <div class="lookup-chip"><strong>백분위 순위</strong>순서 정보. 눈금 차이에 강건</div>
+      <span>+</span>
+      <div class="plr-chip"><strong>logit(p)</strong>확신 정보. 순위가 버리는 "얼마나 확실한가"를 보존</div>
+    </div>
+    <p>순위만 쓰면 0.51과 0.99의 차이가 사라지고, logit만 쓰면 구성원 간 눈금 차이에 흔들립니다. 두 표현을 나란히 넣고 표준화한 뒤 로지스틱 회귀가 32개 계수를 학습합니다. 실제로 nested 비교에서 순위 단독(0.969477)보다 이중 표현(0.969483)이 근소하게 앞섰습니다.</p>
+    <p>그런데 가중치를 <em>학습</em>하는 순간 새 위험이 생깁니다. 결합기가 자기가 채점받을 데이터로 공부하면 점수가 부풀려집니다. 그래서 평가는 <strong>nested OOF</strong>로 합니다.</p>
+    <div class="flow" aria-label="nested OOF 평가 절차">
+      <div><strong>outer fold k 제외</strong>나머지 4개 fold의 OOF</div>
+      <span>→</span>
+      <div><strong>결합기 학습</strong>순위 변환·표준화·계수</div>
+      <span>→</span>
+      <div><strong>fold k 예측</strong>학습에 안 쓴 행만</div>
+      <span>→</span>
+      <div><strong>5개 fold 합산</strong>한 번에 채점</div>
+    </div>
+    <p>구성원 학습에 쓰던 outer 5-fold 규율을 결합기 층에 한 번 더 반복하는 것입니다. 이 점수가 있어야 "결합기가 정말 개선인가"를 champion과 같은 문턱(+0.00002)으로 판정할 수 있습니다.</p>
+
+    <h2>5. 결합 ③: 결측 구간별 독립 학습 (#65, pool16)</h2>
+    <p>최고점 제출은 ②를 한 번 더 쪼갭니다. 행의 원시 특성 결측 개수로 <strong>0-1개 / 2-3개 / 4개 이상</strong> 세 구간을 나누고, 구간마다 ②의 순위+logit 로지스틱 회귀를 독립으로 학습합니다 (<code>MissingnessSegmentedLogisticCombiner</code>).</p>
+    <p>직관은 이렇습니다. 정확값 lookup이나 정확값 TE에 기대는 구성원은 값이 채워진 행에서 강하고, 결측이 많은 행에서는 상대적 강자가 달라집니다. 전역 가중치 하나는 이 차이를 평균 내 버리지만, 구간별 가중치는 "결측 많은 행에서는 누구 말을 더 들을지"를 따로 정합니다.</p>
+    <p>규율도 지켰습니다. 구간 경계는 목표값을 보지 않고 미리 고정했고(자료로 학습하지 않음), #65는 이 전략 하나를 <strong>제출 전에 유일 후보로 선언</strong>한 뒤 제출했습니다. 결과는 nested OOF +0.0000269(② 대비, outer fold 5/5 개선), Public +0.00001로 방향 일치. CV→Public 전이 비율 0.76도 사전에 정한 기대 범위(0.70-0.90) 안이었습니다.</p>
+
+    <h2>6. 등록만 되고 채택 못 된 결합기들</h2>
+    <p><code>COMBINER_REGISTRY</code>에는 탐욕 선택, bagging 탐욕 선택, Optuna 부분집합, Ridge, 얕은 XGBoost 2단 결합 등 19개 전략이 함께 등록되어 있습니다. 전부 같은 nested OOF 심판대에 올랐고, 더 복잡한 전략들이 선형 결합을 이기지 못했습니다. 구성원 16개에 행 수십만 개라면, 결합기 층에서 필요한 것은 표현력보다 안정된 가중치라는 결과입니다.</p>
+
+    <div class="quiz" data-quiz data-right="맞습니다. 결합기도 자기가 채점받을 fold로는 공부하면 안 됩니다." data-wrong="다시 생각해 보세요. 전체 OOF로 학습하고 같은 OOF로 채점하면 무엇이 부풀려질까요?">
+      <p><strong>확인 문제.</strong> 균등 순위 평균은 전체 OOF로 바로 채점해도 되지만, 로지스틱 결합기는 nested OOF로 평가해야 하는 이유는?</p>
+      <button data-correct="false">순위 변환이 fold마다 달라지기 때문</button>
+      <button data-correct="true">학습된 가중치가 채점 자료에 맞춰지기 때문</button>
+      <button data-correct="false">구성원 수가 16개로 늘어났기 때문</button>
+      <p class="feedback" data-feedback></p>
+    </div>
+
+    <div class="quiz" data-quiz data-right="맞습니다. 순위는 눈금을 지우고, logit은 확신의 크기를 남깁니다." data-wrong="두 표현이 각각 무엇을 버리고 무엇을 지키는지 3-4절을 다시 보세요.">
+      <p><strong>확인 문제.</strong> 순위와 logit을 <em>둘 다</em> 특성으로 넣는 이유는?</p>
+      <button data-correct="false">특성 수를 늘려 회귀의 자유도를 키우려고</button>
+      <button data-correct="true">순서의 강건함과 확신의 정보를 함께 쓰려고</button>
+      <button data-correct="false">결측 구간별 학습에 두 표현이 필수라서</button>
+      <p class="feedback" data-feedback></p>
+    </div>
+
+    <h2>더 읽기</h2>
+    <p>1차 자료는 <a href="https://usermanual.wiki/Document/Kaggle20ensembling20guide.685545747.pdf">MLWave의 Kaggle Ensembling Guide</a>입니다. 순위 평균이 왜 통하는지, 스태킹이 언제 과적합하는지를 실전 사례로 다루는 고전으로, 이 수업의 ①→② 전환이 그대로 나옵니다. 구현 근거는 <code>src/pipeline/ensemble.py</code>와 이슈 #63·#64·#65의 판정 기록이고, 압축본은 <a href="../reference/0003-combiner-cheatsheet.html">결합기 치트시트</a>에 있습니다.</p>
+    <footer>
+      <p>막히는 부분이 있으면 언제든 에이전트에게 이어서 질문하세요. 예: "nested OOF와 구성원의 inner 10-fold는 어떻게 다른가요?"</p>
+    </footer>
+  </main>
+</body>
+</html>
