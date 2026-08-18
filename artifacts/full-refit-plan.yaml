@@ -67,8 +67,8 @@ members:
   - config: exp065_tabm
     config_path: configs/exp065_tabm.yaml
     run_id: df2023d4bd71429b88a8026d52f5258c
-    budget_source: configured_cap
-    budgets: {42: 188, 43: 188, 44: 188}
+    budget_source: fold_median
+    budgets: {42: 16, 43: 16, 44: 15}
   - config: exp070_cat_exact_cats
     config_path: configs/exp070_cat_exact_cats.yaml
     run_id: 6238d8c58beb42ee8102209ded92516e
