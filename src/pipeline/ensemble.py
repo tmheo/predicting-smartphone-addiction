@@ -5,6 +5,7 @@
     uv run python -m pipeline.ensemble --only rank_mean   # 개발·디버깅용 부분 실행
     uv run python -m pipeline.ensemble --only rank_mean --only ridge_logit
     uv run python -m pipeline.ensemble --only rank_logit_logistic --submission <path>
+    uv run python -m pipeline.ensemble --record-issue 202 --baseline-run <run_id>
 
 이 module은 측정이다: outer fold 루프, float64 강제 캐스팅, 결합 전략 Protocol과
 adapter, COMBINER_REGISTRY, 선택 빈도 집계, CLI. 계열 3 판정(judge_ensemble)은
@@ -31,9 +32,11 @@ nested OOF 정의(ADR 0001 계열 3): outer fold k마다 나머지 4개 fold의 
 구성원 예측 행렬의 컬럼 키는 config 이름이다(풀 장부가 유일성 보장). run_id 대응은
 리포트 머리에 한 번 출력한다.
 
-MLflow run을 만들지 않는다(실험 하나 = run 하나 규약 유지).
-평가 결과는 stdout으로 남기고, 채택 전략은 전체 OOF로 다시 학습해 구성원 시험 예측에
-적용한 제출 파일을 명시적 경로에 만들 수 있다.
+평가 자체는 MLflow run을 만들지 않고 stdout으로 남긴다(실험 하나 = run 하나 규약).
+--record-issue가 주어지면 최선 전략의 nested 결과 하나를 파생 앙상블 실행
+(source.kind=derived_ensemble)으로 MLflow에 기록한다(#179·#183 선례의 상설화, #202).
+채택 전략은 전체 OOF로 다시 학습해 구성원 시험 예측에 적용한 제출 파일을 명시적
+경로에 만들 수 있다.
 """
 
 from __future__ import annotations
@@ -55,9 +58,9 @@ from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
 
-from .data import ID, TARGET, TRAIN_PATH, labels
+from .data import ID, TARGET, TRAIN_PATH, file_sha256, labels
 from .ledger import CHAMPION_PATH, Champion, Pool
-from .runs import MlflowRunStore, RunStore, RunStoreError
+from .runs import TRACKING_URI, MlflowRunStore, RunStore, RunStoreError
 
 
 def rank_mean(preds: pd.DataFrame) -> np.ndarray:
@@ -962,6 +965,7 @@ class NestedEvaluation:
     name: str
     nested_auc: float
     folds: list[FoldOutcome]
+    prediction: pd.Series  # id 인덱스의 nested OOF 예측. 파생 앙상블 실행 기록의 원본.
 
 
 def evaluate_nested(
@@ -994,6 +998,7 @@ def evaluate_nested(
         name=combiner.name,
         nested_auc=float(roc_auc_score(y.to_numpy(), nested)),
         folds=outcomes,
+        prediction=pd.Series(nested, index=preds.index, name="prediction"),
     )
 
 
@@ -1080,6 +1085,168 @@ def full_fit_predictions(
     return prediction
 
 
+@dataclass(frozen=True)
+class NestedBaseline:
+    """직전 파생 앙상블 실행과의 비교 재료. main이 계산해 기록 함수에 건넨다."""
+
+    run_id: str
+    pool_size: int
+    previous_best_auc: float
+    same_strategy_auc: float | None  # 최선 전략을 직전 구성원 부분집합에 재평가한 값.
+    new_member_configs: list[str]
+
+
+def record_nested_evaluation(
+    evaluation: NestedEvaluation,
+    members: list[tuple[str, str]],
+    *,
+    issue: int,
+    baseline: NestedBaseline | None,
+    input_hashes: dict[str, str],
+    tracking_uri: str = TRACKING_URI,
+) -> str:
+    """최선 전략의 nested 결과를 파생 앙상블 실행으로 MLflow에 기록한다. (#202)
+
+    #179(run 7fbe590b)·#183(run d845b5d1) 사후 등록의 스키마를 그대로 따른다:
+    params에 구성원 계보와 git 상태, metrics에 auc_oof·fold별 AUC·직전 기록 대비 증분,
+    artifacts에 oof.parquet(id, prediction)과 member_weights.csv, tags에
+    source.kind=derived_ensemble와 입력 sha256·산출물 sha256을 남긴다.
+    """
+    import hashlib
+    import tempfile
+    from datetime import datetime, timezone
+
+    # 최상단 import는 judgment → ensemble 단방향만 둔다(module docstring). tracking은
+    # judgment를 최상단에서 당기므로 지역 import로 순환을 피한다.
+    from .tracking import git_state, mlflow_client
+
+    run_name = f"ensemble_{evaluation.name}_issue{issue}_pool{len(members)}"
+    configs = ",".join(config for config, _ in members)
+    run_ids = ",".join(run_id for _, run_id in members)
+
+    client, experiment_id = mlflow_client(tracking_uri)
+    run_id = client.create_run(experiment_id, run_name=run_name).info.run_id
+
+    params: dict[str, str] = {
+        "experiment": run_name,
+        "stage": "confirm",
+        "model.kind": f"ensemble_{evaluation.name}",
+        "ensemble.strategy": evaluation.name,
+        "ensemble.member_count": str(len(members)),
+        "ensemble.member_configs": configs,
+        "ensemble.member_run_ids": run_ids,
+        **git_state(),
+    }
+    if baseline is not None:
+        params["ensemble.baseline_run_id"] = baseline.run_id
+        params["ensemble.new_member_configs"] = ",".join(baseline.new_member_configs)
+    for key, value in params.items():
+        client.log_param(run_id, key, value)
+
+    client.log_metric(run_id, "auc_oof", evaluation.nested_auc)
+    for outcome in evaluation.folds:
+        client.log_metric(run_id, f"auc_fold_{outcome.fold}", outcome.auc)
+    if baseline is not None:
+        size = baseline.pool_size
+        client.log_metric(
+            run_id, f"auc_pool{size}_previous_best", baseline.previous_best_auc
+        )
+        client.log_metric(
+            run_id,
+            f"delta_vs_pool{size}_previous_best",
+            evaluation.nested_auc - baseline.previous_best_auc,
+        )
+        if baseline.same_strategy_auc is not None:
+            client.log_metric(
+                run_id, f"auc_pool{size}_same_strategy", baseline.same_strategy_auc
+            )
+            client.log_metric(
+                run_id,
+                "delta_same_strategy",
+                evaluation.nested_auc - baseline.same_strategy_auc,
+            )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_dir = Path(tmp)
+        oof_path = tmp_dir / "oof.parquet"
+        evaluation.prediction.rename_axis(ID).reset_index().to_parquet(
+            oof_path, index=False
+        )
+        weights_path = tmp_dir / "member_weights.csv"
+        pd.DataFrame(
+            [
+                {
+                    "member": stat.member,
+                    "selected": stat.selected,
+                    "fold_total": stat.fold_total,
+                    "mean_weight": stat.mean_weight,
+                }
+                for stat in member_stats(evaluation)
+            ]
+        ).to_csv(weights_path, index=False)
+        client.log_artifact(run_id, str(oof_path))
+        client.log_artifact(run_id, str(weights_path))
+        oof_sha256 = hashlib.sha256(oof_path.read_bytes()).hexdigest()
+
+    tags = {
+        "source.issue": str(issue),
+        "source.kind": "derived_ensemble",
+        "ensemble.strategy": evaluation.name,
+        "ensemble.member_run_ids": run_ids,
+        "sha256.oof_prediction": oof_sha256,
+        "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        **{f"sha256.{name}": digest for name, digest in input_hashes.items()},
+    }
+    for key, value in tags.items():
+        client.set_tag(run_id, key, value)
+    client.set_terminated(run_id, "FINISHED")
+    return run_id
+
+
+def nested_baseline(
+    baseline_run_id: str,
+    best: NestedEvaluation,
+    members: list[tuple[str, str]],
+    store: RunStore,
+    fold_of: pd.Series,
+    y: pd.Series,
+) -> NestedBaseline:
+    """직전 파생 앙상블 실행에서 비교 재료를 만든다.
+
+    신규 구성원은 직전 실행의 ensemble.member_configs와의 차집합이다. 직전 구성원이
+    현재 풀의 부분집합일 때만 최선 전략을 그 부분집합에 재평가해 같은 전략 증분을
+    잰다(구성원 이탈이 있으면 짝비교가 성립하지 않으므로 건너뛴다).
+    """
+    meta = store.facts_of(baseline_run_id)
+    if "auc_oof" not in meta.metrics:
+        raise RunStoreError(f"기준 실행 {baseline_run_id}에 auc_oof metric이 없다.")
+    baseline_configs = [
+        config
+        for config in meta.params.get("ensemble.member_configs", "").split(",")
+        if config
+    ]
+    if not baseline_configs:
+        raise RunStoreError(
+            f"기준 실행 {baseline_run_id}에 ensemble.member_configs param이 없다."
+        )
+    current_configs = [config for config, _ in members]
+    same_strategy_auc = None
+    if set(baseline_configs) <= set(current_configs):
+        matrix = member_matrix(members, store, fold_of.index)
+        same_strategy_auc = evaluate_nested(
+            COMBINER_REGISTRY[best.name], matrix[baseline_configs], fold_of, y
+        ).nested_auc
+    return NestedBaseline(
+        run_id=baseline_run_id,
+        pool_size=len(baseline_configs),
+        previous_best_auc=meta.metrics["auc_oof"],
+        same_strategy_auc=same_strategy_auc,
+        new_member_configs=[
+            config for config in current_configs if config not in baseline_configs
+        ],
+    )
+
+
 def run_report(
     combiners: list[Combiner],
     members: list[tuple[str, str]],
@@ -1087,7 +1254,7 @@ def run_report(
     fold_of: pd.Series,
     y: pd.Series,
     champion_auc: float,
-) -> None:
+) -> list[NestedEvaluation]:
     """nested 평가부터 계열 3 판정까지의 stdout 리포트. CLI와 golden 테스트가 공유한다."""
     # 최상단 import는 judgment → ensemble 단방향만 둔다(module docstring). 지역 import.
     from .judgment import AUC_THRESHOLD, StrategyOutcome, judge_ensemble
@@ -1146,8 +1313,9 @@ def run_report(
         )
     if verdict.recommended is None:
         print("판정: 채택 없음, 단독 champion 유지")
-        return
+        return evaluations
     print(f"판정: {verdict.recommended} 채택 추천 (nested OOF AUC 최고)")
+    return evaluations
 
 
 def main() -> None:
@@ -1162,12 +1330,23 @@ def main() -> None:
     parser.add_argument(
         "--submission", type=Path, help="--only 전략의 전체 OOF 학습 제출 파일 경로"
     )
+    parser.add_argument(
+        "--record-issue",
+        type=int,
+        help="최선 전략의 nested 결과를 이 이슈 번호의 파생 앙상블 실행으로 MLflow에 기록",
+    )
+    parser.add_argument(
+        "--baseline-run",
+        help="직전 파생 앙상블 실행의 run_id. 증분 지표와 신규 구성원 계보를 함께 기록",
+    )
     args = parser.parse_args()
 
     if args.submission is not None and args.only is None:
         sys.exit("--submission에는 제출 결합 전략을 고르는 --only가 필요하다.")
     if args.submission is not None and len(args.only) != 1:
         sys.exit("--submission에는 --only 전략을 정확히 하나 지정해야 한다.")
+    if args.baseline_run is not None and args.record_issue is None:
+        sys.exit("--baseline-run에는 기록을 여는 --record-issue가 필요하다.")
 
     combiners = list(COMBINER_REGISTRY.values())
     if args.only is not None:
@@ -1193,7 +1372,7 @@ def main() -> None:
     store = MlflowRunStore()
     try:
         members = [(member.config, member.run_id) for member in pool.members]
-        run_report(
+        evaluations = run_report(
             combiners,
             members,
             store,
@@ -1201,6 +1380,34 @@ def main() -> None:
             y,
             champion.oof_auc,
         )
+        if args.record_issue is not None:
+            from .tracking import git_state
+
+            if git_state()["git_dirty"] == "True":
+                sys.exit("기록 거부: git_dirty 상태다. 우회 옵션은 없다. 커밋 후 재실행할 것.")
+            if not evaluations:
+                sys.exit("기록할 평가가 없다: 모든 전략이 비교에서 제외됐다.")
+            best = max(evaluations, key=lambda evaluation: evaluation.nested_auc)
+            baseline = (
+                nested_baseline(args.baseline_run, best, members, store, fold_of, y)
+                if args.baseline_run is not None
+                else None
+            )
+            recorded = record_nested_evaluation(
+                best,
+                members,
+                issue=args.record_issue,
+                baseline=baseline,
+                input_hashes={
+                    "train": file_sha256(TRAIN_PATH),
+                    "test": file_sha256(MISSINGNESS_TEST_PATH),
+                    "folds": file_sha256(FOLDS_PATH),
+                },
+            )
+            print(
+                f"파생 앙상블 실행 기록: {recorded} "
+                f"(전략 {best.name}, 구성원 {len(members)}명)"
+            )
         if args.submission is not None:
             oof = member_matrix(members, store, fold_of.index)
             template = pd.read_csv("data/sample_submission.csv", usecols=[ID, TARGET])

@@ -23,6 +23,7 @@ from pipeline.ensemble import (
     LogisticLinearCombiner,
     MissingnessInteractionLogisticCombiner,
     MissingnessSegmentedLogisticCombiner,
+    NestedBaseline,
     OptunaSubsetRankMeanCombiner,
     OptunaSubsetRidgeLogitCombiner,
     PerformanceWeightedRankMeanCombiner,
@@ -35,7 +36,9 @@ from pipeline.ensemble import (
     member_stats,
     member_test_matrix,
     missingness_bands,
+    nested_baseline,
     rank_mean,
+    record_nested_evaluation,
 )
 from pipeline.judgment import rank_ensemble_auc
 from pipeline.runs import InMemoryRunStore
@@ -522,3 +525,125 @@ def test_full_fit_predictions_supports_missingness_context_on_test_ids():
     assert actual.shape == (6,)
     assert actual.dtype == np.float64
     assert np.isfinite(actual).all()
+
+
+def make_fold_of() -> pd.Series:
+    return pd.Series(np.arange(N) % 5, index=make_index())
+
+
+def test_nested_baseline_measures_same_strategy_on_previous_subset():
+    index = make_index()
+    y = make_labels()
+    fold_of = make_fold_of()
+    preds = make_preds()
+    store = InMemoryRunStore()
+    for i in range(3):
+        store.add_run(
+            f"run-{i}",
+            oof=pd.DataFrame({ID: index, "pred": preds[f"exp_{i}"].to_numpy()}),
+        )
+    store.add_run(
+        "run-baseline",
+        params={"ensemble.member_configs": "exp_0,exp_1"},
+        metrics={"auc_oof": 0.9},
+    )
+    members = [(f"exp_{i}", f"run-{i}") for i in range(3)]
+    best = evaluate_nested(RankMeanCombiner(), preds, fold_of, y)
+
+    baseline = nested_baseline("run-baseline", best, members, store, fold_of, y)
+
+    assert baseline.pool_size == 2
+    assert baseline.previous_best_auc == 0.9
+    assert baseline.new_member_configs == ["exp_2"]
+    expected = evaluate_nested(
+        RankMeanCombiner(), preds[["exp_0", "exp_1"]], fold_of, y
+    ).nested_auc
+    assert baseline.same_strategy_auc == pytest.approx(expected)
+
+
+def test_nested_baseline_skips_same_strategy_when_member_left_the_pool():
+    y = make_labels()
+    fold_of = make_fold_of()
+    preds = make_preds()
+    store = InMemoryRunStore()
+    store.add_run(
+        "run-baseline",
+        params={"ensemble.member_configs": "exp_0,exp_gone"},
+        metrics={"auc_oof": 0.9},
+    )
+    members = [(f"exp_{i}", f"run-{i}") for i in range(3)]
+    best = evaluate_nested(RankMeanCombiner(), preds, fold_of, y)
+
+    baseline = nested_baseline("run-baseline", best, members, store, fold_of, y)
+
+    assert baseline.same_strategy_auc is None
+    assert baseline.new_member_configs == ["exp_1", "exp_2"]
+
+
+def test_record_nested_evaluation_writes_derived_ensemble_run(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        "pipeline.tracking.git_state",
+        lambda: {"git_commit": "a" * 40, "git_dirty": "False"},
+    )
+    y = make_labels()
+    evaluation = evaluate_nested(RankMeanCombiner(), make_preds(), make_fold_of(), y)
+    members = [(f"exp_{i}", f"run-{i}") for i in range(3)]
+    baseline = NestedBaseline(
+        run_id="run-baseline",
+        pool_size=2,
+        previous_best_auc=0.9,
+        same_strategy_auc=0.89,
+        new_member_configs=["exp_2"],
+    )
+    tracking_uri = f"sqlite:///{tmp_path}/mlflow.db"
+
+    run_id = record_nested_evaluation(
+        evaluation,
+        members,
+        issue=999,
+        baseline=baseline,
+        input_hashes={"train": "t1", "test": "t2", "folds": "t3"},
+        tracking_uri=tracking_uri,
+    )
+
+    from mlflow.tracking import MlflowClient
+
+    client = MlflowClient(tracking_uri=tracking_uri)
+    run = client.get_run(run_id)
+    assert run.info.run_name == "ensemble_rank_mean_issue999_pool3"
+    assert run.info.status == "FINISHED"
+    assert run.data.params["ensemble.strategy"] == "rank_mean"
+    assert run.data.params["ensemble.member_configs"] == "exp_0,exp_1,exp_2"
+    assert run.data.params["ensemble.member_run_ids"] == "run-0,run-1,run-2"
+    assert run.data.params["ensemble.baseline_run_id"] == "run-baseline"
+    assert run.data.params["ensemble.new_member_configs"] == "exp_2"
+    assert run.data.params["git_dirty"] == "False"
+    assert run.data.metrics["auc_oof"] == pytest.approx(evaluation.nested_auc)
+    assert run.data.metrics["auc_fold_0"] == pytest.approx(evaluation.folds[0].auc)
+    assert run.data.metrics["auc_pool2_previous_best"] == pytest.approx(0.9)
+    assert run.data.metrics["delta_vs_pool2_previous_best"] == pytest.approx(
+        evaluation.nested_auc - 0.9
+    )
+    assert run.data.metrics["auc_pool2_same_strategy"] == pytest.approx(0.89)
+    assert run.data.metrics["delta_same_strategy"] == pytest.approx(
+        evaluation.nested_auc - 0.89
+    )
+    assert run.data.tags["source.issue"] == "999"
+    assert run.data.tags["source.kind"] == "derived_ensemble"
+    assert run.data.tags["sha256.train"] == "t1"
+    assert "recorded_at" in run.data.tags
+    oof_path = client.download_artifacts(run_id, "oof.parquet")
+    oof = pd.read_parquet(oof_path)
+    assert list(oof.columns) == [ID, "prediction"]
+    np.testing.assert_allclose(oof["prediction"], evaluation.prediction.to_numpy())
+    import hashlib
+
+    with open(oof_path, "rb") as handle:
+        assert run.data.tags["sha256.oof_prediction"] == hashlib.sha256(
+            handle.read()
+        ).hexdigest()
+    weights = pd.read_csv(client.download_artifacts(run_id, "member_weights.csv"))
+    assert list(weights.columns) == ["member", "selected", "fold_total", "mean_weight"]
+    assert list(weights["member"]) == ["exp_0", "exp_1", "exp_2"]
+    assert (weights["selected"] == 5).all()
