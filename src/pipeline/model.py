@@ -565,6 +565,15 @@ class LogisticOnehotAdapter:
     평균·표준편차로 표준화한 수치 열로 통과시키고 결측은 0(평균)으로 둔다.
     importance는 컬럼 블록별 선형 기여(학습 fold 점수 조각)의 표준편차를 gain으로
     돌려준다. 표준화 수치 열에서는 |coef|와 같아 블록 간 축척이 맞는다.
+
+    #200 변형 갈래:
+    - penalty: l2(기본, lbfgs) 외에 l1·elasticnet(둘 다 saga)을 지원한다.
+      l1_ratio는 elasticnet에서만, 그리고 반드시 지정한다.
+    - cross_pairs: 두 컬럼의 정확값 쌍을 학습 fold에서 관측된 조합 기준으로
+      one-hot하는 명시적 교차 블록. 학습 fold에서 cross_min_count 미만으로
+      나타난 쌍과 어느 한쪽이 결측인 행, 검증·테스트에만 있는 쌍은 영벡터
+      블록이 된다(단일 컬럼의 미관측 값 처리와 같은 규약). 관측 쌍 수가
+      cross_max_card를 넘으면 설정 오류로 거부한다.
     """
 
     def __init__(self, params: dict, fit: dict, seed: int) -> None:
@@ -572,8 +581,41 @@ class LogisticOnehotAdapter:
         self._C = float(params.pop("C", 1.0))
         self._max_iter = int(params.pop("max_iter", 2000))
         self._max_card = int(params.pop("onehot_max_card", 10000))
+        self._penalty = str(params.pop("penalty", "l2"))
+        self._l1_ratio = params.pop("l1_ratio", None)
+        solver = params.pop("solver", None)
+        self._solver = None if solver is None else str(solver)
+        cross_pairs = params.pop("cross_pairs", [])
+        self._cross_min_count = int(params.pop("cross_min_count", 1))
+        self._cross_max_card = int(params.pop("cross_max_card", 50000))
         if params:
             raise ValueError(f"logistic_onehot이 모르는 params: {sorted(params)}")
+        if self._penalty not in {"l2", "l1", "elasticnet"}:
+            raise ValueError(f"penalty는 l2·l1·elasticnet 중 하나다(받은 값: {self._penalty!r})")
+        if (self._penalty == "elasticnet") != (self._l1_ratio is not None):
+            raise ValueError("l1_ratio는 elasticnet에서만, 그리고 반드시 지정한다.")
+        if self._l1_ratio is not None:
+            self._l1_ratio = float(self._l1_ratio)
+        allowed_solvers = {
+            "l2": {"lbfgs"},  # exp058 재현성. 다른 L2 solver는 필요할 때 연다.
+            "l1": {"saga", "liblinear"},  # liblinear 좌표 하강이 saga보다 훨씬 빠르다(#200).
+            "elasticnet": {"saga"},  # sklearn에서 elasticnet은 saga 전용.
+        }[self._penalty]
+        default_solver = "lbfgs" if self._penalty == "l2" else "saga"
+        if self._solver is None:
+            self._solver = default_solver
+        if self._solver not in allowed_solvers:
+            raise ValueError(
+                f"penalty {self._penalty!r}에 쓸 수 있는 solver는 {sorted(allowed_solvers)}다"
+                f"(받은 값: {self._solver!r})"
+            )
+        self._cross_pairs: list[tuple[str, str]] = []
+        for pair in cross_pairs:
+            if len(pair) != 2 or pair[0] == pair[1]:
+                raise ValueError(f"cross_pairs 항목은 서로 다른 두 컬럼이어야 한다: {pair}")
+            self._cross_pairs.append((str(pair[0]), str(pair[1])))
+        if self._cross_min_count < 1:
+            raise ValueError(f"cross_min_count는 1 이상이어야 한다(받은 값: {self._cross_min_count})")
         self._fit = fit
         self._seed = seed
         self._model = None
@@ -581,6 +623,8 @@ class LogisticOnehotAdapter:
         # 컬럼별 인코딩 스펙: one-hot이면 ("onehot", 카테고리 목록, 결측 지시자 여부),
         # 통과 수치면 ("numeric", 평균, 표준편차). 블록 오프셋은 인코딩 때 계산한다.
         self._specs: dict[str, tuple] = {}
+        # 교차 쌍별 학습 fold 관측 조합(pandas MultiIndex). 순서가 곧 블록 내 위치다.
+        self._cross_specs: dict[tuple[str, str], pd.MultiIndex] = {}
         self._train_matrix = None  # importance용 학습 fold 인코딩 행렬.
 
     def fit(
@@ -622,9 +666,30 @@ class LogisticOnehotAdapter:
                 mean = float(values.mean())
                 std = float(values.std())
                 self._specs[col] = ("numeric", mean, std if std > 0 else 1.0)
+        self._cross_specs = {}
+        for a, b in self._cross_pairs:
+            missing = [c for c in (a, b) if c not in self._columns]
+            if missing:
+                raise ValueError(f"cross_pairs의 컬럼이 입력에 없다: {missing}")
+            both = X_tr[[a, b]].dropna()
+            counts = both.groupby([a, b], sort=True).size()
+            kept = counts[counts >= self._cross_min_count]
+            if len(kept) > self._cross_max_card:
+                raise ValueError(
+                    f"교차 {a}*{b}의 관측 쌍 {len(kept)}개가 cross_max_card="
+                    f"{self._cross_max_card}를 넘는다."
+                )
+            self._cross_specs[(a, b)] = kept.index
         self._train_matrix = self._encode(X_tr)
+        # sklearn 1.8부터 penalty 인자 대신 l1_ratio가 페널티 선언이다(0=L2, 1=L1,
+        # 사이 값=elasticnet). solver는 __init__에서 페널티와의 조합을 검증했다.
+        l1_ratio = {"l2": 0.0, "l1": 1.0}.get(self._penalty, self._l1_ratio)
         self._model = LogisticRegression(
-            C=self._C, max_iter=self._max_iter, solver="lbfgs", random_state=self._seed
+            C=self._C,
+            max_iter=self._max_iter,
+            solver=self._solver,
+            random_state=self._seed,
+            l1_ratio=l1_ratio,
         )
         self._model.fit(self._train_matrix, y_tr)
         print(
@@ -643,6 +708,8 @@ class LogisticOnehotAdapter:
         for col in self._columns:
             spec = self._specs[col]
             widths.append(1 if spec[0] == "numeric" else len(spec[1]) + int(spec[2]))
+        for pair in self._cross_pairs:
+            widths.append(len(self._cross_specs[pair]))
         return widths
 
     def _encode(self, X: pd.DataFrame):
@@ -673,6 +740,17 @@ class LogisticOnehotAdapter:
                 (np.ones(len(rows)), (rows, codes[seen])), shape=(len(X), width)
             )
             blocks.append(block)
+        for pair in self._cross_pairs:
+            categories = self._cross_specs[pair]
+            keys = pd.MultiIndex.from_arrays([X[pair[0]], X[pair[1]]])
+            # 미관측 쌍과 어느 한쪽 결측(NaN은 자기 자신과도 다르다)은 -1 → 영벡터.
+            codes = categories.get_indexer(keys)
+            rows = np.flatnonzero(codes >= 0)
+            block = sparse.csr_matrix(
+                (np.ones(len(rows)), (rows, codes[rows])),
+                shape=(len(X), len(categories)),
+            )
+            blocks.append(block)
         return sparse.hstack(blocks, format="csr")
 
     def importance(self) -> pd.DataFrame:
@@ -685,7 +763,8 @@ class LogisticOnehotAdapter:
             ]
             gains.append(float(np.std(contribution)))
             offset += width
-        return pd.DataFrame({"feature": self._columns, "gain": gains})
+        features = self._columns + [f"{a}*{b}" for a, b in self._cross_pairs]
+        return pd.DataFrame({"feature": features, "gain": gains})
 
 
 class LookupTransformerAdapter:

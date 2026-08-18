@@ -1,0 +1,40 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #200: exp058 변형 1 - #56 코멘트가 지시하고 실행 기록이 없던 orig_nn10_mean
+# 열 추가. 원본 프록시 최근접 10행 라벨 평균은 값이 11개뿐이라 정확값 one-hot
+# 블록(결측 지시자 포함)이 되고, 선형 모델에 원본 프록시의 국소 라벨 구조라는
+# 새 정보 축을 준다. 다른 모든 구성(C=100, L2, lbfgs)은 exp058과 같다.
+name: exp107_logreg_onehot_nn10
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: original_knn
+      path: data/external/Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      ks: [10]
+
+model:
+  kind: logistic_onehot
+  params:
+    C: 100.0
+    max_iter: 3000
+    onehot_max_card: 5000
+  fit: {}
