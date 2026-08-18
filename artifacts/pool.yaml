@@ -352,3 +352,18 @@ members:
     ensemble_auc_with: 0.9688634779244466
     ensemble_auc_without: 0.9688402384157816
     contribution: 2.3239508665007236e-05
+- run_id: a3c4f73cce764f8f85c3620631f16a71
+  config: exp113_tab_cnn_m0
+  oof_auc: 0.9620748339267182
+  seeds: 42,43,44
+  entered_at: '2026-08-18'
+  reason: 표 합성곱망 3시드 5-fold 확정 재검증에서 진입 하한과 다양성 관문을 통과했다.
+  evidence:
+    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
+    champion_oof_auc: 0.9691957618114269
+    floor_margin: 0.00287907211529137
+    nearest_run_id: ae829ae3d886402ab100a8e966c3131a
+    nearest_spearman: 0.9638799271306391
+    ensemble_auc_with: 0.9688734036276649
+    ensemble_auc_without: 0.968844711232371
+    contribution: 2.8692395293905548e-05

@@ -158,6 +158,49 @@ def test_adapter_contract_learning_importance_and_determinism():
     assert diagnostics.observations["best_validation_auc"] > 0.8
     assert diagnostics.observations["source_script_version_id"] == 342747549
 
+    training = first.training_diagnostics()
+    assert all(training["integrity_assertions"].values())
+    assert training["preprocessing_fit_rows"] == 240
+    assert training["training_rows"] == 240
+    assert training["validation_rows"] == 80
+    assert training["prediction_calls"] > 0
+    assert training["all_predictions_finite"] is True
+    assert training["importance_values_finite"] is True
+    assert np.isfinite(training["placebo_importance"])
+    assert training["fit_seconds"] > 0
+    assert training["importance_seconds"] > 0
+    assert training["fold_adapter_seconds"] > training["fit_seconds"]
+    assert training["cuda_max_allocated_bytes"] is None
+    assert training["cuda_max_reserved_bytes"] is None
+    assert training["cuda_device_total_bytes"] is None
+
+
+def test_full_fit_uses_fixed_budget_and_predicts_finite_values():
+    X, y = _data(160)
+    adapter = _adapter(epochs=1)
+
+    model_mod.fit_full(adapter, X, y, training_budget=3)
+
+    prediction = adapter.predict(X.iloc[:20])
+    assert prediction.shape == (20,)
+    assert np.isfinite(prediction).all()
+    diagnostics = adapter.training_diagnostics()
+    assert diagnostics["full_training_budget"] == 3
+    assert diagnostics["preprocessing_fit_rows"] == len(X)
+    assert diagnostics["training_rows"] == len(X)
+    assert diagnostics["validation_rows"] == 0
+    assert len(diagnostics["training_losses"]) == 3
+    assert len(diagnostics["epoch_seconds"]) == 3
+    assert all(diagnostics["integrity_assertions"].values())
+
+
+def test_full_fit_requires_a_training_budget():
+    X, y = _data(80)
+    adapter = _adapter()
+
+    with pytest.raises(ValueError, match="고정 epoch"):
+        model_mod.fit_full(adapter, X, y, training_budget=None)
+
 
 def test_fold_encoder_distinguishes_unknown_and_missing_categories():
     from pipeline import tab_cnn
