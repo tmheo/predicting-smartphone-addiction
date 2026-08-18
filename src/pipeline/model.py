@@ -562,6 +562,8 @@ class LogisticOnehotAdapter:
         self._max_card = int(params.pop("onehot_max_card", 10000))
         self._penalty = str(params.pop("penalty", "l2"))
         self._l1_ratio = params.pop("l1_ratio", None)
+        solver = params.pop("solver", None)
+        self._solver = None if solver is None else str(solver)
         cross_pairs = params.pop("cross_pairs", [])
         self._cross_min_count = int(params.pop("cross_min_count", 1))
         self._cross_max_card = int(params.pop("cross_max_card", 50000))
@@ -573,6 +575,19 @@ class LogisticOnehotAdapter:
             raise ValueError("l1_ratio는 elasticnet에서만, 그리고 반드시 지정한다.")
         if self._l1_ratio is not None:
             self._l1_ratio = float(self._l1_ratio)
+        allowed_solvers = {
+            "l2": {"lbfgs"},  # exp058 재현성. 다른 L2 solver는 필요할 때 연다.
+            "l1": {"saga", "liblinear"},  # liblinear 좌표 하강이 saga보다 훨씬 빠르다(#200).
+            "elasticnet": {"saga"},  # sklearn에서 elasticnet은 saga 전용.
+        }[self._penalty]
+        default_solver = "lbfgs" if self._penalty == "l2" else "saga"
+        if self._solver is None:
+            self._solver = default_solver
+        if self._solver not in allowed_solvers:
+            raise ValueError(
+                f"penalty {self._penalty!r}에 쓸 수 있는 solver는 {sorted(allowed_solvers)}다"
+                f"(받은 값: {self._solver!r})"
+            )
         self._cross_pairs: list[tuple[str, str]] = []
         for pair in cross_pairs:
             if len(pair) != 2 or pair[0] == pair[1]:
@@ -646,13 +661,12 @@ class LogisticOnehotAdapter:
             self._cross_specs[(a, b)] = kept.index
         self._train_matrix = self._encode(X_tr)
         # sklearn 1.8부터 penalty 인자 대신 l1_ratio가 페널티 선언이다(0=L2, 1=L1,
-        # 사이 값=elasticnet). saga는 L1 성분을 지원하는 유일한 solver이고, L2는
-        # 기존 exp058 재현성을 위해 lbfgs를 유지한다.
+        # 사이 값=elasticnet). solver는 __init__에서 페널티와의 조합을 검증했다.
         l1_ratio = {"l2": 0.0, "l1": 1.0}.get(self._penalty, self._l1_ratio)
         self._model = LogisticRegression(
             C=self._C,
             max_iter=self._max_iter,
-            solver="lbfgs" if self._penalty == "l2" else "saga",
+            solver=self._solver,
             random_state=self._seed,
             l1_ratio=l1_ratio,
         )

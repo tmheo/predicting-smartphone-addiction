@@ -422,6 +422,18 @@ def test_logistic_onehot_penalty_variants():
         va_pred = adapter.fit(X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:])
         assert roc_auc_score(y.iloc[240:], va_pred) > 0.8
 
+    # L1 좌표 하강 liblinear는 saga의 빠른 대안으로 명시 선택할 수 있다.
+    adapter = model_mod.create(
+        ModelConfig(
+            kind="logistic_onehot",
+            params={"penalty": "l1", "solver": "liblinear", "max_iter": 2000},
+            fit={},
+        ),
+        seed=SEED,
+    )
+    va_pred = adapter.fit(X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:])
+    assert roc_auc_score(y.iloc[240:], va_pred) > 0.8
+
     with pytest.raises(ValueError, match="l1_ratio"):
         model_mod.create(
             ModelConfig(kind="logistic_onehot", params={"penalty": "l1", "l1_ratio": 0.5}, fit={}),
@@ -430,6 +442,15 @@ def test_logistic_onehot_penalty_variants():
     with pytest.raises(ValueError, match="penalty"):
         model_mod.create(
             ModelConfig(kind="logistic_onehot", params={"penalty": "none"}, fit={}), seed=SEED
+        )
+    with pytest.raises(ValueError, match="solver"):
+        model_mod.create(
+            ModelConfig(
+                kind="logistic_onehot",
+                params={"penalty": "elasticnet", "l1_ratio": 0.5, "solver": "liblinear"},
+                fit={},
+            ),
+            seed=SEED,
         )
 
 

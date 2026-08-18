@@ -1,11 +1,11 @@
 # 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
-# 이슈 #200: exp058 변형 1+2 조합 - exp107(orig_nn10_mean 추가)에 elastic-net
-# 정규화를 얹는다. fold 0 약식 스윕에서 페널티 단독은 전 설정 +0.00012~14로
-# C에 둔감했고(elastic-net 0.5, C=10이 정점), exp107 구성과 조합하면 0.959706으로
-# 두 변형의 단순 합(+0.00038)을 넘는 +0.00059가 실측돼 조합을 확정 재검증한다.
-# saga는 300회 반복에서 수렴 전이지만 스윕·조합 검증 전부 이 설정의 실측이고,
-# 완전 수렴은 fold당 수 시간이라 비용 대비 이득이 없어 고정 300회로 판정한다.
-name: exp108_logreg_onehot_nn10_elastic
+# 이슈 #200: exp058 변형 1+2 조합 - exp107(orig_nn10_mean 추가)에 L1 정규화를
+# 얹는다. fold 0 약식 스윕에서 페널티 단독은 전 설정 +0.00012~14로 C·페널티
+# 종류에 둔감했고, exp107 구성과 조합하면 두 변형의 단순 합(+0.00038)을 넘는
+# +0.00057~59가 실측됐다(saga elastic-net 0.959706, liblinear L1 0.959687).
+# 동급 AUC에서 liblinear 좌표 하강이 saga의 92분의 1(36초/fold)이라 L1·liblinear로
+# 확정한다. C는 fold 0 약식 스윕(3, 10, 30)에서 0.959687로 정점인 10을 쓴다.
+name: exp108_logreg_onehot_nn10_l1
 
 data:
   train: data/train.csv
@@ -37,8 +37,8 @@ model:
   kind: logistic_onehot
   params:
     C: 10.0
-    penalty: elasticnet
-    l1_ratio: 0.5
-    max_iter: 300
+    penalty: l1
+    solver: liblinear
+    max_iter: 1000
     onehot_max_card: 5000
   fit: {}
