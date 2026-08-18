@@ -56,6 +56,14 @@ class FullFitModelAdapter(Protocol):
     ) -> None: ...
 
 
+class DatasetReferenceAdapter(Protocol):
+    """목표값 비참조 전처리 기준 집합을 받는 선택 계약."""
+
+    def set_dataset_reference(
+        self, X_train: pd.DataFrame, X_test: pd.DataFrame
+    ) -> None: ...
+
+
 @dataclass(frozen=True)
 class AdapterDiagnostics:
     """진입 진단에 추가할 모델별 assertion과 관측값.
@@ -157,6 +165,19 @@ def fit_full(
     ):
         raise ValueError("전체 자료 재학습 길이는 양의 정수 또는 None이어야 한다.")
     provider(X, y, training_budget, initial_score)
+
+
+def set_dataset_reference(
+    adapter: ModelAdapter,
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame,
+) -> None:
+    """지원하는 adapter에 train+test 설명변수 전처리 기준 집합을 건넨다."""
+    if list(X_train.columns) != list(X_test.columns):
+        raise ValueError("전처리 기준 집합의 train/test 열이 다르다.")
+    provider = getattr(adapter, "set_dataset_reference", None)
+    if provider is not None:
+        provider(X_train, X_test)
 
 
 class LightGBMAdapter:
@@ -750,8 +771,9 @@ class LookupTransformerAdapter:
     """정확값 lookup embedding Transformer adapter. (#58)
 
     구현은 torch가 필요한 lookup_transformer 모듈에 있고 여기서 lazy import한다.
-    어휘·rank-gauss 분위는 학습 fold에서만 fit하고(outer fold 규율), gain
-    importance가 없어 검증 fold permutation importance(AUC 하락 폭)를 gain
+    기본 어휘·rank-gauss 분위는 학습 fold에서만 맞춘다.
+    명시적인 실험은 목표값 비참조 train+test 전처리 기준 집합을 사용할 수 있다.
+    gain importance가 없어 검증 fold permutation importance(AUC 하락 폭)를 gain
     컬럼으로 돌려준다(ADR 0001 #97의 계열 무관 중요도). 환산은 시드로 결정적이다.
     fold_seed_offsets가 여러 개면 파이프라인 시드에 각 offset을 더한 초기화로
     같은 fold를 학습하고 확률 예측을 평균한다(#127).
@@ -762,6 +784,23 @@ class LookupTransformerAdapter:
         self._fit = fit
         self._seed = seed
         self._impl = None
+        self._dataset_reference: tuple[pd.DataFrame, pd.DataFrame] | None = None
+
+    def set_dataset_reference(
+        self, X_train: pd.DataFrame, X_test: pd.DataFrame
+    ) -> None:
+        """정확값 어휘와 분위 변환에 쓸 목표값 비참조 기준 집합을 보관한다."""
+        if self._impl is not None:
+            raise RuntimeError("전처리 기준 집합은 Lookup-Transformer 학습 전에 정해야 한다.")
+        self._dataset_reference = (X_train, X_test)
+
+    def _new_impl(self):
+        from . import lookup_transformer
+
+        impl = lookup_transformer.LookupTransformerFold(self._params, self._seed)
+        if self._dataset_reference is not None:
+            impl.set_dataset_reference(*self._dataset_reference)
+        return impl
 
     def fit(
         self,
@@ -772,10 +811,8 @@ class LookupTransformerAdapter:
         initial_score_tr: pd.Series | None = None,
         initial_score_va: pd.Series | None = None,
     ) -> np.ndarray:
-        from . import lookup_transformer
-
         _reject_initial_score("lookup_transformer", initial_score_tr, initial_score_va)
-        self._impl = lookup_transformer.LookupTransformerFold(self._params, self._seed)
+        self._impl = self._new_impl()
         return self._impl.fit(X_tr, y_tr, X_va, y_va)
 
     def fit_full(
@@ -785,12 +822,10 @@ class LookupTransformerAdapter:
         training_budget: int | None,
         initial_score: pd.Series | None = None,
     ) -> None:
-        from . import lookup_transformer
-
         _reject_initial_score("lookup_transformer", initial_score, None)
         if training_budget is None:
             raise ValueError("lookup_transformer 전체 자료 재학습에는 고정 epoch 수가 필요하다.")
-        self._impl = lookup_transformer.LookupTransformerFold(self._params, self._seed)
+        self._impl = self._new_impl()
         self._impl.fit_full(X, y, training_budget)
 
     def predict(

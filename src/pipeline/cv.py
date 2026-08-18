@@ -146,6 +146,7 @@ def run_cv(
             continue
 
         adapter = model_mod.create(cfg.model, seed)
+        model_mod.set_dataset_reference(adapter, X_fold, X_test_fold)
         va_pred = np.asarray(
             adapter.fit(
                 X_fold.loc[tr_idx],

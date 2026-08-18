@@ -1,0 +1,47 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #183: 공개 스택 재현 4순위의 catnative 판. 수치 원시값 9열을 문자열 범주로
+# CatBoost native ordered CTR에 직접 준다(원시 12열 전부 categorical 선언, 수치
+# 순서 정보는 버리는 순수 범주 뷰). adarsh1077 README의 단독 0.96860·스택 최대
+# 계수 +0.749가 근거이나 코드가 없어 하이퍼파라미터는 우리 채택 CatBoost 계열
+# (exp070)의 depth 6, lr 0.05, max_ctr_complexity 1을 그대로 쓴다. 범주 조합 CTR을
+# 막는 ctr1은 exp070 계열과의 비용·기제 대등 비교를 위한 선택이다.
+# exp070(수동 TE + 정확값 범주 복제)과 기제가 겹치므로 seed 42 스크리닝의 pool
+# 리포트로 풀 최근접 상관을 먼저 확인한다(계열 2, 중복 게이트 스피어만 0.998).
+# 타깃 참조 제공자가 없어 placebo 파생 카나리아는 없다.
+
+name: exp112_cat_native_categories
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical:
+    [
+      age,
+      daily_screen_time_hours,
+      social_media_hours,
+      gaming_hours,
+      work_study_hours,
+      sleep_hours,
+      notifications_per_day,
+      app_opens_per_day,
+      weekend_screen_time,
+      gender,
+      stress_level,
+      academic_work_impact,
+    ]
+
+model:
+  kind: catboost
+  params:
+    iterations: 10000
+    depth: 6
+    learning_rate: 0.05
+    eval_metric: AUC
+    max_ctr_complexity: 1
+  fit:
+    early_stopping_rounds: 200

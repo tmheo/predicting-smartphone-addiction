@@ -1,0 +1,45 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #179: beicicc의 독립 전처리 고정 스케줄 Lookup 계약을 자체 재현한다.
+# 기존 Lookup 구조는 유지하고, 입력은 원시 12열과 기존 파생 6열로 제한한다.
+# 정확값 어휘와 quantile-normal 수치 채널은 목표값 없이 train+test 결합 설명변수로
+# 맞춘다. 검증 AUC는 관찰만 하고 24 epoch 마지막 EMA를 선택하며 조기 종료하지 않는다.
+# 외부 예측은 사용하지 않는다. seed 42 스크리닝이 진입 하한과 중복 게이트를 모두
+# 통과할 때만 3시드 확정과 nested 결합 기여 판정으로 넘어간다.
+name: exp106_lookup_fixed24_train_test_preprocessing
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+
+model:
+  kind: lookup_transformer
+  params:
+    lookup_cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+    preprocessing_scope: train_test
+    validation_selection: final
+    epochs: 24
+    ema_decay: 0.999
+  fit: {}

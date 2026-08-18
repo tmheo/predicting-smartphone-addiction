@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: bdf9e3f9654e9f1b8efc64a223cc2661cb71f2bd35e8ec0d7c17675b72ef868b
+source_pool_sha256: 82ce95e501bf6686e5dd863c54026e016b0cdc8c6e9606e9d22f7522a3fb763c
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -89,3 +89,23 @@ members:
     run_id: d55d1cd49c194eb8bf7b5128e548df81
     budget_source: fold_median
     budgets: {42: 15, 43: 15, 44: 15}
+  - config: exp110_lgb_kitopl_no_te
+    config_path: configs/exp110_lgb_kitopl_no_te.yaml
+    run_id: ae829ae3d886402ab100a8e966c3131a
+    budget_source: fold_median
+    budgets: {42: 5774, 43: 5655, 44: 6043}
+  - config: exp111_xgb_depth8_no_te
+    config_path: configs/exp111_xgb_depth8_no_te.yaml
+    run_id: 3cbc2ccce9eb46458d884006a33e516e
+    budget_source: fold_median
+    budgets: {42: 1801, 43: 1643, 44: 1565}
+  - config: exp071_cat_exact_no_te
+    config_path: configs/exp071_cat_exact_no_te.yaml
+    run_id: 521b4924b2ef4ba1830724333b83deb2
+    budget_source: fold_median
+    budgets: {42: 5264, 43: 5876, 44: 5525}
+  - config: exp106_lookup_fixed24_train_test_preprocessing
+    config_path: configs/exp106_lookup_fixed24_train_test_preprocessing.yaml
+    run_id: 547e7bc90b9f4c448307d406f053629a
+    budget_source: configured_cap
+    budgets: {42: 30, 43: 30, 44: 30}

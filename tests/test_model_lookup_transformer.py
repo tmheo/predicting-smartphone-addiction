@@ -147,6 +147,61 @@ def test_lookup_transformer_handles_unseen_values_and_missing():
     assert np.isfinite(pred).all()
 
 
+def test_lookup_transformer_train_test_reference_fits_vocab_and_quantiles(
+    lookup_transformer_module,
+):
+    """train_test 범위는 검증과 test의 목표값 비참조 값까지 전처리에 포함한다."""
+    member = lookup_transformer_module._LookupTransformerMember(
+        {
+            "lookup_cols": ["v"],
+            "preprocessing_scope": "train_test",
+            "validation_selection": "final",
+            "perm_repeats": 1,
+        },
+        seed=SEED,
+    )
+    X_tr = pd.DataFrame({"v": [1.0, 2.0]})
+    X_all_train = pd.DataFrame({"v": [1.0, 2.0, 3.0]})
+    X_test = pd.DataFrame({"v": [4.0]})
+
+    with pytest.raises(ValueError, match="전처리 기준 집합"):
+        member._fit_specs(X_tr)
+
+    member.set_dataset_reference(X_all_train, X_test)
+    member._fit_specs(X_tr)
+
+    _, vocabulary, quantiles = member._specs["v"]
+    assert vocabulary == [1.0, 2.0, 3.0, 4.0]
+    assert quantiles.n_quantiles_ == 4
+    assert quantiles.quantiles_[-1, 0] == pytest.approx(4.0)
+    encoded_ids, _, _ = member._encode(pd.DataFrame({"v": [3.0, 4.0, 9.0]}))
+    assert encoded_ids[:, 0].tolist() == [3, 4, 5]
+
+
+def test_lookup_transformer_final_selection_runs_fixed_epoch_schedule():
+    X, y = _data(96)
+    params = dict(
+        SMALL_PARAMS,
+        epochs=7,
+        patience=1,
+        perm_repeats=1,
+        preprocessing_scope="train_test",
+        validation_selection="final",
+    )
+    adapter = model_mod.create(
+        ModelConfig(kind="lookup_transformer", params=params, fit={}), seed=SEED
+    )
+    model_mod.set_dataset_reference(adapter, X, X.iloc[:12])
+
+    adapter.fit(X.iloc[:72], y.iloc[:72], X.iloc[72:], y.iloc[72:])
+
+    member = adapter.training_diagnostics()["fold_initialization_members"][0]
+    assert member["preprocessing_scope"] == "train_test"
+    assert member["validation_selection"] == "final"
+    assert member["end_epoch"] == 6
+    assert member["best_epoch"] == 6
+
+
 def test_lookup_transformer_full_fit_uses_fixed_epochs():
     X, y = _data(96)
     params = dict(SMALL_PARAMS, epochs=99, patience=2, perm_repeats=1)

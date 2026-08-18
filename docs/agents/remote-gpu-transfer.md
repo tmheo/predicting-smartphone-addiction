@@ -233,9 +233,52 @@ scripts/verify_environment_gates.sh \
 Docker를 사용할 수 없거나 어느 관문이든 실패하면 유료 원격 자원을 만들지 않는다.
 이 로컬 사전 확인은 실제 공급자 자원 안의 준비 경계를 대신하지 않는다.
 
+### 대상 컨테이너 이미지의 Python 관문
+
+저장소의 환경 관문은 공통 실행 스크립트가 외부 관리 Python을 훼손하지 않는지 검사하기 위해 시험용 컨테이너에 `python3-venv`를 먼저 설치한다.
+따라서 이 검사는 실제 GPU 이미지에 가상환경 구성 요소가 들어 있는지 보장하지 않는다.
+Python 실행 파일이 있어도 `venv`와 `ensurepip`는 운영체제의 별도 패키지일 수 있다.
+Vast.ai나 Runpod을 이전에 성공적으로 사용했더라도 컨테이너 이미지나 꼬리표가 달라지면 이 전제를 다시 확인해야 한다.
+
+원격 실행 명세에서 컨테이너 이미지를 고른 뒤 유료 자원을 만들기 전에 다음 검사를 통과해야 한다.
+회사가 제공한 Mac처럼 호스트 구조와 원격 구조가 다르면 원격 구조를 `--platform`에 명시한다.
+
+```bash
+GPU_CONTAINER_IMAGE=registry.example/image@sha256:fixed-digest
+
+scripts/verify_remote_image_python.sh \
+  --platform linux/amd64 \
+  "$GPU_CONTAINER_IMAGE"
+```
+
+이 명령은 지정한 이미지 자체에서 임시 가상환경을 만들고 그 안의 Python과 pip를 확인한 뒤 임시 경로를 삭제한다.
+검사한 이미지 참조와 원격 실행 명세의 이미지 참조는 정확히 같아야 한다.
+가변 꼬리표를 사용할 수밖에 없으면 작업마다 다시 검사하고 실제 이미지 식별자를 원격 실행 장부에 기록한다.
+
+로컬 Docker가 대상 구조를 실행할 수 없거나 공급자 전용 이미지를 가져올 수 없는 경우만 생성 전 검사를 예외로 둘 수 있다.
+이 경우 계산 자원이 `running`이 되고 SSH 인증이 끝난 직후, 입력 전송 전에 다음 동등 검사를 수행한다.
+
+```bash
+GPU_REMOTE_PROBE="$GPU_REMOTE_ROOT/preflight-python-env"
+
+test ! -e "$GPU_REMOTE_PROBE"
+python3 -m venv "$GPU_REMOTE_PROBE"
+"$GPU_REMOTE_PROBE/bin/python" -m pip --version
+rm -rf "$GPU_REMOTE_PROBE"
+```
+
+Debian 또는 Ubuntu 계열 이미지에서 `ensurepip is not available`로 실패하면 보통 `python3-venv`가 빠진 것이다.
+다른 배포판에서는 `/etc/os-release`와 해당 배포판의 Python 패키지 구성을 확인한다.
+호환되는 다른 이미지를 선택하거나, 필요한 운영체제 패키지 설치 명령과 설치 뒤 위 검사를 원격 실행 명세의 불변 준비 단계에 함께 고정한다.
+공통 실행 스크립트 안에서 운영체제 패키지를 설치하거나 시스템 pip를 우회하지 않는다.
+준비 명령을 바꿨다면 기존 실행을 재개하지 않고 새 작업 식별자, 새 작업 루트와 새 입력 묶음으로 다시 시작한다.
+
+이 실패는 공급자 호스트 장애가 아니라 컨테이너 이미지 호환성 실패로 기록한다.
+같은 이미지를 다른 호스트에서 반복 실행해도 해결되지 않으므로 공급자 전환을 위한 서로 다른 호스트 실패 횟수에 포함하지 않는다.
+
 묶음 해시와 내부 파일 해시를 확인한 다음 모델 코드를 실행하기 전에 저장소의 공통 Python 준비 관문을 통과해야 한다.
 입력 전송 묶음에는 `pyproject.toml`, `uv.lock`, `src/`, `scripts/run_remote_python.sh`와 `scripts/record_remote_python.py`를 포함한다.
-작업별 `run-logs/` 실행 파일에서 시스템 Python 패키지 설치를 직접 구현하지 않는다.
+작업별 `run-logs/` 실행 파일에서 사전 검사 없이 시스템 Python 패키지 설치를 즉흥적으로 구현하지 않는다.
 `pip install --break-system-packages`도 사용하지 않는다.
 
 다음 명령을 공급자와 관계없이 같은 형식으로 사용한다.

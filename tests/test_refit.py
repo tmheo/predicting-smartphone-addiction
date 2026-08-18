@@ -14,7 +14,7 @@ from pipeline.refit import RefitMember, RefitPlan, mix_member_predictions
 def test_committed_refit_plan_matches_candidate_pool():
     plan = RefitPlan.load(Path("artifacts/full-refit-plan.yaml"))
 
-    assert len(plan.members) == 16
+    assert len(plan.members) == 20
     assert plan.cv_model_weight == 5
     assert plan.full_model_weight == 1
 

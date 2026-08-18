@@ -90,7 +90,18 @@ PyTorch와 XGBoost 또는 LightGBM을 한 시험에서 함께 확인해야 하�
 
 ### 원격 Python 실행
 
-Vast.ai와 Runpod에서 모형 명령을 실행할 때는 시스템 Python에 패키지를 설치하지 않고 공통 실행 명령을 사용한다.
+원격 실행 명세에서 컨테이너 이미지를 고른 뒤 유료 자원을 만들기 전에 실제 이미지의 가상환경 구성 요소를 검사한다.
+
+```bash
+scripts/verify_remote_image_python.sh \
+  --platform linux/amd64 \
+  registry.example/image@sha256:fixed-digest
+```
+
+로컬에서 대상 구조나 공급자 전용 이미지를 실행할 수 없는 경우에만 원격 SSH 인증 직후 입력 전송 전에 같은 검사를 수행한다.
+자세한 실패 처리와 운영체제 패키지 준비 규칙은 `docs/agents/remote-gpu-transfer.md`를 따른다.
+
+Vast.ai와 Runpod에서 모형 명령을 실행할 때는 시스템 Python에 pip 패키지를 설치하지 않고 공통 실행 명령을 사용한다.
 입력 전송 묶음에는 `pyproject.toml`, `uv.lock`, `src/`, `scripts/run_remote_python.sh`와 `scripts/record_remote_python.py`를 함께 넣는다.
 
 ```bash
@@ -125,6 +136,7 @@ uv run jupyter lab
 │   └── eda.ipynb          # 탐색적 데이터 분석
 ├── scripts/
 │   ├── run_remote_python.sh          # 원격 Python 준비 및 실행 관문
+│   ├── verify_remote_image_python.sh # 대상 원격 이미지의 가상환경 구성 요소 검사
 │   └── verify_environment_gates.sh  # 유료 자원 생성 전 환경 관문 사전 확인
 ├── docs/
 │   ├── adr/               # 아키텍처 결정 기록
