@@ -6,6 +6,9 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
+# CatBoost 로컬 학습 로그
+/catboost_info/
+
 # Competition data (downloaded via kaggle CLI, not committed)
 data/
 
