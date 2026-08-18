@@ -138,13 +138,28 @@ class RefitPlan:
         return matches[0]
 
 
-def run_member(plan: RefitPlan, member: RefitMember, output: Path) -> Path:
+def run_member(
+    plan: RefitPlan,
+    member: RefitMember,
+    output: Path,
+    *,
+    seeds: tuple[int, ...] | None = None,
+    finalize: bool = True,
+) -> Path:
     """구성원 하나를 전체 자료로 시드별 재학습하고 평균 시험 예측을 저장한다."""
     cfg = load_config(member.config_path, "confirm")
     if cfg.name != member.config:
         raise ValueError(f"계획 구성원과 설정 name이 다르다: {member.config} != {cfg.name}")
     if list(member.budgets) != cfg.seeds and list(member.budgets) != [cfg.seeds[0]]:
         raise ValueError(f"{member.config}: 설정 단계와 계획 시드가 다르다.")
+    selected_seeds = tuple(member.budgets) if seeds is None else seeds
+    unknown_seeds = sorted(set(selected_seeds) - set(member.budgets))
+    if unknown_seeds:
+        raise ValueError(f"{member.config}: 계획에 없는 시드다: {unknown_seeds}")
+    if not selected_seeds:
+        raise ValueError(f"{member.config}: 실행할 시드가 없다.")
+    if finalize and selected_seeds != tuple(member.budgets):
+        raise ValueError("일부 시드 실행에서는 최종 평균을 만들 수 없다.")
 
     state = tracking.git_state()
     git_dirty = state["git_dirty"] == "True"
@@ -164,7 +179,8 @@ def run_member(plan: RefitPlan, member: RefitMember, output: Path) -> Path:
 
     seed_predictions: list[np.ndarray] = []
     seed_records = []
-    for seed, budget in member.budgets.items():
+    for seed in selected_seeds:
+        budget = member.budgets[seed]
         prediction_path = member_dir / f"test_pred_seed_{seed}.parquet"
         record_path = member_dir / f"test_pred_seed_{seed}.json"
         seed_identity = {
@@ -231,6 +247,9 @@ def run_member(plan: RefitPlan, member: RefitMember, output: Path) -> Path:
                 "prediction_sha256": prediction_array_sha256(prediction),
             }
         )
+
+    if not finalize:
+        return member_dir / f"test_pred_seed_{selected_seeds[-1]}.parquet"
 
     averaged = np.mean(seed_predictions, axis=0, dtype=np.float64)
     averaged_path = member_dir / "test_pred_full.parquet"
@@ -422,8 +441,12 @@ def main() -> None:
     action.add_argument("--member")
     action.add_argument("--all", action="store_true")
     action.add_argument("--assemble", action="store_true")
+    parser.add_argument("--seed", type=int)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUTPUT)
     args = parser.parse_args()
+
+    if args.seed is not None and args.member is None:
+        parser.error("--seed는 --member와 함께 사용해야 한다.")
 
     plan = RefitPlan.load(args.plan)
     if args.assemble:
@@ -433,7 +456,13 @@ def main() -> None:
     members = plan.members if args.all else (plan.member(args.member),)
     for member in members:
         print(f"[{member.config}] 전체 자료 재학습 시작", flush=True)
-        path = run_member(plan, member, args.out_dir)
+        path = run_member(
+            plan,
+            member,
+            args.out_dir,
+            seeds=None if args.seed is None else (args.seed,),
+            finalize=args.seed is None,
+        )
         print(f"[{member.config}] 완료: {path}", flush=True)
 
 

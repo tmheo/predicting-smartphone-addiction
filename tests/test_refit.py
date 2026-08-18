@@ -119,3 +119,98 @@ def test_run_member_writes_lineage_checkpoint_and_resumes(monkeypatch, tmp_path)
     assert FakeAdapter.fit_calls == 1
     assert (first.parent / "test_pred_seed_42.json").is_file()
     assert (first.parent / "manifest.json").is_file()
+
+
+def test_run_member_can_fit_seeds_independently_before_finalizing(monkeypatch, tmp_path):
+    train = pd.DataFrame(
+        {
+            "id": [1, 2, 3, 4],
+            "x": [0.0, 1.0, 2.0, 3.0],
+            "social_media_hours": [0.5, 1.0, 1.5, 2.0],
+            "addicted_label": [0, 0, 1, 1],
+        }
+    )
+    test = pd.DataFrame(
+        {"id": [5, 6], "x": [0.5, 2.5], "social_media_hours": [0.75, 1.75]}
+    )
+    config_path = tmp_path / "fake.yaml"
+    config_path.write_text("name: fake\n")
+    cfg = ExperimentConfig(
+        name="fake",
+        data=DataConfig(
+            train=Path("train.csv"),
+            test=Path("test.csv"),
+            sample_submission=Path("sample.csv"),
+            folds=Path("folds.parquet"),
+        ),
+        features=FeatureConfig(base="raw", categorical=[]),
+        model=ModelConfig(kind="fake", params={}, fit={}),
+        initial_score=None,
+        seeds=[42, 43, 44],
+        stage="confirm",
+        source_path=config_path,
+    )
+    member = RefitMember(
+        config="fake",
+        config_path=config_path,
+        run_id="run-1",
+        budgets={42: 3, 43: 4, 44: 5},
+        budget_source="fold_median",
+    )
+    plan = RefitPlan(
+        source_path=tmp_path / "plan.yaml",
+        source_pool_sha256="pool-hash",
+        iteration_multiplier=1.25,
+        budget_statistic="median",
+        budget_rounding="half_up",
+        cv_model_weight=5,
+        full_model_weight=1,
+        combiner="missing_segmented_rank_logit",
+        members=(member,),
+    )
+
+    class FakeAdapter:
+        fitted_seeds: list[int] = []
+
+        def __init__(self, seed: int):
+            self.seed = seed
+
+        def fit_full(self, X, y, training_budget, initial_score=None):
+            FakeAdapter.fitted_seeds.append(self.seed)
+            assert training_budget == member.budgets[self.seed]
+
+        def predict(self, X, initial_score=None):
+            return np.full(len(X), self.seed / 100, dtype=np.float64)
+
+    monkeypatch.setattr(refit, "load_config", lambda path, stage: cfg)
+    monkeypatch.setattr(
+        refit.data,
+        "load_csv",
+        lambda path: train.copy() if path == cfg.data.train else test.copy(),
+    )
+    monkeypatch.setattr(refit.data, "file_sha256", lambda path: f"hash:{path}")
+    monkeypatch.setattr(
+        refit.tracking,
+        "git_state",
+        lambda: {"git_commit": "commit-1", "git_dirty": "False"},
+    )
+    monkeypatch.setattr(refit.model, "create", lambda model_cfg, seed: FakeAdapter(seed))
+
+    output = tmp_path / "out"
+    for seed in member.budgets:
+        path = refit.run_member(
+            plan,
+            member,
+            output,
+            seeds=(seed,),
+            finalize=False,
+        )
+        assert path.name == f"test_pred_seed_{seed}.parquet"
+        assert not (path.parent / "manifest.json").exists()
+
+    final = refit.run_member(plan, member, output)
+
+    assert FakeAdapter.fitted_seeds == [42, 43, 44]
+    assert (final.parent / "manifest.json").is_file()
+    averaged = pd.read_parquet(final)
+    assert averaged["pred"].to_numpy() == pytest.approx([0.43, 0.43])
