@@ -158,6 +158,22 @@ def test_adapter_contract_learning_importance_and_determinism():
     assert diagnostics.observations["best_validation_auc"] > 0.8
     assert diagnostics.observations["source_script_version_id"] == 342747549
 
+    training = first.training_diagnostics()
+    assert all(training["integrity_assertions"].values())
+    assert training["preprocessing_fit_rows"] == 240
+    assert training["training_rows"] == 240
+    assert training["validation_rows"] == 80
+    assert training["prediction_calls"] > 0
+    assert training["all_predictions_finite"] is True
+    assert training["importance_values_finite"] is True
+    assert np.isfinite(training["placebo_importance"])
+    assert training["fit_seconds"] > 0
+    assert training["importance_seconds"] > 0
+    assert training["fold_adapter_seconds"] > training["fit_seconds"]
+    assert training["cuda_max_allocated_bytes"] is None
+    assert training["cuda_max_reserved_bytes"] is None
+    assert training["cuda_device_total_bytes"] is None
+
 
 def test_fold_encoder_distinguishes_unknown_and_missing_categories():
     from pipeline import tab_cnn
