@@ -301,3 +301,19 @@ members:
     ensemble_auc_with: 0.9688087354207501
     ensemble_auc_without: 0.968777516155843
     contribution: 3.121926490712301e-05
+- run_id: 547e7bc90b9f4c448307d406f053629a
+  config: exp106_lookup_fixed24_train_test_preprocessing
+  oof_auc: 0.9678698020933406
+  seeds: 42,43,44
+  entered_at: '2026-08-18'
+  reason: '이슈 #179: 공개 스택의 독립 전처리 고정 스케줄 Lookup 2호를 자체 재현했다. 최근접 exp059와 스피어만 0.98289로
+    중복이 아니며 표준 평가 앙상블 기여 +0.00014, 20구성원 최고 nested OOF는 19구성원 대비 +0.00009253 개선됐다.'
+  evidence:
+    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
+    champion_oof_auc: 0.9691957618114269
+    floor_margin: 0.008674040281913764
+    nearest_run_id: b951fac51b6b44298f7fdb0b543caba6
+    nearest_spearman: 0.9828900244906732
+    ensemble_auc_with: 0.9689519956034673
+    ensemble_auc_without: 0.9688087354207501
+    contribution: 0.00014326018271726415
