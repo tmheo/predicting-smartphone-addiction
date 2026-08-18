@@ -902,6 +902,63 @@ class ContextualizedSplineTransformerAdapter:
         return self._impl.entry_diagnostics()
 
 
+class ScalarTokenTransformerAdapter:
+    """ReLU·주기 스칼라 token과 결합 블록을 쓰는 모델 adapter. (#178)
+
+    구현은 torch가 필요한 ``scalar_token_transformer`` 모듈에 있고 여기서 지연
+    import한다. 범주값 스칼라화와 분위 변환은 outer 학습 부분에서만 맞춘다.
+    ``mixing``으로 M0 attention과 매개변수 규모를 맞춘 A0 열별 MLP를 고른다.
+    """
+
+    def __init__(self, params: dict, fit: dict, seed: int) -> None:
+        mixing = params.get("mixing", "attention")
+        if mixing not in {"attention", "token_mlp"}:
+            raise ValueError(
+                "mixing은 ['attention', 'token_mlp'] 중 하나여야 한다: "
+                f"{mixing!r}"
+            )
+        self._params = params
+        self._fit = fit
+        self._seed = seed
+        self._impl = None
+
+    def fit(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
+    ) -> np.ndarray:
+        from . import scalar_token_transformer
+
+        _reject_initial_score(
+            "scalar_token_transformer", initial_score_tr, initial_score_va
+        )
+        if self._fit:
+            raise ValueError(
+                "scalar_token_transformer가 모르는 fit 설정: "
+                f"{sorted(self._fit)}"
+            )
+        self._impl = scalar_token_transformer.ScalarTokenTransformerFold(
+            self._params, self._seed
+        )
+        return self._impl.fit(X_tr, y_tr, X_va, y_va)
+
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray:
+        _reject_initial_score("scalar_token_transformer", initial_score, None)
+        return self._impl.predict(X)
+
+    def importance(self) -> pd.DataFrame:
+        return self._impl.importance()
+
+    def entry_diagnostics(self) -> AdapterDiagnostics:
+        return self._impl.entry_diagnostics()
+
+
 class TabMAdapter:
     """TabM(pytabkit) adapter. (#61)
 
@@ -1232,6 +1289,7 @@ MODEL_REGISTRY: dict[str, Callable[[dict, dict, int], ModelAdapter]] = {
     "logistic_onehot": LogisticOnehotAdapter,
     "lookup_transformer": LookupTransformerAdapter,
     "contextualized_spline_transformer": ContextualizedSplineTransformerAdapter,
+    "scalar_token_transformer": ScalarTokenTransformerAdapter,
     "tabm": TabMAdapter,
     "tabpfn3": TabPFN3Adapter,
     "tabr_s": TabRSAdapter,
