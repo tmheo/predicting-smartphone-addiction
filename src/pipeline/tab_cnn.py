@@ -585,6 +585,136 @@ class TabCNNFold:
         self._fit_seconds = float(time.monotonic() - fit_started)
         return validation_prediction
 
+    def fit_full(
+        self, X: pd.DataFrame, y: pd.Series, training_budget: int
+    ) -> None:
+        """검증 자료 없이 미리 확정한 epoch 수만큼 전체 자료를 학습한다."""
+        if (
+            isinstance(training_budget, bool)
+            or not isinstance(training_budget, int)
+            or training_budget < 1
+        ):
+            raise ValueError("tab_cnn 전체 자료 학습 epoch 수는 양의 정수여야 한다.")
+        fit_started = time.monotonic()
+        if self._device.startswith("cuda"):
+            torch.cuda.empty_cache()
+            torch.cuda.reset_peak_memory_stats(self._device)
+            torch.cuda.synchronize(self._device)
+        full_seed = self._fold_seed(X.index)
+        self._seed_everything(full_seed)
+        self._encoder.fit(X)
+        train = self._encoder.transform(X).to(self._device)
+        target = torch.from_numpy(y.to_numpy(dtype="float32")).to(self._device)
+        smooth_target = (
+            target * (1.0 - self._label_smoothing)
+            + 0.5 * self._label_smoothing
+        )
+
+        model = _TabCNN(
+            train.shape[1],
+            self._interaction_mode,
+            plr_bins=self._plr_bins,
+            periodic_dim=self._periodic_dim,
+            periodic_sigma=self._periodic_sigma,
+            dropout=self._dropout,
+            head_samples=self._head_samples,
+            head_dropout=self._head_dropout,
+        ).to(self._device)
+        self._model = model
+        optimizer = torch.optim.AdamW(
+            model.parameters(), lr=self._lr, weight_decay=self._weight_decay
+        )
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+            optimizer, T_0=self._scheduler_t0, T_mult=1, eta_min=1e-6
+        )
+        scaler = torch.amp.GradScaler(
+            "cuda", enabled=self._device.startswith("cuda")
+        )
+        generator = torch.Generator().manual_seed(full_seed)
+        epoch_seconds: list[float] = []
+        training_losses: list[float] = []
+
+        for epoch in range(1, training_budget + 1):
+            started = time.monotonic()
+            model.train()
+            permutation = torch.randperm(len(train), generator=generator)
+            usable = (len(permutation) // self._batch_size) * self._batch_size
+            if usable == 0:
+                usable = len(permutation)
+            permutation = permutation[:usable]
+            loss_sum = 0.0
+            batches = 0
+            for offset in range(0, usable, self._batch_size):
+                rows = permutation[offset : offset + self._batch_size].to(
+                    self._device
+                )
+                optimizer.zero_grad(set_to_none=True)
+                with self._autocast():
+                    logit = model(train[rows])
+                    loss = nn.functional.binary_cross_entropy_with_logits(
+                        logit, smooth_target[rows]
+                    )
+                if not bool(torch.isfinite(loss)):
+                    raise RuntimeError("tab_cnn 전체 자료 학습 손실에 유한하지 않은 값이 생겼다.")
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
+                loss_sum += float(loss.detach())
+                batches += 1
+            scheduler.step()
+            elapsed = time.monotonic() - started
+            training_loss = loss_sum / batches
+            epoch_seconds.append(float(elapsed))
+            training_losses.append(training_loss)
+            print(
+                f"[tab_cnn] mode={self._interaction_mode} full_epoch={epoch:02d} "
+                f"loss={training_loss:.6f} seconds={elapsed:.2f}",
+                flush=True,
+            )
+
+        relative_difference = abs(
+            model.interaction_parameters - model.reference_interaction_parameters
+        ) / model.reference_interaction_parameters
+        target_or_frequency = [
+            name
+            for name in X.columns
+            if name.endswith("_te") or name.endswith("_freq")
+        ]
+        self._diagnostics = AdapterDiagnostics(
+            assertions={
+                "preprocessing_training_rows_only": self._encoder.fit_rows == len(X),
+                "target_and_frequency_encodings_absent": not target_or_frequency,
+                "placebo_feature_present": "placebo_noise" in X.columns,
+                "interaction_parameter_scale_matched": relative_difference < 0.05,
+            },
+            observations={
+                "interaction_mode": self._interaction_mode,
+                "preprocessing_fit_rows": self._encoder.fit_rows,
+                "training_rows": len(X),
+                "validation_rows": 0,
+                "input_columns": list(X.columns),
+                "input_feature_count": len(X.columns),
+                "full_initialization_seed": full_seed,
+                "full_training_budget": training_budget,
+                "quantile_count": min(self._n_quantiles, len(X)),
+                "quantile_subsample": None,
+                "model_parameter_count": _parameter_count(model),
+                "reference_convolution_interaction_parameters": (
+                    model.reference_interaction_parameters
+                ),
+                "used_interaction_parameters": model.interaction_parameters,
+                "interaction_parameter_relative_difference": relative_difference,
+                "epoch_seconds": epoch_seconds,
+                "training_losses": training_losses,
+                "prediction_source_dtype": "float32",
+                "source_script_version_id": 342747549,
+                "source_sha256": (
+                    "2310c4fa1b98230989f8e3bcf3f9661985a2c30df90597786e739cd34321f4dc"
+                ),
+            },
+        )
+        self._fit_seconds = float(time.monotonic() - fit_started)
+
     def _predict_tensor(self, encoded: torch.Tensor) -> np.ndarray:
         if self._model is None:
             raise RuntimeError("tab_cnn을 먼저 학습해야 한다.")

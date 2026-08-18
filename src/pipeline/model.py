@@ -1200,6 +1200,23 @@ class TabCNNAdapter:
         self._impl = tab_cnn.TabCNNFold(self._params, self._seed)
         return self._impl.fit(X_tr, y_tr, X_va, y_va)
 
+    def fit_full(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        training_budget: int | None,
+        initial_score: pd.Series | None = None,
+    ) -> None:
+        from . import tab_cnn
+
+        _reject_initial_score("tab_cnn", initial_score, None)
+        if self._fit:
+            raise ValueError(f"tab_cnn이 모르는 fit 설정: {sorted(self._fit)}")
+        if training_budget is None:
+            raise ValueError("tab_cnn 전체 자료 재학습에는 고정 epoch 수가 필요하다.")
+        self._impl = tab_cnn.TabCNNFold(self._params, self._seed)
+        self._impl.fit_full(X, y, training_budget)
+
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
     ) -> np.ndarray:
