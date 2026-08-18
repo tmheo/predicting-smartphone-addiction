@@ -123,6 +123,83 @@ def _first_decimal(col: str) -> Callable[[pd.DataFrame], pd.Series]:
     return f
 
 
+# 정체성·자리수 특성 블록(#184). 공개 스택 계보 조사(public-stack-provenance 5순위)의
+# beicicc identity_digit_contract를 따른다: 수치 9열별로 반올림 3해상도(round0/1/2)와
+# 그 절대 편차, 정수·소수1자리 여부 지시자, 소수 첫째·둘째 자리 값 10개를 만든다.
+# 모두 타깃을 쓰지 않고 결측은 자연 전파한다(지시자·자리 값도 결측 행은 NaN).
+DIGIT_IDENTITY_COLS = [
+    "age",
+    "daily_screen_time_hours",
+    "social_media_hours",
+    "gaming_hours",
+    "work_study_hours",
+    "sleep_hours",
+    "notifications_per_day",
+    "app_opens_per_day",
+    "weekend_screen_time",
+]
+DIGIT_IDENTITY_SUFFIXES = [
+    "round0",
+    "absdiff_round0",
+    "round1",
+    "absdiff_round1",
+    "round2",
+    "absdiff_round2",
+    "is_round0",
+    "is_round1",
+    "tenths",
+    "hundredths",
+]
+
+
+def _rounded(col: str, decimals: int) -> Callable[[pd.DataFrame], pd.Series]:
+    def f(df: pd.DataFrame) -> pd.Series:
+        return np.round(df[col], decimals)
+
+    return f
+
+
+def _absdiff_rounded(col: str, decimals: int) -> Callable[[pd.DataFrame], pd.Series]:
+    def f(df: pd.DataFrame) -> pd.Series:
+        return (df[col] - np.round(df[col], decimals)).abs()
+
+    return f
+
+
+def _is_rounded(col: str, decimals: int) -> Callable[[pd.DataFrame], pd.Series]:
+    def f(df: pd.DataFrame) -> pd.Series:
+        # 2.9*10=28.999… 같은 부동소수 오차가 자리 판정을 깨지 않게 소수 6자리에서 끊는다.
+        scaled = np.round(df[col] * 10**decimals, 6)
+        return (scaled % 1 == 0).astype(float).where(df[col].notna())
+
+    return f
+
+
+def _decimal_digit(col: str, place: int) -> Callable[[pd.DataFrame], pd.Series]:
+    def f(df: pd.DataFrame) -> pd.Series:
+        return np.floor(np.round(df[col] * 10**place, 6) % 10)
+
+    return f
+
+
+def _digit_identity_registry() -> dict[str, Callable[[pd.DataFrame], pd.Series]]:
+    registry: dict[str, Callable[[pd.DataFrame], pd.Series]] = {}
+    for col in DIGIT_IDENTITY_COLS:
+        for decimals in (0, 1, 2):
+            registry[f"{col}_round{decimals}"] = _rounded(col, decimals)
+            registry[f"{col}_absdiff_round{decimals}"] = _absdiff_rounded(col, decimals)
+        registry[f"{col}_is_round0"] = _is_rounded(col, 0)
+        registry[f"{col}_is_round1"] = _is_rounded(col, 1)
+        registry[f"{col}_tenths"] = _decimal_digit(col, 1)
+        registry[f"{col}_hundredths"] = _decimal_digit(col, 2)
+    return registry
+
+
+DIGIT_IDENTITY_NAMES = [
+    f"{col}_{suffix}" for col in DIGIT_IDENTITY_COLS for suffix in DIGIT_IDENTITY_SUFFIXES
+]
+
+
 # name -> 파생 컬럼 계산 함수. 타깃을 쓰지 않는 행 단위 결정적 파생만 등록한다.
 DERIVED_REGISTRY: dict[str, Callable[[pd.DataFrame], pd.Series]] = {
     "other_screen": _other_screen,
@@ -138,6 +215,8 @@ DERIVED_REGISTRY: dict[str, Callable[[pd.DataFrame], pd.Series]] = {
     # #181 화면 관계 7특성: 차이 3개 + 안전 비율 4개.
     **{name: _difference(a, b) for name, (a, b) in SCREEN_RELATION_DIFFS.items()},
     **{name: _guarded_ratio(n, d) for name, (n, d) in SCREEN_RELATION_RATIOS.items()},
+    # #184 정체성·자리수 블록: 수치 9열 × 자리수 파생 10개.
+    **_digit_identity_registry(),
 }
 
 

@@ -1,0 +1,167 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #184: LightGBM 트리 구성원(exp074 kitopl D2 묶음) 위에 정체성·자리수 특성
+# 블록(수치 9열 × 자리수 파생 10개, 90열)을 추가해 exp074의 풀 구성원 교체 여부를
+# 판정한다. 레시피는 공개 스택 계보 조사(public-stack-provenance 5순위, beicicc
+# identity_digit_contract, CC BY 4.0)를 따른다: round0/1/2와 절대 편차, 정수·소수
+# 1자리 지시자, 소수 첫째·둘째 자리 값이며 모두 타깃을 쓰지 않고 결측을 자연 전파한다.
+# 블록의 other_screen은 exp074가 이미 가지고 있으므로 증분은 자리수 90열이다.
+# 모델 설정과 나머지 피처 계획은 exp074_lgb_kitopl_d2_bundle과 동일하다.
+# 판정 경로(#184): 같은 커밋의 exp074 seed 42 재실행과 짝지은 LightGBM 대리 스크리닝
+# 문턱 +0.0001, 통과 시 3시드 확정 문턱 +0.00002 후 pipeline.pool로 exp074 교체 판정.
+# 판정 결과(2026-08-18): 앵커 run 8d58b42f 0.9681975 → challenger run 327eee3a 0.9681327,
+# delta -0.0000647(fold 승리 1/5), 카나리아 통과. 대리 스크리닝 문턱 명백 미달로 즉시 종료.
+# 이 설정과 파생 특성·검증 테스트는 기각 근거의 재현 기록으로 남긴다(exp104 전례).
+name: exp106_lgb_kitopl_digit_identity
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [other_screen, screen_slack]
+    - kind: derived
+      names:
+        [
+          age_round0,
+          age_absdiff_round0,
+          age_round1,
+          age_absdiff_round1,
+          age_round2,
+          age_absdiff_round2,
+          age_is_round0,
+          age_is_round1,
+          age_tenths,
+          age_hundredths,
+          daily_screen_time_hours_round0,
+          daily_screen_time_hours_absdiff_round0,
+          daily_screen_time_hours_round1,
+          daily_screen_time_hours_absdiff_round1,
+          daily_screen_time_hours_round2,
+          daily_screen_time_hours_absdiff_round2,
+          daily_screen_time_hours_is_round0,
+          daily_screen_time_hours_is_round1,
+          daily_screen_time_hours_tenths,
+          daily_screen_time_hours_hundredths,
+          social_media_hours_round0,
+          social_media_hours_absdiff_round0,
+          social_media_hours_round1,
+          social_media_hours_absdiff_round1,
+          social_media_hours_round2,
+          social_media_hours_absdiff_round2,
+          social_media_hours_is_round0,
+          social_media_hours_is_round1,
+          social_media_hours_tenths,
+          social_media_hours_hundredths,
+          gaming_hours_round0,
+          gaming_hours_absdiff_round0,
+          gaming_hours_round1,
+          gaming_hours_absdiff_round1,
+          gaming_hours_round2,
+          gaming_hours_absdiff_round2,
+          gaming_hours_is_round0,
+          gaming_hours_is_round1,
+          gaming_hours_tenths,
+          gaming_hours_hundredths,
+          work_study_hours_round0,
+          work_study_hours_absdiff_round0,
+          work_study_hours_round1,
+          work_study_hours_absdiff_round1,
+          work_study_hours_round2,
+          work_study_hours_absdiff_round2,
+          work_study_hours_is_round0,
+          work_study_hours_is_round1,
+          work_study_hours_tenths,
+          work_study_hours_hundredths,
+          sleep_hours_round0,
+          sleep_hours_absdiff_round0,
+          sleep_hours_round1,
+          sleep_hours_absdiff_round1,
+          sleep_hours_round2,
+          sleep_hours_absdiff_round2,
+          sleep_hours_is_round0,
+          sleep_hours_is_round1,
+          sleep_hours_tenths,
+          sleep_hours_hundredths,
+          notifications_per_day_round0,
+          notifications_per_day_absdiff_round0,
+          notifications_per_day_round1,
+          notifications_per_day_absdiff_round1,
+          notifications_per_day_round2,
+          notifications_per_day_absdiff_round2,
+          notifications_per_day_is_round0,
+          notifications_per_day_is_round1,
+          notifications_per_day_tenths,
+          notifications_per_day_hundredths,
+          app_opens_per_day_round0,
+          app_opens_per_day_absdiff_round0,
+          app_opens_per_day_round1,
+          app_opens_per_day_absdiff_round1,
+          app_opens_per_day_round2,
+          app_opens_per_day_absdiff_round2,
+          app_opens_per_day_is_round0,
+          app_opens_per_day_is_round1,
+          app_opens_per_day_tenths,
+          app_opens_per_day_hundredths,
+          weekend_screen_time_round0,
+          weekend_screen_time_absdiff_round0,
+          weekend_screen_time_round1,
+          weekend_screen_time_absdiff_round1,
+          weekend_screen_time_round2,
+          weekend_screen_time_absdiff_round2,
+          weekend_screen_time_is_round0,
+          weekend_screen_time_is_round1,
+          weekend_screen_time_tenths,
+          weekend_screen_time_hundredths,
+        ]
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.03172214617330919
+    num_leaves: 45
+    min_child_samples: 229
+    n_estimators: 10000
+    max_bin: 1023
+    colsample_bytree: 0.4654152088234655
+    subsample: 0.9225106784455195
+    subsample_freq: 1
+    reg_lambda: 0.9179636700368584
+    force_row_wise: true
+  fit:
+    early_stopping_rounds: 200
