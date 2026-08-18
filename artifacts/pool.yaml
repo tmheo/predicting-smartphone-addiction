@@ -285,3 +285,19 @@ members:
     ensemble_auc_with: 0.968777516155843
     ensemble_auc_without: 0.9687467202432362
     contribution: 3.079591260679582e-05
+- run_id: 521b4924b2ef4ba1830724333b83deb2
+  config: exp071_cat_exact_no_te
+  oof_auc: 0.9681599406445471
+  seeds: 42,43,44
+  entered_at: '2026-08-18'
+  reason: '이슈 #183: 공개 스택 no-TE 뷰 CatBoost 판(exp070에서 TE 제거, 이슈 #107의 exp071 재사용).
+    3시드 OOF 0.96816, 최근접 exp070 스피어만 0.99543, 표준 평가 앙상블 기여 +0.00003'
+  evidence:
+    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
+    champion_oof_auc: 0.9691957618114269
+    floor_margin: 0.008964178833120284
+    nearest_run_id: 6238d8c58beb42ee8102209ded92516e
+    nearest_spearman: 0.9954261049909064
+    ensemble_auc_with: 0.9688087354207501
+    ensemble_auc_without: 0.968777516155843
+    contribution: 3.121926490712301e-05
