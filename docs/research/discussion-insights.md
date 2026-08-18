@@ -3,6 +3,8 @@
 Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커션 25개 스레드 전체를 읽고, 모델링에 활용할 수 있는 인사이트를 주제별로 정리한 문서다.
 스냅샷 기준일은 2026-08-10이고, 대회는 2026-08-31까지 진행되므로 이후 올라온 스레드는 반영되어 있지 않다.
 이후 올라오는 스레드는 증분 업데이트 절차(`docs/agents/discussion-update.md`)에 따라 이 문서에 반영한다.
+2026-08-18에 스레드 734005(코멘트 1개 → 9개)와 그 파생 노트북을 표적 재독해로 반영했다.
+전체 회차가 아니므로 다른 스레드의 코멘트 수는 2026-08-10 기준 그대로다.
 
 원자료는 세 개의 리딩 노트다.
 
@@ -115,6 +117,14 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
   즉 비슷한 블렌드 두 개의 점수 차이가 0.00015보다 작으면 노이즈와 구분되지 않는다.
   주의: rho 자리에는 AUC 추정치의 상관을 넣어야 한다.
   예측 벡터끼리의 상관(보통 0.999 수준)을 넣으면 rho를 과대평가해서, 리더보드가 실제보다 미세한 차이까지 구분해 준다고 착각하게 된다 ([733214](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733214) 코멘트).
+- public 우위가 private에서 유지될 확률의 정량 틀이 코멘트에서 정리되고 한 차례 정정됐다 ([734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005) 코멘트).
+  두 제출의 점수 차이 z_pub이 주어졌을 때 private에서 같은 방향일 확률은 Phi(z_pub / S)이고, S^2 = (sigma1^2 + sigma2^2 - 2 rho sigma1 sigma2)(1/n_pub + 1/n_priv)다.
+  처음 발표된 계산은 n_pub, n_priv를 train(691,369행)에서 잘못 가져왔고, 정정 후에는 test(296,302행)의 20/80인 59,260과 237,042를 써야 한다.
+  정정된 결론: XGB 대 LGB급으로 상관 높은 짝(rho 0.983)에서 S = 1.31e-4이고, **public 점수 차이가 2.16e-4는 되어야 한쪽 95% 신뢰로 private 우위를 말할 수 있으며 99%는 3.05e-4가 필요하다**.
+  이 수치는 OOF 재표집이라는 독립된 두 번째 방법으로도 1% 이내로 재현됐다.
+- S는 비교하는 짝에 따라 크게 다르다.
+  같은 데이터에서 짝만 바꿔도 sd(gap)가 0.000003(최상위 단일 모델 대 2위)에서 0.00022(최상위 대 20위)까지 약 70배 움직이므로, 일반 sigma가 아니라 비교하려는 특정 짝에 대해 rho를 직접 추정해야 한다 ([734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005) 코멘트).
+  튜닝된 GBDT 둘 사이의 우위는 거의 결정적으로 전이되고, 계열이 다른 블렌드와의 비교는 훨씬 불확실하다.
 
 ### best-of-N 함정과 제출 규율
 
@@ -130,8 +140,27 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 
 - private 채점은 public의 약 4배 크기 표본이라, 진짜 CV 우위는 살아남을 확률이 높다 ([733618](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733618)).
 - train과 test의 값 분포가 같으므로(2장), private에서 순위가 뒤집힌다면 그 원인은 분포 차이가 아니라 노이즈와 public 점수에 대한 과적합이다 ([733214](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733214)).
-- 과거 AUC 대회(S6E3 등)에서 public LB 순위는 private 최종 순위를 대체로 잘 예측했다 ([734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005) 코멘트).
+- "과거 AUC 대회에서 public 순위가 private를 대체로 잘 예측했다"는 초기 코멘트는 S6 완료 7개 에피소드 전수 분석으로 조건이 붙었다 ([734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005) 코멘트, [분석 노트북](https://www.kaggle.com/code/georgymamarin/three-of-seven-s6-boards-erased-the-public-top-ten)).
+  public 톱10 70자리 중 27자리만 private 톱10에 생존했고, 분포는 극단적이다: 4개 에피소드는 5자리 이상 유지, 3개(S6E2, E6, E7)는 전멸, 중간이 없다.
+  AUC 대회로 좁히면 3개 중 1개(S6E2)가 전멸했으므로 "대체로 예측한다"는 조건부로만 성립한다.
+- 뒤집힘은 보드의 위쪽에만 있다.
+  톱10% 밖에서는 7개 에피소드 모두 public-private 순위 상관이 0.96~1.00으로 순서가 거의 완벽히 보존됐고, 하위 70%의 팀은 전멸 에피소드에서도 필드의 2% 미만만 움직였다.
+  반면 톱10% 안쪽은 두 체제로 갈린다: 유지된 보드의 상위 0.3%는 필드의 0.5% 이하만 움직였고, 전멸한 보드는 11~14%를 움직였다.
+  선두는 서로 자리를 바꾸는 게 아니라 집단으로 가라앉는다(S6E6은 전멸했지만 톱10 내부 순서 상관은 +0.62).
+- 이 뒤집힘은 제출 선택의 인공물이 아니다.
+  public 열(최고 public 제출)과 private 열(실제 선택 제출)이 같은 팀만 남겨 재계산하면 역전이 오히려 깊어지므로(S6E2 -0.81, S6E6 -0.88, S6E7 -0.40), 관측된 역전은 바닥이지 천장이 아니다.
+- 밴드별 하락 기울기(상위권일수록 private에서 더 떨어짐)는 과적합의 증거가 아니다.
+  실력 + 독립 노이즈뿐인 시뮬레이션이 같은 기울기와 전멸까지 재현하므로, 이는 회귀 평균의 산술적 귀결이다.
+- 전멸 보드와 유지 보드를 가르는 단일 수치는 carry-over다: 상위 25% 구간에서 private 점수를 public 점수에 회귀한 Theil-Sen 기울기.
+  전멸 3개는 0.07~0.32, 유지 4개는 0.73~0.91로 깨끗이 분리되고 컷을 17~60%로 바꿔도 유지된다.
+  단 이 수치는 private 보드가 있어야 계산되므로 사후 설명이며, 사전(마감 전) 추정은 노트북이 명시한 미해결 과제다.
+  표본이 7개라 어떤 완벽한 변수라도 우연 분리 확률의 하한이 p = 0.057이라는 한계도 저자가 명시했다.
+- 마감 전 관찰로는 어느 체제인지 알 수 없다는 것이 결론이지만, 이번 대회의 실황 경고가 하나 있다 ([734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005) 코멘트, Tilii).
+  마감 2주 전까지는 상위권이 자체 CV 기반 앙상블을 하고 있었는데, 이후 한 노트북이 블라인드 블렌딩(공개 제출물만 섞기)으로 최고점을 찍자 다수가 따라 하기 시작했다.
+  블라인드 블렌딩 유행은 public 상단의 노이즈와 선택 편향을 키우는 방향이므로 전멸 체제 위험 요인이다.
+  반대 방향 경험칙도 병기됐다: 마감 시점 톱10에 노련한 경쟁자가 많으면(이번 달이 그렇다) 톱10 이탈이 적은 경향이 있다.
 - 종합하면: 최종 제출은 CV 기준으로 고르되, CV와 public이 함께 오르는 변경만 채택하는 보수적 운영이 합리적이다.
+  상위 밴드 안의 public 순위는 방어 대상이 아니므로, 최종 주간에 옆 순위와의 미세 경쟁에 제출을 소모하지 않는다.
 
 ## 4. 피처 엔지니어링
 
@@ -270,7 +299,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 | id | 제목 | 코멘트 수 | 재방문 |
 | --- | --- | --- | --- |
 | [734063](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734063) | Decoding the Synthetic Generator: 0.9689+ via Stringified Target Encoding and Rank Averaging | 1 | O |
-| [734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005) | Changing the random seed moves you 60 places - what this leaderboard can and can't resolve | 1 | |
+| [734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005) | Changing the random seed moves you 60 places - what this leaderboard can and can't resolve | 9 (2026-08-18) | O |
 | [733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983) | A quarter of the rows describe people who can't exist - and LightGBM already knew | 0 | O |
 | [733908](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733908) | An interesting competition | 1 | |
 | [733730](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733730) | My finding on the data and some questions | 2 | |
