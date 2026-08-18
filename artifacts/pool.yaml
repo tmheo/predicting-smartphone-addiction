@@ -269,3 +269,19 @@ members:
     ensemble_auc_with: 0.9687467202432362
     ensemble_auc_without: 0.9686779787020444
     contribution: 6.874154119174136e-05
+- run_id: 3cbc2ccce9eb46458d884006a33e516e
+  config: exp111_xgb_depth8_no_te
+  oof_auc: 0.9648262948660623
+  seeds: 42,43,44
+  entered_at: '2026-08-18'
+  reason: '이슈 #183: 공개 스택 no-TE 뷰 XGBoost 판(exp045에서 TE 제거). 3시드 OOF 0.96483, 최근접
+    exp110 스피어만 0.99498, 표준 평가 앙상블 기여 +0.00003'
+  evidence:
+    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
+    champion_oof_auc: 0.9691957618114269
+    floor_margin: 0.005630533054635456
+    nearest_run_id: ae829ae3d886402ab100a8e966c3131a
+    nearest_spearman: 0.9949813254219428
+    ensemble_auc_with: 0.968777516155843
+    ensemble_auc_without: 0.9687467202432362
+    contribution: 3.079591260679582e-05
