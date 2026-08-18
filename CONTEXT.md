@@ -359,8 +359,13 @@ _Avoid_: 이중 교차검증
 
 **nested OOF 평가**:
 후보 풀의 시드 평균본 전체를 구성원으로, outer fold마다 나머지 fold의 OOF로 결합 전략을 학습해 nested OOF를 채점하고 전략 간 비교와 계열 3 판정까지 내는 측정 절차.
-MLflow run을 만들지 않고 stdout 리포트만 낸다.
+평가 자체는 stdout 리포트로 내고, 요청 시 최선 전략의 결과 하나를 파생 앙상블 실행으로 MLflow에 기록한다.
 _Avoid_: 앙상블 실험, 스태킹 평가
+
+**파생 앙상블 실행**:
+nested OOF 평가의 최선 전략 결과를 MLflow에 남기는 파생 기록으로, 구성원 계보와 nested OOF 예측, 직전 기록 대비 증분을 담는다.
+실험을 새로 실행한 run이 아니라 기존 구성원 실행에서 파생된 기록이며, 시점별 풀 전체의 OOF AUC를 MLflow 한 곳에서 추적하는 수단이다.
+_Avoid_: 앙상블 실험 run, nested run
 
 **결합 전략**:
 구성원 OOF 예측 행렬을 하나의 예측으로 결합하는 fit/predict/summary 계약의 adapter.
