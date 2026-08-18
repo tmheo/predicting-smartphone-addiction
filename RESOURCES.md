@@ -15,6 +15,13 @@
 - [Gorishniy, Rubachev, Babenko: On Embeddings for Numerical Features in Tabular Deep Learning (NeurIPS 2022)](https://arxiv.org/abs/2203.05556)
   PLR(periodic-linear) 수치 embedding의 출처 논문이다.
   수치 feature를 신경망에 넣는 embedding 방식들의 비교 근거가 필요할 때 사용한다.
+- [MLWave: Kaggle Ensembling Guide](https://usermanual.wiki/Document/Kaggle20ensembling20guide.685545747.pdf)
+  순위 평균, 가중 평균, 스태킹의 실전 비교를 다루는 고전 가이드다.
+  결합 전략(수업 0003)의 원리와 스태킹 과적합 위험을 확인할 때 사용한다.
+  원 블로그(mlwave.com)는 내려가 있어 보존본 링크를 쓴다.
+- [scikit-learn: LogisticRegression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
+  `rank_logit_logistic` 결합기의 학습기 문서다.
+  C, lbfgs, max_iter 같은 결합기 상수의 의미를 확인할 때 사용한다.
 
 ## Gaps
 

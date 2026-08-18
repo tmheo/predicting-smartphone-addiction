@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>결합기 치트시트</title>
+  <link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+  <main>
+    <p class="eyebrow">참조 0003</p>
+    <h1>결합기 치트시트</h1>
+    <p class="lead"><code>src/pipeline/ensemble.py</code>의 결합 전략과 평가 규약 압축본. 수업은 <a href="../lessons/0003-three-ensembles-one-pool.html">0003</a>.</p>
+
+    <h2>평가 규약 (ADR 0001 계열 3)</h2>
+    <table>
+      <tbody>
+        <tr><th>nested OOF</th><td>outer fold k마다 나머지 4개 fold의 OOF로 결합기를 학습하고 fold k만 예측. 5개 fold를 합쳐 한 번에 AUC 채점.</td></tr>
+        <tr><th>채택 문턱</th><td>champion OOF AUC 대비 +0.00002. 넘은 전략 중 nested 최고점을 그대로 채택 (동률 규칙 폐기, #64).</td></tr>
+        <tr><th>순위의 모집단</th><td>항상 채점(예측) 블록 자신. 제출 시점에는 test 예측만으로 순위를 매기므로 평가도 같은 조건.</td></tr>
+        <tr><th>구성원 계약</th><td>풀 장부(<code>artifacts/pool.yaml</code>)의 3시드 평균본 전체, float64 원시 예측, 컬럼 키는 config 이름.</td></tr>
+        <tr><th>진입 기준</th><td>단독 성능 하한 + 풀 내 최근접 스피어만(중복 아님) + 표준 평가 앙상블 기여 &gt; 0.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>채택 이력</h2>
+    <table>
+      <thead><tr><th>이슈</th><th>전략</th><th>구성원</th><th>OOF</th><th>Public</th></tr></thead>
+      <tbody>
+        <tr><td>#63</td><td><code>rank_mean</code> (감사 고정점: exp059·exp070·exp081)</td><td>3</td><td>0.96945</td><td>0.97055</td></tr>
+        <tr><td>#64</td><td><code>rank_logit_logistic</code></td><td>16</td><td>0.96948</td><td>0.97056</td></tr>
+        <tr><td>#65</td><td><code>missing_segmented_rank_logit</code></td><td>16</td><td>0.96951</td><td>0.97057</td></tr>
+      </tbody>
+    </table>
+
+    <h2>결합 전략 (COMBINER_REGISTRY)</h2>
+    <table>
+      <thead><tr><th>이름</th><th>학습</th><th>동작</th></tr></thead>
+      <tbody>
+        <tr><td><code>rank_mean</code></td><td>없음</td><td>블록 내 백분위 순위의 균등 평균. 가중치 전원 1/N.</td></tr>
+        <tr><td><code>performance_weighted_rank_mean</code></td><td>약함</td><td>단독 OOF AUC의 0.5 초과분을 비음수 가중치로 정규화.</td></tr>
+        <tr><td><code>greedy_rank_mean</code> / <code>bagged_greedy_rank_mean</code></td><td>선택</td><td>AUC가 오르는 동안 구성원을 하나씩 추가. bagged는 층화 부분 표본 50개의 선택 빈도 평균.</td></tr>
+        <tr><td><code>optuna_subset_rank_mean</code> / <code>optuna_subset_ridge_logit</code></td><td>선택</td><td>TPE로 이진 부분집합 탐색 후 균등 순위 평균 또는 Ridge 가중.</td></tr>
+        <tr><td><code>ridge_logit_alpha_*</code></td><td>계수</td><td>logit 변환 예측에 Ridge 회귀 (alpha 0.01-100).</td></tr>
+        <tr><td><code>logit_logistic</code> / <code>rank_logistic</code> / <code>rank_gauss_logistic</code></td><td>계수</td><td>단일 표현(logit, 경험적 CDF 순위, rank-gauss) + 표준화 + 로지스틱 회귀.</td></tr>
+        <tr><td><code>rank_logit_logistic</code> ★#64</td><td>계수</td><td>구성원당 [순위, logit] 이중 표현 → 표준화 → 로지스틱 (C=1, lbfgs). 순위는 학습 블록의 경험적 CDF를 고정해 적용.</td></tr>
+        <tr><td><code>missing_segmented_rank_logit</code> ★#65</td><td>계수×3</td><td>원시 특성 결측 0-1 / 2-3 / 4+ 구간마다 rank_logit_logistic을 독립 학습. 구간은 train+test에서 목표값 없이 사전 고정.</td></tr>
+        <tr><td><code>missing_4plus_rank_logit</code></td><td>계수×2</td><td>전역 모델 유지, 결측 4+ 구간만 전용 모델로 교체.</td></tr>
+        <tr><td><code>missing_interaction_rank_logit</code></td><td>계수</td><td>전역 이중 표현에 구간 지시자 상호작용 항을 추가한 단일 로지스틱.</td></tr>
+        <tr><td><code>xgb_rank_logit</code></td><td>트리</td><td>이중 표현 위 depth 2, 200그루 고정 XGBoost 2단 결합.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>수치 상수</h2>
+    <table>
+      <tbody>
+        <tr><th>logit 클리핑</th><td>eps = 1e-6 (0/1 포화 예측의 발산 방지)</td></tr>
+        <tr><th>결측 구간</th><td>결측 개수 ≤1 → 0, ≤3 → 1, 그 외 → 2 (id·목표값 제외)</td></tr>
+        <tr><th>미수렴 처리</th><td>lbfgs가 max_iter(1000)에 닿으면 그 전략은 비교에서 제외</td></tr>
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>
