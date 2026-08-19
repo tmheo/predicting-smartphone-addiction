@@ -640,7 +640,7 @@ class _FixedEpochClassifier:
         categorical = frame[self.categorical_columns].to_numpy(
             dtype="int64", copy=True
         )
-        labels = target.to_numpy(dtype="int64")
+        labels = target.to_numpy(dtype="int64", copy=True)
         self.preprocessor = _NumericalPreprocessor(self.config["tfms"]).fit(
             numerical
         )
