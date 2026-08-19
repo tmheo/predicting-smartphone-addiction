@@ -1050,6 +1050,71 @@ class TabMAdapter:
         return self._impl.training_diagnostics()
 
 
+class RealMLPAdapter:
+    """고정 일정 RealMLP adapter. (#180)
+
+    공개 노트북의 fold별 전처리와 내부 OOF 목표 인코딩, 병렬 모형,
+    고정 epoch 학습은 realmlp 모듈에서 구현한다.
+    같은 fold 안에서 초기화가 다른 두 예측을 평균하며, run.py가 담당하는
+    파이프라인 시드 평균과는 분리한다.
+    """
+
+    def __init__(self, params: dict, fit: dict, seed: int) -> None:
+        self._params = params
+        self._fit = fit
+        self._seed = seed
+        self._impl = None
+
+    def fit(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
+    ) -> np.ndarray:
+        from . import realmlp
+
+        _reject_initial_score("realmlp", initial_score_tr, initial_score_va)
+        if self._fit:
+            raise ValueError(f"realmlp가 모르는 fit 설정: {sorted(self._fit)}")
+        self._impl = realmlp.RealMLPFold(self._params, self._seed)
+        return self._impl.fit(X_tr, y_tr, X_va, y_va)
+
+    def fit_full(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        training_budget: int | None,
+        initial_score: pd.Series | None = None,
+    ) -> None:
+        from . import realmlp
+
+        _reject_initial_score("realmlp", initial_score, None)
+        if self._fit:
+            raise ValueError(f"realmlp가 모르는 fit 설정: {sorted(self._fit)}")
+        if training_budget is None:
+            raise ValueError("realmlp 전체 자료 재학습에는 고정 epoch 수가 필요하다.")
+        self._impl = realmlp.RealMLPFold(self._params, self._seed)
+        self._impl.fit_full(X, y, training_budget)
+
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray:
+        _reject_initial_score("realmlp", initial_score, None)
+        return self._impl.predict(X)
+
+    def importance(self) -> pd.DataFrame:
+        return self._impl.importance()
+
+    def entry_diagnostics(self) -> AdapterDiagnostics:
+        return self._impl.entry_diagnostics()
+
+    def training_diagnostics(self) -> dict[str, object]:
+        return self._impl.training_diagnostics()
+
+
 class TabPFN3Adapter:
     """TabPFN-3 adapter. (#102)
 
@@ -1340,6 +1405,7 @@ MODEL_REGISTRY: dict[str, Callable[[dict, dict, int], ModelAdapter]] = {
     "contextualized_spline_transformer": ContextualizedSplineTransformerAdapter,
     "scalar_token_transformer": ScalarTokenTransformerAdapter,
     "tabm": TabMAdapter,
+    "realmlp": RealMLPAdapter,
     "tabpfn3": TabPFN3Adapter,
     "tabr_s": TabRSAdapter,
     "tabiclv2": TabICLv2Adapter,
