@@ -34,6 +34,9 @@ PLR_LITE_PROBE = {
     "d_embedding": 45,
     "lite": True,
 }
+# PLR은 문맥 재계산 활성값이 eval_batch_size x 96 x 33 x 150으로 커져
+# 기본 8192에서 24GB 장치가 넘친다. 2048이면 약 3.9GB로 안전하다.
+PLR_LITE_EVAL_BATCH = 2048
 PLATEAU_TOLERANCE = 5e-4
 
 
@@ -115,6 +118,9 @@ def run_variant(
     params["patience"] = patience
     if name == "plr_lite":
         params["num_embeddings"] = dict(PLR_LITE_PROBE)
+        params["eval_batch_size"] = min(
+            int(params.get("eval_batch_size", 8192)), PLR_LITE_EVAL_BATCH
+        )
     if device is not None:
         params["device"] = device
     adapter = create(ModelConfig(kind="tabr", params=params, fit={}), seed=seed)
@@ -184,8 +190,8 @@ def main() -> None:
     results = []
     for name in variants:
         print(f"[smoke_tabr] variant={name} 시작", flush=True)
-        results.append(
-            run_variant(
+        try:
+            result = run_variant(
                 name,
                 dict(cfg.model.params),
                 X,
@@ -197,10 +203,23 @@ def main() -> None:
                 device=args.device,
                 seed=args.seed,
             )
+        except Exception as error:  # noqa: BLE001 - 변형 실패를 결과로 격리한다.
+            result = {
+                "variant": name,
+                "converged": False,
+                "error": f"{type(error).__name__}: {error}",
+            }
+        results.append(result)
+        partial = args.out.with_suffix(".partial.json")
+        partial.parent.mkdir(parents=True, exist_ok=True)
+        partial.write_text(
+            json.dumps(results, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
         )
 
     fraction = args.train_fraction
     for result in results:
+        if "error" in result:
+            continue
         train_seconds = [
             max(epoch - result["validation_eval_seconds"], 0.0)
             for epoch in result["epoch_seconds"]
