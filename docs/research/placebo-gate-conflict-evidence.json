@@ -1,0 +1,5083 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-19",
+  "source": {
+    "mlflow_database": "verified local mlflow.db",
+    "artifacts": [
+      "oof.parquet",
+      "oof_seed_<seed>.parquet when retained",
+      "feature_importance.parquet"
+    ],
+    "folds": "artifacts/folds.parquet"
+  },
+  "notes": [
+    "Only features present in the candidate and absent from the paired baseline are included.",
+    "placebo_noise and placebo-derived leakage canaries are excluded from candidate features.",
+    "The mean gate passes only when feature mean importance is strictly greater than placebo mean importance.",
+    "A non-paired comparison mode means the historical artifact set did not retain a matching baseline prediction for every candidate seed."
+  ],
+  "candidates": [
+    {
+      "config": "exp005_te_replacement",
+      "run_id": "f4e77ff329104841ae98422e095cfbf7",
+      "baseline_config": "exp003_categorical_copies",
+      "baseline_run_id": "77217687c0514dab9f693fd4aa50c741",
+      "seeds": [
+        42,
+        43,
+        44
+      ],
+      "comparison_mode": "unpaired_candidate_average_vs_baseline_seed_42",
+      "oof_auc": 0.9665894756876401,
+      "baseline_oof_auc": 0.9660458127109742,
+      "oof_delta": 0.0005436629766658596,
+      "fold_comparison_mode": "candidate_averaged_predictions_vs_baseline_seed_42",
+      "fold_deltas": [
+        0.0005909077293000387,
+        0.0005955060163315151,
+        0.00046176153902544037,
+        0.0005029104168094989,
+        0.000575324047636494
+      ],
+      "fold_wins": 5,
+      "seed_deltas": {},
+      "placebo": {
+        "mean": 36495.15774008433,
+        "min": 26806.507372379303,
+        "max": 54174.11724448204,
+        "cells": 15
+      },
+      "features": [
+        {
+          "feature": "age_te",
+          "mean": 40180.69859930277,
+          "min": 31267.57868385315,
+          "max": 54496.895812392235,
+          "placebo_mean": 36495.15774008433,
+          "ratio_to_placebo": 1.1009871195917709,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "app_opens_per_day_te",
+          "mean": 318883.27942043147,
+          "min": 311498.1326816082,
+          "max": 331434.9584534764,
+          "placebo_mean": 36495.15774008433,
+          "ratio_to_placebo": 8.737687385583955,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours_te",
+          "mean": 2233420.7073434233,
+          "min": 2224273.1934576035,
+          "max": 2247803.216259837,
+          "placebo_mean": 36495.15774008433,
+          "ratio_to_placebo": 61.197727195746666,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "gaming_hours_te",
+          "mean": 35164.132221635184,
+          "min": 26664.66822743416,
+          "max": 48745.942363619804,
+          "placebo_mean": 36495.15774008433,
+          "ratio_to_placebo": 0.9635287089885017,
+          "cell_wins": 3,
+          "cells": 15,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_te",
+          "mean": 380390.473870035,
+          "min": 372979.4190354347,
+          "max": 394539.7398304939,
+          "placebo_mean": 36495.15774008433,
+          "ratio_to_placebo": 10.42303958731036,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "sleep_hours_te",
+          "mean": 57190.80155756474,
+          "min": 46131.60322833061,
+          "max": 72621.55422461033,
+          "placebo_mean": 36495.15774008433,
+          "ratio_to_placebo": 1.5670791715677233,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "social_media_hours_te",
+          "mean": 184488.71646057765,
+          "min": 166937.92897307873,
+          "max": 195085.56327438354,
+          "placebo_mean": 36495.15774008433,
+          "ratio_to_placebo": 5.055156023012475,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "weekend_screen_time_te",
+          "mean": 625925.0974933902,
+          "min": 615849.202671051,
+          "max": 638774.0376198888,
+          "placebo_mean": 36495.15774008433,
+          "ratio_to_placebo": 17.150908127351578,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "work_study_hours_te",
+          "mean": 38547.90517503818,
+          "min": 31162.459010362625,
+          "max": 51328.77297073603,
+          "placebo_mean": 36495.15774008433,
+          "ratio_to_placebo": 1.0562471177566446,
+          "cell_wins": 14,
+          "cells": 15,
+          "passes_mean_gate": true
+        }
+      ]
+    },
+    {
+      "config": "exp008_resid_slack",
+      "run_id": "4f9f6064f1e34a2382cb2c5c6081dbd2",
+      "baseline_config": "exp006_te_drop_gaming",
+      "baseline_run_id": "4aaddd505ade428588cf83659f205cf6",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9669979291272299,
+      "baseline_oof_auc": 0.9661668695170613,
+      "oof_delta": 0.0008310596101686052,
+      "fold_comparison_mode": "candidate_seed_42_vs_baseline_averaged_predictions",
+      "fold_deltas": [
+        0.0003419725273162699,
+        0.00046195436591545125,
+        0.00037398496258034264,
+        0.0003012316306365559,
+        0.0005976507113458762
+      ],
+      "fold_wins": 5,
+      "seed_deltas": {
+        "42": 0.0008310596101686052
+      },
+      "placebo": {
+        "mean": 30171.391475939752,
+        "min": 21569.11981320381,
+        "max": 37481.64552152157,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "screen_slack",
+          "mean": 78962.79880087376,
+          "min": 72679.58939528465,
+          "max": 86399.0328772068,
+          "placebo_mean": 30171.391475939752,
+          "ratio_to_placebo": 2.617141435582871,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "screen_slack_n_obs",
+          "mean": 12821.208470726013,
+          "min": 11929.256657838821,
+          "max": 13595.346446990967,
+          "placebo_mean": 30171.391475939752,
+          "ratio_to_placebo": 0.4249458789777832,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp009_resid_both",
+      "run_id": "b27e54ea91b241b4965c4d8276c7e571",
+      "baseline_config": "exp006_te_drop_gaming",
+      "baseline_run_id": "4aaddd505ade428588cf83659f205cf6",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9670306286358519,
+      "baseline_oof_auc": 0.9661668695170613,
+      "oof_delta": 0.0008637591187905524,
+      "fold_comparison_mode": "candidate_seed_42_vs_baseline_averaged_predictions",
+      "fold_deltas": [
+        0.0003115266836750674,
+        0.0004671926606188981,
+        0.0005069522967751094,
+        0.0004225199982765826,
+        0.0005105889903461724
+      ],
+      "fold_wins": 5,
+      "seed_deltas": {
+        "42": 0.0008637591187905524
+      },
+      "placebo": {
+        "mean": 30146.928192853928,
+        "min": 20972.448657274246,
+        "max": 35650.96186196804,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "other_screen",
+          "mean": 56596.48453578949,
+          "min": 50784.16267848015,
+          "max": 59592.83879375458,
+          "placebo_mean": 30146.928192853928,
+          "ratio_to_placebo": 1.8773549389090065,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "screen_slack",
+          "mean": 53976.71932244301,
+          "min": 48221.09351396561,
+          "max": 56926.07931661606,
+          "placebo_mean": 30146.928192853928,
+          "ratio_to_placebo": 1.790455033333636,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "screen_slack_n_obs",
+          "mean": 2807.3418142795563,
+          "min": 2582.853690624237,
+          "max": 2918.3368606567383,
+          "placebo_mean": 30146.928192853928,
+          "ratio_to_placebo": 0.09312198564048103,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp012_ce",
+      "run_id": "9a0fb9ad9a6e4457afe7f008a45d4fd5",
+      "baseline_config": "exp011_resid_pair",
+      "baseline_run_id": "27a92b2b033b4c39bb7e8c993906cfcb",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9671897266012196,
+      "baseline_oof_auc": 0.9670517545443666,
+      "oof_delta": 0.000137972056852953,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        0.00011708715177016771,
+        8.183953798446275e-05,
+        0.00019732660714577577,
+        0.00020432165630657195,
+        6.34061873785452e-05
+      ],
+      "fold_wins": 5,
+      "seed_deltas": {
+        "42": 0.000137972056852953
+      },
+      "placebo": {
+        "mean": 27857.919604682924,
+        "min": 25327.842613458633,
+        "max": 30535.36624121666,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "age_ce",
+          "mean": 9048.14180009365,
+          "min": 7718.053804397583,
+          "max": 10594.030689239502,
+          "placebo_mean": 27857.919604682924,
+          "ratio_to_placebo": 0.3247960338923749,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_ce",
+          "mean": 19706.215753507615,
+          "min": 17547.752814769745,
+          "max": 22078.958674907684,
+          "placebo_mean": 27857.919604682924,
+          "ratio_to_placebo": 0.7073828926620563,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_ce",
+          "mean": 19045.076808166505,
+          "min": 17053.15462732315,
+          "max": 20596.071593165398,
+          "placebo_mean": 27857.919604682924,
+          "ratio_to_placebo": 0.6836503614923571,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_ce",
+          "mean": 23156.21199891567,
+          "min": 20537.908869743347,
+          "max": 26101.040413975716,
+          "placebo_mean": 27857.919604682924,
+          "ratio_to_placebo": 0.8312254585953757,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_ce",
+          "mean": 19789.651457619668,
+          "min": 17165.786399126053,
+          "max": 22602.592779159546,
+          "placebo_mean": 27857.919604682924,
+          "ratio_to_placebo": 0.7103779369904213,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_ce",
+          "mean": 23044.221487259863,
+          "min": 21939.839912891388,
+          "max": 25400.41551923752,
+          "placebo_mean": 27857.919604682924,
+          "ratio_to_placebo": 0.8272053984744117,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_ce",
+          "mean": 19931.111959433554,
+          "min": 17513.215147972107,
+          "max": 22558.64929676056,
+          "placebo_mean": 27857.919604682924,
+          "ratio_to_placebo": 0.7154558646972019,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_ce",
+          "mean": 24945.6362377882,
+          "min": 22095.69730401039,
+          "max": 27569.985969662666,
+          "placebo_mean": 27857.919604682924,
+          "ratio_to_placebo": 0.8954594094526295,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp013_fill",
+      "run_id": "1cb5a58d43494f96a660db58efe777e2",
+      "baseline_config": "exp011_resid_pair",
+      "baseline_run_id": "27a92b2b033b4c39bb7e8c993906cfcb",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9670372982575643,
+      "baseline_oof_auc": 0.9670517545443666,
+      "oof_delta": -1.4456286802300156e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        -2.278490741025596e-05,
+        -3.0169796725321163e-06,
+        2.2855060877624567e-05,
+        -4.842187675824228e-05,
+        -3.0238101828783392e-05
+      ],
+      "fold_wins": 1,
+      "seed_deltas": {
+        "42": -1.4456286802300156e-05
+      },
+      "placebo": {
+        "mean": 28304.439559555052,
+        "min": 23540.519128084183,
+        "max": 35415.41474854946,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "age_fill",
+          "mean": 112.44491348266601,
+          "min": 18.239830017089844,
+          "max": 239.39261674880981,
+          "placebo_mean": 28304.439559555052,
+          "ratio_to_placebo": 0.003972695281461833,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_fill",
+          "mean": 169.0842882156372,
+          "min": 72.6100001335144,
+          "max": 233.35994064807892,
+          "placebo_mean": 28304.439559555052,
+          "ratio_to_placebo": 0.005973772695971205,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_fill",
+          "mean": 1449.3147565841675,
+          "min": 663.538010597229,
+          "max": 2807.726343393326,
+          "placebo_mean": 28304.439559555052,
+          "ratio_to_placebo": 0.05120450286728627,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_fill",
+          "mean": 7756.10728738308,
+          "min": 5214.562829732895,
+          "max": 9859.122954845428,
+          "placebo_mean": 28304.439559555052,
+          "ratio_to_placebo": 0.27402440776343734,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_fill",
+          "mean": 207.1238662481308,
+          "min": 75.47124981880188,
+          "max": 332.3407814502716,
+          "placebo_mean": 28304.439559555052,
+          "ratio_to_placebo": 0.007317716565711319,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_fill",
+          "mean": 383.89824657440187,
+          "min": 216.90310144424438,
+          "max": 590.0774396657944,
+          "placebo_mean": 28304.439559555052,
+          "ratio_to_placebo": 0.013563181343571417,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_fill",
+          "mean": 4583.147241663933,
+          "min": 1016.7533445358276,
+          "max": 10848.507199287415,
+          "placebo_mean": 28304.439559555052,
+          "ratio_to_placebo": 0.16192326408797406,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_fill",
+          "mean": 1070.6490545511247,
+          "min": 496.9764127731323,
+          "max": 1750.2727527618408,
+          "placebo_mean": 28304.439559555052,
+          "ratio_to_placebo": 0.037826188089624034,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_fill",
+          "mean": 4115.0658633232115,
+          "min": 2445.83012008667,
+          "max": 5991.427379846573,
+          "placebo_mean": 28304.439559555052,
+          "ratio_to_placebo": 0.1453858803550852,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp014_dec1",
+      "run_id": "91c2bcf9722d43758be50c15fdf1b2d6",
+      "baseline_config": "exp011_resid_pair",
+      "baseline_run_id": "27a92b2b033b4c39bb7e8c993906cfcb",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9670914120986471,
+      "baseline_oof_auc": 0.9670517545443666,
+      "oof_delta": 3.965755428048112e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        5.977544793589473e-05,
+        6.539267285021744e-05,
+        4.693837830171965e-05,
+        6.617311431633688e-05,
+        -4.94469005436482e-05
+      ],
+      "fold_wins": 4,
+      "seed_deltas": {
+        "42": 3.965755428048112e-05
+      },
+      "placebo": {
+        "mean": 30863.388035964967,
+        "min": 26531.380185365677,
+        "max": 39185.25988698006,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "daily_screen_time_hours_dec1",
+          "mean": 12915.024439048768,
+          "min": 11499.627310991287,
+          "max": 15639.095070242882,
+          "placebo_mean": 30863.388035964967,
+          "ratio_to_placebo": 0.41845776698264453,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_dec1",
+          "mean": 11154.033649778366,
+          "min": 9736.27985072136,
+          "max": 13927.80161511898,
+          "placebo_mean": 30863.388035964967,
+          "ratio_to_placebo": 0.3614001689244428,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_dec1",
+          "mean": 11893.455016803742,
+          "min": 10328.114298343658,
+          "max": 15587.60001385212,
+          "placebo_mean": 30863.388035964967,
+          "ratio_to_placebo": 0.38535804957460773,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_dec1",
+          "mean": 10100.652652716637,
+          "min": 8307.27046084404,
+          "max": 12694.650797843933,
+          "placebo_mean": 30863.388035964967,
+          "ratio_to_placebo": 0.3272697294589431,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_dec1",
+          "mean": 13916.51661877632,
+          "min": 12084.492204904556,
+          "max": 16839.097692489624,
+          "placebo_mean": 30863.388035964967,
+          "ratio_to_placebo": 0.4509069646715217,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_dec1",
+          "mean": 11487.307920527459,
+          "min": 9841.695019125938,
+          "max": 14968.74700641632,
+          "placebo_mean": 30863.388035964967,
+          "ratio_to_placebo": 0.3721985385124067,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp015_te_r1",
+      "run_id": "40408f3bd7494561b011e5da1253dd03",
+      "baseline_config": "exp011_resid_pair",
+      "baseline_run_id": "27a92b2b033b4c39bb7e8c993906cfcb",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9669989312962907,
+      "baseline_oof_auc": 0.9670517545443666,
+      "oof_delta": -5.282324807598382e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        5.6078372896228856e-05,
+        -0.00011383713065249434,
+        -1.604116750597573e-05,
+        -4.1525524518970514e-05,
+        -0.00013234605547751688
+      ],
+      "fold_wins": 1,
+      "seed_deltas": {
+        "42": -5.282324807598382e-05
+      },
+      "placebo": {
+        "mean": 26210.530816030503,
+        "min": 20745.76616024971,
+        "max": 32558.536001563072,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "daily_screen_time_hours_te_r1",
+          "mean": 17224.457567739486,
+          "min": 14449.66897058487,
+          "max": 20897.96674144268,
+          "placebo_mean": 26210.530816030503,
+          "ratio_to_placebo": 0.6571579068213649,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_te_r1",
+          "mean": 26362.055155992508,
+          "min": 21648.27723622322,
+          "max": 30590.255551338196,
+          "placebo_mean": 26210.530816030503,
+          "ratio_to_placebo": 1.0057810481224339,
+          "cell_wins": 3,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "sleep_hours_te_r1",
+          "mean": 19744.510126376153,
+          "min": 14472.176310777664,
+          "max": 25587.946485877037,
+          "placebo_mean": 26210.530816030503,
+          "ratio_to_placebo": 0.7533044738758325,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_te_r1",
+          "mean": 38838.74024682045,
+          "min": 19181.437673926353,
+          "max": 102249.79321706295,
+          "placebo_mean": 26210.530816030503,
+          "ratio_to_placebo": 1.481799072267032,
+          "cell_wins": 3,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "weekend_screen_time_te_r1",
+          "mean": 21377.160262084006,
+          "min": 16699.736400604248,
+          "max": 25146.752121448517,
+          "placebo_mean": 26210.530816030503,
+          "ratio_to_placebo": 0.8155943277962772,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_te_r1",
+          "mean": 23555.547641038895,
+          "min": 20449.92245411873,
+          "max": 27898.179810523987,
+          "placebo_mean": 26210.530816030503,
+          "ratio_to_placebo": 0.8987054785869576,
+          "cell_wins": 1,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp016_resid_te",
+      "run_id": "8ccbffbfb5d044c181a23365058e3626",
+      "baseline_config": "exp011_resid_pair",
+      "baseline_run_id": "27a92b2b033b4c39bb7e8c993906cfcb",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9669793906716162,
+      "baseline_oof_auc": 0.9670517545443666,
+      "oof_delta": -7.23638727504472e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        -1.1709032326612245e-05,
+        -0.0001333052886919317,
+        -6.887421309631492e-05,
+        -5.45750843106152e-06,
+        -0.00015394111128430588
+      ],
+      "fold_wins": 0,
+      "seed_deltas": {
+        "42": -7.23638727504472e-05
+      },
+      "placebo": {
+        "mean": 30679.366971325875,
+        "min": 23637.163469552994,
+        "max": 35746.505524516106,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "other_screen_te",
+          "mean": 15698.933289074897,
+          "min": 12560.459047555923,
+          "max": 19361.832553982735,
+          "placebo_mean": 30679.366971325875,
+          "ratio_to_placebo": 0.5117098179942151,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "screen_slack_te",
+          "mean": 19145.648395180702,
+          "min": 14631.43467593193,
+          "max": 23028.840567588806,
+          "placebo_mean": 30679.366971325875,
+          "ratio_to_placebo": 0.6240561747273001,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp017_pair_dst_wst",
+      "run_id": "7f53d1f9a19a40eaa0abc7f490068db1",
+      "baseline_config": "exp011_resid_pair",
+      "baseline_run_id": "27a92b2b033b4c39bb7e8c993906cfcb",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.967118071465149,
+      "baseline_oof_auc": 0.9670517545443666,
+      "oof_delta": 6.631692078240548e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        6.563408704263196e-05,
+        9.323712951125884e-05,
+        0.00015042552562394285,
+        9.306942086084735e-05,
+        -8.718173159028009e-05
+      ],
+      "fold_wins": 4,
+      "seed_deltas": {
+        "42": 6.631692078240548e-05
+      },
+      "placebo": {
+        "mean": 30297.93405447006,
+        "min": 25617.231907844543,
+        "max": 35585.323686122894,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "daily_screen_time_hours__weekend_screen_time_ce",
+          "mean": 21923.358483457567,
+          "min": 17234.229004383087,
+          "max": 25814.447692751884,
+          "placebo_mean": 30297.93405447006,
+          "ratio_to_placebo": 0.7235925209964296,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours__weekend_screen_time_te",
+          "mean": 103031.0948141098,
+          "min": 47553.98017287254,
+          "max": 222101.01906752586,
+          "placebo_mean": 30297.93405447006,
+          "ratio_to_placebo": 3.4005980285282496,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        }
+      ]
+    },
+    {
+      "config": "exp018_orig_mean",
+      "run_id": "83f5871f901f4418949932c9288252a0",
+      "baseline_config": "exp011_resid_pair",
+      "baseline_run_id": "27a92b2b033b4c39bb7e8c993906cfcb",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9671058995676511,
+      "baseline_oof_auc": 0.9670517545443666,
+      "oof_delta": 5.414502328449089e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        0.00013085245453314798,
+        0.0001327838949296556,
+        6.703398489338319e-05,
+        5.039403914930407e-05,
+        -0.00010184712724881084
+      ],
+      "fold_wins": 4,
+      "seed_deltas": {
+        "42": 5.414502328449089e-05
+      },
+      "placebo": {
+        "mean": 24911.090101766586,
+        "min": 18529.507276296616,
+        "max": 31202.852655410767,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "age_orig_mean",
+          "mean": 14150.613489198684,
+          "min": 12323.776398897171,
+          "max": 16307.703412175179,
+          "placebo_mean": 24911.090101766586,
+          "ratio_to_placebo": 0.5680447315388732,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_orig_mean",
+          "mean": 34446.2112801075,
+          "min": 29479.91500377655,
+          "max": 39582.62928068638,
+          "placebo_mean": 24911.090101766586,
+          "ratio_to_placebo": 1.3827661149868637,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours_orig_mean",
+          "mean": 22324.521696853637,
+          "min": 18112.287889957428,
+          "max": 26434.18965113163,
+          "placebo_mean": 24911.090101766586,
+          "ratio_to_placebo": 0.8961679960874326,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_orig_mean",
+          "mean": 24838.66412200928,
+          "min": 19533.041249513626,
+          "max": 30557.616108059883,
+          "placebo_mean": 24911.090101766586,
+          "ratio_to_placebo": 0.9970926210189345,
+          "cell_wins": 2,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_orig_mean",
+          "mean": 54638.93767938614,
+          "min": 47171.35495328903,
+          "max": 60889.87286877632,
+          "placebo_mean": 24911.090101766586,
+          "ratio_to_placebo": 2.193357956483461,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "sleep_hours_orig_mean",
+          "mean": 21744.716734814643,
+          "min": 15610.701009988785,
+          "max": 27935.350593209267,
+          "placebo_mean": 24911.090101766586,
+          "ratio_to_placebo": 0.8728930225848528,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_orig_mean",
+          "mean": 21212.426164484023,
+          "min": 16800.20760035515,
+          "max": 26315.877541303635,
+          "placebo_mean": 24911.090101766586,
+          "ratio_to_placebo": 0.8515254080743633,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_orig_mean",
+          "mean": 20671.48179175854,
+          "min": 15904.057669401169,
+          "max": 24471.28408050537,
+          "placebo_mean": 24911.090101766586,
+          "ratio_to_placebo": 0.8298104060204338,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_orig_mean",
+          "mean": 25812.094001674654,
+          "min": 19344.146372318268,
+          "max": 31288.91302061081,
+          "placebo_mean": 24911.090101766586,
+          "ratio_to_placebo": 1.0361687865214768,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        }
+      ]
+    },
+    {
+      "config": "exp019_orig_mean_raw",
+      "run_id": "58025adcf9d14df086e7916d6aca661a",
+      "baseline_config": "exp011_resid_pair",
+      "baseline_run_id": "27a92b2b033b4c39bb7e8c993906cfcb",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.967126611770304,
+      "baseline_oof_auc": 0.9670517545443666,
+      "oof_delta": 7.485722593736366e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        5.14089175187582e-05,
+        0.0002384568365397799,
+        0.00012192266662103268,
+        -5.698795763509068e-06,
+        1.8227401326065262e-06
+      ],
+      "fold_wins": 4,
+      "seed_deltas": {
+        "42": 7.485722593736366e-05
+      },
+      "placebo": {
+        "mean": 26051.098190164565,
+        "min": 22602.142111063004,
+        "max": 33844.774347901344,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "age_orig_mean",
+          "mean": 14969.780523204803,
+          "min": 13503.881607294083,
+          "max": 18146.618478417397,
+          "placebo_mean": 26051.098190164565,
+          "ratio_to_placebo": 0.5746314575274433,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_orig_mean",
+          "mean": 35214.54774310589,
+          "min": 31354.782232761383,
+          "max": 41650.80852782726,
+          "placebo_mean": 26051.098190164565,
+          "ratio_to_placebo": 1.3517490696956849,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours_orig_mean",
+          "mean": 17908.103212070466,
+          "min": 15862.813727140427,
+          "max": 22904.942908525467,
+          "placebo_mean": 26051.098190164565,
+          "ratio_to_placebo": 0.6874221993002799,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_orig_mean",
+          "mean": 24343.88545665741,
+          "min": 21265.770440340042,
+          "max": 30679.42926454544,
+          "placebo_mean": 26051.098190164565,
+          "ratio_to_placebo": 0.9344667652378776,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_orig_mean",
+          "mean": 53593.1638283968,
+          "min": 47511.751158475876,
+          "max": 61320.03925335407,
+          "placebo_mean": 26051.098190164565,
+          "ratio_to_placebo": 2.057232422110734,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "sleep_hours_orig_mean",
+          "mean": 21330.93346786499,
+          "min": 17881.026656389236,
+          "max": 28925.36990571022,
+          "placebo_mean": 26051.098190164565,
+          "ratio_to_placebo": 0.8188112958676865,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_orig_mean",
+          "mean": 20171.510604691506,
+          "min": 17912.850395679474,
+          "max": 26533.861112594604,
+          "placebo_mean": 26051.098190164565,
+          "ratio_to_placebo": 0.774305576580535,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_orig_mean",
+          "mean": 16640.278557372094,
+          "min": 14206.072784662247,
+          "max": 22170.607435941696,
+          "placebo_mean": 26051.098190164565,
+          "ratio_to_placebo": 0.6387553582541303,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_orig_mean",
+          "mean": 24817.154141497613,
+          "min": 21238.4432451725,
+          "max": 32143.173164129257,
+          "placebo_mean": 26051.098190164565,
+          "ratio_to_placebo": 0.9526337032066917,
+          "cell_wins": 1,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp020_orig_mean_count",
+      "run_id": "75d566ff9fc74fdc9cc04cda6e8ee79f",
+      "baseline_config": "exp011_resid_pair",
+      "baseline_run_id": "27a92b2b033b4c39bb7e8c993906cfcb",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.96712915143756,
+      "baseline_oof_auc": 0.9670517545443666,
+      "oof_delta": 7.739689319330445e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        0.00013777735022646453,
+        0.00019506951765224656,
+        4.805449078837398e-05,
+        6.760840605024576e-05,
+        -4.795958113135157e-05
+      ],
+      "fold_wins": 4,
+      "seed_deltas": {
+        "42": 7.739689319330445e-05
+      },
+      "placebo": {
+        "mean": 21465.905971670152,
+        "min": 18442.89564228058,
+        "max": 26151.936433315277,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "age_orig_count",
+          "mean": 9695.03526239395,
+          "min": 7742.010149717331,
+          "max": 12525.65209543705,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.45164808208836243,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age_orig_mean",
+          "mean": 12788.113441824913,
+          "min": 10735.059961557388,
+          "max": 14693.810772538185,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.5957406809990762,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_orig_count",
+          "mean": 12284.721528196334,
+          "min": 9920.850214242935,
+          "max": 15224.54574918747,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.5722899161306875,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_orig_mean",
+          "mean": 31397.023815107346,
+          "min": 28068.32122349739,
+          "max": 34879.69870555401,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 1.462646107578403,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours_orig_count",
+          "mean": 8306.079652714729,
+          "min": 7211.545694828033,
+          "max": 9612.753004312515,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.38694288811647465,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_orig_mean",
+          "mean": 19194.95511894226,
+          "min": 17278.61455464363,
+          "max": 22292.85624575615,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.8942066150981467,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_orig_count",
+          "mean": 13357.087885951996,
+          "min": 11095.470239639282,
+          "max": 15755.244801521301,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.6222466409561352,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_orig_mean",
+          "mean": 21207.438568878173,
+          "min": 18278.251497268677,
+          "max": 24219.306762218475,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.9879591663574278,
+          "cell_wins": 2,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_orig_count",
+          "mean": 14142.457751345635,
+          "min": 12263.322618484497,
+          "max": 16148.955600500107,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.6588334901871967,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_orig_mean",
+          "mean": 51286.82324807644,
+          "min": 47140.095272541046,
+          "max": 54946.56354868412,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 2.389222393676873,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "sleep_hours_orig_count",
+          "mean": 10558.037782526017,
+          "min": 8566.902445554733,
+          "max": 13132.031783103943,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.49185148749184376,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_orig_mean",
+          "mean": 18622.27476916313,
+          "min": 15558.811944246292,
+          "max": 22509.25939655304,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.8675280136668849,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_orig_count",
+          "mean": 10348.871502947808,
+          "min": 9255.756704092026,
+          "max": 11972.77395927906,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.48210737141054455,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_orig_mean",
+          "mean": 18069.853561091422,
+          "min": 15324.711697101593,
+          "max": 20955.10486805439,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.8417931945168909,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_orig_count",
+          "mean": 8767.137465500831,
+          "min": 7096.541227579117,
+          "max": 11298.033084750175,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.4084214976563929,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_orig_mean",
+          "mean": 17608.82738518715,
+          "min": 14604.33171749115,
+          "max": 21786.02873003483,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.8203160587969862,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_orig_count",
+          "mean": 12162.038976860047,
+          "min": 10262.886944293976,
+          "max": 15155.780870199203,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 0.5665746879219085,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_orig_mean",
+          "mean": 22456.89105808735,
+          "min": 18866.09530186653,
+          "max": 27006.85964345932,
+          "placebo_mean": 21465.905971670152,
+          "ratio_to_placebo": 1.0461655374678833,
+          "cell_wins": 4,
+          "cells": 5,
+          "passes_mean_gate": true
+        }
+      ]
+    },
+    {
+      "config": "exp021_orig_mean_top3",
+      "run_id": "be6a92e1fc974059801e33f311a2280c",
+      "baseline_config": "exp011_resid_pair",
+      "baseline_run_id": "27a92b2b033b4c39bb7e8c993906cfcb",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9670924724152831,
+      "baseline_oof_auc": 0.9670517545443666,
+      "oof_delta": 4.0717870916417986e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        3.453567660993695e-05,
+        0.00017360839221491897,
+        7.133884521626221e-05,
+        -6.864891009761287e-06,
+        -8.666743673391153e-05
+      ],
+      "fold_wins": 3,
+      "seed_deltas": {
+        "42": 4.0717870916417986e-05
+      },
+      "placebo": {
+        "mean": 28166.059289908408,
+        "min": 24169.17884039879,
+        "max": 31398.881768345833,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "app_opens_per_day_orig_mean",
+          "mean": 35952.29836418629,
+          "min": 31845.334046840668,
+          "max": 38668.24283504486,
+          "placebo_mean": 28166.059289908408,
+          "ratio_to_placebo": 1.2764404844190471,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "notifications_per_day_orig_mean",
+          "mean": 55365.481675481795,
+          "min": 50021.03706908226,
+          "max": 58924.691296339035,
+          "placebo_mean": 28166.059289908408,
+          "ratio_to_placebo": 1.9656807899754243,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "work_study_hours_orig_mean",
+          "mean": 27430.22286710739,
+          "min": 23781.77527141571,
+          "max": 30835.821568489075,
+          "placebo_mean": 28166.059289908408,
+          "ratio_to_placebo": 0.9738750666102354,
+          "cell_wins": 1,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp022_orig_knn",
+      "run_id": "aa9010fe9afe4f6aaa4913146fb6bb97",
+      "baseline_config": "exp011_resid_pair",
+      "baseline_run_id": "27a92b2b033b4c39bb7e8c993906cfcb",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9669384777609772,
+      "baseline_oof_auc": 0.9670517545443666,
+      "oof_delta": -0.0001132767833894599,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        -6.167187502881255e-05,
+        -5.0124335222778704e-05,
+        -0.00010023750678356258,
+        -8.905126367708682e-05,
+        -0.0002849756768191769
+      ],
+      "fold_wins": 0,
+      "seed_deltas": {
+        "42": -0.0001132767833894599
+      },
+      "placebo": {
+        "mean": 28428.206233143806,
+        "min": 21620.317844629288,
+        "max": 33944.36882984638,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "orig_nn10_mean",
+          "mean": 2230510.4978010654,
+          "min": 2204462.2505881786,
+          "max": 2265010.435816169,
+          "placebo_mean": 28428.206233143806,
+          "ratio_to_placebo": 78.46117618214558,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "orig_nn1_mean",
+          "mean": 1094.3391614437103,
+          "min": 711.6045098304749,
+          "max": 1371.995189189911,
+          "placebo_mean": 28428.206233143806,
+          "ratio_to_placebo": 0.03849483686972289,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp025_constrained_impute",
+      "run_id": "3f7d735f3ff6404ea71eb8bc026e61db",
+      "baseline_config": "exp011_resid_pair",
+      "baseline_run_id": "e21d19af37bb461db5dc1a59b66411a6",
+      "seeds": [
+        42,
+        43,
+        44
+      ],
+      "comparison_mode": "paired_averaged_predictions",
+      "oof_auc": 0.9675746898110065,
+      "baseline_oof_auc": 0.9674010717025592,
+      "oof_delta": 0.0001736181084472932,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        0.00011930110893332291,
+        0.00012088546092736685,
+        0.00021128955747085065,
+        0.00028578771905107825,
+        0.00011981446334297097
+      ],
+      "fold_wins": 5,
+      "seed_deltas": {
+        "42": 0.00016319859485403043,
+        "43": 0.00023263926688221748,
+        "44": 0.0001727064971679404
+      },
+      "placebo": {
+        "mean": 25071.604126350085,
+        "min": 18406.373600006104,
+        "max": 33917.55861783028,
+        "cells": 15
+      },
+      "features": [
+        {
+          "feature": "daily_screen_time_hours_recon",
+          "mean": 2351463.6008071024,
+          "min": 2317661.8085246086,
+          "max": 2371660.8913731575,
+          "placebo_mean": 25071.604126350085,
+          "ratio_to_placebo": 93.78991423750705,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "gaming_hours_recon",
+          "mean": 41703.48756165504,
+          "min": 37508.21936869621,
+          "max": 46149.19313466549,
+          "placebo_mean": 25071.604126350085,
+          "ratio_to_placebo": 1.6633753210001014,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "gaming_hours_recon_width",
+          "mean": 8508.82158633868,
+          "min": 7074.023389101028,
+          "max": 10647.072078943253,
+          "placebo_mean": 25071.604126350085,
+          "ratio_to_placebo": 0.33938082076670817,
+          "cell_wins": 0,
+          "cells": 15,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_recon",
+          "mean": 674572.367968909,
+          "min": 668479.6786413193,
+          "max": 680726.7765882015,
+          "placebo_mean": 25071.604126350085,
+          "ratio_to_placebo": 26.905831975064494,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "social_media_hours_recon_width",
+          "mean": 10264.167098434766,
+          "min": 8867.43721485138,
+          "max": 11584.887956619263,
+          "placebo_mean": 25071.604126350085,
+          "ratio_to_placebo": 0.40939411162954653,
+          "cell_wins": 0,
+          "cells": 15,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_recon",
+          "mean": 43400.52703610261,
+          "min": 39362.63199090958,
+          "max": 48259.61030590534,
+          "placebo_mean": 25071.604126350085,
+          "ratio_to_placebo": 1.7310630312038533,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "work_study_hours_recon_width",
+          "mean": 4273.933800824483,
+          "min": 3552.8619487285614,
+          "max": 5271.51776266098,
+          "placebo_mean": 25071.604126350085,
+          "ratio_to_placebo": 0.17046910039284674,
+          "cell_wins": 0,
+          "cells": 15,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp027_recon_ce",
+      "run_id": "67699e50ac58400eaaa5655428716ee9",
+      "baseline_config": "exp026_constrained_impute_nowidth",
+      "baseline_run_id": "4b6de022abd54d6c92570c1ea06795d7",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9673765950140444,
+      "baseline_oof_auc": 0.9672173234483032,
+      "oof_delta": 0.000159271565741137,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        0.00012141713033320123,
+        0.00022081825048059223,
+        0.00019347869580843557,
+        0.00010562854068152383,
+        0.0001415039038000776
+      ],
+      "fold_wins": 5,
+      "seed_deltas": {
+        "42": 0.000159271565741137
+      },
+      "placebo": {
+        "mean": 24029.119428658487,
+        "min": 19089.2327978611,
+        "max": 27385.167264580727,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "age_ce",
+          "mean": 9216.895986461639,
+          "min": 7360.909339427948,
+          "max": 9948.540310502052,
+          "placebo_mean": 24029.119428658487,
+          "ratio_to_placebo": 0.38357194127842437,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_ce",
+          "mean": 19862.93184070587,
+          "min": 16768.428517341614,
+          "max": 21660.09918510914,
+          "placebo_mean": 24029.119428658487,
+          "ratio_to_placebo": 0.8266192150602163,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_ce",
+          "mean": 17316.027290701866,
+          "min": 13374.531856536865,
+          "max": 20438.247102737427,
+          "placebo_mean": 24029.119428658487,
+          "ratio_to_placebo": 0.7206267937579849,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_ce",
+          "mean": 23305.768802118302,
+          "min": 20054.699582099915,
+          "max": 25091.570563554764,
+          "placebo_mean": 24029.119428658487,
+          "ratio_to_placebo": 0.9698969149207576,
+          "cell_wins": 1,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_ce",
+          "mean": 19353.754117918015,
+          "min": 15225.650557041168,
+          "max": 22150.707671761513,
+          "placebo_mean": 24029.119428658487,
+          "ratio_to_placebo": 0.8054291866740498,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_ce",
+          "mean": 19274.923852705957,
+          "min": 16280.431313037872,
+          "max": 20108.065905809402,
+          "placebo_mean": 24029.119428658487,
+          "ratio_to_placebo": 0.8021485726904163,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_ce",
+          "mean": 18797.395111203194,
+          "min": 15148.838407039642,
+          "max": 21100.139419317245,
+          "placebo_mean": 24029.119428658487,
+          "ratio_to_placebo": 0.7822756537963,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_ce",
+          "mean": 22294.925859975814,
+          "min": 19016.391289711,
+          "max": 24127.8268327713,
+          "placebo_mean": 24029.119428658487,
+          "ratio_to_placebo": 0.9278294997937221,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp028_recon_dec1",
+      "run_id": "3f17aca11b6b418890d2a9919801e092",
+      "baseline_config": "exp026_constrained_impute_nowidth",
+      "baseline_run_id": "4b6de022abd54d6c92570c1ea06795d7",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9672337410118509,
+      "baseline_oof_auc": 0.9672173234483032,
+      "oof_delta": 1.6417563547643788e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        -3.30986088389329e-05,
+        0.00010754640707988372,
+        6.391323390741999e-05,
+        -1.7562723901076716e-05,
+        -2.2477501544826417e-05
+      ],
+      "fold_wins": 2,
+      "seed_deltas": {
+        "42": 1.6417563547643788e-05
+      },
+      "placebo": {
+        "mean": 26570.111932945252,
+        "min": 21454.53516817093,
+        "max": 34128.8209028244,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "daily_screen_time_hours_dec1",
+          "mean": 13049.002687597274,
+          "min": 11071.12045288086,
+          "max": 16088.421709299088,
+          "placebo_mean": 26570.111932945252,
+          "ratio_to_placebo": 0.4911158342324234,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_dec1",
+          "mean": 10208.98288655281,
+          "min": 8219.382424354553,
+          "max": 13023.374837517738,
+          "placebo_mean": 26570.111932945252,
+          "ratio_to_placebo": 0.38422807221577115,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_dec1",
+          "mean": 11551.914915800095,
+          "min": 8790.839538812637,
+          "max": 14795.73213338852,
+          "placebo_mean": 26570.111932945252,
+          "ratio_to_placebo": 0.4347710293789336,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_dec1",
+          "mean": 9158.105768275262,
+          "min": 7266.333847045898,
+          "max": 11426.729225993156,
+          "placebo_mean": 26570.111932945252,
+          "ratio_to_placebo": 0.34467697356290744,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_dec1",
+          "mean": 13530.15050804615,
+          "min": 11137.60761833191,
+          "max": 17426.531947016716,
+          "placebo_mean": 26570.111932945252,
+          "ratio_to_placebo": 0.5092244452033949,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_dec1",
+          "mean": 11437.961472964287,
+          "min": 9099.299759626389,
+          "max": 14488.503680586815,
+          "placebo_mean": 26570.111932945252,
+          "ratio_to_placebo": 0.4304822464365286,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp029_recon_orig_mean",
+      "run_id": "70320545d6534bc6b8cb09c408f07b25",
+      "baseline_config": "exp026_constrained_impute_nowidth",
+      "baseline_run_id": "4b6de022abd54d6c92570c1ea06795d7",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9672827790958759,
+      "baseline_oof_auc": 0.9672173234483032,
+      "oof_delta": 6.545564757265421e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        5.5842667394889745e-05,
+        9.814761850135412e-05,
+        9.702465558580897e-05,
+        -0.00010337830161699646,
+        0.00018565968202655103
+      ],
+      "fold_wins": 4,
+      "seed_deltas": {
+        "42": 6.545564757265421e-05
+      },
+      "placebo": {
+        "mean": 20923.002340817453,
+        "min": 17390.443226099014,
+        "max": 24510.949833393097,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "age_orig_mean",
+          "mean": 14071.162632155418,
+          "min": 12572.108455896378,
+          "max": 15796.717865228653,
+          "placebo_mean": 20923.002340817453,
+          "ratio_to_placebo": 0.6725211995366848,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_orig_mean",
+          "mean": 33388.49427268505,
+          "min": 30445.3096678257,
+          "max": 37209.510706305504,
+          "placebo_mean": 20923.002340817453,
+          "ratio_to_placebo": 1.5957793116310752,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours_orig_mean",
+          "mean": 19688.085200428963,
+          "min": 17341.116973876953,
+          "max": 23487.538272857666,
+          "placebo_mean": 20923.002340817453,
+          "ratio_to_placebo": 0.94097801451853,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_orig_mean",
+          "mean": 23219.698535346986,
+          "min": 20268.55393576622,
+          "max": 28282.239161372185,
+          "placebo_mean": 20923.002340817453,
+          "ratio_to_placebo": 1.1097689594025923,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "notifications_per_day_orig_mean",
+          "mean": 55594.182301425935,
+          "min": 51075.047518491745,
+          "max": 58662.38073146343,
+          "placebo_mean": 20923.002340817453,
+          "ratio_to_placebo": 2.657084360831453,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "sleep_hours_orig_mean",
+          "mean": 21272.14378809929,
+          "min": 17354.095581531525,
+          "max": 26426.041036486626,
+          "placebo_mean": 20923.002340817453,
+          "ratio_to_placebo": 1.0166869668891025,
+          "cell_wins": 2,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "social_media_hours_orig_mean",
+          "mean": 18090.089257860185,
+          "min": 15165.028636693954,
+          "max": 22030.10788679123,
+          "placebo_mean": 20923.002340817453,
+          "ratio_to_placebo": 0.864602936193784,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_orig_mean",
+          "mean": 19793.89900665283,
+          "min": 16289.525980710983,
+          "max": 24192.132521748543,
+          "placebo_mean": 20923.002340817453,
+          "ratio_to_placebo": 0.9460353100490784,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_orig_mean",
+          "mean": 25141.60082347393,
+          "min": 21197.16476583481,
+          "max": 29829.597683906555,
+          "placebo_mean": 20923.002340817453,
+          "ratio_to_placebo": 1.2016249108965906,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        }
+      ]
+    },
+    {
+      "config": "exp030_recon_orig_mean_raw",
+      "run_id": "189da0b363684293a0aec15eacb03e3e",
+      "baseline_config": "exp026_constrained_impute_nowidth",
+      "baseline_run_id": "4b6de022abd54d6c92570c1ea06795d7",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9673339724205955,
+      "baseline_oof_auc": 0.9672173234483032,
+      "oof_delta": 0.00011664897229224369,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        5.033022867195758e-05,
+        0.00021454960051281446,
+        0.0002283572744473661,
+        1.7491428696558842e-06,
+        8.66139013540046e-05
+      ],
+      "fold_wins": 5,
+      "seed_deltas": {
+        "42": 0.00011664897229224369
+      },
+      "placebo": {
+        "mean": 23954.09474234581,
+        "min": 19999.46831226349,
+        "max": 27191.15394628048,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "age_orig_mean",
+          "mean": 15059.613844537735,
+          "min": 13966.027304410934,
+          "max": 16355.775593996048,
+          "placebo_mean": 23954.09474234581,
+          "ratio_to_placebo": 0.6286864106751444,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_orig_mean",
+          "mean": 35716.62760744095,
+          "min": 31469.484208345413,
+          "max": 39112.69666290283,
+          "placebo_mean": 23954.09474234581,
+          "ratio_to_placebo": 1.4910447667346598,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours_orig_mean",
+          "mean": 16770.491652226447,
+          "min": 13533.907792568207,
+          "max": 19189.023907899857,
+          "placebo_mean": 23954.09474234581,
+          "ratio_to_placebo": 0.7001095984888019,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_orig_mean",
+          "mean": 24310.425262761117,
+          "min": 20205.90044403076,
+          "max": 27222.526114821434,
+          "placebo_mean": 23954.09474234581,
+          "ratio_to_placebo": 1.014875557780332,
+          "cell_wins": 4,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "notifications_per_day_orig_mean",
+          "mean": 55664.32514641285,
+          "min": 49438.40926194191,
+          "max": 59623.8616682291,
+          "placebo_mean": 23954.09474234581,
+          "ratio_to_placebo": 2.3237916416857956,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "sleep_hours_orig_mean",
+          "mean": 21725.90464835167,
+          "min": 17571.16726255417,
+          "max": 24395.19710600376,
+          "placebo_mean": 23954.09474234581,
+          "ratio_to_placebo": 0.9069808265367186,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_orig_mean",
+          "mean": 18186.729319810867,
+          "min": 15489.51700758934,
+          "max": 20780.20194017887,
+          "placebo_mean": 23954.09474234581,
+          "ratio_to_placebo": 0.7592325869723037,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_orig_mean",
+          "mean": 16732.251843047143,
+          "min": 13749.155685186386,
+          "max": 18591.289986014366,
+          "placebo_mean": 23954.09474234581,
+          "ratio_to_placebo": 0.6985132196821463,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_orig_mean",
+          "mean": 25088.65583603382,
+          "min": 20981.44832777977,
+          "max": 28903.558587551117,
+          "placebo_mean": 23954.09474234581,
+          "ratio_to_placebo": 1.0473639728777704,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        }
+      ]
+    },
+    {
+      "config": "exp031_recon_orig_mean_count",
+      "run_id": "91ce6c7216954753be73a0516ab2058c",
+      "baseline_config": "exp026_constrained_impute_nowidth",
+      "baseline_run_id": "4b6de022abd54d6c92570c1ea06795d7",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9673707715996418,
+      "baseline_oof_auc": 0.9672173234483032,
+      "oof_delta": 0.00015344815133855327,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        0.00021405167581267648,
+        0.00018433464170053426,
+        0.0002126281820400422,
+        -4.6456057334332e-07,
+        0.00018420712255251548
+      ],
+      "fold_wins": 4,
+      "seed_deltas": {
+        "42": 0.00015344815133855327
+      },
+      "placebo": {
+        "mean": 18493.034885787965,
+        "min": 13153.698105096817,
+        "max": 23674.338413000107,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "age_orig_count",
+          "mean": 9338.900973343849,
+          "min": 5633.390626907349,
+          "max": 12430.303208470345,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 0.5049955851497833,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age_orig_mean",
+          "mean": 12792.232923841477,
+          "min": 11311.853744745255,
+          "max": 14792.00203859806,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 0.6917324821396623,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_orig_count",
+          "mean": 12059.237461161614,
+          "min": 8546.204872846603,
+          "max": 15818.483480095863,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 0.6520961830028897,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_orig_mean",
+          "mean": 31570.26586740017,
+          "min": 26969.466825962067,
+          "max": 36920.65970170498,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 1.7071435847267098,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours_orig_count",
+          "mean": 7335.373778009414,
+          "min": 5355.680299520493,
+          "max": 9516.011886358261,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 0.39665602878663814,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_orig_mean",
+          "mean": 17194.299673104288,
+          "min": 12789.993478059769,
+          "max": 21413.47785961628,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 0.929771656155704,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_orig_count",
+          "mean": 13065.69714422226,
+          "min": 10282.391461610794,
+          "max": 16380.91708111763,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 0.7065198992439767,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_orig_mean",
+          "mean": 20503.52486975193,
+          "min": 15357.157663822174,
+          "max": 25721.421821951866,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 1.108716065068857,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "notifications_per_day_orig_count",
+          "mean": 13835.846420884132,
+          "min": 10263.806845664978,
+          "max": 17690.42654323578,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 0.7481652690504079,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_orig_mean",
+          "mean": 51939.85055787563,
+          "min": 44889.55086970329,
+          "max": 57123.76693916321,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 2.808616913267805,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "sleep_hours_orig_count",
+          "mean": 10402.29748082161,
+          "min": 6830.234668254852,
+          "max": 13719.768301486969,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 0.5624981267307213,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_orig_mean",
+          "mean": 18564.681296730043,
+          "min": 12962.264968395233,
+          "max": 24387.521681547165,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 1.0038742375918588,
+          "cell_wins": 3,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "social_media_hours_orig_count",
+          "mean": 8882.966861581803,
+          "min": 6555.44704914093,
+          "max": 11469.970380306244,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 0.48034121583842515,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_orig_mean",
+          "mean": 15396.631682443618,
+          "min": 10959.440479278564,
+          "max": 19261.134357213974,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 0.8325638153787318,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_orig_count",
+          "mean": 8710.515810894965,
+          "min": 5948.654849529266,
+          "max": 11306.116720318794,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 0.47101602655760205,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_orig_mean",
+          "mean": 17188.493061685564,
+          "min": 12372.765820264816,
+          "max": 21382.417422056198,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 0.9294576670536131,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_orig_count",
+          "mean": 12058.43005375862,
+          "min": 9025.082509994507,
+          "max": 14953.44888496399,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 0.6520525229217846,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_orig_mean",
+          "mean": 22033.141568422318,
+          "min": 16592.23568558693,
+          "max": 27105.08378481865,
+          "placebo_mean": 18493.034885787965,
+          "ratio_to_placebo": 1.191429189665075,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        }
+      ]
+    },
+    {
+      "config": "exp033_recon_orig_mean_top3_raw",
+      "run_id": "c34f1da180544c3ba022140d394cb055",
+      "baseline_config": "exp026_constrained_impute_nowidth",
+      "baseline_run_id": "62f57ea7478f4de4b4fecdfb4baa3a35",
+      "seeds": [
+        42,
+        43,
+        44
+      ],
+      "comparison_mode": "paired_averaged_predictions",
+      "oof_auc": 0.9676202184993681,
+      "baseline_oof_auc": 0.9675476423592995,
+      "oof_delta": 7.257614006861424e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        9.091102828906461e-05,
+        0.0001662705678850962,
+        6.862455301748227e-05,
+        -4.92672704399677e-06,
+        2.955457427888941e-05
+      ],
+      "fold_wins": 4,
+      "seed_deltas": {
+        "42": 6.138710353131849e-05,
+        "43": 5.9853512626384386e-05,
+        "44": 5.452308654563254e-05
+      },
+      "placebo": {
+        "mean": 26371.196492115658,
+        "min": 21806.340044736862,
+        "max": 30038.80215370655,
+        "cells": 15
+      },
+      "features": [
+        {
+          "feature": "app_opens_per_day_orig_mean",
+          "mean": 36401.77393520673,
+          "min": 33043.49830698967,
+          "max": 39935.37429189682,
+          "placebo_mean": 26371.196492115658,
+          "ratio_to_placebo": 1.3803611051963445,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "notifications_per_day_orig_mean",
+          "mean": 56142.43314239979,
+          "min": 50617.66771674156,
+          "max": 60514.230494856834,
+          "placebo_mean": 26371.196492115658,
+          "ratio_to_placebo": 2.1289300680454524,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "work_study_hours_orig_mean",
+          "mean": 25831.196010692915,
+          "min": 21347.55003142357,
+          "max": 30150.436724185944,
+          "placebo_mean": 26371.196492115658,
+          "ratio_to_placebo": 0.9795230951472305,
+          "cell_wins": 2,
+          "cells": 15,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp035_lattice_te",
+      "logged_config_alias": "exp033_lattice_te",
+      "run_id": "e02d3e5c41ad4113b728f11a79fd63c1",
+      "baseline_config": "exp026_constrained_impute_nowidth",
+      "baseline_run_id": "4b6de022abd54d6c92570c1ea06795d7",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9668518233770695,
+      "baseline_oof_auc": 0.9672173234483032,
+      "oof_delta": -0.0003655000712337042,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        -0.0006175566592417914,
+        -0.00035915200777325573,
+        -0.0002651976129739442,
+        -0.0003298326791216777,
+        -0.0002629609645287134
+      ],
+      "fold_wins": 0,
+      "seed_deltas": {
+        "42": -0.0003655000712337042
+      },
+      "placebo": {
+        "mean": 6486.8688820838925,
+        "min": 5624.182159423828,
+        "max": 7098.231644630432,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "age__app_opens_per_day_latf_ct",
+          "mean": 4261.180249023438,
+          "min": 3661.47781085968,
+          "max": 4747.476590156555,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.6568932294581146,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age__app_opens_per_day_latf_te",
+          "mean": 35722.43222770691,
+          "min": 32779.26130771637,
+          "max": 41147.94941616058,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 5.5068836563613655,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "age__daily_screen_time_hours_latf_ct",
+          "mean": 5936.70358877182,
+          "min": 5403.736969947815,
+          "max": 6606.662925720215,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.9151878505157433,
+          "cell_wins": 2,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age__daily_screen_time_hours_latf_te",
+          "mean": 3840.178505420685,
+          "min": 3449.935359954834,
+          "max": 4209.242308616638,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5919926200492334,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age__gaming_hours_latf_ct",
+          "mean": 3714.4073494911195,
+          "min": 3437.0631227493286,
+          "max": 3953.7479577064514,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5726040431848337,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age__gaming_hours_latf_te",
+          "mean": 3790.068903255463,
+          "min": 3234.6676783561707,
+          "max": 4155.174289703369,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.584267845111417,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age__notifications_per_day_latf_ct",
+          "mean": 4365.025134754181,
+          "min": 3845.530791759491,
+          "max": 5045.827395915985,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.6729017055994395,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age__notifications_per_day_latf_te",
+          "mean": 25564.09148340225,
+          "min": 24070.142535209656,
+          "max": 27901.33366203308,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 3.940898443933068,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "age__sleep_hours_latf_ct",
+          "mean": 4086.2923072814942,
+          "min": 3683.1871786117554,
+          "max": 4439.631115436554,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.6299329278209154,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age__sleep_hours_latf_te",
+          "mean": 5642.720802116394,
+          "min": 5262.605635643005,
+          "max": 6632.512197971344,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.8698681759548195,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age__social_media_hours_latf_ct",
+          "mean": 4512.654111766815,
+          "min": 3660.332980632782,
+          "max": 5210.774027824402,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.6956598312369672,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age__social_media_hours_latf_te",
+          "mean": 2851.414985084534,
+          "min": 2486.215012550354,
+          "max": 3203.346091270447,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.43956722987878905,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age__weekend_screen_time_latf_ct",
+          "mean": 4980.709679889679,
+          "min": 4134.718864440918,
+          "max": 5613.562172412872,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.7678141443009462,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age__weekend_screen_time_latf_te",
+          "mean": 3962.707933330536,
+          "min": 3396.8710741996765,
+          "max": 4577.707097530365,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.610881459971413,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age__work_study_hours_latf_ct",
+          "mean": 3595.8464917182923,
+          "min": 3214.6060967445374,
+          "max": 3944.355375766754,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5543269884257526,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age__work_study_hours_latf_te",
+          "mean": 4152.737718963623,
+          "min": 3324.6104760169983,
+          "max": 4756.705529689789,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.6401759915994425,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day__weekend_screen_time_latf_ct",
+          "mean": 4686.432140827179,
+          "min": 4192.308710098267,
+          "max": 5529.005816459656,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.7224490314226412,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day__weekend_screen_time_latf_te",
+          "mean": 127657.96421785354,
+          "min": 120600.81706476212,
+          "max": 140800.84056186676,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 19.67944266153314,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours__app_opens_per_day_latf_ct",
+          "mean": 5635.703478050232,
+          "min": 4975.056528091431,
+          "max": 6400.237985134125,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.8687864022680499,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours__app_opens_per_day_latf_te",
+          "mean": 63485.55195951462,
+          "min": 60507.0623421669,
+          "max": 64791.86953639984,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 9.786778970491541,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours__gaming_hours_latf_ct",
+          "mean": 5461.952904510498,
+          "min": 4528.918950557709,
+          "max": 6274.3739285469055,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.8420014345589575,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours__gaming_hours_latf_te",
+          "mean": 3813.2087553024294,
+          "min": 3505.440336704254,
+          "max": 3966.8427624702454,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5878350286737173,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours__notifications_per_day_latf_ct",
+          "mean": 4661.296967697143,
+          "min": 4120.523827075958,
+          "max": 5037.393443584442,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.7185742539935094,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours__notifications_per_day_latf_te",
+          "mean": 140718.9916027069,
+          "min": 18906.064822673798,
+          "max": 370028.0784597397,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 21.692899018100892,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours__sleep_hours_latf_ct",
+          "mean": 3195.1294049263,
+          "min": 2838.947512149811,
+          "max": 3522.8633227348328,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.4925534125949331,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours__sleep_hours_latf_te",
+          "mean": 6516.330736732483,
+          "min": 5395.875699996948,
+          "max": 7187.4204206466675,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 1.0045417681757005,
+          "cell_wins": 2,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours__social_media_hours_latf_ct",
+          "mean": 6208.855237483978,
+          "min": 5543.698858737946,
+          "max": 7006.963439464569,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.957142089711762,
+          "cell_wins": 2,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours__social_media_hours_latf_te",
+          "mean": 724119.2082869529,
+          "min": 722953.3543291092,
+          "max": 724913.2584805489,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 111.62846381663432,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours__weekend_screen_time_latf_ct",
+          "mean": 3693.0839792251586,
+          "min": 3279.222587108612,
+          "max": 4358.295303344727,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5693168840555882,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours__weekend_screen_time_latf_te",
+          "mean": 560087.6585539818,
+          "min": 230404.07504844666,
+          "max": 825274.4900341034,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 86.34175728461076,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours__work_study_hours_latf_ct",
+          "mean": 6230.64310503006,
+          "min": 5934.274645805359,
+          "max": 6438.924388408661,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.9605008546170088,
+          "cell_wins": 2,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours__work_study_hours_latf_te",
+          "mean": 6043.233316516877,
+          "min": 5893.958516597748,
+          "max": 6229.779418468475,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.9316102154011013,
+          "cell_wins": 2,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours__app_opens_per_day_latf_ct",
+          "mean": 3850.2438552856447,
+          "min": 3323.155951499939,
+          "max": 4238.298694610596,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5935442700128636,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours__app_opens_per_day_latf_te",
+          "mean": 6352.994829273224,
+          "min": 5869.621892929077,
+          "max": 7029.3086013793945,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.9793623001722117,
+          "cell_wins": 3,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours__notifications_per_day_latf_ct",
+          "mean": 3790.0824600219726,
+          "min": 3357.8184266090393,
+          "max": 4144.442237854004,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5842699349897168,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours__notifications_per_day_latf_te",
+          "mean": 6463.200687503815,
+          "min": 5493.055829048157,
+          "max": 7325.02401304245,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.9963513684320879,
+          "cell_wins": 3,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours__sleep_hours_latf_ct",
+          "mean": 2472.675954246521,
+          "min": 2224.0016283988953,
+          "max": 2853.1994109153748,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.38118173793766885,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours__sleep_hours_latf_te",
+          "mean": 2781.3285778045656,
+          "min": 2138.746557712555,
+          "max": 3084.3786964416504,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.42876287903495747,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours__weekend_screen_time_latf_ct",
+          "mean": 3057.4132533073425,
+          "min": 2924.3959155082703,
+          "max": 3187.2725620269775,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.47132342411785505,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours__weekend_screen_time_latf_te",
+          "mean": 7208.438512802124,
+          "min": 5698.381694316864,
+          "max": 7968.057907104492,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 1.1112354271120135,
+          "cell_wins": 4,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "gaming_hours__work_study_hours_latf_ct",
+          "mean": 4740.656904697418,
+          "min": 4212.593059062958,
+          "max": 5393.273156642914,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.7308081897247309,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours__work_study_hours_latf_te",
+          "mean": 25152.282499027253,
+          "min": 23298.05597925186,
+          "max": 26499.026167869568,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 3.8774149680280168,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "notifications_per_day__app_opens_per_day_latf_ct",
+          "mean": 3683.8804040908813,
+          "min": 3111.6601181030273,
+          "max": 4176.073877811432,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5678980831977973,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day__app_opens_per_day_latf_te",
+          "mean": 89979.72851819992,
+          "min": 86924.95064687729,
+          "max": 93747.47260332108,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 13.871057077585654,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "notifications_per_day__weekend_screen_time_latf_ct",
+          "mean": 4620.197673892975,
+          "min": 3780.8560967445374,
+          "max": 5907.3779401779175,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.7122384863756868,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day__weekend_screen_time_latf_te",
+          "mean": 285750.9217167854,
+          "min": 278623.10685014725,
+          "max": 295183.8043284416,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 44.05067019405956,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "sleep_hours__app_opens_per_day_latf_ct",
+          "mean": 3607.222271728516,
+          "min": 2776.3332962989807,
+          "max": 4208.349837303162,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5560806511275904,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours__app_opens_per_day_latf_te",
+          "mean": 16743.074748325347,
+          "min": 15974.755168914795,
+          "max": 18791.974650859833,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 2.58107186266214,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "sleep_hours__notifications_per_day_latf_ct",
+          "mean": 3765.162025356293,
+          "min": 3164.1542019844055,
+          "max": 4352.969105243683,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5804282611222971,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours__notifications_per_day_latf_te",
+          "mean": 13248.15406885147,
+          "min": 11592.35187625885,
+          "max": 15523.638159751892,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 2.0423033530771058,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "sleep_hours__weekend_screen_time_latf_ct",
+          "mean": 3281.567900276184,
+          "min": 2673.674005508423,
+          "max": 4010.4611010551453,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5058785617417918,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours__weekend_screen_time_latf_te",
+          "mean": 6405.827797985077,
+          "min": 5597.601979255676,
+          "max": 7049.449785709381,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.9875069027026825,
+          "cell_wins": 1,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours__app_opens_per_day_latf_ct",
+          "mean": 3273.45889005661,
+          "min": 3026.5171508789062,
+          "max": 3570.5814604759216,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5046284963609468,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours__app_opens_per_day_latf_te",
+          "mean": 203698.84693431854,
+          "min": 182657.78901195526,
+          "max": 239052.84338760376,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 31.40172102089425,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "social_media_hours__gaming_hours_latf_ct",
+          "mean": 4136.3599564552305,
+          "min": 3196.8777289390564,
+          "max": 4545.0177454948425,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.6376512353871463,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours__gaming_hours_latf_te",
+          "mean": 3302.449710559845,
+          "min": 3068.359517097473,
+          "max": 3427.3584842681885,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5090976510533292,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours__notifications_per_day_latf_ct",
+          "mean": 3521.5453884124754,
+          "min": 2767.741428375244,
+          "max": 4045.8241477012634,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5428729102477537,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours__notifications_per_day_latf_te",
+          "mean": 442841.93784389494,
+          "min": 376941.96637773514,
+          "max": 481261.29331064224,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 68.26744087073838,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "social_media_hours__sleep_hours_latf_ct",
+          "mean": 2279.44660282135,
+          "min": 2006.1897802352905,
+          "max": 2538.0284576416016,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.3513939689943421,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours__sleep_hours_latf_te",
+          "mean": 3508.002903366089,
+          "min": 2966.935929775238,
+          "max": 3986.115081310272,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5407852335438528,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours__weekend_screen_time_latf_ct",
+          "mean": 2632.43630399704,
+          "min": 2348.354884624481,
+          "max": 2848.077929019928,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.40581000662239,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours__weekend_screen_time_latf_te",
+          "mean": 25139.852173900603,
+          "min": 7279.2116050720215,
+          "max": 58588.65600776672,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 3.875498739204434,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "social_media_hours__work_study_hours_latf_ct",
+          "mean": 4327.020014858246,
+          "min": 3701.3550114631653,
+          "max": 4854.178914070129,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.6670429283392885,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours__work_study_hours_latf_te",
+          "mean": 4186.894265556335,
+          "min": 3740.715760231018,
+          "max": 4479.785894393921,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.6454414821178418,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours__app_opens_per_day_latf_ct",
+          "mean": 3369.282493305206,
+          "min": 3079.608726978302,
+          "max": 3684.2234296798706,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5194004310170104,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours__app_opens_per_day_latf_te",
+          "mean": 8021.074968147278,
+          "min": 6829.031341552734,
+          "max": 8828.69166135788,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 1.236509495405513,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "work_study_hours__notifications_per_day_latf_ct",
+          "mean": 3664.229540348053,
+          "min": 2966.018018722534,
+          "max": 4461.070284843445,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.5648687536244646,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours__notifications_per_day_latf_te",
+          "mean": 8736.553510761261,
+          "min": 7922.6994071006775,
+          "max": 9266.175906658173,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 1.346805935123921,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "work_study_hours__sleep_hours_latf_ct",
+          "mean": 2459.017996120453,
+          "min": 2128.5437483787537,
+          "max": 2813.24738740921,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.37907626018340285,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours__sleep_hours_latf_te",
+          "mean": 2952.2009484291075,
+          "min": 2531.0453934669495,
+          "max": 3431.3691754341125,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.4551041499517282,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours__weekend_screen_time_latf_ct",
+          "mean": 3188.3773295402525,
+          "min": 2836.3374948501587,
+          "max": 3405.4584064483643,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 0.49151252900243503,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours__weekend_screen_time_latf_te",
+          "mean": 6922.581461429596,
+          "min": 6130.6464648246765,
+          "max": 7198.013600826263,
+          "placebo_mean": 6486.8688820838925,
+          "ratio_to_placebo": 1.0671683962271998,
+          "cell_wins": 3,
+          "cells": 5,
+          "passes_mean_gate": true
+        }
+      ]
+    },
+    {
+      "config": "exp048_lgb_orig_cdf_diff",
+      "run_id": "3e4d9915c7e34eba97f4902ce7a90255",
+      "baseline_config": "exp026_constrained_impute_nowidth",
+      "baseline_run_id": "4b6de022abd54d6c92570c1ea06795d7",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9672517597979359,
+      "baseline_oof_auc": 0.9672173234483032,
+      "oof_delta": 3.4436349632627206e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        0.00014957924392366984,
+        -1.6616096102262112e-05,
+        3.0130216468360338e-05,
+        9.829858166110483e-06,
+        4.035730348694866e-05
+      ],
+      "fold_wins": 4,
+      "seed_deltas": {
+        "42": 3.4436349632627206e-05
+      },
+      "placebo": {
+        "mean": 27249.400916075705,
+        "min": 16474.436868190765,
+        "max": 32157.168152213097,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "app_opens_per_day_orig_cdf_diff",
+          "mean": 30454.116097688675,
+          "min": 21192.120711565018,
+          "max": 35302.26803839207,
+          "placebo_mean": 27249.400916075705,
+          "ratio_to_placebo": 1.1176068124023364,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours_orig_cdf_diff",
+          "mean": 38633.36675348282,
+          "min": 33224.24878072739,
+          "max": 41067.03623497486,
+          "placebo_mean": 27249.400916075705,
+          "ratio_to_placebo": 1.4177693987646964,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "notifications_per_day_orig_cdf_diff",
+          "mean": 31815.121994829176,
+          "min": 21455.756159305573,
+          "max": 36640.04772531986,
+          "placebo_mean": 27249.400916075705,
+          "ratio_to_placebo": 1.1675530809948904,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "social_media_hours_orig_cdf_diff",
+          "mean": 15914.299931144715,
+          "min": 12826.778464794159,
+          "max": 18711.100602269173,
+          "placebo_mean": 27249.400916075705,
+          "ratio_to_placebo": 0.5840238462547673,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_orig_cdf_diff",
+          "mean": 26647.595547032357,
+          "min": 17882.930606365204,
+          "max": 31382.27646446228,
+          "placebo_mean": 27249.400916075705,
+          "ratio_to_placebo": 0.9779149137664779,
+          "cell_wins": 1,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp049_lgb_orig_kde_lr",
+      "run_id": "523ee8114f8943838e624f7c3fdecb0d",
+      "baseline_config": "exp026_constrained_impute_nowidth",
+      "baseline_run_id": "4b6de022abd54d6c92570c1ea06795d7",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9672421500269979,
+      "baseline_oof_auc": 0.9672173234483032,
+      "oof_delta": 2.4826578694625567e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        7.217941822568186e-06,
+        5.4823729511932484e-05,
+        5.685018789602925e-05,
+        -5.535603321660254e-05,
+        9.457798682532825e-05
+      ],
+      "fold_wins": 4,
+      "seed_deltas": {
+        "42": 2.4826578694625567e-05
+      },
+      "placebo": {
+        "mean": 23759.58562643528,
+        "min": 18507.83514904976,
+        "max": 31009.396480441093,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "app_opens_per_day_orig_kde_lr",
+          "mean": 22481.468311548233,
+          "min": 18439.04278445244,
+          "max": 27731.996919870377,
+          "placebo_mean": 23759.58562643528,
+          "ratio_to_placebo": 0.9462062455556887,
+          "cell_wins": 1,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_orig_kde_lr",
+          "mean": 24906.751787137986,
+          "min": 20717.562700033188,
+          "max": 31380.06369614601,
+          "placebo_mean": 23759.58562643528,
+          "ratio_to_placebo": 1.048282246110654,
+          "cell_wins": 4,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "weekend_screen_time_orig_kde_lr",
+          "mean": 25535.191474342348,
+          "min": 22991.373853445053,
+          "max": 29480.469770908356,
+          "placebo_mean": 23759.58562643528,
+          "ratio_to_placebo": 1.0747321891814268,
+          "cell_wins": 4,
+          "cells": 5,
+          "passes_mean_gate": true
+        }
+      ]
+    },
+    {
+      "config": "exp050_lgb_xgb_impute",
+      "run_id": "f9c37fe98bca4e618f993cc7e5d0b1fe",
+      "baseline_config": "exp026_constrained_impute_nowidth",
+      "baseline_run_id": "4b6de022abd54d6c92570c1ea06795d7",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.967345008017359,
+      "baseline_oof_auc": 0.9672173234483032,
+      "oof_delta": 0.00012768456905576375,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        5.5815392538516306e-05,
+        0.00015745279717294114,
+        0.00010599643409037185,
+        5.345973298376272e-05,
+        0.0002547535594877859
+      ],
+      "fold_wins": 5,
+      "seed_deltas": {
+        "42": 0.00012768456905576375
+      },
+      "placebo": {
+        "mean": 24301.358061504365,
+        "min": 19710.562036275864,
+        "max": 35946.85288763046,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "age_xgb_recon",
+          "mean": 1756.3676614522933,
+          "min": 1459.4102914333344,
+          "max": 2548.330741763115,
+          "placebo_mean": 24301.358061504365,
+          "ratio_to_placebo": 0.07227446536144598,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_xgb_recon",
+          "mean": 4761.40079703331,
+          "min": 3916.509558200836,
+          "max": 7206.115141153336,
+          "placebo_mean": 24301.358061504365,
+          "ratio_to_placebo": 0.19593146954926013,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_xgb_recon",
+          "mean": 2283234.0107611655,
+          "min": 2243162.9619140625,
+          "max": 2318997.477859974,
+          "placebo_mean": 24301.358061504365,
+          "ratio_to_placebo": 93.95499646491045,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "gaming_hours_xgb_recon",
+          "mean": 51031.97355792522,
+          "min": 48117.7282576561,
+          "max": 55949.11841905117,
+          "placebo_mean": 24301.358061504365,
+          "ratio_to_placebo": 2.099963855055684,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "notifications_per_day_xgb_recon",
+          "mean": 3558.8893731594085,
+          "min": 3019.0049273967743,
+          "max": 5125.042455434799,
+          "placebo_mean": 24301.358061504365,
+          "ratio_to_placebo": 0.1464481682115134,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_xgb_recon",
+          "mean": 3833.2418341875077,
+          "min": 3161.717047929764,
+          "max": 5556.930868029594,
+          "placebo_mean": 24301.358061504365,
+          "ratio_to_placebo": 0.15773776200021195,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_xgb_recon",
+          "mean": 707816.5526664257,
+          "min": 704619.367263794,
+          "max": 713262.9752156734,
+          "placebo_mean": 24301.358061504365,
+          "ratio_to_placebo": 29.126625387561102,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "weekend_screen_time_xgb_recon",
+          "mean": 115367.25176031589,
+          "min": 111711.44570708275,
+          "max": 122197.52167928219,
+          "placebo_mean": 24301.358061504365,
+          "ratio_to_placebo": 4.747358212176152,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "work_study_hours_xgb_recon",
+          "mean": 36211.29129414559,
+          "min": 33565.64963531494,
+          "max": 39705.756907463074,
+          "placebo_mean": 24301.358061504365,
+          "ratio_to_placebo": 1.4900933191675274,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        }
+      ]
+    },
+    {
+      "config": "exp054_lgb_xgb_impute_comps",
+      "run_id": "ee3339dd1dcd4f7cbd927b212bec310a",
+      "baseline_config": "exp051_lgb_xgb_impute_pass5",
+      "baseline_run_id": "f139eeec4b2c495a9aeab56aba3ec665",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9675361035746656,
+      "baseline_oof_auc": 0.9673489428407538,
+      "oof_delta": 0.00018716073391178423,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        0.0002276353153470856,
+        0.0002360624847468351,
+        0.00015939248345642199,
+        0.00012687146726919618,
+        0.0002315384875690718
+      ],
+      "fold_wins": 5,
+      "seed_deltas": {
+        "42": 0.00018716073391178423
+      },
+      "placebo": {
+        "mean": 21128.65201957226,
+        "min": 15675.474781513214,
+        "max": 29985.86934173107,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "imp_awake_screen_frac",
+          "mean": 10321.529170775413,
+          "min": 8122.00265455246,
+          "max": 14963.760640978813,
+          "placebo_mean": 21128.65201957226,
+          "ratio_to_placebo": 0.4885086450954938,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "imp_free_time",
+          "mean": 95851.35829732419,
+          "min": 10540.059678792953,
+          "max": 428016.4126458168,
+          "placebo_mean": 21128.65201957226,
+          "ratio_to_placebo": 4.5365581395601335,
+          "cell_wins": 1,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "imp_leisure",
+          "mean": 11879.004139709472,
+          "min": 9403.043112039566,
+          "max": 15195.49289894104,
+          "placebo_mean": 21128.65201957226,
+          "ratio_to_placebo": 0.5622225274336246,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "imp_leisure_frac",
+          "mean": 24015.136186122894,
+          "min": 22566.49187064171,
+          "max": 26306.63683271408,
+          "placebo_mean": 21128.65201957226,
+          "ratio_to_placebo": 1.1366146862505369,
+          "cell_wins": 4,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "imp_min_per_open",
+          "mean": 13218.247710728645,
+          "min": 10190.322869300842,
+          "max": 17964.005583405495,
+          "placebo_mean": 21128.65201957226,
+          "ratio_to_placebo": 0.6256077149874062,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "imp_notif_per_open",
+          "mean": 14358.16629869938,
+          "min": 10420.092000961304,
+          "max": 19548.111070036888,
+          "placebo_mean": 21128.65201957226,
+          "ratio_to_placebo": 0.6795590312812608,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "imp_resid",
+          "mean": 12032.545553565025,
+          "min": 9749.54771232605,
+          "max": 15432.935970187187,
+          "placebo_mean": 21128.65201957226,
+          "ratio_to_placebo": 0.5694895037515327,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "imp_resid_frac",
+          "mean": 38730.18510427475,
+          "min": 31987.989989995956,
+          "max": 56174.89875793457,
+          "placebo_mean": 21128.65201957226,
+          "ratio_to_placebo": 1.8330646492922282,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "imp_social_frac",
+          "mean": 252712.1329315424,
+          "min": 228595.99894237518,
+          "max": 264830.0676139593,
+          "placebo_mean": 21128.65201957226,
+          "ratio_to_placebo": 11.960636802454115,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "imp_week_total",
+          "mean": 2672519.680456257,
+          "min": 2668455.8536040783,
+          "max": 2677433.270452261,
+          "placebo_mean": 21128.65201957226,
+          "ratio_to_placebo": 126.48794054540735,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "imp_wk_ratio",
+          "mean": 14959.430266165733,
+          "min": 11539.12892317772,
+          "max": 19622.556146502495,
+          "placebo_mean": 21128.65201957226,
+          "ratio_to_placebo": 0.708016311324937,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "imp_work_frac",
+          "mean": 27783.578158068656,
+          "min": 25649.229791879654,
+          "max": 30385.498207449913,
+          "placebo_mean": 21128.65201957226,
+          "ratio_to_placebo": 1.3149716381495464,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        }
+      ]
+    },
+    {
+      "config": "exp055_lgb_xgb_impute_comps_pass6",
+      "run_id": "6fa5d5ad88b5493c935b215633af6191",
+      "baseline_config": "exp051_lgb_xgb_impute_pass5",
+      "baseline_run_id": "f139eeec4b2c495a9aeab56aba3ec665",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9675291575299683,
+      "baseline_oof_auc": 0.9673489428407538,
+      "oof_delta": 0.00018021468921447514,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        0.00016886244038039067,
+        0.0002454825857711729,
+        0.00014989271447996,
+        0.00013077164484276427,
+        0.0002128515953763177
+      ],
+      "fold_wins": 5,
+      "seed_deltas": {
+        "42": 0.00018021468921447514
+      },
+      "placebo": {
+        "mean": 22952.530297183992,
+        "min": 18779.960257053375,
+        "max": 30238.67809009552,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "imp_free_time",
+          "mean": 15107.084781599046,
+          "min": 13224.101611852646,
+          "max": 18795.362937688828,
+          "placebo_mean": 22952.530297183992,
+          "ratio_to_placebo": 0.6581882078357395,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "imp_leisure_frac",
+          "mean": 24756.044077730177,
+          "min": 24338.87331557274,
+          "max": 26047.972675800323,
+          "placebo_mean": 22952.530297183992,
+          "ratio_to_placebo": 1.0785758152671931,
+          "cell_wins": 4,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "imp_resid_frac",
+          "mean": 40035.91257305145,
+          "min": 37221.711950302124,
+          "max": 45803.14803123474,
+          "placebo_mean": 22952.530297183992,
+          "ratio_to_placebo": 1.7442918952584234,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "imp_social_frac",
+          "mean": 251408.8995317459,
+          "min": 222780.049847126,
+          "max": 262521.89780139923,
+          "placebo_mean": 22952.530297183992,
+          "ratio_to_placebo": 10.953428501196264,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "imp_week_total",
+          "mean": 2675558.3129663942,
+          "min": 2671263.5876779556,
+          "max": 2680091.7506148815,
+          "placebo_mean": 22952.530297183992,
+          "ratio_to_placebo": 116.5692095086638,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "imp_work_frac",
+          "mean": 29644.523651599884,
+          "min": 27389.188217639923,
+          "max": 33081.09530091286,
+          "placebo_mean": 22952.530297183992,
+          "ratio_to_placebo": 1.2915579793499683,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        }
+      ]
+    },
+    {
+      "config": "exp066_tabm_nn10",
+      "run_id": "e5b7ba14fc32455887168fc8f1597914",
+      "baseline_config": "exp065_tabm",
+      "baseline_run_id": "01902a9566cf4722a26c431272c09b19",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9682114046987723,
+      "baseline_oof_auc": 0.968189328608447,
+      "oof_delta": 2.2076090325340303e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        1.7718507730801747e-05,
+        1.137894313707477e-05,
+        -4.259710921694637e-05,
+        4.756278221873522e-05,
+        -5.375865525070189e-06
+      ],
+      "fold_wins": 3,
+      "seed_deltas": {
+        "42": 2.2076090325340303e-05
+      },
+      "placebo": {
+        "mean": 1.3580197544482697e-05,
+        "min": -1.1672528433259721e-06,
+        "max": 3.6048392498710946e-05,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "orig_nn10_mean",
+          "mean": 1.1814140649890615e-05,
+          "min": -6.166134199681039e-06,
+          "max": 2.9957197728913698e-05,
+          "placebo_mean": 1.3580197544482697e-05,
+          "ratio_to_placebo": 0.8699535195414305,
+          "cell_wins": 4,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp070_cat_exact_cats",
+      "run_id": "6238d8c58beb42ee8102209ded92516e",
+      "baseline_config": "exp057_cat_xgb_impute_comps5",
+      "baseline_run_id": "3d5239b07c6e475baa7dde03fb0b99bc",
+      "seeds": [
+        42,
+        43,
+        44
+      ],
+      "comparison_mode": "paired_averaged_predictions",
+      "oof_auc": 0.9685793468869544,
+      "baseline_oof_auc": 0.968542903240823,
+      "oof_delta": 3.6443646131312235e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        5.071093492015066e-06,
+        1.1749754320611316e-06,
+        4.354969942621523e-05,
+        4.5993272820399334e-05,
+        8.743240910291661e-05
+      ],
+      "fold_wins": 5,
+      "seed_deltas": {
+        "42": 7.532282263611467e-05,
+        "43": 5.500013616999144e-05,
+        "44": -8.639880149097223e-07
+      },
+      "placebo": {
+        "mean": 0.410974055880981,
+        "min": 0.2941065101944452,
+        "max": 0.5031175381677555,
+        "cells": 15
+      },
+      "features": [
+        {
+          "feature": "age_cat",
+          "mean": 0.36073813556988077,
+          "min": 0.2570697572458388,
+          "max": 0.474381126445658,
+          "placebo_mean": 0.410974055880981,
+          "ratio_to_placebo": 0.8777637673419252,
+          "cell_wins": 3,
+          "cells": 15,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_cat",
+          "mean": 0.7434058286139623,
+          "min": 0.5008257579757197,
+          "max": 0.9069799069145383,
+          "placebo_mean": 0.410974055880981,
+          "ratio_to_placebo": 1.808887490526298,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours_cat",
+          "mean": 0.2461037533327907,
+          "min": 0.19122638570830555,
+          "max": 0.30360227331176004,
+          "placebo_mean": 0.410974055880981,
+          "ratio_to_placebo": 0.5988303879796804,
+          "cell_wins": 0,
+          "cells": 15,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_cat",
+          "mean": 0.3859573491121346,
+          "min": 0.3136224343194127,
+          "max": 0.4561678526442462,
+          "placebo_mean": 0.410974055880981,
+          "ratio_to_placebo": 0.9391282578282962,
+          "cell_wins": 6,
+          "cells": 15,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_cat",
+          "mean": 0.6435351717466223,
+          "min": 0.43275176781119906,
+          "max": 0.8213026921680087,
+          "placebo_mean": 0.410974055880981,
+          "ratio_to_placebo": 1.5658778517469032,
+          "cell_wins": 15,
+          "cells": 15,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "sleep_hours_cat",
+          "mean": 0.23815867440144087,
+          "min": 0.1885868405228177,
+          "max": 0.29058925999796315,
+          "placebo_mean": 0.410974055880981,
+          "ratio_to_placebo": 0.5794980753490974,
+          "cell_wins": 0,
+          "cells": 15,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_cat",
+          "mean": 0.11757406592685446,
+          "min": 0.0905072113602339,
+          "max": 0.16987677304347804,
+          "placebo_mean": 0.410974055880981,
+          "ratio_to_placebo": 0.2860863459490595,
+          "cell_wins": 0,
+          "cells": 15,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_cat",
+          "mean": 0.22872373548066322,
+          "min": 0.13648875763873397,
+          "max": 0.2878811755998055,
+          "placebo_mean": 0.410974055880981,
+          "ratio_to_placebo": 0.5565405704025806,
+          "cell_wins": 0,
+          "cells": 15,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_cat",
+          "mean": 0.14287485447924284,
+          "min": 0.10321920539669947,
+          "max": 0.18344822819466686,
+          "placebo_mean": 0.410974055880981,
+          "ratio_to_placebo": 0.3476493283084996,
+          "cell_wins": 0,
+          "cells": 15,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp104_cat_exact_screen_relations",
+      "run_id": "045181ab93b444e09e4aca418e2a25e3",
+      "baseline_config": "exp070_cat_exact_cats",
+      "baseline_run_id": "beec9a15a6d347ae9ff2a9339cd59dad",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9683927897684064,
+      "baseline_oof_auc": 0.9684083385689265,
+      "oof_delta": -1.5548800520126527e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        -3.1554090820451464e-05,
+        -9.481754885132254e-06,
+        4.33890949246285e-05,
+        -7.727233160281788e-05,
+        -6.580030985636753e-06
+      ],
+      "fold_wins": 1,
+      "seed_deltas": {
+        "42": -1.5548800520126527e-05
+      },
+      "placebo": {
+        "mean": 0.37227480770771443,
+        "min": 0.3120716243672638,
+        "max": 0.4499094283272129,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "gaming_minus_work",
+          "mean": 0.2570160300770148,
+          "min": 0.2346265424645569,
+          "max": 0.29094779813626104,
+          "placebo_mean": 0.37227480770771443,
+          "ratio_to_placebo": 0.690393292147791,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_share_screen",
+          "mean": 1.2949177934093588,
+          "min": 1.2519369245697936,
+          "max": 1.3368723521837298,
+          "placebo_mean": 0.37227480770771443,
+          "ratio_to_placebo": 3.478392216177149,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "screen_minus_work",
+          "mean": 0.21592755819864357,
+          "min": 0.14519306539252572,
+          "max": 0.29594552815310954,
+          "placebo_mean": 0.37227480770771443,
+          "ratio_to_placebo": 0.5800219454231123,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "screen_to_sleep",
+          "mean": 0.28944826296142256,
+          "min": 0.2361080102073689,
+          "max": 0.328945133091615,
+          "placebo_mean": 0.37227480770771443,
+          "ratio_to_placebo": 0.7775123563791569,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_share_screen",
+          "mean": 1.8715406464146809,
+          "min": 1.5829822841186427,
+          "max": 2.2666399711167378,
+          "placebo_mean": 0.37227480770771443,
+          "ratio_to_placebo": 5.027309416768515,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "weekend_minus_daily",
+          "mean": 0.48946742679086797,
+          "min": 0.37545556586095374,
+          "max": 0.5910629934215914,
+          "placebo_mean": 0.37227480770771443,
+          "ratio_to_placebo": 1.314801368926273,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "work_share_screen",
+          "mean": 0.5146943027886189,
+          "min": 0.4745496386200346,
+          "max": 0.6075848026279396,
+          "placebo_mean": 0.37227480770771443,
+          "ratio_to_placebo": 1.3825654922981596,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        }
+      ]
+    },
+    {
+      "config": "exp106_lgb_kitopl_digit_identity",
+      "run_id": "327eee3a55dd43c9bbae9c3b6c701d1c",
+      "baseline_config": "exp074_lgb_kitopl_d2_bundle",
+      "baseline_run_id": "8d58b42f9af542bc873be618f3024598",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9681327177758305,
+      "baseline_oof_auc": 0.9681974636261734,
+      "oof_delta": -6.474585034288438e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        -0.00011237113884776662,
+        2.601666071766484e-05,
+        -4.1158392268814126e-05,
+        -3.106288968990345e-05,
+        -0.0001649435198471938
+      ],
+      "fold_wins": 1,
+      "seed_deltas": {
+        "42": -6.474585034288438e-05
+      },
+      "placebo": {
+        "mean": 22326.889275324345,
+        "min": 20409.49190211296,
+        "max": 25355.021010935307,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "age_absdiff_round0",
+          "mean": 39.23063163757324,
+          "min": 25.189269542694092,
+          "max": 67.97748899459839,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.0017571024406400802,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age_absdiff_round1",
+          "mean": 18.8404278755188,
+          "min": 0.0,
+          "max": 56.76609945297241,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.0008438447310410241,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age_absdiff_round2",
+          "mean": 3.059864044189453,
+          "min": 0.0,
+          "max": 8.696969985961914,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.00013704838172737353,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age_hundredths",
+          "mean": 2.673964023590088,
+          "min": 0.0,
+          "max": 13.36982011795044,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.00011976428917687831,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age_is_round0",
+          "mean": 9.938729858398437,
+          "min": 0.0,
+          "max": 21.04668951034546,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.000445146197297745,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age_is_round1",
+          "mean": 8.643635988235474,
+          "min": 5.172760009765625,
+          "max": 13.32178020477295,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.00038714018247890943,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age_round0",
+          "mean": 6443.811968898774,
+          "min": 5953.551571726799,
+          "max": 6949.449336767197,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.28861217025967284,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age_round1",
+          "mean": 3169.198000431061,
+          "min": 2587.2311111688614,
+          "max": 3820.731588244438,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.14194534497618774,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age_round2",
+          "mean": 1831.5604259490967,
+          "min": 1490.3376607894897,
+          "max": 2302.4372967481613,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.08203383836248677,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "age_tenths",
+          "mean": 2.7879340171813967,
+          "min": 0.0,
+          "max": 13.939670085906982,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.00012486889610110704,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_absdiff_round0",
+          "mean": 26.91260404586792,
+          "min": 17.683849811553955,
+          "max": 46.705010414123535,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.0012053897752613348,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_absdiff_round1",
+          "mean": 20.472397899627687,
+          "min": 6.593490123748779,
+          "max": 35.27749013900757,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.0009169391063471507,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_absdiff_round2",
+          "mean": 5.9850059986114506,
+          "min": 0.0,
+          "max": 13.329040050506592,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.00026806269000608483,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_hundredths",
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.0,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_is_round0",
+          "mean": 7.27092399597168,
+          "min": 0.0,
+          "max": 13.01550006866455,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.0003256577262649615,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_is_round1",
+          "mean": 6.8588580131530765,
+          "min": 0.0,
+          "max": 17.198209762573242,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.00030720168531195606,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_round0",
+          "mean": 14945.942078471184,
+          "min": 13331.888790488243,
+          "max": 15899.86977994442,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.669414439878529,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_round1",
+          "mean": 9009.33241944313,
+          "min": 7750.1199914216995,
+          "max": 9776.856219768524,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.4035193755988316,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_round2",
+          "mean": 3928.6837175369265,
+          "min": 3393.137040615082,
+          "max": 4659.929447770119,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.17596198328796764,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "app_opens_per_day_tenths",
+          "mean": 3.06533203125,
+          "min": 0.0,
+          "max": 7.725930213928223,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.00013729328763401903,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_absdiff_round0",
+          "mean": 16081.488720655441,
+          "min": 13831.85907626152,
+          "max": 17729.36702632904,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.7202744870701127,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_absdiff_round1",
+          "mean": 8826.993483829498,
+          "min": 7987.231871008873,
+          "max": 10258.199325561523,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.3953525892021636,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_absdiff_round2",
+          "mean": 3.1652260780334474,
+          "min": 0.0,
+          "max": 8.88722038269043,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.00014176744637380595,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_hundredths",
+          "mean": 8173.911282229424,
+          "min": 7355.97812473774,
+          "max": 9301.18129336834,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.3661016625035724,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_is_round0",
+          "mean": 174.00962409973144,
+          "min": 115.08446025848389,
+          "max": 274.06007194519043,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.00779372450653243,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_is_round1",
+          "mean": 585.2036762475967,
+          "min": 444.0557712316513,
+          "max": 646.9120695590973,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.026210712519381875,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_round0",
+          "mean": 110417.77475087643,
+          "min": 110043.30136311054,
+          "max": 110967.99240589142,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 4.945506442445166,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours_round1",
+          "mean": 14015.992935228347,
+          "min": 12180.074789643288,
+          "max": 15282.546106219292,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.6277629078726523,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "daily_screen_time_hours_round2",
+          "mean": 138140.79861035346,
+          "min": 136346.01476037502,
+          "max": 140525.9678518772,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 6.187194145448042,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "daily_screen_time_hours_tenths",
+          "mean": 10881.745934009552,
+          "min": 9048.335767388344,
+          "max": 11941.018354535103,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.48738298469711344,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_absdiff_round0",
+          "mean": 15559.93421626091,
+          "min": 13417.822202086449,
+          "max": 18527.865425348282,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.6969145600349141,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_absdiff_round1",
+          "mean": 9895.353965783119,
+          "min": 8072.422085285187,
+          "max": 11322.772542119026,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.4432034325856336,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_absdiff_round2",
+          "mean": 6.1686280250549315,
+          "min": 0.0,
+          "max": 15.98553991317749,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.000276286944812885,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_hundredths",
+          "mean": 6896.5299703836445,
+          "min": 6039.629698872566,
+          "max": 8104.58159828186,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.3088889762178237,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_is_round0",
+          "mean": 101.34141802787781,
+          "min": 40.62427020072937,
+          "max": 163.00351905822754,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.004538985112443776,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_is_round1",
+          "mean": 384.3487946510315,
+          "min": 247.1427994966507,
+          "max": 449.0805685520172,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.01721461462505721,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_round0",
+          "mean": 3509.7448621511458,
+          "min": 2905.882126569748,
+          "max": 3856.00430393219,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.15719811295118985,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_round1",
+          "mean": 10565.90912811756,
+          "min": 10179.058565616608,
+          "max": 10854.94020307064,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.47323695647091296,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "gaming_hours_round2",
+          "mean": 23604.971867609023,
+          "min": 22544.623656988144,
+          "max": 24976.593289256096,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 1.057244095965362,
+          "cell_wins": 4,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "gaming_hours_tenths",
+          "mean": 6849.255058789253,
+          "min": 5670.684542298317,
+          "max": 8254.65025484562,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.3067715781776659,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_absdiff_round0",
+          "mean": 32.19169998168945,
+          "min": 22.836299419403076,
+          "max": 48.331700801849365,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.0014418354292314104,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_absdiff_round1",
+          "mean": 13.619904232025146,
+          "min": 0.0,
+          "max": 23.274110794067383,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.0006100224739806387,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_absdiff_round2",
+          "mean": 4.253293991088867,
+          "min": 0.0,
+          "max": 10.515180110931396,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.00019050096673295207,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_hundredths",
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.0,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_is_round0",
+          "mean": 7.434001922607422,
+          "min": 0.0,
+          "max": 12.068859577178955,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.00033296183050558113,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_is_round1",
+          "mean": 0.9315759658813476,
+          "min": 0.0,
+          "max": 4.657879829406738,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 4.17243958347088e-05,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_round0",
+          "mean": 17307.32506971359,
+          "min": 15446.560031175613,
+          "max": 19368.661636590958,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.7751785238099259,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_round1",
+          "mean": 8859.435196447372,
+          "min": 8019.78506398201,
+          "max": 10249.719081997871,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.39680562245806494,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_round2",
+          "mean": 4514.257463049888,
+          "min": 4274.59278178215,
+          "max": 4964.576994776726,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.20218927085552582,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "notifications_per_day_tenths",
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.0,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_absdiff_round0",
+          "mean": 15771.553275597096,
+          "min": 13814.881355881691,
+          "max": 17961.07461130619,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.7063927751470421,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_absdiff_round1",
+          "mean": 9051.759184980392,
+          "min": 8284.842760443687,
+          "max": 10055.566722750664,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.4054196298175934,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_absdiff_round2",
+          "mean": 2.569532012939453,
+          "min": 0.0,
+          "max": 6.934810161590576,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.00011508687937908561,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_hundredths",
+          "mean": 7526.512573099137,
+          "min": 6754.3968007564545,
+          "max": 8719.538843512535,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.3371052939926311,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_is_round0",
+          "mean": 99.73485400676728,
+          "min": 52.426129937171936,
+          "max": 152.4997192621231,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.004467028647694067,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_is_round1",
+          "mean": 366.89140379428864,
+          "min": 319.20979046821594,
+          "max": 412.2084491252899,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.016432714798284804,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_round0",
+          "mean": 1069.3462289094925,
+          "min": 871.4623516798019,
+          "max": 1263.488857269287,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.04789499404609548,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_round1",
+          "mean": 5368.39948978424,
+          "min": 4744.708984851837,
+          "max": 5977.541409730911,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.24044547467332988,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_round2",
+          "mean": 12164.221624708176,
+          "min": 10557.488953113556,
+          "max": 13183.292832374573,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.5448238433354915,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "sleep_hours_tenths",
+          "mean": 8153.792782735824,
+          "min": 7146.611280798912,
+          "max": 9160.872939229012,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.3652005741680901,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_absdiff_round0",
+          "mean": 14080.818200182915,
+          "min": 12642.989295721054,
+          "max": 15797.96386396885,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.6306663694411304,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_absdiff_round1",
+          "mean": 8661.506669330596,
+          "min": 7472.727825880051,
+          "max": 9854.15618276596,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.3879405931798696,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_absdiff_round2",
+          "mean": 1.097737979888916,
+          "min": 0.0,
+          "max": 5.48868989944458,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 4.916663339671482e-05,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_hundredths",
+          "mean": 6679.82616956234,
+          "min": 5926.554368495941,
+          "max": 7357.971038222313,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.2991830204015423,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_is_round0",
+          "mean": 141.2956235408783,
+          "min": 66.7920196056366,
+          "max": 309.3180378675461,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.006328495734380609,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_is_round1",
+          "mean": 278.6687558412552,
+          "min": 213.36454916000366,
+          "max": 432.7730782032013,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.012481306840592414,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "social_media_hours_round0",
+          "mean": 31414.22606358528,
+          "min": 25420.603186368942,
+          "max": 36248.434742212296,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 1.4070131166146933,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "social_media_hours_round1",
+          "mean": 89203.60594482422,
+          "min": 79705.79412722588,
+          "max": 97871.14886164665,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 3.9953441272005565,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "social_media_hours_round2",
+          "mean": 87756.96557843685,
+          "min": 82827.6507384777,
+          "max": 90344.42016601562,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 3.9305504898716794,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "social_media_hours_tenths",
+          "mean": 6731.751447510719,
+          "min": 5636.8091378211975,
+          "max": 7863.422772169113,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.3015087038995013,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_absdiff_round0",
+          "mean": 18708.39528119564,
+          "min": 16536.421656012535,
+          "max": 20611.286248266697,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.8379311175190061,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_absdiff_round1",
+          "mean": 10271.78648672104,
+          "min": 9215.630036473274,
+          "max": 11477.465662121773,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.4600634848883049,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_absdiff_round2",
+          "mean": 2.7837359428405763,
+          "min": 0.0,
+          "max": 9.39795970916748,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.000124680868369655,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_hundredths",
+          "mean": 8305.07523405552,
+          "min": 7458.834769248962,
+          "max": 9344.72512960434,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.3719763703595861,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_is_round0",
+          "mean": 195.389076089859,
+          "min": 145.08172917366028,
+          "max": 252.42599940299988,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.008751289697387572,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_is_round1",
+          "mean": 588.8941651821136,
+          "min": 461.92568612098694,
+          "max": 681.0258369445801,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.026376005986331417,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "weekend_screen_time_round0",
+          "mean": 41032.417649030685,
+          "min": 40463.646723032,
+          "max": 42107.903710603714,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 1.83780271147668,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "weekend_screen_time_round1",
+          "mean": 62531.44926650524,
+          "min": 60273.52918457985,
+          "max": 64528.15850877762,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 2.80072375938259,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "weekend_screen_time_round2",
+          "mean": 55107.72100129128,
+          "min": 50914.97555911541,
+          "max": 57265.04356324673,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 2.4682220761580194,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "weekend_screen_time_tenths",
+          "mean": 9601.960344481467,
+          "min": 8425.058519363403,
+          "max": 10977.459833741188,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.43006261311527816,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_absdiff_round0",
+          "mean": 16505.47557477951,
+          "min": 14376.075987458229,
+          "max": 18782.48672425747,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.7392644524385824,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_absdiff_round1",
+          "mean": 8749.653372192382,
+          "min": 7686.694900274277,
+          "max": 10408.893068790436,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.3918885996296175,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_absdiff_round2",
+          "mean": 16.685260009765624,
+          "min": 0.0,
+          "max": 83.42630004882812,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.0007473168251972368,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_hundredths",
+          "mean": 7275.7501523733135,
+          "min": 6576.506349205971,
+          "max": 8563.46360552311,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.3258738851907357,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_is_round0",
+          "mean": 89.98594975471497,
+          "min": 50.900059938430786,
+          "max": 147.45298957824707,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.0040303845576090775,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_is_round1",
+          "mean": 372.8076915740967,
+          "min": 260.2723106145859,
+          "max": 505.0315501689911,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.01669769966504574,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_round0",
+          "mean": 2707.2774389743804,
+          "min": 2183.3843553066254,
+          "max": 2909.7747547626495,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.12125636516531932,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_round1",
+          "mean": 10137.49492790699,
+          "min": 9363.783744215965,
+          "max": 10959.784030675888,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.4540486945089542,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        },
+        {
+          "feature": "work_study_hours_round2",
+          "mean": 24782.078158450127,
+          "min": 23663.126034021378,
+          "max": 26900.386385440826,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 1.1099655600406122,
+          "cell_wins": 5,
+          "cells": 5,
+          "passes_mean_gate": true
+        },
+        {
+          "feature": "work_study_hours_tenths",
+          "mean": 6969.011639928818,
+          "min": 6233.972879528999,
+          "max": 7835.7203595638275,
+          "placebo_mean": 22326.889275324345,
+          "ratio_to_placebo": 0.3121353608194296,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    },
+    {
+      "config": "exp125_lgbm_slack_exact_te",
+      "run_id": "3707359030f2457da49c6cbce698b39d",
+      "baseline_config": "exp026_constrained_impute_nowidth",
+      "baseline_run_id": "4b6de022abd54d6c92570c1ea06795d7",
+      "seeds": [
+        42
+      ],
+      "comparison_mode": "paired_seed_42",
+      "oof_auc": 0.9671645265059284,
+      "baseline_oof_auc": 0.9672173234483032,
+      "oof_delta": -5.279694237481092e-05,
+      "fold_comparison_mode": "paired",
+      "fold_deltas": [
+        -0.00010887513658497383,
+        4.322290859160027e-05,
+        1.604776421526566e-05,
+        -0.000133696270583461,
+        -9.351514461830579e-05
+      ],
+      "fold_wins": 2,
+      "seed_deltas": {
+        "42": -5.279694237481092e-05
+      },
+      "placebo": {
+        "mean": 25727.00391972065,
+        "min": 22148.611677646637,
+        "max": 29190.975507736206,
+        "cells": 5
+      },
+      "features": [
+        {
+          "feature": "screen_slack_te",
+          "mean": 20119.524766874314,
+          "min": 16528.389036417007,
+          "max": 22943.88426709175,
+          "placebo_mean": 25727.00391972065,
+          "ratio_to_placebo": 0.7820391690247303,
+          "cell_wins": 0,
+          "cells": 5,
+          "passes_mean_gate": false
+        }
+      ]
+    }
+  ]
+}
