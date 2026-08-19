@@ -224,8 +224,9 @@ class _FoldFeatureEngineer:
                 pd.to_numeric(output[column], errors="coerce")
                 .replace([np.inf, -np.inf], np.nan)
                 .fillna(self.medians[column])
-                .astype("float32")
             )
+        # 어휘와 bin 경계는 fit의 float64 값으로 만들어졌으므로, float32 형
+        # 변환은 매핑과 bin 변환이 끝난 뒤에 해야 정확값 범주가 살아남는다. (#243)
         for column in RAW_NUMERICAL:
             name = f"{column}_cat_"
             output[name] = (
@@ -238,6 +239,8 @@ class _FoldFeatureEngineer:
             output[name] = (
                 estimator.transform(output[[column]]).ravel().astype("int32")
             )
+        for column in RAW_NUMERICAL + self.passthrough_numeric:
+            output[column] = output[column].astype("float32")
         output = output.reindex(self.output_columns, axis=1)
         if output.isna().any().any():
             raise RuntimeError("RealMLP fold 전처리 결과에 결측이 남았다.")

@@ -26,7 +26,7 @@ def test_committed_refit_plan_matches_candidate_pool():
     contextualized_spline = plan.member("exp085_contextual_spline_m0")
     assert contextualized_spline.budgets == {42: 14, 43: 13, 44: 11}
     assert contextualized_spline.budget_source == "fold_median"
-    realmlp = plan.member("exp121_realmlp_fixed4_two_init")
+    realmlp = plan.member("exp124_realmlp_dtype_fix")
     assert realmlp.budgets == {42: 5, 43: 5, 44: 5}
     assert realmlp.budget_source == "fold_median"
 

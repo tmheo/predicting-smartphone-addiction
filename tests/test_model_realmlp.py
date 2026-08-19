@@ -20,6 +20,14 @@ from pipeline.config import ModelConfig, load_config
 
 REPO = Path(__file__).resolve().parents[1]
 SEED = 42
+RAW_DECIMAL_COLUMNS = [
+    "daily_screen_time_hours",
+    "social_media_hours",
+    "gaming_hours",
+    "work_study_hours",
+    "sleep_hours",
+    "weekend_screen_time",
+]
 SMALL_PARAMS = {
     "n_ens": 1,
     "embed_dim": 2,
@@ -124,6 +132,32 @@ def test_realmlp_fold_preprocessing_is_train_only_and_has_54_features():
     assert transformed_validation.loc[validation.index[0], "gender"] == 0
     assert np.isfinite(encoded_train.to_numpy(dtype="float64")).all()
     assert np.isfinite(encoded_validation.to_numpy(dtype="float64")).all()
+
+
+def test_realmlp_numeric_category_mapping_keeps_fit_dtype():
+    """소수 값 열의 정확값 범주가 형 변환으로 죽지 않아야 한다. (#243)"""
+    from pipeline.realmlp import _FoldFeatureEngineer
+
+    X, _ = _data(120)
+    train = X.iloc[:90].copy()
+    validation = X.iloc[90:].copy()
+
+    engineer = _FoldFeatureEngineer()
+    transformed_train = engineer.fit_transform(train)
+    transformed_validation = engineer.transform(validation)
+
+    # 학습 부분의 값은 전부 어휘에 있으므로 unknown이 하나도 없어야 한다.
+    assert engineer.unknown_value_count(transformed_train) == 0
+    # 검증 부분의 unknown은 어휘 밖 신규 값에서만 나와야 한다.
+    for column in RAW_DECIMAL_COLUMNS:
+        name = f"{column}_cat_"
+        fitted_values = pd.to_numeric(train[column], errors="coerce").fillna(
+            engineer.medians[column]
+        )
+        seen = validation[column].isin(set(fitted_values.tolist())).to_numpy()
+        assert (transformed_validation[name].to_numpy()[seen] != 0).all()
+    # 수치 열의 최종 출력 dtype 계약은 float32로 유지된다.
+    assert transformed_train["daily_screen_time_hours"].dtype == np.float32
 
 
 def test_realmlp_adapter_contract_and_diagnostics():
