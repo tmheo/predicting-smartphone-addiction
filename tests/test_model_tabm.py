@@ -129,3 +129,45 @@ def test_tabm_full_fit_uses_all_rows_without_validation_split():
     diagnostics = adapter.training_diagnostics()
     assert diagnostics["full_fit"] is True
     assert diagnostics["epochs"] == 2
+
+
+def test_tabm_muon_contract_and_learning():
+    """optimizer=muon이 pytabkit 학습에서 작동하고 패치가 복원된다. (#196)"""
+    import torch
+    from pytabkit.models.alg_interfaces import tabm_interface
+
+    original_adamw = torch.optim.AdamW
+    original_groups = tabm_interface.make_parameter_groups
+
+    X, y = _data()
+    adapter = _adapter(optimizer="muon")
+    va_pred = adapter.fit(X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:])
+    assert va_pred.shape == (80,)
+    assert roc_auc_score(y.iloc[240:], va_pred) > 0.8
+
+    diagnostics = adapter.training_diagnostics()
+    assert diagnostics["optimizer"] == "muon"
+    # fit이 끝나면 pytabkit·torch 패치는 원본으로 돌아와야 한다.
+    assert torch.optim.AdamW is original_adamw
+    assert tabm_interface.make_parameter_groups is original_groups
+
+
+def test_tabm_rejects_unknown_optimizer():
+    X, y = _data(80)
+    adapter = _adapter(optimizer="sgd")
+    with pytest.raises(ValueError, match="optimizer"):
+        adapter.fit(X.iloc[:60], y.iloc[:60], X.iloc[60:], y.iloc[60:])
+
+
+def test_tabm_muon_full_fit_uses_hybrid_optimizer():
+    X, y = _data(96)
+    adapter = _adapter(n_seed_avg=1, n_epochs=2, patience=2, optimizer="muon")
+
+    model_mod.fit_full(adapter, X, y, 2)
+
+    prediction = adapter.predict(X.iloc[:8])
+    assert prediction.shape == (8,)
+    assert np.isfinite(prediction).all()
+    diagnostics = adapter.training_diagnostics()
+    assert diagnostics["full_fit"] is True
+    assert diagnostics["optimizer"] == "muon"

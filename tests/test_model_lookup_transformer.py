@@ -456,3 +456,72 @@ def test_lookup_transformer_trains_fold_members_on_three_gpus(monkeypatch):
     assert test_pred.shape == (12,)
     assert np.isfinite(val_pred).all()
     assert np.isfinite(test_pred).all()
+
+
+def test_lookup_transformer_muon_parameter_names_select_hidden_matrices(
+    lookup_transformer_module,
+):
+    """Muon 대상은 encoder 행렬과 head 은닉 Linear뿐이다. (#196)"""
+    model = lookup_transformer_module._LookupTransformer(10, 3, 16, 4, 1, 2, 0.1)
+    names = lookup_transformer_module._muon_parameter_names(model)
+
+    parameters = dict(model.named_parameters())
+    assert names, "encoder 행렬이 비어 있으면 안 된다."
+    assert all(parameters[name].ndim == 2 for name in names)
+    assert "head.1.weight" in names
+    assert any(name.startswith("tr.") for name in names)
+    # embedding·PLR·출력층은 AdamW로 남는다.
+    assert "emb.weight" not in names
+    assert "head.4.weight" not in names
+    assert not any(name.startswith("plr.") for name in names)
+
+
+def test_lookup_transformer_muon_optimizer_shares_groups_with_delegates(
+    lookup_transformer_module,
+):
+    """혼성 optimizer의 자식이 부모의 그룹 dict를 공유해 lr 일정이 전달된다. (#196)"""
+    from pipeline.muon import MuonWithAdamW
+
+    model = lookup_transformer_module._LookupTransformer(10, 3, 16, 4, 1, 2, 0.1)
+    names = lookup_transformer_module._muon_parameter_names(model)
+    emb = [p for n, p in model.named_parameters() if n.startswith("emb")]
+    rest = [
+        p
+        for n, p in model.named_parameters()
+        if not n.startswith("emb") and n not in names
+    ]
+    muon = [p for n, p in model.named_parameters() if n in names]
+
+    optimizer = lookup_transformer_module._create_optimizer(
+        "muon",
+        [
+            {"params": rest, "weight_decay": 1e-5, "algorithm": "adamw"},
+            {"params": emb, "weight_decay": 3e-4, "algorithm": "adamw"},
+            {"params": muon, "weight_decay": 1e-5, "algorithm": "muon"},
+        ],
+        2e-3,
+    )
+
+    assert isinstance(optimizer, MuonWithAdamW)
+    assert optimizer.param_groups[1]["weight_decay"] == pytest.approx(3e-4)
+    for group in optimizer.param_groups:
+        group["lr"] = 1.23e-4
+    for delegate in optimizer._delegates:
+        assert all(g["lr"] == pytest.approx(1.23e-4) for g in delegate.param_groups)
+
+
+def test_lookup_transformer_muon_learns_on_cpu():
+    """optimizer=muon으로도 fit/predict 계약과 학습이 유지된다. (#196)"""
+    cfg = ModelConfig(
+        kind="lookup_transformer",
+        params=dict(SMALL_PARAMS, optimizer="muon"),
+        fit={},
+    )
+    adapter = model_mod.create(cfg, seed=SEED)
+    X, y = _data()
+    va_pred = adapter.fit(X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:])
+    assert va_pred.shape == (80,)
+    assert roc_auc_score(y.iloc[240:], va_pred) > 0.8
+
+    member = adapter.entry_diagnostics().observations["fold_initialization_members"][0]
+    assert member["optimizer"] == "muon"

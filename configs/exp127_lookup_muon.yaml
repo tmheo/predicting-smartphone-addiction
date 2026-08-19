@@ -1,0 +1,85 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #196: Lookup-Transformer의 AdamW를 Muon 혼성으로 바꾼 exp081 짝비교판.
+# champion exp081_lookup_fold_initialization_avg3과의 유일한 차이는
+# model.params.optimizer: muon이다.
+# - Muon 대상은 Transformer encoder의 2차원 행렬과 head 은닉 Linear뿐이고,
+#   lookup embedding·PLR·cls·pos·편향·LayerNorm·출력층은 AdamW로 남는다.
+# - 학습률·weight decay·one_cycle 일정은 exp081 값을 그대로 쓰고 Muon 쪽은
+#   adjust_lr_fn=match_rms_adamw 보정으로 재사용한다.
+# 근거: 2026 표 데이터 optimizer 벤치마크(arXiv:2604.15297)의 MLP·TabM 실측
+# (docs/research/tabular-sota-portability.md 2순위).
+# 판정 앵커: champion exp081(run d55d1cd4) seed 42 짝비교(pipeline.compare).
+# 미달 시 계열 즉시 닫음. 원격 GPU 실행 대상(Vast.ai).
+name: exp127_lookup_muon
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions: [social_frac, work_frac, leisure_frac, resid_frac, week_total]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: lookup_transformer
+  params:
+    lookup_cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+    fold_seed_offsets: [0, 1000, 2000]
+    optimizer: muon
+  fit: {}

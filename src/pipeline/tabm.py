@@ -18,10 +18,15 @@ pytabkit(torch)이 필요하므로 model.py의 adapter가 이 모듈을 lazy imp
 from __future__ import annotations
 
 import re
+import threading
+from contextlib import contextmanager, nullcontext
 
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
+
+_OPTIMIZERS = {"adamw", "muon"}
+_MUON_PATCH_LOCK = threading.Lock()
 
 # 원문 노트북의 TabM 하이퍼파라미터 그대로가 기본값이다.
 _PYTABKIT_DEFAULTS = {
@@ -42,6 +47,49 @@ _PYTABKIT_DEFAULTS = {
     "gradient_clipping_norm": None,
     "tfms": ["quantile_tabr"],
 }
+
+
+@contextmanager
+def _pytabkit_muon_optimizer():
+    """pytabkit TabM 학습의 AdamW 생성 지점만 Muon 혼성으로 바꾼다. (#196)
+
+    pytabkit 1.7.3의 tabm_interface는 optimizer를 설정으로 노출하지 않고
+    ``torch.optim.AdamW(make_parameter_groups(model), ...)`` 한 줄로 고정한다.
+    학습의 다른 의미를 바꾸지 않는 유일한 경로가 이 생성 지점의 대체라서,
+    ``_fit_with_selected_epoch``의 로거 수집과 같은 방식으로 호출 동안만 감싼다.
+
+    - ``make_parameter_groups``는 weight decay 그룹을 유지한 채 그룹별
+      algorithm 표시를 붙이는 판으로 바꾼다.
+    - ``torch.optim.AdamW``는 algorithm 표시가 있는 그룹에서만 Muon 혼성을
+      만들고, 표시 없는 호출은 원본 AdamW로 그대로 보내는 dispatcher로 바꾼다.
+
+    시드 병렬은 프로세스 단위(seed_parallel)라 프로세스 전역 패치가 다른 실행과
+    겹치지 않지만, 같은 프로세스의 동시 fit을 대비해 lock으로 직렬화한다.
+    """
+    import torch
+    from pytabkit.models.alg_interfaces import tabm_interface
+
+    from .muon import ALGORITHM_KEY, MuonWithAdamW, tabm_parameter_groups
+
+    original_adamw = torch.optim.AdamW
+
+    def dispatching_adamw(params, *args, **kwargs):
+        groups = list(params)
+        if groups and isinstance(groups[0], dict) and ALGORITHM_KEY in groups[0]:
+            lr = kwargs.get("lr", args[0] if args else 1e-3)
+            weight_decay = kwargs.get("weight_decay", 0.0)
+            return MuonWithAdamW(groups, lr=float(lr), weight_decay=float(weight_decay))
+        return original_adamw(groups, *args, **kwargs)
+
+    with _MUON_PATCH_LOCK:
+        original_groups = tabm_interface.make_parameter_groups
+        torch.optim.AdamW = dispatching_adamw
+        tabm_interface.make_parameter_groups = tabm_parameter_groups
+        try:
+            yield
+        finally:
+            torch.optim.AdamW = original_adamw
+            tabm_interface.make_parameter_groups = original_groups
 
 
 def _fit_with_selected_epoch(model, X_tr, y_tr, X_va, y_va) -> int:
@@ -88,11 +136,17 @@ class TabMFold:
         self._n_seed_avg = int(params.pop("n_seed_avg", 3))
         self._perm_repeats = int(params.pop("perm_repeats", 3))
         self._perm_sample = int(params.pop("perm_sample", 50_000))
+        self._optimizer_name = str(params.pop("optimizer", "adamw")).lower()
         self._pytabkit = {
             k: params.pop(k, default) for k, default in _PYTABKIT_DEFAULTS.items()
         }
         if params:
             raise ValueError(f"tabm이 모르는 params: {sorted(params)}")
+        if self._optimizer_name not in _OPTIMIZERS:
+            raise ValueError(
+                f"optimizer는 {sorted(_OPTIMIZERS)} 중 하나여야 한다: "
+                f"{self._optimizer_name!r}"
+            )
         if self._n_seed_avg < 1:
             raise ValueError(f"n_seed_avg는 1 이상이어야 한다: {self._n_seed_avg}")
         self._seed = seed
@@ -147,34 +201,41 @@ class TabMFold:
         self._models = []
         fit_parameters = []
         val_pred = np.zeros(len(X_va), dtype="float64")
-        for s in range(self._n_seed_avg):
-            model = TabM_D_Classifier(
-                random_state=self._seed + 1000 * s,
-                device=device,
-                verbosity=0,
-                **extra,
-                **self._pytabkit,
-            )
-            selected_epoch_count = _fit_with_selected_epoch(
-                model, X_tr_t, y_tr, X_va_t, y_va
-            )
-            member_pred = model.predict_proba(X_va_t)[:, 1].astype("float64")
-            val_pred += member_pred / self._n_seed_avg
-            self._models.append(model)
-            fit_parameters.append(
-                {
-                    "fit_parameters": _json_value(model.fit_params_),
-                    "selected_epoch_count": selected_epoch_count,
-                }
-            )
-            print(
-                f"[tabm] member {s + 1}/{self._n_seed_avg} "
-                f"valAUC={roc_auc_score(y_va_np, member_pred):.5f}",
-                flush=True,
-            )
+        optimizer_scope = (
+            _pytabkit_muon_optimizer()
+            if self._optimizer_name == "muon"
+            else nullcontext()
+        )
+        with optimizer_scope:
+            for s in range(self._n_seed_avg):
+                model = TabM_D_Classifier(
+                    random_state=self._seed + 1000 * s,
+                    device=device,
+                    verbosity=0,
+                    **extra,
+                    **self._pytabkit,
+                )
+                selected_epoch_count = _fit_with_selected_epoch(
+                    model, X_tr_t, y_tr, X_va_t, y_va
+                )
+                member_pred = model.predict_proba(X_va_t)[:, 1].astype("float64")
+                val_pred += member_pred / self._n_seed_avg
+                self._models.append(model)
+                fit_parameters.append(
+                    {
+                        "fit_parameters": _json_value(model.fit_params_),
+                        "selected_epoch_count": selected_epoch_count,
+                    }
+                )
+                print(
+                    f"[tabm] member {s + 1}/{self._n_seed_avg} "
+                    f"valAUC={roc_auc_score(y_va_np, member_pred):.5f}",
+                    flush=True,
+                )
         self._val = (X_va_t, y_va_np)
         self._val_auc = roc_auc_score(y_va_np, val_pred)
         self._training_diagnostics = {
+            "optimizer": self._optimizer_name,
             "members": fit_parameters,
             "validation_auc": float(self._val_auc),
         }
@@ -198,6 +259,7 @@ class TabMFold:
                 params=params,
                 seed=self._seed + 1000 * s,
                 device=device,
+                optimizer=self._optimizer_name,
             )
             member.fit(X_t, y)
             self._models.append(member)
@@ -209,6 +271,7 @@ class TabMFold:
         self._training_diagnostics = {
             "full_fit": True,
             "epochs": epochs,
+            "optimizer": self._optimizer_name,
             "members": [member.training_diagnostics() for member in self._models],
         }
 
@@ -280,10 +343,13 @@ class _FixedEpochTabMMember:
     변환기와 모형 구현을 조립해 모든 행을 정확히 고정 epoch만큼 학습한다.
     """
 
-    def __init__(self, *, params: dict, seed: int, device: str) -> None:
+    def __init__(
+        self, *, params: dict, seed: int, device: str, optimizer: str = "adamw"
+    ) -> None:
         self._params = dict(params)
         self._seed = seed
         self._device_name = device
+        self._optimizer_name = optimizer
         self._converter = None
         self._transform = None
         self._model = None
@@ -357,11 +423,20 @@ class _FixedEpochTabMMember:
             k=int(self._params["tabm_k"]),
             share_training_batches=bool(self._params["share_training_batches"]),
         ).to(device)
-        optimizer = torch.optim.AdamW(
-            make_parameter_groups(self._model),
-            lr=float(self._params["lr"]),
-            weight_decay=float(self._params["weight_decay"]),
-        )
+        if self._optimizer_name == "muon":
+            from .muon import MuonWithAdamW, tabm_parameter_groups
+
+            optimizer = MuonWithAdamW(
+                tabm_parameter_groups(self._model),
+                lr=float(self._params["lr"]),
+                weight_decay=float(self._params["weight_decay"]),
+            )
+        else:
+            optimizer = torch.optim.AdamW(
+                make_parameter_groups(self._model),
+                lr=float(self._params["lr"]),
+                weight_decay=float(self._params["weight_decay"]),
+            )
         n_train = len(X)
         batch_size = min(int(self._params["batch_size"]), n_train)
         y_train = transformed.tensors["y"]
