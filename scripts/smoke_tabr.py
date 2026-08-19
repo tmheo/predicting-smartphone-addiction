@@ -6,7 +6,7 @@
 검증은 fold 0 검증 부분 전체를 사용한다(누수 규율 유지).
 
 사용법:
-    uv run python scripts/smoke_tabr.py configs/exp122_tabr.yaml \
+    uv run python scripts/smoke_tabr.py configs/exp123_tabr.yaml \
         --out results/tabr-smoke.json --train-fraction 0.2 \
         --variant default --variant plr_lite
 """

@@ -4,7 +4,7 @@
 # 모델은 공식 기본 TabR(default-evaluation)이다: 문맥 96개, 매 배치 후보 키 재계산,
 # 검증 AUC 조기 종료 patience 16. #142의 TabR-S(두 epoch, 문맥 고정)와 학습 방식이 다르다.
 # max_epochs는 fold 0 시간 한도(4.5 GPU 시간) 안에서 스모크 실측 epoch 시간으로 고정한다.
-name: exp122_tabr
+name: exp123_tabr
 
 data:
   train: data/train.csv
