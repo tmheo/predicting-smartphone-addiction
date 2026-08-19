@@ -1208,6 +1208,45 @@ class TabRSAdapter:
         return self._impl.entry_diagnostics()
 
 
+class TabRAdapter:
+    """공식 기본 TabR(조기 종료, 매 배치 문맥 재계산)을 제공하는 검색형 모델 adapter. (#199)"""
+
+    def __init__(self, params: dict, fit: dict, seed: int) -> None:
+        self._params = params
+        self._fit = fit
+        self._seed = seed
+        self._impl = None
+
+    def fit(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        initial_score_tr: pd.Series | None = None,
+        initial_score_va: pd.Series | None = None,
+    ) -> np.ndarray:
+        from . import tabr
+
+        _reject_initial_score("tabr", initial_score_tr, initial_score_va)
+        if self._fit:
+            raise ValueError(f"tabr가 모르는 fit 설정: {sorted(self._fit)}")
+        self._impl = tabr.TabRFold(self._params, self._seed)
+        return self._impl.fit(X_tr, y_tr, X_va, y_va)
+
+    def predict(
+        self, X: pd.DataFrame, initial_score: pd.Series | None = None
+    ) -> np.ndarray:
+        _reject_initial_score("tabr", initial_score, None)
+        return self._impl.predict(X)
+
+    def importance(self) -> pd.DataFrame:
+        return self._impl.importance()
+
+    def entry_diagnostics(self) -> AdapterDiagnostics:
+        return self._impl.entry_diagnostics()
+
+
 class TabICLv2Adapter:
     """공식 TabICLv2 문맥 추론기 adapter. (#143)"""
 
@@ -1446,6 +1485,7 @@ MODEL_REGISTRY: dict[str, Callable[[dict, dict, int], ModelAdapter]] = {
     "tabm": TabMAdapter,
     "realmlp": RealMLPAdapter,
     "tabpfn3": TabPFN3Adapter,
+    "tabr": TabRAdapter,
     "tabr_s": TabRSAdapter,
     "tabiclv2": TabICLv2Adapter,
     "trompt": TromptAdapter,

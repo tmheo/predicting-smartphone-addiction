@@ -1,0 +1,77 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #199: TabR retrieval 계열의 스모크 게이트 진입 판정.
+# champion exp081과 같은 33개 피처 계획을 사용한다.
+# 모델은 공식 기본 TabR(default-evaluation)이다: 문맥 96개, 매 배치 후보 키 재계산,
+# 검증 AUC 조기 종료 patience 16. #142의 TabR-S(두 epoch, 문맥 고정)와 학습 방식이 다르다.
+# max_epochs는 fold 0 시간 한도(4.5 GPU 시간) 안에서 스모크 실측 epoch 시간으로 고정한다.
+name: exp123_tabr
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions: [social_frac, work_frac, leisure_frac, resid_frac, week_total]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: tabr
+  params:
+    context_size: 96
+    patience: 16
+    max_epochs: 64
+    batch_size: 1024
+    eval_batch_size: 8192
+    candidate_encoding_batch_size: 65536
+    d_main: 265
+    d_multiplier: 2.0
+    context_dropout: 0.38920071545944357
+    dropout0: 0.38852797479169876
+    dropout1: 0.0
+    lr: 0.0003121273641315169
+    weight_decay: 0.0000012260352006404615
+    perm_sample: 8192
+    perm_repeats: 1
+  fit: {}
