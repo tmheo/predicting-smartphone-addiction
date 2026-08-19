@@ -128,6 +128,8 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 - S는 비교하는 짝에 따라 크게 다르다.
   같은 데이터에서 짝만 바꿔도 sd(gap)가 0.000003(최상위 단일 모델 대 2위)에서 0.00022(최상위 대 20위)까지 약 70배 움직이므로, 일반 sigma가 아니라 비교하려는 특정 짝에 대해 rho를 직접 추정해야 한다 ([734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005) 코멘트).
   튜닝된 GBDT 둘 사이의 우위는 거의 결정적으로 전이되고, 계열이 다른 블렌드와의 비교는 훨씬 불확실하다.
+- 교차 분할 비교의 눈금: 서로 다른 CV 분할에서 나온 점수끼리는(공개 노트북의 CV 주장 대 우리 OOF 등) 소형 LightGBM 기준 약 1e-4 미만의 차이를 의미 있게 읽지 않는다.
+  분할 시드를 바꿔 완전한 5-fold CV를 3회 재실행했을 때 OOF AUC 표준편차가 0.000042라는 실측이 근거이며, 상세는 [alexchilton CV 이득 노이즈 노트북 검토](alexchilton-cv-gain-noise-notebook.md)가 소유한다.
 
 ### best-of-N 함정과 제출 규율
 
@@ -329,6 +331,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 
 | id | 제목 | 코멘트 수 | 재방문 |
 | --- | --- | --- | --- |
+| [736062](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/736062) | Achieving 0.971+ LB: Residual NN + LightGBM Stacking Strategy - 정량 근거 없는 홍보성 글로 저신뢰 판정, 본문 반입 없음([검토 문서](discussion-736062-cv-gain-noise.md)) | 0 (2026-08-19) | |
 | [735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) | What actually creates a decorrelated model when you work alone? | 2 (2026-08-19) | O |
 | [735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421) | Contextualized Deep Univariate Spline Transformer | 5 (2026-08-18) | O |
 | [734063](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734063) | Decoding the Synthetic Generator: 0.9689+ via Stringified Target Encoding and Rank Averaging | 1 | O |
