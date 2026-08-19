@@ -1,0 +1,64 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #243: exp121 대비 dtype 정합 복원(realmlp.py transform의 float32 형
+# 변환을 어휘 매핑·bin 변환 뒤로 이동)만 반영한 단일 델타 짝비교.
+# 설정 값은 exp121_realmlp_fixed4_two_init.yaml과 이름 외에 전부 동일하다.
+# 어닐링 완주(schedule_epochs 4)는 넣지 않는다(#234 결정, #232 델타는 근사값).
+# 원문: https://www.kaggle.com/code/beicicc/s6e8-fold-safe-realmlp
+# 받은 판본: Kaggle kernel id 129554888, SHA-256
+# 60a0bd05332e8932468d9cc796855013be3c3798344fd75c15c016764eba58ef.
+# 원문은 Apache License 2.0이며 수정 내용과 사용 조건은 realmlp.py에 기록했다.
+name: exp124_realmlp_dtype_fix
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers: []
+
+model:
+  kind: realmlp
+  params:
+    n_ens: 8
+    embed_dim: 8
+    onehot_thresh: 8
+    hidden_dims: [512, 512, 512]
+    dropout: 0.06
+    p_drop_sched: expm4t
+    pbld_hidden_dim: 20
+    pbld_out_dim: 5
+    pbld_freq_scale: 5.0
+    pbld_lr_factor: 0.093
+    lr: 0.01
+    mom: 0.9
+    sq_mom: 0.98
+    lr_sched: flat_cos
+    flat_ratio: 0.3
+    first_layer_lr_factor: 1.0
+    first_layer_wd_factor: 0.1
+    lr_scale_mult: 10.0
+    lr_bias_mult: 0.1
+    weight_decay: 0.013
+    wd_scale_mult: 0.1
+    wd_bias_mult: 0.5
+    ema_decay: 0.997875
+    grad_clip: 1.2
+    ls_eps: 0.04
+    ls_eps_sched: cos
+    tfms: [median_center, robust_scale]
+    fixed_epochs: 4
+    schedule_epochs: 8
+    batch_size: 256
+    eval_batch_size: 10240
+    n_init_avg: 2
+    init_seed_stride: 1000
+    inner_folds: 5
+    perm_sample: 8192
+    perm_repeats: 1
+    device: cuda
+    verbosity: 1
+  fit: {}
