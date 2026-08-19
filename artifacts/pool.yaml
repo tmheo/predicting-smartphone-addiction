@@ -367,3 +367,19 @@ members:
     ensemble_auc_with: 0.9688734036276649
     ensemble_auc_without: 0.968844711232371
     contribution: 2.8692395293905548e-05
+- run_id: 56701722ba224b98b5ddf799ec5e55db
+  config: exp121_realmlp_fixed4_two_init
+  oof_auc: 0.9637131967242619
+  seeds: 42,43,44
+  entered_at: '2026-08-19'
+  reason: '이슈 #180: 공개 RealMLP 고정 4 epoch 두 초기화 평균을 자체 재현했다. 3시드 OOF 0.96371, 최근접
+    구성원과 스피어만 0.98428로 중복이 아니며 표준 평가 앙상블 기여 참고값 -0.00003은 nested 결합 기여 판정으로 넘긴다.'
+  evidence:
+    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
+    champion_oof_auc: 0.9691957618114269
+    floor_margin: 0.004517434912835072
+    nearest_run_id: ae829ae3d886402ab100a8e966c3131a
+    nearest_spearman: 0.9842843992904183
+    ensemble_auc_with: 0.9688617024063425
+    ensemble_auc_without: 0.9688900257505136
+    contribution: -2.8323344171132803e-05

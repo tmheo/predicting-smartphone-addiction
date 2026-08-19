@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: e6853bfd64ca2640709affeb0ce6a1ceb9782cd881e33068bd97d21e0f50adc8
+source_pool_sha256: 6f61c9486afdb4e559e48f1129c7a03822d8635b9a8f6edcc22b5107c32fc5aa
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -124,3 +124,8 @@ members:
     run_id: b47a4184249746cdb1d062aa98364437
     budget_source: fold_median
     budgets: {42: 36, 43: 36, 44: 36}
+  - config: exp121_realmlp_fixed4_two_init
+    config_path: configs/exp121_realmlp_fixed4_two_init.yaml
+    run_id: 56701722ba224b98b5ddf799ec5e55db
+    budget_source: fold_median
+    budgets: {42: 5, 43: 5, 44: 5}
