@@ -2841,6 +2841,7 @@ dependencies = [
     { name = "tabpfn" },
     { name = "torch" },
     { name = "xgboost" },
+    { name = "xrfm" },
 ]
 
 [package.dev-dependencies]
@@ -2870,6 +2871,7 @@ requires-dist = [
     { name = "tabpfn", specifier = "==8.3.0" },
     { name = "torch", specifier = ">=2.5" },
     { name = "xgboost", specifier = ">=3.4.0" },
+    { name = "xrfm", specifier = "==0.4.5" },
 ]
 
 [package.metadata.requires-dev]
@@ -4240,6 +4242,21 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ae/1b/d631cf47b046ba9fae9c86bf2dba88bec3c2f42173d5216fe81fb9be729c/xgboost-3.4.0-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:ba132153e3c696f090be808bc42b8e4248932ab9a4ee66441154c954789b507c", size = 57615296, upload-time = "2026-08-04T11:14:30.855Z" },
     { url = "https://files.pythonhosted.org/packages/89/97/838165ec9399aa5e6add044f05b64d877d45125adeda15869021b9e625ce/xgboost-3.4.0-py3-none-win_amd64.whl", hash = "sha256:23c62770c38fb9acd8b40d6c7df6de8fa077ef7afcb84aafd898faabbec639f9", size = 48935508, upload-time = "2026-08-04T11:14:50.954Z" },
     { url = "https://files.pythonhosted.org/packages/56/84/92c3af9c167815a15cfa09e5579d6cc604dc6f08b1ae061b3756274cf530/xgboost-3.4.0-py3-none-win_arm64.whl", hash = "sha256:9cdc68b992e55717438122174e2b3d9527c59882818fb954a329a62786012709", size = 2094191, upload-time = "2026-08-04T11:14:55.472Z" },
+]
+
+[[package]]
+name = "xrfm"
+version = "0.4.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scikit-learn" },
+    { name = "torch" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2e/97/dd32a1da5f46e064655f22ee28d85dd1f6de1f6d751619e4725312a026df/xrfm-0.4.5.tar.gz", hash = "sha256:61cc65adf59201e49d4cc34d32dccac28e0196790a7f1921168d3588b75ca301", size = 55200, upload-time = "2026-05-16T01:10:20.614Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2f/76/c6797abf7dc6a8b69d20546886c5d16651bede59416c6dc614ffe0d05d89/xrfm-0.4.5-py3-none-any.whl", hash = "sha256:a75ed05f6be72e76d22546fa6594e4aa2d27734763a7155111a89c4d27ccb604", size = 59351, upload-time = "2026-05-16T01:10:19.592Z" },
 ]
 
 [[package]]

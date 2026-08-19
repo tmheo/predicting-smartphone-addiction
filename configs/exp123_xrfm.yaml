@@ -1,0 +1,74 @@
+# 이슈 #198: 재귀 특성 커널 머신 xRFM의 fold 0 진입 진단 설정.
+# champion exp081의 33열 피처 계획을 그대로 공유하고 model 블록만 바꾼다.
+# 전처리와 내부 튜닝 분할은 outer 학습 fold 안에서만 맞춘다.
+name: exp123_xrfm
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions: [social_frac, work_frac, leisure_frac, resid_frac, week_total]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: xrfm
+  params:
+    device: cuda
+    max_leaf_size: 60000
+    n_trees: 1
+    inner_val_frac: 0.1
+    eval_batch_size: 65536
+    kernel: l2_high_dim
+    exponent: 1.0
+    bandwidth: 10.0
+    diag: false
+    bandwidth_mode: constant
+    reg: 0.001
+    iters: 5
+    perm_sample: 1000
+    perm_repeats: 1
+    verbose: true
+  fit: {}
