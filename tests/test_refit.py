@@ -96,7 +96,7 @@ def test_run_member_writes_lineage_checkpoint_and_resumes(monkeypatch, tmp_path)
         budget_rounding="half_up",
         cv_model_weight=5,
         full_model_weight=1,
-        combiner="missing_segmented_rank_logit",
+        combiner="missing_interaction_rank_logit",
         members=(member,),
     )
 
@@ -177,7 +177,7 @@ def test_run_member_can_fit_seeds_independently_before_finalizing(monkeypatch, t
         budget_rounding="half_up",
         cv_model_weight=5,
         full_model_weight=1,
-        combiner="missing_segmented_rank_logit",
+        combiner="missing_interaction_rank_logit",
         members=(member,),
     )
 

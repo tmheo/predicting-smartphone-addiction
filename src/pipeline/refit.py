@@ -108,8 +108,8 @@ class RefitPlan:
             raise ValueError("학습 길이 규약은 fold 중앙값과 사사오입이어야 한다.")
         if (self.cv_model_weight, self.full_model_weight) != (5, 1):
             raise ValueError("CV와 전체 자료 예측의 모델 개수 가중치는 5:1이어야 한다.")
-        if self.combiner != "missing_segmented_rank_logit":
-            raise ValueError("확정 결합기는 missing_segmented_rank_logit이어야 한다.")
+        if self.combiner != "missing_interaction_rank_logit":
+            raise ValueError("확정 결합기는 missing_interaction_rank_logit이어야 한다.")
         for member in self.members:
             if list(member.budgets) not in ([42], [42, 43, 44]):
                 raise ValueError(f"{member.config}: 허용되지 않은 시드 목록이다.")
