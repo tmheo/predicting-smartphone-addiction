@@ -26,6 +26,7 @@ dependencies = [
     "tabpfn==8.3.0",
     "torch>=2.5",
     "xgboost>=3.4.0",
+    "xrfm==0.4.5",
 ]
 
 # mlflow 3.x는 pandas<3을 선언하지만 이 프로젝트의 사용 범위(로컬 file store 기록)에서는 pandas 3과 동작한다.
