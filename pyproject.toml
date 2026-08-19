@@ -7,6 +7,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "catboost>=1.2.10",
+    # TabR(#199)의 CUDA exact 검색 경로. Linux GPU 원격 환경에서만 설치된다.
+    "faiss-gpu-cu12==1.14.1; sys_platform == 'linux'",
     "ipykernel>=7.3.0",
     "jupyterlab>=4.6.2",
     "kaggle>=2.2.4",
