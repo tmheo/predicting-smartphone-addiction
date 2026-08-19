@@ -52,6 +52,7 @@ from typing import Any, Literal, Protocol
 
 import numpy as np
 import pandas as pd
+from scipy.optimize import nnls
 from scipy.special import ndtri
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import LogisticRegression, Ridge
@@ -596,6 +597,177 @@ class LogisticLinearCombiner:
         )
 
 
+@dataclass(frozen=True)
+class FittedNNLSLinear:
+    weights: pd.Series
+    representation: Representation
+    quantiles: EmpiricalCDFTransformer | None
+    eps: float
+
+    def predict(self, outer_preds: pd.DataFrame) -> np.ndarray:
+        features, _ = _linear_features(
+            outer_preds[list(self.weights.index)],
+            self.representation,
+            quantiles=self.quantiles,
+            fit=False,
+            eps=self.eps,
+        )
+        return features @ self.weights.to_numpy(dtype=np.float64)
+
+    def summary(self) -> dict[str, float]:
+        return {member: float(weight) for member, weight in self.weights.items()}
+
+
+class NNLSCombiner:
+    """비음수 최소제곱 결합: 가중치 ≥ 0 제약이 음수 가중치의 분산 증폭을 막는다. (#223)
+
+    학습 후 가중치를 합 1로 정규화한다(AUC는 순서 평가라 스케일 무관, summary 가독성
+    목적). 모든 가중치가 0이면 균등 가중치로 되돌린다.
+    """
+
+    LOGIT_EPS = 1e-6
+
+    def __init__(self, name: str, representation: Representation) -> None:
+        if representation not in ("logit", "rank"):
+            raise ValueError(
+                f"NNLS는 구성원당 특성 1개인 표현만 받는다: {representation}"
+            )
+        self.name = name
+        self.representation = representation
+
+    def fit(self, inner_preds: pd.DataFrame, y: pd.Series) -> FittedNNLSLinear:
+        features, quantiles = _linear_features(
+            inner_preds,
+            self.representation,
+            quantiles=None,
+            fit=True,
+            eps=self.LOGIT_EPS,
+        )
+        raw, _ = nnls(features, y.to_numpy(dtype=np.float64))
+        total = float(raw.sum())
+        if total == 0.0:
+            raw = np.full(len(raw), 1.0)
+            total = float(raw.sum())
+        weights = pd.Series(raw / total, index=inner_preds.columns, dtype=np.float64)
+        return FittedNNLSLinear(
+            weights, self.representation, quantiles, self.LOGIT_EPS
+        )
+
+
+SHRINKAGE_LAMBDA_GRID = (0.25, 0.5, 0.75, 1.0)
+
+
+@lru_cache(maxsize=1)
+def outer_fold_assignment() -> pd.Series:
+    """artifacts/folds.parquet의 outer fold 배정. 수축 결합의 λ 선택이 재사용한다."""
+    from .judgment import FOLDS_PATH  # 순환을 막는 지역 import(module docstring).
+
+    return pd.read_parquet(FOLDS_PATH).set_index(ID)["fold"]
+
+
+def _aligned_folds(fold_of: pd.Series, index: pd.Index) -> pd.Series:
+    aligned = fold_of.reindex(index)
+    if aligned.isna().any():
+        raise ValueError("fold 배정에 요청한 id가 없다.")
+    return aligned.astype(np.int64)
+
+
+def _shrunk_prediction(
+    meta: FittedLogisticLinear, block: pd.DataFrame, shrinkage_lambda: float
+) -> np.ndarray:
+    """순위 공간의 볼록 결합: λ·학습 메타 예측 + (1-λ)·rank_mean 예측."""
+    meta_ranks = (
+        pd.Series(meta.predict(block), index=block.index)
+        .rank(pct=True)
+        .to_numpy(dtype=np.float64)
+    )
+    return shrinkage_lambda * meta_ranks + (1.0 - shrinkage_lambda) * rank_mean(block)
+
+
+@dataclass(frozen=True)
+class FittedShrunkRankLogit:
+    meta: FittedLogisticLinear
+    members: list[str]
+    shrinkage_lambda: float
+
+    def predict(self, outer_preds: pd.DataFrame) -> np.ndarray:
+        return _shrunk_prediction(
+            self.meta, outer_preds[self.members], self.shrinkage_lambda
+        )
+
+    def summary(self) -> dict[str, float]:
+        meta_summary = self.meta.summary()
+        uniform = 1.0 / len(self.members)
+        return {
+            member: float(
+                self.shrinkage_lambda * meta_summary[member]
+                + (1.0 - self.shrinkage_lambda) * uniform
+            )
+            for member in self.members
+        }
+
+
+class ShrunkRankLogitCombiner:
+    """학습 메타를 균등 순위 평균으로 수축하는 볼록 결합. (#223)
+
+    학습 메타는 현행 기본 표현인 rank_logit 이중 표현 로지스틱이다. λ는 outer 학습
+    fold 안의 leave-one-fold-out으로 λ별 AUC를 재어 고르므로 outer fold 밖 정보를
+    쓰지 않고, nested 계약이 유지된다. 격자는 오름차순이라 동률이면 수축이 큰
+    (λ가 작은) 쪽을 채택한다.
+    """
+
+    name = "shrunk_rank_logit_logistic"
+
+    def __init__(
+        self,
+        *,
+        fold_of: pd.Series | None = None,
+        lambda_grid: tuple[float, ...] = SHRINKAGE_LAMBDA_GRID,
+        name: str | None = None,
+    ) -> None:
+        if not lambda_grid or not all(0.0 <= value <= 1.0 for value in lambda_grid):
+            raise ValueError("λ 격자는 [0, 1] 안의 값 1개 이상이어야 한다.")
+        self.fold_of = fold_of
+        self.lambda_grid = tuple(sorted(lambda_grid))
+        self.name = name or type(self).name
+
+    @staticmethod
+    def _meta() -> LogisticLinearCombiner:
+        return LogisticLinearCombiner("shrinkage_meta", "rank_logit")
+
+    def fit(self, inner_preds: pd.DataFrame, y: pd.Series) -> FittedShrunkRankLogit:
+        fold_of = self.fold_of if self.fold_of is not None else outer_fold_assignment()
+        folds = _aligned_folds(fold_of, inner_preds.index)
+        unique_folds = sorted(folds.unique())
+        if len(unique_folds) < 2:
+            raise ValueError("λ 선택의 leave-one-fold-out에는 fold 2개 이상이 필요하다.")
+
+        combined = {
+            shrinkage_lambda: np.full(len(inner_preds), np.nan, dtype=np.float64)
+            for shrinkage_lambda in self.lambda_grid
+        }
+        for fold in unique_folds:
+            train = (folds != fold).to_numpy()
+            validate = (folds == fold).to_numpy()
+            meta = self._meta().fit(inner_preds[train], y[train])
+            block = inner_preds[validate]
+            for shrinkage_lambda in self.lambda_grid:
+                combined[shrinkage_lambda][validate] = _shrunk_prediction(
+                    meta, block, shrinkage_lambda
+                )
+        label_values = y.to_numpy()
+        aucs = [
+            float(roc_auc_score(label_values, combined[shrinkage_lambda]))
+            for shrinkage_lambda in self.lambda_grid
+        ]
+        best_lambda = self.lambda_grid[int(np.argmax(aucs))]
+        return FittedShrunkRankLogit(
+            meta=self._meta().fit(inner_preds, y),
+            members=list(inner_preds.columns),
+            shrinkage_lambda=float(best_lambda),
+        )
+
+
 MISSINGNESS_TEST_PATH = Path("data/test.csv")
 MISSINGNESS_BAND_LABELS = (0, 1, 2)
 
@@ -945,6 +1117,9 @@ COMBINER_REGISTRY: dict[str, Combiner] = {
         MissingnessSegmentedLogisticCombiner(
             specialized_bands=(2,), name="missing_4plus_rank_logit"
         ),
+        NNLSCombiner("nnls_logit", "logit"),
+        NNLSCombiner("nnls_rank", "rank"),
+        ShrunkRankLogitCombiner(),
     )
 }
 

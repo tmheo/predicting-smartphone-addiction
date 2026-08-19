@@ -21,14 +21,17 @@ from pipeline.ensemble import (
     EmpiricalCDFTransformer,
     GreedyRankMeanCombiner,
     LogisticLinearCombiner,
+    SHRINKAGE_LAMBDA_GRID,
     MissingnessInteractionLogisticCombiner,
     MissingnessSegmentedLogisticCombiner,
     NestedBaseline,
+    NNLSCombiner,
     OptunaSubsetRankMeanCombiner,
     OptunaSubsetRidgeLogitCombiner,
     PerformanceWeightedRankMeanCombiner,
     RankMeanCombiner,
     RidgeLogitCombiner,
+    ShrunkRankLogitCombiner,
     XGBoostRankLogitCombiner,
     evaluate_nested,
     full_fit_predictions,
@@ -84,6 +87,9 @@ def test_registry_holds_reference_and_issue_64_adapters():
         "missing_segmented_rank_logit",
         "missing_interaction_rank_logit",
         "missing_4plus_rank_logit",
+        "nnls_logit",
+        "nnls_rank",
+        "shrunk_rank_logit_logistic",
     ]
 
 
@@ -392,6 +398,103 @@ def test_xgboost_rank_logit_is_deterministic_and_summarizes_members():
     np.testing.assert_array_equal(first.predict(preds), second.predict(preds))
     assert set(first.summary()) == set(preds.columns)
     assert first.predict(preds).dtype == np.float64
+
+
+def test_nnls_learns_nonnegative_normalized_weights():
+    rng = np.random.default_rng(5)
+    y = make_labels()
+    preds = pd.DataFrame(
+        {
+            "informative": np.clip(0.2 + 0.6 * y + rng.normal(0, 0.05, N), 0.01, 0.99),
+            "inverse": np.clip(0.8 - 0.6 * y + rng.normal(0, 0.05, N), 0.01, 0.99),
+            "noise": rng.random(N),
+        },
+        index=make_index(),
+    )
+    for name in ("nnls_logit", "nnls_rank"):
+        fitted = COMBINER_REGISTRY[name].fit(preds, y)
+        weights = fitted.summary()
+        assert set(weights) == set(preds.columns)
+        assert all(weight >= 0.0 for weight in weights.values())
+        assert sum(weights.values()) == pytest.approx(1.0)
+        assert weights["informative"] > weights["inverse"]
+        prediction = fitted.predict(preds.iloc[:10])
+        assert prediction.dtype == np.float64
+        assert np.isfinite(prediction).all()
+
+
+def test_nnls_falls_back_to_uniform_when_all_weights_are_zero():
+    # 유일한 구성원이 역상관이면 NNLS 해가 0 벡터라 균등 가중치로 되돌린다.
+    y = make_labels()
+    preds = pd.DataFrame({"inverse": 0.9 - 0.8 * y}, index=make_index())
+    fitted = NNLSCombiner("nnls_logit_test", "logit").fit(preds, y)
+    assert fitted.summary() == {"inverse": 1.0}
+    assert np.isfinite(fitted.predict(preds)).all()
+
+
+def test_nnls_rejects_multi_feature_representations():
+    with pytest.raises(ValueError, match="표현"):
+        NNLSCombiner("nnls_bad", "rank_logit")
+
+
+def test_shrunk_rank_logit_mixes_meta_and_rank_mean_in_rank_space():
+    preds, y = selection_fixture()
+    combiner = ShrunkRankLogitCombiner(fold_of=make_fold_of())
+    fitted = combiner.fit(preds, y)
+    assert fitted.shrinkage_lambda in SHRINKAGE_LAMBDA_GRID
+
+    block = preds.iloc[:20]
+    meta_ranks = (
+        pd.Series(
+            fitted.meta.predict(block[fitted.members]), index=block.index
+        )
+        .rank(pct=True)
+        .to_numpy(dtype=np.float64)
+    )
+    expected = (
+        fitted.shrinkage_lambda * meta_ranks
+        + (1.0 - fitted.shrinkage_lambda)
+        * block.rank(pct=True).to_numpy().mean(axis=1)
+    )
+    np.testing.assert_allclose(fitted.predict(block), expected)
+
+    meta_summary = fitted.meta.summary()
+    uniform = 1.0 / len(preds.columns)
+    for member, weight in fitted.summary().items():
+        assert weight == pytest.approx(
+            fitted.shrinkage_lambda * meta_summary[member]
+            + (1.0 - fitted.shrinkage_lambda) * uniform
+        )
+
+
+def test_shrunk_rank_logit_is_deterministic():
+    preds, y = selection_fixture()
+    combiner = ShrunkRankLogitCombiner(fold_of=make_fold_of())
+    first = combiner.fit(preds, y)
+    second = combiner.fit(preds, y)
+    assert first.shrinkage_lambda == second.shrinkage_lambda
+    assert first.summary() == second.summary()
+
+
+def test_shrunk_rank_logit_requires_at_least_two_inner_folds():
+    preds, y = selection_fixture()
+    single = pd.Series(np.zeros(N, dtype=np.int64), index=make_index())
+    with pytest.raises(ValueError, match="fold 2개"):
+        ShrunkRankLogitCombiner(fold_of=single).fit(preds, y)
+
+
+def test_shrunk_rank_logit_rejects_missing_fold_context():
+    preds, y = selection_fixture()
+    incomplete = make_fold_of().iloc[:-1]
+    with pytest.raises(ValueError, match="요청한 id"):
+        ShrunkRankLogitCombiner(fold_of=incomplete).fit(preds, y)
+
+
+def test_shrunk_rank_logit_rejects_lambda_outside_unit_interval():
+    with pytest.raises(ValueError, match="격자"):
+        ShrunkRankLogitCombiner(lambda_grid=(0.5, 1.5))
+    with pytest.raises(ValueError, match="격자"):
+        ShrunkRankLogitCombiner(lambda_grid=())
 
 
 def test_nested_evaluation_reports_non_convergent_outer_fold():
