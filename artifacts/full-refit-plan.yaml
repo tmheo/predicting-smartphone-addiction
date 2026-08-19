@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: cc66ba9e9f15b2a1dd906f7343f8ea884bad42ec3bdd8d7a4b02272f2a2276a4
+source_pool_sha256: e6853bfd64ca2640709affeb0ce6a1ceb9782cd881e33068bd97d21e0f50adc8
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -121,6 +121,6 @@ members:
     budgets: {42: 23719, 43: 22945, 44: 22746}
   - config: exp113_tab_cnn_m0
     config_path: configs/exp113_tab_cnn_m0.yaml
-    run_id: a3c4f73cce764f8f85c3620631f16a71
+    run_id: b47a4184249746cdb1d062aa98364437
     budget_source: fold_median
     budgets: {42: 36, 43: 36, 44: 36}

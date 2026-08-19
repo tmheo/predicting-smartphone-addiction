@@ -352,7 +352,7 @@ members:
     ensemble_auc_with: 0.9688634779244466
     ensemble_auc_without: 0.9688402384157816
     contribution: 2.3239508665007236e-05
-- run_id: a3c4f73cce764f8f85c3620631f16a71
+- run_id: b47a4184249746cdb1d062aa98364437
   config: exp113_tab_cnn_m0
   oof_auc: 0.9620748339267182
   seeds: 42,43,44
