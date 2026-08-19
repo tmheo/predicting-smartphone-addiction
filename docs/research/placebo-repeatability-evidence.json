@@ -1,0 +1,5791 @@
+{
+ "schema_version": 1,
+ "generated_at": "2026-08-20",
+ "source": {
+  "issue": 261,
+  "design_issue": 256,
+  "script": "scripts/diagnose_placebo_repeatability.py",
+  "rerun_git_commit": "327a973898b09b9f8861adc92155d4f527cc4c6a",
+  "prior_evidence": "docs/research/placebo-gate-conflict-evidence.json"
+ },
+ "definitions": {
+  "cell": "fold 모델 하나(모델 seed x fold x 플라시보 난수)의 gain importance 표",
+  "rank": "셀 안 전체 피처의 gain 내림차순 경쟁 순위(동률은 최고 순위)",
+  "percentile": "셀 안 다른 피처 중 gain이 엄격히 낮은 비율(%)",
+  "above_placebo": "해당 셀에서 후보 gain > 플라시보 gain",
+  "min_median_max": "관측 요약이며 분위수·오류율 추정이 아니다"
+ },
+ "interpretive_constraints": [
+  "플라시보 난수 반복 4회를 경험적 P값, 95% 분위수, 오류율 추정으로 해석하지 않는다.",
+  "역사 사례의 OOF 관찰을 오류율의 참값으로 간주하지 않는다(#256).",
+  "중요도는 보조 증거다. 판정의 주 증거는 짝지은 OOF 피처 묶음 대조다(#256)."
+ ],
+ "placebo_repeatability": {
+  "design": {
+   "model_seed": 42,
+   "fold": 0,
+   "placebo_seeds": [
+    101,
+    202,
+    303,
+    404
+   ],
+   "original_cell": "기존 실행의 fold 0 셀은 플라시보 난수 42에 해당한다"
+  },
+  "exp027_recon_ce": {
+   "role": "양성 대표(짝지은 OOF 양수인데 전 열 미달)",
+   "refit": {
+    "config": "exp027_recon_ce",
+    "new_features": [
+     "age_ce",
+     "app_opens_per_day_ce",
+     "daily_screen_time_hours_ce",
+     "notifications_per_day_ce",
+     "sleep_hours_ce",
+     "social_media_hours_ce",
+     "weekend_screen_time_ce",
+     "work_study_hours_ce"
+    ],
+    "cells": [
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 0,
+       "placebo_seed": 101
+      },
+      "n_features": 36,
+      "placebo": {
+       "gain": 20922.48186159134,
+       "rank": 22,
+       "percentile": 40.0
+      },
+      "features": [
+       {
+        "feature": "age_ce",
+        "gain": 7415.926369905472,
+        "ratio_to_placebo": 0.35444773803433594,
+        "above_placebo": false,
+        "rank": 32,
+        "percentile": 11.428571428571429
+       },
+       {
+        "feature": "app_opens_per_day_ce",
+        "gain": 17479.0566778183,
+        "ratio_to_placebo": 0.8354198509262736,
+        "above_placebo": false,
+        "rank": 26,
+        "percentile": 28.571428571428573
+       },
+       {
+        "feature": "daily_screen_time_hours_ce",
+        "gain": 15461.497281551361,
+        "ratio_to_placebo": 0.7389896372635869,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 17.142857142857142
+       },
+       {
+        "feature": "notifications_per_day_ce",
+        "gain": 20451.256486415863,
+        "ratio_to_placebo": 0.9774775584324662,
+        "above_placebo": false,
+        "rank": 24,
+        "percentile": 34.285714285714285
+       },
+       {
+        "feature": "sleep_hours_ce",
+        "gain": 16836.936053037643,
+        "ratio_to_placebo": 0.8047293893917156,
+        "above_placebo": false,
+        "rank": 28,
+        "percentile": 22.857142857142858
+       },
+       {
+        "feature": "social_media_hours_ce",
+        "gain": 16966.463258981705,
+        "ratio_to_placebo": 0.8109202039805834,
+        "above_placebo": false,
+        "rank": 27,
+        "percentile": 25.714285714285715
+       },
+       {
+        "feature": "weekend_screen_time_ce",
+        "gain": 16763.664854049683,
+        "ratio_to_placebo": 0.8012273574878205,
+        "above_placebo": false,
+        "rank": 29,
+        "percentile": 20.0
+       },
+       {
+        "feature": "work_study_hours_ce",
+        "gain": 19175.81462788582,
+        "ratio_to_placebo": 0.9165172064547474,
+        "above_placebo": false,
+        "rank": 25,
+        "percentile": 31.428571428571427
+       }
+      ],
+      "above_count": 0,
+      "all_above": false,
+      "auc_fold": 0.9666663989924967
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 0,
+       "placebo_seed": 202
+      },
+      "n_features": 36,
+      "placebo": {
+       "gain": 31151.2874314785,
+       "rank": 21,
+       "percentile": 42.857142857142854
+      },
+      "features": [
+       {
+        "feature": "age_ce",
+        "gain": 11420.571625590324,
+        "ratio_to_placebo": 0.3666163605825739,
+        "above_placebo": false,
+        "rank": 32,
+        "percentile": 11.428571428571429
+       },
+       {
+        "feature": "app_opens_per_day_ce",
+        "gain": 24424.013014912605,
+        "ratio_to_placebo": 0.784045059731048,
+        "above_placebo": false,
+        "rank": 27,
+        "percentile": 25.714285714285715
+       },
+       {
+        "feature": "daily_screen_time_hours_ce",
+        "gain": 22658.951608181,
+        "ratio_to_placebo": 0.727384113996009,
+        "above_placebo": false,
+        "rank": 29,
+        "percentile": 20.0
+       },
+       {
+        "feature": "notifications_per_day_ce",
+        "gain": 28484.51613855362,
+        "ratio_to_placebo": 0.9143929027398688,
+        "above_placebo": false,
+        "rank": 24,
+        "percentile": 34.285714285714285
+       },
+       {
+        "feature": "sleep_hours_ce",
+        "gain": 25536.023405194283,
+        "ratio_to_placebo": 0.8197421522742597,
+        "above_placebo": false,
+        "rank": 26,
+        "percentile": 28.571428571428573
+       },
+       {
+        "feature": "social_media_hours_ce",
+        "gain": 21853.529134988785,
+        "ratio_to_placebo": 0.701528923421178,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 17.142857142857142
+       },
+       {
+        "feature": "weekend_screen_time_ce",
+        "gain": 24280.46582055092,
+        "ratio_to_placebo": 0.7794369935418917,
+        "above_placebo": false,
+        "rank": 28,
+        "percentile": 22.857142857142858
+       },
+       {
+        "feature": "work_study_hours_ce",
+        "gain": 27510.008945703506,
+        "ratio_to_placebo": 0.8831098556108,
+        "above_placebo": false,
+        "rank": 25,
+        "percentile": 31.428571428571427
+       }
+      ],
+      "above_count": 0,
+      "all_above": false,
+      "auc_fold": 0.96668782535835
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 0,
+       "placebo_seed": 303
+      },
+      "n_features": 36,
+      "placebo": {
+       "gain": 30890.214486837387,
+       "rank": 21,
+       "percentile": 42.857142857142854
+      },
+      "features": [
+       {
+        "feature": "age_ce",
+        "gain": 10759.347107052803,
+        "ratio_to_placebo": 0.3483092392135206,
+        "above_placebo": false,
+        "rank": 32,
+        "percentile": 11.428571428571429
+       },
+       {
+        "feature": "app_opens_per_day_ce",
+        "gain": 23934.813541650772,
+        "ratio_to_placebo": 0.7748348122299256,
+        "above_placebo": false,
+        "rank": 27,
+        "percentile": 25.714285714285715
+       },
+       {
+        "feature": "daily_screen_time_hours_ce",
+        "gain": 21895.125279188156,
+        "ratio_to_placebo": 0.7088045726752036,
+        "above_placebo": false,
+        "rank": 29,
+        "percentile": 20.0
+       },
+       {
+        "feature": "notifications_per_day_ce",
+        "gain": 28373.95277774334,
+        "ratio_to_placebo": 0.918541785776002,
+        "above_placebo": false,
+        "rank": 24,
+        "percentile": 34.285714285714285
+       },
+       {
+        "feature": "sleep_hours_ce",
+        "gain": 25172.413428544998,
+        "ratio_to_placebo": 0.8148992762504514,
+        "above_placebo": false,
+        "rank": 26,
+        "percentile": 28.571428571428573
+       },
+       {
+        "feature": "social_media_hours_ce",
+        "gain": 21825.64169025421,
+        "ratio_to_placebo": 0.7065552005006092,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 17.142857142857142
+       },
+       {
+        "feature": "weekend_screen_time_ce",
+        "gain": 23775.039739251137,
+        "ratio_to_placebo": 0.7696625010286642,
+        "above_placebo": false,
+        "rank": 28,
+        "percentile": 22.857142857142858
+       },
+       {
+        "feature": "work_study_hours_ce",
+        "gain": 26277.46782183647,
+        "ratio_to_placebo": 0.850672883253483,
+        "above_placebo": false,
+        "rank": 25,
+        "percentile": 31.428571428571427
+       }
+      ],
+      "above_count": 0,
+      "all_above": false,
+      "auc_fold": 0.966677707401587
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 0,
+       "placebo_seed": 404
+      },
+      "n_features": 36,
+      "placebo": {
+       "gain": 24712.50424528122,
+       "rank": 22,
+       "percentile": 40.0
+      },
+      "features": [
+       {
+        "feature": "age_ce",
+        "gain": 8319.38512480259,
+        "ratio_to_placebo": 0.33664678586311836,
+        "above_placebo": false,
+        "rank": 32,
+        "percentile": 11.428571428571429
+       },
+       {
+        "feature": "app_opens_per_day_ce",
+        "gain": 19680.198364257812,
+        "ratio_to_placebo": 0.7963660084354134,
+        "above_placebo": false,
+        "rank": 26,
+        "percentile": 28.571428571428573
+       },
+       {
+        "feature": "daily_screen_time_hours_ce",
+        "gain": 18009.849719762802,
+        "ratio_to_placebo": 0.7287747749482625,
+        "above_placebo": false,
+        "rank": 29,
+        "percentile": 20.0
+       },
+       {
+        "feature": "notifications_per_day_ce",
+        "gain": 22974.532618165016,
+        "ratio_to_placebo": 0.9296723792187891,
+        "above_placebo": false,
+        "rank": 24,
+        "percentile": 34.285714285714285
+       },
+       {
+        "feature": "sleep_hours_ce",
+        "gain": 19350.006405949593,
+        "ratio_to_placebo": 0.7830046770611854,
+        "above_placebo": false,
+        "rank": 27,
+        "percentile": 25.714285714285715
+       },
+       {
+        "feature": "social_media_hours_ce",
+        "gain": 17768.05645799637,
+        "ratio_to_placebo": 0.7189905272910222,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 17.142857142857142
+       },
+       {
+        "feature": "weekend_screen_time_ce",
+        "gain": 19045.187956809998,
+        "ratio_to_placebo": 0.770670093478957,
+        "above_placebo": false,
+        "rank": 28,
+        "percentile": 22.857142857142858
+       },
+       {
+        "feature": "work_study_hours_ce",
+        "gain": 22569.572882652283,
+        "ratio_to_placebo": 0.9132855439756526,
+        "above_placebo": false,
+        "rank": 25,
+        "percentile": 31.428571428571427
+       }
+      ],
+      "above_count": 0,
+      "all_above": false,
+      "auc_fold": 0.9666355119304846
+     }
+    ],
+    "placebo_gain": {
+     "min": 20922.48186159134,
+     "median": 27801.359366059303,
+     "max": 31151.2874314785
+    },
+    "placebo_rank": {
+     "min": 21,
+     "median": 21.5,
+     "max": 22
+    },
+    "per_feature": [
+     {
+      "feature": "age_ce",
+      "cells": 4,
+      "above_count": 0,
+      "gain": {
+       "min": 7415.926369905472,
+       "median": 9539.366115927696,
+       "max": 11420.571625590324
+      },
+      "ratio_to_placebo": {
+       "min": 0.33664678586311836,
+       "median": 0.3513784886239283,
+       "max": 0.3666163605825739
+      },
+      "rank": {
+       "min": 32,
+       "median": 32.0,
+       "max": 32
+      },
+      "percentile": {
+       "min": 11.428571428571429,
+       "median": 11.428571428571429,
+       "max": 11.428571428571429
+      }
+     },
+     {
+      "feature": "app_opens_per_day_ce",
+      "cells": 4,
+      "above_count": 0,
+      "gain": {
+       "min": 17479.0566778183,
+       "median": 21807.505952954292,
+       "max": 24424.013014912605
+      },
+      "ratio_to_placebo": {
+       "min": 0.7748348122299256,
+       "median": 0.7902055340832307,
+       "max": 0.8354198509262736
+      },
+      "rank": {
+       "min": 26,
+       "median": 26.5,
+       "max": 27
+      },
+      "percentile": {
+       "min": 25.714285714285715,
+       "median": 27.142857142857146,
+       "max": 28.571428571428573
+      }
+     },
+     {
+      "feature": "daily_screen_time_hours_ce",
+      "cells": 4,
+      "above_count": 0,
+      "gain": {
+       "min": 15461.497281551361,
+       "median": 19952.48749947548,
+       "max": 22658.951608181
+      },
+      "ratio_to_placebo": {
+       "min": 0.7088045726752036,
+       "median": 0.7280794444721357,
+       "max": 0.7389896372635869
+      },
+      "rank": {
+       "min": 29,
+       "median": 29.0,
+       "max": 30
+      },
+      "percentile": {
+       "min": 17.142857142857142,
+       "median": 20.0,
+       "max": 20.0
+      }
+     },
+     {
+      "feature": "notifications_per_day_ce",
+      "cells": 4,
+      "above_count": 0,
+      "gain": {
+       "min": 20451.256486415863,
+       "median": 25674.242697954178,
+       "max": 28484.51613855362
+      },
+      "ratio_to_placebo": {
+       "min": 0.9143929027398688,
+       "median": 0.9241070824973956,
+       "max": 0.9774775584324662
+      },
+      "rank": {
+       "min": 24,
+       "median": 24.0,
+       "max": 24
+      },
+      "percentile": {
+       "min": 34.285714285714285,
+       "median": 34.285714285714285,
+       "max": 34.285714285714285
+      }
+     },
+     {
+      "feature": "sleep_hours_ce",
+      "cells": 4,
+      "above_count": 0,
+      "gain": {
+       "min": 16836.936053037643,
+       "median": 22261.209917247295,
+       "max": 25536.023405194283
+      },
+      "ratio_to_placebo": {
+       "min": 0.7830046770611854,
+       "median": 0.8098143328210835,
+       "max": 0.8197421522742597
+      },
+      "rank": {
+       "min": 26,
+       "median": 26.5,
+       "max": 28
+      },
+      "percentile": {
+       "min": 22.857142857142858,
+       "median": 27.142857142857146,
+       "max": 28.571428571428573
+      }
+     },
+     {
+      "feature": "social_media_hours_ce",
+      "cells": 4,
+      "above_count": 0,
+      "gain": {
+       "min": 16966.463258981705,
+       "median": 19796.84907412529,
+       "max": 21853.529134988785
+      },
+      "ratio_to_placebo": {
+       "min": 0.701528923421178,
+       "median": 0.7127728638958157,
+       "max": 0.8109202039805834
+      },
+      "rank": {
+       "min": 27,
+       "median": 30.0,
+       "max": 30
+      },
+      "percentile": {
+       "min": 17.142857142857142,
+       "median": 17.142857142857142,
+       "max": 25.714285714285715
+      }
+     },
+     {
+      "feature": "weekend_screen_time_ce",
+      "cells": 4,
+      "above_count": 0,
+      "gain": {
+       "min": 16763.664854049683,
+       "median": 21410.113848030567,
+       "max": 24280.46582055092
+      },
+      "ratio_to_placebo": {
+       "min": 0.7696625010286642,
+       "median": 0.7750535435104243,
+       "max": 0.8012273574878205
+      },
+      "rank": {
+       "min": 28,
+       "median": 28.0,
+       "max": 29
+      },
+      "percentile": {
+       "min": 20.0,
+       "median": 22.857142857142858,
+       "max": 22.857142857142858
+      }
+     },
+     {
+      "feature": "work_study_hours_ce",
+      "cells": 4,
+      "above_count": 0,
+      "gain": {
+       "min": 19175.81462788582,
+       "median": 24423.520352244377,
+       "max": 27510.008945703506
+      },
+      "ratio_to_placebo": {
+       "min": 0.850672883253483,
+       "median": 0.8981976997932264,
+       "max": 0.9165172064547474
+      },
+      "rank": {
+       "min": 25,
+       "median": 25.0,
+       "max": 25
+      },
+      "percentile": {
+       "min": 31.428571428571427,
+       "median": 31.428571428571427,
+       "max": 31.428571428571427
+      }
+     }
+    ],
+    "all_above_cells": 0,
+    "n_cells": 4,
+    "mode": "refit",
+    "model_seed": 42,
+    "fold": 0,
+    "placebo_seeds": [
+     101,
+     202,
+     303,
+     404
+    ]
+   },
+   "original_run_readout_seed42": {
+    "config": "exp027_recon_ce",
+    "new_features": [
+     "age_ce",
+     "app_opens_per_day_ce",
+     "daily_screen_time_hours_ce",
+     "notifications_per_day_ce",
+     "sleep_hours_ce",
+     "social_media_hours_ce",
+     "weekend_screen_time_ce",
+     "work_study_hours_ce"
+    ],
+    "cells": [
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 0,
+       "placebo_seed": 42
+      },
+      "n_features": 36,
+      "placebo": {
+       "gain": 27385.167264580727,
+       "rank": 22,
+       "percentile": 40.0
+      },
+      "features": [
+       {
+        "feature": "age_ce",
+        "gain": 9837.310755610466,
+        "ratio_to_placebo": 0.35922040061204197,
+        "above_placebo": false,
+        "rank": 32,
+        "percentile": 11.428571428571429
+       },
+       {
+        "feature": "app_opens_per_day_ce",
+        "gain": 21660.09918510914,
+        "ratio_to_placebo": 0.790942738302123,
+        "above_placebo": false,
+        "rank": 27,
+        "percentile": 25.714285714285715
+       },
+       {
+        "feature": "daily_screen_time_hours_ce",
+        "gain": 20438.247102737427,
+        "ratio_to_placebo": 0.7463254434517087,
+        "above_placebo": false,
+        "rank": 29,
+        "percentile": 20.0
+       },
+       {
+        "feature": "notifications_per_day_ce",
+        "gain": 25091.570563554764,
+        "ratio_to_placebo": 0.9162467521608881,
+        "above_placebo": false,
+        "rank": 24,
+        "percentile": 34.285714285714285
+       },
+       {
+        "feature": "sleep_hours_ce",
+        "gain": 22150.707671761513,
+        "ratio_to_placebo": 0.8088578557053646,
+        "above_placebo": false,
+        "rank": 26,
+        "percentile": 28.571428571428573
+       },
+       {
+        "feature": "social_media_hours_ce",
+        "gain": 19995.555406808853,
+        "ratio_to_placebo": 0.7301600612339729,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 17.142857142857142
+       },
+       {
+        "feature": "weekend_screen_time_ce",
+        "gain": 21100.139419317245,
+        "ratio_to_placebo": 0.7704951814045563,
+        "above_placebo": false,
+        "rank": 28,
+        "percentile": 22.857142857142858
+       },
+       {
+        "feature": "work_study_hours_ce",
+        "gain": 24127.8268327713,
+        "ratio_to_placebo": 0.881054572340612,
+        "above_placebo": false,
+        "rank": 25,
+        "percentile": 31.428571428571427
+       }
+      ],
+      "above_count": 0,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 1,
+       "placebo_seed": 42
+      },
+      "n_features": 36,
+      "placebo": {
+       "gain": 25604.811653614044,
+       "rank": 22,
+       "percentile": 40.0
+      },
+      "features": [
+       {
+        "feature": "age_ce",
+        "gain": 9801.853118658066,
+        "ratio_to_placebo": 0.3828129357582899,
+        "above_placebo": false,
+        "rank": 32,
+        "percentile": 11.428571428571429
+       },
+       {
+        "feature": "app_opens_per_day_ce",
+        "gain": 21254.840957522392,
+        "ratio_to_placebo": 0.8301112011703603,
+        "above_placebo": false,
+        "rank": 26,
+        "percentile": 28.571428571428573
+       },
+       {
+        "feature": "daily_screen_time_hours_ce",
+        "gain": 18374.003025889397,
+        "ratio_to_placebo": 0.7175996166054969,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 17.142857142857142
+       },
+       {
+        "feature": "notifications_per_day_ce",
+        "gain": 24714.7915289402,
+        "ratio_to_placebo": 0.9652401221803864,
+        "above_placebo": false,
+        "rank": 23,
+        "percentile": 37.142857142857146
+       },
+       {
+        "feature": "sleep_hours_ce",
+        "gain": 20308.609154462814,
+        "ratio_to_placebo": 0.7931559672924332,
+        "above_placebo": false,
+        "rank": 28,
+        "percentile": 22.857142857142858
+       },
+       {
+        "feature": "social_media_hours_ce",
+        "gain": 20043.239919781685,
+        "ratio_to_placebo": 0.7827919295376906,
+        "above_placebo": false,
+        "rank": 29,
+        "percentile": 20.0
+       },
+       {
+        "feature": "weekend_screen_time_ce",
+        "gain": 20383.950612425804,
+        "ratio_to_placebo": 0.7960984399410206,
+        "above_placebo": false,
+        "rank": 27,
+        "percentile": 25.714285714285715
+       },
+       {
+        "feature": "work_study_hours_ce",
+        "gain": 23647.786212444305,
+        "ratio_to_placebo": 0.9235680594864477,
+        "above_placebo": false,
+        "rank": 25,
+        "percentile": 31.428571428571427
+       }
+      ],
+      "above_count": 0,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 2,
+       "placebo_seed": 42
+      },
+      "n_features": 36,
+      "placebo": {
+       "gain": 23362.36990380287,
+       "rank": 22,
+       "percentile": 40.0
+      },
+      "features": [
+       {
+        "feature": "age_ce",
+        "gain": 9135.866408109665,
+        "ratio_to_placebo": 0.3910504989745304,
+        "above_placebo": false,
+        "rank": 32,
+        "percentile": 11.428571428571429
+       },
+       {
+        "feature": "app_opens_per_day_ce",
+        "gain": 19117.48657989502,
+        "ratio_to_placebo": 0.8183025377396802,
+        "above_placebo": false,
+        "rank": 27,
+        "percentile": 25.714285714285715
+       },
+       {
+        "feature": "daily_screen_time_hours_ce",
+        "gain": 17410.51868414879,
+        "ratio_to_placebo": 0.7452376944564492,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 17.142857142857142
+       },
+       {
+        "feature": "notifications_per_day_ce",
+        "gain": 22534.893008708954,
+        "ratio_to_placebo": 0.9645807810380049,
+        "above_placebo": false,
+        "rank": 23,
+        "percentile": 37.142857142857146
+       },
+       {
+        "feature": "sleep_hours_ce",
+        "gain": 17920.31737458706,
+        "ratio_to_placebo": 0.7670590547267224,
+        "above_placebo": false,
+        "rank": 29,
+        "percentile": 20.0
+       },
+       {
+        "feature": "social_media_hours_ce",
+        "gain": 19947.326718091965,
+        "ratio_to_placebo": 0.8538229126679904,
+        "above_placebo": false,
+        "rank": 26,
+        "percentile": 28.571428571428573
+       },
+       {
+        "feature": "weekend_screen_time_ce",
+        "gain": 18369.947422504425,
+        "ratio_to_placebo": 0.7863049638433388,
+        "above_placebo": false,
+        "rank": 28,
+        "percentile": 22.857142857142858
+       },
+       {
+        "feature": "work_study_hours_ce",
+        "gain": 21388.503968715668,
+        "ratio_to_placebo": 0.9155108859582819,
+        "above_placebo": false,
+        "rank": 25,
+        "percentile": 31.428571428571427
+       }
+      ],
+      "above_count": 0,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 3,
+       "placebo_seed": 42
+      },
+      "n_features": 36,
+      "placebo": {
+       "gain": 24704.015523433685,
+       "rank": 22,
+       "percentile": 40.0
+      },
+      "features": [
+       {
+        "feature": "age_ce",
+        "gain": 9948.540310502052,
+        "ratio_to_placebo": 0.40270944215789883,
+        "above_placebo": false,
+        "rank": 32,
+        "percentile": 11.428571428571429
+       },
+       {
+        "feature": "app_opens_per_day_ce",
+        "gain": 20513.803963661194,
+        "ratio_to_placebo": 0.8303833821753492,
+        "above_placebo": false,
+        "rank": 27,
+        "percentile": 25.714285714285715
+       },
+       {
+        "feature": "daily_screen_time_hours_ce",
+        "gain": 16982.835784196854,
+        "ratio_to_placebo": 0.6874524414092644,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 17.142857142857142
+       },
+       {
+        "feature": "notifications_per_day_ce",
+        "gain": 24132.889327287674,
+        "ratio_to_placebo": 0.9768812403957464,
+        "above_placebo": false,
+        "rank": 23,
+        "percentile": 37.142857142857146
+       },
+       {
+        "feature": "sleep_hours_ce",
+        "gain": 21163.48583173752,
+        "ratio_to_placebo": 0.8566820163977917,
+        "above_placebo": false,
+        "rank": 26,
+        "percentile": 28.571428571428573
+       },
+       {
+        "feature": "social_media_hours_ce",
+        "gain": 20108.065905809402,
+        "ratio_to_placebo": 0.8139594102317226,
+        "above_placebo": false,
+        "rank": 28,
+        "percentile": 22.857142857142858
+       },
+       {
+        "feature": "weekend_screen_time_ce",
+        "gain": 18984.09969472885,
+        "ratio_to_placebo": 0.7684621019089367,
+        "above_placebo": false,
+        "rank": 29,
+        "percentile": 20.0
+       },
+       {
+        "feature": "work_study_hours_ce",
+        "gain": 23294.1209962368,
+        "ratio_to_placebo": 0.9429285281229083,
+        "above_placebo": false,
+        "rank": 25,
+        "percentile": 31.428571428571427
+       }
+      ],
+      "above_count": 0,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 4,
+       "placebo_seed": 42
+      },
+      "n_features": 36,
+      "placebo": {
+       "gain": 19089.2327978611,
+       "rank": 24,
+       "percentile": 34.285714285714285
+      },
+      "features": [
+       {
+        "feature": "age_ce",
+        "gain": 7360.909339427948,
+        "ratio_to_placebo": 0.3856052999810825,
+        "above_placebo": false,
+        "rank": 32,
+        "percentile": 11.428571428571429
+       },
+       {
+        "feature": "app_opens_per_day_ce",
+        "gain": 16768.428517341614,
+        "ratio_to_placebo": 0.8784233863615762,
+        "above_placebo": false,
+        "rank": 26,
+        "percentile": 28.571428571428573
+       },
+       {
+        "feature": "daily_screen_time_hours_ce",
+        "gain": 13374.531856536865,
+        "ratio_to_placebo": 0.700632235887209,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 17.142857142857142
+       },
+       {
+        "feature": "notifications_per_day_ce",
+        "gain": 20054.699582099915,
+        "ratio_to_placebo": 1.0505765105629072,
+        "above_placebo": true,
+        "rank": 22,
+        "percentile": 40.0
+       },
+       {
+        "feature": "sleep_hours_ce",
+        "gain": 15225.650557041168,
+        "ratio_to_placebo": 0.7976041110854473,
+        "above_placebo": false,
+        "rank": 28,
+        "percentile": 22.857142857142858
+       },
+       {
+        "feature": "social_media_hours_ce",
+        "gain": 16280.431313037872,
+        "ratio_to_placebo": 0.8528593833724974,
+        "above_placebo": false,
+        "rank": 27,
+        "percentile": 25.714285714285715
+       },
+       {
+        "feature": "weekend_screen_time_ce",
+        "gain": 15148.838407039642,
+        "ratio_to_placebo": 0.7935802641967378,
+        "above_placebo": false,
+        "rank": 29,
+        "percentile": 20.0
+       },
+       {
+        "feature": "work_study_hours_ce",
+        "gain": 19016.391289711,
+        "ratio_to_placebo": 0.9961841573770182,
+        "above_placebo": false,
+        "rank": 25,
+        "percentile": 31.428571428571427
+       }
+      ],
+      "above_count": 1,
+      "all_above": false
+     }
+    ],
+    "placebo_gain": {
+     "min": 19089.2327978611,
+     "median": 24704.015523433685,
+     "max": 27385.167264580727
+    },
+    "placebo_rank": {
+     "min": 22,
+     "median": 22,
+     "max": 24
+    },
+    "per_feature": [
+     {
+      "feature": "age_ce",
+      "cells": 5,
+      "above_count": 0,
+      "gain": {
+       "min": 7360.909339427948,
+       "median": 9801.853118658066,
+       "max": 9948.540310502052
+      },
+      "ratio_to_placebo": {
+       "min": 0.35922040061204197,
+       "median": 0.3856052999810825,
+       "max": 0.40270944215789883
+      },
+      "rank": {
+       "min": 32,
+       "median": 32,
+       "max": 32
+      },
+      "percentile": {
+       "min": 11.428571428571429,
+       "median": 11.428571428571429,
+       "max": 11.428571428571429
+      }
+     },
+     {
+      "feature": "app_opens_per_day_ce",
+      "cells": 5,
+      "above_count": 0,
+      "gain": {
+       "min": 16768.428517341614,
+       "median": 20513.803963661194,
+       "max": 21660.09918510914
+      },
+      "ratio_to_placebo": {
+       "min": 0.790942738302123,
+       "median": 0.8301112011703603,
+       "max": 0.8784233863615762
+      },
+      "rank": {
+       "min": 26,
+       "median": 27,
+       "max": 27
+      },
+      "percentile": {
+       "min": 25.714285714285715,
+       "median": 25.714285714285715,
+       "max": 28.571428571428573
+      }
+     },
+     {
+      "feature": "daily_screen_time_hours_ce",
+      "cells": 5,
+      "above_count": 0,
+      "gain": {
+       "min": 13374.531856536865,
+       "median": 17410.51868414879,
+       "max": 20438.247102737427
+      },
+      "ratio_to_placebo": {
+       "min": 0.6874524414092644,
+       "median": 0.7175996166054969,
+       "max": 0.7463254434517087
+      },
+      "rank": {
+       "min": 29,
+       "median": 30,
+       "max": 30
+      },
+      "percentile": {
+       "min": 17.142857142857142,
+       "median": 17.142857142857142,
+       "max": 20.0
+      }
+     },
+     {
+      "feature": "notifications_per_day_ce",
+      "cells": 5,
+      "above_count": 1,
+      "gain": {
+       "min": 20054.699582099915,
+       "median": 24132.889327287674,
+       "max": 25091.570563554764
+      },
+      "ratio_to_placebo": {
+       "min": 0.9162467521608881,
+       "median": 0.9652401221803864,
+       "max": 1.0505765105629072
+      },
+      "rank": {
+       "min": 22,
+       "median": 23,
+       "max": 24
+      },
+      "percentile": {
+       "min": 34.285714285714285,
+       "median": 37.142857142857146,
+       "max": 40.0
+      }
+     },
+     {
+      "feature": "sleep_hours_ce",
+      "cells": 5,
+      "above_count": 0,
+      "gain": {
+       "min": 15225.650557041168,
+       "median": 20308.609154462814,
+       "max": 22150.707671761513
+      },
+      "ratio_to_placebo": {
+       "min": 0.7670590547267224,
+       "median": 0.7976041110854473,
+       "max": 0.8566820163977917
+      },
+      "rank": {
+       "min": 26,
+       "median": 28,
+       "max": 29
+      },
+      "percentile": {
+       "min": 20.0,
+       "median": 22.857142857142858,
+       "max": 28.571428571428573
+      }
+     },
+     {
+      "feature": "social_media_hours_ce",
+      "cells": 5,
+      "above_count": 0,
+      "gain": {
+       "min": 16280.431313037872,
+       "median": 19995.555406808853,
+       "max": 20108.065905809402
+      },
+      "ratio_to_placebo": {
+       "min": 0.7301600612339729,
+       "median": 0.8139594102317226,
+       "max": 0.8538229126679904
+      },
+      "rank": {
+       "min": 26,
+       "median": 28,
+       "max": 30
+      },
+      "percentile": {
+       "min": 17.142857142857142,
+       "median": 22.857142857142858,
+       "max": 28.571428571428573
+      }
+     },
+     {
+      "feature": "weekend_screen_time_ce",
+      "cells": 5,
+      "above_count": 0,
+      "gain": {
+       "min": 15148.838407039642,
+       "median": 18984.09969472885,
+       "max": 21100.139419317245
+      },
+      "ratio_to_placebo": {
+       "min": 0.7684621019089367,
+       "median": 0.7863049638433388,
+       "max": 0.7960984399410206
+      },
+      "rank": {
+       "min": 27,
+       "median": 28,
+       "max": 29
+      },
+      "percentile": {
+       "min": 20.0,
+       "median": 22.857142857142858,
+       "max": 25.714285714285715
+      }
+     },
+     {
+      "feature": "work_study_hours_ce",
+      "cells": 5,
+      "above_count": 0,
+      "gain": {
+       "min": 19016.391289711,
+       "median": 23294.1209962368,
+       "max": 24127.8268327713
+      },
+      "ratio_to_placebo": {
+       "min": 0.881054572340612,
+       "median": 0.9235680594864477,
+       "max": 0.9961841573770182
+      },
+      "rank": {
+       "min": 25,
+       "median": 25,
+       "max": 25
+      },
+      "percentile": {
+       "min": 31.428571428571427,
+       "median": 31.428571428571427,
+       "max": 31.428571428571427
+      }
+     }
+    ],
+    "all_above_cells": 0,
+    "n_cells": 5,
+    "mode": "readout",
+    "importance_source": "/Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction/mlruns/1/67699e50ac58400eaaa5655428716ee9/artifacts/feature_importance.parquet"
+   },
+   "paired_oof": {
+    "run_id": "67699e50ac58400eaaa5655428716ee9",
+    "baseline_config": "exp026_constrained_impute_nowidth",
+    "baseline_run_id": "4b6de022abd54d6c92570c1ea06795d7",
+    "seeds": [
+     42
+    ],
+    "comparison_mode": "paired_seed_42",
+    "oof_delta": 0.000159271565741137,
+    "fold_deltas": [
+     0.00012141713033320123,
+     0.00022081825048059223,
+     0.00019347869580843557,
+     0.00010562854068152383,
+     0.0001415039038000776
+    ],
+    "fold_wins": 5,
+    "seed_deltas": {
+     "42": 0.000159271565741137
+    }
+   }
+  },
+  "exp050_lgb_xgb_impute": {
+   "role": "음성 대표(미달 4열은 제거해도 점수 유지, 올바른 기각)",
+   "refit": {
+    "config": "exp050_lgb_xgb_impute",
+    "new_features": [
+     "age_xgb_recon",
+     "app_opens_per_day_xgb_recon",
+     "daily_screen_time_hours_xgb_recon",
+     "gaming_hours_xgb_recon",
+     "notifications_per_day_xgb_recon",
+     "sleep_hours_xgb_recon",
+     "social_media_hours_xgb_recon",
+     "weekend_screen_time_xgb_recon",
+     "work_study_hours_xgb_recon"
+    ],
+    "cells": [
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 0,
+       "placebo_seed": 101
+      },
+      "n_features": 37,
+      "placebo": {
+       "gain": 29664.470429301262,
+       "rank": 23,
+       "percentile": 38.888888888888886
+      },
+      "features": [
+       {
+        "feature": "age_xgb_recon",
+        "gain": 2092.8132190704346,
+        "ratio_to_placebo": 0.07054948862337504,
+        "above_placebo": false,
+        "rank": 37,
+        "percentile": 0.0
+       },
+       {
+        "feature": "app_opens_per_day_xgb_recon",
+        "gain": 5549.561036944389,
+        "ratio_to_placebo": 0.18707770462886053,
+        "above_placebo": false,
+        "rank": 31,
+        "percentile": 16.666666666666668
+       },
+       {
+        "feature": "daily_screen_time_hours_xgb_recon",
+        "gain": 2295277.6839591265,
+        "ratio_to_placebo": 77.37463877635759,
+        "above_placebo": true,
+        "rank": 1,
+        "percentile": 100.0
+       },
+       {
+        "feature": "gaming_hours_xgb_recon",
+        "gain": 55390.018099188805,
+        "ratio_to_placebo": 1.867217492764576,
+        "above_placebo": true,
+        "rank": 10,
+        "percentile": 75.0
+       },
+       {
+        "feature": "notifications_per_day_xgb_recon",
+        "gain": 4687.797292470932,
+        "ratio_to_placebo": 0.15802733791062495,
+        "above_placebo": false,
+        "rank": 35,
+        "percentile": 5.555555555555555
+       },
+       {
+        "feature": "sleep_hours_xgb_recon",
+        "gain": 5242.407904982567,
+        "ratio_to_placebo": 0.1767234617410984,
+        "above_placebo": false,
+        "rank": 33,
+        "percentile": 11.11111111111111
+       },
+       {
+        "feature": "social_media_hours_xgb_recon",
+        "gain": 709081.8202147484,
+        "ratio_to_placebo": 23.903403969563147,
+        "above_placebo": true,
+        "rank": 2,
+        "percentile": 97.22222222222223
+       },
+       {
+        "feature": "weekend_screen_time_xgb_recon",
+        "gain": 118859.54829120636,
+        "ratio_to_placebo": 4.0067982529633195,
+        "above_placebo": true,
+        "rank": 7,
+        "percentile": 83.33333333333333
+       },
+       {
+        "feature": "work_study_hours_xgb_recon",
+        "gain": 38095.52766251564,
+        "ratio_to_placebo": 1.2842139809408681,
+        "above_placebo": true,
+        "rank": 18,
+        "percentile": 52.77777777777778
+       }
+      ],
+      "above_count": 5,
+      "all_above": false,
+      "auc_fold": 0.9666838163350715
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 0,
+       "placebo_seed": 202
+      },
+      "n_features": 37,
+      "placebo": {
+       "gain": 25317.838582515717,
+       "rank": 25,
+       "percentile": 33.333333333333336
+      },
+      "features": [
+       {
+        "feature": "age_xgb_recon",
+        "gain": 1496.6336431503296,
+        "ratio_to_placebo": 0.05911379987167988,
+        "above_placebo": false,
+        "rank": 37,
+        "percentile": 0.0
+       },
+       {
+        "feature": "app_opens_per_day_xgb_recon",
+        "gain": 4887.314200162888,
+        "ratio_to_placebo": 0.19303836637690017,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 19.444444444444443
+       },
+       {
+        "feature": "daily_screen_time_hours_xgb_recon",
+        "gain": 2293437.1992366314,
+        "ratio_to_placebo": 90.58582120910035,
+        "above_placebo": true,
+        "rank": 1,
+        "percentile": 100.0
+       },
+       {
+        "feature": "gaming_hours_xgb_recon",
+        "gain": 53250.34985756874,
+        "ratio_to_placebo": 2.103273930119097,
+        "above_placebo": true,
+        "rank": 10,
+        "percentile": 75.0
+       },
+       {
+        "feature": "notifications_per_day_xgb_recon",
+        "gain": 4041.7669785022736,
+        "ratio_to_placebo": 0.15964107541524036,
+        "above_placebo": false,
+        "rank": 35,
+        "percentile": 5.555555555555555
+       },
+       {
+        "feature": "sleep_hours_xgb_recon",
+        "gain": 4206.933735489845,
+        "ratio_to_placebo": 0.16616480596393082,
+        "above_placebo": false,
+        "rank": 33,
+        "percentile": 11.11111111111111
+       },
+       {
+        "feature": "social_media_hours_xgb_recon",
+        "gain": 708325.7757921219,
+        "ratio_to_placebo": 27.97733990931144,
+        "above_placebo": true,
+        "rank": 2,
+        "percentile": 97.22222222222223
+       },
+       {
+        "feature": "weekend_screen_time_xgb_recon",
+        "gain": 116095.06104207039,
+        "ratio_to_placebo": 4.585504432524688,
+        "above_placebo": true,
+        "rank": 7,
+        "percentile": 83.33333333333333
+       },
+       {
+        "feature": "work_study_hours_xgb_recon",
+        "gain": 35699.385551810265,
+        "ratio_to_placebo": 1.4100487067827328,
+        "above_placebo": true,
+        "rank": 15,
+        "percentile": 61.111111111111114
+       }
+      ],
+      "above_count": 5,
+      "all_above": false,
+      "auc_fold": 0.9666814032080289
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 0,
+       "placebo_seed": 303
+      },
+      "n_features": 37,
+      "placebo": {
+       "gain": 27898.782816767693,
+       "rank": 23,
+       "percentile": 38.888888888888886
+      },
+      "features": [
+       {
+        "feature": "age_xgb_recon",
+        "gain": 1993.380586385727,
+        "ratio_to_placebo": 0.07145044998836536,
+        "above_placebo": false,
+        "rank": 37,
+        "percentile": 0.0
+       },
+       {
+        "feature": "app_opens_per_day_xgb_recon",
+        "gain": 5226.921734571457,
+        "ratio_to_placebo": 0.18735303862181324,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 19.444444444444443
+       },
+       {
+        "feature": "daily_screen_time_hours_xgb_recon",
+        "gain": 2295108.027400613,
+        "ratio_to_placebo": 82.26552543436446,
+        "above_placebo": true,
+        "rank": 1,
+        "percentile": 100.0
+       },
+       {
+        "feature": "gaming_hours_xgb_recon",
+        "gain": 55195.85937130451,
+        "ratio_to_placebo": 1.9784325263871643,
+        "above_placebo": true,
+        "rank": 10,
+        "percentile": 75.0
+       },
+       {
+        "feature": "notifications_per_day_xgb_recon",
+        "gain": 4372.1097947359085,
+        "ratio_to_placebo": 0.1567132811295333,
+        "above_placebo": false,
+        "rank": 35,
+        "percentile": 5.555555555555555
+       },
+       {
+        "feature": "sleep_hours_xgb_recon",
+        "gain": 4871.4250675439835,
+        "ratio_to_placebo": 0.17461066669246106,
+        "above_placebo": false,
+        "rank": 33,
+        "percentile": 11.11111111111111
+       },
+       {
+        "feature": "social_media_hours_xgb_recon",
+        "gain": 709622.4392306805,
+        "ratio_to_placebo": 25.43560569976494,
+        "above_placebo": true,
+        "rank": 2,
+        "percentile": 97.22222222222223
+       },
+       {
+        "feature": "weekend_screen_time_xgb_recon",
+        "gain": 119067.83250260353,
+        "ratio_to_placebo": 4.267850439376213,
+        "above_placebo": true,
+        "rank": 7,
+        "percentile": 83.33333333333333
+       },
+       {
+        "feature": "work_study_hours_xgb_recon",
+        "gain": 37324.28385543823,
+        "ratio_to_placebo": 1.3378463175463569,
+        "above_placebo": true,
+        "rank": 18,
+        "percentile": 52.77777777777778
+       }
+      ],
+      "above_count": 5,
+      "all_above": false,
+      "auc_fold": 0.966683912494797
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 0,
+       "placebo_seed": 404
+      },
+      "n_features": 37,
+      "placebo": {
+       "gain": 28713.930389881134,
+       "rank": 23,
+       "percentile": 38.888888888888886
+      },
+      "features": [
+       {
+        "feature": "age_xgb_recon",
+        "gain": 1647.5550608634949,
+        "ratio_to_placebo": 0.057378249459157905,
+        "above_placebo": false,
+        "rank": 37,
+        "percentile": 0.0
+       },
+       {
+        "feature": "app_opens_per_day_xgb_recon",
+        "gain": 5433.701865196228,
+        "ratio_to_placebo": 0.1892357399846271,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 19.444444444444443
+       },
+       {
+        "feature": "daily_screen_time_hours_xgb_recon",
+        "gain": 2293967.443148732,
+        "ratio_to_placebo": 79.89040204531291,
+        "above_placebo": true,
+        "rank": 1,
+        "percentile": 100.0
+       },
+       {
+        "feature": "gaming_hours_xgb_recon",
+        "gain": 54283.55454945564,
+        "ratio_to_placebo": 1.8904954428873768,
+        "above_placebo": true,
+        "rank": 10,
+        "percentile": 75.0
+       },
+       {
+        "feature": "notifications_per_day_xgb_recon",
+        "gain": 4402.2497581243515,
+        "ratio_to_placebo": 0.1533140778134545,
+        "above_placebo": false,
+        "rank": 35,
+        "percentile": 5.555555555555555
+       },
+       {
+        "feature": "sleep_hours_xgb_recon",
+        "gain": 4559.008996486664,
+        "ratio_to_placebo": 0.15877342232790503,
+        "above_placebo": false,
+        "rank": 33,
+        "percentile": 11.11111111111111
+       },
+       {
+        "feature": "social_media_hours_xgb_recon",
+        "gain": 707814.0523780584,
+        "ratio_to_placebo": 24.65054566780917,
+        "above_placebo": true,
+        "rank": 2,
+        "percentile": 97.22222222222223
+       },
+       {
+        "feature": "weekend_screen_time_xgb_recon",
+        "gain": 118801.31366229057,
+        "ratio_to_placebo": 4.137410380578079,
+        "above_placebo": true,
+        "rank": 7,
+        "percentile": 83.33333333333333
+       },
+       {
+        "feature": "work_study_hours_xgb_recon",
+        "gain": 37651.05057156086,
+        "ratio_to_placebo": 1.3112468429201594,
+        "above_placebo": true,
+        "rank": 16,
+        "percentile": 58.333333333333336
+       }
+      ],
+      "above_count": 5,
+      "all_above": false,
+      "auc_fold": 0.966728358712403
+     }
+    ],
+    "placebo_gain": {
+     "min": 25317.838582515717,
+     "median": 28306.356603324413,
+     "max": 29664.470429301262
+    },
+    "placebo_rank": {
+     "min": 23,
+     "median": 23.0,
+     "max": 25
+    },
+    "per_feature": [
+     {
+      "feature": "age_xgb_recon",
+      "cells": 4,
+      "above_count": 0,
+      "gain": {
+       "min": 1496.6336431503296,
+       "median": 1820.467823624611,
+       "max": 2092.8132190704346
+      },
+      "ratio_to_placebo": {
+       "min": 0.057378249459157905,
+       "median": 0.06483164424752746,
+       "max": 0.07145044998836536
+      },
+      "rank": {
+       "min": 37,
+       "median": 37.0,
+       "max": 37
+      },
+      "percentile": {
+       "min": 0.0,
+       "median": 0.0,
+       "max": 0.0
+      }
+     },
+     {
+      "feature": "app_opens_per_day_xgb_recon",
+      "cells": 4,
+      "above_count": 0,
+      "gain": {
+       "min": 4887.314200162888,
+       "median": 5330.3117998838425,
+       "max": 5549.561036944389
+      },
+      "ratio_to_placebo": {
+       "min": 0.18707770462886053,
+       "median": 0.18829438930322018,
+       "max": 0.19303836637690017
+      },
+      "rank": {
+       "min": 30,
+       "median": 30.0,
+       "max": 31
+      },
+      "percentile": {
+       "min": 16.666666666666668,
+       "median": 19.444444444444443,
+       "max": 19.444444444444443
+      }
+     },
+     {
+      "feature": "daily_screen_time_hours_xgb_recon",
+      "cells": 4,
+      "above_count": 4,
+      "gain": {
+       "min": 2293437.1992366314,
+       "median": 2294537.7352746725,
+       "max": 2295277.6839591265
+      },
+      "ratio_to_placebo": {
+       "min": 77.37463877635759,
+       "median": 81.07796373983868,
+       "max": 90.58582120910035
+      },
+      "rank": {
+       "min": 1,
+       "median": 1.0,
+       "max": 1
+      },
+      "percentile": {
+       "min": 100.0,
+       "median": 100.0,
+       "max": 100.0
+      }
+     },
+     {
+      "feature": "gaming_hours_xgb_recon",
+      "cells": 4,
+      "above_count": 4,
+      "gain": {
+       "min": 53250.34985756874,
+       "median": 54739.70696038008,
+       "max": 55390.018099188805
+      },
+      "ratio_to_placebo": {
+       "min": 1.867217492764576,
+       "median": 1.9344639846372704,
+       "max": 2.103273930119097
+      },
+      "rank": {
+       "min": 10,
+       "median": 10.0,
+       "max": 10
+      },
+      "percentile": {
+       "min": 75.0,
+       "median": 75.0,
+       "max": 75.0
+      }
+     },
+     {
+      "feature": "notifications_per_day_xgb_recon",
+      "cells": 4,
+      "above_count": 0,
+      "gain": {
+       "min": 4041.7669785022736,
+       "median": 4387.17977643013,
+       "max": 4687.797292470932
+      },
+      "ratio_to_placebo": {
+       "min": 0.1533140778134545,
+       "median": 0.15737030952007913,
+       "max": 0.15964107541524036
+      },
+      "rank": {
+       "min": 35,
+       "median": 35.0,
+       "max": 35
+      },
+      "percentile": {
+       "min": 5.555555555555555,
+       "median": 5.555555555555555,
+       "max": 5.555555555555555
+      }
+     },
+     {
+      "feature": "sleep_hours_xgb_recon",
+      "cells": 4,
+      "above_count": 0,
+      "gain": {
+       "min": 4206.933735489845,
+       "median": 4715.217032015324,
+       "max": 5242.407904982567
+      },
+      "ratio_to_placebo": {
+       "min": 0.15877342232790503,
+       "median": 0.17038773632819593,
+       "max": 0.1767234617410984
+      },
+      "rank": {
+       "min": 33,
+       "median": 33.0,
+       "max": 33
+      },
+      "percentile": {
+       "min": 11.11111111111111,
+       "median": 11.11111111111111,
+       "max": 11.11111111111111
+      }
+     },
+     {
+      "feature": "social_media_hours_xgb_recon",
+      "cells": 4,
+      "above_count": 4,
+      "gain": {
+       "min": 707814.0523780584,
+       "median": 708703.7980034351,
+       "max": 709622.4392306805
+      },
+      "ratio_to_placebo": {
+       "min": 23.903403969563147,
+       "median": 25.043075683787052,
+       "max": 27.97733990931144
+      },
+      "rank": {
+       "min": 2,
+       "median": 2.0,
+       "max": 2
+      },
+      "percentile": {
+       "min": 97.22222222222223,
+       "median": 97.22222222222223,
+       "max": 97.22222222222223
+      }
+     },
+     {
+      "feature": "weekend_screen_time_xgb_recon",
+      "cells": 4,
+      "above_count": 4,
+      "gain": {
+       "min": 116095.06104207039,
+       "median": 118830.43097674847,
+       "max": 119067.83250260353
+      },
+      "ratio_to_placebo": {
+       "min": 4.0067982529633195,
+       "median": 4.2026304099771465,
+       "max": 4.585504432524688
+      },
+      "rank": {
+       "min": 7,
+       "median": 7.0,
+       "max": 7
+      },
+      "percentile": {
+       "min": 83.33333333333333,
+       "median": 83.33333333333333,
+       "max": 83.33333333333333
+      }
+     },
+     {
+      "feature": "work_study_hours_xgb_recon",
+      "cells": 4,
+      "above_count": 4,
+      "gain": {
+       "min": 35699.385551810265,
+       "median": 37487.667213499546,
+       "max": 38095.52766251564
+      },
+      "ratio_to_placebo": {
+       "min": 1.2842139809408681,
+       "median": 1.324546580233258,
+       "max": 1.4100487067827328
+      },
+      "rank": {
+       "min": 15,
+       "median": 17.0,
+       "max": 18
+      },
+      "percentile": {
+       "min": 52.77777777777778,
+       "median": 55.55555555555556,
+       "max": 61.111111111111114
+      }
+     }
+    ],
+    "all_above_cells": 0,
+    "n_cells": 4,
+    "mode": "refit",
+    "model_seed": 42,
+    "fold": 0,
+    "placebo_seeds": [
+     101,
+     202,
+     303,
+     404
+    ]
+   },
+   "original_run_readout_seed42": {
+    "config": "exp050_lgb_xgb_impute",
+    "new_features": [
+     "age_xgb_recon",
+     "app_opens_per_day_xgb_recon",
+     "daily_screen_time_hours_xgb_recon",
+     "gaming_hours_xgb_recon",
+     "notifications_per_day_xgb_recon",
+     "sleep_hours_xgb_recon",
+     "social_media_hours_xgb_recon",
+     "weekend_screen_time_xgb_recon",
+     "work_study_hours_xgb_recon"
+    ],
+    "cells": [
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 0,
+       "placebo_seed": 42
+      },
+      "n_features": 37,
+      "placebo": {
+       "gain": 19710.562036275864,
+       "rank": 26,
+       "percentile": 30.555555555555557
+      },
+      "features": [
+       {
+        "feature": "age_xgb_recon",
+        "gain": 1459.4102914333344,
+        "ratio_to_placebo": 0.07404204348650208,
+        "above_placebo": false,
+        "rank": 37,
+        "percentile": 0.0
+       },
+       {
+        "feature": "app_opens_per_day_xgb_recon",
+        "gain": 4229.028891801834,
+        "ratio_to_placebo": 0.21455648418439882,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 19.444444444444443
+       },
+       {
+        "feature": "daily_screen_time_hours_xgb_recon",
+        "gain": 2291841.979565859,
+        "ratio_to_placebo": 116.27481628113341,
+        "above_placebo": true,
+        "rank": 1,
+        "percentile": 100.0
+       },
+       {
+        "feature": "gaming_hours_xgb_recon",
+        "gain": 51793.72461438179,
+        "ratio_to_placebo": 2.6277142437166017,
+        "above_placebo": true,
+        "rank": 10,
+        "percentile": 75.0
+       },
+       {
+        "feature": "notifications_per_day_xgb_recon",
+        "gain": 3193.3762180805206,
+        "ratio_to_placebo": 0.16201345310211565,
+        "above_placebo": false,
+        "rank": 35,
+        "percentile": 5.555555555555555
+       },
+       {
+        "feature": "sleep_hours_xgb_recon",
+        "gain": 3399.976108789444,
+        "ratio_to_placebo": 0.17249513750709056,
+        "above_placebo": false,
+        "rank": 33,
+        "percentile": 11.11111111111111
+       },
+       {
+        "feature": "social_media_hours_xgb_recon",
+        "gain": 707724.9571199417,
+        "ratio_to_placebo": 35.905874008941254,
+        "above_placebo": true,
+        "rank": 2,
+        "percentile": 97.22222222222223
+       },
+       {
+        "feature": "weekend_screen_time_xgb_recon",
+        "gain": 114762.57330060005,
+        "ratio_to_placebo": 5.822389695909626,
+        "above_placebo": true,
+        "rank": 7,
+        "percentile": 83.33333333333333
+       },
+       {
+        "feature": "work_study_hours_xgb_recon",
+        "gain": 34308.242543935776,
+        "ratio_to_placebo": 1.7406019412736145,
+        "above_placebo": true,
+        "rank": 15,
+        "percentile": 61.111111111111114
+       }
+      ],
+      "above_count": 5,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 1,
+       "placebo_seed": 42
+      },
+      "n_features": 37,
+      "placebo": {
+       "gain": 22714.055633068085,
+       "rank": 25,
+       "percentile": 33.333333333333336
+      },
+      "features": [
+       {
+        "feature": "age_xgb_recon",
+        "gain": 1630.516100883484,
+        "ratio_to_placebo": 0.07178445484256495,
+        "above_placebo": false,
+        "rank": 37,
+        "percentile": 0.0
+       },
+       {
+        "feature": "app_opens_per_day_xgb_recon",
+        "gain": 4450.467001199722,
+        "ratio_to_placebo": 0.19593449417815742,
+        "above_placebo": false,
+        "rank": 31,
+        "percentile": 16.666666666666668
+       },
+       {
+        "feature": "daily_screen_time_hours_xgb_recon",
+        "gain": 2289167.7002408504,
+        "ratio_to_placebo": 100.78198879235741,
+        "above_placebo": true,
+        "rank": 1,
+        "percentile": 100.0
+       },
+       {
+        "feature": "gaming_hours_xgb_recon",
+        "gain": 51024.92829966545,
+        "ratio_to_placebo": 2.2464032458114263,
+        "above_placebo": true,
+        "rank": 10,
+        "percentile": 75.0
+       },
+       {
+        "feature": "notifications_per_day_xgb_recon",
+        "gain": 3343.065687417984,
+        "ratio_to_placebo": 0.14718048337219916,
+        "above_placebo": false,
+        "rank": 35,
+        "percentile": 5.555555555555555
+       },
+       {
+        "feature": "sleep_hours_xgb_recon",
+        "gain": 3566.7047910690308,
+        "ratio_to_placebo": 0.15702632980595815,
+        "above_placebo": false,
+        "rank": 34,
+        "percentile": 8.333333333333334
+       },
+       {
+        "feature": "social_media_hours_xgb_recon",
+        "gain": 707535.8469336033,
+        "ratio_to_placebo": 31.14969243553065,
+        "above_placebo": true,
+        "rank": 2,
+        "percentile": 97.22222222222223
+       },
+       {
+        "feature": "weekend_screen_time_xgb_recon",
+        "gain": 113568.84314727783,
+        "ratio_to_placebo": 4.999936822464215,
+        "above_placebo": true,
+        "rank": 7,
+        "percentile": 83.33333333333333
+       },
+       {
+        "feature": "work_study_hours_xgb_recon",
+        "gain": 36713.99071979523,
+        "ratio_to_placebo": 1.6163555867295423,
+        "above_placebo": true,
+        "rank": 15,
+        "percentile": 61.111111111111114
+       }
+      ],
+      "above_count": 5,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 2,
+       "placebo_seed": 42
+      },
+      "n_features": 37,
+      "placebo": {
+       "gain": 21297.05079460144,
+       "rank": 25,
+       "percentile": 33.333333333333336
+      },
+      "features": [
+       {
+        "feature": "age_xgb_recon",
+        "gain": 1633.4523017406464,
+        "ratio_to_placebo": 0.07669852119405697,
+        "above_placebo": false,
+        "rank": 37,
+        "percentile": 0.0
+       },
+       {
+        "feature": "app_opens_per_day_xgb_recon",
+        "gain": 4004.8833928108215,
+        "ratio_to_placebo": 0.18804873179088316,
+        "above_placebo": false,
+        "rank": 32,
+        "percentile": 13.88888888888889
+       },
+       {
+        "feature": "daily_screen_time_hours_xgb_recon",
+        "gain": 2318997.477859974,
+        "ratio_to_placebo": 108.88819772396906,
+        "above_placebo": true,
+        "rank": 1,
+        "percentile": 100.0
+       },
+       {
+        "feature": "gaming_hours_xgb_recon",
+        "gain": 48274.36819887161,
+        "ratio_to_placebo": 2.2667161131581945,
+        "above_placebo": true,
+        "rank": 9,
+        "percentile": 77.77777777777777
+       },
+       {
+        "feature": "notifications_per_day_xgb_recon",
+        "gain": 3113.9575774669647,
+        "ratio_to_placebo": 0.1462154364704956,
+        "above_placebo": false,
+        "rank": 35,
+        "percentile": 5.555555555555555
+       },
+       {
+        "feature": "sleep_hours_xgb_recon",
+        "gain": 3161.717047929764,
+        "ratio_to_placebo": 0.14845797563347235,
+        "above_placebo": false,
+        "rank": 34,
+        "percentile": 8.333333333333334
+       },
+       {
+        "feature": "social_media_hours_xgb_recon",
+        "gain": 713262.9752156734,
+        "ratio_to_placebo": 33.49116185591657,
+        "above_placebo": true,
+        "rank": 2,
+        "percentile": 97.22222222222223
+       },
+       {
+        "feature": "weekend_screen_time_xgb_recon",
+        "gain": 114595.87496733665,
+        "ratio_to_placebo": 5.380833058649858,
+        "above_placebo": true,
+        "rank": 7,
+        "percentile": 83.33333333333333
+       },
+       {
+        "feature": "work_study_hours_xgb_recon",
+        "gain": 36762.8166642189,
+        "ratio_to_placebo": 1.726192843261559,
+        "above_placebo": true,
+        "rank": 14,
+        "percentile": 63.888888888888886
+       }
+      ],
+      "above_count": 5,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 3,
+       "placebo_seed": 42
+      },
+      "n_features": 37,
+      "placebo": {
+       "gain": 35946.85288763046,
+       "rank": 22,
+       "percentile": 41.666666666666664
+      },
+      "features": [
+       {
+        "feature": "age_xgb_recon",
+        "gain": 2548.330741763115,
+        "ratio_to_placebo": 0.07089162296708348,
+        "above_placebo": false,
+        "rank": 37,
+        "percentile": 0.0
+       },
+       {
+        "feature": "app_opens_per_day_xgb_recon",
+        "gain": 7206.115141153336,
+        "ratio_to_placebo": 0.20046581445334272,
+        "above_placebo": false,
+        "rank": 31,
+        "percentile": 16.666666666666668
+       },
+       {
+        "feature": "daily_screen_time_hours_xgb_recon",
+        "gain": 2272999.9342250824,
+        "ratio_to_placebo": 63.232237362487886,
+        "above_placebo": true,
+        "rank": 1,
+        "percentile": 100.0
+       },
+       {
+        "feature": "gaming_hours_xgb_recon",
+        "gain": 55949.11841905117,
+        "ratio_to_placebo": 1.5564399641311468,
+        "above_placebo": true,
+        "rank": 12,
+        "percentile": 69.44444444444444
+       },
+       {
+        "feature": "notifications_per_day_xgb_recon",
+        "gain": 5125.042455434799,
+        "ratio_to_placebo": 0.14257277184891917,
+        "above_placebo": false,
+        "rank": 35,
+        "percentile": 5.555555555555555
+       },
+       {
+        "feature": "sleep_hours_xgb_recon",
+        "gain": 5556.930868029594,
+        "ratio_to_placebo": 0.1545874095126077,
+        "above_placebo": false,
+        "rank": 34,
+        "percentile": 8.333333333333334
+       },
+       {
+        "feature": "social_media_hours_xgb_recon",
+        "gain": 705939.6167991161,
+        "ratio_to_placebo": 19.638426178944705,
+        "above_placebo": true,
+        "rank": 2,
+        "percentile": 97.22222222222223
+       },
+       {
+        "feature": "weekend_screen_time_xgb_recon",
+        "gain": 122197.52167928219,
+        "ratio_to_placebo": 3.3993941572930053,
+        "above_placebo": true,
+        "rank": 7,
+        "percentile": 83.33333333333333
+       },
+       {
+        "feature": "work_study_hours_xgb_recon",
+        "gain": 39705.756907463074,
+        "ratio_to_placebo": 1.1045683757513602,
+        "above_placebo": true,
+        "rank": 21,
+        "percentile": 44.44444444444444
+       }
+      ],
+      "above_count": 5,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 4,
+       "placebo_seed": 42
+      },
+      "n_features": 37,
+      "placebo": {
+       "gain": 21838.26895594597,
+       "rank": 26,
+       "percentile": 30.555555555555557
+      },
+      "features": [
+       {
+        "feature": "age_xgb_recon",
+        "gain": 1510.1288714408875,
+        "ratio_to_placebo": 0.06915057573872953,
+        "above_placebo": false,
+        "rank": 37,
+        "percentile": 0.0
+       },
+       {
+        "feature": "app_opens_per_day_xgb_recon",
+        "gain": 3916.509558200836,
+        "ratio_to_placebo": 0.17934157538317508,
+        "above_placebo": false,
+        "rank": 30,
+        "percentile": 19.444444444444443
+       },
+       {
+        "feature": "daily_screen_time_hours_xgb_recon",
+        "gain": 2243162.9619140625,
+        "ratio_to_placebo": 102.71706820898504,
+        "above_placebo": true,
+        "rank": 1,
+        "percentile": 100.0
+       },
+       {
+        "feature": "gaming_hours_xgb_recon",
+        "gain": 48117.7282576561,
+        "ratio_to_placebo": 2.2033673252547312,
+        "above_placebo": true,
+        "rank": 10,
+        "percentile": 75.0
+       },
+       {
+        "feature": "notifications_per_day_xgb_recon",
+        "gain": 3019.0049273967743,
+        "ratio_to_placebo": 0.13824378358408215,
+        "above_placebo": false,
+        "rank": 34,
+        "percentile": 8.333333333333334
+       },
+       {
+        "feature": "sleep_hours_xgb_recon",
+        "gain": 3480.880355119705,
+        "ratio_to_placebo": 0.15939360221918852,
+        "above_placebo": false,
+        "rank": 32,
+        "percentile": 13.88888888888889
+       },
+       {
+        "feature": "social_media_hours_xgb_recon",
+        "gain": 704619.367263794,
+        "ratio_to_placebo": 32.265348901289414,
+        "above_placebo": true,
+        "rank": 2,
+        "percentile": 97.22222222222223
+       },
+       {
+        "feature": "weekend_screen_time_xgb_recon",
+        "gain": 111711.44570708275,
+        "ratio_to_placebo": 5.115398383106127,
+        "above_placebo": true,
+        "rank": 7,
+        "percentile": 83.33333333333333
+       },
+       {
+        "feature": "work_study_hours_xgb_recon",
+        "gain": 33565.64963531494,
+        "ratio_to_placebo": 1.5370105434192816,
+        "above_placebo": true,
+        "rank": 15,
+        "percentile": 61.111111111111114
+       }
+      ],
+      "above_count": 5,
+      "all_above": false
+     }
+    ],
+    "placebo_gain": {
+     "min": 19710.562036275864,
+     "median": 21838.26895594597,
+     "max": 35946.85288763046
+    },
+    "placebo_rank": {
+     "min": 22,
+     "median": 25,
+     "max": 26
+    },
+    "per_feature": [
+     {
+      "feature": "age_xgb_recon",
+      "cells": 5,
+      "above_count": 0,
+      "gain": {
+       "min": 1459.4102914333344,
+       "median": 1630.516100883484,
+       "max": 2548.330741763115
+      },
+      "ratio_to_placebo": {
+       "min": 0.06915057573872953,
+       "median": 0.07178445484256495,
+       "max": 0.07669852119405697
+      },
+      "rank": {
+       "min": 37,
+       "median": 37,
+       "max": 37
+      },
+      "percentile": {
+       "min": 0.0,
+       "median": 0.0,
+       "max": 0.0
+      }
+     },
+     {
+      "feature": "app_opens_per_day_xgb_recon",
+      "cells": 5,
+      "above_count": 0,
+      "gain": {
+       "min": 3916.509558200836,
+       "median": 4229.028891801834,
+       "max": 7206.115141153336
+      },
+      "ratio_to_placebo": {
+       "min": 0.17934157538317508,
+       "median": 0.19593449417815742,
+       "max": 0.21455648418439882
+      },
+      "rank": {
+       "min": 30,
+       "median": 31,
+       "max": 32
+      },
+      "percentile": {
+       "min": 13.88888888888889,
+       "median": 16.666666666666668,
+       "max": 19.444444444444443
+      }
+     },
+     {
+      "feature": "daily_screen_time_hours_xgb_recon",
+      "cells": 5,
+      "above_count": 5,
+      "gain": {
+       "min": 2243162.9619140625,
+       "median": 2289167.7002408504,
+       "max": 2318997.477859974
+      },
+      "ratio_to_placebo": {
+       "min": 63.232237362487886,
+       "median": 102.71706820898504,
+       "max": 116.27481628113341
+      },
+      "rank": {
+       "min": 1,
+       "median": 1,
+       "max": 1
+      },
+      "percentile": {
+       "min": 100.0,
+       "median": 100.0,
+       "max": 100.0
+      }
+     },
+     {
+      "feature": "gaming_hours_xgb_recon",
+      "cells": 5,
+      "above_count": 5,
+      "gain": {
+       "min": 48117.7282576561,
+       "median": 51024.92829966545,
+       "max": 55949.11841905117
+      },
+      "ratio_to_placebo": {
+       "min": 1.5564399641311468,
+       "median": 2.2464032458114263,
+       "max": 2.6277142437166017
+      },
+      "rank": {
+       "min": 9,
+       "median": 10,
+       "max": 12
+      },
+      "percentile": {
+       "min": 69.44444444444444,
+       "median": 75.0,
+       "max": 77.77777777777777
+      }
+     },
+     {
+      "feature": "notifications_per_day_xgb_recon",
+      "cells": 5,
+      "above_count": 0,
+      "gain": {
+       "min": 3019.0049273967743,
+       "median": 3193.3762180805206,
+       "max": 5125.042455434799
+      },
+      "ratio_to_placebo": {
+       "min": 0.13824378358408215,
+       "median": 0.1462154364704956,
+       "max": 0.16201345310211565
+      },
+      "rank": {
+       "min": 34,
+       "median": 35,
+       "max": 35
+      },
+      "percentile": {
+       "min": 5.555555555555555,
+       "median": 5.555555555555555,
+       "max": 8.333333333333334
+      }
+     },
+     {
+      "feature": "sleep_hours_xgb_recon",
+      "cells": 5,
+      "above_count": 0,
+      "gain": {
+       "min": 3161.717047929764,
+       "median": 3480.880355119705,
+       "max": 5556.930868029594
+      },
+      "ratio_to_placebo": {
+       "min": 0.14845797563347235,
+       "median": 0.15702632980595815,
+       "max": 0.17249513750709056
+      },
+      "rank": {
+       "min": 32,
+       "median": 34,
+       "max": 34
+      },
+      "percentile": {
+       "min": 8.333333333333334,
+       "median": 8.333333333333334,
+       "max": 13.88888888888889
+      }
+     },
+     {
+      "feature": "social_media_hours_xgb_recon",
+      "cells": 5,
+      "above_count": 5,
+      "gain": {
+       "min": 704619.367263794,
+       "median": 707535.8469336033,
+       "max": 713262.9752156734
+      },
+      "ratio_to_placebo": {
+       "min": 19.638426178944705,
+       "median": 32.265348901289414,
+       "max": 35.905874008941254
+      },
+      "rank": {
+       "min": 2,
+       "median": 2,
+       "max": 2
+      },
+      "percentile": {
+       "min": 97.22222222222223,
+       "median": 97.22222222222223,
+       "max": 97.22222222222223
+      }
+     },
+     {
+      "feature": "weekend_screen_time_xgb_recon",
+      "cells": 5,
+      "above_count": 5,
+      "gain": {
+       "min": 111711.44570708275,
+       "median": 114595.87496733665,
+       "max": 122197.52167928219
+      },
+      "ratio_to_placebo": {
+       "min": 3.3993941572930053,
+       "median": 5.115398383106127,
+       "max": 5.822389695909626
+      },
+      "rank": {
+       "min": 7,
+       "median": 7,
+       "max": 7
+      },
+      "percentile": {
+       "min": 83.33333333333333,
+       "median": 83.33333333333333,
+       "max": 83.33333333333333
+      }
+     },
+     {
+      "feature": "work_study_hours_xgb_recon",
+      "cells": 5,
+      "above_count": 5,
+      "gain": {
+       "min": 33565.64963531494,
+       "median": 36713.99071979523,
+       "max": 39705.756907463074
+      },
+      "ratio_to_placebo": {
+       "min": 1.1045683757513602,
+       "median": 1.6163555867295423,
+       "max": 1.7406019412736145
+      },
+      "rank": {
+       "min": 14,
+       "median": 15,
+       "max": 21
+      },
+      "percentile": {
+       "min": 44.44444444444444,
+       "median": 61.111111111111114,
+       "max": 63.888888888888886
+      }
+     }
+    ],
+    "all_above_cells": 0,
+    "n_cells": 5,
+    "mode": "readout",
+    "importance_source": "/Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction/mlruns/1/f9c37fe98bca4e618f993cc7e5d0b1fe/artifacts/feature_importance.parquet"
+   },
+   "paired_oof": {
+    "run_id": "f9c37fe98bca4e618f993cc7e5d0b1fe",
+    "baseline_config": "exp026_constrained_impute_nowidth",
+    "baseline_run_id": "4b6de022abd54d6c92570c1ea06795d7",
+    "seeds": [
+     42
+    ],
+    "comparison_mode": "paired_seed_42",
+    "oof_delta": 0.00012768456905576375,
+    "fold_deltas": [
+     5.5815392538516306e-05,
+     0.00015745279717294114,
+     0.00010599643409037185,
+     5.345973298376272e-05,
+     0.0002547535594877859
+    ],
+    "fold_wins": 5,
+    "seed_deltas": {
+     "42": 0.00012768456905576375
+    }
+   }
+  }
+ },
+ "clean_rerun_pair": {
+  "bundle": "재구성 폭 3열(gaming/social_media/work_study _recon_width)",
+  "candidate": {
+   "config": "exp025_constrained_impute",
+   "run_id": "aa32cdf99d7349319cc523ce59b5a912",
+   "stage": "confirm",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "327a973898b09b9f8861adc92155d4f527cc4c6a",
+   "git_dirty": false,
+   "auc_oof": 0.967574689811006
+  },
+  "baseline": {
+   "config": "exp026_constrained_impute_nowidth",
+   "run_id": "e48c83c60be4484cae6f27f10fc71cea",
+   "stage": "confirm",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "327a973898b09b9f8861adc92155d4f527cc4c6a",
+   "git_dirty": false,
+   "auc_oof": 0.967547642359299
+  },
+  "pair": {
+   "mode": "pair",
+   "candidate_artifacts": "mlruns/1/aa32cdf99d7349319cc523ce59b5a912/artifacts",
+   "baseline_artifacts": "mlruns/1/e48c83c60be4484cae6f27f10fc71cea/artifacts",
+   "candidate_auc_oof": 0.9675746898110065,
+   "baseline_auc_oof": 0.9675476423592995,
+   "oof_delta": 2.7047451707007397e-05,
+   "fold_deltas": {
+    "auc_fold_0": -2.480958975703551e-05,
+    "auc_fold_1": 3.157946277987378e-05,
+    "auc_fold_2": 1.6073897333268583e-05,
+    "auc_fold_3": 0.000100169509932857,
+    "auc_fold_4": 1.1254862130716248e-05
+   },
+   "fold_wins": 4,
+   "seed_deltas": {
+    "42": -2.370309082566635e-06,
+    "43": 6.49603199514015e-05,
+    "44": 2.6900781186167677e-05
+   },
+   "seed_wins": 2
+  },
+  "importance_readout": {
+   "config": "exp025_constrained_impute",
+   "new_features": [
+    "daily_screen_time_hours_recon",
+    "gaming_hours_recon",
+    "gaming_hours_recon_width",
+    "social_media_hours_recon",
+    "social_media_hours_recon_width",
+    "work_study_hours_recon",
+    "work_study_hours_recon_width"
+   ],
+   "cells": [
+    {
+     "cell": {
+      "model_seed": 42,
+      "fold": 0,
+      "placebo_seed": 42
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 25459.214154958725,
+      "rank": 22,
+      "percentile": 30.0
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2339806.144865036,
+       "ratio_to_placebo": 91.90409926338236,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 41514.62491297722,
+       "ratio_to_placebo": 1.6306326134143996,
+       "above_placebo": true,
+       "rank": 15,
+       "percentile": 53.333333333333336
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 7996.762207984924,
+       "ratio_to_placebo": 0.3141009050519882,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 674807.6152746677,
+       "ratio_to_placebo": 26.505437723545548,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 10032.513842344284,
+       "ratio_to_placebo": 0.3940621961573876,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 43414.97141647339,
+       "ratio_to_placebo": 1.7052753927213185,
+       "above_placebo": true,
+       "rank": 13,
+       "percentile": 60.0
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 4350.612090349197,
+       "ratio_to_placebo": 0.17088556087666293,
+       "above_placebo": false,
+       "rank": 29,
+       "percentile": 6.666666666666667
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 42,
+      "fold": 1,
+      "placebo_seed": 42
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 30672.276771068573,
+      "rank": 21,
+      "percentile": 33.333333333333336
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2368128.245696783,
+       "ratio_to_placebo": 77.20744903849149,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 44597.22226071358,
+       "ratio_to_placebo": 1.4539912571074483,
+       "above_placebo": true,
+       "rank": 15,
+       "percentile": 53.333333333333336
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 9227.795254945755,
+       "ratio_to_placebo": 0.3008513298122627,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 680726.7765882015,
+       "ratio_to_placebo": 22.193552231841252,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 11382.82978117466,
+       "ratio_to_placebo": 0.37111134155881903,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 45823.494636535645,
+       "ratio_to_placebo": 1.4939710859598907,
+       "above_placebo": true,
+       "rank": 14,
+       "percentile": 56.666666666666664
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 4594.978664517403,
+       "ratio_to_placebo": 0.14980885503914032,
+       "above_placebo": false,
+       "rank": 30,
+       "percentile": 3.3333333333333335
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 42,
+      "fold": 2,
+      "placebo_seed": 42
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 19600.503744363785,
+      "rank": 23,
+      "percentile": 26.666666666666668
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2335525.630792141,
+       "ratio_to_placebo": 119.15640849096708,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 40367.489010334015,
+       "ratio_to_placebo": 2.0595128337934616,
+       "above_placebo": true,
+       "rank": 14,
+       "percentile": 56.666666666666664
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 8223.071913480759,
+       "ratio_to_placebo": 0.4195337028440068,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 673949.1995613575,
+       "ratio_to_placebo": 34.38427952420125,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 9280.868868112564,
+       "ratio_to_placebo": 0.4735015481824706,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 41999.83981800079,
+       "ratio_to_placebo": 2.142793897839388,
+       "above_placebo": true,
+       "rank": 13,
+       "percentile": 60.0
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 3583.362758874893,
+       "ratio_to_placebo": 0.18281993185533846,
+       "above_placebo": false,
+       "rank": 28,
+       "percentile": 10.0
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 42,
+      "fold": 3,
+      "placebo_seed": 42
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 29398.918771147728,
+      "rank": 21,
+      "percentile": 33.333333333333336
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2361629.485837579,
+       "ratio_to_placebo": 80.33048780539833,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 44802.941311359406,
+       "ratio_to_placebo": 1.5239656145221665,
+       "above_placebo": true,
+       "rank": 15,
+       "percentile": 53.333333333333336
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 9241.943650007248,
+       "ratio_to_placebo": 0.31436338601259534,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 668479.6786413193,
+       "ratio_to_placebo": 22.73824026812065,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 10623.501754522324,
+       "ratio_to_placebo": 0.3613568865310887,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 45753.695389032364,
+       "ratio_to_placebo": 1.556305377935712,
+       "above_placebo": true,
+       "rank": 14,
+       "percentile": 56.666666666666664
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 5102.461491584778,
+       "ratio_to_placebo": 0.17355949486796649,
+       "above_placebo": false,
+       "rank": 30,
+       "percentile": 3.3333333333333335
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 42,
+      "fold": 4,
+      "placebo_seed": 42
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 28461.327293276787,
+      "rank": 21,
+      "percentile": 33.333333333333336
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2364575.519834757,
+       "ratio_to_placebo": 83.080296834692,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 41873.92668008804,
+       "ratio_to_placebo": 1.4712569884251188,
+       "above_placebo": true,
+       "rank": 17,
+       "percentile": 46.666666666666664
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 9028.502968788147,
+       "ratio_to_placebo": 0.3172200254666579,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 674105.1297867298,
+       "ratio_to_placebo": 23.68495055906858,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 11407.11295747757,
+       "ratio_to_placebo": 0.4007934289196762,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 45131.11705386639,
+       "ratio_to_placebo": 1.5856996614675587,
+       "above_placebo": true,
+       "rank": 13,
+       "percentile": 60.0
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 4664.526334285736,
+       "ratio_to_placebo": 0.16388997906600103,
+       "above_placebo": false,
+       "rank": 29,
+       "percentile": 6.666666666666667
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 43,
+      "fold": 0,
+      "placebo_seed": 43
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 26231.43772661686,
+      "rank": 21,
+      "percentile": 33.333333333333336
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2339643.4941236973,
+       "ratio_to_placebo": 89.19234692765914,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 42353.06494152546,
+       "ratio_to_placebo": 1.6145918261487473,
+       "above_placebo": true,
+       "rank": 16,
+       "percentile": 50.0
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 8901.454202771187,
+       "ratio_to_placebo": 0.3393429782820841,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 675057.1535211802,
+       "ratio_to_placebo": 25.734660850716708,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 10491.296347260475,
+       "ratio_to_placebo": 0.3999512514945008,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 43638.015385985374,
+       "ratio_to_placebo": 1.6635769583344713,
+       "above_placebo": true,
+       "rank": 14,
+       "percentile": 56.666666666666664
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 4252.607685685158,
+       "ratio_to_placebo": 0.162118742022671,
+       "above_placebo": false,
+       "rank": 29,
+       "percentile": 6.666666666666667
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 43,
+      "fold": 1,
+      "placebo_seed": 43
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 21895.856013059616,
+      "rank": 21,
+      "percentile": 33.333333333333336
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2363928.6966564655,
+       "ratio_to_placebo": 107.96237860015695,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 41435.48438310623,
+       "ratio_to_placebo": 1.892389334237143,
+       "above_placebo": true,
+       "rank": 13,
+       "percentile": 60.0
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 7823.329608440399,
+       "ratio_to_placebo": 0.35729727140031586,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 677802.1781365871,
+       "ratio_to_placebo": 30.95572868821923,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 9968.339504241943,
+       "ratio_to_placebo": 0.4552614658361109,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 40911.980301856995,
+       "ratio_to_placebo": 1.8684805141874954,
+       "above_placebo": true,
+       "rank": 14,
+       "percentile": 56.666666666666664
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 4311.991963386536,
+       "ratio_to_placebo": 0.19693187426948192,
+       "above_placebo": false,
+       "rank": 27,
+       "percentile": 13.333333333333334
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 43,
+      "fold": 2,
+      "placebo_seed": 43
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 19290.572687864304,
+      "rank": 23,
+      "percentile": 26.666666666666668
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2335248.9856681824,
+       "ratio_to_placebo": 121.05648823672753,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 38757.059131622314,
+       "ratio_to_placebo": 2.009119156737341,
+       "above_placebo": true,
+       "rank": 14,
+       "percentile": 56.666666666666664
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 7654.715583086014,
+       "ratio_to_placebo": 0.3968112148324966,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 673529.4366033077,
+       "ratio_to_placebo": 34.91495288924341,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 9463.037620306015,
+       "ratio_to_placebo": 0.49055244618316646,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 42914.1780834198,
+       "ratio_to_placebo": 2.224619184603944,
+       "above_placebo": true,
+       "rank": 13,
+       "percentile": 60.0
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 3661.4882509708405,
+       "ratio_to_placebo": 0.18980713067550775,
+       "above_placebo": false,
+       "rank": 27,
+       "percentile": 13.333333333333334
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 43,
+      "fold": 3,
+      "placebo_seed": 43
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 31030.40898156166,
+      "rank": 22,
+      "percentile": 30.0
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2361608.0127687454,
+       "ratio_to_placebo": 76.10624836340438,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 46022.290256500244,
+       "ratio_to_placebo": 1.4831351492610618,
+       "above_placebo": true,
+       "rank": 15,
+       "percentile": 53.333333333333336
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 9766.206617474556,
+       "ratio_to_placebo": 0.3147301933170671,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 670762.4526399374,
+       "ratio_to_placebo": 21.61629429500932,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 11282.080478072166,
+       "ratio_to_placebo": 0.3635814302278776,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 46166.22851729393,
+       "ratio_to_placebo": 1.4877737687803603,
+       "above_placebo": true,
+       "rank": 14,
+       "percentile": 56.666666666666664
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 5213.968658924103,
+       "ratio_to_placebo": 0.16802771313849763,
+       "above_placebo": false,
+       "rank": 30,
+       "percentile": 3.3333333333333335
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 43,
+      "fold": 4,
+      "placebo_seed": 43
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 21426.095640659332,
+      "rank": 22,
+      "percentile": 30.0
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2361528.0121428967,
+       "ratio_to_placebo": 110.2173747260575,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 38767.4231262207,
+       "ratio_to_placebo": 1.8093554596411638,
+       "above_placebo": true,
+       "rank": 14,
+       "percentile": 56.666666666666664
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 7619.469197273254,
+       "ratio_to_placebo": 0.3556163159663178,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 673376.142989397,
+       "ratio_to_placebo": 31.427851078549356,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 9572.717223644257,
+       "ratio_to_placebo": 0.44677842310563315,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 40472.21793150902,
+       "ratio_to_placebo": 1.8889217433859822,
+       "above_placebo": true,
+       "rank": 13,
+       "percentile": 60.0
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 3740.3468923568726,
+       "ratio_to_placebo": 0.17456969086140853,
+       "above_placebo": false,
+       "rank": 27,
+       "percentile": 13.333333333333334
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 44,
+      "fold": 0,
+      "placebo_seed": 44
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 23898.581979990005,
+      "rank": 21,
+      "percentile": 33.333333333333336
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2317661.8085246086,
+       "ratio_to_placebo": 96.97905132886791,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 41172.46688294411,
+       "ratio_to_placebo": 1.722799575197278,
+       "above_placebo": true,
+       "rank": 15,
+       "percentile": 53.333333333333336
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 7666.076552867889,
+       "ratio_to_placebo": 0.3207753731701154,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 678342.9697139263,
+       "ratio_to_placebo": 28.384235109928056,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 9817.22145485878,
+       "ratio_to_placebo": 0.4107867765158042,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 41595.588089466095,
+       "ratio_to_placebo": 1.7405044418239366,
+       "above_placebo": true,
+       "rank": 14,
+       "percentile": 56.666666666666664
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 3673.003308534622,
+       "ratio_to_placebo": 0.1536912655156688,
+       "above_placebo": false,
+       "rank": 29,
+       "percentile": 6.666666666666667
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 44,
+      "fold": 1,
+      "placebo_seed": 44
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 23390.505733013153,
+      "rank": 21,
+      "percentile": 33.333333333333336
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2365145.6456212997,
+       "ratio_to_placebo": 101.11562668280207,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 40243.117184877396,
+       "ratio_to_placebo": 1.7204894004527065,
+       "above_placebo": true,
+       "rank": 14,
+       "percentile": 56.666666666666664
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 8346.148605585098,
+       "ratio_to_placebo": 0.356817791836173,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 675659.1794993877,
+       "ratio_to_placebo": 28.886044073248417,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 10254.7213408947,
+       "ratio_to_placebo": 0.4384138358505552,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 42410.31937241554,
+       "ratio_to_placebo": 1.8131424714155706,
+       "above_placebo": true,
+       "rank": 13,
+       "percentile": 60.0
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 4194.76059627533,
+       "ratio_to_placebo": 0.1793360367730263,
+       "above_placebo": false,
+       "rank": 29,
+       "percentile": 6.666666666666667
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 44,
+      "fold": 2,
+      "placebo_seed": 44
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 22994.430179834366,
+      "rank": 22,
+      "percentile": 30.0
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2330693.9058356285,
+       "ratio_to_placebo": 101.359063373512,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 39987.79083919525,
+       "ratio_to_placebo": 1.739020733562848,
+       "above_placebo": true,
+       "rank": 15,
+       "percentile": 53.333333333333336
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 8415.751964330673,
+       "ratio_to_placebo": 0.36599088990303014,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 678677.888897419,
+       "ratio_to_placebo": 29.51488180353368,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 9933.940132141113,
+       "ratio_to_placebo": 0.43201505992755457,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 43154.01724886894,
+       "ratio_to_placebo": 1.8767160965229794,
+       "above_placebo": true,
+       "rank": 13,
+       "percentile": 60.0
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 3552.8619487285614,
+       "ratio_to_placebo": 0.15450967564503282,
+       "above_placebo": false,
+       "rank": 29,
+       "percentile": 6.666666666666667
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 44,
+      "fold": 3,
+      "placebo_seed": 44
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 33917.55861783028,
+      "rank": 21,
+      "percentile": 33.333333333333336
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2371660.8913731575,
+       "ratio_to_placebo": 69.92428075664586,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 46149.19313466549,
+       "ratio_to_placebo": 1.3606283888134894,
+       "above_placebo": true,
+       "rank": 17,
+       "percentile": 46.666666666666664
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 10647.072078943253,
+       "ratio_to_placebo": 0.3139103317815494,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 671034.9323458672,
+       "ratio_to_placebo": 19.78429343653018,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 11584.887956619263,
+       "ratio_to_placebo": 0.3415601956247272,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 48259.61030590534,
+       "ratio_to_placebo": 1.4228503545811084,
+       "above_placebo": true,
+       "rank": 14,
+       "percentile": 56.666666666666664
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 5271.51776266098,
+       "ratio_to_placebo": 0.15542149781646641,
+       "above_placebo": false,
+       "rank": 30,
+       "percentile": 3.3333333333333335
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    },
+    {
+     "cell": {
+      "model_seed": 44,
+      "fold": 4,
+      "placebo_seed": 44
+     },
+     "n_features": 31,
+     "placebo": {
+      "gain": 18406.373600006104,
+      "rank": 23,
+      "percentile": 26.666666666666668
+     },
+     "features": [
+      {
+       "feature": "daily_screen_time_hours_recon",
+       "gain": 2355169.5323655605,
+       "ratio_to_placebo": 127.9540219896862,
+       "above_placebo": true,
+       "rank": 1,
+       "percentile": 100.0
+      },
+      {
+       "feature": "gaming_hours_recon",
+       "gain": 37508.21936869621,
+       "ratio_to_placebo": 2.037784312314718,
+       "above_placebo": true,
+       "rank": 15,
+       "percentile": 53.333333333333336
+      },
+      {
+       "feature": "gaming_hours_recon_width",
+       "gain": 7074.023389101028,
+       "ratio_to_placebo": 0.3843246661633926,
+       "above_placebo": false,
+       "rank": 26,
+       "percentile": 16.666666666666668
+      },
+      {
+       "feature": "social_media_hours_recon",
+       "gain": 672274.7853343487,
+       "ratio_to_placebo": 36.52402151253334,
+       "above_placebo": true,
+       "rank": 2,
+       "percentile": 96.66666666666667
+      },
+      {
+       "feature": "social_media_hours_recon_width",
+       "gain": 8867.43721485138,
+       "ratio_to_placebo": 0.48175905844095435,
+       "above_placebo": false,
+       "rank": 25,
+       "percentile": 20.0
+      },
+      {
+       "feature": "work_study_hours_recon",
+       "gain": 39362.63199090958,
+       "ratio_to_placebo": 2.138532708631782,
+       "above_placebo": true,
+       "rank": 13,
+       "percentile": 60.0
+      },
+      {
+       "feature": "work_study_hours_recon_width",
+       "gain": 3940.5186052322388,
+       "ratio_to_placebo": 0.21408446285317886,
+       "above_placebo": false,
+       "rank": 27,
+       "percentile": 13.333333333333334
+      }
+     ],
+     "above_count": 4,
+     "all_above": false
+    }
+   ],
+   "placebo_gain": {
+    "min": 18406.373600006104,
+    "median": 23898.581979990005,
+    "max": 33917.55861783028
+   },
+   "placebo_rank": {
+    "min": 21,
+    "median": 21,
+    "max": 23
+   },
+   "per_feature": [
+    {
+     "feature": "daily_screen_time_hours_recon",
+     "cells": 15,
+     "above_count": 15,
+     "gain": {
+      "min": 2317661.8085246086,
+      "median": 2361528.0121428967,
+      "max": 2371660.8913731575
+     },
+     "ratio_to_placebo": {
+      "min": 69.92428075664586,
+      "median": 96.97905132886791,
+      "max": 127.9540219896862
+     },
+     "rank": {
+      "min": 1,
+      "median": 1,
+      "max": 1
+     },
+     "percentile": {
+      "min": 100.0,
+      "median": 100.0,
+      "max": 100.0
+     }
+    },
+    {
+     "feature": "gaming_hours_recon",
+     "cells": 15,
+     "above_count": 15,
+     "gain": {
+      "min": 37508.21936869621,
+      "median": 41435.48438310623,
+      "max": 46149.19313466549
+     },
+     "ratio_to_placebo": {
+      "min": 1.3606283888134894,
+      "median": 1.7204894004527065,
+      "max": 2.0595128337934616
+     },
+     "rank": {
+      "min": 13,
+      "median": 15,
+      "max": 17
+     },
+     "percentile": {
+      "min": 46.666666666666664,
+      "median": 53.333333333333336,
+      "max": 60.0
+     }
+    },
+    {
+     "feature": "gaming_hours_recon_width",
+     "cells": 15,
+     "above_count": 0,
+     "gain": {
+      "min": 7074.023389101028,
+      "median": 8346.148605585098,
+      "max": 10647.072078943253
+     },
+     "ratio_to_placebo": {
+      "min": 0.3008513298122627,
+      "median": 0.3393429782820841,
+      "max": 0.4195337028440068
+     },
+     "rank": {
+      "min": 26,
+      "median": 26,
+      "max": 26
+     },
+     "percentile": {
+      "min": 16.666666666666668,
+      "median": 16.666666666666668,
+      "max": 16.666666666666668
+     }
+    },
+    {
+     "feature": "social_media_hours_recon",
+     "cells": 15,
+     "above_count": 15,
+     "gain": {
+      "min": 668479.6786413193,
+      "median": 674105.1297867298,
+      "max": 680726.7765882015
+     },
+     "ratio_to_placebo": {
+      "min": 19.78429343653018,
+      "median": 28.384235109928056,
+      "max": 36.52402151253334
+     },
+     "rank": {
+      "min": 2,
+      "median": 2,
+      "max": 2
+     },
+     "percentile": {
+      "min": 96.66666666666667,
+      "median": 96.66666666666667,
+      "max": 96.66666666666667
+     }
+    },
+    {
+     "feature": "social_media_hours_recon_width",
+     "cells": 15,
+     "above_count": 0,
+     "gain": {
+      "min": 8867.43721485138,
+      "median": 10032.513842344284,
+      "max": 11584.887956619263
+     },
+     "ratio_to_placebo": {
+      "min": 0.3415601956247272,
+      "median": 0.4107867765158042,
+      "max": 0.49055244618316646
+     },
+     "rank": {
+      "min": 25,
+      "median": 25,
+      "max": 25
+     },
+     "percentile": {
+      "min": 20.0,
+      "median": 20.0,
+      "max": 20.0
+     }
+    },
+    {
+     "feature": "work_study_hours_recon",
+     "cells": 15,
+     "above_count": 15,
+     "gain": {
+      "min": 39362.63199090958,
+      "median": 43154.01724886894,
+      "max": 48259.61030590534
+     },
+     "ratio_to_placebo": {
+      "min": 1.4228503545811084,
+      "median": 1.7405044418239366,
+      "max": 2.224619184603944
+     },
+     "rank": {
+      "min": 13,
+      "median": 13,
+      "max": 14
+     },
+     "percentile": {
+      "min": 56.666666666666664,
+      "median": 60.0,
+      "max": 60.0
+     }
+    },
+    {
+     "feature": "work_study_hours_recon_width",
+     "cells": 15,
+     "above_count": 0,
+     "gain": {
+      "min": 3552.8619487285614,
+      "median": 4252.607685685158,
+      "max": 5271.51776266098
+     },
+     "ratio_to_placebo": {
+      "min": 0.14980885503914032,
+      "median": 0.17088556087666293,
+      "max": 0.21408446285317886
+     },
+     "rank": {
+      "min": 27,
+      "median": 29,
+      "max": 30
+     },
+     "percentile": {
+      "min": 3.3333333333333335,
+      "median": 6.666666666666667,
+      "max": 13.333333333333334
+     }
+    }
+   ],
+   "all_above_cells": 0,
+   "n_cells": 15,
+   "mode": "readout",
+   "importance_source": "mlruns/1/aa32cdf99d7349319cc523ce59b5a912/artifacts/feature_importance.parquet"
+  },
+  "reproduces_dirty_run_exactly": {
+   "dirty_run_id": "3f7d735f3ff6404ea71eb8bc026e61db",
+   "auc_oof": 0.967574689811006,
+   "auc_oof_seed_42": 0.967214953139221,
+   "auc_oof_seed_43": 0.967254498828305,
+   "auc_oof_seed_44": 0.967260869547431,
+   "note": "깨끗한 재실행이 옛 dirty 실행의 대표·시드별 OOF AUC를 기록 자릿수까지 재현했다."
+  }
+ },
+ "merged_existing": {
+  "exp070_cat_exact_cats": {
+   "role": "CatBoost 대표 충돌(3시드 fold 5/5 양수, 새 열 7/9 미달, nested 계수 5/5 양수)",
+   "importance_readout": {
+    "config": "exp070_cat_exact_cats",
+    "new_features": [
+     "age_cat",
+     "app_opens_per_day_cat",
+     "daily_screen_time_hours_cat",
+     "gaming_hours_cat",
+     "notifications_per_day_cat",
+     "sleep_hours_cat",
+     "social_media_hours_cat",
+     "weekend_screen_time_cat",
+     "work_study_hours_cat"
+    ],
+    "cells": [
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 0,
+       "placebo_seed": 42
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.35807886872595823,
+       "rank": 34,
+       "percentile": 28.26086956521739
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.3022986849280519,
+        "ratio_to_placebo": 0.844223748817204,
+        "above_placebo": false,
+        "rank": 38,
+        "percentile": 19.565217391304348
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.9041775522447365,
+        "ratio_to_placebo": 2.5250793364651565,
+        "above_placebo": true,
+        "rank": 23,
+        "percentile": 52.17391304347826
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.2400452173129562,
+        "ratio_to_placebo": 0.6703696818721394,
+        "above_placebo": false,
+        "rank": 41,
+        "percentile": 13.043478260869565
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.375772329772401,
+        "ratio_to_placebo": 1.049412189860284,
+        "above_placebo": true,
+        "rank": 32,
+        "percentile": 32.608695652173914
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.5548737916592735,
+        "ratio_to_placebo": 1.549585412938524,
+        "above_placebo": true,
+        "rank": 30,
+        "percentile": 36.95652173913044
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.2546726567531139,
+        "ratio_to_placebo": 0.711219451902418,
+        "above_placebo": false,
+        "rank": 40,
+        "percentile": 15.217391304347826
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.09678790413816682,
+        "ratio_to_placebo": 0.27029772653867407,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.274354601440561,
+        "ratio_to_placebo": 0.7661848419503572,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 17.391304347826086
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.16966748332839943,
+        "ratio_to_placebo": 0.4738271318049987,
+        "above_placebo": false,
+        "rank": 42,
+        "percentile": 10.869565217391305
+       }
+      ],
+      "above_count": 3,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 1,
+       "placebo_seed": 42
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.39856160428020476,
+       "rank": 32,
+       "percentile": 32.608695652173914
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.3144664869456139,
+        "ratio_to_placebo": 0.7890034653828104,
+        "above_placebo": false,
+        "rank": 37,
+        "percentile": 21.73913043478261
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.7966322768374072,
+        "ratio_to_placebo": 1.9987682413013945,
+        "above_placebo": true,
+        "rank": 24,
+        "percentile": 50.0
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.2270896746822293,
+        "ratio_to_placebo": 0.5697730846210067,
+        "above_placebo": false,
+        "rank": 40,
+        "percentile": 15.217391304347826
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.3701469184849318,
+        "ratio_to_placebo": 0.9287069163458699,
+        "above_placebo": false,
+        "rank": 33,
+        "percentile": 30.434782608695652
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.6004633824238721,
+        "ratio_to_placebo": 1.5065760875493723,
+        "above_placebo": true,
+        "rank": 30,
+        "percentile": 36.95652173913044
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.24735513852360508,
+        "ratio_to_placebo": 0.6206195877054542,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 17.391304347826086
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.10201235598783231,
+        "ratio_to_placebo": 0.2559512880626443,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.21305098943589923,
+        "ratio_to_placebo": 0.5345497086219972,
+        "above_placebo": false,
+        "rank": 41,
+        "percentile": 13.043478260869565
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.18344822819466686,
+        "ratio_to_placebo": 0.460275717039957,
+        "above_placebo": false,
+        "rank": 42,
+        "percentile": 10.869565217391305
+       }
+      ],
+      "above_count": 2,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 2,
+       "placebo_seed": 42
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.3260595900195689,
+       "rank": 34,
+       "percentile": 28.26086956521739
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.3584849438637554,
+        "ratio_to_placebo": 1.0994460976971738,
+        "above_placebo": true,
+        "rank": 33,
+        "percentile": 30.434782608695652
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.9069799069145383,
+        "ratio_to_placebo": 2.781638493933286,
+        "above_placebo": true,
+        "rank": 20,
+        "percentile": 58.69565217391305
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.2520638291591881,
+        "ratio_to_placebo": 0.773060621048012,
+        "above_placebo": false,
+        "rank": 37,
+        "percentile": 21.73913043478261
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.37373428534375186,
+        "ratio_to_placebo": 1.1462146699053437,
+        "above_placebo": true,
+        "rank": 32,
+        "percentile": 32.608695652173914
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.5724965905111122,
+        "ratio_to_placebo": 1.7558035648537529,
+        "above_placebo": true,
+        "rank": 29,
+        "percentile": 39.130434782608695
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.2316845346553929,
+        "ratio_to_placebo": 0.7105588725100466,
+        "above_placebo": false,
+        "rank": 38,
+        "percentile": 19.565217391304348
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.12143284314964128,
+        "ratio_to_placebo": 0.37242530772474236,
+        "above_placebo": false,
+        "rank": 43,
+        "percentile": 8.695652173913043
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.2312970055228859,
+        "ratio_to_placebo": 0.7093703500915409,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 17.391304347826086
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.10321920539669947,
+        "ratio_to_placebo": 0.31656546397087915,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       }
+      ],
+      "above_count": 4,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 3,
+       "placebo_seed": 42
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.5031175381677555,
+       "rank": 32,
+       "percentile": 32.608695652173914
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.3299137405742747,
+        "ratio_to_placebo": 0.6557388990567665,
+        "above_placebo": false,
+        "rank": 38,
+        "percentile": 19.565217391304348
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.8062618897273732,
+        "ratio_to_placebo": 1.6025318709095362,
+        "above_placebo": true,
+        "rank": 25,
+        "percentile": 47.82608695652174
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.2478291174090452,
+        "ratio_to_placebo": 0.4925869177838341,
+        "above_placebo": false,
+        "rank": 41,
+        "percentile": 13.043478260869565
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.4354220489953384,
+        "ratio_to_placebo": 0.8654479638715252,
+        "above_placebo": false,
+        "rank": 33,
+        "percentile": 30.434782608695652
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.6666180191399472,
+        "ratio_to_placebo": 1.3249747197595712,
+        "above_placebo": true,
+        "rank": 29,
+        "percentile": 39.130434782608695
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.2448122209792432,
+        "ratio_to_placebo": 0.4865905129660079,
+        "above_placebo": false,
+        "rank": 42,
+        "percentile": 10.869565217391305
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.13652514093924342,
+        "ratio_to_placebo": 0.2713583419024474,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.2684437615612266,
+        "ratio_to_placebo": 0.5335607312335808,
+        "above_placebo": false,
+        "rank": 40,
+        "percentile": 15.217391304347826
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.156332602120842,
+        "ratio_to_placebo": 0.31072779273442,
+        "above_placebo": false,
+        "rank": 43,
+        "percentile": 8.695652173913043
+       }
+      ],
+      "above_count": 2,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 4,
+       "placebo_seed": 42
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.3773881515847084,
+       "rank": 35,
+       "percentile": 26.08695652173913
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.3664218490653488,
+        "ratio_to_placebo": 0.9709415823647073,
+        "above_placebo": false,
+        "rank": 36,
+        "percentile": 23.91304347826087
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.7954425624434984,
+        "ratio_to_placebo": 2.107757117183775,
+        "above_placebo": true,
+        "rank": 27,
+        "percentile": 43.47826086956522
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.24810956849499685,
+        "ratio_to_placebo": 0.6574386807141355,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 17.391304347826086
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.4191358056001101,
+        "ratio_to_placebo": 1.1106225880173957,
+        "above_placebo": true,
+        "rank": 32,
+        "percentile": 32.608695652173914
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.8213026921680087,
+        "ratio_to_placebo": 2.176281074854199,
+        "above_placebo": true,
+        "rank": 26,
+        "percentile": 45.65217391304348
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.1991833930316079,
+        "ratio_to_placebo": 0.5277945059886154,
+        "above_placebo": false,
+        "rank": 42,
+        "percentile": 10.869565217391305
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.12366440609145626,
+        "ratio_to_placebo": 0.3276849195507893,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.22542374505700627,
+        "ratio_to_placebo": 0.5973259735644025,
+        "above_placebo": false,
+        "rank": 41,
+        "percentile": 13.043478260869565
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.126586952299229,
+        "ratio_to_placebo": 0.3354290582989205,
+        "above_placebo": false,
+        "rank": 43,
+        "percentile": 8.695652173913043
+       }
+      ],
+      "above_count": 3,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 43,
+       "fold": 0,
+       "placebo_seed": 43
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.4644826799023688,
+       "rank": 32,
+       "percentile": 32.608695652173914
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.3274789374076014,
+        "ratio_to_placebo": 0.7050401480555428,
+        "above_placebo": false,
+        "rank": 36,
+        "percentile": 23.91304347826087
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.5008257579757197,
+        "ratio_to_placebo": 1.0782442051036003,
+        "above_placebo": true,
+        "rank": 31,
+        "percentile": 34.78260869565217
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.24634674793860417,
+        "ratio_to_placebo": 0.5303679956169401,
+        "above_placebo": false,
+        "rank": 40,
+        "percentile": 15.217391304347826
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.34316092778497115,
+        "ratio_to_placebo": 0.7388024196232706,
+        "above_placebo": false,
+        "rank": 35,
+        "percentile": 26.08695652173913
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.7774996461090571,
+        "ratio_to_placebo": 1.6739044957983846,
+        "above_placebo": true,
+        "rank": 26,
+        "percentile": 45.65217391304348
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.26578367496095523,
+        "ratio_to_placebo": 0.572214393477107,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 17.391304347826086
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.0905072113602339,
+        "ratio_to_placebo": 0.19485594463771594,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.20776389485305646,
+        "ratio_to_placebo": 0.4473017054085355,
+        "above_placebo": false,
+        "rank": 41,
+        "percentile": 13.043478260869565
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.12796722166808827,
+        "ratio_to_placebo": 0.27550482979254715,
+        "above_placebo": false,
+        "rank": 43,
+        "percentile": 8.695652173913043
+       }
+      ],
+      "above_count": 2,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 43,
+       "fold": 1,
+       "placebo_seed": 43
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.33763586825708053,
+       "rank": 32,
+       "percentile": 32.608695652173914
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.3351552459844985,
+        "ratio_to_placebo": 0.9926529657959998,
+        "above_placebo": false,
+        "rank": 33,
+        "percentile": 30.434782608695652
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.846149660231334,
+        "ratio_to_placebo": 2.506101216672466,
+        "above_placebo": true,
+        "rank": 22,
+        "percentile": 54.34782608695652
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.21658985502410727,
+        "ratio_to_placebo": 0.6414894724964257,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 17.391304347826086
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.3136224343194127,
+        "ratio_to_placebo": 0.9288777165126791,
+        "above_placebo": false,
+        "rank": 34,
+        "percentile": 28.26086956521739
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.6362870401929859,
+        "ratio_to_placebo": 1.88453627121307,
+        "above_placebo": true,
+        "rank": 28,
+        "percentile": 41.30434782608695
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.29058925999796315,
+        "ratio_to_placebo": 0.860658737171563,
+        "above_placebo": false,
+        "rank": 37,
+        "percentile": 21.73913043478261
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.10951497418713152,
+        "ratio_to_placebo": 0.32435823466405334,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.17770398468940993,
+        "ratio_to_placebo": 0.5263184436142422,
+        "above_placebo": false,
+        "rank": 41,
+        "percentile": 13.043478260869565
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.11191739407995352,
+        "ratio_to_placebo": 0.331473651356076,
+        "above_placebo": false,
+        "rank": 43,
+        "percentile": 8.695652173913043
+       }
+      ],
+      "above_count": 2,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 43,
+       "fold": 2,
+       "placebo_seed": 43
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.37287154037654735,
+       "rank": 34,
+       "percentile": 28.26086956521739
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.46461018915408125,
+        "ratio_to_placebo": 1.2460328527215858,
+        "above_placebo": true,
+        "rank": 31,
+        "percentile": 34.78260869565217
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.8534203002206479,
+        "ratio_to_placebo": 2.2887783266022783,
+        "above_placebo": true,
+        "rank": 25,
+        "percentile": 47.82608695652174
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.26005952274565275,
+        "ratio_to_placebo": 0.6974507158230138,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 17.391304347826086
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.3930101812912315,
+        "ratio_to_placebo": 1.0540095950856077,
+        "above_placebo": true,
+        "rank": 33,
+        "percentile": 30.434782608695652
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.43275176781119906,
+        "ratio_to_placebo": 1.1605921100177856,
+        "above_placebo": true,
+        "rank": 32,
+        "percentile": 32.608695652173914
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.21768652393606003,
+        "ratio_to_placebo": 0.5838110457993858,
+        "above_placebo": false,
+        "rank": 41,
+        "percentile": 13.043478260869565
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.10054992757404933,
+        "ratio_to_placebo": 0.269663722451191,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.2878811755998055,
+        "ratio_to_placebo": 0.772065294415032,
+        "above_placebo": false,
+        "rank": 36,
+        "percentile": 23.91304347826087
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.1358891558994788,
+        "ratio_to_placebo": 0.3644396023420024,
+        "above_placebo": false,
+        "rank": 43,
+        "percentile": 8.695652173913043
+       }
+      ],
+      "above_count": 4,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 43,
+       "fold": 3,
+       "placebo_seed": 43
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.5020189538046933,
+       "rank": 32,
+       "percentile": 32.608695652173914
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.474381126445658,
+        "ratio_to_placebo": 0.9449466456404202,
+        "above_placebo": false,
+        "rank": 33,
+        "percentile": 30.434782608695652
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.6154030660860242,
+        "ratio_to_placebo": 1.225856237940853,
+        "above_placebo": true,
+        "rank": 29,
+        "percentile": 39.130434782608695
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.2720447063289072,
+        "ratio_to_placebo": 0.5419012654146603,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 17.391304347826086
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.39560697786294785,
+        "ratio_to_placebo": 0.7880319554963572,
+        "above_placebo": false,
+        "rank": 35,
+        "percentile": 26.08695652173913
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.6332727622144277,
+        "ratio_to_placebo": 1.2614518982101974,
+        "above_placebo": true,
+        "rank": 28,
+        "percentile": 41.30434782608695
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.1885868405228177,
+        "ratio_to_placebo": 0.37565681353972546,
+        "above_placebo": false,
+        "rank": 42,
+        "percentile": 10.869565217391305
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.10345681900952132,
+        "ratio_to_placebo": 0.2060814999621915,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.23375832571237934,
+        "ratio_to_placebo": 0.4656364544421589,
+        "above_placebo": false,
+        "rank": 41,
+        "percentile": 13.043478260869565
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.17718515541671537,
+        "ratio_to_placebo": 0.35294515092282336,
+        "above_placebo": false,
+        "rank": 43,
+        "percentile": 8.695652173913043
+       }
+      ],
+      "above_count": 2,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 43,
+       "fold": 4,
+       "placebo_seed": 43
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.2941065101944452,
+       "rank": 34,
+       "percentile": 28.26086956521739
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.3767975812669947,
+        "ratio_to_placebo": 1.28116028787625,
+        "above_placebo": true,
+        "rank": 32,
+        "percentile": 32.608695652173914
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.5983186861875235,
+        "ratio_to_placebo": 2.0343605647897824,
+        "above_placebo": true,
+        "rank": 30,
+        "percentile": 36.95652173913044
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.2219789386511562,
+        "ratio_to_placebo": 0.7547569705423974,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 17.391304347826086
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.3550220894851441,
+        "ratio_to_placebo": 1.2071208122881238,
+        "above_placebo": true,
+        "rank": 33,
+        "percentile": 30.434782608695652
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.8075955653017596,
+        "ratio_to_placebo": 2.7459288975542457,
+        "above_placebo": true,
+        "rank": 23,
+        "percentile": 52.17391304347826
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.21006382537028798,
+        "ratio_to_placebo": 0.7142440513520311,
+        "above_placebo": false,
+        "rank": 40,
+        "percentile": 15.217391304347826
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.10674640119502299,
+        "ratio_to_placebo": 0.36295150734490306,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.18884385203470921,
+        "ratio_to_placebo": 0.6420934100025777,
+        "above_placebo": false,
+        "rank": 41,
+        "percentile": 13.043478260869565
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.1224853608097337,
+        "ratio_to_placebo": 0.4164659963791821,
+        "above_placebo": false,
+        "rank": 42,
+        "percentile": 10.869565217391305
+       }
+      ],
+      "above_count": 4,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 44,
+       "fold": 0,
+       "placebo_seed": 44
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.47513633088955404,
+       "rank": 32,
+       "percentile": 32.608695652173914
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.3716059266202183,
+        "ratio_to_placebo": 0.7821037930829131,
+        "above_placebo": false,
+        "rank": 34,
+        "percentile": 28.26086956521739
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.6386997705782548,
+        "ratio_to_placebo": 1.3442452808912253,
+        "above_placebo": true,
+        "rank": 28,
+        "percentile": 41.30434782608695
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.2819286193952143,
+        "ratio_to_placebo": 0.5933636328490925,
+        "above_placebo": false,
+        "rank": 38,
+        "percentile": 19.565217391304348
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.3740775964465854,
+        "ratio_to_placebo": 0.7873058154619208,
+        "above_placebo": false,
+        "rank": 33,
+        "percentile": 30.434782608695652
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.7963543256171373,
+        "ratio_to_placebo": 1.6760543739650393,
+        "above_placebo": true,
+        "rank": 26,
+        "percentile": 45.65217391304348
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.2505037421992016,
+        "ratio_to_placebo": 0.5272249792605976,
+        "above_placebo": false,
+        "rank": 41,
+        "percentile": 13.043478260869565
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.14557442044478164,
+        "ratio_to_placebo": 0.30638452793587906,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.26732790652507454,
+        "ratio_to_placebo": 0.5626341097187435,
+        "above_placebo": false,
+        "rank": 40,
+        "percentile": 15.217391304347826
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.14862033266475821,
+        "ratio_to_placebo": 0.31279513479112414,
+        "above_placebo": false,
+        "rank": 43,
+        "percentile": 8.695652173913043
+       }
+      ],
+      "above_count": 2,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 44,
+       "fold": 1,
+       "placebo_seed": 44
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.3169798670724149,
+       "rank": 33,
+       "percentile": 30.434782608695652
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.31100448273736836,
+        "ratio_to_placebo": 0.9811490099032648,
+        "above_placebo": false,
+        "rank": 34,
+        "percentile": 28.26086956521739
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.8265255497107931,
+        "ratio_to_placebo": 2.607501723514734,
+        "above_placebo": true,
+        "rank": 22,
+        "percentile": 54.34782608695652
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.25898025620933246,
+        "ratio_to_placebo": 0.8170243069417646,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 17.391304347826086
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.3878877332895797,
+        "ratio_to_placebo": 1.2236983278214504,
+        "above_placebo": true,
+        "rank": 32,
+        "percentile": 32.608695652173914
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.509803163118402,
+        "ratio_to_placebo": 1.608314016366018,
+        "above_placebo": true,
+        "rank": 31,
+        "percentile": 34.78260869565217
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.26435161716058403,
+        "ratio_to_placebo": 0.8339697394730505,
+        "above_placebo": false,
+        "rank": 38,
+        "percentile": 19.565217391304348
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.09387847893187286,
+        "ratio_to_placebo": 0.2961654309433667,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.13648875763873397,
+        "ratio_to_placebo": 0.4305912514233996,
+        "above_placebo": false,
+        "rank": 43,
+        "percentile": 8.695652173913043
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.14009699759331734,
+        "ratio_to_placebo": 0.4419744348031789,
+        "above_placebo": false,
+        "rank": 42,
+        "percentile": 10.869565217391305
+       }
+      ],
+      "above_count": 3,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 44,
+       "fold": 2,
+       "placebo_seed": 44
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.47158848379217805,
+       "rank": 32,
+       "percentile": 32.608695652173914
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.4086485213756504,
+        "ratio_to_placebo": 0.8665362607873512,
+        "above_placebo": false,
+        "rank": 33,
+        "percentile": 30.434782608695652
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.7281367910685428,
+        "ratio_to_placebo": 1.5440088468941955,
+        "above_placebo": true,
+        "rank": 27,
+        "percentile": 43.47826086956522
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.22366158762040472,
+        "ratio_to_placebo": 0.4742727935633157,
+        "above_placebo": false,
+        "rank": 40,
+        "percentile": 15.217391304347826
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.3707235394261662,
+        "ratio_to_placebo": 0.7861166083723505,
+        "above_placebo": false,
+        "rank": 34,
+        "percentile": 28.26086956521739
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.6788267358532042,
+        "ratio_to_placebo": 1.439447228215931,
+        "above_placebo": true,
+        "rank": 28,
+        "percentile": 41.30434782608695
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.1901344761096432,
+        "ratio_to_placebo": 0.40317879389402694,
+        "above_placebo": false,
+        "rank": 41,
+        "percentile": 13.043478260869565
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.10170435368803689,
+        "ratio_to_placebo": 0.21566335307894513,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.23548129388644296,
+        "ratio_to_placebo": 0.4993363959884483,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 17.391304347826086
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.12203375839204555,
+        "ratio_to_placebo": 0.2587717100526653,
+        "above_placebo": false,
+        "rank": 43,
+        "percentile": 8.695652173913043
+       }
+      ],
+      "above_count": 2,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 44,
+       "fold": 3,
+       "placebo_seed": 44
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.4966988649817695,
+       "rank": 32,
+       "percentile": 32.608695652173914
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.4127345599332556,
+        "ratio_to_placebo": 0.8309553112194132,
+        "above_placebo": false,
+        "rank": 34,
+        "percentile": 28.26086956521739
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.5457764166567115,
+        "ratio_to_placebo": 1.098807456861701,
+        "above_placebo": true,
+        "rank": 31,
+        "percentile": 34.78260869565217
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.19122638570830555,
+        "ratio_to_placebo": 0.3849946097930467,
+        "above_placebo": false,
+        "rank": 41,
+        "percentile": 13.043478260869565
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.4258695159352021,
+        "ratio_to_placebo": 0.8573998169913937,
+        "above_placebo": false,
+        "rank": 33,
+        "percentile": 30.434782608695652
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.5658698459704604,
+        "ratio_to_placebo": 1.1392614033680744,
+        "above_placebo": true,
+        "rank": 30,
+        "percentile": 36.95652173913044
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.22972713325998387,
+        "ratio_to_placebo": 0.46250786836087415,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 17.391304347826086
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.16137897916234817,
+        "ratio_to_placebo": 0.3249030560363195,
+        "above_placebo": false,
+        "rank": 43,
+        "percentile": 8.695652173913043
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.2160929610927777,
+        "ratio_to_placebo": 0.43505829452762895,
+        "above_placebo": false,
+        "rank": 40,
+        "percentile": 15.217391304347826
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.14268395064268394,
+        "ratio_to_placebo": 0.2872644990801839,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       }
+      ],
+      "above_count": 2,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 44,
+       "fold": 4,
+       "placebo_seed": 44
+      },
+      "n_features": 47,
+      "placebo": {
+       "gain": 0.4698859861654679,
+       "rank": 32,
+       "percentile": 32.608695652173914
+      },
+      "features": [
+       {
+        "feature": "age_cat",
+        "gain": 0.2570697572458388,
+        "ratio_to_placebo": 0.5470896447533403,
+        "above_placebo": false,
+        "rank": 41,
+        "percentile": 13.043478260869565
+       },
+       {
+        "feature": "app_opens_per_day_cat",
+        "gain": 0.7883372423263303,
+        "ratio_to_placebo": 1.6777202673346412,
+        "above_placebo": true,
+        "rank": 27,
+        "percentile": 43.47826086956522
+       },
+       {
+        "feature": "daily_screen_time_hours_cat",
+        "gain": 0.30360227331176004,
+        "ratio_to_placebo": 0.646119020891268,
+        "above_placebo": false,
+        "rank": 37,
+        "percentile": 21.73913043478261
+       },
+       {
+        "feature": "gaming_hours_cat",
+        "gain": 0.4561678526442462,
+        "ratio_to_placebo": 0.9708053997669321,
+        "above_placebo": false,
+        "rank": 33,
+        "percentile": 30.434782608695652
+       },
+       {
+        "feature": "notifications_per_day_cat",
+        "gain": 0.5990122481084893,
+        "ratio_to_placebo": 1.2748033900665219,
+        "above_placebo": true,
+        "rank": 30,
+        "percentile": 36.95652173913044
+       },
+       {
+        "feature": "sleep_hours_cat",
+        "gain": 0.28724507856115306,
+        "ratio_to_placebo": 0.6113080343281427,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 17.391304347826086
+       },
+       {
+        "feature": "social_media_hours_cat",
+        "gain": 0.16987677304347804,
+        "ratio_to_placebo": 0.3615276429709415,
+        "above_placebo": false,
+        "rank": 44,
+        "percentile": 6.521739130434782
+       },
+       {
+        "feature": "weekend_screen_time_cat",
+        "gain": 0.26694377715998036,
+        "ratio_to_placebo": 0.5681032953086996,
+        "above_placebo": false,
+        "rank": 40,
+        "percentile": 15.217391304347826
+       },
+       {
+        "feature": "work_study_hours_cat",
+        "gain": 0.17498901868203098,
+        "ratio_to_placebo": 0.37240740059102234,
+        "above_placebo": false,
+        "rank": 43,
+        "percentile": 8.695652173913043
+       }
+      ],
+      "above_count": 2,
+      "all_above": false
+     }
+    ],
+    "placebo_gain": {
+     "min": 0.2941065101944452,
+     "median": 0.39856160428020476,
+     "max": 0.5031175381677555
+    },
+    "placebo_rank": {
+     "min": 32,
+     "median": 32,
+     "max": 35
+    },
+    "per_feature": [
+     {
+      "feature": "age_cat",
+      "cells": 15,
+      "above_count": 3,
+      "gain": {
+       "min": 0.2570697572458388,
+       "median": 0.3584849438637554,
+       "max": 0.474381126445658
+      },
+      "ratio_to_placebo": {
+       "min": 0.5470896447533403,
+       "median": 0.8665362607873512,
+       "max": 1.28116028787625
+      },
+      "rank": {
+       "min": 31,
+       "median": 34,
+       "max": 41
+      },
+      "percentile": {
+       "min": 13.043478260869565,
+       "median": 28.26086956521739,
+       "max": 34.78260869565217
+      }
+     },
+     {
+      "feature": "app_opens_per_day_cat",
+      "cells": 15,
+      "above_count": 15,
+      "gain": {
+       "min": 0.5008257579757197,
+       "median": 0.7954425624434984,
+       "max": 0.9069799069145383
+      },
+      "ratio_to_placebo": {
+       "min": 1.0782442051036003,
+       "median": 1.9987682413013945,
+       "max": 2.781638493933286
+      },
+      "rank": {
+       "min": 20,
+       "median": 27,
+       "max": 31
+      },
+      "percentile": {
+       "min": 34.78260869565217,
+       "median": 43.47826086956522,
+       "max": 58.69565217391305
+      }
+     },
+     {
+      "feature": "daily_screen_time_hours_cat",
+      "cells": 15,
+      "above_count": 0,
+      "gain": {
+       "min": 0.19122638570830555,
+       "median": 0.2478291174090452,
+       "max": 0.30360227331176004
+      },
+      "ratio_to_placebo": {
+       "min": 0.3849946097930467,
+       "median": 0.6414894724964257,
+       "max": 0.8170243069417646
+      },
+      "rank": {
+       "min": 37,
+       "median": 39,
+       "max": 41
+      },
+      "percentile": {
+       "min": 13.043478260869565,
+       "median": 17.391304347826086,
+       "max": 21.73913043478261
+      }
+     },
+     {
+      "feature": "gaming_hours_cat",
+      "cells": 15,
+      "above_count": 6,
+      "gain": {
+       "min": 0.3136224343194127,
+       "median": 0.375772329772401,
+       "max": 0.4561678526442462
+      },
+      "ratio_to_placebo": {
+       "min": 0.7388024196232706,
+       "median": 0.9288777165126791,
+       "max": 1.2236983278214504
+      },
+      "rank": {
+       "min": 32,
+       "median": 33,
+       "max": 35
+      },
+      "percentile": {
+       "min": 26.08695652173913,
+       "median": 30.434782608695652,
+       "max": 32.608695652173914
+      }
+     },
+     {
+      "feature": "notifications_per_day_cat",
+      "cells": 15,
+      "above_count": 15,
+      "gain": {
+       "min": 0.43275176781119906,
+       "median": 0.6332727622144277,
+       "max": 0.8213026921680087
+      },
+      "ratio_to_placebo": {
+       "min": 1.1392614033680744,
+       "median": 1.549585412938524,
+       "max": 2.7459288975542457
+      },
+      "rank": {
+       "min": 23,
+       "median": 29,
+       "max": 32
+      },
+      "percentile": {
+       "min": 32.608695652173914,
+       "median": 39.130434782608695,
+       "max": 52.17391304347826
+      }
+     },
+     {
+      "feature": "sleep_hours_cat",
+      "cells": 15,
+      "above_count": 0,
+      "gain": {
+       "min": 0.1885868405228177,
+       "median": 0.2448122209792432,
+       "max": 0.29058925999796315
+      },
+      "ratio_to_placebo": {
+       "min": 0.37565681353972546,
+       "median": 0.5838110457993858,
+       "max": 0.860658737171563
+      },
+      "rank": {
+       "min": 37,
+       "median": 40,
+       "max": 42
+      },
+      "percentile": {
+       "min": 10.869565217391305,
+       "median": 15.217391304347826,
+       "max": 21.73913043478261
+      }
+     },
+     {
+      "feature": "social_media_hours_cat",
+      "cells": 15,
+      "above_count": 0,
+      "gain": {
+       "min": 0.0905072113602339,
+       "median": 0.10674640119502299,
+       "max": 0.16987677304347804
+      },
+      "ratio_to_placebo": {
+       "min": 0.19485594463771594,
+       "median": 0.2961654309433667,
+       "max": 0.37242530772474236
+      },
+      "rank": {
+       "min": 43,
+       "median": 44,
+       "max": 44
+      },
+      "percentile": {
+       "min": 6.521739130434782,
+       "median": 6.521739130434782,
+       "max": 8.695652173913043
+      }
+     },
+     {
+      "feature": "weekend_screen_time_cat",
+      "cells": 15,
+      "above_count": 0,
+      "gain": {
+       "min": 0.13648875763873397,
+       "median": 0.2312970055228859,
+       "max": 0.2878811755998055
+      },
+      "ratio_to_placebo": {
+       "min": 0.4305912514233996,
+       "median": 0.5345497086219972,
+       "max": 0.772065294415032
+      },
+      "rank": {
+       "min": 36,
+       "median": 40,
+       "max": 43
+      },
+      "percentile": {
+       "min": 8.695652173913043,
+       "median": 15.217391304347826,
+       "max": 23.91304347826087
+      }
+     },
+     {
+      "feature": "work_study_hours_cat",
+      "cells": 15,
+      "above_count": 0,
+      "gain": {
+       "min": 0.10321920539669947,
+       "median": 0.14009699759331734,
+       "max": 0.18344822819466686
+      },
+      "ratio_to_placebo": {
+       "min": 0.2587717100526653,
+       "median": 0.3354290582989205,
+       "max": 0.4738271318049987
+      },
+      "rank": {
+       "min": 42,
+       "median": 43,
+       "max": 44
+      },
+      "percentile": {
+       "min": 6.521739130434782,
+       "median": 8.695652173913043,
+       "max": 10.869565217391305
+      }
+     }
+    ],
+    "all_above_cells": 0,
+    "n_cells": 15,
+    "mode": "readout",
+    "importance_source": "/Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction/mlruns/1/6238d8c58beb42ee8102209ded92516e/artifacts/feature_importance.parquet"
+   },
+   "paired_oof": {
+    "run_id": "6238d8c58beb42ee8102209ded92516e",
+    "baseline_config": "exp057_cat_xgb_impute_comps5",
+    "baseline_run_id": "3d5239b07c6e475baa7dde03fb0b99bc",
+    "seeds": [
+     42,
+     43,
+     44
+    ],
+    "comparison_mode": "paired_averaged_predictions",
+    "oof_delta": 3.6443646131312235e-05,
+    "fold_deltas": [
+     5.071093492015066e-06,
+     1.1749754320611316e-06,
+     4.354969942621523e-05,
+     4.5993272820399334e-05,
+     8.743240910291661e-05
+    ],
+    "fold_wins": 5,
+    "seed_deltas": {
+     "42": 7.532282263611467e-05,
+     "43": 5.500013616999144e-05,
+     "44": -8.639880149097223e-07
+    }
+   }
+  },
+  "exp066_tabm_nn10": {
+   "role": "TabM 경계 사례(순열 중요도, fold 4/5 우위지만 평균 0.87배 미달, 중복도 0.99933이라 평균 비교 불안정성만 뒷받침)",
+   "importance_readout": {
+    "config": "exp066_tabm_nn10",
+    "new_features": [
+     "orig_nn10_mean"
+    ],
+    "cells": [
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 0,
+       "placebo_seed": 42
+      },
+      "n_features": 39,
+      "placebo": {
+       "gain": -1.1672528433259721e-06,
+       "rank": 38,
+       "percentile": 2.6315789473684212
+      },
+      "features": [
+       {
+        "feature": "orig_nn10_mean",
+        "gain": 1.7271648858674382e-05,
+        "ratio_to_placebo": -14.796835970397398,
+        "above_placebo": true,
+        "rank": 35,
+        "percentile": 10.526315789473685
+       }
+      ],
+      "above_count": 1,
+      "all_above": true
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 1,
+       "placebo_seed": 42
+      },
+      "n_features": 39,
+      "placebo": {
+       "gain": 4.965920647526101e-06,
+       "rank": 36,
+       "percentile": 7.894736842105263
+      },
+      "features": [
+       {
+        "feature": "orig_nn10_mean",
+        "gain": 6.174267161374036e-06,
+        "ratio_to_placebo": 1.243327793497849,
+        "above_placebo": true,
+        "rank": 35,
+        "percentile": 10.526315789473685
+       }
+      ],
+      "above_count": 1,
+      "all_above": true
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 2,
+       "placebo_seed": 42
+      },
+      "n_features": 39,
+      "placebo": {
+       "gain": 1.831921978368012e-05,
+       "rank": 35,
+       "percentile": 10.526315789473685
+      },
+      "features": [
+       {
+        "feature": "orig_nn10_mean",
+        "gain": 2.9957197728913698e-05,
+        "ratio_to_placebo": 1.6352878606544916,
+        "above_placebo": true,
+        "rank": 34,
+        "percentile": 13.157894736842104
+       }
+      ],
+      "above_count": 1,
+      "all_above": true
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 3,
+       "placebo_seed": 42
+      },
+      "n_features": 39,
+      "placebo": {
+       "gain": 3.6048392498710946e-05,
+       "rank": 30,
+       "percentile": 23.68421052631579
+      },
+      "features": [
+       {
+        "feature": "orig_nn10_mean",
+        "gain": -6.166134199681039e-06,
+        "ratio_to_placebo": -0.17105157185307318,
+        "above_placebo": false,
+        "rank": 39,
+        "percentile": 0.0
+       }
+      ],
+      "above_count": 0,
+      "all_above": false
+     },
+     {
+      "cell": {
+       "model_seed": 42,
+       "fold": 4,
+       "placebo_seed": 42
+      },
+      "n_features": 39,
+      "placebo": {
+       "gain": 9.734707635822293e-06,
+       "rank": 36,
+       "percentile": 7.894736842105263
+      },
+      "features": [
+       {
+        "feature": "orig_nn10_mean",
+        "gain": 1.1833723700171994e-05,
+        "ratio_to_placebo": 1.2156218905461147,
+        "above_placebo": true,
+        "rank": 35,
+        "percentile": 10.526315789473685
+       }
+      ],
+      "above_count": 1,
+      "all_above": true
+     }
+    ],
+    "placebo_gain": {
+     "min": -1.1672528433259721e-06,
+     "median": 9.734707635822293e-06,
+     "max": 3.6048392498710946e-05
+    },
+    "placebo_rank": {
+     "min": 30,
+     "median": 36,
+     "max": 38
+    },
+    "per_feature": [
+     {
+      "feature": "orig_nn10_mean",
+      "cells": 5,
+      "above_count": 4,
+      "gain": {
+       "min": -6.166134199681039e-06,
+       "median": 1.1833723700171994e-05,
+       "max": 2.9957197728913698e-05
+      },
+      "ratio_to_placebo": {
+       "min": -14.796835970397398,
+       "median": 1.2156218905461147,
+       "max": 1.6352878606544916
+      },
+      "rank": {
+       "min": 34,
+       "median": 35,
+       "max": 39
+      },
+      "percentile": {
+       "min": 0.0,
+       "median": 10.526315789473685,
+       "max": 13.157894736842104
+      }
+     }
+    ],
+    "all_above_cells": 4,
+    "n_cells": 5,
+    "mode": "readout",
+    "importance_source": "/Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction/mlruns/1/e5b7ba14fc32455887168fc8f1597914/artifacts/feature_importance.parquet"
+   },
+   "paired_oof": {
+    "run_id": "e5b7ba14fc32455887168fc8f1597914",
+    "baseline_config": "exp065_tabm",
+    "baseline_run_id": "01902a9566cf4722a26c431272c09b19",
+    "seeds": [
+     42
+    ],
+    "comparison_mode": "paired_seed_42",
+    "oof_delta": 2.2076090325340303e-05,
+    "fold_deltas": [
+     1.7718507730801747e-05,
+     1.137894313707477e-05,
+     -4.259710921694637e-05,
+     4.756278221873522e-05,
+     -5.375865525070189e-06
+    ],
+    "fold_wins": 3,
+    "seed_deltas": {
+     "42": 2.2076090325340303e-05
+    }
+   }
+  }
+ }
+}
