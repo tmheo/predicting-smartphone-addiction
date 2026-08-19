@@ -12,7 +12,6 @@ import importlib.metadata
 import json
 import os
 import platform
-import re
 import shutil
 import tomllib
 import uuid
@@ -21,6 +20,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from packaging.requirements import InvalidRequirement, Requirement
 from sklearn.metrics import roc_auc_score
 
 from .config import ExperimentConfig
@@ -76,28 +76,35 @@ def _content_sha256(value: object) -> str:
     return hashlib.sha256(_canonical_json(value)).hexdigest()
 
 
-def _dependency_name(requirement: str) -> str:
-    match = re.match(r"[A-Za-z0-9_.-]+", requirement)
-    if match is None:
-        raise RecoveryError(f"pyproject 의존성 이름을 해석할 수 없다: {requirement!r}")
-    return match.group(0)
+def _requirement_of(requirement: str) -> Requirement:
+    try:
+        return Requirement(requirement)
+    except InvalidRequirement as exc:
+        raise RecoveryError(f"pyproject 의존성을 해석할 수 없다: {requirement!r}") from exc
 
 
 def model_dependency_snapshot(
     pyproject_path: Path = Path("pyproject.toml"), lock_path: Path = Path("uv.lock")
 ) -> dict[str, object]:
-    """현재 프로젝트가 선언한 모델 실행 의존성의 실제 판본과 잠금 해시를 고정한다."""
+    """현재 프로젝트가 선언한 모델 실행 의존성의 실제 판본과 잠금 해시를 고정한다.
+
+    환경 표식이 붙은 의존성(faiss-gpu-cu12의 sys_platform == 'linux' 등)은 표식이
+    현재 환경에 맞을 때만 설치를 요구한다. 스냅샷은 실행 환경의 정체성이므로,
+    이 환경에 설치될 수 없는 의존성은 판본 목록에 넣지 않는다.
+    """
     if not pyproject_path.is_file() or not lock_path.is_file():
         raise RecoveryError("pyproject.toml과 uv.lock이 있어야 복구 실행 의존성을 고정할 수 있다.")
     project = tomllib.loads(pyproject_path.read_text())
     requirements = project.get("project", {}).get("dependencies", [])
     versions: dict[str, str] = {}
     for requirement in requirements:
-        name = _dependency_name(requirement)
+        req = _requirement_of(requirement)
+        if req.marker is not None and not req.marker.evaluate():
+            continue
         try:
-            versions[name] = importlib.metadata.version(name)
+            versions[req.name] = importlib.metadata.version(req.name)
         except importlib.metadata.PackageNotFoundError as exc:
-            raise RecoveryError(f"선언된 실행 의존성이 설치되지 않았다: {name}") from exc
+            raise RecoveryError(f"선언된 실행 의존성이 설치되지 않았다: {req.name}") from exc
     return {
         "python_implementation": platform.python_implementation(),
         "python_version": platform.python_version(),
