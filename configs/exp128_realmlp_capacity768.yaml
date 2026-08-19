@@ -18,6 +18,14 @@
 # (kernel 129554888, Apache-2.0). 수정 내용과 사용 조건은 realmlp.py에 기록했다.
 # 번호는 exp128이다. 이슈 196 브랜치가 exp126(tabm_muon)·exp127(lookup_muon)을
 # 이미 원격 실행에 사용 중이어서 충돌을 피했다(e564648 전례).
+# 판정 결과(2026-08-20): Vast.ai RTX A4000 confirm 3시드(워크트리 run 16ebb441,
+# main 반입 run 47bb6b6a) 3시드 평균 OOF 0.9683176 vs exp124 0.9683223,
+# delta -0.0000047, fold 승리 1/5(시드 평균본 fold 기준). 계열 2 중복 게이트에서
+# 최근접 exp124(run c41c6a4d)와 스피어만 0.99962 >= 0.998이고 기존 구성원이 더
+# 높아 진입 탈락. fold별 validation_unknown_category_values 23,23,24,23,27은
+# 3시드 모두 exp124와 정확히 일치. 용량 확장 축(첫 층 768, PBLD 32/6/10.0,
+# n_ens 10)은 이 자료 규모에서 기대 몫 +0.0007을 실현하지 못하고 예측이 exp124와
+# 사실상 중복이므로 축을 닫는다. 이 설정은 기각 근거의 재현 기록으로 남긴다.
 name: exp128_realmlp_capacity768
 
 data:
