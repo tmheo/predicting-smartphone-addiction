@@ -16,7 +16,9 @@
 # 짝비교, 계열 2(풀 진입·교체) 규칙으로 exp124 교체 여부를 정한다.
 # RealMLP 구현 원문: https://www.kaggle.com/code/beicicc/s6e8-fold-safe-realmlp
 # (kernel 129554888, Apache-2.0). 수정 내용과 사용 조건은 realmlp.py에 기록했다.
-name: exp127_realmlp_capacity768
+# 번호는 exp128이다. 이슈 196 브랜치가 exp126(tabm_muon)·exp127(lookup_muon)을
+# 이미 원격 실행에 사용 중이어서 충돌을 피했다(e564648 전례).
+name: exp128_realmlp_capacity768
 
 data:
   train: data/train.csv
