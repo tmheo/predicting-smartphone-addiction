@@ -142,6 +142,35 @@ def test_training_only_vocab_distinguishes_unknown_and_missing():
     assert (exact_ids[1] == 0).all()
 
 
+def test_full_fit_uses_fixed_epoch_budget_and_predicts():
+    X, y = _data(80)
+    adapter = _adapter()
+
+    model_mod.fit_full(adapter, X, y, training_budget=2)
+
+    prediction = adapter.predict(X.iloc[:12])
+    assert prediction.shape == (12,)
+    assert np.isfinite(prediction).all()
+    assert adapter.training_diagnostics() == {
+        "initialization_seed": SEED,
+        "numeric_mode": "spline",
+        "configured_epochs": 4,
+        "end_epoch": 2,
+        "best_epoch": 2,
+        "observed_best_epoch": None,
+        "best_validation_auc": None,
+        "full_fit": True,
+    }
+
+
+def test_full_fit_requires_fixed_epoch_budget():
+    X, y = _data(80)
+    adapter = _adapter()
+
+    with pytest.raises(ValueError, match="고정 epoch 수"):
+        model_mod.fit_full(adapter, X, y, training_budget=None)
+
+
 def test_periodic_ablation_keeps_parameter_scale_close_to_spline():
     X, y = _data(80)
     counts = {}

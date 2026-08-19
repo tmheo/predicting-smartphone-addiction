@@ -351,3 +351,18 @@ members:
     ensemble_auc_with: 0.9685231490700812
     ensemble_auc_without: 0.9686192227064963
     contribution: -9.607363641506161e-05
+- run_id: e84d97e875754af1b073b399db2a0616
+  config: exp085_contextual_spline_m0
+  oof_auc: 0.9681422751383426
+  seeds: 42,43,44
+  entered_at: '2026-08-19'
+  reason: 3시드 평균 OOF가 champion 대비 -0.01 진입 하한을 넘고 최근접 스피어만 0.998 미만으로 중복 게이트를 통과했다.
+  evidence:
+    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
+    champion_oof_auc: 0.9691957618114269
+    floor_margin: 0.008946513326915762
+    nearest_run_id: d55d1cd49c194eb8bf7b5128e548df81
+    nearest_spearman: 0.9770420238469464
+    ensemble_auc_with: 0.9689153096546314
+    ensemble_auc_without: 0.968844711232371
+    contribution: 7.05984222603151e-05

@@ -502,6 +502,7 @@ class ContextualizedSplineTransformerFold:
         self._validation_auc: float | None = None
         self._additive_auc: float | None = None
         self._trainable_parameters: int | None = None
+        self._training_diagnostics: dict[str, object] | None = None
 
     def _seed_everything(self) -> None:
         random.seed(self._seed)
@@ -631,14 +632,20 @@ class ContextualizedSplineTransformerFold:
             dropout=self._dropout,
         )
 
-    def fit(
-        self, X_tr: pd.DataFrame, y_tr: pd.Series, X_va: pd.DataFrame, y_va: pd.Series
-    ) -> np.ndarray:
+    def _initialize_training(
+        self, X: pd.DataFrame, y: pd.Series
+    ) -> tuple[
+        _ContextualizedModel,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.optim.Optimizer,
+        torch.Generator,
+    ]:
         self._seed_everything()
-        self._fit_preprocessing(X_tr)
-        numeric_tr_cpu, exact_tr_cpu = self._encode(X_tr)
-        numeric_va_cpu, exact_va_cpu = self._encode(X_va)
-        model = self._build_model(numeric_tr_cpu.numpy()).to(self._device)
+        self._fit_preprocessing(X)
+        numeric_cpu, exact_cpu = self._encode(X)
+        model = self._build_model(numeric_cpu.numpy()).to(self._device)
         self._model = model
         self._trainable_parameters = sum(
             parameter.numel()
@@ -651,54 +658,79 @@ class ContextualizedSplineTransformerFold:
             flush=True,
         )
 
-        x_num = numeric_tr_cpu.to(self._device)
-        x_exact = exact_tr_cpu.to(self._device)
-        x_num_va = numeric_va_cpu.to(self._device)
-        x_exact_va = exact_va_cpu.to(self._device)
-        target = torch.from_numpy(y_tr.to_numpy(dtype="float32")).to(self._device)
+        x_num = numeric_cpu.to(self._device)
+        x_exact = exact_cpu.to(self._device)
+        target = torch.from_numpy(y.to_numpy(dtype="float32")).to(self._device)
         soft_target = (
             target * (1.0 - self._label_smoothing) + 0.5 * self._label_smoothing
         )
-        y_va_array = y_va.to_numpy(dtype="float64")
-
         optimizer = torch.optim.AdamW(
             model.parameters(), lr=self._lr, weight_decay=self._weight_decay
         )
         generator = torch.Generator(device=self._device).manual_seed(self._seed)
+        return model, x_num, x_exact, soft_target, optimizer, generator
+
+    def _train_epoch(
+        self,
+        model: _ContextualizedModel,
+        x_num: torch.Tensor,
+        x_exact: torch.Tensor,
+        soft_target: torch.Tensor,
+        optimizer: torch.optim.Optimizer,
+        generator: torch.Generator,
+    ) -> float:
+        model.train()
+        permutation = torch.randperm(
+            len(x_num), generator=generator, device=self._device
+        )
+        epoch_loss = 0.0
+        batches = 0
+        for start in range(0, len(x_num), self._batch_size):
+            rows = permutation[start : start + self._batch_size]
+            output = model(x_num[rows], x_exact[rows])
+            final_loss = F.binary_cross_entropy_with_logits(
+                output["final_logit"], soft_target[rows]
+            )
+            additive_loss = F.binary_cross_entropy_with_logits(
+                output["additive_logit"], soft_target[rows]
+            )
+            loss = final_loss + self._additive_weight * additive_loss
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), self._grad_clip)
+            optimizer.step()
+            epoch_loss += float(loss.detach())
+            batches += 1
+        return epoch_loss / batches
+
+    def fit(
+        self, X_tr: pd.DataFrame, y_tr: pd.Series, X_va: pd.DataFrame, y_va: pd.Series
+    ) -> np.ndarray:
+        model, x_num, x_exact, soft_target, optimizer, generator = (
+            self._initialize_training(X_tr, y_tr)
+        )
+        numeric_va_cpu, exact_va_cpu = self._encode(X_va)
+        x_num_va = numeric_va_cpu.to(self._device)
+        x_exact_va = exact_va_cpu.to(self._device)
+        y_va_array = y_va.to_numpy(dtype="float64")
+
         best_auc = -np.inf
         best_state: dict[str, torch.Tensor] | None = None
         best_additive_auc = -np.inf
+        best_epoch: int | None = None
         stale = 0
+        end_epoch = 0
         for epoch in range(1, self._epochs + 1):
-            model.train()
-            permutation = torch.randperm(
-                len(X_tr), generator=generator, device=self._device
+            end_epoch = epoch
+            epoch_loss = self._train_epoch(
+                model, x_num, x_exact, soft_target, optimizer, generator
             )
-            epoch_loss = 0.0
-            batches = 0
-            for start in range(0, len(X_tr), self._batch_size):
-                rows = permutation[start : start + self._batch_size]
-                output = model(x_num[rows], x_exact[rows])
-                final_loss = F.binary_cross_entropy_with_logits(
-                    output["final_logit"], soft_target[rows]
-                )
-                additive_loss = F.binary_cross_entropy_with_logits(
-                    output["additive_logit"], soft_target[rows]
-                )
-                loss = final_loss + self._additive_weight * additive_loss
-                optimizer.zero_grad(set_to_none=True)
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), self._grad_clip)
-                optimizer.step()
-                epoch_loss += float(loss.detach())
-                batches += 1
-
             final_logit, additive_logit = self._predict_tensors(x_num_va, x_exact_va)
             final_auc = float(roc_auc_score(y_va_array, final_logit))
             additive_auc = float(roc_auc_score(y_va_array, additive_logit))
             print(
                 f"[contextualized_spline_transformer] mode={self._mode} "
-                f"epoch={epoch:02d} loss={epoch_loss / batches:.6f} "
+                f"epoch={epoch:02d} loss={epoch_loss:.6f} "
                 f"add_auc={additive_auc:.6f} final_auc={final_auc:.6f}",
                 flush=True,
             )
@@ -706,20 +738,60 @@ class ContextualizedSplineTransformerFold:
                 best_auc = final_auc
                 best_additive_auc = additive_auc
                 best_state = copy.deepcopy(model.state_dict())
+                best_epoch = epoch
                 stale = 0
             else:
                 stale += 1
             if stale >= self._patience:
                 break
 
-        if best_state is None:
+        if best_state is None or best_epoch is None:
             raise RuntimeError("검증 checkpoint를 만들지 못했다.")
         model.load_state_dict(best_state)
         validation_logit, _ = self._predict_tensors(x_num_va, x_exact_va)
         self._validation = (X_va.copy(), y_va_array)
         self._validation_auc = float(roc_auc_score(y_va_array, validation_logit))
         self._additive_auc = best_additive_auc
+        self._training_diagnostics = {
+            "initialization_seed": self._seed,
+            "numeric_mode": self._mode,
+            "configured_epochs": self._epochs,
+            "end_epoch": end_epoch,
+            "best_epoch": best_epoch,
+            "observed_best_epoch": best_epoch,
+            "best_validation_auc": float(best_auc),
+            "full_fit": False,
+        }
         return _sigmoid(validation_logit)
+
+    def fit_full(self, X: pd.DataFrame, y: pd.Series, epochs: int) -> None:
+        if isinstance(epochs, bool) or not isinstance(epochs, int) or epochs < 1:
+            raise ValueError(
+                "Contextualized Spline Transformer 전체 자료 재학습 epoch 수는 "
+                "양의 정수여야 한다."
+            )
+        model, x_num, x_exact, soft_target, optimizer, generator = (
+            self._initialize_training(X, y)
+        )
+        for epoch in range(1, epochs + 1):
+            epoch_loss = self._train_epoch(
+                model, x_num, x_exact, soft_target, optimizer, generator
+            )
+            print(
+                f"[contextualized_spline_transformer] mode={self._mode} "
+                f"epoch={epoch:02d} loss={epoch_loss:.6f} full_fit=true",
+                flush=True,
+            )
+        self._training_diagnostics = {
+            "initialization_seed": self._seed,
+            "numeric_mode": self._mode,
+            "configured_epochs": self._epochs,
+            "end_epoch": epochs,
+            "best_epoch": epochs,
+            "observed_best_epoch": None,
+            "best_validation_auc": None,
+            "full_fit": True,
+        }
 
     def _predict_tensors(
         self, numerical: torch.Tensor, exact: torch.Tensor, chunk: int = 16384
@@ -766,6 +838,11 @@ class ContextualizedSplineTransformerFold:
                 )
             gains.append(float(np.mean(drops)))
         return pd.DataFrame({"feature": self._columns, "gain": gains})
+
+    def training_diagnostics(self) -> dict[str, object]:
+        if self._training_diagnostics is None:
+            raise RuntimeError("training_diagnostics는 fit 뒤에 호출해야 한다.")
+        return self._training_diagnostics
 
     def entry_diagnostics(self) -> AdapterDiagnostics:
         if self._trainable_parameters is None:
