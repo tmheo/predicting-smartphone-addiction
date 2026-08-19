@@ -6,6 +6,10 @@
 # 단일 델타 짝비교다. 모델 설정·나머지 피처 계획은 exp026과 동일하다.
 # 판정: pipeline.compare --proxy-baseline 4b6de022 (대리 스크리닝, 문턱 개선 >= 0).
 # 미달 시 GPU 변형(exp070 정확값 키, exp081 lookup_cols 확장) 없이 이슈를 닫는다.
+# 결과: seed 42 실행(worktree run c37bb4d1, 반입 run 37073590)은 OOF 0.9671645로
+# 기준 0.9672173 대비 -0.0000528 미달, screen_slack_te의 평균 gain(20119.5)도
+# 플라시보(25727.0) 미달이라 대리 스크리닝에서 닫았다. 재생성된 목표 표면이
+# 잔차에 대해 매끄럽다는 반대 가설(연구 문서의 위험 절)과 부합한다.
 name: exp125_lgbm_slack_exact_te
 
 data:
