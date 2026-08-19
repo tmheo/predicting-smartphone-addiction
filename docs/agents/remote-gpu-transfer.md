@@ -278,6 +278,8 @@ Debian 또는 Ubuntu 계열 이미지에서 `ensurepip is not available`로 실�
 
 묶음 해시와 내부 파일 해시를 확인한 다음 모델 코드를 실행하기 전에 저장소의 공통 Python 준비 관문을 통과해야 한다.
 입력 전송 묶음에는 `pyproject.toml`, `uv.lock`, `src/`, `scripts/run_remote_python.sh`와 `scripts/record_remote_python.py`를 포함한다.
+`pipeline.entry_diagnostic`은 종료부에서 `git rev-parse HEAD`로 실행 커밋을 기록하므로, 진입 진단을 실행할 묶음은 `git archive` 결과물이 아니라 실행 커밋의 git 체크아웃(얕은 클론으로 `.git` 포함)이어야 한다.
+이슈 199의 첫 fold 0 실행은 `.git` 없는 묶음 때문에 95분의 계산을 산출물 저장 직전에 잃었다.
 작업별 `run-logs/` 실행 파일에서 사전 검사 없이 시스템 Python 패키지 설치를 즉흥적으로 구현하지 않는다.
 `pip install --break-system-packages`도 사용하지 않는다.
 

@@ -18,7 +18,7 @@ import pandas as pd
 
 from pipeline.judgment import spearman
 from pipeline.ledger import Pool
-from pipeline.runs import MlflowStore
+from pipeline.runs import MlflowRunStore
 
 GATE_THRESHOLD = 0.98
 
@@ -28,6 +28,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--predictions", type=Path, required=True)
     parser.add_argument("--fold", type=int, default=0)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument(
+        "--tracking-uri",
+        default=None,
+        help="main 작업 폴더 밖에서 실행할 때 mlflow.db의 절대 sqlite URI",
+    )
     return parser.parse_args()
 
 
@@ -41,7 +46,11 @@ def main() -> None:
     if not candidate.index.is_unique:
         raise ValueError("검증 예측의 id가 고유하지 않다.")
 
-    store = MlflowStore()
+    store = (
+        MlflowRunStore(tracking_uri=args.tracking_uri)
+        if args.tracking_uri
+        else MlflowRunStore()
+    )
     pool = Pool.load()
     correlations: dict[str, dict[str, object]] = {}
     for member in pool.members:
