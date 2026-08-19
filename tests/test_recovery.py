@@ -310,3 +310,38 @@ def test_incomplete_temporary_state_and_duplicate_fold_are_rejected(recovery_env
     shutil.copytree(seed_dir / "fold_0", duplicate)
     with pytest.raises(RecoveryError, match="중복 fold"):
         run_cv(cfg, plan, train, test, SEED, recovery=recovery)
+
+
+def test_dependency_snapshot_skips_requirements_for_other_environments(tmp_path):
+    # faiss-gpu-cu12처럼 다른 환경 전용 표식이 붙은 의존성은 설치를 요구하지 않고,
+    # 표식 없는 의존성은 설치돼 있어야 한다. (#258 회귀: macOS 로컬 실행 차단)
+    pyproject = tmp_path / "pyproject.toml"
+    lock = tmp_path / "uv.lock"
+    lock.write_text("")
+    pyproject.write_text(
+        "[project]\n"
+        'name = "snapshot-test"\n'
+        'version = "0.0.0"\n'
+        "dependencies = [\n"
+        "    \"pytest>=1\",\n"
+        "    \"nonexistent-elsewhere-only==1.0; sys_platform == 'nonexistent-os'\",\n"
+        "]\n"
+    )
+    snapshot = recovery_mod.model_dependency_snapshot(pyproject, lock)
+    packages = snapshot["project_packages"]
+    assert "pytest" in packages
+    assert "nonexistent-elsewhere-only" not in packages
+
+
+def test_dependency_snapshot_requires_applicable_requirements(tmp_path):
+    pyproject = tmp_path / "pyproject.toml"
+    lock = tmp_path / "uv.lock"
+    lock.write_text("")
+    pyproject.write_text(
+        "[project]\n"
+        'name = "snapshot-test"\n'
+        'version = "0.0.0"\n'
+        'dependencies = ["nonexistent-package-for-snapshot==1.0"]\n'
+    )
+    with pytest.raises(RecoveryError, match="설치되지 않았다"):
+        recovery_mod.model_dependency_snapshot(pyproject, lock)
