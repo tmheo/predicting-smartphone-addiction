@@ -104,6 +104,90 @@ def _guarded_ratio(numerator: str, denominator: str) -> Callable[[pd.DataFrame],
     return f
 
 
+# zhenrui 파생 수치 블록(#258). 공개 노트북(kernel 129907249, Apache-2.0, SHA-256
+# ef16bb88782581ad4e880f295903db88278428464c1aa31643a0511d5197b116)의 상호작용·비율·
+# 로그 16열 이식. 원본은 중앙값 대체 후 계산하고 비율 분모에 +1e-6을 더하지만, 이식은
+# 저장소 규율을 따라 결측을 자연 전파하고 비율은 마스크 방식(분자·분모 유한, 분모 양수)
+# 만 쓴다. 스트레스 상호작용의 원본 missing→1 대체도 결측 자연 전파로 바꿨다.
+# 16열 중 4열(weekend_minus_daily, social_share_screen, gaming_share_screen,
+# screen_to_sleep)은 정의가 같은 기존 등록을 그대로 쓴다.
+STRESS_LEVEL_ORDER = {"Low": 0.0, "Medium": 1.0, "High": 2.0}
+ENGAGEMENT_PARTS = ["notifications_per_day", "app_opens_per_day"]
+
+
+def _stress_numeric(df: pd.DataFrame) -> pd.Series:
+    return df["stress_level"].map(STRESS_LEVEL_ORDER)
+
+
+def _total_screen(df: pd.DataFrame) -> pd.Series:
+    return df[SCREEN_TOTAL] + df["weekend_screen_time"]
+
+
+def _activity_total(df: pd.DataFrame) -> pd.Series:
+    return df[SCREEN_PARTS].sum(axis=1, skipna=False)
+
+
+def _engagement_total(df: pd.DataFrame) -> pd.Series:
+    return df[ENGAGEMENT_PARTS].sum(axis=1, skipna=False)
+
+
+def _masked_ratio(num: pd.Series, den: pd.Series) -> pd.Series:
+    defined = np.isfinite(num) & np.isfinite(den) & (den > 0)
+    return (num / den).where(defined)
+
+
+def _activity_share_screen(df: pd.DataFrame) -> pd.Series:
+    return _masked_ratio(_activity_total(df), df[SCREEN_TOTAL])
+
+
+def _notif_per_app(df: pd.DataFrame) -> pd.Series:
+    return _masked_ratio(df["notifications_per_day"], df["app_opens_per_day"])
+
+
+def _screen_per_app(df: pd.DataFrame) -> pd.Series:
+    # 원본 규약대로 시간을 분으로 환산해 app open 1회당 화면 시간을 만든다.
+    return _masked_ratio(df[SCREEN_TOTAL] * 60.0, df["app_opens_per_day"])
+
+
+def _sleep_deficit(df: pd.DataFrame) -> pd.Series:
+    # 원본 규약의 기준 수면 9시간 대비 부족분. 음수는 0으로 자르고 결측은 유지한다.
+    return (9.0 - df["sleep_hours"]).clip(lower=0.0)
+
+
+def _log1p_of(col: str) -> Callable[[pd.DataFrame], pd.Series]:
+    def f(df: pd.DataFrame) -> pd.Series:
+        return np.log1p(df[col])
+
+    return f
+
+
+def _times_stress(col: str) -> Callable[[pd.DataFrame], pd.Series]:
+    def f(df: pd.DataFrame) -> pd.Series:
+        return df[col] * _stress_numeric(df)
+
+    return f
+
+
+ZHENRUI_DERIVED_NAMES = [
+    "total_screen",
+    "weekend_minus_daily",
+    "social_share_screen",
+    "gaming_share_screen",
+    "activity_total",
+    "activity_share_screen",
+    "screen_to_sleep",
+    "sleep_deficit",
+    "engagement_total",
+    "notif_per_app",
+    "log_notifications",
+    "log_app_opens",
+    "screen_per_app",
+    "screen_x_stress",
+    "social_x_stress",
+    "sleep_x_stress",
+]
+
+
 # 소수 첫째 자리가 실제로 변하는 격자 컬럼(정수 격자인 age 등은 제외). (#49)
 DECIMAL_GRID_COLS = [
     "daily_screen_time_hours",
@@ -217,6 +301,19 @@ DERIVED_REGISTRY: dict[str, Callable[[pd.DataFrame], pd.Series]] = {
     **{name: _guarded_ratio(n, d) for name, (n, d) in SCREEN_RELATION_RATIOS.items()},
     # #184 정체성·자리수 블록: 수치 9열 × 자리수 파생 10개.
     **_digit_identity_registry(),
+    # #258 zhenrui 블록의 신규 12열(나머지 4열은 위 기존 등록을 그대로 쓴다).
+    "total_screen": _total_screen,
+    "activity_total": _activity_total,
+    "activity_share_screen": _activity_share_screen,
+    "sleep_deficit": _sleep_deficit,
+    "engagement_total": _engagement_total,
+    "notif_per_app": _notif_per_app,
+    "log_notifications": _log1p_of("notifications_per_day"),
+    "log_app_opens": _log1p_of("app_opens_per_day"),
+    "screen_per_app": _screen_per_app,
+    "screen_x_stress": _times_stress(SCREEN_TOTAL),
+    "social_x_stress": _times_stress("social_media_hours"),
+    "sleep_x_stress": _times_stress("sleep_hours"),
 }
 
 
