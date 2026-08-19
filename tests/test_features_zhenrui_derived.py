@@ -26,7 +26,8 @@ def make_df() -> pd.DataFrame:
             "notifications_per_day": [120.0, 80.0, np.nan, 50.0, 0.0, 90.0],
             "app_opens_per_day": [40.0, 0.0, 30.0, 20.0, 10.0, 60.0],
             "weekend_screen_time": [9.0, 5.0, 3.0, np.nan, 2.0, 6.0],
-            "stress_level": ["Medium", "Low", "Low", np.nan, "Low", "High"],
+            # 파이프라인과 같은 범주형 dtype으로 만든다(#258 회귀: 범주형 산술 차단).
+            "stress_level": pd.Categorical(["Medium", "Low", "Low", None, "Low", "High"]),
         }
     )
 

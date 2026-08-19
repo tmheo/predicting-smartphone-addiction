@@ -116,7 +116,9 @@ ENGAGEMENT_PARTS = ["notifications_per_day", "app_opens_per_day"]
 
 
 def _stress_numeric(df: pd.DataFrame) -> pd.Series:
-    return df["stress_level"].map(STRESS_LEVEL_ORDER)
+    # stress_level은 파이프라인에서 범주형 dtype으로 들어오므로, map 결과가 범주형으로
+    # 남아 산술이 막히지 않게 명시적으로 float64 수치 서열로 바꾼다.
+    return df["stress_level"].astype("object").map(STRESS_LEVEL_ORDER).astype("float64")
 
 
 def _total_screen(df: pd.DataFrame) -> pd.Series:
