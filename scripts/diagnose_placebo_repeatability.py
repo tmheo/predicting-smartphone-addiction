@@ -20,6 +20,10 @@ readout: 기존 실행의 feature_importance.parquet(feature, fold, seed, gain)�
     uv run python scripts/diagnose_placebo_repeatability.py readout \
         exp070_cat_exact_cats --importance <feature_importance.parquet> \
         --out run-placebo-repeat/exp070_readout.json
+    uv run python scripts/diagnose_placebo_repeatability.py pair \
+        --candidate-artifacts <run artifacts dir> \
+        --baseline-artifacts <run artifacts dir> \
+        --out run-placebo-repeat/exp025_vs_exp026.json
 
 판독 정의(반복 4회를 경험적 P값이나 분위수 추정으로 해석하지 않는다):
 - rank: 셀 안 전체 피처를 gain 내림차순으로 세운 경쟁 순위(동률은 최고 순위).
@@ -213,6 +217,59 @@ def run_readout(args: argparse.Namespace) -> dict:
     return result
 
 
+def run_pair(args: argparse.Namespace) -> dict:
+    """두 실행의 OOF artifact를 같은 fold 배정에서 짝지어 후보-기준 차이를 계산한다.
+
+    oof.parquet은 시드 평균본 예측이고 oof_seed_<seed>.parquet이 시드별 예측이다.
+    라벨은 data/train.csv를 id로 병합해 얻는다.
+    """
+    train = data.load_csv(Path("data/train.csv"))
+    labels = train.set_index(data.ID)[data.TARGET]
+
+    def scored(oof_path: Path) -> tuple[pd.Series, pd.Series, dict[str, float]]:
+        oof = pd.read_parquet(oof_path)
+        y = labels.loc[oof[data.ID]].reset_index(drop=True)
+        aucs = {}
+        for fold in sorted(oof["fold"].unique()):
+            mask = (oof["fold"] == fold).to_numpy()
+            aucs[f"auc_fold_{int(fold)}"] = float(
+                roc_auc_score(y[mask], oof.loc[mask, "pred"])
+            )
+        aucs["auc_oof"] = float(roc_auc_score(y, oof["pred"]))
+        return y, oof, aucs
+
+    _, cand_oof, cand_mean = scored(args.candidate_artifacts / "oof.parquet")
+    _, base_oof, base_mean = scored(args.baseline_artifacts / "oof.parquet")
+    assert cand_oof[data.ID].equals(base_oof[data.ID]), "두 실행의 id 순서가 다르다."
+    assert cand_oof["fold"].equals(base_oof["fold"]), "두 실행의 fold 배정이 다르다."
+
+    fold_deltas = {
+        key: cand_mean[key] - base_mean[key]
+        for key in cand_mean
+        if key.startswith("auc_fold_")
+    }
+    seed_deltas = {}
+    for cand_seed_path in sorted(args.candidate_artifacts.glob("oof_seed_*.parquet")):
+        seed = int(cand_seed_path.stem.rsplit("_", 1)[1])
+        base_seed_path = args.baseline_artifacts / cand_seed_path.name
+        _, _, cand_aucs = scored(cand_seed_path)
+        _, _, base_aucs = scored(base_seed_path)
+        seed_deltas[str(seed)] = cand_aucs["auc_oof"] - base_aucs["auc_oof"]
+
+    return {
+        "mode": "pair",
+        "candidate_artifacts": str(args.candidate_artifacts),
+        "baseline_artifacts": str(args.baseline_artifacts),
+        "candidate_auc_oof": cand_mean["auc_oof"],
+        "baseline_auc_oof": base_mean["auc_oof"],
+        "oof_delta": cand_mean["auc_oof"] - base_mean["auc_oof"],
+        "fold_deltas": fold_deltas,
+        "fold_wins": sum(v > 0 for v in fold_deltas.values()),
+        "seed_deltas": seed_deltas,
+        "seed_wins": sum(v > 0 for v in seed_deltas.values()),
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -228,8 +285,14 @@ def main() -> None:
     readout.add_argument("--importance", type=Path, required=True)
     readout.add_argument("--out", type=Path, required=True)
 
+    pair = sub.add_parser("pair", help="두 실행 OOF artifact의 짝지은 차이")
+    pair.add_argument("--candidate-artifacts", type=Path, required=True)
+    pair.add_argument("--baseline-artifacts", type=Path, required=True)
+    pair.add_argument("--out", type=Path, required=True)
+
     args = parser.parse_args()
-    result = run_refit(args) if args.command == "refit" else run_readout(args)
+    runners = {"refit": run_refit, "readout": run_readout, "pair": run_pair}
+    result = runners[args.command](args)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(result, ensure_ascii=False, indent=1))
     print(f"saved: {args.out}")
