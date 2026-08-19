@@ -15,6 +15,14 @@
 # #181은 CatBoost exp070 짝비교에서 7특성 블록이 -0.0000155로 기각된 전례이므로,
 # 이 스크리닝의 질문은 "로그·스트레스 상호작용·참여 강도까지 합친 zhenrui 16열
 # 묶음이 LightGBM 대리에서 양의 신호를 내는가"다.
+# 판정 결과(2026-08-20): 기준 run 348ed829 0.9686372 → challenger(워크트리 run
+# d9b2a061, 반입 run 090b4f5e) 0.9685733, delta -0.0000640, fold 승리 0/5, 카나리아
+# 통과. 새 피처 gain은 비율·합 5열(social_share_screen, gaming_share_screen,
+# activity_share_screen, total_screen, weekend_minus_daily)만 플라시보 상회, 로그·
+# 스트레스 상호작용 등 11열 미달. 대리 스크리닝 미달로 파생 16열 축을 닫고 RealMLP
+# 본실험을 열지 않는다. 이 설정과 파생 특성·검증 테스트는 기각 근거의 재현 기록으로
+# 남긴다(#181·#62·#51의 비율 특성 기각과 같은 방향: 신호가 기존 fold-fit 블록에
+# 이미 흡수되어 있다).
 name: exp126_lgb_zhenrui_derived16
 
 data:
