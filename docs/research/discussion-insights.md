@@ -5,6 +5,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 이후 올라오는 스레드는 증분 업데이트 절차(`docs/agents/discussion-update.md`)에 따라 이 문서에 반영한다.
 2026-08-18에 스레드 734005(코멘트 1개 → 9개)와 그 파생 노트북을 표적 재독해로 반영했다.
 같은 날 새 스레드 [735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861)(앙상블 다양성, 코멘트 1개)과 [735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421)(spline Transformer, 코멘트 5개)을 표적 반영했다.
+2026-08-19에 735861의 새 코멘트(작성자 YKuma의 답글, 코멘트 1개 → 2개)를 표적 반영했다.
 전체 회차가 아니므로 다른 스레드의 코멘트 수는 2026-08-10 기준 그대로다.
 
 원자료는 세 개의 리딩 노트다.
@@ -38,7 +39,8 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 ### 값이 정해진 눈금 위에만 있어, 정확한 값 자체가 강력한 단서다
 
 - `sleep_hours`, `notifications_per_day`, `app_opens_per_day` 등의 값은 연속적으로 고르게 퍼져 있지 않고 특정 값들에만 몰려 있으며, 생성기가 원본의 이런 값 패턴을 그대로 복제했다 ([734063](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734063)).
-- 같은 방향의 독립 증거가 셋 더 있다: 전 피처를 범주형으로 취급한 Keras 베이스라인의 임베딩 공간 클래스 분리 ([732358](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732358)), 전 피처 one-hot + 결합 피처 로지스틱 회귀의 OOF 0.9601 ([733708](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733708) 코멘트), 정확값 타깃 인코딩 +0.0032 ([733495](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733495) 코멘트).
+- 같은 방향의 독립 증거가 넷 더 있다: 전 피처를 범주형으로 취급한 Keras 베이스라인의 임베딩 공간 클래스 분리 ([732358](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/732358)), 전 피처 one-hot + 결합 피처 로지스틱 회귀의 OOF 0.9601 ([733708](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733708) 코멘트), 정확값 타깃 인코딩 +0.0032 ([733495](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733495) 코멘트), 그리고 정확값별 타깃 비율이 train을 독립된 두 반쪽으로 나눠도 r = 0.9975로 재현된다는 실측 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) 작성자 코멘트).
+  이 비율 곡선은 값에 따라 심하게 비단조적이어서, 값 단위 조회표를 구조로 삼는 아키텍처(조회표 transformer 등)가 이 데이터에 잘 맞는 이유이기도 하다.
 - 정확값 인코딩이 통하는 이유는 스마트폰 도메인과 무관하다.
   데이터가 특정 값들 위에서 생성되거나 반올림되어 있어, 정확한 값이 같은 값에서 나온 행들을 묶어 주는 것뿐이다 ([733495](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733495)).
 - 우리 파이프라인 재현 결과: 이 신호는 표현 하나만 넣어야 한다.
@@ -327,7 +329,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 
 | id | 제목 | 코멘트 수 | 재방문 |
 | --- | --- | --- | --- |
-| [735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) | What actually creates a decorrelated model when you work alone? | 1 (2026-08-18) | O |
+| [735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) | What actually creates a decorrelated model when you work alone? | 2 (2026-08-19) | O |
 | [735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421) | Contextualized Deep Univariate Spline Transformer | 5 (2026-08-18) | O |
 | [734063](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734063) | Decoding the Synthetic Generator: 0.9689+ via Stringified Target Encoding and Rank Averaging | 1 | O |
 | [734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005) | Changing the random seed moves you 60 places - what this leaderboard can and can't resolve | 9 (2026-08-18) | O |
