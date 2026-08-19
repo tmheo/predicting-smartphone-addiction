@@ -889,6 +889,35 @@ class ContextualizedSplineTransformerAdapter:
         )
         return self._impl.fit(X_tr, y_tr, X_va, y_va)
 
+    def fit_full(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        training_budget: int | None,
+        initial_score: pd.Series | None = None,
+    ) -> None:
+        from . import contextualized_spline_transformer
+
+        _reject_initial_score(
+            "contextualized_spline_transformer", initial_score, None
+        )
+        if self._fit:
+            raise ValueError(
+                "contextualized_spline_transformer가 모르는 fit 설정: "
+                f"{sorted(self._fit)}"
+            )
+        if training_budget is None:
+            raise ValueError(
+                "contextualized_spline_transformer 전체 자료 재학습에는 "
+                "고정 epoch 수가 필요하다."
+            )
+        self._impl = (
+            contextualized_spline_transformer.ContextualizedSplineTransformerFold(
+                self._params, self._seed
+            )
+        )
+        self._impl.fit_full(X, y, training_budget)
+
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
     ) -> np.ndarray:
@@ -897,6 +926,9 @@ class ContextualizedSplineTransformerAdapter:
 
     def importance(self) -> pd.DataFrame:
         return self._impl.importance()
+
+    def training_diagnostics(self) -> dict[str, object]:
+        return self._impl.training_diagnostics()
 
     def entry_diagnostics(self) -> AdapterDiagnostics:
         return self._impl.entry_diagnostics()

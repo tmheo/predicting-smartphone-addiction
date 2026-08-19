@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: e6853bfd64ca2640709affeb0ce6a1ceb9782cd881e33068bd97d21e0f50adc8
+source_pool_sha256: 0d67a079a15969f0fc44926cad5d1c8f90867e774cbc0de324655bff6dc12744
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -124,3 +124,8 @@ members:
     run_id: b47a4184249746cdb1d062aa98364437
     budget_source: fold_median
     budgets: {42: 36, 43: 36, 44: 36}
+  - config: exp085_contextual_spline_m0
+    config_path: configs/exp085_contextual_spline_m0.yaml
+    run_id: e84d97e875754af1b073b399db2a0616
+    budget_source: fold_median
+    budgets: {42: 14, 43: 13, 44: 11}
