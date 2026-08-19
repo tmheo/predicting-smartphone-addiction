@@ -116,6 +116,36 @@ GBM은 원시 수치 열을 직접 분할해 정확값 정보를 부분 복원�
 - 목표 인코딩 cv 전달 방식: 원본은 `cv=5`(정수)와 `shuffle`/`random_state` 인자를 쓰고 우리는 `StratifiedKFold` 객체를 넘기는데, sklearn 1.9.0에서 같은 시드일 때 두 방식의 출력이 동일함을 확인했다.
 - 아키텍처와 학습 절차: PBLD 임베딩(차원·주파수·PReLU), 한 판 8모형 병렬 구조, 매개변수 그룹 5종과 배율, flat_cos 반쪽 스케줄(4/8), 배치 구성과 진행도 계산, 라벨 평활 손실과 클래스 가중, EMA 갱신·epoch 말 적재, 기울기 절단, softmax 평균 예측까지 줄 단위 대조로 원본과 동일함을 확인했다. 이는 이슈 230의 레시피 재대조 결론과도 일치한다.
 
+## 파급 범위: 다른 구현은 같은 결함이 없다
+
+같은 결함 계열(어휘를 만든 dtype과 조회하는 dtype의 불일치)이 다른 경로에도 있는지 저장소 전체를 확인했다.
+
+- 공용 특성 경로 `src/pipeline/features.py`의 정확값 TE/CE/PairCE는 값을 문자열 키로 바꿔(`_exact_keys`의 `astype(str)`) 매핑하므로 dtype 불일치가 구조적으로 불가능하다. 이 경로를 쓰는 CatBoost·LightGBM 계열 실험(exp070, exp071, exp117 등)은 재실험이 필요 없다.
+- `lookup_transformer`는 원시 dtype 그대로 어휘를 만들고 같은 dtype 값으로 조회하며, 이슈 128 실측(exp067 기준 미등록률 0.0174%)으로 정상 동작이 이미 검증돼 있다.
+- `contextualized_spline_transformer`, `tab_cnn`, `tabr_s`, `scalar_token_transformer`, `amformer`, `trompt`, `tabpfn3`, `logistic_onehot`은 어휘 구성과 조회가 모두 같은 dtype의 원시 값에서 이뤄지고, float32 형 변환은 매핑이 끝난 뒤 수치 채널에만 적용된다.
+- `tabm`은 pytabkit 변환기가 pandas category dtype 열만 범주로 다루므로 동일하게 안전하다.
+- realmlp 모듈의 소비자는 `model.py`의 realmlp adapter(`kind: realmlp` 설정은 `exp121_realmlp_fixed4_two_init` 하나)와 테스트뿐이다.
+
+bin 밀림 쪽도 같은 방식으로 전수 확인했다.
+경계에서 불연속인 이산 구간화(`KBinsDiscretizer`)를 쓰는 곳은 realmlp뿐이다.
+다른 경계 연산은 결함이 성립하지 않는다.
+`QuantileTransformer`를 쓰는 네 adapter(tab_cnn, scalar_token_transformer, lookup_transformer, tabr_s)는 적합과 변환의 dtype이 서로 일치하고 출력도 경계에서 연속이다.
+원본 prior의 경험적 CDF 차(`features.py`)와 앙상블의 경험적 CDF 표현(`ensemble.py`)은 양쪽 모두 float64로 통일돼 있다.
+spline의 `torch.searchsorted`는 마디에서 연속인 조각별 선형 기저라 경계 배정이 바뀌어도 출력이 달라지지 않는다.
+
+## 수정 시 재실험 필요 항목
+
+수정의 파급은 exp121 계열에 한정되며, 실행 개폐와 순서는 [exp121 개선 실험 개폐 결정](https://github.com/tmheo/predicting-smartphone-addiction/issues/234)이 정한다.
+
+1. exp121 재실행: dtype 정합 수정만 반영한 단일 델타 짝비교(3 파이프라인 시드, GPU).
+2. 후보 풀 갱신: `artifacts/pool.yaml`의 exp121 항목(run `56701722`)을 수정판으로 교체 판정하고 최근접 구성원 중복 관문을 재확인한다.
+3. 전체 자료 재학습 계획 갱신: `artifacts/full-refit-plan.yaml`의 exp121 항목(run id와 fold_median 예산 `{42: 5, 43: 5, 44: 5}`)을 수정판 실행 기준으로 재산정한다.
+4. [보강 풀의 nested 재평가와 결합 전략 재선정](https://github.com/tmheo/predicting-smartphone-addiction/issues/187)은 아직 열려 있으므로, exp121 수정판을 먼저 반영한 뒤 한 번만 실행하는 순서가 중복 실행을 피한다.
+5. [schedule_epochs=4 완주 짝비교](https://github.com/tmheo/predicting-smartphone-addiction/issues/232)의 어닐링 델타는 죽은 채널 상태의 이식 위에서 측정되므로, 수정판 기반으로 재측정하거나 근사값으로만 해석해야 한다.
+
+제출물 영향은 없다.
+exp121은 2026-08-19에 풀에 들어왔고, 이슈 180은 exp121로 새 제출을 만들지 않았다.
+
 ## 재현 방법
 
 fold 1 실증은 다음 절차로 재현한다.
