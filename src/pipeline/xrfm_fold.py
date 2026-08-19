@@ -39,6 +39,11 @@ _KERNELS = {
     "sum_power_laplace",
 }
 
+# 나무 분할 뒤 leaf 검증 부분집합에 한 클래스만 남을 수 있으므로,
+# 한 클래스에서도 정의되는 지표만 허용한다. 'auc'는 leaf 단위 최적
+# 가중치 선택이 미정의가 되어 학습이 중단된다(2026-08-19 원격 실행 실측).
+_TUNING_METRICS = {"brier", "logloss", "accuracy"}
+
 
 class _FoldKernelEncoder:
     """학습 fold에서만 대치 통계, 표준화 통계와 범주 어휘를 맞춘다."""
@@ -144,6 +149,7 @@ class XRFMFold:
         self._inner_val_frac = float(params.pop("inner_val_frac", 0.1))
         self._eval_batch_size = int(params.pop("eval_batch_size", 65536))
         self._kernel = str(params.pop("kernel", "l2_high_dim"))
+        self._tuning_metric = str(params.pop("tuning_metric", "brier"))
         self._exponent = float(params.pop("exponent", 1.0))
         self._bandwidth = float(params.pop("bandwidth", 10.0))
         self._diag = bool(params.pop("diag", False))
@@ -169,6 +175,10 @@ class XRFMFold:
             raise ValueError("xrfm eval_batch_size는 1 이상이어야 한다.")
         if self._kernel not in _KERNELS:
             raise ValueError(f"xrfm kernel은 {sorted(_KERNELS)} 중 하나여야 한다.")
+        if self._tuning_metric not in _TUNING_METRICS:
+            raise ValueError(
+                f"xrfm tuning_metric은 {sorted(_TUNING_METRICS)} 중 하나여야 한다."
+            )
         if self._reg <= 0.0:
             raise ValueError("xrfm reg는 0보다 커야 한다.")
         if self._iters < 0:
@@ -229,7 +239,7 @@ class XRFMFold:
             max_leaf_size=self._max_leaf_size,
             device=self._device,
             n_trees=self._n_trees,
-            tuning_metric="auc",
+            tuning_metric=self._tuning_metric,
             random_state=self._seed,
             verbose=self._verbose,
         )
@@ -387,6 +397,7 @@ class XRFMFold:
                 "missing_auc": subgroup_auc(missing),
                 "complete_auc": subgroup_auc(~missing),
                 "kernel": self._kernel,
+                "tuning_metric": self._tuning_metric,
                 "exponent": self._exponent,
                 "bandwidth": self._bandwidth,
                 "bandwidth_mode": self._bandwidth_mode,

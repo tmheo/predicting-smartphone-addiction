@@ -135,6 +135,7 @@ def test_fold_encoder_imputes_and_flags_missing_numeric():
     [
         ({"device": "tpu"}, "device"),
         ({"kernel": "rbf"}, "kernel"),
+        ({"tuning_metric": "auc"}, "tuning_metric"),
         ({"inner_val_frac": 0.9}, "inner_val_frac"),
         ({"unknown": 1}, "모르는 params"),
         ({"package_version": "0.0.1"}, "패키지"),
