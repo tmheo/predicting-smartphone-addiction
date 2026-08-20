@@ -103,6 +103,76 @@ def test_contextual_spline_muon_config_is_exp085_single_optimizer_delta():
     assert challenger.model.params == {**baseline.model.params, "optimizer": "muon"}
 
 
+def test_multilevel_config_is_exp085_single_output_path_delta():
+    baseline = load_config("configs/exp085_contextual_spline_m0.yaml", "screen")
+    challenger = load_config(
+        "configs/exp136_contextual_spline_multilevel.yaml", "screen"
+    )
+
+    assert challenger.name == "exp136_contextual_spline_multilevel"
+    assert challenger.data == baseline.data
+    assert challenger.features == baseline.features
+    assert challenger.model.kind == baseline.model.kind
+    assert challenger.model.fit == baseline.model.fit
+    assert challenger.model.params == {
+        **baseline.model.params,
+        "output_path": "multilevel_stage1",
+    }
+
+
+def test_multilevel_path_preserves_shared_initial_weights_and_favors_final_head():
+    import torch
+
+    from pipeline.contextualized_spline_transformer import (
+        ContextualizedSplineTransformerFold,
+    )
+
+    X, _ = _data(80)
+
+    def build(output_path: str):
+        fold = ContextualizedSplineTransformerFold(
+            dict(SMALL_PARAMS, output_path=output_path), seed=SEED
+        )
+        fold._seed_everything()
+        fold._fit_preprocessing(X)
+        numeric, exact = fold._encode(X)
+        return fold._build_model(numeric.numpy()), numeric, exact
+
+    baseline, _, _ = build("direct_final")
+    challenger, numeric, exact = build("multilevel_stage1")
+    baseline_state = baseline.state_dict()
+    challenger_state = challenger.state_dict()
+
+    assert set(baseline_state) < set(challenger_state)
+    for name, value in baseline_state.items():
+        torch.testing.assert_close(value, challenger_state[name])
+
+    output = challenger(numeric[:12], exact[:12])
+    assert output["mixer_weights"].shape == (12, 4)
+    torch.testing.assert_close(
+        output["mixer_weights"].sum(dim=1), torch.ones(12)
+    )
+    assert torch.all(output["mixer_weights"][:, 3] > 0.7)
+
+
+def test_multilevel_path_contract_and_diagnostics():
+    X, y = _data(120)
+    adapter = _adapter(
+        output_path="multilevel_stage1", epochs=2, patience=1
+    )
+
+    prediction = adapter.fit(X.iloc[:90], y.iloc[:90], X.iloc[90:], y.iloc[90:])
+
+    assert prediction.shape == (30,)
+    assert np.isfinite(prediction).all()
+    diagnostics = adapter.training_diagnostics()
+    assert diagnostics["output_path"] == "multilevel_stage1"
+    assert diagnostics["best_base_final_auc"] >= 0
+    assert diagnostics["best_univariate_auc"] >= 0
+    assert diagnostics["best_attention_auc"] >= 0
+    assert sum(diagnostics["best_mixer_mean_weights"]) == pytest.approx(1.0)
+
+
 @pytest.mark.parametrize("mode", ["spline", "periodic"])
 def test_adapter_contract_and_learning(mode: str):
     X, y = _data()
@@ -170,6 +240,7 @@ def test_full_fit_uses_fixed_epoch_budget_and_predicts():
         "initialization_seed": SEED,
         "numeric_mode": "spline",
         "optimizer": "adamw",
+        "output_path": "direct_final",
         "configured_epochs": 4,
         "end_epoch": 2,
         "best_epoch": 2,
@@ -230,6 +301,14 @@ def test_rejects_unknown_params_and_fit_settings():
     adapter = model_mod.create(cfg, seed=SEED)
     with pytest.raises(ValueError, match="fit 설정"):
         adapter.fit(X.iloc[:60], y.iloc[:60], X.iloc[60:], y.iloc[60:])
+
+
+def test_contextual_spline_rejects_unknown_output_path():
+    X, y = _data(80)
+    with pytest.raises(ValueError, match="output_path"):
+        _adapter(output_path="unknown").fit(
+            X.iloc[:60], y.iloc[:60], X.iloc[60:], y.iloc[60:]
+        )
 
 
 def test_rejects_initial_score():

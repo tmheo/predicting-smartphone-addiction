@@ -1,9 +1,14 @@
-"""Contextualized deep univariate Transformer 구현. (#149)
+"""Contextualized deep univariate Transformer 구현. (#149, #287)
 
 이 파일은 Kaggle 공개 노트북 "Contextualized Deep Univariate Spline
 Transformer" 판본 3의 구조를 참고해 크게 수정한 파생 구현이다.
 원문: https://www.kaggle.com/code/ern711/contextualized-deep-univariate-spline-transformer/versions/3
 원문 소스 SHA-256: c308b69cfeabad223a1e147fa174f78d1ddaccc09991b2075eecaf757f4781a2
+
+이슈 #287의 다층 출력 경로는 Kaggle 공개 노트북 "Multi-Level Deep
+Univariate Spline Transformer" 판본 5의 1단계 구조를 참고했다.
+원문: https://www.kaggle.com/code/ern711/multi-level-deep-univariate-spline-transformer?scriptVersionId=342998269
+원문 소스 SHA-256: 3ae3e15d975892f90875d57e3877ba299ea073c5e019295b58870a09a35793fd
 
 원 공개 노트북 소스에는 Apache License 2.0이 적용된다.
 이 저장소의 변경 사항은 다음과 같다.
@@ -14,6 +19,10 @@ Transformer" 판본 3의 구조를 참고해 크게 수정한 파생 구현이�
 - 목표·빈도 인코딩을 제거하고 exp067 피처 계획을 그대로 받는다.
 - M0 조각선형 경로와 매개변수 규모를 맞춘 A0 주기 경로를 한 구현에서 제공한다.
 - 결정적 검증 permutation importance와 공통 진입 진단 관측값을 제공한다.
+- ``output_path=multilevel_stage1``에서 ADD, UNI, ATTN, FINAL 머리와 행별
+  혼합기를 선택하며, 2단계 hypernetwork는 포함하지 않는다.
+- 다층 머리는 공유 기반 모형 뒤에 초기화해 ``direct_final`` 대조군과 공유
+  매개변수의 초기값 및 자료 순서를 같게 유지한다.
 
 Apache License 2.0 원문은 ``contextualized_spline_transformer.LICENSE``에 있다.
 """
@@ -37,6 +46,14 @@ from .model import AdapterDiagnostics
 _NA_ID = 0
 _MODES = {"spline", "periodic"}
 _OPTIMIZERS = {"adamw", "muon"}
+_OUTPUT_PATHS = {"direct_final", "multilevel_stage1"}
+_AUX_HEAD_HIDDEN = 128
+_AUX_HEAD_DROPOUT = 0.05
+_MIXER_HIDDEN = 16
+_MIXER_FINAL_BIAS = 2.0
+_UNI_AUX_WEIGHT = 0.1
+_ATTN_AUX_WEIGHT = 0.1
+_MIXER_ENTROPY_WEIGHT = 1e-5
 
 _RAW_CAPACITY = {
     "age": (48, 2),
@@ -301,6 +318,71 @@ class _AttentionBlock(nn.Module):
         return x + torch.tanh(self.ff_scale) * self.ff(self.norm2(x))
 
 
+class _PooledTokenHead(nn.Module):
+    """token 묶음의 원소별 평균과 최댓값으로 한 logit을 만든다."""
+
+    def __init__(self, token_dim: int) -> None:
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.LayerNorm(2 * token_dim),
+            nn.Linear(2 * token_dim, _AUX_HEAD_HIDDEN),
+            nn.SiLU(),
+            nn.Dropout(_AUX_HEAD_DROPOUT),
+            nn.Linear(_AUX_HEAD_HIDDEN, 1),
+        )
+
+    def forward(self, tokens: torch.Tensor) -> torch.Tensor:
+        pooled = torch.cat(
+            [tokens.mean(dim=1), tokens.max(dim=1).values],
+            dim=1,
+        )
+        return self.net(pooled).squeeze(1)
+
+
+class _MultiLogitMixer(nn.Module):
+    """네 logit과 쌍별 차이로 행마다 다른 볼록 혼합 가중치를 만든다."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.LayerNorm(10),
+            nn.Linear(10, _MIXER_HIDDEN),
+            nn.SiLU(),
+            nn.Linear(_MIXER_HIDDEN, 4),
+        )
+        nn.init.zeros_(self.net[-1].weight)
+        nn.init.zeros_(self.net[-1].bias)
+        with torch.no_grad():
+            self.net[-1].bias[3] = _MIXER_FINAL_BIAS
+
+    def forward(
+        self,
+        additive_logit: torch.Tensor,
+        univariate_logit: torch.Tensor,
+        attention_logit: torch.Tensor,
+        final_logit: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        logits = torch.stack(
+            [additive_logit, univariate_logit, attention_logit, final_logit],
+            dim=1,
+        )
+        differences = torch.stack(
+            [
+                (additive_logit - univariate_logit).abs(),
+                (additive_logit - attention_logit).abs(),
+                (additive_logit - final_logit).abs(),
+                (univariate_logit - attention_logit).abs(),
+                (univariate_logit - final_logit).abs(),
+                (attention_logit - final_logit).abs(),
+            ],
+            dim=1,
+        )
+        weights = torch.softmax(
+            self.net(torch.cat([logits, differences], dim=1)), dim=1
+        )
+        return (weights * logits).sum(dim=1), weights
+
+
 class _ContextualizedModel(nn.Module):
     def __init__(
         self,
@@ -319,6 +401,7 @@ class _ContextualizedModel(nn.Module):
         gate_hidden: int,
         residual_hidden: int,
         dropout: float,
+        output_path: str,
     ) -> None:
         super().__init__()
         n_num = len(numerical_columns)
@@ -372,6 +455,17 @@ class _ContextualizedModel(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(residual_hidden // 2, 1),
         )
+        self.output_path = output_path
+        if output_path == "multilevel_stage1":
+            self.univariate_head: _PooledTokenHead | None = _PooledTokenHead(token_dim)
+            self.attention_head: _PooledTokenHead | None = _PooledTokenHead(
+                attention_dim
+            )
+            self.logit_mixer: _MultiLogitMixer | None = _MultiLogitMixer()
+        else:
+            self.univariate_head = None
+            self.attention_head = None
+            self.logit_mixer = None
 
     def forward(
         self, x_num: torch.Tensor, x_exact: torch.Tensor
@@ -413,10 +507,33 @@ class _ContextualizedModel(nn.Module):
             dim=1,
         )
         final_input = F.normalize(self.final_norm(final_input), p=2, dim=1)
-        return {
-            "final_logit": self.final_head(final_input).squeeze(1),
+        base_final_logit = self.final_head(final_input).squeeze(1)
+        output = {
+            "final_logit": base_final_logit,
+            "base_final_logit": base_final_logit,
             "additive_logit": additive_logit,
         }
+        if self.output_path == "multilevel_stage1":
+            assert self.univariate_head is not None
+            assert self.attention_head is not None
+            assert self.logit_mixer is not None
+            univariate_logit = self.univariate_head(tokens)
+            attention_logit = self.attention_head(interaction)
+            mixed_logit, mixer_weights = self.logit_mixer(
+                additive_logit,
+                univariate_logit,
+                attention_logit,
+                base_final_logit,
+            )
+            output.update(
+                {
+                    "final_logit": mixed_logit,
+                    "univariate_logit": univariate_logit,
+                    "attention_logit": attention_logit,
+                    "mixer_weights": mixer_weights,
+                }
+            )
+        return output
 
 
 def _muon_parameter_names(model: _ContextualizedModel) -> set[str]:
@@ -458,6 +575,12 @@ class ContextualizedSplineTransformerFold:
             raise ValueError(
                 f"optimizer는 {sorted(_OPTIMIZERS)} 중 하나여야 한다: "
                 f"{self._optimizer_name!r}"
+            )
+        self._output_path = str(params.pop("output_path", "direct_final"))
+        if self._output_path not in _OUTPUT_PATHS:
+            raise ValueError(
+                f"output_path는 {sorted(_OUTPUT_PATHS)} 중 하나여야 한다: "
+                f"{self._output_path!r}"
             )
         self._exact_max_card = int(params.pop("exact_max_card", 5000))
         self._token_dim = int(params.pop("token_dim", 64))
@@ -533,6 +656,7 @@ class ContextualizedSplineTransformerFold:
         self._additive_auc: float | None = None
         self._trainable_parameters: int | None = None
         self._training_diagnostics: dict[str, object] | None = None
+        self._multilevel_diagnostics: dict[str, object] = {}
 
     def _seed_everything(self) -> None:
         random.seed(self._seed)
@@ -660,6 +784,7 @@ class ContextualizedSplineTransformerFold:
             gate_hidden=self._gate_hidden,
             residual_hidden=self._residual_hidden,
             dropout=self._dropout,
+            output_path=self._output_path,
         )
 
     def _initialize_training(
@@ -685,6 +810,7 @@ class ContextualizedSplineTransformerFold:
         print(
             f"[contextualized_spline_transformer] mode={self._mode} "
             f"optimizer={self._optimizer_name} "
+            f"output_path={self._output_path} "
             f"parameters={self._trainable_parameters:,}",
             flush=True,
         )
@@ -746,6 +872,23 @@ class ContextualizedSplineTransformerFold:
                 output["additive_logit"], soft_target[rows]
             )
             loss = final_loss + self._additive_weight * additive_loss
+            if self._output_path == "multilevel_stage1":
+                univariate_loss = F.binary_cross_entropy_with_logits(
+                    output["univariate_logit"], soft_target[rows]
+                )
+                attention_loss = F.binary_cross_entropy_with_logits(
+                    output["attention_logit"], soft_target[rows]
+                )
+                mixer_weights = output["mixer_weights"]
+                mixer_entropy = -(
+                    mixer_weights * torch.log(mixer_weights.clamp_min(1e-8))
+                ).sum(dim=1).mean()
+                loss = (
+                    loss
+                    + _UNI_AUX_WEIGHT * univariate_loss
+                    + _ATTN_AUX_WEIGHT * attention_loss
+                    + _MIXER_ENTROPY_WEIGHT * mixer_entropy
+                )
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), self._grad_clip)
@@ -800,6 +943,10 @@ class ContextualizedSplineTransformerFold:
             raise RuntimeError("검증 checkpoint를 만들지 못했다.")
         model.load_state_dict(best_state)
         validation_logit, _ = self._predict_tensors(x_num_va, x_exact_va)
+        if self._output_path == "multilevel_stage1":
+            self._multilevel_diagnostics = self._measure_multilevel_heads(
+                x_num_va, x_exact_va, y_va_array
+            )
         self._validation = (X_va.copy(), y_va_array)
         self._validation_auc = float(roc_auc_score(y_va_array, validation_logit))
         self._additive_auc = best_additive_auc
@@ -807,12 +954,14 @@ class ContextualizedSplineTransformerFold:
             "initialization_seed": self._seed,
             "numeric_mode": self._mode,
             "optimizer": self._optimizer_name,
+            "output_path": self._output_path,
             "configured_epochs": self._epochs,
             "end_epoch": end_epoch,
             "best_epoch": best_epoch,
             "observed_best_epoch": best_epoch,
             "best_validation_auc": float(best_auc),
             "full_fit": False,
+            **self._multilevel_diagnostics,
         }
         return _sigmoid(validation_logit)
 
@@ -838,12 +987,54 @@ class ContextualizedSplineTransformerFold:
             "initialization_seed": self._seed,
             "numeric_mode": self._mode,
             "optimizer": self._optimizer_name,
+            "output_path": self._output_path,
             "configured_epochs": self._epochs,
             "end_epoch": epochs,
             "best_epoch": epochs,
             "observed_best_epoch": None,
             "best_validation_auc": None,
             "full_fit": True,
+        }
+
+    def _measure_multilevel_heads(
+        self,
+        numerical: torch.Tensor,
+        exact: torch.Tensor,
+        target: np.ndarray,
+        chunk: int = 16384,
+    ) -> dict[str, object]:
+        if self._model is None:
+            raise RuntimeError("다층 머리 진단은 fit 뒤에 호출해야 한다.")
+        self._model.eval()
+        collected: dict[str, list[torch.Tensor]] = {
+            "base_final_logit": [],
+            "univariate_logit": [],
+            "attention_logit": [],
+            "mixer_weights": [],
+        }
+        with torch.no_grad(), contextlib.nullcontext():
+            for start in range(0, len(numerical), chunk):
+                output = self._model(
+                    numerical[start : start + chunk], exact[start : start + chunk]
+                )
+                for key in collected:
+                    collected[key].append(output[key].float().cpu())
+        arrays = {
+            key: torch.cat(parts).numpy().astype("float64")
+            for key, parts in collected.items()
+        }
+        mixer_mean = arrays["mixer_weights"].mean(axis=0)
+        return {
+            "best_base_final_auc": float(
+                roc_auc_score(target, arrays["base_final_logit"])
+            ),
+            "best_univariate_auc": float(
+                roc_auc_score(target, arrays["univariate_logit"])
+            ),
+            "best_attention_auc": float(
+                roc_auc_score(target, arrays["attention_logit"])
+            ),
+            "best_mixer_mean_weights": [float(value) for value in mixer_mean],
         }
 
     def _predict_tensors(
@@ -909,9 +1100,11 @@ class ContextualizedSplineTransformerFold:
             observations={
                 "numeric_mode": self._mode,
                 "optimizer": self._optimizer_name,
+                "output_path": self._output_path,
                 "numerical_feature_count": len(self._numeric_cols),
                 "exact_feature_count": len(self._exact_cols),
                 "trainable_parameters": self._trainable_parameters,
                 "best_additive_auc": float(self._additive_auc),
+                **self._multilevel_diagnostics,
             },
         )
