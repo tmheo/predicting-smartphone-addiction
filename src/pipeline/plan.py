@@ -109,6 +109,7 @@ REGISTRY: dict[str, ProviderKind] = {
     "original_kde_ratio": ProviderKind(ROW_WISE, features.OriginalKdeLogRatio),
     "target_encoding": ProviderKind(FOLD_FIT, features.ExactValueTargetEncoder),
     "lattice_pair_te": ProviderKind(FOLD_FIT, features.LatticePairTargetEncoder),
+    "rich_lattice_encoding": ProviderKind(FOLD_FIT, features.RichLatticeEncoder),
     "frequency_encoding": ProviderKind(FOLD_FIT, features.FrequencyEncoder),
     "median_impute_aux": ProviderKind(FOLD_FIT, features.MedianImputeAux),
     "constrained_impute_aux": ProviderKind(FOLD_FIT, features.ConstrainedImputeAux),

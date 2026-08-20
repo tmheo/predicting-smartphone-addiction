@@ -1,0 +1,173 @@
+schema_version: 1
+judgment_id: issue-289-catboost-hpo
+generated_at: '2026-08-20T08:26:02Z'
+source:
+  issue: 289
+  map_issue: 273
+  path: candidate_pool
+  stage: screening
+
+contract:
+  base_config: exp070_cat_exact_cats
+  valid_fold: 0
+  seed: 42
+  checkpoint_trials: 25
+  maximum_trials: 50
+  checkpoint_minimum_improvement: 0.0002
+  corrected_parameter:
+    name: colsample_bylevel
+    value: 1.0
+    reason: CatBoost GPU 이진 분류에서 지원되지 않는 rsm 별칭이므로 기본값으로 고정했다.
+    user_approved: true
+
+environment_gates:
+  command: scripts/verify_environment_gates.sh --source-root /Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction
+  corrected_gpu_entry_point:
+    git_commit: 1cf5196a1424d6ed29121705f26666b801012a43
+    collected_tests: 374
+    status: passed
+  cpu_promotion_config:
+    git_commit: 6ac010b7a37475121ac790728dad02460fdc04ff
+    collected_tests: 374
+    status: passed
+
+gpu_search:
+  provider: vast.ai
+  runpod_used: false
+  status: stopped_after_checkpoint
+  completed_trials: 25
+  continued_after_checkpoint: false
+  input:
+    train_sha256: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test_sha256: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds_sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+    fold0_pool_rows: 138274
+    fold0_pool_members: 28
+    fold0_pool_sha256: 153841dc9f21c722c62ea03b60bde9ef4be84dcf52c592cf438e2142276adbec
+  feature_preparation:
+    seconds: 48.661089959554374
+    feature_count: 47
+    feature_names_sha256: 4567f30081eaf48437a94eb8141cbc7c92dbb9d180ebdce709391609067200dd
+  checkpoint:
+    baseline_fold0_auc: 0.967796533926754
+    best_fold0_auc: 0.9678695493510366
+    improvement: 0.00007301542428261865
+    required_improvement: 0.0002
+    passed: false
+  promoted_trial:
+    number: 22
+    sampled_params:
+      learning_rate: 0.04135929497228879
+      subsample: 0.9463496835047676
+      grow_policy: SymmetricTree
+      depth: 4
+      l2_leaf_reg: 2.0450724960201474
+      leaf_estimation_iterations: 2
+      one_hot_max_size: 8
+      model_size_reg: 0.5576665329695717
+    fixed_params:
+      iterations: 10000
+      eval_metric: AUC
+      max_ctr_complexity: 1
+      boosting_type: Plain
+      max_bin: 254
+      bootstrap_type: Bernoulli
+      colsample_bylevel: 1.0
+    best_iteration: 8769
+    training_seconds: 32.76849718671292
+    gpu_peak_memory_mib: 46002
+    gpu_total_memory_mib: 48935
+    nearest_pool_member: exp070_cat_exact_cats::6238d8c58beb42ee8102209ded92516e
+    nearest_pool_spearman: 0.9987148339317895
+    prediction_sha256: 6f0a549b9b6582820135e042b77e2743644d3ec46232725e6f0e9a74a2afc17d
+  trials_artifact:
+    path: artifacts/judgments/issue-289-catboost-gpu-trials.json
+    sha256: 368755ec104ab060680245eb1fa02d89b9aae17df4668fa281621a366c6b3161
+    required_fields_verified: true
+  recovered_result:
+    archive_sha256: 328cb002a9fb25ca2d5a1b41c30d2b5b4153825ce718a4c01a8cd3489f9d56ee
+    summary_sha256: 1bdd4a4a87bd94ccfe6e471b4c14c033ab95574ec342aec80d009d19666fe67e
+    manifest_verified: true
+
+vast_cost:
+  cap_usd: 10.0
+  attempts:
+    - instance_id: 48185351
+      result: repository_root_bug_reproduced
+      estimated_usd: 0.07940452814690858
+    - instance_id: 48186380
+      result: provider_image_preparation_failure
+      estimated_usd: 0.026507057410699347
+    - instance_id: 48186698
+      result: ssh_account_key_injection_failure
+      estimated_usd: 0.026950576979554733
+    - instance_id: 48187117
+      result: ssh_account_key_injection_failure
+      estimated_usd: 0.03134207903897321
+    - instance_id: 48187457
+      result: completed
+      estimated_usd: 0.2569357485064754
+  total_estimated_usd: 0.42113999008261127
+  within_cap: true
+  cleanup:
+    issue_289_instance_count: 0
+    issue_289_separately_billed_volume_count: 0
+    termination_schedule_removed: true
+    unrelated_resources_changed: false
+
+cpu_screen:
+  config: exp133_cat_hpo_trial22
+  source_run_id: 477434dc18e04216badbc10684c24b13
+  imported_run_id: bec48951f5344eaf8bb380cf20859151
+  git_commit: 6ac010b7a37475121ac790728dad02460fdc04ff
+  git_dirty: false
+  seeds: [42]
+  bundle:
+    sha256: 1a7b804957ec882657bb810a08e3113b7d61b3c760fc2d9bfc41ccb4c9f2d71e
+    import_rescored: true
+  auc_oof: 0.9684093404791929
+  fold_aucs:
+    0: 0.9678132786586895
+    1: 0.9685626975764418
+    2: 0.9684855952369656
+    3: 0.9689895807905476
+    4: 0.9681972074491594
+  training_seconds: 1844.539797458012
+  comparison_with_exp070_seed_42:
+    exp070_auc: 0.9684083385689265
+    candidate_delta: 0.0000010019102664187158
+
+pool_entry:
+  champion:
+    run_id: 7124425b5b51421dbbeba597229554da
+    auc: 0.9692840450124712
+  floor:
+    threshold: 0.9592840450124712
+    candidate_margin: 0.00912529546672171
+    passed: true
+  nearest_candidate:
+    config: exp070_cat_exact_cats
+    run_id: 6238d8c58beb42ee8102209ded92516e
+    auc: 0.9685793468869544
+    spearman: 0.9990505700118874
+    duplicate_threshold: 0.998
+    duplicate: true
+  candidate_minus_nearest_auc: -0.00017000640776154707
+  admitted: false
+  reason: 기존 exp070과 중복이고 기존 3시드 평균본의 OOF AUC가 더 높아 스크리닝에서 탈락했다.
+
+follow_up:
+  confirmation_three_seed_required: false
+  pool_changed: false
+  nested_oof_reevaluation_required: false
+  full_refit_plan_update_required: false
+
+result:
+  status: rejected_at_cpu_screen
+  reason_codes:
+    - gpu_checkpoint_improvement_below_threshold
+    - cpu_entry_floor_passed
+    - cpu_duplicate_gate_failed
+    - existing_pool_member_auc_higher
+    - confirmation_not_required
+    - pool_unchanged
