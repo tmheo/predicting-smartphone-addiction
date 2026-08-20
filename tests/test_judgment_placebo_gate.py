@@ -1,7 +1,7 @@
 """플라시보 게이트 단위 테스트. (#94, 지도 #91)
 
 - 기준값은 플라시보 원본의 평균 gain 하나이고, 미기록이면 게이트는 실패다.
-- 카나리아는 기준값 미만이 통과이고, 미기록은 0.0(모델이 무시)으로 본다.
+- 카나리아는 플라시보와 0 중 큰 상한 이하가 통과이고, 미기록은 0.0으로 본다.
 - 새 피처는 기준값 초과가 통과이고, gain 미기록은 실패다.
 """
 
@@ -45,9 +45,14 @@ def test_canary_below_placebo_passes():
     assert [c.feature for c in report.checks] == [CANARY]
 
 
-def test_canary_at_or_above_placebo_fails():
-    assert not check_canaries({CANARY}, pd.Series({PLACEBO: 100.0, CANARY: 100.0})).ok
+def test_canary_at_placebo_passes_and_above_placebo_fails():
+    assert check_canaries({CANARY}, pd.Series({PLACEBO: 100.0, CANARY: 100.0})).ok
     assert not check_canaries({CANARY}, pd.Series({PLACEBO: 100.0, CANARY: 500.0})).ok
+
+
+def test_zero_canary_passes_when_placebo_gain_is_negative():
+    assert check_canaries({CANARY}, pd.Series({PLACEBO: -1.0, CANARY: 0.0})).ok
+    assert not check_canaries({CANARY}, pd.Series({PLACEBO: -1.0, CANARY: 0.1})).ok
 
 
 def test_canary_unrecorded_counts_as_zero():

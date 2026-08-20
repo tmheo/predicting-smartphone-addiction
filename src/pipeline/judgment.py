@@ -19,8 +19,9 @@ compare·pool CLI는 이 module의 caller다. 판정 함수는 통과 여부와 
     3개 이상 승리를 추가로 요구한다. 그 외 구간에서 fold 승리 수는 보조 증거로 기록만 한다.
 - 새 피처는 fold별 gain importance 평균이 플라시보 평균보다 높아야 한다.
   확정 재검증의 게이트이며, 스크리닝에서는 참고로만 쓴다.
-- 플라시보 파생 카나리아(placebo_noise_te 등)의 중요도가 플라시보 원본보다 높으면
-  누수로 보고 그 run은 어느 단계에서도 판정에 쓰지 않는다. (#33)
+- 플라시보 파생 카나리아(placebo_noise_te 등)의 중요도가 플라시보 원본과 0 중
+  큰 값보다 높으면 누수로 보고 그 run은 어느 단계에서도 판정에 쓰지 않는다. (#33)
+  음수 permutation importance는 0 중요도보다 엄격한 영가설 상한으로 쓰지 않는다.
 - 플라시보 게이트의 기준값은 플라시보 원본의 평균 gain 하나뿐이고, 기준값 미기록은
   실패다. 판정 게이트는 이 module의 _gate가 유일한 소스다(#94). tracking의 경고와
   summary의 요약표는 게이트가 아니므로 평균 gain·기준값 helper만 공유한다.
@@ -190,20 +191,20 @@ def _gate(
 ) -> GainCheck:
     """플라시보 게이트 한 건. 기준값 미기록(None)이나 gain 미기록(None)은 실패다.
 
-    above=True면 기준값 초과(새 피처의 기여 증거), False면 기준값 미만(카나리아 무해)이
-    통과다.
+    above=True면 기준값 초과(새 피처의 기여 증거)가 통과다.
+    False면 플라시보와 0 중 큰 상한 이하(카나리아 무해)가 통과다.
     """
     ok = (
         placebo_gain is not None
         and gain is not None
-        and (gain > placebo_gain if above else gain < placebo_gain)
+        and (gain > placebo_gain if above else gain <= max(placebo_gain, 0.0))
     )
     return GainCheck(feature, gain, ok)
 
 
 @dataclass(frozen=True)
 class CanaryReport:
-    """placebo 카나리아 검사: 파생 피처가 플라시보 원본보다 중요해지면 누수다. (#33)"""
+    """placebo 카나리아 검사: 파생 피처가 영가설 상한보다 중요해지면 누수다. (#33)"""
 
     placebo_gain: float | None  # 플라시보 원본의 평균 gain. 미기록이면 None(전부 실패).
     checks: list[GainCheck]
