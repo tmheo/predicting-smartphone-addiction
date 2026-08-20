@@ -40,7 +40,7 @@ from torch import nn
 
 _NA = 0  # 컬럼별 local id 0은 결측 전용. lookup 컬럼의 마지막 id는 UNK.
 _TORCH_INIT_LOCK = threading.Lock()
-_OPTIMIZERS = {"adamw", "radam", "nadam"}
+_OPTIMIZERS = {"adamw", "radam", "nadam", "muon"}
 _LR_SCHEDULES = {
     "one_cycle",
     "one_cycle_fixed_momentum",
@@ -60,12 +60,35 @@ def _sigmoid(logit: np.ndarray) -> np.ndarray:
     return 1.0 / (1.0 + np.exp(-np.clip(logit, -60, 60)))
 
 
+def _muon_parameter_names(model: nn.Module) -> set[str]:
+    """Muon으로 학습할 은닉 행렬 가중치의 이름. (#196)
+
+    Transformer encoder의 2차원 행렬(attention 사영, feed-forward)과 head의
+    은닉 Linear만 해당한다. embedding, PLR, cls·pos, 편향, LayerNorm과
+    출력층(head의 마지막 Linear)은 AdamW로 남긴다.
+    """
+    return {
+        name
+        for name, parameter in model.named_parameters()
+        if parameter.ndim == 2
+        and (name.startswith("tr.") or name == "head.1.weight")
+    }
+
+
 def _create_optimizer(
     name: str,
     parameter_groups: list[dict[str, object]],
     lr: float,
 ) -> torch.optim.Optimizer:
-    """가중치 감쇠 그룹을 보존한 Adam 계열 최적화 알고리즘을 만든다."""
+    """가중치 감쇠 그룹을 보존한 최적화 알고리즘을 만든다.
+
+    muon은 그룹별 algorithm 표시가 붙은 그룹을 요구하고, 나머지 이름은 표시 없는
+    Adam 계열 그룹을 받는다.
+    """
+    if name == "muon":
+        from .muon import MuonWithAdamW
+
+        return MuonWithAdamW(parameter_groups, lr=lr)
     if name == "adamw":
         return torch.optim.AdamW(parameter_groups, lr=lr)
     if name == "radam":
@@ -467,15 +490,43 @@ class _LookupTransformerMember:
             ).to(dev)
         self._model = model
         emb_params = [p for n_, p in model.named_parameters() if n_.startswith("emb")]
-        rest = [p for n_, p in model.named_parameters() if not n_.startswith("emb")]
-        opt = _create_optimizer(
-            self._optimizer_name,
-            [
+        if self._optimizer_name == "muon":
+            # 은닉 행렬만 Muon으로 보내고 나머지는 기존 AdamW 그룹 그대로다.
+            # rest 그룹을 첫 그룹으로 유지해 학습률 진단(param_groups[0])이
+            # 다른 optimizer와 같은 축을 읽게 한다.
+            muon_names = _muon_parameter_names(model)
+            rest = [
+                p
+                for n_, p in model.named_parameters()
+                if not n_.startswith("emb") and n_ not in muon_names
+            ]
+            muon_params = [
+                p for n_, p in model.named_parameters() if n_ in muon_names
+            ]
+            parameter_groups: list[dict[str, object]] = [
+                {
+                    "params": rest,
+                    "weight_decay": self._weight_decay,
+                    "algorithm": "adamw",
+                },
+                {
+                    "params": emb_params,
+                    "weight_decay": self._emb_weight_decay,
+                    "algorithm": "adamw",
+                },
+                {
+                    "params": muon_params,
+                    "weight_decay": self._weight_decay,
+                    "algorithm": "muon",
+                },
+            ]
+        else:
+            rest = [p for n_, p in model.named_parameters() if not n_.startswith("emb")]
+            parameter_groups = [
                 {"params": rest, "weight_decay": self._weight_decay},
                 {"params": emb_params, "weight_decay": self._emb_weight_decay},
-            ],
-            self._lr,
-        )
+            ]
+        opt = _create_optimizer(self._optimizer_name, parameter_groups, self._lr)
         n_tr = len(X_tr)
         steps = math.ceil(n_tr / self._batch_size) * epochs + 10
         schedule = _LearningRateController(

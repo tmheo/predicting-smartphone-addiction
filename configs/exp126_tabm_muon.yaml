@@ -1,0 +1,104 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #196: TabM의 AdamW를 Muon 혼성으로 바꾼 exp065 짝비교판.
+# exp065_tabm과의 유일한 차이는 model.params.optimizer: muon이다.
+# - Muon 대상은 backbone MLP의 2차원 행렬 가중치뿐이고, embedding·원소별
+#   adapter·출력층·편향은 AdamW로 남는다(pipeline.muon 소관).
+# - 학습률·weight decay는 exp065 값을 그대로 쓰고 Muon 쪽은
+#   adjust_lr_fn=match_rms_adamw 보정으로 재사용한다.
+# 근거: 2026 표 데이터 optimizer 벤치마크(arXiv:2604.15297)의 TabM 변형
+# +0.21%~+0.40% 실측(docs/research/tabular-sota-portability.md 2순위).
+# 판정 앵커: exp065(run df2023d4) seed 42 짝비교. 미달 시 계열 즉시 닫음.
+# 원격 GPU 실행 대상(Vast.ai, docs/agents/vast-resource-control.md).
+name: exp126_tabm_muon
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [other_screen, screen_slack]
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions:
+        [
+          social_frac,
+          work_frac,
+          leisure_frac,
+          resid_frac,
+          week_total,
+        ]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: tabm
+  params:
+    optimizer: muon
+    arch_type: tabm-mini-normal
+    tabm_k: 16
+    num_emb_type: pwl
+    d_embedding: 16
+    batch_size: 128
+    lr: 5.0e-4
+    n_epochs: 150
+    dropout: 0.02
+    d_block: 160
+    n_blocks: 10
+    weight_decay: 1.0e-2
+    patience: 5
+    n_seed_avg: 3
+    perm_repeats: 2
+    perm_sample: 50000
+  fit: {}
