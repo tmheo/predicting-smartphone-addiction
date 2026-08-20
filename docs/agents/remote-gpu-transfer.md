@@ -232,6 +232,8 @@ scripts/verify_environment_gates.sh \
 이 명령은 비커밋 입력 준비와 전체 시험 수집을 확인하고, 외부 관리 Python 원격 유사 환경에서 가상환경 준비와 `pipeline.entry_diagnostic` 시작까지 검증한 뒤 전체 시험을 실행한다.
 Docker를 사용할 수 없거나 어느 관문이든 실패하면 유료 원격 자원을 만들지 않는다.
 이 로컬 사전 확인은 실제 공급자 자원 안의 준비 경계를 대신하지 않는다.
+기본 작업 폴더에서 병합한 커밋을 확인할 때는 기존 `data/`를 검사 대상으로 삼지 않도록 `scripts/verify_environment_gates.sh --isolated`를 실행한다.
+이 명령은 현재 커밋을 임시 Git 작업 폴더에서 확인하고 원래 `data/`는 변경하지 않는다.
 
 ### 대상 컨테이너 이미지의 Python 관문
 
