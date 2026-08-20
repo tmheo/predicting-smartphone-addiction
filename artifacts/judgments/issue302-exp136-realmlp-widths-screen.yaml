@@ -1,0 +1,147 @@
+schema_version: 1
+judgment_id: issue302-exp136-realmlp-widths-screen
+created_at: '2026-08-20T15:12:55Z'
+stage: screening
+route: candidate_pool
+supersedes: null
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: RealMLP에 제약 복원 구간 폭 3열 전용 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/302
+
+feature_bundle:
+  name: reconstruction_widths
+  columns:
+    - gaming_hours_recon_width
+    - social_media_hours_recon_width
+    - work_study_hours_recon_width
+  provider: constrained_impute_aux
+  preregistration:
+    kind: committed_config
+    reference: configs/exp136_realmlp_muon_recon_widths.yaml@d09f976e6772ec35a05493d6e8b1f88e3daa843f
+    description: exp134 RealMLP Muon 설정에 재구성 값 없이 폭 3열만 더하는 짝비교를 결과 확인 전에 고정했다.
+  content_sha256: 9dad127be2c2c4817e308e1fed569ce0871cb4a566c73c15712ff5e8a50a8dcc
+
+lineage:
+  included:
+    config: exp136_realmlp_muon_recon_widths
+    config_path: configs/exp136_realmlp_muon_recon_widths.yaml
+    config_sha256: 9556597389aff1dd9f038c68a6a3e80bbbb200bd6047e61c673084badd1313ac
+    source_run_id: 590ef4608393483ba47d5237177da0d1
+    imported_run_id: e901997ce82d41dc96d233485decaecc
+    import_bundle_sha256: a3124b7573c322ac4518e6171cd9eee58b410759603bb0bb9093e91f9c4f4818
+    git_commit: d09f976e6772ec35a05493d6e8b1f88e3daa843f
+    seeds: [42]
+  excluded:
+    config: exp134_realmlp_muon
+    config_path: configs/exp134_realmlp_muon.yaml
+    config_sha256: 430eb0836f3784d3c2c212bad22fb7e4ed6833e8633eeb75ba70fed5ab7f4894
+    imported_run_id: f72eeee10b1b4947af79228f888e7a81
+    import_bundle_sha256: a3e6041cf130b8fa510c5315465b2852b0357017deee98081399193736f48e2c
+    git_commit: c792484169b56190323c01731f2e9d510c60e0be
+    seeds_used: [42]
+    source_seeds: [42, 43, 44]
+  allowed_differences:
+    - features.providers.constrained_impute_aux
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  model_contract_match: true
+  emitted_feature_columns_match: true
+  reconstruction_value_columns_absent: true
+  adoption_eligibility:
+    seeds_ok: false
+    clean_commit_ok: true
+    folds_ok: true
+    ok: false
+    reason: 스크리닝은 seed 42만 실행하므로 후보 풀 등록 자격을 아직 평가하지 않는다.
+  canary:
+    state: 유효
+    placebo_present: true
+    target_using_provider_total: 0
+    derived_canary_checks: []
+    reason: 새 제공자는 목표값을 참조하지 않으며 계획의 상시 플라시보 불변식을 유지했다.
+
+paired_oof:
+  comparison: included_minus_excluded
+  seed: 42
+  included_auc: 0.9683795890815337
+  excluded_auc: 0.9683444021872215
+  overall_delta: 0.00003518689431214406
+  fold_deltas:
+    0: 0.00003416727576181433
+    1: 0.00004507277813958721
+    2: -0.000003764564451169904
+    3: 0.00004967271434830489
+    4: 0.00005048804950465313
+  fold_wins: 4
+  fold_total: 5
+  thresholds:
+    screening_delta_min: 0.0
+  screening_passed: true
+
+selection_procedure:
+  required: false
+  reason: 결과 확인 전에 폭 3열 전체와 단일 포함 설정을 고정했고 같은 OOF로 하위 묶음이나 변형을 고르지 않았다.
+  candidate_set: [exp136_realmlp_muon_recon_widths]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호 가능성
+  reason: seed 42 짝차이가 비음수여서 확정 재검증 자격을 얻었지만 3시드 반복성은 아직 확인하지 않았다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 후보 풀의 exp134 직접 교체 경로이며 현재 champion 교체를 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: false
+  state: null
+  reason: 후보 풀 진입 자격, 중복과 포함·제외 nested OOF는 3시드 확정 실행에서 평가한다.
+
+auxiliary_importance:
+  method: realmlp_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: -0.000008189246444922916
+  cell_total: 5
+  features:
+    gaming_hours_recon_width:
+      mean: 0.00022797510171006506
+      above_placebo_cells: 4
+    social_media_hours_recon_width:
+      mean: 0.0013147113144681643
+      above_placebo_cells: 5
+    work_study_hours_recon_width:
+      mean: 0.00005936715348970889
+      above_placebo_cells: 5
+  conflicts_with_oof: false
+  used_as_gate: false
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호 가능성
+  champion_route: null
+  candidate_pool_route: null
+  actual_ledger_change: none
+  reason_codes:
+    - screening_delta_nonnegative
+    - screening_fold_wins_4_of_5
+    - clean_commit
+    - folds_match
+    - canary_valid
+    - confirmation_required

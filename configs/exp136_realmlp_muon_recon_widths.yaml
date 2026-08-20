@@ -1,0 +1,78 @@
+# 이슈 #302: exp134_realmlp_muon의 모형 설정은 그대로 두고 제약 복원 구간 폭 3열만 더한다.
+# ConstrainedImputeAux는 같은 fold 학습 상태에서 재구성과 폭을 계산하지만 emit으로 폭 3열만
+# 모델 입력에 내보낸다. 재구성 값 4열은 폭 묶음의 기여를 분리하기 위해 제외한다.
+name: exp136_realmlp_muon_recon_widths
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: constrained_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          gaming_hours_recon_width,
+          social_media_hours_recon_width,
+          work_study_hours_recon_width,
+        ]
+
+model:
+  kind: realmlp
+  params:
+    optimizer: muon
+    n_ens: 8
+    embed_dim: 8
+    onehot_thresh: 8
+    hidden_dims: [512, 512, 512]
+    dropout: 0.06
+    p_drop_sched: expm4t
+    pbld_hidden_dim: 20
+    pbld_out_dim: 5
+    pbld_freq_scale: 5.0
+    pbld_lr_factor: 0.093
+    lr: 0.01
+    mom: 0.9
+    sq_mom: 0.98
+    lr_sched: flat_cos
+    flat_ratio: 0.3
+    first_layer_lr_factor: 1.0
+    first_layer_wd_factor: 0.1
+    lr_scale_mult: 10.0
+    lr_bias_mult: 0.1
+    weight_decay: 0.013
+    wd_scale_mult: 0.1
+    wd_bias_mult: 0.5
+    ema_decay: 0.997875
+    grad_clip: 1.2
+    ls_eps: 0.04
+    ls_eps_sched: cos
+    tfms: [median_center, robust_scale]
+    fixed_epochs: 4
+    schedule_epochs: 8
+    batch_size: 256
+    eval_batch_size: 10240
+    n_init_avg: 2
+    init_seed_stride: 1000
+    inner_folds: 5
+    perm_sample: 8192
+    perm_repeats: 1
+    device: cuda
+    verbosity: 1
+  fit: {}

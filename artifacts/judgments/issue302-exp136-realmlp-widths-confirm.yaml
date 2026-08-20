@@ -1,0 +1,283 @@
+schema_version: 1
+judgment_id: issue302-exp136-realmlp-widths-confirm
+created_at: '2026-08-20T16:26:41Z'
+stage: confirmation
+route: candidate_pool
+supersedes: issue302-exp136-realmlp-widths-screen
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: RealMLP에 제약 복원 구간 폭 3열 전용 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/302
+  screening_judgment: artifacts/judgments/issue302-exp136-realmlp-widths-screen.yaml
+
+feature_bundle:
+  name: reconstruction_widths
+  columns:
+    - gaming_hours_recon_width
+    - social_media_hours_recon_width
+    - work_study_hours_recon_width
+  provider: constrained_impute_aux
+  preregistration:
+    kind: committed_config
+    reference: configs/exp136_realmlp_muon_recon_widths.yaml@d09f976e6772ec35a05493d6e8b1f88e3daa843f
+    description: exp134 RealMLP Muon 설정에 재구성 값 없이 폭 3열만 더하는 짝비교를 결과 확인 전에 고정했다.
+  content_sha256: 9dad127be2c2c4817e308e1fed569ce0871cb4a566c73c15712ff5e8a50a8dcc
+
+lineage:
+  included:
+    config: exp136_realmlp_muon_recon_widths
+    config_path: configs/exp136_realmlp_muon_recon_widths.yaml
+    config_sha256: 9556597389aff1dd9f038c68a6a3e80bbbb200bd6047e61c673084badd1313ac
+    source_run_id: c95616ab50cc482fb6afbd4973af814b
+    imported_run_id: bd2bd1154e6343f68b364714e2fedcc4
+    import_bundle_sha256: 356c65b66fb5a0efa983f1d38ab44892ff37d5d6884e52a01adf77cd66aa0028
+    git_commit: d09f976e6772ec35a05493d6e8b1f88e3daa843f
+    seeds: [42, 43, 44]
+  excluded:
+    config: exp134_realmlp_muon
+    config_path: configs/exp134_realmlp_muon.yaml
+    config_sha256: 430eb0836f3784d3c2c212bad22fb7e4ed6833e8633eeb75ba70fed5ab7f4894
+    imported_run_id: f72eeee10b1b4947af79228f888e7a81
+    import_bundle_sha256: a3e6041cf130b8fa510c5315465b2852b0357017deee98081399193736f48e2c
+    git_commit: c792484169b56190323c01731f2e9d510c60e0be
+    seeds: [42, 43, 44]
+  allowed_differences:
+    - features.providers.constrained_impute_aux
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  model_contract_match: true
+  emitted_feature_columns_match: true
+  reconstruction_value_columns_absent: true
+  screening_seed_42_prediction_exact_match: true
+  adoption_eligibility:
+    seeds_ok: true
+    clean_commit_ok: true
+    folds_ok: true
+    ok: true
+  canary:
+    state: 유효
+    placebo_present: true
+    target_using_provider_total: 0
+    derived_canary_checks: []
+    reason: 새 제공자는 목표값을 참조하지 않으며 계획의 상시 플라시보 불변식을 유지했다.
+
+paired_oof:
+  comparison: included_minus_excluded
+  included_auc: 0.9684765044445613
+  excluded_auc: 0.9684260631310234
+  overall_delta: 0.00005044131353793002
+  seed_aucs:
+    included:
+      42: 0.9683795890815337
+      43: 0.9683778770543497
+      44: 0.9683964352899831
+    excluded:
+      42: 0.9683444021872215
+      43: 0.9683199952768115
+      44: 0.9683350766995176
+  seed_deltas:
+    42: 0.00003518689431214472
+    43: 0.00005788177753829338
+    44: 0.00006135859046552117
+  fold_deltas:
+    0: 0.000055916246076592735
+    1: 0.000034749308506665244
+    2: 0.000016088232490218957
+    3: 0.00007284416355757273
+    4: 0.00007310636685864402
+  seed_wins: 3
+  seed_total: 3
+  fold_wins: 5
+  fold_total: 5
+  thresholds:
+    mean_must_be_positive: true
+    seed_win_min: 2
+    boundary_upper: 0.0002
+    boundary_fold_win_min: 3
+
+selection_procedure:
+  required: false
+  reason: 폭 3열 전체의 포함과 제외 한 쌍을 결과 확인 전에 고정했으며 같은 OOF에서 여러 변형을 고르지 않았다.
+  candidate_set: [exp136_realmlp_muon_recon_widths, exp134_realmlp_muon]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호
+  reasons:
+    - 3시드 평균 짝차이가 양수다.
+    - 같은 시드 3개가 모두 양수다.
+    - 경계 구간에서 평균본 분할 5개가 모두 양수다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 후보 풀의 RealMLP 구성원 경로이며 현재 champion 교체를 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: true
+  state: 후보 풀 기여
+  ledger_action: add_member
+  replacement:
+    performed: false
+    compared_config: exp134_realmlp_muon
+    reason: 최근접 exp134와의 스피어만 상관이 중복 문턱보다 낮아 직접 교체가 아니라 별도 구성원 진입 경로를 적용했다.
+  retained_configs:
+    - exp124_realmlp_dtype_fix
+    - exp134_realmlp_muon
+  added:
+    config: exp136_realmlp_muon_recon_widths
+    run_id: bd2bd1154e6343f68b364714e2fedcc4
+  entry_snapshot:
+    champion_run_id: 7124425b5b51421dbbeba597229554da
+    champion_oof_auc: 0.9692840450124712
+    floor: 0.9592840450124712
+    floor_margin: 0.009192459432090128
+    floor_ok: true
+    nearest_run_id: f72eeee10b1b4947af79228f888e7a81
+    nearest_config: exp134_realmlp_muon
+    nearest_spearman: 0.9972106548157474
+    duplicate_threshold: 0.998
+    duplicate: false
+    uniform_rank_ensemble:
+      candidate_included_auc: 0.9690810541075118
+      candidate_excluded_auc: 0.9690544410043349
+      marginal_delta: 0.000026613103176864605
+      used_as_gate: false
+  nested_contribution:
+    strategy: missing_segmented_rank_logit
+    candidate_included_auc: 0.9697018070166334
+    candidate_excluded_auc: 0.9696999775221133
+    marginal_delta: 0.0000018294945201002832
+    outer_fold_deltas:
+      0: 0.000006828355388344143
+      1: 0.0000037134399534233253
+      2: -0.0000056285154360624645
+      3: 0.000004644590857250108
+      4: 0.000008571242645194488
+    outer_fold_wins: 4
+    outer_fold_total: 5
+    status: 후보 풀 기여
+  direct_replacement_readout:
+    strategy: missing_segmented_rank_logit
+    candidate_auc: 0.9697032415704311
+    exp134_auc: 0.9696999775221133
+    delta: 0.000003264048317741519
+    outer_fold_deltas:
+      0: 0.00001322107423695762
+      1: 0.000009697670258157487
+      2: -0.000012587028975774572
+      3: 0.000006130626509559534
+      4: 0.000007305676417157514
+    outer_fold_wins: 4
+    outer_fold_total: 5
+    interpretation: 직접 교체 진단도 양수지만 중복 문턱을 넘지 않아 교체하지 않았고, 별도 포함·제외 한계 기여로 진입을 확정했다.
+  coefficient_readout:
+    selected_folds: 5
+    fold_total: 5
+    mean_weight: 0.6721990470250924
+    interpretation: 결합 계수의 부호는 보조 설명이며 개별 후보의 인과적 기여로 해석하지 않는다.
+
+ensemble_reevaluation:
+  pool_size: 30
+  strategy_count: 22
+  excluded_strategy_count: 0
+  best_strategy: shrunk_rank_logit_logistic
+  nested_oof_auc: 0.9697130448587711
+  champion_auc: 0.9692840450124712
+  champion_delta: 0.00042899984629996046
+  outer_fold_aucs:
+    0: 0.9691259302069084
+    1: 0.9698060461254532
+    2: 0.9698484396246974
+    3: 0.9702746324677927
+    4: 0.9695101738008951
+  fixed_strategy:
+    name: missing_segmented_rank_logit
+    nested_oof_auc: 0.9697018070166334
+  full_refit_combiner_changed: false
+  reason: 이 티켓은 구성원 진입 판정만 수행하며 전체 재학습 결합 규약을 다시 여는 티켓이 아니다.
+
+full_refit_plan:
+  path: artifacts/full-refit-plan.yaml
+  source_pool_sha256: 94ad66ce3239ace798f8705743cdce112385aea5610af2ccb418963f5243817a
+  action: add_member
+  added_config: exp136_realmlp_muon_recon_widths
+  retained_configs:
+    - exp124_realmlp_dtype_fix
+    - exp134_realmlp_muon
+  budget_source: fold_median
+  fold_best_iteration_medians:
+    42: 4
+    43: 4
+    44: 4
+  iteration_multiplier: 1.25
+  budgets:
+    42: 5
+    43: 5
+    44: 5
+
+auxiliary_importance:
+  method: realmlp_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: -0.0000004108457135535796
+  cell_total: 15
+  features:
+    gaming_hours_recon_width:
+      mean: 0.00022172731283053674
+      above_placebo_cells: 14
+    social_media_hours_recon_width:
+      mean: 0.001270404808448533
+      above_placebo_cells: 15
+    work_study_hours_recon_width:
+      mean: 0.00013047579186856357
+      above_placebo_cells: 14
+  conflicts_with_oof: false
+  used_as_gate: false
+
+remote_execution:
+  provider: Vast.ai
+  gpu: 2x RTX A4000 16376MiB
+  image: nvcr.io/nvidia/pytorch@sha256:38ed2ecb2c16d10677006d73fb0a150855d6ec81db8fc66e800b5ae92741007e
+  result_archive_sha256: eadb49b21b01258534a86633ebd5180eb6fc94b2b478b70b9d058397e7532dd9
+  duration_seconds: 3196.168736934662
+  estimated_cost_usd: 0.15191666218763517
+  cleanup:
+    instance_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호
+  champion_route: null
+  candidate_pool_route: 후보 풀 기여
+  actual_ledger_change: exp136_added_without_replacement
+  full_refit_plan_change: exp136_added_without_replacement
+  reason_codes:
+    - paired_mean_positive
+    - seed_wins_3_of_3
+    - boundary_fold_wins_5_of_5
+    - adoption_eligibility_passed
+    - canary_valid
+    - nearest_spearman_below_duplicate_threshold
+    - nested_marginal_positive
+    - nested_outer_fold_wins_4_of_5
+    - pool_member_added
+    - exp124_retained
+    - exp134_retained
+    - full_refit_plan_updated
