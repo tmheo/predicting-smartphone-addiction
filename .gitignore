@@ -53,5 +53,8 @@ run-placebo-repeat/
 # exp027 빈도 인코딩 재검증 원자료 로컬 사본 (issue #282: 판정 기록은 artifacts/judgments에 커밋)
 run-issue282/
 
+# exp048·exp049 원본 분포 변환 재검증 원자료 로컬 사본 (issue #283: 판정 기록은 artifacts/judgments에 커밋)
+run-issue283/
+
 # 전체 자료 재학습 산출물(이슈 #66). codex/issue-66-full-refit의 항목을 미리 반영한다.
 artifacts/full-refit/
