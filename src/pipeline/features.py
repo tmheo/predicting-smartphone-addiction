@@ -428,6 +428,27 @@ def _spec_keys(df: pd.DataFrame, spec: ColumnSpec, digits: int | None = None) ->
     return keys
 
 
+def _target_encoding_keys(
+    df: pd.DataFrame, spec: ColumnSpec, digits: int | None = None
+) -> pd.Series:
+    """타깃 인코딩 키.
+
+    플라시보가 든 카나리아는 원본 잡음과 결측 마스크를 모델 입력에 그대로 남기되,
+    타깃 인코딩용 키에 행 ID를 붙여 반드시 행별 고유하게 만든다.
+    그래야 공유 결측 키가 실제 결측 집단의 목표 평균을 담는 일을 막으면서도,
+    자기 라벨을 포함한 잘못된 평균표는 여전히 카나리아 중요도로 검출할 수 있다.
+    """
+    columns = [spec] if isinstance(spec, str) else spec
+    keys: pd.Series | None = None
+    for column in columns:
+        part = _exact_keys(df[column], digits)
+        if column == PLACEBO:
+            part = part + "|__row_id__=" + df[ID].astype(str)
+        keys = part if keys is None else keys + "|" + part
+    assert keys is not None
+    return keys
+
+
 class PairCE:
     """dataset-wide 제공자: 결합 키의 훈련+테스트 합산 빈도 log1p를 <a>__<b>_ce로 만든다.
 
@@ -512,7 +533,7 @@ class ExactValueTargetEncoder:
         oof: dict[str, np.ndarray] = {}
         for spec in self.cols:
             name = _spec_name(spec)
-            keys = _spec_keys(train_fold, spec, self.key_digits)
+            keys = _target_encoding_keys(train_fold, spec, self.key_digits)
             self.tables_[name] = self._table(y, keys)
             vals = np.empty(len(train_fold))
             for tr_i, va_i in splits:
@@ -529,7 +550,7 @@ class ExactValueTargetEncoder:
         out: dict[str, pd.Series] = {}
         for spec in self.cols:
             name = _spec_name(spec)
-            mapped = _spec_keys(df, spec, self.key_digits).map(self.tables_[name])
+            mapped = _target_encoding_keys(df, spec, self.key_digits).map(self.tables_[name])
             mapped = mapped.fillna(self.global_mean_)
             if is_fit_row.any():
                 mapped = mapped.copy()
