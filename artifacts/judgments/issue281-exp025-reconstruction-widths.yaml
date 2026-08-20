@@ -1,0 +1,232 @@
+schema_version: 1
+judgment_id: issue281-exp025-reconstruction-widths
+created_at: '2026-08-20T03:02:26Z'
+stage: retrospective_confirmation
+route: candidate_pool
+supersedes: null
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  scope:
+    title: 새 계약을 적용할 과거 후보 재검증 범위와 순서 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/263
+  execution:
+    title: 플라시보 거짓 기각 확정 2건의 판정 기록과 exp025의 exp026 풀 교체 판정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/281
+
+feature_bundle:
+  name: reconstruction_widths
+  columns:
+    - gaming_hours_recon_width
+    - social_media_hours_recon_width
+    - work_study_hours_recon_width
+  provider: constrained_impute_aux
+  preregistration:
+    kind: committed_pair
+    reference: configs/exp025_constrained_impute.yaml
+    description: 폭 3열 포함판 exp025와 제외판 exp026의 단일 차이를 이슈 261 실행 전에 고정했다.
+  content_sha256: 2c53da70b1b0c9ded02728654913740115a225153a5d3229ab2f3854fdca3379
+
+lineage:
+  included:
+    config: exp025_constrained_impute
+    config_path: configs/exp025_constrained_impute.yaml
+    config_sha256: 2b8bf71956c90493b127a1db449f3843e4fb50dbcf81a45b5cf3392de1700bf2
+    source_run_id: aa32cdf99d7349319cc523ce59b5a912
+    imported_run_id: 9804689a5e3642e586abb972b522f3d4
+    import_bundle_sha256: 7fc9d6ac89269ef782df2791ad2488f6fec1ed83f0a4fa831c757a8352e96fc5
+    git_commit: 327a973898b09b9f8861adc92155d4f527cc4c6a
+    seeds: [42, 43, 44]
+  excluded:
+    config: exp026_constrained_impute_nowidth
+    config_path: configs/exp026_constrained_impute_nowidth.yaml
+    config_sha256: f04ce589aa654be3b8ca301459e11373135374f1dd93f94c321701d14fc9b663
+    source_run_id: e48c83c60be4484cae6f27f10fc71cea
+    replaced_pool_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+    git_commit: 327a973898b09b9f8861adc92155d4f527cc4c6a
+    seeds: [42, 43, 44]
+    source_and_pool_oof_auc_match: true
+  allowed_differences:
+    - features.providers.constrained_impute_aux.widths
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  adoption_eligibility:
+    seeds_ok: true
+    clean_commit_ok: true
+    folds_ok: true
+    ok: true
+  canary:
+    state: 유효
+    placebo_gain: 25071.604126350085
+    checks:
+      - feature: placebo_noise_te
+        gain: 4159.901818688711
+        required_direction: below_placebo
+        ok: true
+
+paired_oof:
+  comparison: included_minus_excluded
+  included_auc: 0.9675746898110065
+  excluded_auc: 0.9675476423592995
+  overall_delta: 0.000027047451707007397
+  seed_deltas:
+    42: -0.000002370309082566635
+    43: 0.0000649603199514015
+    44: 0.000026900781186167677
+  fold_deltas:
+    0: -0.00002480958975703551
+    1: 0.00003157946277987378
+    2: 0.000016073897333268583
+    3: 0.000100169509932857
+    4: 0.000011254862130716248
+  seed_wins: 2
+  seed_total: 3
+  fold_wins: 4
+  fold_total: 5
+  thresholds:
+    mean_must_be_positive: true
+    seed_win_min: 2
+    boundary_upper: 0.0002
+    boundary_fold_win_min: 3
+
+selection_procedure:
+  required: false
+  reason: 폭 3열 전체의 포함과 제외 한 쌍을 결과 확인 전에 고정했으며 같은 OOF에서 여러 변형을 고르지 않았다.
+  candidate_set: [exp025_constrained_impute, exp026_constrained_impute_nowidth]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호
+  reasons:
+    - 3시드 평균 짝차이가 양수다.
+    - 같은 시드 2개에서 양수다.
+    - 경계 구간에서 평균본 분할 4개가 양수다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 과거 후보 풀 구성원의 재판정이므로 현 champion을 대상으로 다시 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: true
+  state: 후보 풀 기여
+  ledger_action: replace_existing_member
+  replacement:
+    removed_config: exp026_constrained_impute_nowidth
+    removed_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+    added_config: exp025_constrained_impute
+    added_run_id: 9804689a5e3642e586abb972b522f3d4
+    basis: 깨끗한 직접 짝비교에서 같은 모델 계열 구성원의 단독 OOF 품질이 개선됐다.
+  entry_snapshot:
+    champion_run_id: 7124425b5b51421dbbeba597229554da
+    champion_oof_auc: 0.9692840450124712
+    floor: 0.9592840450124712
+    floor_margin: 0.008290644798535252
+    floor_ok: true
+    nearest_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+    nearest_spearman: 0.9979250275125117
+    legacy_duplicate_threshold: 0.998
+    legacy_duplicate: false
+    uniform_rank_ensemble:
+      candidate_included_auc: 0.9690570653227683
+      candidate_excluded_auc: 0.9690802079052767
+      marginal_delta: -0.000023142582508461906
+      used_as_gate: false
+  nested_contribution:
+    strategy: shrunk_rank_logit_logistic
+    candidate_included_auc: 0.969687228989848
+    candidate_excluded_auc: 0.9696834229852276
+    marginal_delta: 0.000003806004620465764
+    outer_fold_deltas:
+      0: 0.000009015164554870836
+      1: 0.00001013076960243442
+      2: 0.00000035393883135448334
+      3: -0.000004824985487372757
+      4: 0.000004355141199452461
+    outer_fold_wins: 4
+    outer_fold_total: 5
+    status: 후보 풀 기여
+  direct_replacement_readout:
+    strategy: shrunk_rank_logit_logistic
+    exp025_auc: 0.969687228989848
+    exp026_auc: 0.9696906489339499
+    delta: -0.000003419944101801242
+    outer_fold_wins: 1
+    outer_fold_total: 5
+    interpretation: 직접 교체의 nested 차이는 음수지만 후보 제외 대비 한계 기여는 양수이며, 후보 풀 기여는 제거 관문으로 사용하지 않는다.
+  coefficient_readout:
+    selected_folds: 5
+    fold_total: 5
+    mean_weight: -0.4696801699652977
+    interpretation: 결합 계수의 부호는 보조 설명이며 개별 후보의 인과적 기여로 해석하지 않는다.
+
+ensemble_reevaluation:
+  pool_size: 26
+  strategy_count: 22
+  excluded_strategy_count: 0
+  recommended_strategy: shrunk_rank_logit_logistic
+  nested_oof_auc: 0.969687228989848
+  champion_auc: 0.9692840450124712
+  champion_delta: 0.00040318397737681977
+  eligible: true
+  outer_fold_aucs:
+    0: 0.9691146873843328
+    1: 0.9697834909611336
+    2: 0.9698045238078992
+    3: 0.9702526428444445
+    4: 0.96948079784703
+
+auxiliary_importance:
+  method: lightgbm_gain
+  placebo_reference: placebo_noise
+  cell_total: 15
+  features:
+    gaming_hours_recon_width:
+      above_placebo_cells: 0
+      ratio_min: 0.3008513298122627
+      ratio_median: 0.3393429782820841
+      ratio_max: 0.4195337028440068
+    social_media_hours_recon_width:
+      above_placebo_cells: 0
+      ratio_min: 0.3415601956247272
+      ratio_median: 0.4107867765158042
+      ratio_max: 0.49055244618316646
+    work_study_hours_recon_width:
+      above_placebo_cells: 0
+      ratio_min: 0.14980885503914032
+      ratio_median: 0.17088556087666293
+      ratio_max: 0.21408446285317886
+  conflicts_with_oof: true
+  evidence:
+    - docs/research/placebo-repeatability-report.md
+    - docs/research/placebo-repeatability-evidence.json
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호
+  champion_route: null
+  candidate_pool_route: 후보 풀 기여
+  actual_ledger_change: exp026_replaced_by_exp025
+  full_refit_plan_change: exp026_replaced_by_exp025
+  reason_codes:
+    - paired_mean_positive
+    - seed_wins_2_of_3
+    - boundary_fold_wins_4_of_5
+    - adoption_eligibility_passed
+    - canary_valid
+    - nested_marginal_positive
+    - nested_outer_fold_wins_4_of_5
+    - placebo_importance_conflict

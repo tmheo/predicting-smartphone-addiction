@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: 85001287f5e207144d13bad01f3f5f91c2dbf33c5e35a50c5946f87d9632f75d
+source_pool_sha256: f2e1403f1824bb4169b318925672514054b9c9ede7a0d794796953807feff465
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -29,11 +29,11 @@ members:
     run_id: 202b7d47c3bd4b8e8904fa5c005c7423
     budget_source: fold_median
     budgets: {42: 455, 43: 514, 44: 470}
-  - config: exp026_constrained_impute_nowidth
-    config_path: configs/exp026_constrained_impute_nowidth.yaml
-    run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+  - config: exp025_constrained_impute
+    config_path: configs/exp025_constrained_impute.yaml
+    run_id: 9804689a5e3642e586abb972b522f3d4
     budget_source: fold_median
-    budgets: {42: 504, 43: 370, 44: 400}
+    budgets: {42: 503, 43: 394, 44: 398}
   - config: exp032_recon_orig_mean_top3
     config_path: configs/exp032_recon_orig_mean_top3.yaml
     run_id: b1bd4b08386946c9a4e05b755dbd5f26
