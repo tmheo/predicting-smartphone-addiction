@@ -1289,11 +1289,21 @@ class ConstrainedImputeAux:
     있어 폭이 0/NaN 결측 지표로 퇴화하므로 daily 폭 열은 만들지 않는다(지도의 배제 경계).
     폭 열은 seed 42 스크리닝에서 gain importance가 플라시보 미달이라 widths=False의
     recon 전용 변형을 함께 둔다.
+
+    emit은 재구성과 폭 열 전체 중 모델 입력으로 내보낼 열 이름의 부분집합이다.
+    일부 열만 내보내더라도 학습 fold에서 같은 IterativeImputer 상태를 맞추고 전체 재구성과
+    폭을 계산한 뒤 출력만 제한하므로, 나머지 열의 생성 계약이 바뀌지 않는다.
     """
 
     uses_target = False
 
-    def __init__(self, cols: list[str], max_iter: int = 20, widths: bool = True) -> None:
+    def __init__(
+        self,
+        cols: list[str],
+        max_iter: int = 20,
+        widths: bool = True,
+        emit: list[str] | None = None,
+    ) -> None:
         screen = [SCREEN_TOTAL, *SCREEN_PARTS]
         missing = [c for c in screen if c not in cols]
         if missing:
@@ -1302,12 +1312,29 @@ class ConstrainedImputeAux:
         self.max_iter = max_iter
         self.widths = widths
 
-    def columns(self) -> list[str]:
+        available = self._available_columns()
+        if emit is None:
+            self.emit = available
+        else:
+            unknown = sorted(set(emit) - set(available))
+            if unknown:
+                raise ValueError(
+                    f"emit은 재구성 제공자 출력의 부분집합이어야 한다. "
+                    f"알 수 없는 열: {unknown}"
+                )
+            if len(set(emit)) != len(emit) or not emit:
+                raise ValueError(f"emit은 중복 없는 비어 있지 않은 목록이어야 한다: {emit}")
+            self.emit = list(emit)
+
+    def _available_columns(self) -> list[str]:
         screen = [SCREEN_TOTAL, *SCREEN_PARTS]
         cols = [f"{c}_recon" for c in screen]
         if self.widths:
             cols += [f"{c}_recon_width" for c in SCREEN_PARTS]
         return cols
+
+    def columns(self) -> list[str]:
+        return list(self.emit)
 
     def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
         from sklearn.experimental import enable_iterative_imputer  # noqa: F401
