@@ -104,6 +104,18 @@ def test_realmlp_public_contract_config():
     assert params["n_init_avg"] == 2
 
 
+def test_realmlp_muon_config_is_exp124_single_optimizer_delta():
+    baseline = load_config(REPO / "configs" / "exp124_realmlp_dtype_fix.yaml", "screen")
+    challenger = load_config(REPO / "configs" / "exp134_realmlp_muon.yaml", "screen")
+
+    assert challenger.name == "exp134_realmlp_muon"
+    assert challenger.data == baseline.data
+    assert challenger.features == baseline.features
+    assert challenger.model.kind == baseline.model.kind
+    assert challenger.model.fit == baseline.model.fit
+    assert challenger.model.params == {**baseline.model.params, "optimizer": "muon"}
+
+
 def test_realmlp_fold_preprocessing_is_train_only_and_has_54_features():
     from pipeline.realmlp import _FoldFeatureEngineer, _FoldTargetEncoder
 
@@ -180,6 +192,7 @@ def test_realmlp_adapter_contract_and_diagnostics():
     assert observations["fold_initialization_average_count"] == 2
     assert observations["validation_selection"] == "final_fixed_epoch"
     assert observations["pytabkit_estimator_used"] is False
+    assert observations["optimizer"] == "adamw"
     assert os.environ["CUBLAS_WORKSPACE_CONFIG"] in {":4096:8", ":16:8"}
     assert observations["cublas_workspace_config"] == os.environ[
         "CUBLAS_WORKSPACE_CONFIG"
@@ -215,3 +228,60 @@ def test_realmlp_full_fit_and_unknown_settings():
     bad = _adapter(no_such_param=1)
     with pytest.raises(ValueError, match="no_such_param"):
         bad.fit(X.iloc[:72], y.iloc[:72], X.iloc[72:], y.iloc[72:])
+
+
+def test_realmlp_muon_splits_internal_ensemble_hidden_matrices():
+    from pipeline.realmlp import _DEFAULTS, _RealMLP, _muon_parameters
+
+    config = {**_DEFAULTS, **SMALL_PARAMS, "n_ens": 3, "optimizer": "muon"}
+    model = _RealMLP([3, 4], numerical_features=5, config=config)
+    selected = _muon_parameters(model)
+
+    assert len(selected) == 3 * len(config["hidden_dims"])
+    assert all(parameter.ndim == 2 for parameter in selected)
+    selected_ids = {id(parameter) for parameter in selected}
+    assert all(
+        id(parameter) not in selected_ids for parameter in model.output.parameters()
+    )
+    assert all(
+        id(parameter) not in selected_ids
+        for parameter in model.categorical.parameters()
+    )
+    assert all(
+        id(parameter) not in selected_ids for parameter in model.numerical.parameters()
+    )
+
+
+def test_realmlp_split_hidden_matrix_keeps_initialization_and_forward_values():
+    import torch
+
+    from pipeline.realmlp import _NTPLinear
+
+    torch.manual_seed(123)
+    dense = _NTPLinear(3, 5, 4)
+    torch.manual_seed(123)
+    split = _NTPLinear(3, 5, 4, split_weight=True)
+    values = torch.randn(7, 3, 5)
+
+    assert torch.equal(dense.weight, torch.stack(list(split.weights)))
+    assert torch.equal(dense.bias, split.bias)
+    assert torch.equal(dense(values), split(values))
+
+
+def test_realmlp_muon_contract_and_learning():
+    X, y = _data(120)
+    adapter = _adapter(optimizer="muon", n_init_avg=1, perm_sample=24)
+
+    prediction = adapter.fit(X.iloc[:90], y.iloc[:90], X.iloc[90:], y.iloc[90:])
+
+    assert prediction.shape == (30,)
+    assert np.isfinite(prediction).all()
+    assert adapter.training_diagnostics()["optimizer"] == "muon"
+
+
+def test_realmlp_rejects_unknown_optimizer():
+    X, y = _data(80)
+    with pytest.raises(ValueError, match="optimizer"):
+        _adapter(optimizer="sgd").fit(
+            X.iloc[:60], y.iloc[:60], X.iloc[60:], y.iloc[60:]
+        )
