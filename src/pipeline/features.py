@@ -1170,6 +1170,19 @@ XGB_IMPUTE_COMPOSITIONS: dict[
     ),
     "notif_per_open": ([_IMP_N, _IMP_O], lambda r: r[_IMP_N] / r[_IMP_O]),
     "min_per_open": ([_IMP_D, _IMP_O], lambda r: r[_IMP_D] * 60 / r[_IMP_O]),
+    # 아래 7열은 szymonkapiski 노트북 build_continuous의 우리 미판정 열 이식이다(#265).
+    # 원문: kernel 129458801(Apache-2.0, SHA-256 95a8fd0e2030cb34bd9fc10aaa4ea55f
+    # f9819522ac455a19abc090dd61b4d5e6). 원문은 train+test 결합 제약 결측 행렬 위에서
+    # epsilon 분모(+1e-6)로 계산하지만, 이식은 이 등록부 규율대로 fold-fit 복원 행렬
+    # 위에서 epsilon 없이 계산한다(복원 행렬은 전 셀 비결측, inf는 TabM adapter가
+    # 학습 fold 중앙값으로 대체). 포화 앵커 3h·9.5h는 원문 EDA S-곡선 무릎 상수다.
+    "over_9h": ([_IMP_D], lambda r: (r[_IMP_D] - 9.5).clip(lower=0.0)),
+    "under_3h": ([_IMP_D], lambda r: (3.0 - r[_IMP_D]).clip(lower=0.0)),
+    "screen_over_sleep": ([_IMP_D, _IMP_SL], lambda r: r[_IMP_D] / r[_IMP_SL]),
+    "screen_minus_sleep": ([_IMP_D, _IMP_SL], lambda r: r[_IMP_D] - r[_IMP_SL]),
+    "gaming_over_daily": ([_IMP_G, _IMP_D], lambda r: r[_IMP_G] / r[_IMP_D]),
+    "weekend_minus_daily": ([_IMP_WK, _IMP_D], lambda r: r[_IMP_WK] - r[_IMP_D]),
+    "screen_mean_dw": ([_IMP_D, _IMP_WK], lambda r: (r[_IMP_D] + r[_IMP_WK]) / 2.0),
 }
 
 
