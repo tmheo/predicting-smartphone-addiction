@@ -89,6 +89,37 @@ def test_m0_and_a0_keep_champion_feature_plan_and_33_columns():
     assert len(plan.all_columns()) == 33
 
 
+def test_oof_target_mean_arm_adds_twelve_treatments_and_one_canary():
+    baseline = load_config("configs/exp115_scalar_token_transformer_m0.yaml", "screen")
+    cfg = load_config("configs/exp133_scalar_token_transformer_oof_te.yaml", "screen")
+    assert cfg.model == baseline.model
+    assert cfg.features.providers[:-1] == baseline.features.providers
+    assert cfg.features.base == baseline.features.base
+    assert cfg.features.categorical == baseline.features.categorical
+    assert cfg.features.exclude == baseline.features.exclude
+
+    plan = FeaturePlan.from_config(cfg.features)
+    transformer = plan.fold_fit_transformers()[-1]
+
+    assert transformer.inner_folds == 10
+    assert transformer.smoothing == 10
+    assert transformer.columns() == [
+        "age_te",
+        "daily_screen_time_hours_te",
+        "social_media_hours_te",
+        "gaming_hours_te",
+        "work_study_hours_te",
+        "sleep_hours_te",
+        "notifications_per_day_te",
+        "app_opens_per_day_te",
+        "weekend_screen_time_te",
+        "gender_te",
+        "stress_level_te",
+        "academic_work_impact_te",
+        "placebo_noise_te",
+    ]
+
+
 @pytest.mark.parametrize("mixing", ["attention", "token_mlp"])
 def test_adapter_contract_and_learning(mixing: str):
     X, y = _data()
@@ -119,7 +150,17 @@ def test_adapter_contract_and_learning(mixing: str):
     }
     assert diagnostics.observations["mixing"] == mixing
     assert diagnostics.observations["feature_count"] == 3
+    assert diagnostics.observations["target_encodings"] == 0
     assert diagnostics.observations["trainable_parameters"] > 0
+
+
+def test_diagnostics_count_target_encoding_columns():
+    X, y = _data()
+    X = X.rename(columns={"value": "value_te"})
+    adapter = _adapter()
+    adapter.fit(X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:])
+
+    assert adapter.entry_diagnostics().observations["target_encodings"] == 1
 
 
 def test_training_only_category_mapping_distinguishes_unknown_and_missing():
