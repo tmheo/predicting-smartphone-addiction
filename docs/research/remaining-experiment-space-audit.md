@@ -214,6 +214,7 @@ LightGBM과 반복 교차검증의 동작은 각각 공식 문서와 공식 소�
 
 - 고정 Stratified 5-fold는 ID 위치 신호가 없다는 [ID 구간 진단](https://github.com/tmheo/predicting-smartphone-addiction/issues/55)과 train/test 값 분포 이동이 결측률 차이뿐이라는 기존 진단 때문에 유지한다.
 - 최신 [Private-LB-robust validation](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734628)은 grouped, ID-block, 결측 층화와 적대적 검증을 질문하지만 S6E8 측정 결과를 제시하지 않는다.
+- 이 감사 뒤인 2026-08-14 16:29 UTC에 추가된 댓글은 앙상블 2×2 수치를 제시했지만, 새 분할을 직접 비교하지 않았고 앙상블 방향도 이슈 62와 64의 자체 nested 결과를 재확인한다 ([증분 판정](private-lb-robust-validation-comment.md)).
 - meta 결합의 아주 작은 차이는 고정 nested OOF가 정식 판정이고, 추가 분할 반복은 민감도 검사로만 쓸 수 있다.
 - scikit-learn 공식 문서는 `RepeatedStratifiedKFold`가 서로 다른 무작위화로 Stratified K-Fold를 반복한다고 정의한다 ([문서](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RepeatedStratifiedKFold.html)).
 - 후보 풀과 결합에서 값이 비슷할 때 반복 meta 분할을 보조 표로 남길 수 있지만, 새 모델의 공통 고정 fold OOF를 대신하지 않는다.
