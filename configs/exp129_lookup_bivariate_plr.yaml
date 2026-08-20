@@ -1,0 +1,105 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #267: champion exp127_lookup_muon에 szymonkapiski 노트북 build_continuous의
+# 수면·알림 이변수 결합 9종을 복원 행렬 조성(imp_*)으로 더한 짝비교판.
+# champion exp127과의 유일한 차이는 xgb_impute_aux.compositions의 9열 추가다.
+# 추가 열(전부 lookup_cols 밖 수치라 PLR 전용 토큰이 된다):
+#   awake_screen_frac(=awake_share), wk_ratio(=weekend_over_daily), notif_per_open,
+#   min_per_open(=screen_per_open), screen_over_sleep, screen_minus_sleep,
+#   gaming_over_daily, weekend_minus_daily, screen_mean_dw
+# - 티켓의 판정 앵커는 exp081이었으나 #196의 champion 교체로 현 champion exp127
+#   (run 7124425b)로 앵커를 옮긴다(지도 #172 Notes: 새 champion 문맥의 재판정).
+# - 단일 변수 포화 앵커(over_9h, under_3h)는 범위 제외: lookup 임베딩이 값별 자유
+#   함수를 학습하므로 구조적 중복(#267 범위 제외 1).
+# 근거: docs/research/szymonkapiski-tabm-constrained-imputation.md의 비대칭 논리
+# (GBDT 기각이 신경망 기각을 함의하지 않음)와 #106의 조성 이득 실측.
+# 판정 앵커: champion exp127(run 7124425b) seed 42 짝비교(pipeline.compare).
+# 미달 시 계열 즉시 닫음. 원격 GPU 실행 대상(Vast.ai).
+name: exp129_lookup_bivariate_plr
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions:
+        [
+          social_frac,
+          work_frac,
+          leisure_frac,
+          resid_frac,
+          week_total,
+          awake_screen_frac,
+          wk_ratio,
+          notif_per_open,
+          min_per_open,
+          screen_over_sleep,
+          screen_minus_sleep,
+          gaming_over_daily,
+          weekend_minus_daily,
+          screen_mean_dw,
+        ]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: lookup_transformer
+  params:
+    lookup_cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+    fold_seed_offsets: [0, 1000, 2000]
+    optimizer: muon
+  fit: {}

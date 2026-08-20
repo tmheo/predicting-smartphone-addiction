@@ -1170,6 +1170,17 @@ XGB_IMPUTE_COMPOSITIONS: dict[
     ),
     "notif_per_open": ([_IMP_N, _IMP_O], lambda r: r[_IMP_N] / r[_IMP_O]),
     "min_per_open": ([_IMP_D, _IMP_O], lambda r: r[_IMP_D] * 60 / r[_IMP_O]),
+    # szymonkapiski 노트북 build_continuous의 수면·화면 이변수 결합(#267). 공개 노트북
+    # (kernel 129458801, Apache-2.0, SHA-256
+    # 95a8fd0e2030cb34bd9fc10aaa4ea55ff9819522ac455a19abc090dd61b4d5e6)에서 옮기되,
+    # 원본의 +1e-6·clip(lower=1e-3) epsilon 방어는 기존 조성 규율(복원 행렬 위 순수
+    # 산술)에 맞춰 뺐다. 원본이 raw notif·opens를 쓰는 것과 달리 조성 규약대로 복원
+    # 행렬 위에서 계산한다.
+    "screen_over_sleep": ([_IMP_D, _IMP_SL], lambda r: r[_IMP_D] / r[_IMP_SL]),
+    "screen_minus_sleep": ([_IMP_D, _IMP_SL], lambda r: r[_IMP_D] - r[_IMP_SL]),
+    "gaming_over_daily": ([_IMP_G, _IMP_D], lambda r: r[_IMP_G] / r[_IMP_D]),
+    "weekend_minus_daily": ([_IMP_WK, _IMP_D], lambda r: r[_IMP_WK] - r[_IMP_D]),
+    "screen_mean_dw": ([_IMP_D, _IMP_WK], lambda r: (r[_IMP_D] + r[_IMP_WK]) / 2),
 }
 
 
