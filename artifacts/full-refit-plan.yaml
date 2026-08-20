@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: 365a270dfb30dd8bdc96855fc8a01148576e9b7bc2775366119ba1ff26a1c67b
+source_pool_sha256: 290d96ac719b737cdfbfd8d1e6ee19ce621b472410c528a43bb4515d2eb3ec38
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -49,11 +49,6 @@ members:
     run_id: c62a9ad334bf486cb46d738474ccd767
     budget_source: fold_median
     budgets: {42: 258, 43: 239, 44: 255}
-  - config: exp045_xgb_depth8
-    config_path: configs/exp045_xgb_depth8.yaml
-    run_id: e2c432b487564df990a4cc3baf3d6fc0
-    budget_source: fold_median
-    budgets: {42: 1093, 43: 1004, 44: 995}
   - config: exp058_logreg_onehot
     config_path: configs/exp058_logreg_onehot.yaml
     run_id: e2b76edd9d204290810e39a7457c4c48
@@ -154,3 +149,8 @@ members:
     run_id: f72eeee10b1b4947af79228f888e7a81
     budget_source: fold_median
     budgets: {42: 5, 43: 5, 44: 5}
+  - config: exp135_xgb_hpo_trial30
+    config_path: configs/exp135_xgb_hpo_trial30.yaml
+    run_id: 119b9c4e44674d38a6f758b65a68593e
+    budget_source: fold_median
+    budgets: {42: 9758, 43: 10393, 44: 10368}

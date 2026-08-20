@@ -1,0 +1,182 @@
+schema_version: 1
+judgment_id: issue-288-xgb-hpo
+generated_at: '2026-08-20T14:37:35Z'
+source:
+  issue: 288
+  map_issue: 273
+  path: candidate_pool
+  stage: confirmed
+
+contract:
+  base_config: exp045_xgb_depth8
+  feature_plan_fixed: true
+  valid_fold: 0
+  seed: 42
+  trials: 50
+  sampler:
+    name: TPESampler
+    multivariate: true
+    seed: 42
+  fixed_model_params:
+    tree_method: hist
+    eval_metric: auc
+    n_estimators: 10000
+    early_stopping_rounds: 200
+
+environment_gates:
+  command: scripts/verify_environment_gates.sh
+  before_search:
+    git_commit: f21a
+    collected_tests: 360
+    remote_contract_tests: 4
+    status: passed
+  after_implementation:
+    git_commit: f9a03a787086cac588861f2cd4db5bbf456949b7
+    collected_tests: 368
+    remote_contract_tests: 4
+    status: passed
+
+search:
+  status: completed
+  completed_trials: 50
+  failed_trials: 0
+  artifact:
+    path: artifacts/hpo/issue-288-xgb-search.json
+    sha256: 2bd338addcd73e27069bc8b9363530195b3eda09c6a05dad47dd083fee884927
+  input:
+    base_config_sha256: dcd7c40a8ded7ea386402737e3b2c5f395d300fb4eb539607232c5dafca27d17
+    train_sha256: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test_sha256: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds_sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+    pool_sha256: b48a78eb1800c85e4b3f2db585b67cb7517227808d9c74dcdbd3bc3f254e541d
+  promoted_trials:
+    - number: 15
+      config: exp134_xgb_hpo_trial15
+      fold0_auc: 0.967598107191456
+      training_seconds: 197.83637420798186
+      best_iteration: 9885
+      nearest_pool_member:
+        config: exp117_ag25_gbm_r21
+        run_id: d107ea874ebe4dbe8094694141a162b6
+        spearman: 0.9970331861750602
+    - number: 30
+      config: exp135_xgb_hpo_trial30
+      fold0_auc: 0.9675804655607616
+      training_seconds: 194.01277316600317
+      best_iteration: 8491
+      nearest_pool_member:
+        config: exp045_xgb_depth8
+        run_id: e2c432b487564df990a4cc3baf3d6fc0
+        spearman: 0.9977411679622838
+
+screens:
+  - config: exp134_xgb_hpo_trial15
+    run_id: 7b9f1874471a45438dd7bdbfee43cb69
+    auc_oof: 0.9681696447486217
+    training_seconds: 639.101177125005
+    nearest_pool_member:
+      config: exp045_xgb_depth8
+      run_id: e2c432b487564df990a4cc3baf3d6fc0
+      spearman: 0.9969342391438032
+    category2_screen_passed: true
+  - config: exp135_xgb_hpo_trial30
+    run_id: e62aedfac52b46b28b807458e2870cf5
+    auc_oof: 0.9682084663864804
+    training_seconds: 948.8437507500057
+    nearest_pool_member:
+      config: exp045_xgb_depth8
+      run_id: e2c432b487564df990a4cc3baf3d6fc0
+      spearman: 0.9977490514458096
+    category2_screen_passed: true
+
+confirmations:
+  - config: exp134_xgb_hpo_trial15
+    run_id: 2e54bb8089d64955b01b1a7f33a6aca4
+    auc_oof: 0.9682812588889096
+    seed_aucs:
+      42: 0.9681696447486217
+      43: 0.968152624538921
+      44: 0.9681823544109662
+    training_seconds: 1050.8217
+    nearest_existing_pool_member:
+      config: exp117_ag25_gbm_r21
+      run_id: d107ea874ebe4dbe8094694141a162b6
+      spearman: 0.997413597149264
+    final_pool_decision: rejected_as_duplicate_of_exp135
+  - config: exp135_xgb_hpo_trial30
+    run_id: 119b9c4e44674d38a6f758b65a68593e
+    auc_oof: 0.9683307160272167
+    seed_aucs:
+      42: 0.9682084663864804
+      43: 0.9682246155293751
+      44: 0.9682435703549117
+    training_seconds: 997.3370
+    nearest_existing_pool_member:
+      config: exp045_xgb_depth8
+      run_id: e2c432b487564df990a4cc3baf3d6fc0
+      auc_oof: 0.9679360495201849
+      spearman: 0.9980767475439829
+    candidate_minus_nearest_auc: 0.0003946665070318378
+    final_pool_decision: admitted_as_replacement
+
+pool_decision:
+  duplicate_threshold: 0.998
+  admitted:
+    config: exp135_xgb_hpo_trial30
+    run_id: 119b9c4e44674d38a6f758b65a68593e
+  removed:
+    config: exp045_xgb_depth8
+    run_id: e2c432b487564df990a4cc3baf3d6fc0
+  rejected:
+    config: exp134_xgb_hpo_trial15
+    run_id: 2e54bb8089d64955b01b1a7f33a6aca4
+    candidate_pair_spearman: 0.9992555846427865
+    reason: exp135와 중복이고 OOF AUC가 더 낮다.
+  current_pool:
+    members: 29
+    sha256: 290d96ac719b737cdfbfd8d1e6ee19ce621b472410c528a43bb4515d2eb3ec38
+
+nested_reevaluation:
+  strategies_evaluated: 22
+  selected_strategy: missing_segmented_rank_logit
+  auc_oof: 0.9696999775221133
+  fold_aucs:
+    0: 0.9691453788285395
+    1: 0.9698308657371343
+    2: 0.9698290184047823
+    3: 0.9702808077489506
+    4: 0.9694967864038513
+  champion_auc: 0.9692840450124712
+  champion_delta: 0.0004159325096421
+  prior_pool_same_strategy_auc: 0.969705068416113
+  replacement_delta: -0.00000509089399969298
+  interpretation: 후보 풀 진입 규약상 결합 기여도는 진단값이며 exp135의 중복 교체 판정을 뒤집지 않는다.
+
+full_refit_plan:
+  path: artifacts/full-refit-plan.yaml
+  source_pool_sha256: 290d96ac719b737cdfbfd8d1e6ee19ce621b472410c528a43bb4515d2eb3ec38
+  admitted_config: exp135_xgb_hpo_trial30
+  budget_source: fold_median
+  fold_best_iteration_medians:
+    42: 7806
+    43: 8314
+    44: 8294
+  iteration_multiplier: 1.25
+  budgets:
+    42: 9758
+    43: 10393
+    44: 10368
+
+result:
+  status: admitted_replacement
+  reason_codes:
+    - search_completed_50_trials
+    - two_candidates_passed_five_fold_screen
+    - two_candidates_confirmed_three_seeds
+    - exp135_duplicate_with_exp045
+    - exp135_auc_higher_than_exp045
+    - exp134_duplicate_with_exp135
+    - exp134_auc_lower_than_exp135
+    - pool_replaced_without_member_count_change
+    - nested_oof_reevaluated
+    - full_refit_plan_updated

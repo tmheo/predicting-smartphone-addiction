@@ -126,22 +126,6 @@ members:
     ensemble_auc_with: 0.967876902064954
     ensemble_auc_without: 0.96779600305279
     contribution: 8.089901216401518e-05
-- run_id: e2c432b487564df990a4cc3baf3d6fc0
-  config: exp045_xgb_depth8
-  oof_auc: 0.9679360495201849
-  seeds: 42,43,44
-  entered_at: '2026-08-12'
-  reason: '이슈 #59: XGBoost depthwise depth 8의 3시드 평균본. 같은 피처에서 학습기 교차만으로 champion(CatBoost)과
-    다른 오류 계열 확보'
-  evidence:
-    champion_run_id: 737f4dae278c4615ba294372352ac5bb
-    champion_oof_auc: 0.9682023830256766
-    floor_margin: 0.009733666494508242
-    nearest_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
-    nearest_spearman: 0.9958708717079499
-    ensemble_auc_with: 0.968060668424677
-    ensemble_auc_without: 0.9680122021547373
-    contribution: 4.8466269939706486e-05
 - run_id: e2b76edd9d204290810e39a7457c4c48
   config: exp058_logreg_onehot
   oof_auc: 0.9596583963715687
@@ -461,3 +445,18 @@ members:
     ensemble_auc_with: 0.9690456786128936
     ensemble_auc_without: 0.9690156292463373
     contribution: 3.004936655626178e-05
+- run_id: 119b9c4e44674d38a6f758b65a68593e
+  config: exp135_xgb_hpo_trial30
+  oof_auc: 0.9683307160272167
+  seeds: 42,43,44
+  entered_at: '2026-08-20'
+  reason: 이슈 288 XGBoost 설정값 탐색에서 exp045 중복 구성원을 더 높은 3시드 OOF AUC로 교체
+  evidence:
+    champion_run_id: 7124425b5b51421dbbeba597229554da
+    champion_oof_auc: 0.9692840450124712
+    floor_margin: 0.009046671014745433
+    nearest_run_id: e2c432b487564df990a4cc3baf3d6fc0
+    nearest_spearman: 0.9980767475439829
+    ensemble_auc_with: 0.9690250363253543
+    ensemble_auc_without: 0.969026124992675
+    contribution: -1.088667320736647e-06

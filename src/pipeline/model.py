@@ -387,6 +387,15 @@ class XGBoostAdapter:
             {"feature": names, "gain": [gain.get(n, 0.0) for n in names]}
         )
 
+    def training_diagnostics(self) -> dict[str, object]:
+        """조기 종료로 선택된 반복 수와 검증 AUC를 기록한다."""
+        if self._model is None:
+            raise ValueError("xgboost 학습 관측은 fit 뒤에만 읽을 수 있다.")
+        return {
+            "best_iteration": int(self._model.best_iteration),
+            "best_score": float(self._model.best_score),
+        }
+
 
 class CatBoostAdapter:
     """CatBoost 이진 분류 adapter. (#59)
