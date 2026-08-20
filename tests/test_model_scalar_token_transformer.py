@@ -120,6 +120,26 @@ def test_oof_target_mean_arm_adds_twelve_treatments_and_one_canary():
     ]
 
 
+def test_stabilized_canary_arm_changes_only_importance_repeats():
+    candidate = load_config("configs/exp133_scalar_token_transformer_oof_te.yaml", "screen")
+    stabilized = load_config(
+        "configs/exp136_scalar_token_transformer_oof_te_canary32.yaml", "screen"
+    )
+
+    assert stabilized.data == candidate.data
+    assert stabilized.features == candidate.features
+    assert stabilized.model.kind == candidate.model.kind
+    assert stabilized.model.fit == candidate.model.fit
+    assert stabilized.model.params == {"mixing": "attention", "perm_repeats": 32}
+    assert {
+        key: value
+        for key, value in stabilized.model.params.items()
+        if key != "perm_repeats"
+    } == {
+        key: value for key, value in candidate.model.params.items() if key != "perm_repeats"
+    }
+
+
 @pytest.mark.parametrize("mixing", ["attention", "token_mlp"])
 def test_adapter_contract_and_learning(mixing: str):
     X, y = _data()
@@ -150,6 +170,7 @@ def test_adapter_contract_and_learning(mixing: str):
     }
     assert diagnostics.observations["mixing"] == mixing
     assert diagnostics.observations["feature_count"] == 3
+    assert diagnostics.observations["permutation_importance_repeats"] == 1
     assert diagnostics.observations["target_encodings"] == 0
     assert diagnostics.observations["trainable_parameters"] > 0
 

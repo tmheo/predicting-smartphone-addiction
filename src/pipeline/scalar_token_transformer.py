@@ -605,6 +605,7 @@ class ScalarTokenTransformerFold:
                 "best_epoch": self._best_epoch,
                 "best_validation_auc": float(self._validation_auc),
                 "quantile_fit_rows_max": 10_000,
+                "permutation_importance_repeats": self._perm_repeats,
                 "target_encodings": sum(
                     column.endswith("_te") for column in (self._columns or [])
                 ),
