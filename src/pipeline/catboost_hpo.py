@@ -31,6 +31,7 @@ import argparse
 import datetime
 import hashlib
 import json
+import os
 import subprocess
 import threading
 import time
@@ -550,14 +551,32 @@ def _export_pool(args: argparse.Namespace) -> None:
     )
 
 
-def _run(args: argparse.Namespace) -> None:
-    summary = run_search(
-        config_path=args.config,
-        pool_oof=args.pool_oof,
-        output_dir=args.output_dir,
-        device=args.device,
-        memory_interval_seconds=args.memory_interval_seconds,
+def _repository_root(config_path: Path) -> Path:
+    result = subprocess.run(
+        ["git", "-C", str(config_path.parent), "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=True,
     )
+    return Path(result.stdout.strip()).resolve()
+
+
+def _run(args: argparse.Namespace) -> None:
+    config_path = args.config.resolve()
+    pool_oof = args.pool_oof.resolve()
+    output_dir = args.output_dir.resolve()
+    original_directory = Path.cwd()
+    try:
+        os.chdir(_repository_root(config_path))
+        summary = run_search(
+            config_path=config_path,
+            pool_oof=pool_oof,
+            output_dir=output_dir,
+            device=args.device,
+            memory_interval_seconds=args.memory_interval_seconds,
+        )
+    finally:
+        os.chdir(original_directory)
     print(json.dumps(summary, ensure_ascii=False, indent=2, allow_nan=False))
 
 

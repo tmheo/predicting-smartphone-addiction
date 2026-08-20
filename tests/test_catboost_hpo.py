@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 
 import numpy as np
@@ -5,6 +6,7 @@ import optuna
 import pandas as pd
 import pytest
 
+import pipeline.catboost_hpo as catboost_hpo
 from pipeline.catboost_hpo import (
     BASELINE_FOLD0_AUC,
     GpuMemorySampler,
@@ -172,3 +174,37 @@ def test_gpu_memory_sampler_keeps_peak_and_total() -> None:
     assert sampler.start_mib == 100
     assert sampler.peak_mib == 300
     assert sampler.total_mib == 24576
+
+
+def test_run_uses_config_repository_root_from_another_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository_root = Path(catboost_hpo.__file__).resolve().parents[2]
+    config_path = repository_root / "configs/exp070_cat_exact_cats.yaml"
+    caller = tmp_path / "caller"
+    caller.mkdir()
+    monkeypatch.chdir(caller)
+    captured: dict[str, object] = {}
+
+    def fake_run_search(**kwargs: object) -> dict[str, str]:
+        captured.update(kwargs)
+        captured["working_directory"] = Path.cwd()
+        return {"status": "completed"}
+
+    monkeypatch.setattr(catboost_hpo, "run_search", fake_run_search)
+
+    catboost_hpo._run(
+        argparse.Namespace(
+            config=config_path,
+            pool_oof=Path("pool-fold0.parquet"),
+            output_dir=Path("results"),
+            device="0",
+            memory_interval_seconds=0.5,
+        )
+    )
+
+    assert captured["config_path"] == config_path
+    assert captured["pool_oof"] == caller / "pool-fold0.parquet"
+    assert captured["output_dir"] == caller / "results"
+    assert captured["working_directory"] == repository_root
+    assert Path.cwd() == caller
