@@ -6,6 +6,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 2026-08-18에 스레드 734005(코멘트 1개 → 9개)와 그 파생 노트북을 표적 재독해로 반영했다.
 같은 날 새 스레드 [735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861)(앙상블 다양성, 코멘트 1개)과 [735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421)(spline Transformer, 코멘트 5개)을 표적 반영했다.
 2026-08-19에 735861의 새 코멘트(작성자 YKuma의 답글, 코멘트 1개 → 2개)를 표적 반영했다.
+2026-08-21에 스레드 [734628](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734628)(Private-LB 검증, 코멘트 1개)을 표적 반영했다.
 전체 회차가 아니므로 다른 스레드의 코멘트 수는 2026-08-10 기준 그대로다.
 
 원자료는 세 개의 리딩 노트다.
@@ -268,6 +269,10 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
   OOF를 반으로 갈라 한쪽에서 가중치를 적합하고 다른 쪽에서 채점하기를 5회 평균한 실측에서, 최적화 가중치 0.96820이 균등 가중 0.96780을 t = +41.6으로 이겼고 전체 OOF 점수 0.96821과 거의 일치했다.
   즉 구성원이 몇 개 수준인 풀에서는 가중치 최적화가 과적합 없이 제값을 한다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861)).
 - 힐 클라이밍은 모든 모델이 같은 폴드 분할을 쓸 때 대체로 잘 작동한다 ([735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) 코멘트, Tilii).
+- 후보 선별과 가중치 학습은 독립된 두 이득이 아니다.
+  같은 74개 OOF 구성원에서 균등 순위 평균은 단독 점수 상위 10개가 전체 74개보다 `+0.00193` 높았지만, 힐 클라이밍은 전체 74개가 상위 10개보다 `+0.00006` 높았고 전체 74개의 nested 로지스틱 결합은 네 조합보다 높은 `0.96963`이었다 ([734628](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734628) 코멘트).
+  다만 2×2 표에는 계산 코드와 힐 클라이밍의 outer 평가 계약이 연결돼 있지 않아 정성적 외부 확인으로만 쓴다.
+  우리 자체 nested 비교에서는 16개 전체 후보의 학습형 결합이 선택된 3개 후보의 균등 순위 평균보다 `+0.00003347` 높고 5/5 outer fold에서 이겼으므로, 무결성과 중복 검사를 통과한 후보를 남겨 결합기가 판정하게 하는 현행 규칙을 유지한다 ([이슈 62](https://github.com/tmheo/predicting-smartphone-addiction/issues/62), [이슈 64](https://github.com/tmheo/predicting-smartphone-addiction/issues/64)).
 - 다양성 공급원으로 확인된 신경망이 둘 있다: 조회표 transformer(다양성 선두)와 [spline Transformer](https://www.kaggle.com/code/ern711/contextualized-deep-univariate-spline-transformer)(깊은 단변량 스플라인 인코더 + 얕은 self-attention)다.
   상위권(Tilii)이 spline 판에 파생 변수를 더해 public LB 0.96982를 얻었고, 100개 초과 앙상블에 넣으면 상위권 LB 기준 약 +0.00005를 거의 확실히 만든다고 평가했다 ([735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421) 코멘트).
   단, 이 수치들은 구성원 목록과 OOF가 비공개인 참가자 보고이며, 우리 자체 재검토와 제한 재개 결정은 [spline 재검토 문서](spline-comment-reassessment.md)([#166](https://github.com/tmheo/predicting-smartphone-addiction/issues/166))에 있다.
@@ -334,6 +339,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 | [736062](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/736062) | Achieving 0.971+ LB: Residual NN + LightGBM Stacking Strategy - 정량 근거 없는 홍보성 글로 저신뢰 판정, 본문 반입 없음([검토 문서](discussion-736062-cv-gain-noise.md)) | 0 (2026-08-19) | |
 | [735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) | What actually creates a decorrelated model when you work alone? | 2 (2026-08-19) | O |
 | [735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421) | Contextualized Deep Univariate Spline Transformer | 5 (2026-08-18) | O |
+| [734628](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734628) | How are you designing Private-LB-robust validation for S6E8? | 1 (2026-08-21) | O |
 | [734063](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734063) | Decoding the Synthetic Generator: 0.9689+ via Stringified Target Encoding and Rank Averaging | 1 | O |
 | [734005](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734005) | Changing the random seed moves you 60 places - what this leaderboard can and can't resolve | 9 (2026-08-18) | O |
 | [733983](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/733983) | A quarter of the rows describe people who can't exist - and LightGBM already knew | 0 | O |
