@@ -30,7 +30,7 @@ execution_lineage:
   candidate:
     config: exp049_lgb_orig_kde_lr
     source_run_id: a3ee8c4069414b869cab196d551c123c
-    imported_run_id: 68ffe6ded50e42dab3f17a77cc80f99b
+    imported_run_id: c8523f430c1d48c7a5f973ab0caf754e
     config_sha256: 70523d9ccf7c2381da53b0a3cb84f6f5476e081051180e2daaabfbb3c791e897
     git_commit: 327a973898b09b9f8861adc92155d4f527cc4c6a
     git_dirty: false
@@ -123,7 +123,7 @@ pool_entry:
     passed: true
   nearest_candidate:
     config: exp048_lgb_orig_cdf_diff
-    run_id: 2ddd0e31d2634e4794677a7f14a97117
+    run_id: 2b5fda6d3ea94ff886c5fe616376f0f0
     auc: 0.9676097182368125
     spearman: 0.9980511268460561
     duplicate_threshold: 0.998

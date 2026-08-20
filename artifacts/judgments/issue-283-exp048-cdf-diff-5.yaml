@@ -32,7 +32,7 @@ execution_lineage:
   candidate:
     config: exp048_lgb_orig_cdf_diff
     source_run_id: f04861551d304bd680e9a0f1908eee70
-    imported_run_id: 2ddd0e31d2634e4794677a7f14a97117
+    imported_run_id: 2b5fda6d3ea94ff886c5fe616376f0f0
     config_sha256: 78aa4f87470c0c6eb03cd646e6949fec48bf59009a37d590fd10ec8445212977
     git_commit: 327a973898b09b9f8861adc92155d4f527cc4c6a
     git_dirty: false
@@ -135,7 +135,7 @@ pool_entry:
     delta: -0.000022708863204545793
     role: 보조 설명이며 진입 판정에 사용하지 않았다.
   admitted: true
-  pool_run_id: 2ddd0e31d2634e4794677a7f14a97117
+  pool_run_id: 2b5fda6d3ea94ff886c5fe616376f0f0
 
 pool_contribution:
   procedure: missing_interaction_rank_logit

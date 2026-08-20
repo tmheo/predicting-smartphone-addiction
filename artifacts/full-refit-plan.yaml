@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: 39cce6972e8c632441481b1fc80b61eff88c747722d3de6c23ddfbeb6c561beb
+source_pool_sha256: b48a78eb1800c85e4b3f2db585b67cb7517227808d9c74dcdbd3bc3f254e541d
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -146,6 +146,6 @@ members:
     budgets: {42: 514, 43: 474, 44: 464}
   - config: exp048_lgb_orig_cdf_diff
     config_path: configs/exp048_lgb_orig_cdf_diff.yaml
-    run_id: 2ddd0e31d2634e4794677a7f14a97117
+    run_id: 2b5fda6d3ea94ff886c5fe616376f0f0
     budget_source: fold_median
     budgets: {42: 578, 43: 365, 44: 388}
