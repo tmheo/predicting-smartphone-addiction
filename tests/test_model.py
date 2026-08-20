@@ -357,6 +357,10 @@ def test_xgboost_adapter_smoke():
     assert isinstance(adapter, model_mod.XGBoostAdapter)
     X, y = _smoke_data()
     _assert_adapter_contract(adapter, X, y)
+    diagnostics = model_mod.collect_training_diagnostics(adapter)
+    assert diagnostics is not None
+    assert diagnostics["best_iteration"] >= 0
+    assert 0.0 <= diagnostics["best_score"] <= 1.0
 
 
 def test_catboost_adapter_smoke():
