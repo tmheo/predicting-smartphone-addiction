@@ -466,7 +466,9 @@ class ExactValueTargetEncoder:
 
     학습 fold 전체로 키별 타깃 평균표를 만들고,
     학습 fold 행에는 내부 층화 K-fold OOF 값을, 검증 fold와 test 행에는 전체 평균표 값을 준다.
-    평활 없음, 미지 키는 fit 데이터의 전체 타깃 평균. 새 컬럼 이름은 <col><suffix>.
+    smoothing이 0이면 평활하지 않고, 양수면 ``(sum + smoothing * global_mean) /
+    (count + smoothing)``으로 평균을 평활한다. 미지 키는 fit 데이터의 전체 타깃 평균이다.
+    새 컬럼 이름은 <col><suffix>.
     key_digits로 키 해상도를 낮춘 반올림 표현을 만들 수 있다(suffix로 정확값 TE와 구분). (#49)
     cols 항목이 컬럼 목록이면 결합 키 TE가 되고, 이름은 컬럼들을 __로 이은 어간을 쓴다. (#48, #51)
     """
@@ -479,14 +481,26 @@ class ExactValueTargetEncoder:
         inner_folds: int = 10,
         key_digits: int | None = None,
         suffix: str = "_te",
+        smoothing: float = 0.0,
     ) -> None:
+        if not np.isfinite(smoothing) or smoothing < 0:
+            raise ValueError(f"smoothing은 유한한 0 이상이어야 한다(받은 값: {smoothing})")
         self.cols = list(cols)
         self.inner_folds = inner_folds
         self.key_digits = key_digits
         self.suffix = suffix
+        self.smoothing = float(smoothing)
 
     def columns(self) -> list[str]:
         return [f"{_spec_name(spec)}{self.suffix}" for spec in self.cols]
+
+    def _table(self, y: pd.Series, keys: pd.Series) -> pd.Series:
+        if self.smoothing == 0:
+            return y.groupby(keys).mean()
+        stats = y.groupby(keys).agg(["sum", "count"])
+        return (stats["sum"] + self.smoothing * y.mean()) / (
+            stats["count"] + self.smoothing
+        )
 
     def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
         assert train_fold[ID].is_unique, "학습 fold의 id가 유일하지 않다."
@@ -499,11 +513,11 @@ class ExactValueTargetEncoder:
         for spec in self.cols:
             name = _spec_name(spec)
             keys = _spec_keys(train_fold, spec, self.key_digits)
-            self.tables_[name] = y.groupby(keys).mean()
+            self.tables_[name] = self._table(y, keys)
             vals = np.empty(len(train_fold))
             for tr_i, va_i in splits:
                 inner_y = y.iloc[tr_i]
-                inner_table = inner_y.groupby(keys.iloc[tr_i]).mean()
+                inner_table = self._table(inner_y, keys.iloc[tr_i])
                 mapped = keys.iloc[va_i].map(inner_table).fillna(inner_y.mean())
                 vals[va_i] = mapped.to_numpy()
             oof[name] = vals
