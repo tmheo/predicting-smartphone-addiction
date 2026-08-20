@@ -1,0 +1,207 @@
+pool:
+  path: artifacts/pool.yaml
+  sha256: 290d96ac719b737cdfbfd8d1e6ee19ce621b472410c528a43bb4515d2eb3ec38
+  member_count: 29
+
+perspectives:
+  raw_exact_values:
+    label: 원시 정확값
+    description: 원시 수치와 범주 값 자체를 희소 선형식 또는 학습형 기저로 표현한다.
+  exact_value_target_statistics:
+    label: 정확값 목표 통계
+    description: 정확값별 목표 평균을 바깥쪽 학습 부분 안의 내부 OOF로 표현한다.
+  arithmetic_relations:
+    label: 화면 시간 산술 관계
+    description: 화면 시간 합계, 잔차와 비율로 원시 열 사이의 산술 관계를 표현한다.
+  original_proxy_neighbors:
+    label: 원본 프록시 최근접 라벨
+    description: 원본 프록시의 가까운 행에서 얻은 라벨 평균을 표현한다.
+  original_proxy_initial_score:
+    label: 원본 프록시 초기 점수
+    description: 원본 프록시로 맞춘 목표 확률을 초기 점수로 두고 합성 자료 잔차를 학습한다.
+  constrained_missing_reconstruction:
+    label: 제약 결측 복원
+    description: 화면 시간 예산 제약 안에서 결측값과 복원 구간 폭을 표현한다.
+  original_proxy_value_priors:
+    label: 원본 프록시 값별 사전 통계
+    description: 원본 프록시의 정확값별 목표 평균을 합성 자료의 보조 좌표로 표현한다.
+  pairwise_lattice_target_statistics:
+    label: 쌍 격자 목표 통계
+    description: 두 수치 열의 격자 셀별 목표 평균과 빈도를 표현한다.
+  exact_value_lookup_geometry:
+    label: 정확값 조회와 연속 좌표
+    description: 정확값 조회 표현과 연속 수치 좌표를 함께 학습한다.
+  learned_missing_reconstruction:
+    label: 학습형 결측 복원과 조성
+    description: 학습형 결측 복원값과 복원 행렬의 조성 관계를 함께 표현한다.
+  native_exact_categories:
+    label: 정확값 범주 복제
+    description: 수치 정확값을 범주로 복제해 학습기 내부 목표 통계로 표현한다.
+  transductive_value_geometry:
+    label: 전처리 기준 집합의 값 좌표
+    description: 훈련과 시험 설명변수를 전처리 기준 집합으로 삼아 정확값 어휘와 분위 좌표를 고정한다.
+  exact_value_frequency:
+    label: 정확값 빈도
+    description: 목표값을 쓰지 않는 정확값별 출현 빈도를 표현한다.
+  original_proxy_distribution_coordinates:
+    label: 원본 프록시 분포 좌표
+    description: 원본 프록시의 목표 범주별 경험적 누적분포 차이를 좌표로 표현한다.
+
+members:
+  - config: exp006_te_drop_gaming
+    run_id: 4aaddd505ade428588cf83659f205cf6
+    model_family: lightgbm
+    primary: exact_value_target_statistics
+    secondary: [raw_exact_values]
+  - config: exp011_resid_pair
+    run_id: e21d19af37bb461db5dc1a59b66411a6
+    model_family: lightgbm
+    primary: arithmetic_relations
+    secondary: [raw_exact_values, exact_value_target_statistics]
+  - config: exp022_orig_knn
+    run_id: 52e9c12bcfb94ee9912e4bb7f43e3f09
+    model_family: lightgbm
+    primary: original_proxy_neighbors
+    secondary: [raw_exact_values, arithmetic_relations, exact_value_target_statistics]
+  - config: exp023_orig_proxy_residual
+    run_id: 202b7d47c3bd4b8e8904fa5c005c7423
+    model_family: lightgbm
+    primary: original_proxy_initial_score
+    secondary: [raw_exact_values, arithmetic_relations, exact_value_target_statistics]
+  - config: exp025_constrained_impute
+    run_id: 9804689a5e3642e586abb972b522f3d4
+    model_family: lightgbm
+    primary: constrained_missing_reconstruction
+    secondary: [raw_exact_values, arithmetic_relations, exact_value_target_statistics]
+  - config: exp032_recon_orig_mean_top3
+    run_id: b1bd4b08386946c9a4e05b755dbd5f26
+    model_family: lightgbm
+    primary: original_proxy_value_priors
+    secondary:
+      [raw_exact_values, arithmetic_relations, exact_value_target_statistics, constrained_missing_reconstruction]
+  - config: exp033_recon_orig_mean_top3_raw
+    run_id: c34f1da180544c3ba022140d394cb055
+    model_family: lightgbm
+    primary: original_proxy_value_priors
+    secondary:
+      [raw_exact_values, arithmetic_relations, exact_value_target_statistics, constrained_missing_reconstruction]
+  - config: exp035_lattice_te
+    run_id: c62a9ad334bf486cb46d738474ccd767
+    model_family: lightgbm
+    primary: pairwise_lattice_target_statistics
+    secondary:
+      [raw_exact_values, arithmetic_relations, exact_value_target_statistics, constrained_missing_reconstruction]
+  - config: exp058_logreg_onehot
+    run_id: e2b76edd9d204290810e39a7457c4c48
+    model_family: logistic_onehot
+    primary: raw_exact_values
+    secondary: []
+  - config: exp059_lookup_transformer
+    run_id: b951fac51b6b44298f7fdb0b543caba6
+    model_family: lookup_transformer
+    primary: exact_value_lookup_geometry
+    secondary: [raw_exact_values, arithmetic_relations]
+  - config: exp065_tabm
+    run_id: df2023d4bd71429b88a8026d52f5258c
+    model_family: tabm
+    primary: learned_missing_reconstruction
+    secondary:
+      [raw_exact_values, arithmetic_relations, exact_value_target_statistics, constrained_missing_reconstruction]
+  - config: exp070_cat_exact_cats
+    run_id: 6238d8c58beb42ee8102209ded92516e
+    model_family: catboost
+    primary: native_exact_categories
+    secondary:
+      [raw_exact_values, arithmetic_relations, exact_value_target_statistics, constrained_missing_reconstruction, learned_missing_reconstruction]
+  - config: exp067_tabpfn3
+    run_id: 85b09132aae543aab16e69dea5906a30
+    model_family: tabpfn3
+    primary: learned_missing_reconstruction
+    secondary:
+      [raw_exact_values, arithmetic_relations, exact_value_target_statistics, constrained_missing_reconstruction]
+  - config: exp081_lookup_fold_initialization_avg3
+    run_id: d55d1cd49c194eb8bf7b5128e548df81
+    model_family: lookup_transformer
+    primary: learned_missing_reconstruction
+    secondary:
+      [raw_exact_values, arithmetic_relations, constrained_missing_reconstruction, exact_value_lookup_geometry]
+  - config: exp110_lgb_kitopl_no_te
+    run_id: ae829ae3d886402ab100a8e966c3131a
+    model_family: lightgbm
+    primary: constrained_missing_reconstruction
+    secondary: [raw_exact_values, arithmetic_relations]
+  - config: exp111_xgb_depth8_no_te
+    run_id: 3cbc2ccce9eb46458d884006a33e516e
+    model_family: xgboost
+    primary: constrained_missing_reconstruction
+    secondary: [raw_exact_values, arithmetic_relations]
+  - config: exp071_cat_exact_no_te
+    run_id: 521b4924b2ef4ba1830724333b83deb2
+    model_family: catboost
+    primary: native_exact_categories
+    secondary:
+      [raw_exact_values, arithmetic_relations, constrained_missing_reconstruction, learned_missing_reconstruction]
+  - config: exp106_lookup_fixed24_train_test_preprocessing
+    run_id: 547e7bc90b9f4c448307d406f053629a
+    model_family: lookup_transformer
+    primary: transductive_value_geometry
+    secondary: [raw_exact_values, arithmetic_relations, exact_value_lookup_geometry]
+  - config: exp107_logreg_onehot_nn10
+    run_id: c4c4c780acab4b83baf10d67b98cc85a
+    model_family: logistic_onehot
+    primary: original_proxy_neighbors
+    secondary: [raw_exact_values]
+  - config: exp108_logreg_onehot_nn10_l1
+    run_id: 83f7977a87ef46679c26824c5b85f928
+    model_family: logistic_onehot
+    primary: original_proxy_neighbors
+    secondary: [raw_exact_values]
+  - config: exp117_ag25_gbm_r21
+    run_id: d107ea874ebe4dbe8094694141a162b6
+    model_family: lightgbm
+    primary: learned_missing_reconstruction
+    secondary:
+      [raw_exact_values, arithmetic_relations, exact_value_target_statistics, constrained_missing_reconstruction]
+  - config: exp113_tab_cnn_m0
+    run_id: b47a4184249746cdb1d062aa98364437
+    model_family: tab_cnn
+    primary: learned_missing_reconstruction
+    secondary: [raw_exact_values, arithmetic_relations, constrained_missing_reconstruction]
+  - config: exp085_contextual_spline_m0
+    run_id: e84d97e875754af1b073b399db2a0616
+    model_family: contextualized_spline_transformer
+    primary: learned_missing_reconstruction
+    secondary: [raw_exact_values, arithmetic_relations, constrained_missing_reconstruction]
+  - config: exp124_realmlp_dtype_fix
+    run_id: c41c6a4deae04e1fbd8a75193eaaa32c
+    model_family: realmlp
+    primary: raw_exact_values
+    secondary: []
+  - config: exp127_lookup_muon
+    run_id: 7124425b5b51421dbbeba597229554da
+    model_family: lookup_transformer
+    primary: learned_missing_reconstruction
+    secondary:
+      [raw_exact_values, arithmetic_relations, constrained_missing_reconstruction, exact_value_lookup_geometry]
+  - config: exp027_recon_ce
+    run_id: e4e81bdce7df4a72bf250ef842fd8781
+    model_family: lightgbm
+    primary: exact_value_frequency
+    secondary:
+      [raw_exact_values, arithmetic_relations, exact_value_target_statistics, constrained_missing_reconstruction]
+  - config: exp048_lgb_orig_cdf_diff
+    run_id: 2b5fda6d3ea94ff886c5fe616376f0f0
+    model_family: lightgbm
+    primary: original_proxy_distribution_coordinates
+    secondary:
+      [raw_exact_values, arithmetic_relations, exact_value_target_statistics, constrained_missing_reconstruction]
+  - config: exp134_realmlp_muon
+    run_id: f72eeee10b1b4947af79228f888e7a81
+    model_family: realmlp
+    primary: raw_exact_values
+    secondary: []
+  - config: exp135_xgb_hpo_trial30
+    run_id: 119b9c4e44674d38a6f758b65a68593e
+    model_family: xgboost
+    primary: exact_value_target_statistics
+    secondary: [raw_exact_values, arithmetic_relations, constrained_missing_reconstruction]
