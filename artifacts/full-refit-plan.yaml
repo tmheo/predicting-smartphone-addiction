@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: a34390046d72b8e5e6b66acdc3868dbd8e35e6626d1a7a0a4bfc47fb576ab65d
+source_pool_sha256: 85001287f5e207144d13bad01f3f5f91c2dbf33c5e35a50c5946f87d9632f75d
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -134,3 +134,8 @@ members:
     run_id: c41c6a4deae04e1fbd8a75193eaaa32c
     budget_source: fold_median
     budgets: {42: 5, 43: 5, 44: 5}
+  - config: exp127_lookup_muon
+    config_path: configs/exp127_lookup_muon.yaml
+    run_id: 7124425b5b51421dbbeba597229554da
+    budget_source: fold_median
+    budgets: {42: 13, 43: 15, 44: 15}
