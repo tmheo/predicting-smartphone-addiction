@@ -1,0 +1,83 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #259: zhenruiweng 공개 RealMLP 0.97009 판(kernel 129907249, Apache-2.0,
+# SHA-256 ef16bb88782581ad4e880f295903db88278428464c1aa31643a0511d5197b116)이
+# beicicc 계약 대비 가진 용량 확장만 exp124(run c41c6a4d) 위에 얹은 단일 묶음
+# 짝비교다. #244 개봉 결정과 #234 결정 5(용량은 특성이 아니므로 대리 없이
+# 본실험 직접)를 따른다.
+# exp124_realmlp_dtype_fix.yaml 대비 델타는 용량 축 세 가지뿐이다.
+#   - 은닉 구조: hidden_dims [512, 512, 512] -> [768, 512, 512]
+#   - PBLD 임베딩: pbld_hidden_dim 20 -> 32, pbld_out_dim 5 -> 6,
+#     pbld_freq_scale 5.0 -> 10.0
+#   - 내부 앙상블 수: n_ens 8 -> 10
+# 노트북의 lr 0.008, dropout 0.07, wd 0.015, epoch 10 완주는 넣지 않는다
+# (#244 후보 정의는 용량 축뿐이고, 어닐링 완주는 #232 실측 +0.0000194로
+# 단독 후보가 아님). 나머지 값은 exp124와 전부 동일하다.
+# 판정: exp124와 같은 GPU 등급·같은 이미지에서 confirm 3시드(42, 43, 44)
+# 짝비교, 계열 2(풀 진입·교체) 규칙으로 exp124 교체 여부를 정한다.
+# RealMLP 구현 원문: https://www.kaggle.com/code/beicicc/s6e8-fold-safe-realmlp
+# (kernel 129554888, Apache-2.0). 수정 내용과 사용 조건은 realmlp.py에 기록했다.
+# 번호는 exp128이다. 이슈 196 브랜치가 exp126(tabm_muon)·exp127(lookup_muon)을
+# 이미 원격 실행에 사용 중이어서 충돌을 피했다(e564648 전례).
+# 판정 결과(2026-08-20): Vast.ai RTX A4000 confirm 3시드(워크트리 run 16ebb441,
+# main 반입 run 47bb6b6a) 3시드 평균 OOF 0.9683176 vs exp124 0.9683223,
+# delta -0.0000047, fold 승리 1/5(시드 평균본 fold 기준). 계열 2 중복 게이트에서
+# 최근접 exp124(run c41c6a4d)와 스피어만 0.99962 >= 0.998이고 기존 구성원이 더
+# 높아 진입 탈락. fold별 validation_unknown_category_values 23,23,24,23,27은
+# 3시드 모두 exp124와 정확히 일치. 용량 확장 축(첫 층 768, PBLD 32/6/10.0,
+# n_ens 10)은 이 자료 규모에서 기대 몫 +0.0007을 실현하지 못하고 예측이 exp124와
+# 사실상 중복이므로 축을 닫는다. 이 설정은 기각 근거의 재현 기록으로 남긴다.
+name: exp128_realmlp_capacity768
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers: []
+
+model:
+  kind: realmlp
+  params:
+    n_ens: 10
+    embed_dim: 8
+    onehot_thresh: 8
+    hidden_dims: [768, 512, 512]
+    dropout: 0.06
+    p_drop_sched: expm4t
+    pbld_hidden_dim: 32
+    pbld_out_dim: 6
+    pbld_freq_scale: 10.0
+    pbld_lr_factor: 0.093
+    lr: 0.01
+    mom: 0.9
+    sq_mom: 0.98
+    lr_sched: flat_cos
+    flat_ratio: 0.3
+    first_layer_lr_factor: 1.0
+    first_layer_wd_factor: 0.1
+    lr_scale_mult: 10.0
+    lr_bias_mult: 0.1
+    weight_decay: 0.013
+    wd_scale_mult: 0.1
+    wd_bias_mult: 0.5
+    ema_decay: 0.997875
+    grad_clip: 1.2
+    ls_eps: 0.04
+    ls_eps_sched: cos
+    tfms: [median_center, robust_scale]
+    fixed_epochs: 4
+    schedule_epochs: 8
+    batch_size: 256
+    eval_batch_size: 10240
+    n_init_avg: 2
+    init_seed_stride: 1000
+    inner_folds: 5
+    perm_sample: 8192
+    perm_repeats: 1
+    device: cuda
+    verbosity: 1
+  fit: {}
