@@ -30,6 +30,7 @@ from sklearn.metrics import roc_auc_score
 
 from .data import ID, TRAIN_PATH, file_sha256, labels
 from .ensemble import (
+    BaggedGreedyRankMeanCombiner,
     COMBINER_REGISTRY,
     Combiner,
     CombinerConvergenceError,
@@ -150,6 +151,7 @@ class DiagnosticResult:
     frozen_map: FrozenPerspectiveMap
     member_quality: tuple[MemberQuality, ...]
     registered_strategy_names: tuple[str, ...]
+    bagged_workers: int
     baseline_evaluations: tuple[EvaluationSummary, ...]
     group_evaluations: dict[str, tuple[EvaluationSummary, ...]]
     baseline_best: EvaluationSummary
@@ -299,11 +301,19 @@ def evaluate_all(
     fold_of: pd.Series,
     y: pd.Series,
     *,
+    existing: tuple[EvaluationSummary, ...] = (),
+    processed: tuple[str, ...] = (),
+    checkpoint: Callable[[tuple[EvaluationSummary, ...], tuple[str, ...]], None]
+    | None = None,
     progress: Callable[[str], None] | None = None,
 ) -> tuple[EvaluationSummary, ...]:
     """등록 순서를 유지해 모든 결합 전략을 평가하고 미수렴만 제외한다."""
-    summaries: list[EvaluationSummary] = []
+    summaries = list(existing)
+    processed_names = list(processed)
+    processed_set = set(processed_names)
     for combiner in combiners:
+        if combiner.name in processed_set:
+            continue
         if progress is not None:
             progress(f"전략 시작: {combiner.name}")
         try:
@@ -311,13 +321,40 @@ def evaluate_all(
         except CombinerConvergenceError as exc:
             if progress is not None:
                 progress(f"전략 제외: {combiner.name}: {exc}")
-            continue
-        summaries.append(summary)
-        if progress is not None:
-            progress(f"전략 완료: {combiner.name} {summary.nested_auc:.12f}")
+        else:
+            summaries.append(summary)
+            if progress is not None:
+                progress(f"전략 완료: {combiner.name} {summary.nested_auc:.12f}")
+        processed_names.append(combiner.name)
+        processed_set.add(combiner.name)
+        if checkpoint is not None:
+            checkpoint(tuple(summaries), tuple(processed_names))
     if not summaries:
         raise PerspectiveDiagnosticError("점수를 낸 결합 전략이 없다.")
     return tuple(summaries)
+
+
+def diagnostic_combiners(bagged_workers: int) -> tuple[Combiner, ...]:
+    """전략 의미는 유지하고 배깅 작업 스레드 수만 실행 환경에 맞춘다."""
+    if bagged_workers < 1:
+        raise PerspectiveDiagnosticError("배깅 작업 스레드 수는 1 이상이어야 한다.")
+    combiners: list[Combiner] = []
+    for combiner in COMBINER_REGISTRY.values():
+        if isinstance(combiner, BaggedGreedyRankMeanCombiner):
+            combiners.append(
+                BaggedGreedyRankMeanCombiner(
+                    bags=combiner.bags,
+                    sample_fraction=combiner.sample_fraction,
+                    seed=combiner.seed,
+                    workers=bagged_workers,
+                    max_members=combiner.max_members,
+                    min_improvement=combiner.min_improvement,
+                    name=combiner.name,
+                )
+            )
+        else:
+            combiners.append(combiner)
+    return tuple(combiners)
 
 
 def best_evaluation(evaluations: Iterable[EvaluationSummary]) -> EvaluationSummary:
@@ -491,7 +528,9 @@ def _load_checkpoint(
             "perspective_map_sha256": frozen_map.sha256,
             "strategy_names": list(strategy_names),
             "baseline_evaluations": [],
+            "baseline_processed_names": [],
             "group_evaluations": {},
+            "group_processed_names": {},
         }
     try:
         checkpoint = json.loads(path.read_text())
@@ -539,29 +578,54 @@ def run_diagnostic(
             )
 
     strategy_names = tuple(combiner.name for combiner in combiners)
+    bagged_workers = next(
+        combiner.workers
+        for combiner in combiners
+        if isinstance(combiner, BaggedGreedyRankMeanCombiner)
+    )
     checkpoint = _load_checkpoint(
         checkpoint_path, frozen_map=frozen_map, strategy_names=strategy_names
     )
-    baseline_records = checkpoint["baseline_evaluations"]
-    if baseline_records:
-        baseline_evaluations = tuple(
-            _evaluation_from_json(record) for record in baseline_records
-        )
+    baseline_evaluations = tuple(
+        _evaluation_from_json(record)
+        for record in checkpoint["baseline_evaluations"]
+    )
+    baseline_processed = tuple(checkpoint.get("baseline_processed_names", []))
+    if set(baseline_processed) == set(strategy_names):
         if progress is not None:
             progress("전체 풀 결합 전략 결과를 중간 결과에서 복구했다.")
     else:
         if progress is not None:
-            progress("전체 풀 결합 전략 재평가 시작")
+            if baseline_processed:
+                progress(
+                    f"전체 풀 결합 전략 {len(baseline_processed)}개 뒤부터 재개"
+                )
+            else:
+                progress("전체 풀 결합 전략 재평가 시작")
+
+        def save_baseline(
+            evaluations: tuple[EvaluationSummary, ...], processed: tuple[str, ...]
+        ) -> None:
+            checkpoint["baseline_evaluations"] = [
+                _evaluation_to_json(evaluation) for evaluation in evaluations
+            ]
+            checkpoint["baseline_processed_names"] = list(processed)
+            _write_json_atomic(checkpoint_path, checkpoint)
+
         baseline_evaluations = evaluate_all(
-            combiners, matrix, fold_of, y, progress=progress
+            combiners,
+            matrix,
+            fold_of,
+            y,
+            existing=baseline_evaluations,
+            processed=baseline_processed,
+            checkpoint=save_baseline,
+            progress=progress,
         )
-        checkpoint["baseline_evaluations"] = [
-            _evaluation_to_json(evaluation) for evaluation in baseline_evaluations
-        ]
-        _write_json_atomic(checkpoint_path, checkpoint)
     baseline_best = best_evaluation(baseline_evaluations)
 
     group_records = checkpoint["group_evaluations"]
+    group_processed_records = checkpoint.setdefault("group_processed_names", {})
     comparisons = []
     all_group_evaluations: dict[str, tuple[EvaluationSummary, ...]] = {}
     for perspective in frozen_map.perspectives:
@@ -570,10 +634,12 @@ def run_diagnostic(
             for member in frozen_map.members
             if member.primary == perspective
         ]
-        if perspective in group_records:
-            group_evaluations = tuple(
-                _evaluation_from_json(record) for record in group_records[perspective]
-            )
+        group_evaluations = tuple(
+            _evaluation_from_json(record)
+            for record in group_records.get(perspective, [])
+        )
+        group_processed = tuple(group_processed_records.get(perspective, []))
+        if set(group_processed) == set(strategy_names):
             if progress is not None:
                 progress(f"관점 {perspective} 결과를 중간 결과에서 복구했다.")
         else:
@@ -582,13 +648,26 @@ def run_diagnostic(
                     f"관점 제거 시작: {perspective} ({len(excluded)}개 구성원 제외)"
                 )
             subset = matrix.drop(columns=excluded)
+
+            def save_group(
+                evaluations: tuple[EvaluationSummary, ...], processed: tuple[str, ...]
+            ) -> None:
+                group_records[perspective] = [
+                    _evaluation_to_json(evaluation) for evaluation in evaluations
+                ]
+                group_processed_records[perspective] = list(processed)
+                _write_json_atomic(checkpoint_path, checkpoint)
+
             group_evaluations = evaluate_all(
-                combiners, subset, fold_of, y, progress=progress
+                combiners,
+                subset,
+                fold_of,
+                y,
+                existing=group_evaluations,
+                processed=group_processed,
+                checkpoint=save_group,
+                progress=progress,
             )
-            group_records[perspective] = [
-                _evaluation_to_json(evaluation) for evaluation in group_evaluations
-            ]
-            _write_json_atomic(checkpoint_path, checkpoint)
         all_group_evaluations[perspective] = group_evaluations
         comparisons.append(
             compare_perspective(
@@ -609,6 +688,7 @@ def run_diagnostic(
         frozen_map=frozen_map,
         member_quality=quality,
         registered_strategy_names=strategy_names,
+        bagged_workers=bagged_workers,
         baseline_evaluations=baseline_evaluations,
         group_evaluations=all_group_evaluations,
         baseline_best=baseline_best,
@@ -644,6 +724,7 @@ def render_report(result: DiagnosticResult) -> str:
         f"`{result.folds_sha256}`다.",
         f"등록된 {len(result.registered_strategy_names)}개 결합 전략을 전체 풀과 모든 대표 "
         "정보 관점 제외 풀에 같은 순서로 적용했다.",
+        f"배깅 탐욕 전략은 선택 규칙을 바꾸지 않고 {result.bagged_workers}개 작업 스레드로 실행했다.",
         "",
         "## 전체 풀 결합 전략 재평가",
         "",
@@ -830,6 +911,8 @@ def result_json(result: DiagnosticResult) -> dict[str, Any]:
         "pool_sha256": result.frozen_map.pool_sha256,
         "perspective_map_sha256": result.frozen_map.sha256,
         "strategy_names": list(result.registered_strategy_names),
+        "bagged_workers": result.bagged_workers,
+        "baseline_processed_names": list(result.registered_strategy_names),
         "baseline_evaluations": [
             _evaluation_to_json(evaluation) for evaluation in result.baseline_evaluations
         ],
@@ -838,6 +921,10 @@ def result_json(result: DiagnosticResult) -> dict[str, Any]:
                 _evaluation_to_json(evaluation) for evaluation in evaluations
             ]
             for perspective, evaluations in result.group_evaluations.items()
+        },
+        "group_processed_names": {
+            perspective: list(result.registered_strategy_names)
+            for perspective in result.group_evaluations
         },
         "baseline_best": _evaluation_to_json(result.baseline_best),
         "member_quality": [asdict(item) for item in result.member_quality],
@@ -863,6 +950,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pool", type=Path, default=POOL_PATH)
     parser.add_argument("--tracking-uri", default=TRACKING_URI)
     parser.add_argument("--reference-run")
+    parser.add_argument(
+        "--bagged-workers",
+        type=int,
+        default=min(12, os.cpu_count() or 1),
+        help="배깅 탐욕 전략의 작업 스레드 수. 선택 결과에는 영향을 주지 않는다.",
+    )
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT_PATH)
     parser.add_argument("--json-output", type=Path, default=DEFAULT_JSON_PATH)
     return parser.parse_args()
@@ -883,7 +976,7 @@ def main() -> None:
             MlflowRunStore(args.tracking_uri),
             fold_of,
             y,
-            tuple(COMBINER_REGISTRY.values()),
+            diagnostic_combiners(args.bagged_workers),
             checkpoint_path=args.json_output,
             reference_run_id=args.reference_run,
             progress=progress,

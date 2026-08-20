@@ -16,9 +16,11 @@ from pipeline.pool_perspective import (
     PerspectiveDefinition,
     PerspectiveDiagnosticError,
     compare_perspective,
+    diagnostic_combiners,
     load_frozen_map,
     member_selection,
 )
+from pipeline.ensemble import BaggedGreedyRankMeanCombiner
 
 
 POOL_SHA256 = "290d96ac719b737cdfbfd8d1e6ee19ce621b472410c528a43bb4515d2eb3ec38"
@@ -62,6 +64,20 @@ def test_repository_map_rejects_changed_pool_before_reading_results(tmp_path: Pa
 
     with pytest.raises(PerspectiveDiagnosticError, match="후보 풀 내용 해시 변경"):
         load_frozen_map(map_path, pool_path=changed_pool)
+
+
+def test_diagnostic_worker_override_preserves_registered_strategy_names():
+    combiners = diagnostic_combiners(7)
+
+    bagged = [
+        combiner
+        for combiner in combiners
+        if isinstance(combiner, BaggedGreedyRankMeanCombiner)
+    ]
+    assert len(bagged) == 1
+    assert bagged[0].workers == 7
+    assert bagged[0].bags == 50
+    assert bagged[0].name == "bagged_greedy_rank_mean"
 
 
 def test_member_selection_aggregates_outer_fold_weights():

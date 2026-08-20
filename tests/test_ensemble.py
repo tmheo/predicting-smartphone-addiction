@@ -191,7 +191,11 @@ def test_bagged_greedy_is_deterministic_and_averages_selection_frequencies():
     )
     first = combiner.fit(preds, y).summary()
     second = combiner.fit(preds, y).summary()
+    more_workers = BaggedGreedyRankMeanCombiner(
+        bags=4, sample_fraction=0.6, seed=7, workers=4
+    ).fit(preds, y).summary()
     assert first == second
+    assert first == more_workers
     assert sum(first.values()) == pytest.approx(1.0)
     assert any(weight == 0.0 for weight in first.values())
 
