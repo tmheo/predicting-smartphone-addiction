@@ -29,6 +29,9 @@ def test_committed_refit_plan_matches_candidate_pool():
     realmlp = plan.member("exp124_realmlp_dtype_fix")
     assert realmlp.budgets == {42: 5, 43: 5, 44: 5}
     assert realmlp.budget_source == "fold_median"
+    constrained_impute = plan.member("exp025_constrained_impute")
+    assert constrained_impute.budgets == {42: 503, 43: 394, 44: 398}
+    assert constrained_impute.budget_source == "fold_median"
     lookup_muon = plan.member("exp127_lookup_muon")
     assert lookup_muon.budgets == {42: 11, 43: 14, 44: 14}
     assert lookup_muon.budget_source == "fold_median"

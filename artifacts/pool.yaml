@@ -61,22 +61,22 @@ members:
     ensemble_auc_with: 0.9675430190054946
     ensemble_auc_without: 0.9674367112386212
     contribution: 0.00010630776687337029
-- run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
-  config: exp026_constrained_impute_nowidth
-  oof_auc: 0.9675476423592995
+- run_id: 9804689a5e3642e586abb972b522f3d4
+  config: exp025_constrained_impute
+  oof_auc: 0.9675746898110065
   seeds: 42,43,44
-  entered_at: '2026-08-11'
-  reason: '이슈 #74: 새 champion exp026의 3시드 평균본. 최근접 exp011과 스피어만 0.99712로 중복 아님, 표준
-    평가 앙상블 기여 +0.00012'
+  entered_at: '2026-08-20'
+  reason: '이슈 281: 깨끗한 짝비교에서 폭 3열 포함판이 exp026보다 3시드 +0.00002705, 시드 2/3, fold 4/5로
+    실신호를 확인해 같은 계열 구성원 품질 개선판으로 교체'
   evidence:
-    champion_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
-    champion_oof_auc: 0.9675476423592995
-    floor_margin: 0.010000000000000009
-    nearest_run_id: e21d19af37bb461db5dc1a59b66411a6
-    nearest_spearman: 0.9971180102892839
-    ensemble_auc_with: 0.9676591285688336
-    ensemble_auc_without: 0.9675430190054946
-    contribution: 0.00011610956333907296
+    champion_run_id: 7124425b5b51421dbbeba597229554da
+    champion_oof_auc: 0.9692840450124712
+    floor_margin: 0.008290644798535252
+    nearest_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
+    nearest_spearman: 0.9979250275125117
+    ensemble_auc_with: 0.9690570653227683
+    ensemble_auc_without: 0.9690802079052767
+    contribution: -2.3142582508461906e-05
 - run_id: b1bd4b08386946c9a4e05b755dbd5f26
   config: exp032_recon_orig_mean_top3
   oof_auc: 0.9676472210375413
