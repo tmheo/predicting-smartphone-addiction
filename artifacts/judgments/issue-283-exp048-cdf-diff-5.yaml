@@ -1,0 +1,238 @@
+schema_version: 1
+schema_note: 피처 기여 판정 기록 스키마 구현 전 이슈 262 계약의 필수 필드를 수동 기록했다.
+judgment_id: issue-283-exp048-cdf-diff-5
+generated_at: '2026-08-20T05:15:44Z'
+supersedes: null
+source:
+  issue: 283
+  contract_issue: 262
+  scope_issue: 263
+  stage: confirmation
+  path: candidate_pool
+
+feature_bundle:
+  name: exp048_original_cdf_diff_5
+  provider: original_cdf_diff
+  columns:
+    - app_opens_per_day_orig_cdf_diff
+    - daily_screen_time_hours_orig_cdf_diff
+    - notifications_per_day_orig_cdf_diff
+    - social_media_hours_orig_cdf_diff
+    - weekend_screen_time_orig_cdf_diff
+  preregistration:
+    issue: 283
+    rule: exp048_lgb_orig_cdf_diff 설정의 CDF 차이 5열 전부를 하나의 묶음으로 고정하고 파생 변형을 만들지 않는다.
+  content_hash:
+    algorithm: sha256
+    encoding: UTF-8 canonical JSON with sorted keys, compact separators and trailing LF
+    payload_fields: [name, provider, columns]
+    value: 0927c00e138f1f81e1ecd9087ba5bb81e45d71036f6395cf03ffc2c63096043f
+
+execution_lineage:
+  candidate:
+    config: exp048_lgb_orig_cdf_diff
+    source_run_id: f04861551d304bd680e9a0f1908eee70
+    imported_run_id: 2ddd0e31d2634e4794677a7f14a97117
+    config_sha256: 78aa4f87470c0c6eb03cd646e6949fec48bf59009a37d590fd10ec8445212977
+    git_commit: 327a973898b09b9f8861adc92155d4f527cc4c6a
+    git_dirty: false
+    seeds: [42, 43, 44]
+  baseline:
+    config: exp026_constrained_impute_nowidth
+    run_id: e48c83c60be4484cae6f27f10fc71cea
+    config_sha256: f04ce589aa654be3b8ca301459e11373135374f1dd93f94c321701d14fc9b663
+    git_commit: 327a973898b09b9f8861adc92155d4f527cc4c6a
+    git_dirty: false
+    seeds: [42, 43, 44]
+  inputs:
+    train_sha256: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test_sha256: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds_sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  status: 유효
+  clean_pair_same_commit: true
+  folds_match: true
+  adoption_eligibility:
+    seeds_ok: true
+    git_dirty: false
+    folds_ok: true
+  canary:
+    status: 유효
+    source_feature: placebo_noise_te
+    source_gain_mean: 4024.7444450934727
+    placebo_feature: placebo_noise
+    placebo_gain_mean: 23775.80845295588
+    below_placebo: true
+  environment_gates:
+    command: scripts/verify_environment_gates.sh --source-root /Users/taemyungheo/.codex/worktrees/aedf/predicting-smartphone-addiction
+    before_run:
+      private_inputs: passed
+      collected_tests: 357
+      remote_contract_tests: 4
+      full_tests: 357
+      status: passed
+    after_run:
+      private_inputs: passed
+      collected_tests: 357
+      remote_contract_tests: 4
+      full_tests: 357
+      status: passed
+
+paired_oof:
+  comparison: candidate_minus_baseline
+  candidate_auc: 0.9676097182368125
+  baseline_auc: 0.9675476423592995
+  delta: 0.00006207587751305699
+  thresholds:
+    confirmation_mean_min_delta_exclusive: 0.0
+    confirmation_seed_win_min: 2
+    boundary_upper: 0.0002
+    boundary_fold_win_min: 3
+  seed_deltas:
+    42: 0.000034436349632627206
+    43: 0.00007280503112849779
+    44: 0.00006891209184944902
+  seed_wins: 3
+  fold_deltas:
+    0: 0.00008316458855561759
+    1: 0.000015906949841659745
+    2: 0.000021678563127958128
+    3: 0.00011159424945617058
+    4: 0.00008932137072426016
+  fold_wins: 5
+  boundary_fold_gate_applied: true
+  feature_signal: 실신호
+
+selection_procedure:
+  required: false
+  reason: 결과를 보기 전에 CDF 차이 5열 전체를 고정했으며 같은 OOF로 변형, 하위 묶음 또는 문턱을 선택하지 않았다.
+  candidate_set: null
+  inner_rule: null
+  tie_rule: null
+  nested_result: null
+
+pool_entry:
+  candidate_auc: 0.9676097182368125
+  champion:
+    config: exp127_lookup_muon
+    run_id: 7124425b5b51421dbbeba597229554da
+    auc: 0.9692840450124712
+  floor:
+    margin: 0.01
+    threshold: 0.9592840450124712
+    candidate_margin: 0.008325673224341301
+    passed: true
+  nearest_candidate:
+    config: exp032_recon_orig_mean_top3
+    run_id: b1bd4b08386946c9a4e05b755dbd5f26
+    spearman: 0.997702406875849
+    duplicate_threshold: 0.998
+    passed: true
+  rank_mean_reference:
+    auc_without: 0.9690383381095419
+    auc_with: 0.9690156292463373
+    delta: -0.000022708863204545793
+    role: 보조 설명이며 진입 판정에 사용하지 않았다.
+  admitted: true
+  pool_run_id: 2ddd0e31d2634e4794677a7f14a97117
+
+pool_contribution:
+  procedure: missing_interaction_rank_logit
+  excluded:
+    member_count: 27
+    nested_auc: 0.9696863651337675
+    outer_fold_aucs:
+      0: 0.9691359795325217
+      1: 0.9698191088786645
+      2: 0.9698195105167793
+      3: 0.9702776197622728
+      4: 0.9694743073799735
+  included:
+    member_count: 28
+    nested_auc: 0.96968725851272
+    outer_fold_aucs:
+      0: 0.9691363263672044
+      1: 0.9698206192713976
+      2: 0.9698166320680042
+      3: 0.9702756864189791
+      4: 0.9694711868508958
+  marginal_delta: 0.0000008933789524823155
+  outer_fold_deltas:
+    0: 0.0000003468346826407398
+    1: 0.0000015103927331061584
+    2: -0.000002878448775112119
+    3: -0.000001933343293680778
+    4: -0.000003120529077693668
+  outer_fold_wins: 2
+  required_outer_fold_wins: 3
+  status: 양의 기여 미확인
+  admission_effect: 후보 풀 기여는 진입을 소급 취소하는 제거 관문이 아니므로 등록을 유지한다.
+
+importance_support:
+  role: 보조 증거
+  method: LightGBM gain을 3개 난수 초기값과 5개 분할의 15셀에서 판독했다.
+  placebo_gain:
+    mean: 23775.80845295588
+    min: 16300.21592783928
+    median: 23583.392681121826
+    max: 32157.168152213097
+  bundle_conflict: social_media_hours CDF 차이는 15셀 모두 플라시보 미달이고 묶음 전체는 짝지은 OOF 실신호다.
+  interpretation: 개별 열의 인과적 기여가 아니라 사전 고정 묶음과 중요도 비교의 충돌로만 해석한다.
+  features:
+    - feature: app_opens_per_day_orig_cdf_diff
+      cells: 15
+      above_placebo_cells: 15
+      gain_min_median_max: [21192.120711565018, 27787.531547307968, 35302.26803839207]
+      ratio_to_placebo_min_median_max: [1.075813947102703, 1.1782669238065775, 1.3446196123338119]
+    - feature: daily_screen_time_hours_orig_cdf_diff
+      cells: 15
+      above_placebo_cells: 15
+      gain_min_median_max: [32744.695337057114, 36807.08220243454, 41067.03623497486]
+      ratio_to_placebo_min_median_max: [1.2696965615444304, 1.637006566182061, 2.016715293308602]
+    - feature: notifications_per_day_orig_cdf_diff
+      cells: 15
+      above_placebo_cells: 15
+      gain_min_median_max: [20850.282979488373, 29458.929225444794, 36640.04772531986]
+      ratio_to_placebo_min_median_max: [1.1346397865149211, 1.1970501132628952, 1.3023665895817573]
+    - feature: social_media_hours_orig_cdf_diff
+      cells: 15
+      above_placebo_cells: 0
+      gain_min_median_max: [11664.417585134506, 14109.369750022888, 18711.100602269173]
+      ratio_to_placebo_min_median_max: [0.4902924033548305, 0.6040654250730431, 0.8409308326908822]
+    - feature: weekend_screen_time_orig_cdf_diff
+      cells: 15
+      above_placebo_cells: 9
+      gain_min_median_max: [17882.930606365204, 24223.224917173386, 31382.27646446228]
+      ratio_to_placebo_min_median_max: [0.9399176953154051, 1.0250477329406722, 1.1618181001728543]
+
+results:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호
+  champion_path:
+    status: 판정 불가
+    reason: 현 champion은 Lookup 계보이므로 이 재검증에서 champion 이식을 판정하지 않았다.
+  candidate_pool_path:
+    admission: 진입
+    contribution: 양의 기여 미확인
+  ledger_changes:
+    pool: artifacts/pool.yaml에 exp048_lgb_orig_cdf_diff를 추가했다.
+    full_refit_plan: artifacts/full-refit-plan.yaml을 28구성원 후보 풀과 맞췄다.
+    champion: 변경하지 않았다.
+  reason_codes:
+    - valid_execution
+    - feature_signal_confirmed
+    - pool_entry_floor_passed
+    - pool_duplicate_gate_passed
+    - pool_positive_contribution_not_confirmed
+    - champion_path_not_evaluated
+
+raw_evidence:
+  local_only: true
+  bundle: run-issue283/exp048-issue283.bundle.zip
+  bundle_sha256: 6201dc58cd0736c82806325448ac4e345902974dd54889d7c1bc585471c8cc80
+  pair: run-issue283/exp048_vs_exp026_pair.json
+  importance: run-issue283/exp048_importance_readout.json
+  run_log: run-issue283/exp048-confirm.log
+  baseline_record: docs/research/placebo-repeatability-evidence.json#/clean_rerun_pair/baseline
+  baseline_local_artifacts: /Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction/run-placebo-repeat/worktree-mlruns/1/e48c83c60be4484cae6f27f10fc71cea/artifacts

@@ -429,3 +429,19 @@ members:
     ensemble_auc_with: 0.9690366670530813
     ensemble_auc_without: 0.9690554221704453
     contribution: -1.8755117363933316e-05
+- run_id: 2ddd0e31d2634e4794677a7f14a97117
+  config: exp048_lgb_orig_cdf_diff
+  oof_auc: 0.9676097182368125
+  seeds: 42,43,44
+  entered_at: '2026-08-20'
+  reason: '이슈 283: CDF 차이 5열 묶음이 깨끗한 짝비교에서 exp026보다 3시드 +0.00006208, 시드 3/3, fold
+    5/5로 실신호이며 최근접 스피어만 0.99770으로 중복 문턱 아래'
+  evidence:
+    champion_run_id: 7124425b5b51421dbbeba597229554da
+    champion_oof_auc: 0.9692840450124712
+    floor_margin: 0.008325673224341301
+    nearest_run_id: b1bd4b08386946c9a4e05b755dbd5f26
+    nearest_spearman: 0.997702406875849
+    ensemble_auc_with: 0.9690156292463373
+    ensemble_auc_without: 0.9690383381095419
+    contribution: -2.2708863204545793e-05

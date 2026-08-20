@@ -1,0 +1,226 @@
+schema_version: 1
+schema_note: 피처 기여 판정 기록 스키마 구현 전 이슈 262 계약의 필수 필드를 수동 기록했다.
+judgment_id: issue-283-exp049-kde-log-ratio-3
+generated_at: '2026-08-20T05:15:44Z'
+supersedes: null
+source:
+  issue: 283
+  contract_issue: 262
+  scope_issue: 263
+  stage: confirmation
+  path: candidate_pool
+
+feature_bundle:
+  name: exp049_original_kde_log_ratio_3
+  provider: original_kde_ratio
+  columns:
+    - app_opens_per_day_orig_kde_lr
+    - notifications_per_day_orig_kde_lr
+    - weekend_screen_time_orig_kde_lr
+  preregistration:
+    issue: 283
+    rule: exp049_lgb_orig_kde_lr 설정의 KDE 밀도비 3열 전부를 하나의 묶음으로 고정하고 파생 변형을 만들지 않는다.
+  content_hash:
+    algorithm: sha256
+    encoding: UTF-8 canonical JSON with sorted keys, compact separators and trailing LF
+    payload_fields: [name, provider, columns]
+    value: ab44b0601fd523263f367f3676d136835070fe0d0b233f6ead4a05c9ba5be15a
+
+execution_lineage:
+  candidate:
+    config: exp049_lgb_orig_kde_lr
+    source_run_id: a3ee8c4069414b869cab196d551c123c
+    imported_run_id: 68ffe6ded50e42dab3f17a77cc80f99b
+    config_sha256: 70523d9ccf7c2381da53b0a3cb84f6f5476e081051180e2daaabfbb3c791e897
+    git_commit: 327a973898b09b9f8861adc92155d4f527cc4c6a
+    git_dirty: false
+    seeds: [42, 43, 44]
+  baseline:
+    config: exp026_constrained_impute_nowidth
+    run_id: e48c83c60be4484cae6f27f10fc71cea
+    config_sha256: f04ce589aa654be3b8ca301459e11373135374f1dd93f94c321701d14fc9b663
+    git_commit: 327a973898b09b9f8861adc92155d4f527cc4c6a
+    git_dirty: false
+    seeds: [42, 43, 44]
+  inputs:
+    train_sha256: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test_sha256: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds_sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  status: 유효
+  clean_pair_same_commit: true
+  folds_match: true
+  adoption_eligibility:
+    seeds_ok: true
+    git_dirty: false
+    folds_ok: true
+  canary:
+    status: 유효
+    source_feature: placebo_noise_te
+    source_gain_mean: 4296.537461312612
+    placebo_feature: placebo_noise
+    placebo_gain_mean: 25300.078982043266
+    below_placebo: true
+  environment_gates:
+    command: scripts/verify_environment_gates.sh --source-root /Users/taemyungheo/.codex/worktrees/aedf/predicting-smartphone-addiction
+    before_run:
+      private_inputs: passed
+      collected_tests: 357
+      remote_contract_tests: 4
+      full_tests: 357
+      status: passed
+    after_run:
+      private_inputs: passed
+      collected_tests: 357
+      remote_contract_tests: 4
+      full_tests: 357
+      status: passed
+
+paired_oof:
+  comparison: candidate_minus_baseline
+  candidate_auc: 0.9675967207188548
+  baseline_auc: 0.9675476423592995
+  delta: 0.00004907835955536566
+  thresholds:
+    confirmation_mean_min_delta_exclusive: 0.0
+    confirmation_seed_win_min: 2
+    boundary_upper: 0.0002
+    boundary_fold_win_min: 3
+  seed_deltas:
+    42: 0.000024826578694625567
+    43: 0.00003673736267872929
+    44: 0.00004727869744569624
+  seed_wins: 3
+  fold_deltas:
+    0: 0.00004320946145341953
+    1: 0.00007976436543888354
+    2: 0.0000015570771380035708
+    3: 0.000052737393304247426
+    4: 0.00008828973634511517
+  fold_wins: 5
+  boundary_fold_gate_applied: true
+  feature_signal: 실신호
+
+selection_procedure:
+  required: false
+  reason: 결과를 보기 전에 KDE 밀도비 3열 전체를 고정했으며 같은 OOF로 변형, 하위 묶음 또는 문턱을 선택하지 않았다.
+  candidate_set: null
+  inner_rule: null
+  tie_rule: null
+  nested_result: null
+
+pool_entry:
+  candidate_auc: 0.9675967207188548
+  champion:
+    config: exp127_lookup_muon
+    run_id: 7124425b5b51421dbbeba597229554da
+    auc: 0.9692840450124712
+  floor:
+    margin: 0.01
+    threshold: 0.9592840450124712
+    candidate_margin: 0.00831267570638361
+    passed: true
+  nearest_candidate:
+    config: exp048_lgb_orig_cdf_diff
+    run_id: 2ddd0e31d2634e4794677a7f14a97117
+    auc: 0.9676097182368125
+    spearman: 0.9980511268460561
+    duplicate_threshold: 0.998
+    passed: false
+    replacement: false
+  rank_mean_reference: null
+  admitted: false
+  pool_run_id: null
+
+pool_contribution:
+  procedure: missing_interaction_rank_logit
+  diagnostic_only: true
+  excluded:
+    member_count: 28
+    nested_auc: 0.96968725851272
+    outer_fold_aucs:
+      0: 0.9691363263672044
+      1: 0.9698206192713976
+      2: 0.9698166320680042
+      3: 0.9702756864189791
+      4: 0.9694711868508958
+  included:
+    member_count: 29
+    hypothetical: true
+    nested_auc: 0.9696868707269045
+    outer_fold_aucs:
+      0: 0.969136805897234
+      1: 0.9698244331843098
+      2: 0.9698185550087945
+      3: 0.9702684554105976
+      4: 0.9694723265709233
+  marginal_delta: -0.00000038778581545884094
+  outer_fold_deltas:
+    0: 0.0000004795300296844829
+    1: 0.0000038139129121539384
+    2: 0.000001922940790377581
+    3: -0.000007231008381514137
+    4: 0.0000011397200274654296
+  outer_fold_wins: 4
+  required_outer_fold_wins: 3
+  status: 양의 기여 미확인
+  admission_effect: CDF 후보와 중복 문턱을 넘고 단독 OOF가 더 낮아 등록하지 않았으며 가상 포함 결과도 진단 기록으로만 남긴다.
+
+importance_support:
+  role: 보조 증거
+  method: LightGBM gain을 3개 난수 초기값과 5개 분할의 15셀에서 판독했다.
+  placebo_gain:
+    mean: 25300.078982043266
+    min: 16668.05056166649
+    median: 26330.81038594246
+    max: 35020.05266940594
+  bundle_conflict: app_opens_per_day KDE 밀도비는 15셀 중 14셀에서 플라시보 미달이고 묶음 전체는 짝지은 OOF 실신호다.
+  interpretation: 개별 열의 인과적 기여가 아니라 사전 고정 묶음과 중요도 비교의 충돌로만 해석한다.
+  features:
+    - feature: app_opens_per_day_orig_kde_lr
+      cells: 15
+      above_placebo_cells: 1
+      gain_min_median_max: [16538.270246744156, 23833.724642276764, 32299.46617913246]
+      ratio_to_placebo_min_median_max: [0.8890919350560352, 0.9223134666313559, 1.0104740360307307]
+    - feature: notifications_per_day_orig_kde_lr
+      cells: 15
+      above_placebo_cells: 12
+      gain_min_median_max: [19307.100989341736, 26283.53645682335, 36189.34376370907]
+      ratio_to_placebo_min_median_max: [0.9383595024484761, 1.033389187199157, 1.202792497054136]
+    - feature: weekend_screen_time_orig_kde_lr
+      cells: 15
+      above_placebo_cells: 11
+      gain_min_median_max: [21805.026059627533, 26552.709852695465, 30620.854657649994]
+      ratio_to_placebo_min_median_max: [0.8561037443273595, 1.0189725382450263, 1.3081929394775873]
+
+results:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호
+  champion_path:
+    status: 판정 불가
+    reason: 현 champion은 Lookup 계보이므로 이 재검증에서 champion 이식을 판정하지 않았다.
+  candidate_pool_path:
+    admission: 중복 조건 미달
+    contribution: 양의 기여 미확인
+  ledger_changes:
+    pool: 중복 조건 미달로 artifacts/pool.yaml에 추가하지 않았다.
+    full_refit_plan: 후보 풀에 들어오지 않아 변경하지 않았다.
+    champion: 변경하지 않았다.
+  reason_codes:
+    - valid_execution
+    - feature_signal_confirmed
+    - pool_entry_floor_passed
+    - pool_duplicate_gate_failed_lower_auc
+    - pool_positive_contribution_not_confirmed
+    - champion_path_not_evaluated
+
+raw_evidence:
+  local_only: true
+  bundle: run-issue283/exp049-issue283.bundle.zip
+  bundle_sha256: e2d27810e7875e364147904eb3f77f91593e6bc966f31613e1c5d25cc24728ab
+  pair: run-issue283/exp049_vs_exp026_pair.json
+  importance: run-issue283/exp049_importance_readout.json
+  run_log: run-issue283/exp049-confirm.log
+  baseline_record: docs/research/placebo-repeatability-evidence.json#/clean_rerun_pair/baseline
+  baseline_local_artifacts: /Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction/run-placebo-repeat/worktree-mlruns/1/e48c83c60be4484cae6f27f10fc71cea/artifacts
