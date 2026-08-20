@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: 290d96ac719b737cdfbfd8d1e6ee19ce621b472410c528a43bb4515d2eb3ec38
+source_pool_sha256: 94ad66ce3239ace798f8705743cdce112385aea5610af2ccb418963f5243817a
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -154,3 +154,8 @@ members:
     run_id: 119b9c4e44674d38a6f758b65a68593e
     budget_source: fold_median
     budgets: {42: 9758, 43: 10393, 44: 10368}
+  - config: exp136_realmlp_muon_recon_widths
+    config_path: configs/exp136_realmlp_muon_recon_widths.yaml
+    run_id: bd2bd1154e6343f68b364714e2fedcc4
+    budget_source: fold_median
+    budgets: {42: 5, 43: 5, 44: 5}
