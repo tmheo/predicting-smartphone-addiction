@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: 94ad66ce3239ace798f8705743cdce112385aea5610af2ccb418963f5243817a
+source_pool_sha256: 85d20803a780aff85580b7376d1b8211caa9915471f9acce70e2a519f445b01b
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -59,11 +59,6 @@ members:
     run_id: b951fac51b6b44298f7fdb0b543caba6
     budget_source: fold_median
     budgets: {42: 15, 43: 15, 44: 15}
-  - config: exp065_tabm
-    config_path: configs/exp065_tabm.yaml
-    run_id: df2023d4bd71429b88a8026d52f5258c
-    budget_source: fold_median
-    budgets: {42: 16, 43: 16, 44: 15}
   - config: exp070_cat_exact_cats
     config_path: configs/exp070_cat_exact_cats.yaml
     run_id: 6238d8c58beb42ee8102209ded92516e
@@ -159,3 +154,8 @@ members:
     run_id: bd2bd1154e6343f68b364714e2fedcc4
     budget_source: fold_median
     budgets: {42: 5, 43: 5, 44: 5}
+  - config: exp137_tabm_recon_widths
+    config_path: configs/exp137_tabm_recon_widths.yaml
+    run_id: e7682b186be14dea822d41d7d411bb98
+    budget_source: fold_median
+    budgets: {42: 18, 43: 16, 44: 16}
