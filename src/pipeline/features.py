@@ -656,6 +656,216 @@ class LatticePairTargetEncoder:
         return pd.DataFrame(out, index=df.index)
 
 
+RichKeySpec = tuple[str, str, tuple[str, ...], bool]
+
+
+class RichLatticeEncoder:
+    """fold-fit 제공자: 지정 격자 키의 OOF TE와 셀 개수 블록. (#266)
+
+    ``raw_cols``의 정확값 키는 셀 개수만 내고, ``numeric_cols``의 소수 첫째 자리
+    반올림과 정수 내림 키 및 ``pairs``의 지정 쌍 셀은 평활 TE와 셀 개수를 함께 낸다.
+    쌍 셀에서 수치 열은 정수 내림하고 범주 열은 정확값을 유지한다.
+
+    학습 fold 행에는 내부 층화 K-fold에서 자기 분할을 뺀 TE와 셀 개수를 주고,
+    검증 fold와 test 행에는 학습 fold 전체 표를 적용한다.
+    미지 키는 TE가 해당 fit 모집단의 전체 타깃 평균, 셀 개수가 0이다.
+    placebo 쌍 카나리아는 자동 포함한다.
+
+    키 구성은 Szymon Klapinski의 공개 Kaggle 노트북
+    ``s6e8-tabm-with-constrained-imputation`` 고정 판본(kernel 129458801,
+    SHA-256 95a8fd0e2030cb34bd9fc10aaa4ea55ff9819522ac455a19abc090dd61b4d5e6)을
+    참고해 수정했다.
+    원문과 달리 기존 정확값 TE는 중복 생성하지 않고, 학습 행의 TE와 셀 개수 모두를
+    내부 OOF로 만들며, 결측은 저장소의 ``__nan__`` 키 규약을 따른다.
+    원문은 Apache License 2.0이고 사용 조건 원문은
+    ``contextualized_spline_transformer.LICENSE``에 보존돼 있다.
+    """
+
+    uses_target = True
+
+    def __init__(
+        self,
+        raw_cols: list[str],
+        numeric_cols: list[str],
+        pairs: list[list[str]],
+        inner_folds: int = 10,
+        smoothing: float = 10.0,
+    ) -> None:
+        if not raw_cols or len(set(raw_cols)) != len(raw_cols):
+            raise ValueError(f"raw_cols는 중복 없는 비어 있지 않은 목록이어야 한다: {raw_cols}")
+        if PLACEBO in raw_cols:
+            raise ValueError(f"{PLACEBO}는 카나리아로 자동 포함되므로 raw_cols에 넣지 않는다.")
+        if not numeric_cols or len(set(numeric_cols)) != len(numeric_cols):
+            raise ValueError(
+                f"numeric_cols는 중복 없는 비어 있지 않은 목록이어야 한다: {numeric_cols}"
+            )
+        unknown_numeric = set(numeric_cols) - set(raw_cols)
+        if unknown_numeric:
+            raise ValueError(f"numeric_cols가 raw_cols에 없는 열을 포함한다: {sorted(unknown_numeric)}")
+
+        normalized_pairs: list[tuple[str, str]] = []
+        for pair in pairs:
+            if len(pair) != 2 or pair[0] == pair[1]:
+                raise ValueError(f"pairs의 각 항목은 서로 다른 열 두 개여야 한다: {pair}")
+            unknown_pair = set(pair) - set(raw_cols)
+            if unknown_pair:
+                raise ValueError(f"pairs가 raw_cols에 없는 열을 포함한다: {sorted(unknown_pair)}")
+            normalized_pairs.append((pair[0], pair[1]))
+        canonical_pairs = [tuple(sorted(pair)) for pair in normalized_pairs]
+        if len(set(canonical_pairs)) != len(canonical_pairs):
+            raise ValueError(f"pairs에 중복 쌍이 있다: {pairs}")
+        if inner_folds < 2:
+            raise ValueError(f"inner_folds는 2 이상이어야 한다(받은 값: {inner_folds})")
+        if smoothing <= 0:
+            raise ValueError(f"smoothing은 0보다 커야 한다(받은 값: {smoothing})")
+
+        self.raw_cols = list(raw_cols)
+        self.numeric_cols = list(numeric_cols)
+        self.numeric_set = set(numeric_cols)
+        self.pairs = normalized_pairs
+        self.inner_folds = inner_folds
+        self.smoothing = float(smoothing)
+
+    def _specs(self) -> list[RichKeySpec]:
+        specs: list[RichKeySpec] = [
+            (f"{col}_rich", "exact", (col,), False) for col in self.raw_cols
+        ]
+        for col in self.numeric_cols:
+            specs.extend(
+                [
+                    (f"{col}_rich_r1", "r1", (col,), True),
+                    (f"{col}_rich_fl", "floor", (col,), True),
+                ]
+            )
+        specs.extend(
+            (f"{left}__{right}_rich_pair", "pair", (left, right), True)
+            for left, right in self.pairs
+        )
+        specs.append(
+            (
+                f"{PLACEBO}__{self.numeric_cols[0]}_rich_pair",
+                "pair",
+                (PLACEBO, self.numeric_cols[0]),
+                True,
+            )
+        )
+        return specs
+
+    @staticmethod
+    def _output_names(stem: str, emits_te: bool) -> list[str]:
+        return ([f"{stem}_te"] if emits_te else []) + [f"{stem}_freq"]
+
+    def columns(self) -> list[str]:
+        return [
+            name
+            for stem, _, _, emits_te in self._specs()
+            for name in self._output_names(stem, emits_te)
+        ]
+
+    def _keys(
+        self,
+        df: pd.DataFrame,
+        key_kind: str,
+        cols: tuple[str, ...],
+        cache: dict[tuple[str, str], pd.Series],
+    ) -> pd.Series:
+        def single(col: str, resolution: str) -> pd.Series:
+            cache_key = (col, resolution)
+            if cache_key not in cache:
+                if resolution == "exact":
+                    keys = _exact_keys(df[col])
+                else:
+                    values = pd.to_numeric(df[col], errors="coerce")
+                    keys = (
+                        _exact_keys(values, 1)
+                        if resolution == "r1"
+                        else _exact_keys(np.floor(values))
+                    )
+                cache[cache_key] = keys
+            return cache[cache_key]
+
+        if key_kind != "pair":
+            return single(cols[0], key_kind)
+        left, right = cols
+        left_resolution = "floor" if left in self.numeric_set or left == PLACEBO else "exact"
+        right_resolution = "floor" if right in self.numeric_set else "exact"
+        return single(left, left_resolution) + "|" + single(right, right_resolution)
+
+    def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
+        assert train_fold[ID].is_unique, "학습 fold의 id가 유일하지 않다."
+        y = train_fold[TARGET].astype("float64")
+        total_sum = float(y.sum())
+        total_count = len(y)
+        self.global_mean_ = total_sum / total_count
+        splits = list(
+            StratifiedKFold(
+                n_splits=self.inner_folds, shuffle=True, random_state=seed
+            ).split(train_fold, y)
+        )
+        cache: dict[tuple[str, str], pd.Series] = {}
+        self.te_tables_: dict[str, pd.Series] = {}
+        self.freq_tables_: dict[str, pd.Series] = {}
+        oof: dict[str, np.ndarray] = {}
+
+        for stem, key_kind, cols, emits_te in self._specs():
+            keys = self._keys(train_fold, key_kind, cols, cache)
+            grouped = y.groupby(keys).agg(["sum", "count"])
+            full_count = grouped["count"].astype("float64")
+            self.freq_tables_[stem] = full_count
+            if emits_te:
+                self.te_tables_[stem] = (
+                    grouped["sum"] + self.smoothing * self.global_mean_
+                ) / (full_count + self.smoothing)
+
+            te_values = np.empty(total_count, dtype="float64") if emits_te else None
+            freq_values = np.empty(total_count, dtype="float64")
+            for _, va_i in splits:
+                va_keys = keys.iloc[va_i]
+                va_y = y.iloc[va_i]
+                held_out = va_y.groupby(va_keys).agg(["sum", "count"])
+                inner_count = (
+                    va_keys.map(grouped["count"]).to_numpy(dtype="float64")
+                    - va_keys.map(held_out["count"]).to_numpy(dtype="float64")
+                )
+                inner_sum = (
+                    va_keys.map(grouped["sum"]).to_numpy(dtype="float64")
+                    - va_keys.map(held_out["sum"]).to_numpy(dtype="float64")
+                )
+                inner_global = (total_sum - float(va_y.sum())) / (total_count - len(va_i))
+                freq_values[va_i] = inner_count
+                if te_values is not None:
+                    te_values[va_i] = (
+                        inner_sum + self.smoothing * inner_global
+                    ) / (inner_count + self.smoothing)
+
+            if te_values is not None:
+                oof[f"{stem}_te"] = te_values
+            oof[f"{stem}_freq"] = freq_values
+
+        self.oof_ = pd.DataFrame(oof, index=pd.Index(train_fold[ID], name=ID))
+        assert list(self.oof_.columns) == self.columns()
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        is_fit_row = df[ID].isin(self.oof_.index).to_numpy()
+        fit_ids = df.loc[is_fit_row, ID]
+        cache: dict[tuple[str, str], pd.Series] = {}
+        out: dict[str, pd.Series] = {}
+        for stem, key_kind, cols, emits_te in self._specs():
+            keys = self._keys(df, key_kind, cols, cache)
+            if emits_te:
+                te = keys.map(self.te_tables_[stem]).fillna(self.global_mean_)
+                if is_fit_row.any():
+                    te = te.copy()
+                    te.iloc[is_fit_row] = self.oof_[f"{stem}_te"].loc[fit_ids].to_numpy()
+                out[f"{stem}_te"] = te.astype("float64")
+            freq = keys.map(self.freq_tables_[stem]).fillna(0.0)
+            if is_fit_row.any():
+                freq = freq.copy()
+                freq.iloc[is_fit_row] = self.oof_[f"{stem}_freq"].loc[fit_ids].to_numpy()
+            out[f"{stem}_freq"] = freq.astype("float64")
+        return pd.DataFrame(out, index=df.index)
+
+
 class FrequencyEncoder:
     """fold-fit 제공자: 정확값 키 빈도 인코딩(CE). (#49)
 

@@ -107,6 +107,22 @@ def all_kind_providers(proxy_path: str, proxy_sha: str) -> list[dict]:
             "resolutions": ["floor", "r1"],
             "inner_folds": 2,
         },
+        {
+            "kind": "rich_lattice_encoding",
+            "raw_cols": [
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "gaming_hours",
+                "work_study_hours",
+                "stress_level",
+            ],
+            "numeric_cols": ["daily_screen_time_hours", "social_media_hours"],
+            "pairs": [
+                ["daily_screen_time_hours", "social_media_hours"],
+                ["stress_level", "daily_screen_time_hours"],
+            ],
+            "inner_folds": 2,
+        },
         {"kind": "frequency_encoding", "cols": ["work_study_hours"]},
         {"kind": "median_impute_aux", "cols": ["social_media_hours"]},
         {
