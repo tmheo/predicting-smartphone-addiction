@@ -9,7 +9,7 @@ challenger: exp052_cat_xgb_impute_pass5 run 2c6150364304443c813302d6fa19528d
 시드 44: champion 0.96838 → challenger 0.96818 (delta -0.00020) → 악화
 시드별 개선 0/3 (최소 2) → 미달
 보조 증거: fold 승리 0/5 (경계 구간이 아니라 게이트 아님)
-카나리아 placebo_noise_te: 평균 gain 0.2 vs 플라시보 0.4 → 통과
+카나리아 placebo_noise_te: 평균 gain 0.1807 vs 플라시보 0.4371 → 통과
 새 피처 없음: importance 조건은 묻지 않는다.
 판정: 개선 아님
 --- stderr ---
