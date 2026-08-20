@@ -332,7 +332,10 @@ LEGACY_CONFIG_NUMBERS = set(range(1, 18)) - {11}
 def test_legacy_configs_are_rejected_and_current_schema_loads():
     """종결 실험 config 16개는 옛 스키마라 명확한 오류로 거부되고, 나머지는 적재된다."""
     for path in sorted((REPO / "configs").glob("*.yaml")):
-        if int(path.name[3:6]) in LEGACY_CONFIG_NUMBERS:
+        is_legacy = (
+            path.name.startswith("exp") and int(path.name[3:6]) in LEGACY_CONFIG_NUMBERS
+        )
+        if is_legacy:
             with pytest.raises(ValueError, match="#71 이전"):
                 load_config(path, "screen")
         else:
