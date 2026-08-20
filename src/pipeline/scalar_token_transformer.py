@@ -9,7 +9,7 @@
 이 저장소의 변경 사항은 다음과 같다.
 
 - 커밋된 outer fold와 ``ModelAdapter`` 경계를 사용한다.
-- 공개 목표값·빈도 인코딩과 자체 파생 피처를 제거하고 champion 피처 계획을 받는다.
+- 공개 입력 생성은 피처 계획 밖으로 분리하고, M0는 champion 피처 계획을 받는다.
 - 범주값 스칼라화와 분위 변환을 outer 학습 부분에서만 맞춘다.
 - M0 attention과 매개변수 규모를 맞춘 A0 비-attention 결합을 함께 제공한다.
 - fold별 독립 시드, 결정론, 검증 permutation importance와 진입 진단을 제공한다.
@@ -605,6 +605,9 @@ class ScalarTokenTransformerFold:
                 "best_epoch": self._best_epoch,
                 "best_validation_auc": float(self._validation_auc),
                 "quantile_fit_rows_max": 10_000,
-                "target_encodings": 0,
+                "permutation_importance_repeats": self._perm_repeats,
+                "target_encodings": sum(
+                    column.endswith("_te") for column in (self._columns or [])
+                ),
             },
         )

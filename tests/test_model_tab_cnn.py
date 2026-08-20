@@ -98,6 +98,64 @@ def test_m0_and_a0_keep_exp081_feature_plan_and_33_columns():
     assert len(plan.all_columns()) == 33
 
 
+def test_issue285_controls_change_only_the_declared_axis():
+    baseline = load_config("configs/exp113_tab_cnn_m0.yaml", "screen")
+    target_mean = load_config("configs/exp131_tab_cnn_oof_target_mean.yaml", "screen")
+    longer = load_config("configs/exp132_tab_cnn_epochs100.yaml", "screen")
+
+    assert target_mean.model == baseline.model
+    assert target_mean.features.providers[:-1] == baseline.features.providers
+    target_provider = target_mean.features.providers[-1]
+    assert target_provider["kind"] == "target_encoding"
+    assert target_provider["inner_folds"] == 10
+    assert target_provider["smoothing"] == 10.0
+    assert target_provider["cols"][:-1] == [
+        "age",
+        "daily_screen_time_hours",
+        "social_media_hours",
+        "gaming_hours",
+        "work_study_hours",
+        "sleep_hours",
+        "notifications_per_day",
+        "app_opens_per_day",
+        "weekend_screen_time",
+        "gender",
+        "stress_level",
+        "academic_work_impact",
+    ]
+    assert target_provider["cols"][-1] == "placebo_noise"
+
+    assert longer.features == baseline.features
+    baseline_params = dict(baseline.model.params)
+    longer_params = dict(longer.model.params)
+    assert baseline_params.pop("epochs") == 30
+    assert longer_params.pop("epochs") == 100
+    assert longer_params == baseline_params
+
+    raw = pd.DataFrame(
+        {
+            "id": [0],
+            "age": [20.0],
+            "gender": pd.Categorical(["Female"]),
+            "daily_screen_time_hours": [5.0],
+            "social_media_hours": [1.0],
+            "gaming_hours": [1.0],
+            "work_study_hours": [2.0],
+            "sleep_hours": [8.0],
+            "notifications_per_day": [10.0],
+            "app_opens_per_day": [5.0],
+            "weekend_screen_time": [6.0],
+            "stress_level": pd.Categorical(["Low"]),
+            "academic_work_impact": pd.Categorical(["No"]),
+            "addicted_label": [0],
+        }
+    )
+    plan = FeaturePlan.from_config(target_mean.features)
+    plan.apply_dataset_wide(raw, raw.drop(columns="addicted_label"))
+    assert len(plan.all_columns()) == 46
+    assert plan.all_columns()[-13:] == [f"{col}_te" for col in target_provider["cols"]]
+
+
 def test_convolution_and_dense_ablation_have_matching_parameter_scale():
     from pipeline import tab_cnn
 

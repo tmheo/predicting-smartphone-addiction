@@ -39,6 +39,7 @@ class MuonWithAdamW(torch.optim.Optimizer):
         *,
         lr: float,
         weight_decay: float = 0.0,
+        betas: tuple[float, float] = (0.9, 0.999),
     ) -> None:
         for group in param_groups:
             if group.get(ALGORITHM_KEY) not in _ALGORITHMS:
@@ -50,7 +51,7 @@ class MuonWithAdamW(torch.optim.Optimizer):
         # 순환시킬 때 필요하다. Muon 그룹에도 주입되지만 Muon step은 읽지 않는다.
         super().__init__(
             param_groups,
-            {"lr": lr, "betas": (0.9, 0.999), "weight_decay": weight_decay},
+            {"lr": lr, "betas": betas, "weight_decay": weight_decay},
         )
         muon_groups = [g for g in self.param_groups if g[ALGORITHM_KEY] == "muon"]
         adamw_groups = [g for g in self.param_groups if g[ALGORITHM_KEY] == "adamw"]
@@ -60,7 +61,7 @@ class MuonWithAdamW(torch.optim.Optimizer):
         # (torch.optim.Optimizer.add_param_group은 받은 dict 객체를 보관한다.)
         self._delegates: list[torch.optim.Optimizer] = []
         if adamw_groups:
-            self._delegates.append(_AdamW(adamw_groups, lr=lr))
+            self._delegates.append(_AdamW(adamw_groups, lr=lr, betas=betas))
         self._delegates.append(
             _Muon(muon_groups, lr=lr, adjust_lr_fn="match_rms_adamw")
         )
@@ -76,6 +77,35 @@ class MuonWithAdamW(torch.optim.Optimizer):
         return loss
 
 
+def hybrid_parameter_groups(
+    param_groups: list[dict[str, object]],
+    muon_parameters: list[torch.nn.Parameter],
+) -> list[dict[str, object]]:
+    """기존 그룹 설정을 보존하며 선택한 2차원 행렬만 Muon으로 분리한다."""
+    if not muon_parameters:
+        raise ValueError("Muon 대상 매개변수가 없다.")
+    if any(parameter.ndim != 2 for parameter in muon_parameters):
+        shapes = [tuple(parameter.shape) for parameter in muon_parameters]
+        raise ValueError(f"Muon 대상은 모두 2차원 행렬이어야 한다: {shapes}")
+
+    muon_ids = {id(parameter) for parameter in muon_parameters}
+    seen_ids: set[int] = set()
+    tagged: list[dict[str, object]] = []
+    for group in param_groups:
+        parameters = list(group["params"])
+        adamw = [parameter for parameter in parameters if id(parameter) not in muon_ids]
+        muon = [parameter for parameter in parameters if id(parameter) in muon_ids]
+        seen_ids.update(id(parameter) for parameter in muon)
+        if adamw:
+            tagged.append({**group, "params": adamw, ALGORITHM_KEY: "adamw"})
+        if muon:
+            tagged.append({**group, "params": muon, ALGORITHM_KEY: "muon"})
+    missing = muon_ids - seen_ids
+    if missing:
+        raise ValueError(f"기존 매개변수 그룹에 없는 Muon 대상이 있다: {len(missing)}개")
+    return tagged
+
+
 def tabm_parameter_groups(module: torch.nn.Module) -> list[dict[str, object]]:
     """pytabkit TabM의 weight decay 그룹을 유지한 채 algorithm 표시를 붙인다.
 
@@ -85,19 +115,11 @@ def tabm_parameter_groups(module: torch.nn.Module) -> list[dict[str, object]]:
     """
     from pytabkit.models.nn_models.tabm import make_parameter_groups
 
-    muon_parameters = {
+    muon_parameters = [
         parameter
         for name, parameter in module.named_parameters()
         if name.startswith("backbone.") and parameter.ndim == 2
-    }
+    ]
     if not muon_parameters:
         raise ValueError("TabM backbone에서 Muon 대상 2차원 가중치를 찾지 못했다.")
-    tagged: list[dict[str, object]] = []
-    for group in make_parameter_groups(module):
-        adamw = [p for p in group["params"] if p not in muon_parameters]
-        muon = [p for p in group["params"] if p in muon_parameters]
-        if adamw:
-            tagged.append({**group, "params": adamw, ALGORITHM_KEY: "adamw"})
-        if muon:
-            tagged.append({**group, "params": muon, ALGORITHM_KEY: "muon"})
-    return tagged
+    return hybrid_parameter_groups(make_parameter_groups(module), muon_parameters)

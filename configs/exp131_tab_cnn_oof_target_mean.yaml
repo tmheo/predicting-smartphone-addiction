@@ -1,0 +1,98 @@
+# 이슈 #285 팔 A: exp113의 33열에 원시 12열의 누출 없는 정확값 목표 평균을 추가한다.
+# 학습 행은 바깥쪽 학습 분할 안에서 다시 나눈 내부 10-fold OOF 표현을 받고,
+# 검증과 시험 행은 바깥쪽 학습 분할 전체의 평활 10 평균표를 받는다.
+# placebo_noise_te는 실험 피처가 아니라 누출 판정용 카나리아다.
+name: exp131_tab_cnn_oof_target_mean
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions: [social_frac, work_frac, leisure_frac, resid_frac, week_total]
+      cat_cols: [gender, stress_level, academic_work_impact]
+    - kind: target_encoding
+      inner_folds: 10
+      smoothing: 10.0
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          gender,
+          stress_level,
+          academic_work_impact,
+          placebo_noise,
+        ]
+
+model:
+  kind: tab_cnn
+  params:
+    interaction_mode: convolution
+    plr_bins: 12
+    periodic_dim: 12
+    periodic_sigma: 2.33
+    dropout: 0.08
+    head_samples: 5
+    head_dropout: 0.2
+    epochs: 30
+    patience: 15
+    batch_size: 128
+    eval_batch_size: 8192
+    lr: 0.002
+    weight_decay: 0.015
+    label_smoothing: 0.01
+    scheduler_t0: 15
+    n_quantiles: 1000
+    perm_sample: 8192
+    perm_repeats: 1
+    device: cuda
+  fit: {}

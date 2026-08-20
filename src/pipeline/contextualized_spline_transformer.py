@@ -36,6 +36,7 @@ from .model import AdapterDiagnostics
 
 _NA_ID = 0
 _MODES = {"spline", "periodic"}
+_OPTIMIZERS = {"adamw", "muon"}
 
 _RAW_CAPACITY = {
     "age": (48, 2),
@@ -418,6 +419,29 @@ class _ContextualizedModel(nn.Module):
         }
 
 
+def _muon_parameter_names(model: _ContextualizedModel) -> set[str]:
+    """예측 출력층을 제외한 선형 변환 행렬 이름을 반환한다."""
+    final_output = next(
+        module
+        for module in reversed(model.final_head)
+        if isinstance(module, nn.Linear)
+    )
+    excluded_module_ids = {
+        id(final_output),
+        *(id(module) for module in model.additive_heads),
+    }
+    selected: set[str] = set()
+    for module_name, module in model.named_modules():
+        if isinstance(module, nn.Linear) and id(module) not in excluded_module_ids:
+            selected.add(f"{module_name}.weight")
+        if (
+            isinstance(module, nn.MultiheadAttention)
+            and module.in_proj_weight is not None
+        ):
+            selected.add(f"{module_name}.in_proj_weight")
+    return selected
+
+
 class ContextualizedSplineTransformerFold:
     """fold 하나의 전처리, 학습, 예측과 중요도 상태."""
 
@@ -428,6 +452,12 @@ class ContextualizedSplineTransformerFold:
         if self._mode not in _MODES:
             raise ValueError(
                 f"numeric_mode는 {sorted(_MODES)} 중 하나여야 한다: {self._mode!r}"
+            )
+        self._optimizer_name = str(params.pop("optimizer", "adamw")).lower()
+        if self._optimizer_name not in _OPTIMIZERS:
+            raise ValueError(
+                f"optimizer는 {sorted(_OPTIMIZERS)} 중 하나여야 한다: "
+                f"{self._optimizer_name!r}"
             )
         self._exact_max_card = int(params.pop("exact_max_card", 5000))
         self._token_dim = int(params.pop("token_dim", 64))
@@ -654,6 +684,7 @@ class ContextualizedSplineTransformerFold:
         )
         print(
             f"[contextualized_spline_transformer] mode={self._mode} "
+            f"optimizer={self._optimizer_name} "
             f"parameters={self._trainable_parameters:,}",
             flush=True,
         )
@@ -664,9 +695,29 @@ class ContextualizedSplineTransformerFold:
         soft_target = (
             target * (1.0 - self._label_smoothing) + 0.5 * self._label_smoothing
         )
-        optimizer = torch.optim.AdamW(
-            model.parameters(), lr=self._lr, weight_decay=self._weight_decay
-        )
+        if self._optimizer_name == "muon":
+            from .muon import MuonWithAdamW, hybrid_parameter_groups
+
+            names = _muon_parameter_names(model)
+            named_parameters = dict(model.named_parameters())
+            parameter_groups = hybrid_parameter_groups(
+                [
+                    {
+                        "params": list(model.parameters()),
+                        "weight_decay": self._weight_decay,
+                    }
+                ],
+                [named_parameters[name] for name in sorted(names)],
+            )
+            optimizer = MuonWithAdamW(
+                parameter_groups,
+                lr=self._lr,
+                weight_decay=self._weight_decay,
+            )
+        else:
+            optimizer = torch.optim.AdamW(
+                model.parameters(), lr=self._lr, weight_decay=self._weight_decay
+            )
         generator = torch.Generator(device=self._device).manual_seed(self._seed)
         return model, x_num, x_exact, soft_target, optimizer, generator
 
@@ -755,6 +806,7 @@ class ContextualizedSplineTransformerFold:
         self._training_diagnostics = {
             "initialization_seed": self._seed,
             "numeric_mode": self._mode,
+            "optimizer": self._optimizer_name,
             "configured_epochs": self._epochs,
             "end_epoch": end_epoch,
             "best_epoch": best_epoch,
@@ -785,6 +837,7 @@ class ContextualizedSplineTransformerFold:
         self._training_diagnostics = {
             "initialization_seed": self._seed,
             "numeric_mode": self._mode,
+            "optimizer": self._optimizer_name,
             "configured_epochs": self._epochs,
             "end_epoch": epochs,
             "best_epoch": epochs,
@@ -855,6 +908,7 @@ class ContextualizedSplineTransformerFold:
             },
             observations={
                 "numeric_mode": self._mode,
+                "optimizer": self._optimizer_name,
                 "numerical_feature_count": len(self._numeric_cols),
                 "exact_feature_count": len(self._exact_cols),
                 "trainable_parameters": self._trainable_parameters,

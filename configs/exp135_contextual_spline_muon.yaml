@@ -1,0 +1,78 @@
+# 이슈 #280: exp085_contextual_spline_m0의 optimizer만 Muon 혼성 구성으로 바꾼다.
+# 은닉 선형 행렬은 Muon, 예측 출력층·임베딩·편향과 나머지 매개변수는
+# AdamW로 학습한다.
+name: exp135_contextual_spline_muon
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions:
+        [social_frac, work_frac, leisure_frac, resid_frac, week_total]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: contextualized_spline_transformer
+  params:
+    optimizer: muon
+    numeric_mode: spline
+    exact_cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+    perm_repeats: 1
+  fit: {}

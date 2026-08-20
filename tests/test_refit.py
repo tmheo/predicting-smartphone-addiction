@@ -28,10 +28,11 @@ def test_committed_refit_plan_matches_candidate_pool():
     assert contextualized_spline.budget_source == "fold_median"
     realmlp = plan.member("exp124_realmlp_dtype_fix")
     assert realmlp.budgets == {42: 5, 43: 5, 44: 5}
-    assert realmlp.budget_source == "fold_median"
+
     realmlp_muon = plan.member("exp134_realmlp_muon")
     assert realmlp_muon.budgets == {42: 5, 43: 5, 44: 5}
     assert realmlp_muon.budget_source == "fold_median"
+    assert realmlp.budget_source == "fold_median"
     xgb_hpo = plan.member("exp135_xgb_hpo_trial30")
     assert xgb_hpo.budgets == {42: 9758, 43: 10393, 44: 10368}
     assert xgb_hpo.budget_source == "fold_median"

@@ -79,6 +79,57 @@ def test_muon_with_adamw_shares_group_dicts_with_delegates():
         assert any(group is shared for shared in delegate_groups)
 
 
+def test_muon_with_adamw_preserves_adamw_betas():
+    torch, matrix, bias = _hybrid_inputs()
+    from pipeline.muon import MuonWithAdamW
+
+    optimizer = MuonWithAdamW(
+        [
+            {"params": [bias], "weight_decay": 0.0, "algorithm": "adamw"},
+            {"params": [matrix], "weight_decay": 0.0, "algorithm": "muon"},
+        ],
+        lr=1e-2,
+        betas=(0.8, 0.95),
+    )
+
+    adamw = next(
+        delegate
+        for delegate in optimizer._delegates
+        if isinstance(delegate, torch.optim.AdamW)
+    )
+    assert adamw.param_groups[0]["betas"] == (0.8, 0.95)
+
+
+def test_hybrid_parameter_groups_preserve_groups_and_tag_selected_matrices():
+    import torch
+
+    from pipeline.muon import ALGORITHM_KEY, hybrid_parameter_groups
+
+    matrix = torch.nn.Parameter(torch.zeros(4, 4))
+    other_matrix = torch.nn.Parameter(torch.zeros(4, 2))
+    bias = torch.nn.Parameter(torch.zeros(4))
+    groups = hybrid_parameter_groups(
+        [
+            {"params": [matrix, bias], "lr": 1e-2, "weight_decay": 0.1},
+            {"params": [other_matrix], "lr": 2e-2, "weight_decay": 0.0},
+        ],
+        [matrix],
+    )
+
+    tagged = {id(p): group[ALGORITHM_KEY] for group in groups for p in group["params"]}
+    assert tagged == {
+        id(matrix): "muon",
+        id(other_matrix): "adamw",
+        id(bias): "adamw",
+    }
+    assert any(
+        group[ALGORITHM_KEY] == "muon"
+        and group["lr"] == pytest.approx(1e-2)
+        and group["weight_decay"] == pytest.approx(0.1)
+        for group in groups
+    )
+
+
 def test_tabm_parameter_groups_tag_backbone_matrices_only():
     import torch  # noqa: F401  (pytabkit이 torch를 요구한다)
     from pytabkit.models.nn_models.tabm import Model

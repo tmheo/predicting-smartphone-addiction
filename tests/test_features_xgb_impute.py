@@ -263,3 +263,59 @@ def test_fit_transform_is_deterministic_per_seed():
     first, second = run(), run()
     pd.testing.assert_frame_equal(first, second)
     assert first.notna().all().all()
+
+
+def test_continuous_expansion_compositions_match_notebook_formulas(recording):
+    # szymonkapiski build_continuous 이식 7열(#265): 복원 행렬 위 식이 원문 산술과
+    # 같은지(epsilon 제거 제외), 포화 앵커의 클리핑 경계가 3.0·9.5인지 고정한다.
+    rng = np.random.default_rng(1)
+    n = 90
+    df = pd.DataFrame(
+        {
+            "daily_screen_time_hours": rng.uniform(1, 12, n).round(1),
+            "sleep_hours": rng.uniform(4, 9, n).round(1),
+            "gaming_hours": rng.uniform(0, 5, n).round(1),
+            "weekend_screen_time": rng.uniform(1, 14, n).round(1),
+            "stress_level": pd.Categorical(rng.choice(["low", "mid", "high"], n)),
+        }
+    )
+    df.loc[::5, "daily_screen_time_hours"] = np.nan
+    df.loc[1::7, "sleep_hours"] = np.nan
+    names = [
+        "over_9h",
+        "under_3h",
+        "screen_over_sleep",
+        "screen_minus_sleep",
+        "gaming_over_daily",
+        "weekend_minus_daily",
+        "screen_mean_dw",
+    ]
+    cols = [
+        "daily_screen_time_hours",
+        "sleep_hours",
+        "gaming_hours",
+        "weekend_screen_time",
+    ]
+    provider = XgbImputeAux(
+        cols=cols, cat_cols=CATS, emit=[cols[0]], compositions=names
+    )
+    provider.fit(df, seed=42)
+    out = provider.transform(df)
+    assert list(out.columns) == [f"{cols[0]}_xgb_recon", *[f"imp_{n}" for n in names]]
+    recon = {c: df[c].astype("float64").fillna(7.0) for c in cols}
+    d, sl = recon["daily_screen_time_hours"], recon["sleep_hours"]
+    g, wk = recon["gaming_hours"], recon["weekend_screen_time"]
+    expected = {
+        "imp_over_9h": (d - 9.5).clip(lower=0.0),
+        "imp_under_3h": (3.0 - d).clip(lower=0.0),
+        "imp_screen_over_sleep": d / sl,
+        "imp_screen_minus_sleep": d - sl,
+        "imp_gaming_over_daily": g / d,
+        "imp_weekend_minus_daily": wk - d,
+        "imp_screen_mean_dw": (d + wk) / 2.0,
+    }
+    for name, series in expected.items():
+        pd.testing.assert_series_equal(out[name], series, check_names=False)
+        assert out[name].dtype == "float64"
+    assert (out["imp_over_9h"] >= 0).all()
+    assert (out["imp_under_3h"] >= 0).all()

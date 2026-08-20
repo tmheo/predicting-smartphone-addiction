@@ -107,6 +107,22 @@ def all_kind_providers(proxy_path: str, proxy_sha: str) -> list[dict]:
             "resolutions": ["floor", "r1"],
             "inner_folds": 2,
         },
+        {
+            "kind": "rich_lattice_encoding",
+            "raw_cols": [
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "gaming_hours",
+                "work_study_hours",
+                "stress_level",
+            ],
+            "numeric_cols": ["daily_screen_time_hours", "social_media_hours"],
+            "pairs": [
+                ["daily_screen_time_hours", "social_media_hours"],
+                ["stress_level", "daily_screen_time_hours"],
+            ],
+            "inner_folds": 2,
+        },
         {"kind": "frequency_encoding", "cols": ["work_study_hours"]},
         {"kind": "median_impute_aux", "cols": ["social_media_hours"]},
         {
@@ -170,6 +186,38 @@ def test_build_full_matrices_fits_fold_providers_on_all_training_rows():
     assert X_test.index.equals(test.index)
     assert X_train[["gaming_hours_te", "placebo_noise_te"]].notna().all().all()
     assert X_test[["gaming_hours_te", "placebo_noise_te"]].notna().all().all()
+
+
+def test_target_encoding_canary_is_row_unique_despite_shared_missing_mask():
+    plan = FeaturePlan.from_config(
+        make_config(
+            [
+                {
+                    "kind": "target_encoding",
+                    "inner_folds": 3,
+                    "smoothing": 10.0,
+                    "cols": [PLACEBO],
+                }
+            ]
+        )
+    )
+    train, test = toy_frames()
+    train, test = plan.apply_dataset_wide(train, test)
+    X = plan.build_matrix(train, seed=7)
+    fit_rows = train.index[:40]
+    validation_rows = train.index[40:]
+    df_ff = pd.concat(
+        [train, X[[column for column in X.columns if column not in train.columns]]], axis=1
+    )
+    transformer = plan.fold_fit_transformers()[0]
+    transformer.fit(df_ff.loc[fit_rows], seed=7)
+    X_full = plan.add_fold_fit_columns(X, df_ff)
+
+    assert X_full.loc[validation_rows, PLACEBO].isna().any()
+    assert X_full.loc[validation_rows, "placebo_noise_te"].nunique() == 1
+    assert X_full.loc[validation_rows, "placebo_noise_te"].iloc[0] == pytest.approx(
+        train.loc[fit_rows, "addicted_label"].mean()
+    )
 
 
 def test_stage_order_invariant_ignores_config_interleaving():

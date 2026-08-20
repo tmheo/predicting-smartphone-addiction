@@ -64,6 +64,7 @@ RAW_NUMERICAL = [
 ]
 
 _DEFAULTS = {
+    "optimizer": "adamw",
     "n_ens": 8,
     "embed_dim": 8,
     "onehot_thresh": 8,
@@ -419,16 +420,36 @@ class _ScalingLayer(nn.Module):
 
 
 class _NTPLinear(nn.Module):
-    def __init__(self, n_ens: int, input_features: int, output_features: int) -> None:
+    def __init__(
+        self,
+        n_ens: int,
+        input_features: int,
+        output_features: int,
+        *,
+        split_weight: bool = False,
+    ) -> None:
         super().__init__()
         self.input_features = input_features
-        self.weight = nn.Parameter(
-            torch.randn(n_ens, input_features, output_features)
+        initial_weight = torch.randn(n_ens, input_features, output_features)
+        self.weight = (
+            None if split_weight else nn.Parameter(initial_weight)
+        )
+        self.weights = nn.ParameterList(
+            [
+                nn.Parameter(initial_weight[index].clone())
+                for index in range(n_ens)
+            ]
+            if split_weight
+            else []
         )
         self.bias = nn.Parameter(torch.randn(n_ens, output_features))
 
+    def matrix_parameters(self) -> list[nn.Parameter]:
+        return list(self.weights) if self.weights else [self.weight]
+
     def forward(self, values: torch.Tensor) -> torch.Tensor:
-        output = torch.einsum("bki,kio->bko", values, self.weight)
+        weight = torch.stack(list(self.weights)) if self.weights else self.weight
+        output = torch.einsum("bki,kio->bko", values, weight)
         return output / math.sqrt(self.input_features) + self.bias
 
 
@@ -502,8 +523,14 @@ class _RealMLP(nn.Module):
         input_dim = numerical_dim + categorical_dim
         layers: list[nn.Module] = [_ScalingLayer(n_ens, input_dim)]
         self.dropout_modules: list[nn.Dropout] = []
+        split_hidden_weights = config["optimizer"] == "muon"
         for layer_index, output_dim in enumerate(config["hidden_dims"]):
-            linear = _NTPLinear(n_ens, input_dim, int(output_dim))
+            linear = _NTPLinear(
+                n_ens,
+                input_dim,
+                int(output_dim),
+                split_weight=split_hidden_weights,
+            )
             if layer_index == 0:
                 self.first_linear = linear
             dropout = nn.Dropout(float(config["dropout"]))
@@ -540,14 +567,16 @@ def _schedule(value: float, progress: float, name: str, flat_ratio: float) -> fl
 
 
 def _parameter_groups(model: _RealMLP, config: dict) -> list[dict]:
-    first_weight_id = id(model.first_linear.weight)
+    first_weight_ids = {
+        id(parameter) for parameter in model.first_linear.matrix_parameters()
+    }
     scale, pbld, first_weight, other_weight, bias = [], [], [], [], []
     for name, parameter in model.named_parameters():
         if "numerical" in name:
             pbld.append(parameter)
         elif "scale" in name:
             scale.append(parameter)
-        elif id(parameter) == first_weight_id:
+        elif id(parameter) in first_weight_ids:
             first_weight.append(parameter)
         elif "bias" in name:
             bias.append(parameter)
@@ -582,6 +611,16 @@ def _parameter_groups(model: _RealMLP, config: dict) -> list[dict]:
             "lr": learning_rate * float(config["lr_bias_mult"]),
             "weight_decay": weight_decay * float(config["wd_bias_mult"]),
         },
+    ]
+
+
+def _muon_parameters(model: _RealMLP) -> list[nn.Parameter]:
+    """내부 앙상블별 RealMLP 은닉 행렬만 반환한다."""
+    return [
+        parameter
+        for module in model.hidden.modules()
+        if isinstance(module, _NTPLinear)
+        for parameter in module.matrix_parameters()
     ]
 
 
@@ -665,10 +704,24 @@ class _FixedEpochClassifier:
         parameter_groups = _parameter_groups(self.model, self.config)
         for group in parameter_groups:
             group["lr_base"] = group["lr"]
-        optimizer = torch.optim.AdamW(
-            parameter_groups,
-            betas=(float(self.config["mom"]), float(self.config["sq_mom"])),
-        )
+        betas = (float(self.config["mom"]), float(self.config["sq_mom"]))
+        if self.config["optimizer"] == "muon":
+            from .muon import (
+                MuonWithAdamW,
+                hybrid_parameter_groups,
+            )
+
+            parameter_groups = hybrid_parameter_groups(
+                parameter_groups, _muon_parameters(self.model)
+            )
+            optimizer = MuonWithAdamW(
+                parameter_groups,
+                lr=float(self.config["lr"]),
+                weight_decay=float(self.config["weight_decay"]),
+                betas=betas,
+            )
+        else:
+            optimizer = torch.optim.AdamW(parameter_groups, betas=betas)
         numerical_tensor = torch.as_tensor(
             numerical, dtype=torch.float32, device=self.device
         )
@@ -816,6 +869,12 @@ class RealMLPFold:
         if unknown:
             raise ValueError(f"realmlp가 모르는 params: {unknown}")
         self.config = {**_DEFAULTS, **params}
+        self.config["optimizer"] = str(self.config["optimizer"]).lower()
+        if self.config["optimizer"] not in {"adamw", "muon"}:
+            raise ValueError(
+                "realmlp optimizer는 ['adamw', 'muon'] 중 하나여야 한다: "
+                f"{self.config['optimizer']!r}"
+            )
         self.config["hidden_dims"] = list(self.config["hidden_dims"])
         self.config["tfms"] = list(self.config["tfms"])
         self.seed = seed
@@ -993,6 +1052,7 @@ class RealMLPFold:
             "source_notebook_sha256": SOURCE_NOTEBOOK_SHA256,
             "source_backend": "custom_pytorch_realmlp",
             "pytabkit_estimator_used": False,
+            "optimizer": self.config["optimizer"],
             "preprocessing_fit_rows": self.engineer.fit_rows,
             "target_encoding_fit_rows": self.target_encoder.fit_rows,
             "training_rows": len(X_train),
@@ -1068,6 +1128,7 @@ class RealMLPFold:
             "source_notebook_sha256": SOURCE_NOTEBOOK_SHA256,
             "source_backend": "custom_pytorch_realmlp",
             "pytabkit_estimator_used": False,
+            "optimizer": self.config["optimizer"],
             "full_fit": True,
             "full_training_budget": training_budget,
             "preprocessing_fit_rows": len(X),

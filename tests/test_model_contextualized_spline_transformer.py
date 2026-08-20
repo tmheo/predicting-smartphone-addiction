@@ -47,8 +47,10 @@ def _data(n: int = 240) -> tuple[pd.DataFrame, pd.Series]:
     return X, y.astype(int)
 
 
-def _adapter(mode: str = "spline") -> model_mod.ContextualizedSplineTransformerAdapter:
-    params = dict(SMALL_PARAMS, numeric_mode=mode)
+def _adapter(
+    mode: str = "spline", **overrides
+) -> model_mod.ContextualizedSplineTransformerAdapter:
+    params = dict(SMALL_PARAMS, numeric_mode=mode, **overrides)
     cfg = ModelConfig(
         kind="contextualized_spline_transformer",
         params=params,
@@ -89,6 +91,18 @@ def test_m0_and_a0_keep_exp067_feature_plan_and_33_columns():
     assert len(plan.all_columns()) == 33
 
 
+def test_contextual_spline_muon_config_is_exp085_single_optimizer_delta():
+    baseline = load_config("configs/exp085_contextual_spline_m0.yaml", "screen")
+    challenger = load_config("configs/exp135_contextual_spline_muon.yaml", "screen")
+
+    assert challenger.name == "exp135_contextual_spline_muon"
+    assert challenger.data == baseline.data
+    assert challenger.features == baseline.features
+    assert challenger.model.kind == baseline.model.kind
+    assert challenger.model.fit == baseline.model.fit
+    assert challenger.model.params == {**baseline.model.params, "optimizer": "muon"}
+
+
 @pytest.mark.parametrize("mode", ["spline", "periodic"])
 def test_adapter_contract_and_learning(mode: str):
     X, y = _data()
@@ -117,6 +131,7 @@ def test_adapter_contract_and_learning(mode: str):
         "missing_and_unknown_ids_distinct": True,
     }
     assert diagnostics.observations["numeric_mode"] == mode
+    assert diagnostics.observations["optimizer"] == "adamw"
     assert diagnostics.observations["trainable_parameters"] > 0
 
 
@@ -154,6 +169,7 @@ def test_full_fit_uses_fixed_epoch_budget_and_predicts():
     assert adapter.training_diagnostics() == {
         "initialization_seed": SEED,
         "numeric_mode": "spline",
+        "optimizer": "adamw",
         "configured_epochs": 4,
         "end_epoch": 2,
         "best_epoch": 2,
@@ -227,4 +243,50 @@ def test_rejects_initial_score():
             y.iloc[60:],
             pd.Series(np.zeros(60)),
             pd.Series(np.zeros(20)),
+        )
+
+
+def test_contextual_spline_muon_selects_hidden_linear_matrices():
+    from pipeline.contextualized_spline_transformer import (
+        ContextualizedSplineTransformerFold,
+        _muon_parameter_names,
+    )
+
+    X, y = _data(80)
+    fold = ContextualizedSplineTransformerFold(
+        dict(SMALL_PARAMS, optimizer="muon"), seed=SEED
+    )
+    fold._fit_preprocessing(X)
+    numeric, _ = fold._encode(X)
+    model = fold._build_model(numeric.numpy())
+    names = _muon_parameter_names(model)
+    named = dict(model.named_parameters())
+
+    assert names
+    assert all(named[name].ndim == 2 for name in names)
+    assert "interaction.attention.in_proj_weight" in names
+    assert "interaction.attention.out_proj.weight" in names
+    assert "final_head.0.weight" in names
+    assert "final_head.4.weight" in names
+    assert "final_head.8.weight" not in names
+    assert not any(name.startswith("additive_heads.") for name in names)
+    assert not any(name.startswith("exact_embeddings.") for name in names)
+
+
+def test_contextual_spline_muon_contract_and_learning():
+    X, y = _data(120)
+    adapter = _adapter(optimizer="muon", epochs=2, patience=1)
+
+    prediction = adapter.fit(X.iloc[:90], y.iloc[:90], X.iloc[90:], y.iloc[90:])
+
+    assert prediction.shape == (30,)
+    assert np.isfinite(prediction).all()
+    assert adapter.training_diagnostics()["optimizer"] == "muon"
+
+
+def test_contextual_spline_rejects_unknown_optimizer():
+    X, y = _data(80)
+    with pytest.raises(ValueError, match="optimizer"):
+        _adapter(optimizer="sgd").fit(
+            X.iloc[:60], y.iloc[:60], X.iloc[60:], y.iloc[60:]
         )
