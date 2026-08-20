@@ -460,3 +460,18 @@ members:
     ensemble_auc_with: 0.9690250363253543
     ensemble_auc_without: 0.969026124992675
     contribution: -1.088667320736647e-06
+- run_id: 54acd002d3c04ec3a74c09871e83da50
+  config: exp131_lookup_bivariate_plr5
+  oof_auc: 0.9693397329635609
+  seeds: 42,43,44
+  entered_at: '2026-08-20'
+  reason: '이슈 267: exp127에 수면·화면 이변수 조성 5열을 더한 새 champion. 3시드 +0.0000557로 교체 확정'
+  evidence:
+    champion_run_id: 54acd002d3c04ec3a74c09871e83da50
+    champion_oof_auc: 0.9693397329635609
+    floor_margin: 0.010000000000000009
+    nearest_run_id: 7124425b5b51421dbbeba597229554da
+    nearest_spearman: 0.9979172593290473
+    ensemble_auc_with: 0.9691178229365589
+    ensemble_auc_without: 0.9690554221704453
+    contribution: 6.240076611363499e-05

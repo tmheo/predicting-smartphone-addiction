@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: 290d96ac719b737cdfbfd8d1e6ee19ce621b472410c528a43bb4515d2eb3ec38
+source_pool_sha256: e49952054b510291019bb91041a4e897881df3c84ab5945bd917c383ef7723ce
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -154,3 +154,8 @@ members:
     run_id: 119b9c4e44674d38a6f758b65a68593e
     budget_source: fold_median
     budgets: {42: 9758, 43: 10393, 44: 10368}
+  - config: exp131_lookup_bivariate_plr5
+    config_path: configs/exp131_lookup_bivariate_plr5.yaml
+    run_id: 54acd002d3c04ec3a74c09871e83da50
+    budget_source: fold_median
+    budgets: {42: 14, 43: 14, 44: 14}
