@@ -1,0 +1,365 @@
+schema_version: 1
+schema_note: 피처 기여 판정 기록 스키마 구현 전 이슈 262 계약의 필수 필드를 수동 기록했다.
+judgment_id: issue-284-exp017-pair-selection-nested-replay
+generated_at: '2026-08-20T05:14:11Z'
+supersedes: null
+source:
+  issue: 284
+  contract_issue: 262
+  scope_issue: 263
+  stage: nested_selection_replay
+  path: candidate_pool
+
+feature_bundle:
+  name: exp017_pair_selection_procedure
+  provider:
+    screening: exact_value_target_encoding
+    evaluated_variants:
+      - exact_value_target_encoding
+      - exact_value_target_encoding_plus_pair_frequency_encoding
+  columns:
+    outer_0: []
+    outer_1: []
+    outer_2:
+      te:
+        - daily_screen_time_hours__notifications_per_day_te
+      te_ce:
+        - daily_screen_time_hours__notifications_per_day_te
+        - daily_screen_time_hours__notifications_per_day_ce
+    outer_3: []
+    outer_4:
+      te:
+        - work_study_hours__academic_work_impact_te
+      te_ce:
+        - work_study_hours__academic_work_impact_te
+        - work_study_hours__academic_work_impact_ce
+  preregistration:
+    issue: 284
+    comment: https://github.com/tmheo/predicting-smartphone-addiction/issues/284#issuecomment-5351429094
+    rule: outer 학습부에서 66쌍을 약식 선별한 뒤 문턱을 넘은 최고 쌍의 TE 단독과 TE+CE만 바깥쪽에서 평가한다.
+    content_sha256: 55558688d8d587e477fdb3a69d8cd71d590c80997518ae13db6d3289454707a5
+
+execution_lineage:
+  baseline:
+    config: exp026_constrained_impute_nowidth
+    config_path: configs/exp026_constrained_impute_nowidth.yaml
+    config_sha256: 3c1811531586f5c86723f4f87df85f69db36e65a56774bea621a56e3db64ad06
+    reference_run_id: e48c83c60be4484cae6f27f10fc71cea
+    reference_auc: 0.9675476423592995
+    reproduced_auc: 0.9675476423592995
+    reference_auc_match: true
+  candidate:
+    kind: outer_fold_selected_procedure
+    runner: run-logs/issue284/replay_exp017_nested.py
+    runner_sha256: 45a2db5695ce3c503dfa00a846c5e9667282257bef1656a34cf3d4700e883db5
+    selection_seed: 42
+    evaluation_seeds: [42, 43, 44]
+  git_commit: 00559d28cf471a49273f6d883baeceb25f6f0538
+  git_dirty: false
+  inputs:
+    train_sha256: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test_sha256: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds_sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  status: 유효
+  clean_source_tree: true
+  folds_match: true
+  baseline_reproduction_match: true
+  adoption_eligibility:
+    seeds_ok: true
+    git_dirty: false
+    folds_ok: true
+  canary:
+    te:
+      status: 유효
+      cells: 15
+      source_feature: placebo_noise_te
+      source_gain_mean: 4501.621086716652
+      placebo_feature: placebo_noise
+      placebo_gain_mean: 26531.216376701992
+      below_placebo: true
+    te_ce:
+      status: 유효
+      cells: 15
+      source_feature: placebo_noise_te
+      source_gain_mean: 4284.585770726204
+      placebo_feature: placebo_noise
+      placebo_gain_mean: 25014.44077483813
+      below_placebo: true
+  environment_gates:
+    command: scripts/verify_environment_gates.sh --source-root /Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction
+    before_run:
+      private_inputs: passed
+      collected_tests: 358
+      remote_contract_tests: 4
+      full_tests: 358
+      status: passed
+    after_run:
+      private_inputs: passed
+      collected_tests: 358
+      remote_contract_tests: 4
+      full_tests: 358
+      status: passed
+
+paired_oof:
+  baseline_auc: 0.9675476423592995
+  thresholds:
+    overall_delta_min_exclusive: 0.0
+    outer_fold_win_min: 3
+  te:
+    candidate_auc: 0.9675368741023409
+    delta: -0.000010768256958559874
+    seed_deltas:
+      42: -0.000027404258297281103
+      43: -0.0000029740563811664344
+      44: -0.00002012414540586427
+    seed_wins: 0
+    fold_deltas:
+      0: 0.0
+      1: 0.0
+      2: -0.000059090785616056074
+      3: 0.0
+      4: 0.000014232291899451965
+    outer_fold_wins: 1
+    feature_signal: 실신호 미확인
+  te_ce:
+    candidate_auc: 0.9675562886433442
+    delta: 0.000008646284044733221
+    seed_deltas:
+      42: 0.00004257593939527293
+      43: -0.0000006730078141448104
+      44: -0.000004297287943044736
+    seed_wins: 1
+    fold_deltas:
+      0: 0.0
+      1: 0.0
+      2: -0.000002321026830731654
+      3: 0.0
+      4: 0.000049506778977748134
+    outer_fold_wins: 1
+    feature_signal: 실신호 미확인
+
+selection_procedure:
+  required: true
+  reason: 같은 OOF로 66쌍 중 하나를 골랐던 과거 선택 편향을 outer fold마다 선택부터 다시 수행해 통제했다.
+  candidate_set:
+    count: 66
+    source_columns:
+      - age
+      - daily_screen_time_hours
+      - social_media_hours
+      - gaming_hours
+      - work_study_hours
+      - sleep_hours
+      - notifications_per_day
+      - app_opens_per_day
+      - weekend_screen_time
+      - gender
+      - stress_level
+      - academic_work_impact
+    pairs:
+      - age__daily_screen_time_hours
+      - age__social_media_hours
+      - age__gaming_hours
+      - age__work_study_hours
+      - age__sleep_hours
+      - age__notifications_per_day
+      - age__app_opens_per_day
+      - age__weekend_screen_time
+      - age__gender
+      - age__stress_level
+      - age__academic_work_impact
+      - daily_screen_time_hours__social_media_hours
+      - daily_screen_time_hours__gaming_hours
+      - daily_screen_time_hours__work_study_hours
+      - daily_screen_time_hours__sleep_hours
+      - daily_screen_time_hours__notifications_per_day
+      - daily_screen_time_hours__app_opens_per_day
+      - daily_screen_time_hours__weekend_screen_time
+      - daily_screen_time_hours__gender
+      - daily_screen_time_hours__stress_level
+      - daily_screen_time_hours__academic_work_impact
+      - social_media_hours__gaming_hours
+      - social_media_hours__work_study_hours
+      - social_media_hours__sleep_hours
+      - social_media_hours__notifications_per_day
+      - social_media_hours__app_opens_per_day
+      - social_media_hours__weekend_screen_time
+      - social_media_hours__gender
+      - social_media_hours__stress_level
+      - social_media_hours__academic_work_impact
+      - gaming_hours__work_study_hours
+      - gaming_hours__sleep_hours
+      - gaming_hours__notifications_per_day
+      - gaming_hours__app_opens_per_day
+      - gaming_hours__weekend_screen_time
+      - gaming_hours__gender
+      - gaming_hours__stress_level
+      - gaming_hours__academic_work_impact
+      - work_study_hours__sleep_hours
+      - work_study_hours__notifications_per_day
+      - work_study_hours__app_opens_per_day
+      - work_study_hours__weekend_screen_time
+      - work_study_hours__gender
+      - work_study_hours__stress_level
+      - work_study_hours__academic_work_impact
+      - sleep_hours__notifications_per_day
+      - sleep_hours__app_opens_per_day
+      - sleep_hours__weekend_screen_time
+      - sleep_hours__gender
+      - sleep_hours__stress_level
+      - sleep_hours__academic_work_impact
+      - notifications_per_day__app_opens_per_day
+      - notifications_per_day__weekend_screen_time
+      - notifications_per_day__gender
+      - notifications_per_day__stress_level
+      - notifications_per_day__academic_work_impact
+      - app_opens_per_day__weekend_screen_time
+      - app_opens_per_day__gender
+      - app_opens_per_day__stress_level
+      - app_opens_per_day__academic_work_impact
+      - weekend_screen_time__gender
+      - weekend_screen_time__stress_level
+      - weekend_screen_time__academic_work_impact
+      - gender__stress_level
+      - gender__academic_work_impact
+      - stress_level__academic_work_impact
+  inner_rule:
+    outer_training_only: true
+    validation_fold: outer 학습부에 남은 커밋 fold 중 가장 작은 번호를 사용한다.
+    training_folds: outer와 안쪽 검증 fold를 제외한 나머지 3개 fold를 사용한다.
+    baseline: exp026_constrained_impute_nowidth
+    candidate_change: 후보 쌍 TE 한 열만 추가한다.
+    model:
+      learning_rate: 0.1
+      early_stopping_rounds: 100
+      num_leaves: 255
+      target_encoding_inner_folds: 5
+    threshold: 0.0001
+    no_winner: 두 평가 변형 모두 exp026 기준 예측으로 돌아간다.
+  tie_rule: Δ가 같으면 쌍 이름의 사전 순으로 앞선 후보를 선택한다.
+  screens:
+    outer_0:
+      inner_validation_fold: 1
+      baseline_auc: 0.966365076657106
+      top_pair: age__app_opens_per_day
+      top_delta: 0.000092856803842
+      threshold_pass_count: 0
+      winner: null
+    outer_1:
+      inner_validation_fold: 0
+      baseline_auc: 0.965665940268742
+      top_pair: gaming_hours__notifications_per_day
+      top_delta: 0.000003895103182
+      threshold_pass_count: 0
+      winner: null
+    outer_2:
+      inner_validation_fold: 0
+      baseline_auc: 0.965502659151954
+      top_pair: daily_screen_time_hours__notifications_per_day
+      top_delta: 0.000121814455215
+      threshold_pass_count: 1
+      winner: daily_screen_time_hours__notifications_per_day
+    outer_3:
+      inner_validation_fold: 0
+      baseline_auc: 0.965614489868070
+      top_pair: daily_screen_time_hours__weekend_screen_time
+      top_delta: 0.000046587103526
+      threshold_pass_count: 0
+      winner: null
+    outer_4:
+      inner_validation_fold: 0
+      baseline_auc: 0.965398734972634
+      top_pair: work_study_hours__academic_work_impact
+      top_delta: 0.000230497779788
+      threshold_pass_count: 7
+      winner: work_study_hours__academic_work_impact
+  fit_counts:
+    pair_screening: 330
+    screening_baselines: 5
+    outer_baselines: 15
+    outer_variant_models: 12
+  nested_result:
+    te: 실신호 미확인
+    te_ce: 실신호 미확인
+
+pool_entry:
+  evaluated: false
+  status: 미실행
+  reason: 두 평가 변형 모두 실신호 미확인이므로 이슈 284의 중단 조건에 따라 후보 풀 진입 판정을 열지 않았다.
+  entry_floor: null
+  adoption_eligibility: null
+  nearest_candidate: null
+  duplicate_threshold: 0.998
+
+pool_contribution:
+  evaluated: false
+  included_nested_oof: null
+  excluded_nested_oof: null
+  marginal_delta: null
+  outer_fold_wins: null
+  status: 미실행
+  reason: 실신호 변형이 없어 후보 풀 진입 판정 단계에 도달하지 않았다.
+
+importance_support:
+  role: 보조 증거
+  method: 선택이 일어난 outer fold의 LightGBM gain을 난수 초기값 3개에서 판독했다.
+  interpretation: 중요도는 채택이나 기각에 사용하지 않았고 선택 절차 nested OOF 판정과 함께 설명만 한다.
+  features:
+    daily_screen_time_hours__notifications_per_day_te:
+      roles: [te, te_ce]
+      above_placebo_cells: 6
+      cells: 6
+      interpretation: 중요도는 플라시보보다 높았지만 해당 pair가 선택된 outer 2의 TE와 TE+CE 짝차이는 모두 음수였다.
+    daily_screen_time_hours__notifications_per_day_ce:
+      roles: [te_ce]
+      above_placebo_cells: 0
+      cells: 3
+    work_study_hours__academic_work_impact_te:
+      roles: [te, te_ce]
+      above_placebo_cells: 0
+      cells: 6
+    work_study_hours__academic_work_impact_ce:
+      roles: [te_ce]
+      above_placebo_cells: 0
+      cells: 3
+
+results:
+  execution_validity: 유효
+  feature_bundle_signal:
+    te: 실신호 미확인
+    te_ce: 실신호 미확인
+  champion_path:
+    status: 판정하지 않음
+    reason: 이슈 284에서 champion 경로를 판정하지 않기로 사전 고정했다.
+  candidate_pool_path:
+    admission: 미실행
+    contribution: 미실행
+  ledger_changes:
+    pool: 변경 없음
+    full_refit_plan: 변경 없음
+    champion: 변경 없음
+  reason_codes:
+    - valid_execution
+    - selection_procedure_replayed
+    - te_signal_not_confirmed
+    - te_ce_signal_not_confirmed
+    - stop_before_pool_entry
+    - champion_path_not_evaluated
+
+raw_evidence:
+  local_only: true
+  preregistration: run-logs/issue284/preregistration.md
+  runner: run-logs/issue284/replay_exp017_nested.py
+  screen: run-logs/issue284/evidence/nested_pair_screen.csv
+  screen_sha256: ef6a12fed4819a2665dc551c9fba24e87911a362d248b63bd1e26ce7f7bec8ec
+  result: run-logs/issue284/evidence/result.json
+  result_sha256: a682ceb1e1a9c991495a92d0b0777520aa268ae0eae6f7697d626d898c195244
+  predictions: run-logs/issue284/evidence/nested_oof_predictions.parquet
+  predictions_sha256: f3c41a2179961249a1c48a41e08d4ec234eb21323cdaeab878e1caa30b6a4a5d
+  prediction_rows: 691369
+  prediction_unique_ids: 691369
+  resume_reproduction:
+    result_bytes_unchanged: true
+    result_sha256: a682ceb1e1a9c991495a92d0b0777520aa268ae0eae6f7697d626d898c195244
