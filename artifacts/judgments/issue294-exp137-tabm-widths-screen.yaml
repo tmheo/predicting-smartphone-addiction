@@ -1,0 +1,160 @@
+schema_version: 1
+judgment_id: issue294-exp137-tabm-widths-screen
+created_at: '2026-08-20T17:03:20Z'
+stage: screening
+route: candidate_pool
+supersedes: null
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: TabM에 제약 복원 구간 폭 3열 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/294
+
+feature_bundle:
+  name: reconstruction_widths
+  columns:
+    - gaming_hours_recon_width
+    - social_media_hours_recon_width
+    - work_study_hours_recon_width
+  provider: constrained_impute_aux
+  preregistration:
+    kind: committed_config
+    reference: configs/exp137_tabm_recon_widths.yaml@1bdbce6f21f2c38aa1cd99553ac22998c6ad1387
+    description: exp065 TabM 설정에 폭 3열만 더하는 짝비교를 결과 확인 전에 고정했다.
+  content_sha256: 2c53da70b1b0c9ded02728654913740115a225153a5d3229ab2f3854fdca3379
+
+lineage:
+  included:
+    config: exp137_tabm_recon_widths
+    config_path: configs/exp137_tabm_recon_widths.yaml
+    config_sha256: b4b818d80aff90cc4199d4022d761531621070d3077b34c968ebd7c0bb6f30a3
+    source_run_id: e92b22721c274c06a4bae5afe5316827
+    imported_run_id: bedb23c5413f4763be4e64900d6970d1
+    import_bundle_sha256: c89fc81ea05700947bd9d19e13238528af1b8cd03d3bb10db82f8e94d2001618
+    git_commit: 1bdbce6f21f2c38aa1cd99553ac22998c6ad1387
+    seeds: [42]
+  excluded:
+    config: exp065_tabm
+    config_path: configs/exp065_tabm.yaml
+    config_sha256: e082e096f8b800e030c1b3ebcc284e95e792b5084d598dbb84608eb20a4708fb
+    imported_run_id: df2023d4bd71429b88a8026d52f5258c
+    import_bundle_sha256: a70e34404c7c7eedfec1f38e7cfe612a06a03a20fae208bac72f3eaf79b1acef
+    git_commit: 9b4da0715010744119e6d6db0718e86dac5ee06b
+    seeds_used: [42]
+    source_seeds: [42, 43, 44]
+  allowed_differences:
+    - name
+    - features.providers.constrained_impute_aux.widths
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  model_contract_match: true
+  emitted_feature_columns_match: true
+  adoption_eligibility:
+    seeds_ok: false
+    clean_commit_ok: true
+    folds_ok: true
+    ok: false
+    reason: 스크리닝은 seed 42만 실행하므로 후보 풀 등록 자격을 아직 평가하지 않는다.
+  canary:
+    state: 유효
+    placebo_present: true
+    placebo_gain_mean: 0.00004387487997176143
+    placebo_te_gain_mean: 0.0
+    placebo_te_below_placebo_cells: 5
+    cell_total: 5
+    reason: 목표값을 쓰는 플라시보 파생 열의 중요도가 모든 분할에서 원본 플라시보보다 낮다.
+
+paired_oof:
+  comparison: included_minus_excluded
+  seed: 42
+  included_auc: 0.9682870232880149
+  excluded_auc: 0.968189328608447
+  overall_delta: 0.00009769467956788347
+  fold_deltas:
+    0: 0.0001640790649062307
+    1: -0.00001432716479976559
+    2: 0.00011358911975090091
+    3: 0.00011550584441122336
+    4: 0.000005840050251171291
+  fold_wins: 4
+  fold_total: 5
+  thresholds:
+    screening_delta_min: 0.0
+  screening_passed: true
+
+selection_procedure:
+  required: false
+  reason: 결과 확인 전에 폭 3열 전체와 단일 포함 설정을 고정했고 같은 OOF로 하위 묶음이나 변형을 고르지 않았다.
+  candidate_set: [exp137_tabm_recon_widths]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호 가능성
+  reason: seed 42 짝차이가 비음수여서 확정 재검증 자격을 얻었지만 3시드 반복성은 아직 확인하지 않았다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 후보 풀의 exp065 직접 교체 경로이며 현재 champion 교체를 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: false
+  state: null
+  reason: 후보 풀 진입 자격, 중복과 포함·제외 nested OOF는 3시드 확정 실행에서 평가한다.
+
+auxiliary_importance:
+  method: tabm_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: 0.00004387487997176143
+  cell_total: 5
+  features:
+    gaming_hours_recon_width:
+      mean: 0.000024922387034176375
+      above_placebo_cells: 1
+    social_media_hours_recon_width:
+      mean: 0.000050115851802567944
+      above_placebo_cells: 3
+    work_study_hours_recon_width:
+      mean: 0.0000011661546454155847
+      above_placebo_cells: 0
+  conflicts_with_oof: true
+  used_as_gate: false
+
+remote_execution:
+  provider: Vast.ai
+  gpu: RTX A4000 16376MiB
+  image: nvcr.io/nvidia/pytorch@sha256:38ed2ecb2c16d10677006d73fb0a150855d6ec81db8fc66e800b5ae92741007e
+  result_archive_sha256: b02d3d7981b42a0ad9d539da939ce0cf8f473fef0511fc92a5a3aca5336cde9e
+  actual_cost_usd: 0.141
+  cleanup:
+    instance_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호 가능성
+  champion_route: null
+  candidate_pool_route: null
+  actual_ledger_change: none
+  reason_codes:
+    - screening_delta_nonnegative
+    - screening_fold_wins_4_of_5
+    - clean_commit
+    - folds_match
+    - canary_valid
+    - confirmation_required
