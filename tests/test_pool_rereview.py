@@ -10,6 +10,7 @@ import pytest
 import yaml
 from sklearn.metrics import roc_auc_score
 
+from pipeline import ensemble as ensemble_module
 from pipeline.pool_rereview import (
     CandidateState,
     InputContext,
@@ -78,6 +79,89 @@ def test_exclusion_contribution_uses_after_minus_before_direction():
 
     assert result[("a",)] == pytest.approx(0.01)
     assert evaluator.fits == 2
+
+
+def test_fold_parallel_strategy_evaluation_matches_nested_contract():
+    rows = 120
+    index = pd.Index(np.arange(rows), name="id")
+    rng = np.random.default_rng(339)
+    predictions = pd.DataFrame(
+        {"a": rng.random(rows), "b": rng.random(rows)}, index=index
+    )
+    labels = pd.Series(np.tile([0, 1], rows // 2), index=index)
+    folds = pd.Series(np.arange(rows) % 5, index=index)
+    context = InputContext(
+        predictions=predictions,
+        labels=labels,
+        folds=folds,
+        missingness_bands=pd.Series(np.arange(rows) % 3, index=index),
+        ledger={"strategies": {"included": ["rank_mean"]}},
+        baseline={},
+        source_hashes={},
+        prediction_file_sha256="0" * 64,
+        member_prediction_sha256={"a": "0" * 64, "b": "0" * 64},
+    )
+
+    with StrategyEvaluator(context, jobs=2) as evaluator:
+        actual = evaluator.evaluate_one(
+            "rank_mean", ("a", "b"), excluded_fold=None, capture_prediction=True
+        )
+    expected = ensemble_module.evaluate_nested(
+        ensemble_module.COMBINER_REGISTRY["rank_mean"], predictions, folds, labels
+    )
+
+    assert actual.auc == expected.nested_auc
+    assert actual.fold_auc == {str(item.fold): item.auc for item in expected.folds}
+    assert actual.fits == 5
+    np.testing.assert_array_equal(actual.prediction, expected.prediction.to_numpy())
+
+
+def test_fold_parallel_mapper_schedules_every_request_and_fold_once():
+    evaluator = object.__new__(StrategyEvaluator)
+    evaluator.context = type(
+        "Context",
+        (),
+        {
+            "folds": pd.Series([0, 1, 2, 0, 1, 2]),
+            "labels": pd.Series([0, 1, 0, 1, 0, 1]),
+        },
+    )()
+    seen = []
+
+    def fake_map(payloads):
+        seen.extend(payloads)
+        return [
+            {
+                "request_index": request_index,
+                "name": name,
+                "fold": fold,
+                "fold_auc": 0.5,
+                "fits": 1,
+                "prediction": np.full(2, 0.5),
+                "failure": None,
+            }
+            for request_index, name, _members, _excluded, _clone, fold in payloads
+        ]
+
+    evaluator._map_fold_tasks = fake_map
+    requests = [
+        ("rank_mean", ("a",), None, None, True),
+        ("rank_mean", ("b",), None, None, False),
+    ]
+
+    outcomes = evaluator._map(requests)
+
+    assert [(item[0], item[-1]) for item in seen] == [
+        (0, 0),
+        (0, 1),
+        (0, 2),
+        (1, 0),
+        (1, 1),
+        (1, 2),
+    ]
+    assert [item["fits"] for item in outcomes] == [3, 3]
+    assert outcomes[0]["prediction"] is not None
+    assert outcomes[1]["prediction"] is None
 
 
 def test_final_candidate_scans_all_accepted_states_not_only_terminal():

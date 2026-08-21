@@ -350,58 +350,42 @@ def _pool_matrix(
     return matrix, context.folds.loc[mask], context.labels.loc[mask]
 
 
-def _lofo_prediction(
-    combiner: ensemble_module.Combiner,
-    matrix: pd.DataFrame,
-    fold_of: pd.Series,
-    labels: pd.Series,
-) -> tuple[np.ndarray, int]:
-    unique = sorted(int(value) for value in fold_of.unique())
-    _require(len(unique) >= 2, "학습 분할 안 채점에는 fold 두 개 이상이 필요하다.")
-    prediction = np.full(len(matrix), np.nan, dtype=np.float64)
-    for fold in unique:
-        validate = (fold_of.to_numpy() == fold)
-        train = ~validate
-        fitted = combiner.fit(matrix.loc[train], labels.loc[train])
-        prediction[validate] = np.asarray(fitted.predict(matrix.loc[validate]), dtype=np.float64)
-    _require(np.isfinite(prediction).all(), "결합 전략 예측이 유한하지 않다.")
-    return prediction, len(unique)
-
-
-def _strategy_task(
-    payload: tuple[str, tuple[str, ...], int | None, str | None, bool]
+def _strategy_fold_task(
+    payload: tuple[int, str, tuple[str, ...], int | None, str | None, int]
 ) -> dict[str, Any]:
-    name, members, excluded_fold, clone_source, capture_prediction = payload
+    request_index, name, members, excluded_fold, clone_source, fold = payload
     if _WORKER is None:
         raise RuntimeError("결합 전략 작업자 입력이 준비되지 않았다.")
     try:
         matrix, fold_of, labels = _pool_matrix(
             _WORKER, members, excluded_fold, clone_source
         )
-        prediction, fits = _lofo_prediction(
-            _registry_combiner(name, _WORKER), matrix, fold_of, labels
+        validate = (fold_of.to_numpy() == fold)
+        _require(validate.any(), f"요청한 fold가 학습 분할 안에 없다: {fold}")
+        fitted = _registry_combiner(name, _WORKER).fit(
+            matrix.loc[~validate], labels.loc[~validate]
         )
-        fold_auc = {
-            str(fold): float(
-                roc_auc_score(
-                    labels.loc[fold_of.to_numpy() == fold].to_numpy(),
-                    prediction[fold_of.to_numpy() == fold],
-                )
-            )
-            for fold in sorted(int(value) for value in fold_of.unique())
-        }
+        prediction = np.asarray(
+            fitted.predict(matrix.loc[validate]), dtype=np.float64
+        )
+        _require(np.isfinite(prediction).all(), "결합 전략 예측이 유한하지 않다.")
         return {
+            "request_index": request_index,
             "name": name,
-            "auc": float(roc_auc_score(labels.to_numpy(), prediction)),
-            "fold_auc": fold_auc,
-            "fits": fits,
-            "prediction": prediction if capture_prediction else None,
+            "fold": fold,
+            "fold_auc": float(
+                roc_auc_score(labels.loc[validate].to_numpy(), prediction)
+            ),
+            "fits": 1,
+            "prediction": prediction,
             "failure": None,
         }
     except Exception as exc:  # 중단 계약을 부모 프로세스에 구조화해 전달한다.
         return {
+            "request_index": request_index,
             "name": name,
-            "failure": f"{type(exc).__name__}: {exc}",
+            "fold": fold,
+            "failure": f"outer fold {fold}: {type(exc).__name__}: {exc}",
             "fits": 0,
             "prediction": None,
         }
@@ -447,10 +431,95 @@ class StrategyEvaluator:
     def __exit__(self, exc_type, exc, traceback) -> None:
         self.close()
 
-    def _map(self, payloads: list[tuple[str, tuple[str, ...], int | None, str | None, bool]]) -> list[dict[str, Any]]:
+    def _map_fold_tasks(
+        self,
+        payloads: list[
+            tuple[int, str, tuple[str, ...], int | None, str | None, int]
+        ],
+    ) -> list[dict[str, Any]]:
         if self._executor is None:
-            return [_strategy_task(payload) for payload in payloads]
-        return list(self._executor.map(_strategy_task, payloads))
+            return [_strategy_fold_task(payload) for payload in payloads]
+        return list(self._executor.map(_strategy_fold_task, payloads))
+
+    def _map(
+        self,
+        requests: list[
+            tuple[str, tuple[str, ...], int | None, str | None, bool]
+        ],
+    ) -> list[dict[str, Any]]:
+        """전략 적합을 fold 단위로 배분하고 요청 순서대로 다시 합친다."""
+        fold_tasks = [
+            (request_index, name, members, excluded_fold, clone_source, fold)
+            for request_index, (
+                name,
+                members,
+                excluded_fold,
+                clone_source,
+                _capture_prediction,
+            ) in enumerate(requests)
+            for fold in sorted(
+                int(value)
+                for value in self.context.folds[
+                    _scope_mask(self.context.folds, excluded_fold)
+                ].unique()
+            )
+        ]
+        task_outcomes = self._map_fold_tasks(fold_tasks)
+        by_request: dict[int, list[dict[str, Any]]] = {
+            index: [] for index in range(len(requests))
+        }
+        for outcome in task_outcomes:
+            by_request[int(outcome["request_index"])].append(outcome)
+
+        outcomes: list[dict[str, Any]] = []
+        for request_index, request in enumerate(requests):
+            name, _members, excluded_fold, _clone_source, capture_prediction = request
+            fold_outcomes = by_request[request_index]
+            failures = [
+                outcome["failure"]
+                for outcome in fold_outcomes
+                if outcome["failure"] is not None
+            ]
+            if failures:
+                outcomes.append(
+                    {
+                        "name": name,
+                        "failure": "; ".join(failures),
+                        "fits": sum(int(item["fits"]) for item in fold_outcomes),
+                        "prediction": None,
+                    }
+                )
+                continue
+
+            mask = _scope_mask(self.context.folds, excluded_fold)
+            labels = self.context.labels.to_numpy()[mask]
+            folds = self.context.folds.to_numpy()[mask]
+            prediction = np.full(len(labels), np.nan, dtype=np.float64)
+            fold_auc: dict[str, float] = {}
+            for outcome in fold_outcomes:
+                fold = int(outcome["fold"])
+                fold_mask = folds == fold
+                fold_prediction = np.asarray(outcome["prediction"], dtype=np.float64)
+                _require(
+                    len(fold_prediction) == int(fold_mask.sum()),
+                    f"{name} fold {fold} 예측 행 수가 다르다.",
+                )
+                prediction[fold_mask] = fold_prediction
+                fold_auc[str(fold)] = float(outcome["fold_auc"])
+            _require(
+                np.isfinite(prediction).all(), f"{name} 예측이 전 행을 덮지 않는다."
+            )
+            outcomes.append(
+                {
+                    "name": name,
+                    "auc": float(roc_auc_score(labels, prediction)),
+                    "fold_auc": dict(sorted(fold_auc.items(), key=lambda item: int(item[0]))),
+                    "fits": sum(int(item["fits"]) for item in fold_outcomes),
+                    "prediction": prediction if capture_prediction else None,
+                    "failure": None,
+                }
+            )
+        return outcomes
 
     def evaluate(
         self,
