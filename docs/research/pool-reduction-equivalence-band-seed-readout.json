@@ -1,0 +1,122 @@
+{
+  "ticket_issue": 342,
+  "purpose": "보조 판독. 성능 동등 대역을 정하는 데 쓰지 않는다.",
+  "clone_target": "exp025_constrained_impute",
+  "covered_members": [
+    "exp025_constrained_impute",
+    "exp059_lookup_transformer",
+    "exp070_cat_exact_cats",
+    "exp067_tabpfn3",
+    "exp081_lookup_fold_initialization_avg3",
+    "exp110_lgb_kitopl_no_te",
+    "exp111_xgb_depth8_no_te",
+    "exp071_cat_exact_no_te",
+    "exp106_lookup_fixed24_train_test_preprocessing",
+    "exp107_logreg_onehot_nn10",
+    "exp108_logreg_onehot_nn10_l1",
+    "exp117_ag25_gbm_r21",
+    "exp113_tab_cnn_m0",
+    "exp085_contextual_spline_m0",
+    "exp124_realmlp_dtype_fix",
+    "exp127_lookup_muon",
+    "exp027_recon_ce",
+    "exp048_lgb_orig_cdf_diff",
+    "exp134_realmlp_muon",
+    "exp135_xgb_hpo_trial30",
+    "exp131_lookup_bivariate_plr5",
+    "exp136_realmlp_muon_recon_widths",
+    "exp137_tabm_recon_widths",
+    "exp133_scalar_token_transformer_oof_te",
+    "exp131_tab_cnn_oof_target_mean",
+    "exp132_tab_cnn_epochs100",
+    "exp139_realmlp_reference_qnormal_train_test"
+  ],
+  "excluded_members": [
+    "exp006_te_drop_gaming",
+    "exp011_resid_pair",
+    "exp022_orig_knn",
+    "exp023_orig_proxy_residual",
+    "exp032_recon_orig_mean_top3",
+    "exp033_recon_orig_mean_top3_raw",
+    "exp035_lattice_te",
+    "exp058_logreg_onehot"
+  ],
+  "confirm_seeds": [
+    42,
+    43,
+    44
+  ],
+  "results": [
+    {
+      "pool": "시드 평균",
+      "members": 27,
+      "small_best_strategy": "shrunk_rank_logit_logistic",
+      "large_best_strategy": "shrunk_rank_logit_logistic",
+      "small_best_auc": 0.9697259296285865,
+      "large_best_auc": 0.9697376710340998,
+      "delta_best": -1.1741405513299163e-05,
+      "bootstrap": {
+        "replicates": 2000,
+        "minimum": -2.3540359280538325e-05,
+        "percentile_2p5": -1.8573286414227953e-05,
+        "median": -1.1781245446484956e-05,
+        "percentile_97p5": -4.88981712016279e-06,
+        "maximum": -1.5742877688129653e-06
+      }
+    },
+    {
+      "pool": "시드 42",
+      "members": 27,
+      "small_best_strategy": "shrunk_rank_logit_logistic",
+      "large_best_strategy": "missing_segmented_rank_logit",
+      "small_best_auc": 0.9696669966886337,
+      "large_best_auc": 0.9696640467762585,
+      "delta_best": 2.9499123751497436e-06,
+      "bootstrap": {
+        "replicates": 2000,
+        "minimum": -1.9143554462086598e-05,
+        "percentile_2p5": -1.0833118209002678e-05,
+        "median": 2.9315383354155955e-06,
+        "percentile_97p5": 1.7046421064917355e-05,
+        "maximum": 2.8423052329307197e-05
+      }
+    },
+    {
+      "pool": "시드 43",
+      "members": 27,
+      "small_best_strategy": "shrunk_rank_logit_logistic",
+      "large_best_strategy": "missing_interaction_rank_logit",
+      "small_best_auc": 0.9696653285296569,
+      "large_best_auc": 0.9696665328882734,
+      "delta_best": -1.2043586165022546e-06,
+      "bootstrap": {
+        "replicates": 2000,
+        "minimum": -2.4515571875438624e-05,
+        "percentile_2p5": -1.4069537214603245e-05,
+        "median": -1.4405105114856376e-06,
+        "percentile_97p5": 1.2577807745325907e-05,
+        "maximum": 2.2035350077609372e-05
+      }
+    },
+    {
+      "pool": "시드 44",
+      "members": 27,
+      "small_best_strategy": "shrunk_rank_logit_logistic",
+      "large_best_strategy": "missing_interaction_rank_logit",
+      "small_best_auc": 0.9696809383041938,
+      "large_best_auc": 0.9696776781936123,
+      "delta_best": 3.2601105814933362e-06,
+      "bootstrap": {
+        "replicates": 2000,
+        "minimum": -1.8814996194604916e-05,
+        "percentile_2p5": -1.0424904619127372e-05,
+        "median": 3.072802533254926e-06,
+        "percentile_97p5": 1.6633511844033054e-05,
+        "maximum": 2.840565121231542e-05
+      }
+    }
+  ],
+  "seed_delta_spread": 4.464469197995591e-06,
+  "seed_mean_bootstrap_width": 1.3683469294065164e-05,
+  "seed_noise_exceeds_row_noise": false
+}

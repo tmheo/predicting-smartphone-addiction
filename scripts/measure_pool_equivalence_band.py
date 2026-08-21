@@ -477,13 +477,40 @@ def load_seed_matrices(
     return matrices, covered, missing
 
 
-def seed_readout(evidence_path: Path) -> dict:
+_SEED_WORKER_STATE: dict = {}
+
+
+def _init_seed_worker() -> None:
+    fold_of = ensemble_module.outer_fold_assignment()
+    _SEED_WORKER_STATE["fold_of"] = fold_of
+    _SEED_WORKER_STATE["y"] = labels(fold_of.index)
+
+
+def _run_seed_arm(payload: dict) -> dict:
+    """시드 조각 풀의 팔 하나. 행렬은 메모리 사상으로 읽어 작업자끼리 페이지를 나눠 쓴다."""
+    fold_of = _SEED_WORKER_STATE["fold_of"]
+    y = _SEED_WORKER_STATE["y"]
+    values = np.load(payload["matrix_path"], mmap_mode="r")
+    matrix = pd.DataFrame(
+        np.asarray(values), index=fold_of.index, columns=payload["columns"]
+    )
+    if payload["side"] == "large":
+        target = payload["target"]
+        matrix[f"{target}__복제0"] = matrix[target].to_numpy(dtype=np.float64)
+    arm = evaluate_arm(f"{payload['pool']} {payload['side']}", matrix, fold_of, y)
+    prediction = arm.best_prediction.to_numpy(dtype=np.float64)
+    arm.best_prediction = None
+    return {"payload": payload, "arm": arm, "prediction": prediction}
+
+
+def seed_readout(evidence_path: Path, jobs: int = 8) -> dict:
     """시드 잡음이 행 재표집 잡음보다 큰지 작은지만 알려주는 보조 판독.
 
     시드 조각 풀마다 같은 복제 영점 짝을 만들어 Δ를 재고, 그 Δ가 시드에 따라 흔들리는
     폭을 시드 평균 짝의 짝지은 행 부트스트랩 폭과 나란히 놓는다. 대역은 바꾸지 않는다.
     """
-    base, fold_of, y = load_inputs()
+    fold_of = ensemble_module.outer_fold_assignment()
+    y = labels(fold_of.index)
     matrices, covered, missing = load_seed_matrices(fold_of.index)
     if not covered:
         raise MeasurementError("시드별 OOF 산출물이 있는 구성원이 없다.")
@@ -494,22 +521,46 @@ def seed_readout(evidence_path: Path) -> dict:
         flush=True,
     )
 
-    results = []
-    for label in ["시드 평균", *[f"시드 {seed}" for seed in CONFIRM_SEEDS]]:
+    pools = ["시드 평균", *[f"시드 {seed}" for seed in CONFIRM_SEEDS]]
+    payloads: list[dict] = []
+    matrix_paths: list[Path] = []  # 작업자에게 넘길 임시 행렬. 판독이 끝나면 지운다.
+    for label in pools:
         matrix = matrices[label]
-        small = evaluate_arm(f"{label} 작은 팔", matrix, fold_of, y)
-        clone = matrix[[target]].to_numpy(dtype=np.float64)
-        large_matrix = pd.concat(
-            [
-                matrix,
-                pd.DataFrame(clone, index=matrix.index, columns=[f"{target}__복제0"]),
-            ],
-            axis=1,
-        )
-        large = evaluate_arm(f"{label} 큰 팔", large_matrix, fold_of, y)
+        matrix_path = DEFAULT_CHECKPOINT.parent / f"seed-matrix-{label.replace(' ', '-')}.npy"
+        matrix_path.parent.mkdir(parents=True, exist_ok=True)
+        np.save(matrix_path, matrix.to_numpy(dtype=np.float64))
+        matrix_paths.append(matrix_path)
+        for side in ("small", "large"):
+            payloads.append(
+                {
+                    "pool": label,
+                    "side": side,
+                    "matrix_path": str(matrix_path),
+                    "columns": list(matrix.columns),
+                    "target": target,
+                }
+            )
+    del matrices
+
+    with ProcessPoolExecutor(
+        max_workers=min(jobs, len(payloads)), initializer=_init_seed_worker
+    ) as executor:
+        arms = {}
+        for outcome in executor.map(_run_seed_arm, payloads):
+            key = (outcome["payload"]["pool"], outcome["payload"]["side"])
+            arms[key] = outcome
+            print(f"{key[0]} {key[1]} 팔 완료", flush=True)
+
+    for matrix_path in matrix_paths:
+        matrix_path.unlink(missing_ok=True)
+
+    results = []
+    for label in pools:
+        small = arms[(label, "small")]["arm"]
+        large = arms[(label, "large")]["arm"]
         bootstrap = paired_row_bootstrap(
-            small.best_prediction.to_numpy(dtype=np.float64),
-            large.best_prediction.to_numpy(dtype=np.float64),
+            arms[(label, "small")]["prediction"],
+            arms[(label, "large")]["prediction"],
             y.to_numpy(),
             positions,
         )
@@ -771,6 +822,67 @@ def _fmt(value: float, digits: int = 12) -> str:
     return f"{value:+.{digits}f}"
 
 
+def _seed_readout_lines(evidence: dict) -> list[str]:
+    """보조 판독 절. 대역을 정하는 데 쓰지 않는다는 점을 문서에서 못 박는다."""
+    seed = evidence.get("seed_readout")
+    if not seed:
+        return []
+    slices = [r for r in seed["results"] if r["pool"] != "시드 평균"]
+    slice_deltas = [r["delta_best"] for r in slices]
+    mean_delta = next(
+        r["delta_best"] for r in seed["results"] if r["pool"] == "시드 평균"
+    )
+    verdict = (
+        "**시드 잡음이 행 재표집 잡음보다 크다.**"
+        if seed["seed_noise_exceeds_row_noise"]
+        else "**시드 잡음은 행 재표집 잡음보다 작다.**"
+    )
+    ratio = (
+        f"약 {seed['seed_mean_bootstrap_width'] / seed['seed_delta_spread']:.1f}배 차이다."
+        if seed["seed_delta_spread"] > 0
+        else "두 폭을 비율로 비교할 수 없다."
+    )
+    lines = [
+        "",
+        "## 보조 판독: 시드 조각",
+        "",
+        "설계가 약속한 보조 판독이다.",
+        "**성능 동등 대역을 정하는 데 쓰지 않는다.**",
+        "풀 장부가 시드 평균본만 구성원으로 받아 시드 조각 풀은 재심사의 판정 대상이 아니고, "
+        f"35개 중 {len(seed['excluded_members'])}개가 #98 이전 실행이라 같은 대조를 낼 수 없어 전원에 같은 기준을 적용할 수 없기 때문이다.",
+        "",
+        f"시드별 OOF 산출물이 있는 {len(seed['covered_members'])}개로 풀을 만들고, "
+        f"`{seed['clone_target']}` 하나를 복제했다가 그 복제본만 빼는 같은 영점 짝을 시드 조각마다 반복했다.",
+        "",
+        "| 풀 | Δ | 부트스트랩 2.5백분위 | 97.5백분위 | 최선 전략 |",
+        "| --- | ---: | ---: | ---: | --- |",
+    ]
+    for record in seed["results"]:
+        strategy = record["large_best_strategy"]
+        if record["small_best_strategy"] != strategy:
+            strategy = f"{record['small_best_strategy']} → {strategy}"
+        lines.append(
+            f"| {record['pool']} | {_fmt(record['delta_best'])} | "
+            f"{_fmt(record['bootstrap']['percentile_2p5'])} | "
+            f"{_fmt(record['bootstrap']['percentile_97p5'])} | {strategy} |"
+        )
+    lines += [
+        "",
+        f"시드 조각 3개의 Δ 폭은 `{seed['seed_delta_spread']:.12f}`이고, "
+        f"시드 평균 짝의 짝지은 행 부트스트랩 폭은 `{seed['seed_mean_bootstrap_width']:.12f}`다.",
+        "",
+        verdict,
+        ratio,
+        "시드 단위 짝지은 재표집을 대역에서 뺀 결정이 대역을 좁게 만들지 않았다는 뜻이다.",
+        "",
+        f"다만 시드 평균 풀의 Δ `{mean_delta:+.12f}`는 시드 조각 3개의 범위 "
+        f"`{min(slice_deltas):+.12f} ~ {max(slice_deltas):+.12f}` 밖에 있다.",
+        "시드 조각 3개 모두에서 최선 전략이 바뀐 반면 시드 평균 풀에서는 바뀌지 않았다는 점도 같은 방향을 가리킨다.",
+        "시드 평균본으로 만든 풀은 어느 단일 시드 풀과도 다르게 움직이므로, 시드 조각의 수치를 시드 평균본 판정에 대입하면 안 된다.",
+    ]
+    return lines
+
+
 def render_markdown(evidence: dict) -> str:
     summary = evidence["summary"]
     overall = summary["overall"]
@@ -960,6 +1072,9 @@ def render_markdown(evidence: dict) -> str:
         + "다.",
         "즉 `0.00002`는 안전한 여유가 아니라 측정된 잡음 폭의 경계에 걸쳐 있다.",
         "관측값만 보고 그 문턱을 재사용했다면 대역을 실제보다 좁게 잡았을 것이다.",
+    ]
+    lines += _seed_readout_lines(evidence)
+    lines += [
         "",
         "## 해석 제약",
         "",
@@ -1011,11 +1126,13 @@ def main() -> None:
         return
 
     if args.command == "seed-readout":
-        seed_readout(args.seed_evidence)
+        seed_readout(args.seed_evidence, args.jobs)
         return
 
     evidence = json.loads(args.evidence.read_text())
     evidence["summary"] = summarize(evidence["contrasts"])
+    if args.seed_evidence.exists():
+        evidence["seed_readout"] = json.loads(args.seed_evidence.read_text())
     args.evidence.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n")
     args.report.write_text(render_markdown(evidence))
     print(f"보고서: {args.report}")
