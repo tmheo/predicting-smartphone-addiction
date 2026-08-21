@@ -1,0 +1,579 @@
+schema_version: 1
+frozen_at: '2026-08-22'
+ticket_issue: 341
+map_issue: 338
+purpose: >-
+  35개 후보 풀의 실제 제거 결과를 보기 전에 영점 대조, 제거 대상, 조사 순서,
+  판정, 난수, 결합 전략, 입력과 산출물 계약을 변경 불가 상태로 고정한다.
+immutability:
+  starts_before: null_band_measurement
+  forbidden_after_start:
+  - 후보 추가, 삭제 또는 이름 변경
+  - 제거 대상 집합 추가, 삭제 또는 구성원 변경
+  - 단계 순서, 정렬 열쇠 또는 동률 해소 변경
+  - 판정 하한 축소 또는 결과를 본 뒤의 확대
+  - 결합 전략 추가, 삭제, 순서 변경 또는 매개변수 변경
+  - 난수, 반복 수, 분할, 중간 저장 단위 또는 산출물 필드 변경
+  allowed_after_start:
+  - 중간 저장 재개
+  - 실행 실패 원인 기록 뒤 같은 입력과 계약으로 재실행
+  - 기존 하한과 사전 고정한 영점 대조 하한 중 더 넓은 하한의 기계적 채택
+
+sources:
+  baseline_ledger:
+    path: artifacts/pool-baseline-2026-08-21.yaml
+    sha256: cef5c08efad104580dc9fab7a3c7605d1e5f95ce5f9b825caa66206dc50ff96f
+  pool:
+    path: artifacts/pool.yaml
+    sha256: e6f093c08af4d09a70e2ee9a7cc99f9d099b06b7505116005464b5ae1240712a
+  full_refit_plan:
+    path: artifacts/full-refit-plan.yaml
+    sha256: cb42b27f01abecdc51784e224d3346b27910d29b106171d8cdd471e1246b403f
+  train:
+    path: data/train.csv
+    sha256: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+  test:
+    path: data/test.csv
+    sha256: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+  folds:
+    path: artifacts/folds.parquet
+    sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+  external_original:
+    path: data/external/Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv
+    sha256: 2194ce1946e8559f26780049c8d972857d8378104f2c9ec25ed9ec35409f1074
+  combiner_implementation:
+    path: src/pipeline/ensemble.py
+    sha256: 8e83a1891ada5cce4a2f28303989dbe6f38a5d9fa8275ddaf7d918e143ff55e1
+  equivalence_evidence:
+    path: docs/research/pool-reduction-equivalence-band-evidence.json
+    sha256: 32ea8f4cbd4d8bc69a52ff116c4904659926e97605a16ffc0dce8248313292db
+  judgment_rule:
+    path: docs/research/pool-reduction-judgment-rule.md
+    sha256: da8e79ee448d690ad0de4090e64fb74a88020e088e5f456de26a88c3563cc216
+  procedure:
+    path: docs/research/pool-rereview-procedure.md
+    sha256: 283afd495e07cf521113f67d0610fcd0a249b1b0fe1a52f26bf4a85d6ba2965c
+  project_dependencies:
+    path: pyproject.toml
+    sha256: d9c7186959cdfc43a5383d9909755ae52c6b3f087ad275e6c39a25cf779236a9
+  dependency_lock:
+    path: uv.lock
+    sha256: 27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4
+
+candidate_pool:
+  count: 35
+  members:
+  - exp006_te_drop_gaming
+  - exp011_resid_pair
+  - exp022_orig_knn
+  - exp023_orig_proxy_residual
+  - exp025_constrained_impute
+  - exp032_recon_orig_mean_top3
+  - exp033_recon_orig_mean_top3_raw
+  - exp035_lattice_te
+  - exp058_logreg_onehot
+  - exp059_lookup_transformer
+  - exp070_cat_exact_cats
+  - exp067_tabpfn3
+  - exp081_lookup_fold_initialization_avg3
+  - exp110_lgb_kitopl_no_te
+  - exp111_xgb_depth8_no_te
+  - exp071_cat_exact_no_te
+  - exp106_lookup_fixed24_train_test_preprocessing
+  - exp107_logreg_onehot_nn10
+  - exp108_logreg_onehot_nn10_l1
+  - exp117_ag25_gbm_r21
+  - exp113_tab_cnn_m0
+  - exp085_contextual_spline_m0
+  - exp124_realmlp_dtype_fix
+  - exp127_lookup_muon
+  - exp027_recon_ce
+  - exp048_lgb_orig_cdf_diff
+  - exp134_realmlp_muon
+  - exp135_xgb_hpo_trial30
+  - exp131_lookup_bivariate_plr5
+  - exp136_realmlp_muon_recon_widths
+  - exp137_tabm_recon_widths
+  - exp133_scalar_token_transformer_oof_te
+  - exp131_tab_cnn_oof_target_mean
+  - exp132_tab_cnn_epochs100
+  - exp139_realmlp_reference_qnormal_train_test
+  full_refit_count:
+    default: 3
+    overrides:
+      exp058_logreg_onehot: 1
+      exp107_logreg_onehot_nn10: 1
+      exp108_logreg_onehot_nn10_l1: 1
+
+lineage_groups:
+  exp025_constrained_impute:
+    size: 5
+    members:
+    - exp025_constrained_impute
+    - exp032_recon_orig_mean_top3
+    - exp033_recon_orig_mean_top3_raw
+    - exp027_recon_ce
+    - exp048_lgb_orig_cdf_diff
+    predecessor_depth:
+      exp025_constrained_impute: 1
+      exp032_recon_orig_mean_top3: 1
+      exp027_recon_ce: 1
+      exp048_lgb_orig_cdf_diff: 1
+      exp033_recon_orig_mean_top3_raw: 2
+  exp059_lookup_transformer:
+    size: 4
+    members:
+    - exp059_lookup_transformer
+    - exp081_lookup_fold_initialization_avg3
+    - exp127_lookup_muon
+    - exp131_lookup_bivariate_plr5
+    predecessor_depth:
+      exp059_lookup_transformer: 0
+      exp081_lookup_fold_initialization_avg3: 1
+      exp127_lookup_muon: 2
+      exp131_lookup_bivariate_plr5: 3
+  exp124_realmlp_dtype_fix:
+    size: 4
+    members:
+    - exp124_realmlp_dtype_fix
+    - exp134_realmlp_muon
+    - exp136_realmlp_muon_recon_widths
+    - exp139_realmlp_reference_qnormal_train_test
+    predecessor_depth:
+      exp124_realmlp_dtype_fix: 1
+      exp134_realmlp_muon: 2
+      exp136_realmlp_muon_recon_widths: 3
+      exp139_realmlp_reference_qnormal_train_test: 4
+  exp058_logreg_onehot:
+    size: 3
+    members:
+    - exp058_logreg_onehot
+    - exp107_logreg_onehot_nn10
+    - exp108_logreg_onehot_nn10_l1
+    predecessor_depth:
+      exp058_logreg_onehot: 0
+      exp107_logreg_onehot_nn10: 1
+      exp108_logreg_onehot_nn10_l1: 1
+  exp113_tab_cnn_m0:
+    size: 3
+    members:
+    - exp113_tab_cnn_m0
+    - exp131_tab_cnn_oof_target_mean
+    - exp132_tab_cnn_epochs100
+    predecessor_depth:
+      exp113_tab_cnn_m0: 0
+      exp131_tab_cnn_oof_target_mean: 1
+      exp132_tab_cnn_epochs100: 1
+  exp006_te_drop_gaming:
+    size: 2
+    members:
+    - exp006_te_drop_gaming
+    - exp011_resid_pair
+    predecessor_depth:
+      exp006_te_drop_gaming: 0
+      exp011_resid_pair: 1
+  exp070_cat_exact_cats:
+    size: 2
+    members:
+    - exp070_cat_exact_cats
+    - exp071_cat_exact_no_te
+    predecessor_depth:
+      exp070_cat_exact_cats: 1
+      exp071_cat_exact_no_te: 2
+  exp110_lgb_kitopl_no_te:
+    size: 2
+    members:
+    - exp110_lgb_kitopl_no_te
+    - exp117_ag25_gbm_r21
+    predecessor_depth:
+      exp110_lgb_kitopl_no_te: 1
+      exp117_ag25_gbm_r21: 1
+  exp111_xgb_depth8_no_te:
+    size: 2
+    members:
+    - exp111_xgb_depth8_no_te
+    - exp135_xgb_hpo_trial30
+    predecessor_depth:
+      exp111_xgb_depth8_no_te: 1
+      exp135_xgb_hpo_trial30: 1
+
+information_perspectives:
+  격자 이변수 목표값 부호화:
+    size: 1
+    members: [exp035_lattice_te]
+  원본 프록시 분포 좌표:
+    size: 1
+    members: [exp048_lgb_orig_cdf_diff]
+  전처리 기준 집합 값 좌표:
+    size: 1
+    members: [exp139_realmlp_reference_qnormal_train_test]
+  정확값 빈도 부호화:
+    size: 1
+    members: [exp027_recon_ce]
+  원본 프록시 통계 사전:
+    size: 2
+    members: [exp032_recon_orig_mean_top3, exp033_recon_orig_mean_top3_raw]
+  정확값 범주 복제:
+    size: 2
+    members: [exp070_cat_exact_cats, exp071_cat_exact_no_te]
+  원본 프록시 최근접 라벨:
+    size: 3
+    members: [exp022_orig_knn, exp107_logreg_onehot_nn10, exp108_logreg_onehot_nn10_l1]
+  원시 관측 열 전용:
+    size: 3
+    members: [exp058_logreg_onehot, exp124_realmlp_dtype_fix, exp134_realmlp_muon]
+  제약 기반 결측 복원 구간 폭:
+    size: 4
+    members:
+    - exp025_constrained_impute
+    - exp136_realmlp_muon_recon_widths
+    - exp137_tabm_recon_widths
+    - exp139_realmlp_reference_qnormal_train_test
+  정확값 어휘 조회:
+    size: 6
+    members:
+    - exp059_lookup_transformer
+    - exp081_lookup_fold_initialization_avg3
+    - exp106_lookup_fixed24_train_test_preprocessing
+    - exp085_contextual_spline_m0
+    - exp127_lookup_muon
+    - exp131_lookup_bivariate_plr5
+  학습 기반 결측 복원:
+    size: 13
+    members:
+    - exp070_cat_exact_cats
+    - exp067_tabpfn3
+    - exp081_lookup_fold_initialization_avg3
+    - exp071_cat_exact_no_te
+    - exp117_ag25_gbm_r21
+    - exp113_tab_cnn_m0
+    - exp085_contextual_spline_m0
+    - exp127_lookup_muon
+    - exp131_lookup_bivariate_plr5
+    - exp137_tabm_recon_widths
+    - exp133_scalar_token_transformer_oof_te
+    - exp131_tab_cnn_oof_target_mean
+    - exp132_tab_cnn_epochs100
+  목표값 부호화:
+    size: 17
+    members:
+    - exp006_te_drop_gaming
+    - exp011_resid_pair
+    - exp022_orig_knn
+    - exp023_orig_proxy_residual
+    - exp025_constrained_impute
+    - exp032_recon_orig_mean_top3
+    - exp033_recon_orig_mean_top3_raw
+    - exp035_lattice_te
+    - exp070_cat_exact_cats
+    - exp067_tabpfn3
+    - exp117_ag25_gbm_r21
+    - exp027_recon_ce
+    - exp048_lgb_orig_cdf_diff
+    - exp135_xgb_hpo_trial30
+    - exp137_tabm_recon_widths
+    - exp133_scalar_token_transformer_oof_te
+    - exp131_tab_cnn_oof_target_mean
+  제약 기반 결측 복원값:
+    size: 22
+    members:
+    - exp025_constrained_impute
+    - exp032_recon_orig_mean_top3
+    - exp033_recon_orig_mean_top3_raw
+    - exp035_lattice_te
+    - exp070_cat_exact_cats
+    - exp067_tabpfn3
+    - exp081_lookup_fold_initialization_avg3
+    - exp110_lgb_kitopl_no_te
+    - exp111_xgb_depth8_no_te
+    - exp071_cat_exact_no_te
+    - exp117_ag25_gbm_r21
+    - exp113_tab_cnn_m0
+    - exp085_contextual_spline_m0
+    - exp127_lookup_muon
+    - exp027_recon_ce
+    - exp048_lgb_orig_cdf_diff
+    - exp135_xgb_hpo_trial30
+    - exp131_lookup_bivariate_plr5
+    - exp137_tabm_recon_widths
+    - exp133_scalar_token_transformer_oof_te
+    - exp131_tab_cnn_oof_target_mean
+    - exp132_tab_cnn_epochs100
+  산술 파생 조합:
+    size: 27
+    members:
+    - exp011_resid_pair
+    - exp022_orig_knn
+    - exp023_orig_proxy_residual
+    - exp025_constrained_impute
+    - exp032_recon_orig_mean_top3
+    - exp033_recon_orig_mean_top3_raw
+    - exp035_lattice_te
+    - exp059_lookup_transformer
+    - exp070_cat_exact_cats
+    - exp067_tabpfn3
+    - exp081_lookup_fold_initialization_avg3
+    - exp110_lgb_kitopl_no_te
+    - exp111_xgb_depth8_no_te
+    - exp071_cat_exact_no_te
+    - exp106_lookup_fixed24_train_test_preprocessing
+    - exp117_ag25_gbm_r21
+    - exp113_tab_cnn_m0
+    - exp085_contextual_spline_m0
+    - exp127_lookup_muon
+    - exp027_recon_ce
+    - exp048_lgb_orig_cdf_diff
+    - exp135_xgb_hpo_trial30
+    - exp131_lookup_bivariate_plr5
+    - exp137_tabm_recon_widths
+    - exp133_scalar_token_transformer_oof_te
+    - exp131_tab_cnn_oof_target_mean
+    - exp132_tab_cnn_epochs100
+
+strategies:
+  tie_break: registry_order
+  required_success_count: 19
+  included:
+  - rank_mean
+  - performance_weighted_rank_mean
+  - logit_logistic
+  - rank_logistic
+  - ridge_logit_alpha_0p01
+  - ridge_logit_alpha_0p1
+  - ridge_logit
+  - ridge_logit_alpha_10
+  - ridge_logit_alpha_100
+  - rank_gauss_logistic
+  - rank_logit_logistic
+  - greedy_rank_mean
+  - xgb_rank_logit
+  - missing_segmented_rank_logit
+  - missing_interaction_rank_logit
+  - missing_4plus_rank_logit
+  - nnls_logit
+  - nnls_rank
+  - shrunk_rank_logit_logistic
+  excluded_precision:
+  - bagged_greedy_rank_mean
+  - optuna_subset_rank_mean
+  - optuna_subset_ridge_logit
+  random_state:
+    logistic_strategies: 0
+    xgb_rank_logit: 42
+    deterministic_without_rng:
+    - rank_mean
+    - performance_weighted_rank_mean
+    - ridge_logit_alpha_0p01
+    - ridge_logit_alpha_0p1
+    - ridge_logit
+    - ridge_logit_alpha_10
+    - ridge_logit_alpha_100
+    - greedy_rank_mean
+    - nnls_logit
+    - nnls_rank
+
+randomness:
+  bootstrap_seed: 342342
+  bootstrap_replicates: 2000
+  bootstrap_quantiles: [0.025, 0.5, 0.975]
+  bootstrap_sampling: outer fold 안에서 목표값 층을 보존한 짝지은 행 복원추출
+  rng_order:
+  - full-oof 척도
+  - outer-0부터 outer-4까지의 학습 분할 안 척도
+  - 각 척도 안에서 candidate_pool.members 순서
+  - 각 대조 안에서 2000개 재표본 순서
+  final_candidate_bootstrap: 같은 seed로 새 난수 생성기를 시작한다
+
+null_band:
+  existing_lower: -0.000027669802
+  clone_sources: candidate_pool.members
+  scales:
+  - name: full-oof
+    rows: 전체 OOF 행
+    folds: 5
+    contrasts_per_block: 35
+    blocks: 1
+  - name: inner-training
+    rows: 각 outer fold를 뺀 학습 행
+    folds: 4
+    contrasts_per_block: 35
+    blocks: 5
+    block_order: [outer-0, outer-1, outer-2, outer-3, outer-4]
+  arm_definition:
+    small: 동결한 35개 기준 풀 P
+    large: P와 해당 구성원의 정확 복제 열 하나
+    delta: A(P) - A(P와 복제 열)
+  scale_lower: >-
+    각 블록의 관측 delta 최솟값, 각 짝지은 행 부트스트랩 2.5백분위 최솟값,
+    같은 블록의 서로 다른 복제 큰 팔을 양방향으로 짝지은 AUC 차이 최솟값 중 최솟값
+  adopted_lower: min(existing_lower, full-oof scale_lower, inner-training scale_lower)
+  timing_rule: 모든 실제 구성원 제거 대조보다 먼저 끝내고 결과 파일의 내용 해시를 고정한다
+  no_narrowing: 새 하한이 기존 하한보다 높아도 existing_lower를 유지한다
+
+procedure:
+  split_order: [outer-0, outer-1, outer-2, outer-3, outer-4, final]
+  checkpoint_unit: split
+  score_unit: 주어진 행 안의 기존 outer fold 열을 쓴 leave-one-fold-out nested OOF AUC
+  anchor: 동결한 35개 기준 풀
+  comparison_delta: 제거 후 AUC - 제거 전 AUC
+  verdict:
+    keep: delta < adopted_lower
+    remove: delta >= adopted_lower
+  update_working_pool: remove 판정에서만 제거 후 풀로 이동한다
+  cumulative_record: 모든 대조에서 35개 앵커 대비 delta를 함께 남긴다
+  order_computation:
+    timing: split마다 35개 앵커 풀에서 한 번만 계산하고 제거 뒤 다시 계산하지 않는다
+    contribution_strategy: 그 split의 앵커 풀이 고른 최선 전략 하나로 고정한다
+    contribution_delta: 대상 집합을 뺀 AUC - 대상 집합을 빼기 전 AUC
+    numeric_order: float64 원값 오름차순이며 영점 대역으로 묶지 않는다
+    use: 조사 순서에만 쓰며 제거 판정에는 쓰지 않는다
+    tie_breaker_reference_pool: 그 split의 동결한 35개 앵커 풀
+  candidate_set_filter: 대조 시점에 작업 풀에 남은 구성원과의 교집합만 제거 대상으로 삼는다
+  skip_conditions:
+  - 교집합이 비어 있음
+  - 교집합을 빼면 작업 풀이 비게 됨
+  skip_record_required: true
+  stages:
+  - stage: 1
+    name: 모델 계보 묶음 통째 제거
+    candidates: lineage_groups의 9개 묶음
+    primary_order: baseline size 내림차순
+    secondary_order: split 안 대상 집합 제외 기여 오름차순
+  - stage: 2
+    name: 유지 판정이 난 모델 계보 묶음의 개별 제거
+    candidates: stage 1에서 keep 판정이 난 묶음의 구성원만
+    primary_order: predecessor_depth 오름차순
+    secondary_order: common_tie_breakers
+  - stage: 3
+    name: 정보 관점 묶음 통째 제거
+    candidates: information_perspectives의 14개 묶음
+    primary_order: baseline size 오름차순
+    secondary_order: split 안 대상 집합 제외 기여 오름차순
+  - stage: 4
+    name: 남은 전체 개별 훑기
+    candidates: candidate_pool.members
+    primary_order: split 안 개별 제외 기여 오름차순
+    secondary_order: common_tie_breakers
+  common_tie_breakers:
+  - 제거 뒤 작업 풀에서 완전히 사라지는 정보 관점 수 오름차순
+  - 같은 모델 계보 묶음 안 predecessor_depth 오름차순
+  - split 학습 행에서 계산한 단독 OOF AUC 오름차순
+  - 제거로 줄어드는 전체 자료 재학습 횟수 내림차순
+  - 제거 대상 config 이름 튜플 사전순
+  pair_scoring:
+    before_arm: 등록 전략 19개를 모두 다시 평가해 최선을 고른다
+    after_arm: 등록 전략 19개를 모두 다시 평가해 최선을 고른다
+    no_strategy_inheritance: true
+  outer_split_role:
+    decision: false
+    outputs:
+    - 편향 없는 절차 nested OOF AUC와 35개 앵커 nested OOF AUC 차이
+    - 구성원별 다섯 분할 잔존 횟수
+  final_role:
+    decision: true
+    selection: >-
+      전체 OOF 축소 궤적의 모든 지점 중 35개 앵커 대비 delta가 adopted_lower 이상인
+      지점에서 구성원 수가 가장 작은 풀
+    same_size_tie_breakers:
+    - 35개 앵커 대비 delta 내림차순
+    - 전체 자료 재학습 횟수 오름차순
+    - 남은 config 이름 튜플 사전순
+  boundary_flag:
+    target: final에서 고른 후보 한 건
+    bootstrap_replicates: 2000
+    condition: 짝지은 행 부트스트랩 2.5백분위가 adopted_lower보다 작음
+    action: 판정은 바꾸지 않고 궤적상 직전 풀과 함께 보고한다
+
+stop_conditions:
+  before_execution:
+  - sources의 실제 내용 해시 불일치
+  - baseline 장부의 구성원, 계보 묶음 또는 정보 관점과 이 장부 불일치
+  - 등록 전략 이름, 순서, 제외 목록 또는 구현 내용 해시 불일치
+  - 후보 OOF id, fold 또는 목표값 id 불일치
+  - fold 값이 0부터 4까지를 정확히 덮지 않음
+  - 예측에 결측값 또는 유한하지 않은 값이 있음
+  - 실행 코드가 커밋되지 않았거나 작업 폴더가 깨끗하지 않음
+  during_execution:
+  - 필요한 19개 전략 중 하나라도 적합 또는 예측 실패
+  - 결정 산출물 스키마 누락
+  - 완료된 중간 저장 단위의 입력 또는 결정 내용 해시 불일치
+  - 같은 입력으로 다시 계산한 완료 단위의 결정 산출물이 글자 단위로 다름
+  prohibited_recovery:
+  - 실패한 전략만 빼고 계속하기
+  - 실패 뒤 난수, 문턱, 후보 또는 순서를 바꾸기
+  - 부분 결과를 보고 특정 단계나 대조를 생략하기
+
+outputs:
+  root: run-logs/pool-rereview
+  null_band:
+    path: run-logs/pool-rereview/null-band.json
+    required:
+    - 입력 장부와 입력 파일 내용 해시
+    - 두 척도의 블록별 35개 복제 대조와 같은 크기 대조
+    - 대조별 두 팔의 전략별 AUC와 최선 전략
+    - 관측 delta, fold별 delta, 음수 fold 수
+    - 부트스트랩 세 백분위와 최솟값, 최댓값
+    - 척도별 하한과 최종 adopted_lower
+  checkpoint:
+    paths:
+    - run-logs/pool-rereview/checkpoints/outer-0.json
+    - run-logs/pool-rereview/checkpoints/outer-1.json
+    - run-logs/pool-rereview/checkpoints/outer-2.json
+    - run-logs/pool-rereview/checkpoints/outer-3.json
+    - run-logs/pool-rereview/checkpoints/outer-4.json
+    - run-logs/pool-rereview/checkpoints/final.json
+    required:
+    - split 입력 해시와 adopted_lower
+    - 앵커 점수와 전략
+    - 정렬 열쇠와 실제 대조 순서
+    - 결정 산출물
+    outer_additional_required:
+    - 채점 분할의 축소 풀 예측과 앵커 예측 내용 해시
+    final_additional_required:
+    - 최종 채택 후보와 궤적상 직전 풀
+  decision:
+    path: run-logs/pool-rereview/decision.json
+    excludes: [소요 시간, 적합 횟수, 작업자 수, 재개 횟수]
+    contrast_required:
+    - step
+    - stage
+    - target_kind
+    - removed
+    - working_members_before
+    - working_members_after
+    - delta_vs_working
+    - verdict
+    - delta_vs_anchor
+    - before_strategy
+    - after_strategy
+    - strategy_changed
+    - fold_delta
+    - negative_folds
+    - fold_total
+    - sort_keys
+    - strategy_auc_before
+    - strategy_auc_after
+    top_level_required:
+    - 장부, 입력, 영점 대조와 실행 코드 내용 해시
+    - adopted_lower와 출처
+    - split별 앵커, 최종 풀, 최종 전략과 궤적 전체
+    - 절차 nested OOF AUC, 앵커 nested OOF AUC와 차이
+    - 구성원별 다섯 분할 잔존 횟수
+    - 최종 채택 후보와 경계 표시, 경계일 때 직전 풀
+    - 영점 fold 부호 빈도표와 작은 풀 적용의 근사 제약 문구
+  telemetry:
+    path: run-logs/pool-rereview/telemetry.json
+    required: [소요 시간, 적합 횟수, 작업자 수, 재개 횟수, 실패와 재시도 기록]
+  manifest:
+    path: run-logs/pool-rereview/manifest.sha256
+    rule: root 아래 모든 결정 산출물, 중간 저장과 예측 파일의 상대 경로별 SHA-256
+  determinism:
+    rule: 같은 입력의 처음 실행과 재개 실행 decision.json이 글자 단위로 같아야 한다
+    telemetry_exempt: true
+  runtime_identity:
+    required:
+    - 실행 git 커밋과 깨끗한 작업 폴더 여부
+    - Python 판본
+    - pyproject.toml과 uv.lock 내용 해시
+    - 운영체제와 CPU 구조
+    - 동시 실행 수를 정하는 환경 변수
