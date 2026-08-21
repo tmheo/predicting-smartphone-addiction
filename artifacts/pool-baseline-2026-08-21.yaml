@@ -1,0 +1,1850 @@
+schema_version: 1
+frozen_at: '2026-08-21'
+ticket_issue: 343
+map_issue: 338
+purpose: 후보 풀 소급 재심사의 읽기 전용 기준 입력. 이 파일은 제거 대조 결과를 보기 전에 고정하며 재심사 중에는 바꾸지 않는다.
+source:
+  git_commit: 15a36ad65fd61993518c8e713e7729261d57fde9
+  pool_path: artifacts/pool.yaml
+  pool_sha256: e6f093c08af4d09a70e2ee9a7cc99f9d099b06b7505116005464b5ae1240712a
+  full_refit_plan_path: artifacts/full-refit-plan.yaml
+  full_refit_plan_sha256: cb42b27f01abecdc51784e224d3346b27910d29b106171d8cdd471e1246b403f
+inputs:
+  train_sha256: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+  test_sha256: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+  folds_sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+  external_original_sha256: 2194ce1946e8559f26780049c8d972857d8378104f2c9ec25ed9ec35409f1074
+integrity_summary:
+  members_total: 35
+  members_passed: 35
+  members_failed: []
+  seed_mean_fully_verified: 27
+  duplicates_removed: []
+  retained_after_duplicate_check: 35
+model_families:
+  catboost:
+    size: 2
+    members:
+    - exp070_cat_exact_cats
+    - exp071_cat_exact_no_te
+  contextualized_spline_transformer:
+    size: 1
+    members:
+    - exp085_contextual_spline_m0
+  lightgbm:
+    size: 12
+    members:
+    - exp006_te_drop_gaming
+    - exp011_resid_pair
+    - exp022_orig_knn
+    - exp023_orig_proxy_residual
+    - exp025_constrained_impute
+    - exp032_recon_orig_mean_top3
+    - exp033_recon_orig_mean_top3_raw
+    - exp035_lattice_te
+    - exp110_lgb_kitopl_no_te
+    - exp117_ag25_gbm_r21
+    - exp027_recon_ce
+    - exp048_lgb_orig_cdf_diff
+  logistic_onehot:
+    size: 3
+    members:
+    - exp058_logreg_onehot
+    - exp107_logreg_onehot_nn10
+    - exp108_logreg_onehot_nn10_l1
+  lookup_transformer:
+    size: 5
+    members:
+    - exp059_lookup_transformer
+    - exp081_lookup_fold_initialization_avg3
+    - exp106_lookup_fixed24_train_test_preprocessing
+    - exp127_lookup_muon
+    - exp131_lookup_bivariate_plr5
+  realmlp:
+    size: 4
+    members:
+    - exp124_realmlp_dtype_fix
+    - exp134_realmlp_muon
+    - exp136_realmlp_muon_recon_widths
+    - exp139_realmlp_reference_qnormal_train_test
+  scalar_token_transformer:
+    size: 1
+    members:
+    - exp133_scalar_token_transformer_oof_te
+  tab_cnn:
+    size: 3
+    members:
+    - exp113_tab_cnn_m0
+    - exp131_tab_cnn_oof_target_mean
+    - exp132_tab_cnn_epochs100
+  tabm:
+    size: 1
+    members:
+    - exp137_tabm_recon_widths
+  tabpfn3:
+    size: 1
+    members:
+    - exp067_tabpfn3
+  xgboost:
+    size: 2
+    members:
+    - exp111_xgb_depth8_no_te
+    - exp135_xgb_hpo_trial30
+lineage_groups:
+  exp006_te_drop_gaming:
+    members:
+    - exp006_te_drop_gaming
+    - exp011_resid_pair
+    size: 2
+    predecessors_outside_pool: []
+  exp022_orig_knn:
+    members:
+    - exp022_orig_knn
+    size: 1
+    predecessors_outside_pool: []
+  exp023_orig_proxy_residual:
+    members:
+    - exp023_orig_proxy_residual
+    size: 1
+    predecessors_outside_pool: []
+  exp025_constrained_impute:
+    members:
+    - exp025_constrained_impute
+    - exp032_recon_orig_mean_top3
+    - exp033_recon_orig_mean_top3_raw
+    - exp027_recon_ce
+    - exp048_lgb_orig_cdf_diff
+    size: 5
+    predecessors_outside_pool:
+    - exp026_constrained_impute_nowidth
+  exp035_lattice_te:
+    members:
+    - exp035_lattice_te
+    size: 1
+    predecessors_outside_pool: []
+  exp058_logreg_onehot:
+    members:
+    - exp058_logreg_onehot
+    - exp107_logreg_onehot_nn10
+    - exp108_logreg_onehot_nn10_l1
+    size: 3
+    predecessors_outside_pool: []
+  exp059_lookup_transformer:
+    members:
+    - exp059_lookup_transformer
+    - exp081_lookup_fold_initialization_avg3
+    - exp127_lookup_muon
+    - exp131_lookup_bivariate_plr5
+    size: 4
+    predecessors_outside_pool: []
+  exp070_cat_exact_cats:
+    members:
+    - exp070_cat_exact_cats
+    - exp071_cat_exact_no_te
+    size: 2
+    predecessors_outside_pool:
+    - exp057_cat_xgb_impute_comps5
+  exp067_tabpfn3:
+    members:
+    - exp067_tabpfn3
+    size: 1
+    predecessors_outside_pool: []
+  exp110_lgb_kitopl_no_te:
+    members:
+    - exp110_lgb_kitopl_no_te
+    - exp117_ag25_gbm_r21
+    size: 2
+    predecessors_outside_pool:
+    - exp074_lgb_kitopl_d2_bundle
+  exp111_xgb_depth8_no_te:
+    members:
+    - exp111_xgb_depth8_no_te
+    - exp135_xgb_hpo_trial30
+    size: 2
+    predecessors_outside_pool:
+    - exp045_xgb_depth8
+  exp106_lookup_fixed24_train_test_preprocessing:
+    members:
+    - exp106_lookup_fixed24_train_test_preprocessing
+    size: 1
+    predecessors_outside_pool: []
+  exp113_tab_cnn_m0:
+    members:
+    - exp113_tab_cnn_m0
+    - exp131_tab_cnn_oof_target_mean
+    - exp132_tab_cnn_epochs100
+    size: 3
+    predecessors_outside_pool: []
+  exp085_contextual_spline_m0:
+    members:
+    - exp085_contextual_spline_m0
+    size: 1
+    predecessors_outside_pool: []
+  exp124_realmlp_dtype_fix:
+    members:
+    - exp124_realmlp_dtype_fix
+    - exp134_realmlp_muon
+    - exp136_realmlp_muon_recon_widths
+    - exp139_realmlp_reference_qnormal_train_test
+    size: 4
+    predecessors_outside_pool:
+    - exp121_realmlp_fixed4_two_init
+  exp137_tabm_recon_widths:
+    members:
+    - exp137_tabm_recon_widths
+    size: 1
+    predecessors_outside_pool:
+    - exp065_tabm
+  exp133_scalar_token_transformer_oof_te:
+    members:
+    - exp133_scalar_token_transformer_oof_te
+    size: 1
+    predecessors_outside_pool: []
+information_perspectives:
+  격자 이변수 목표값 부호화:
+    size: 1
+    members:
+    - exp035_lattice_te
+  목표값 부호화:
+    size: 17
+    members:
+    - exp006_te_drop_gaming
+    - exp011_resid_pair
+    - exp022_orig_knn
+    - exp023_orig_proxy_residual
+    - exp025_constrained_impute
+    - exp032_recon_orig_mean_top3
+    - exp033_recon_orig_mean_top3_raw
+    - exp035_lattice_te
+    - exp070_cat_exact_cats
+    - exp067_tabpfn3
+    - exp117_ag25_gbm_r21
+    - exp027_recon_ce
+    - exp048_lgb_orig_cdf_diff
+    - exp135_xgb_hpo_trial30
+    - exp137_tabm_recon_widths
+    - exp133_scalar_token_transformer_oof_te
+    - exp131_tab_cnn_oof_target_mean
+  산술 파생 조합:
+    size: 27
+    members:
+    - exp011_resid_pair
+    - exp022_orig_knn
+    - exp023_orig_proxy_residual
+    - exp025_constrained_impute
+    - exp032_recon_orig_mean_top3
+    - exp033_recon_orig_mean_top3_raw
+    - exp035_lattice_te
+    - exp059_lookup_transformer
+    - exp070_cat_exact_cats
+    - exp067_tabpfn3
+    - exp081_lookup_fold_initialization_avg3
+    - exp110_lgb_kitopl_no_te
+    - exp111_xgb_depth8_no_te
+    - exp071_cat_exact_no_te
+    - exp106_lookup_fixed24_train_test_preprocessing
+    - exp117_ag25_gbm_r21
+    - exp113_tab_cnn_m0
+    - exp085_contextual_spline_m0
+    - exp127_lookup_muon
+    - exp027_recon_ce
+    - exp048_lgb_orig_cdf_diff
+    - exp135_xgb_hpo_trial30
+    - exp131_lookup_bivariate_plr5
+    - exp137_tabm_recon_widths
+    - exp133_scalar_token_transformer_oof_te
+    - exp131_tab_cnn_oof_target_mean
+    - exp132_tab_cnn_epochs100
+  원본 프록시 분포 좌표:
+    size: 1
+    members:
+    - exp048_lgb_orig_cdf_diff
+  원본 프록시 최근접 라벨:
+    size: 3
+    members:
+    - exp022_orig_knn
+    - exp107_logreg_onehot_nn10
+    - exp108_logreg_onehot_nn10_l1
+  원본 프록시 통계 사전:
+    size: 2
+    members:
+    - exp032_recon_orig_mean_top3
+    - exp033_recon_orig_mean_top3_raw
+  원시 관측 열 전용:
+    size: 3
+    members:
+    - exp058_logreg_onehot
+    - exp124_realmlp_dtype_fix
+    - exp134_realmlp_muon
+  전처리 기준 집합 값 좌표:
+    size: 1
+    members:
+    - exp139_realmlp_reference_qnormal_train_test
+  정확값 범주 복제:
+    size: 2
+    members:
+    - exp070_cat_exact_cats
+    - exp071_cat_exact_no_te
+  정확값 빈도 부호화:
+    size: 1
+    members:
+    - exp027_recon_ce
+  정확값 어휘 조회:
+    size: 6
+    members:
+    - exp059_lookup_transformer
+    - exp081_lookup_fold_initialization_avg3
+    - exp106_lookup_fixed24_train_test_preprocessing
+    - exp085_contextual_spline_m0
+    - exp127_lookup_muon
+    - exp131_lookup_bivariate_plr5
+  제약 기반 결측 복원 구간 폭:
+    size: 4
+    members:
+    - exp025_constrained_impute
+    - exp136_realmlp_muon_recon_widths
+    - exp137_tabm_recon_widths
+    - exp139_realmlp_reference_qnormal_train_test
+  제약 기반 결측 복원값:
+    size: 22
+    members:
+    - exp025_constrained_impute
+    - exp032_recon_orig_mean_top3
+    - exp033_recon_orig_mean_top3_raw
+    - exp035_lattice_te
+    - exp070_cat_exact_cats
+    - exp067_tabpfn3
+    - exp081_lookup_fold_initialization_avg3
+    - exp110_lgb_kitopl_no_te
+    - exp111_xgb_depth8_no_te
+    - exp071_cat_exact_no_te
+    - exp117_ag25_gbm_r21
+    - exp113_tab_cnn_m0
+    - exp085_contextual_spline_m0
+    - exp127_lookup_muon
+    - exp027_recon_ce
+    - exp048_lgb_orig_cdf_diff
+    - exp135_xgb_hpo_trial30
+    - exp131_lookup_bivariate_plr5
+    - exp137_tabm_recon_widths
+    - exp133_scalar_token_transformer_oof_te
+    - exp131_tab_cnn_oof_target_mean
+    - exp132_tab_cnn_epochs100
+  학습 기반 결측 복원:
+    size: 13
+    members:
+    - exp070_cat_exact_cats
+    - exp067_tabpfn3
+    - exp081_lookup_fold_initialization_avg3
+    - exp071_cat_exact_no_te
+    - exp117_ag25_gbm_r21
+    - exp113_tab_cnn_m0
+    - exp085_contextual_spline_m0
+    - exp127_lookup_muon
+    - exp131_lookup_bivariate_plr5
+    - exp137_tabm_recon_widths
+    - exp133_scalar_token_transformer_oof_te
+    - exp131_tab_cnn_oof_target_mean
+    - exp132_tab_cnn_epochs100
+full_refit_total: 99
+members:
+- config: exp006_te_drop_gaming
+  run_id: 4aaddd505ade428588cf83659f205cf6
+  oof_auc: 0.9665924316740748
+  ledger_oof_auc: 0.9665924316740748
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-11'
+  config_path: configs/refit/exp006_te_drop_gaming.yaml
+  config_sha256: c4deaafabe14032ac6b352322f1b39b4c4139f3bbb0d4057c8289adb3f69e75b
+  run_git_commit: 9e61a9654a14d91a71f02892ef0f4764e4a6fb04
+  model_family: lightgbm
+  lineage:
+    group: exp006_te_drop_gaming
+    role: 묶음 시작
+    predecessor: null
+  config_relations:
+    config_subset_of:
+    - exp011_resid_pair
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 기존 기록 부분 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 6582c852dee84acc1cae9b5231c3e4b223f2849338286cb195bcc6a8bda100f6
+    test_sha256: 407bf10dc247cbe51e9d4a638e4c415186e2467d653715a8e54259fc3a73b6a1
+- config: exp011_resid_pair
+  run_id: e21d19af37bb461db5dc1a59b66411a6
+  oof_auc: 0.9674010717025592
+  ledger_oof_auc: 0.9674010717025592
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-11'
+  config_path: configs/exp011_resid_pair.yaml
+  config_sha256: d2609af20ce94d9a4565db830640f93bc3b8940e9da46d02b14876e289a70a0c
+  run_git_commit: e529837229c249e4751a8237093d17d75446913e
+  model_family: lightgbm
+  lineage:
+    group: exp006_te_drop_gaming
+    role: champion 개선판
+    predecessor: exp006_te_drop_gaming
+    predecessor_in_pool: true
+    evidence: '이슈 #46(현재 champion 위에서 산술 잔차 표현 결정)과 artifacts/pool.yaml 진입 근거: 새 champion exp011_resid_pair,
+      구 champion 대비 스피어만 0.99584'
+    predecessor_config_source: 실행 산출물
+    config_delta:
+      shape: 진부분집합 확장
+      added_leaves: 2
+      removed_leaves: 0
+      changed_leaves: 0
+      changed_keys: []
+  config_relations:
+    config_subset_of: []
+    config_superset_of:
+    - exp006_te_drop_gaming
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 기존 기록 부분 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 15988c7117300ed4be52bee52e0fe065f63f2799448969bef4cc07cab65bd6df
+    test_sha256: 63f0e1b7612ed426698fdb4cf7a88ec1bc6320d7360063a31ebbbc5d1175e9bf
+- config: exp022_orig_knn
+  run_id: 52e9c12bcfb94ee9912e4bb7f43e3f09
+  oof_auc: 0.9673310988424522
+  ledger_oof_auc: 0.9673310988424522
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-11'
+  config_path: configs/exp022_orig_knn.yaml
+  config_sha256: 5e9d52d59467e98d6498a5bf23e3b4a57b99d60336dc8f42e73cf30f66d754b9
+  run_git_commit: 2c8087158d25e459e2b63065eef55075083c3eb9
+  model_family: lightgbm
+  lineage:
+    group: exp022_orig_knn
+    role: 묶음 시작
+    predecessor: null
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 원본 프록시 최근접 라벨
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 기존 기록 부분 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: f66f0895d1e8f9fd86420c02c669b319144d5f9d8bb306a48416fb2968cb71de
+    test_sha256: d802a2ccb39c54b37c931d2389e3d925ed016a0de119031b19679b293b0fa4ca
+- config: exp023_orig_proxy_residual
+  run_id: 202b7d47c3bd4b8e8904fa5c005c7423
+  oof_auc: 0.9673739546249797
+  ledger_oof_auc: 0.9673739546249797
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-11'
+  config_path: configs/exp023_orig_proxy_residual.yaml
+  config_sha256: f7e792369fd4cb69fd90c605bcded9a13050ec4c9e4fd0cc2be30c180a048122
+  run_git_commit: c22237bfeb3dc57668e492346acdcfe42c1d3ed2
+  model_family: lightgbm
+  lineage:
+    group: exp023_orig_proxy_residual
+    role: 묶음 시작
+    predecessor: null
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 기존 기록 부분 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 585fd50e1eb834a0854434d803022f10c088324cd47d752096312aeda23f283b
+    test_sha256: ac21067ffd3e782c70df32d52d0c9f00a030d4d35792f0d2d43615b4faa5f8c4
+- config: exp025_constrained_impute
+  run_id: 9804689a5e3642e586abb972b522f3d4
+  oof_auc: 0.9675746898110065
+  ledger_oof_auc: 0.9675746898110065
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-20'
+  config_path: configs/exp025_constrained_impute.yaml
+  config_sha256: 2b8bf71956c90493b127a1db449f3843e4fb50dbcf81a45b5cf3392de1700bf2
+  run_git_commit: 327a973898b09b9f8861adc92155d4f527cc4c6a
+  model_family: lightgbm
+  lineage:
+    group: exp025_constrained_impute
+    role: 품질 개선판 교체
+    predecessor: exp026_constrained_impute_nowidth
+    predecessor_in_pool: false
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 281): 폭 3열 포함판이 exp026보다 3시드 +0.00002705'
+    predecessor_config_source: 저장소 현재 파일
+    config_delta:
+      shape: 진부분집합 축소
+      added_leaves: 0
+      removed_leaves: 1
+      changed_leaves: 0
+      changed_keys: []
+  config_relations:
+    config_subset_of:
+    - exp035_lattice_te
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 제약 기반 결측 복원 구간 폭
+  - 제약 기반 결측 복원값
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 28ea5e1056ab90765220431169ea5bd67cfad682b2e4f41274cfd24e38b4329f
+    test_sha256: fd9b43be0aaba86fe90eb1020f7936d558cbe37f3c843207d867d24971cdb517
+- config: exp032_recon_orig_mean_top3
+  run_id: b1bd4b08386946c9a4e05b755dbd5f26
+  oof_auc: 0.9676472210375413
+  ledger_oof_auc: 0.9676472210375413
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-12'
+  config_path: configs/exp032_recon_orig_mean_top3.yaml
+  config_sha256: 7b74c858cb40103a99de32a5d3452fe97f54bc5d13e164fce1645dc6e7bb897c
+  run_git_commit: addc845ad893d208a079d109b148dc03d7cb5f00
+  model_family: lightgbm
+  lineage:
+    group: exp025_constrained_impute
+    role: 특성 묶음 추가판
+    predecessor: exp026_constrained_impute_nowidth
+    predecessor_in_pool: false
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 #78): 원본 prior 상위 3열(m=20)의 exp026 베이스 재구성'
+    predecessor_config_source: 저장소 현재 파일
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 19
+      removed_leaves: 8
+      changed_leaves: 11
+      changed_keys:
+      - features.providers[1].cols[0]
+      - features.providers[1].cols[1]
+      - features.providers[1].cols[2]
+      - features.providers[1].kind
+      - features.providers[2].cols[3]
+      - features.providers[2].cols[4]
+      - features.providers[2].cols[5]
+      - features.providers[2].cols[6]
+      - features.providers[2].cols[7]
+      - features.providers[2].cols[8]
+      - features.providers[2].kind
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 원본 프록시 통계 사전
+  - 제약 기반 결측 복원값
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 기존 기록 부분 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 542114610c478fed58b4bb1bb35fee50ad704a01b78cc2f763eab0096f31f064
+    test_sha256: 347326a0698770e3d153b12ee475c42d0508c2c4588f2af1020c5e56331d722d
+- config: exp033_recon_orig_mean_top3_raw
+  run_id: c34f1da180544c3ba022140d394cb055
+  oof_auc: 0.9676202184993681
+  ledger_oof_auc: 0.9676202184993681
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-12'
+  config_path: configs/exp033_recon_orig_mean_top3_raw.yaml
+  config_sha256: 3cf48e2f8053960b237aee9d1f65f9ef46db7a999a9d6c97ea22efd55b6ada88
+  run_git_commit: 9fd834bc25cbb7de16f38ccc1be78db8ab7a7e26
+  model_family: lightgbm
+  lineage:
+    group: exp025_constrained_impute
+    role: 설정값 변형판
+    predecessor: exp032_recon_orig_mean_top3
+    predecessor_in_pool: true
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 #80): exp032의 평활 제거(m=0) 변형'
+    predecessor_config_source: 실행 산출물
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 0
+      removed_leaves: 0
+      changed_leaves: 1
+      changed_keys:
+      - features.providers[1].smoothing
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 원본 프록시 통계 사전
+  - 제약 기반 결측 복원값
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 기존 기록 부분 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 9bb907c98aec08e3a6c401a866b67c563b5290b9656d8b3f6b2ebd878d067e81
+    test_sha256: f5bfa6174b00e80875f7ca08f1e04dba8e65997dd71de24b5179dfc06ef8ec56
+- config: exp035_lattice_te
+  run_id: c62a9ad334bf486cb46d738474ccd767
+  oof_auc: 0.9672897196399213
+  ledger_oof_auc: 0.9672897196399213
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-12'
+  config_path: configs/exp035_lattice_te.yaml
+  config_sha256: e905418ebedaef4859dd8684a6921e4cad4f890caba89b949a1f100336f18e5e
+  run_git_commit: 0d571eaa1130e35d588b66057daede8fe131fc01
+  model_family: lightgbm
+  lineage:
+    group: exp035_lattice_te
+    role: 묶음 시작
+    predecessor: null
+  config_relations:
+    config_subset_of: []
+    config_superset_of:
+    - exp025_constrained_impute
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 격자 이변수 목표값 부호화
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 제약 기반 결측 복원값
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 기존 기록 부분 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 490f5939bed0d2ebb4192da172dc5b8ecfd3960b2fee2dc2b51ac9dd2f3c443b
+    test_sha256: 7d7a4c7ab6c7815e6ff7a12f071d2d75e5a6448758129001eb9ee913cf7abffe
+- config: exp058_logreg_onehot
+  run_id: e2b76edd9d204290810e39a7457c4c48
+  oof_auc: 0.9596583963715687
+  ledger_oof_auc: 0.9596583963715687
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-13'
+  config_path: configs/exp058_logreg_onehot.yaml
+  config_sha256: 0ae00bb534653755448916edbb7c5c6e11f60014cefe47d9becaf35cf2940d9a
+  run_git_commit: 7b7d9ff78b4f693af500784f7c39229470d65678
+  model_family: logistic_onehot
+  lineage:
+    group: exp058_logreg_onehot
+    role: 묶음 시작
+    predecessor: null
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 원시 관측 열 전용
+  full_refit_count: 1
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 기존 기록 부분 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: f3d479df12e2fa16a33b8d188dafa8faa3159458606f3dbdefe5a41365082769
+    test_sha256: 4dd874272dfd305ea41ba6a8ddb017fe5e1ca0987d9f19271aa7e6fa7a192398
+- config: exp059_lookup_transformer
+  run_id: b951fac51b6b44298f7fdb0b543caba6
+  oof_auc: 0.9689221785328946
+  ledger_oof_auc: 0.9689221785328946
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-14'
+  config_path: configs/exp059_lookup_transformer.yaml
+  config_sha256: 6ce0c5344269d23915cf1bf273ee5124a73b3d6547d5ad56b327a5a83155e4a8
+  run_git_commit: 495cc49df87e1de625da99f440b7d7fb80ac4f33
+  model_family: lookup_transformer
+  lineage:
+    group: exp059_lookup_transformer
+    role: 묶음 시작
+    predecessor: null
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 산술 파생 조합
+  - 정확값 어휘 조회
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 9407248f85db87e1825f140a8c3927d8d296c8daddf80215d929148da6ccf3d1
+    test_sha256: c23651771024fa66f9065dc14bf93a694517f280df6e360f19fc2f030e0c4f25
+- config: exp070_cat_exact_cats
+  run_id: 6238d8c58beb42ee8102209ded92516e
+  oof_auc: 0.9685793468869544
+  ledger_oof_auc: 0.9685793468869544
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-15'
+  config_path: configs/exp070_cat_exact_cats.yaml
+  config_sha256: 78d564c6c4e255f910b62bce855844697ed4ba16640e9f9fa15b1d625ebbb91d
+  run_git_commit: 07616e55c9e7ab7a1e5860f0f1b28c150e42ac42
+  model_family: catboost
+  lineage:
+    group: exp070_cat_exact_cats
+    role: 중복 교체판
+    predecessor: exp057_cat_xgb_impute_comps5
+    predecessor_in_pool: false
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 #107): exp057과 스피어만 0.99959 중복 교체'
+    predecessor_config_source: 저장소 현재 파일
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 37
+      removed_leaves: 26
+      changed_leaves: 10
+      changed_keys:
+      - features.providers[0].kind
+      - features.providers[1].kind
+      - features.providers[2].cols[3]
+      - features.providers[2].cols[4]
+      - features.providers[2].cols[5]
+      - features.providers[2].cols[6]
+      - features.providers[2].cols[7]
+      - features.providers[2].cols[8]
+      - features.providers[2].kind
+      - features.providers[3].kind
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 정확값 범주 복제
+  - 제약 기반 결측 복원값
+  - 학습 기반 결측 복원
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 64039d4b52ce4dbf5ff690de19d92346d0e6c6a695337c1f34ac82cba65a1c30
+    test_sha256: e3b2cb7a9db28990e0adb82e95775b0761971cf18d6a7a954f3b0b6f1d59ac77
+- config: exp067_tabpfn3
+  run_id: 85b09132aae543aab16e69dea5906a30
+  oof_auc: 0.9672432266679856
+  ledger_oof_auc: 0.9672432266679856
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-15'
+  config_path: configs/exp067_tabpfn3.yaml
+  config_sha256: ef40507faf97ba6e61c48e4e1798172d84a38a5c40ff8171e91e96379ed894bb
+  run_git_commit: ccce6c3308083c036e0dcfe3ada1e4266f439bb8
+  model_family: tabpfn3
+  lineage:
+    group: exp067_tabpfn3
+    role: 묶음 시작
+    predecessor: null
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 제약 기반 결측 복원값
+  - 학습 기반 결측 복원
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 59a742f0a4ad336826d87491a01f92b1f23bb2ba23ba6c0380d3eede34c070f7
+    test_sha256: cea3b01adf1cd3c0ad2c02b57cb3adcb5afe540d14e129763cb65ae7ca7040f7
+- config: exp081_lookup_fold_initialization_avg3
+  run_id: d55d1cd49c194eb8bf7b5128e548df81
+  oof_auc: 0.9691957618114269
+  ledger_oof_auc: 0.9691957618114269
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-15'
+  config_path: configs/exp081_lookup_fold_initialization_avg3.yaml
+  config_sha256: d5e143369cfc1de2eebe5bcc01c7aae18e926b5695058f8c31a9f7f4436a4d9c
+  run_git_commit: 8c61ca1d588383955b73e1881422bbc1e6c442f3
+  model_family: lookup_transformer
+  lineage:
+    group: exp059_lookup_transformer
+    role: 학습 설정 개선판
+    predecessor: exp059_lookup_transformer
+    predecessor_in_pool: true
+    evidence: '이슈 #127: 당시 Lookup-Transformer 기준 구성 위의 fold 내 초기화 3개 평균, 설정은 exp059의 진부분집합 확장'
+    predecessor_config_source: 실행 산출물
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 37
+      removed_leaves: 3
+      changed_leaves: 0
+      changed_keys: []
+  config_relations:
+    config_subset_of:
+    - exp127_lookup_muon
+    - exp131_lookup_bivariate_plr5
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 산술 파생 조합
+  - 정확값 어휘 조회
+  - 제약 기반 결측 복원값
+  - 학습 기반 결측 복원
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 92d2188043561b57cc937800e54026d7cea97a8ef8d6ee6f1947d7e6007e18a0
+    test_sha256: 6ea966a3116e4fff05b5726656ad852ef2298b1d5650dec7a139e9318de770ad
+- config: exp110_lgb_kitopl_no_te
+  run_id: ae829ae3d886402ab100a8e966c3131a
+  oof_auc: 0.9673323106299934
+  ledger_oof_auc: 0.9673323106299934
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-18'
+  config_path: configs/exp110_lgb_kitopl_no_te.yaml
+  config_sha256: 5056d260735c2672035c720f1c3b98059f1128df79fc873fecf460976924535d
+  run_git_commit: f07383ec3b0e404d37a7c32d775e8438b2e239fe
+  model_family: lightgbm
+  lineage:
+    group: exp110_lgb_kitopl_no_te
+    role: 특성 묶음 제거판
+    predecessor: exp074_lgb_kitopl_d2_bundle
+    predecessor_in_pool: false
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 #183): exp074에서 TE 제거'
+    predecessor_config_source: 저장소 현재 파일
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 1
+      removed_leaves: 12
+      changed_leaves: 7
+      changed_keys:
+      - features.providers[1].cols[3]
+      - features.providers[1].cols[4]
+      - features.providers[1].cols[5]
+      - features.providers[1].cols[6]
+      - features.providers[1].cols[7]
+      - features.providers[1].cols[8]
+      - features.providers[1].kind
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 산술 파생 조합
+  - 제약 기반 결측 복원값
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 740fe8ef20d6864bc38fb975521c606249490d43b617d9197fb1277060a459f0
+    test_sha256: ffe237cde45ad5f9ae3d58e04cba7f4e0c39a0a0d0f071122036ec9d11c0310c
+- config: exp111_xgb_depth8_no_te
+  run_id: 3cbc2ccce9eb46458d884006a33e516e
+  oof_auc: 0.9648262948660623
+  ledger_oof_auc: 0.9648262948660623
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-18'
+  config_path: configs/exp111_xgb_depth8_no_te.yaml
+  config_sha256: b6adfccb792cd02f8e360f7ae5bd6328fd4d417ae14e8d2beb3bb893674e8bc3
+  run_git_commit: f07383ec3b0e404d37a7c32d775e8438b2e239fe
+  model_family: xgboost
+  lineage:
+    group: exp111_xgb_depth8_no_te
+    role: 특성 묶음 제거판
+    predecessor: exp045_xgb_depth8
+    predecessor_in_pool: false
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 #183): exp045에서 TE 제거'
+    predecessor_config_source: 저장소 현재 파일
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 1
+      removed_leaves: 12
+      changed_leaves: 7
+      changed_keys:
+      - features.providers[1].cols[3]
+      - features.providers[1].cols[4]
+      - features.providers[1].cols[5]
+      - features.providers[1].cols[6]
+      - features.providers[1].cols[7]
+      - features.providers[1].cols[8]
+      - features.providers[1].kind
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 산술 파생 조합
+  - 제약 기반 결측 복원값
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: f1f3d1fb61785b5ec78647c73eabdbb0128057a5b1fb9b0eead26d377cb31a05
+    test_sha256: 9c49e51d029866802e0c58e29024b480ee1fe9c732400118e4f040f0fca12c8b
+- config: exp071_cat_exact_no_te
+  run_id: 521b4924b2ef4ba1830724333b83deb2
+  oof_auc: 0.9681599406445471
+  ledger_oof_auc: 0.9681599406445471
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-18'
+  config_path: configs/exp071_cat_exact_no_te.yaml
+  config_sha256: 888484ca2434466cf48e2a03a0260cfa994de7dabfb47c8bd10a93961d39b616
+  run_git_commit: 5fa7bf8f2a540fbe99670c262aef45a67b8ca321
+  model_family: catboost
+  lineage:
+    group: exp070_cat_exact_cats
+    role: 특성 묶음 제거판
+    predecessor: exp070_cat_exact_cats
+    predecessor_in_pool: true
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 #183): exp070에서 TE 제거'
+    predecessor_config_source: 실행 산출물
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 14
+      removed_leaves: 25
+      changed_leaves: 8
+      changed_keys:
+      - features.providers[2].cols[3]
+      - features.providers[2].cols[4]
+      - features.providers[2].cols[5]
+      - features.providers[2].cols[6]
+      - features.providers[2].cols[7]
+      - features.providers[2].cols[8]
+      - features.providers[2].kind
+      - features.providers[3].kind
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 산술 파생 조합
+  - 정확값 범주 복제
+  - 제약 기반 결측 복원값
+  - 학습 기반 결측 복원
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: e6611866d54b6cf384690e539ec4ced26ee266c62d02fc4206137ae63c572029
+    test_sha256: 29701c540e24cd2f33cd9ff4dfadb69411c1eb1758face814a5b999630dd4a01
+- config: exp106_lookup_fixed24_train_test_preprocessing
+  run_id: 547e7bc90b9f4c448307d406f053629a
+  oof_auc: 0.9678698020933406
+  ledger_oof_auc: 0.9678698020933406
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-18'
+  config_path: configs/exp106_lookup_fixed24_train_test_preprocessing.yaml
+  config_sha256: 535334f0113294ad06c977578d390b20ab2db8f64643a0c50fe87d69a423fe93
+  run_git_commit: 2d819bcb766774fd3fbfb47feaf1e2190b438613
+  model_family: lookup_transformer
+  lineage:
+    group: exp106_lookup_fixed24_train_test_preprocessing
+    role: 묶음 시작
+    predecessor: null
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: train_test
+  information_perspectives:
+  - 산술 파생 조합
+  - 정확값 어휘 조회
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: a149a194f0ed082887cdbffa2b7791a61ab5e4b90c86f9769f2ee4ae7713942e
+    test_sha256: eca0d5764ed538aa6d943f55bdaa27c2f62ca12b679f3dc1b67907c157fe8c03
+- config: exp107_logreg_onehot_nn10
+  run_id: c4c4c780acab4b83baf10d67b98cc85a
+  oof_auc: 0.9599906992621854
+  ledger_oof_auc: 0.9599906992621854
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-18'
+  config_path: configs/exp107_logreg_onehot_nn10.yaml
+  config_sha256: 8372fab3ecf176767d6e11cdc3feccc58e5cd23f547435fddd8c9a1824edd066
+  run_git_commit: d54e7f43c1d1c02058b170e58fd17f341790fd5b
+  model_family: logistic_onehot
+  lineage:
+    group: exp058_logreg_onehot
+    role: 특성 묶음 추가판
+    predecessor: exp058_logreg_onehot
+    predecessor_in_pool: true
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 #200): exp058 계열 orig_nn10_mean 열 추가 변형'
+    predecessor_config_source: 실행 산출물
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 12
+      removed_leaves: 3
+      changed_leaves: 0
+      changed_keys: []
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 원본 프록시 최근접 라벨
+  full_refit_count: 1
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 025a572e1183fb022cdb00345e4b0776e6e3eba5c76d574c133b1989b794e949
+    test_sha256: 96ea2c1e07bf0668889c2ca5cc3c86f11819aca0756a68678dd809a668b916af
+- config: exp108_logreg_onehot_nn10_l1
+  run_id: 83f7977a87ef46679c26824c5b85f928
+  oof_auc: 0.9602293969491845
+  ledger_oof_auc: 0.9602293969491845
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-18'
+  config_path: configs/exp108_logreg_onehot_nn10_l1.yaml
+  config_sha256: 2c6eac801369fdb1455678d3c578cb73b954ee0f6704c57902e9afd54d55fd4e
+  run_git_commit: faaafc0433aef7f913947a6bd94b8f1ebb4f2957
+  model_family: logistic_onehot
+  lineage:
+    group: exp058_logreg_onehot
+    role: 특성 묶음 추가판
+    predecessor: exp058_logreg_onehot
+    predecessor_in_pool: true
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 #200): exp058 계열 orig_nn10_mean + L1 조합 변형'
+    predecessor_config_source: 실행 산출물
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 14
+      removed_leaves: 3
+      changed_leaves: 2
+      changed_keys:
+      - model.params.C
+      - model.params.max_iter
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 원본 프록시 최근접 라벨
+  full_refit_count: 1
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 349098fb8300f07af39f41eb2cc487f376569a190f8032724121af3bad8fdb69
+    test_sha256: b47ed2d2946108a67a5243729862650354e5be76556e681c460cba05e4a65f6e
+- config: exp117_ag25_gbm_r21
+  run_id: d107ea874ebe4dbe8094694141a162b6
+  oof_auc: 0.9687158156369342
+  ledger_oof_auc: 0.9687158156369342
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-18'
+  config_path: configs/exp117_ag25_gbm_r21.yaml
+  config_sha256: 9bf41cafe8224d64c29528bc45f73b1a9e0e60f16e6a1d2717c82a92ef7e6b8f
+  run_git_commit: 75452bbd82e17c27a72290324290a7624456e992
+  model_family: lightgbm
+  lineage:
+    group: exp110_lgb_kitopl_no_te
+    role: 중복 교체판
+    predecessor: exp074_lgb_kitopl_d2_bundle
+    predecessor_in_pool: false
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 197): 최근접 exp074와 스피어만 0.99829 초과·성능 우위로 교체 진입'
+    predecessor_config_source: 저장소 현재 파일
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 34
+      removed_leaves: 7
+      changed_leaves: 3
+      changed_keys:
+      - model.params.learning_rate
+      - model.params.n_estimators
+      - model.params.num_leaves
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 제약 기반 결측 복원값
+  - 학습 기반 결측 복원
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 1d8617af4a8d2cb21e898f1e33e805e6f1d351e96be64bbe70008fe94749494b
+    test_sha256: 0c84bc4ae72a46d74ef4287e41f72207856c96dc2019c08d9828aba53653c5f1
+- config: exp113_tab_cnn_m0
+  run_id: b47a4184249746cdb1d062aa98364437
+  oof_auc: 0.9620748339267182
+  ledger_oof_auc: 0.9620748339267182
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-18'
+  config_path: configs/exp113_tab_cnn_m0.yaml
+  config_sha256: 6ea07223019f68ab86683bdcd7d55cc15eed7a72ce830bb068bf53c3ceaca886
+  run_git_commit: b684ce9b0d618cab8ce392b8cc5d57b3ef22bb0b
+  model_family: tab_cnn
+  lineage:
+    group: exp113_tab_cnn_m0
+    role: 묶음 시작
+    predecessor: null
+  config_relations:
+    config_subset_of:
+    - exp131_tab_cnn_oof_target_mean
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 산술 파생 조합
+  - 제약 기반 결측 복원값
+  - 학습 기반 결측 복원
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 97721e2bf2254933057ee0512d76cdbd8b091a60684d22e3396eeacae35b277c
+    test_sha256: 63b42e1a968e976bfd1ce440fa7b45c5fcae01714f3c1ca00d85c1caaddd6794
+- config: exp085_contextual_spline_m0
+  run_id: e84d97e875754af1b073b399db2a0616
+  oof_auc: 0.9681422751383426
+  ledger_oof_auc: 0.9681422751383426
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-19'
+  config_path: configs/exp085_contextual_spline_m0.yaml
+  config_sha256: 0c498704cb79af55924e0173bc6803558b3500ed0a2bf9c2b2964b1ea8085135
+  run_git_commit: 5381f1a2e515c0aa751193cd66023c6f89df77b8
+  model_family: contextualized_spline_transformer
+  lineage:
+    group: exp085_contextual_spline_m0
+    role: 묶음 시작
+    predecessor: null
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 산술 파생 조합
+  - 정확값 어휘 조회
+  - 제약 기반 결측 복원값
+  - 학습 기반 결측 복원
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 04b2a8f637a978ed3d428f28d1c2e7bec51f856cdf844aee434d63dc239f6671
+    test_sha256: be72f7a7879548c075361e5caf3d9fdc6ae47073df386222fd771ce02f76f392
+- config: exp124_realmlp_dtype_fix
+  run_id: c41c6a4deae04e1fbd8a75193eaaa32c
+  oof_auc: 0.9683223457855767
+  ledger_oof_auc: 0.9683223457855767
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-19'
+  config_path: configs/exp124_realmlp_dtype_fix.yaml
+  config_sha256: 3e0fa92985c3ebce4bd67129ccf83c96ca287fd1aa29a14b05610ba5a7eed4e9
+  run_git_commit: e2309eb51b4ad8932239d0dc809bde1b23125686
+  model_family: realmlp
+  lineage:
+    group: exp124_realmlp_dtype_fix
+    role: 결함 수정판 교체
+    predecessor: exp121_realmlp_fixed4_two_init
+    predecessor_in_pool: false
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 243): exp121의 dtype 정합 결함 수정판으로 exp121을 교체 진입'
+    predecessor_config_source: 저장소 현재 파일
+    config_delta:
+      shape: 차이 없음
+      added_leaves: 0
+      removed_leaves: 0
+      changed_leaves: 0
+      changed_keys: []
+  config_relations:
+    config_subset_of:
+    - exp134_realmlp_muon
+    - exp136_realmlp_muon_recon_widths
+    - exp139_realmlp_reference_qnormal_train_test
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 원시 관측 열 전용
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: c468867d7e18f9db383922296331d1034769742479526d3d793ffbd78ee13315
+    test_sha256: 942acb79afaa1a8bdd65ab52958911950a2ae6e2e8944508fd93135e516b152a
+- config: exp127_lookup_muon
+  run_id: 7124425b5b51421dbbeba597229554da
+  oof_auc: 0.9692840450124712
+  ledger_oof_auc: 0.9692840450124712
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-20'
+  config_path: configs/exp127_lookup_muon.yaml
+  config_sha256: 19e69910d8ede4b2fb9559685800fa03f0056d635009d7c5296055c0890644cb
+  run_git_commit: c2e3e13cf1c4232b37ed064bb219995789be64c9
+  model_family: lookup_transformer
+  lineage:
+    group: exp059_lookup_transformer
+    role: 학습 설정 개선판
+    predecessor: exp081_lookup_fold_initialization_avg3
+    predecessor_in_pool: true
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 196): exp081의 Muon 혼성 optimizer판'
+    predecessor_config_source: 실행 산출물
+    config_delta:
+      shape: 진부분집합 확장
+      added_leaves: 1
+      removed_leaves: 0
+      changed_leaves: 0
+      changed_keys: []
+  config_relations:
+    config_subset_of:
+    - exp131_lookup_bivariate_plr5
+    config_superset_of:
+    - exp081_lookup_fold_initialization_avg3
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 산술 파생 조합
+  - 정확값 어휘 조회
+  - 제약 기반 결측 복원값
+  - 학습 기반 결측 복원
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 7634d94dcdf5d8c987b6b3f7e8bd4403e621ef97296958422f119a51366ccf5b
+    test_sha256: be2d33bedc9f022c0c55fadccf658c393e2223e8438de9e7b8e0b4fe00058c58
+- config: exp027_recon_ce
+  run_id: e4e81bdce7df4a72bf250ef842fd8781
+  oof_auc: 0.967717165004002
+  ledger_oof_auc: 0.967717165004002
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-20'
+  config_path: configs/exp027_recon_ce.yaml
+  config_sha256: f530adf264655d090a1a4e9220353a6e433c0f7400b1f65dcd81c978f79d7f21
+  run_git_commit: 327a973898b09b9f8861adc92155d4f527cc4c6a
+  model_family: lightgbm
+  lineage:
+    group: exp025_constrained_impute
+    role: 특성 묶음 추가판
+    predecessor: exp026_constrained_impute_nowidth
+    predecessor_in_pool: false
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 282)와 설정 차이: exp026에 빈도 인코딩 8열 묶음 추가'
+    predecessor_config_source: 저장소 현재 파일
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 11
+      removed_leaves: 2
+      changed_leaves: 6
+      changed_keys:
+      - features.providers[2].cols[3]
+      - features.providers[2].cols[4]
+      - features.providers[2].cols[5]
+      - features.providers[2].cols[6]
+      - features.providers[2].cols[7]
+      - features.providers[2].kind
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 정확값 빈도 부호화
+  - 제약 기반 결측 복원값
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 82d4ece1e6d7d6dd20df27a0d48bac1ff99303a17e7900f9d7e6daa86820e1e2
+    test_sha256: 800ef0598b6796a6ec844407456f0e8255e4c96b7d4901421bd2d58db8dc18f9
+- config: exp048_lgb_orig_cdf_diff
+  run_id: 2b5fda6d3ea94ff886c5fe616376f0f0
+  oof_auc: 0.9676097182368125
+  ledger_oof_auc: 0.9676097182368125
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-20'
+  config_path: configs/exp048_lgb_orig_cdf_diff.yaml
+  config_sha256: 78aa4f87470c0c6eb03cd646e6949fec48bf59009a37d590fd10ec8445212977
+  run_git_commit: 327a973898b09b9f8861adc92155d4f527cc4c6a
+  model_family: lightgbm
+  lineage:
+    group: exp025_constrained_impute
+    role: 특성 묶음 추가판
+    predecessor: exp026_constrained_impute_nowidth
+    predecessor_in_pool: false
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 283): CDF 차이 5열 묶음이 exp026보다 3시드 +0.00006208'
+    predecessor_config_source: 저장소 현재 파일
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 13
+      removed_leaves: 6
+      changed_leaves: 12
+      changed_keys:
+      - features.providers[1].cols[0]
+      - features.providers[1].cols[1]
+      - features.providers[1].cols[3]
+      - features.providers[1].cols[4]
+      - features.providers[1].kind
+      - features.providers[2].cols[3]
+      - features.providers[2].cols[4]
+      - features.providers[2].cols[5]
+      - features.providers[2].cols[6]
+      - features.providers[2].cols[7]
+      - features.providers[2].cols[8]
+      - features.providers[2].kind
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 원본 프록시 분포 좌표
+  - 제약 기반 결측 복원값
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 2bc251ba0f9005dcfddf35aad26f0b380e9d3538b43fe25b875d722a894fc5d5
+    test_sha256: fff2c201e3b736f5c9d3f04cae8df9fb52193916e3088a190146f2c754eb0610
+- config: exp134_realmlp_muon
+  run_id: f72eeee10b1b4947af79228f888e7a81
+  oof_auc: 0.9684260631310234
+  ledger_oof_auc: 0.9684260631310234
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-20'
+  config_path: configs/exp134_realmlp_muon.yaml
+  config_sha256: 430eb0836f3784d3c2c212bad22fb7e4ed6833e8633eeb75ba70fed5ab7f4894
+  run_git_commit: c792484169b56190323c01731f2e9d510c60e0be
+  model_family: realmlp
+  lineage:
+    group: exp124_realmlp_dtype_fix
+    role: 학습 설정 개선판
+    predecessor: exp124_realmlp_dtype_fix
+    predecessor_in_pool: true
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 280): exp124의 Muon 혼성 optimizer판'
+    predecessor_config_source: 실행 산출물
+    config_delta:
+      shape: 진부분집합 확장
+      added_leaves: 1
+      removed_leaves: 0
+      changed_leaves: 0
+      changed_keys: []
+  config_relations:
+    config_subset_of:
+    - exp136_realmlp_muon_recon_widths
+    - exp139_realmlp_reference_qnormal_train_test
+    config_superset_of:
+    - exp124_realmlp_dtype_fix
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 원시 관측 열 전용
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 29f30a098fb818dc859ea2adad44e1ec9f8e797cefcfd4d05d85e4d937d0cb80
+    test_sha256: b54d9be9d087353eb68c601a08070b225ecfa2208927815416e5ed660a9ece9f
+- config: exp135_xgb_hpo_trial30
+  run_id: 119b9c4e44674d38a6f758b65a68593e
+  oof_auc: 0.9683307160272167
+  ledger_oof_auc: 0.9683307160272167
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-20'
+  config_path: configs/exp135_xgb_hpo_trial30.yaml
+  config_sha256: 653c4a07185cc25b00bbb339bdbcf27e058b9d1f36bbb57ef5bbb29749a2baf9
+  run_git_commit: f9a03a787086cac588861f2cd4db5bbf456949b7
+  model_family: xgboost
+  lineage:
+    group: exp111_xgb_depth8_no_te
+    role: 중복 교체판
+    predecessor: exp045_xgb_depth8
+    predecessor_in_pool: false
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 288): exp045 중복 구성원을 더 높은 3시드 OOF AUC로 교체'
+    predecessor_config_source: 저장소 현재 파일
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 8
+      removed_leaves: 0
+      changed_leaves: 2
+      changed_keys:
+      - model.params.learning_rate
+      - model.params.max_depth
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 제약 기반 결측 복원값
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: b4a601c3a41137a0319be1dd8ff3a4a9ccc2aeaf68a1037ae171f78637085299
+    test_sha256: 8052c82fbac39a96a636fb6ac53aa709aca0eb5ee018c0c5d481f3039110b0a6
+- config: exp131_lookup_bivariate_plr5
+  run_id: 54acd002d3c04ec3a74c09871e83da50
+  oof_auc: 0.9693397329635609
+  ledger_oof_auc: 0.9693397329635609
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-20'
+  config_path: configs/exp131_lookup_bivariate_plr5.yaml
+  config_sha256: d344102b44330a9e89a15e330f90694e19652575595ec5bb8dbb03beaa91b5b2
+  run_git_commit: 58719c6b86c8d62a027760ff367892eaed5a141f
+  model_family: lookup_transformer
+  lineage:
+    group: exp059_lookup_transformer
+    role: 특성 묶음 추가판
+    predecessor: exp127_lookup_muon
+    predecessor_in_pool: true
+    evidence: 'artifacts/pool.yaml 진입 근거(이슈 267): exp127에 수면·화면 이변수 조성 5열을 더한 판'
+    predecessor_config_source: 실행 산출물
+    config_delta:
+      shape: 진부분집합 확장
+      added_leaves: 5
+      removed_leaves: 0
+      changed_leaves: 0
+      changed_keys: []
+  config_relations:
+    config_subset_of: []
+    config_superset_of:
+    - exp081_lookup_fold_initialization_avg3
+    - exp127_lookup_muon
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 산술 파생 조합
+  - 정확값 어휘 조회
+  - 제약 기반 결측 복원값
+  - 학습 기반 결측 복원
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 3735b1ba771c32cc3feea9bb325e8da5d04e8474589d52995b2126e9f7a0e8ad
+    test_sha256: e46bff92c8046c495266a5b7339ddfa69af0c64c23817944667fb552fbf57fc6
+- config: exp136_realmlp_muon_recon_widths
+  run_id: bd2bd1154e6343f68b364714e2fedcc4
+  oof_auc: 0.9684765044445613
+  ledger_oof_auc: 0.9684765044445613
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-20'
+  config_path: configs/exp136_realmlp_muon_recon_widths.yaml
+  config_sha256: 9556597389aff1dd9f038c68a6a3e80bbbb200bd6047e61c673084badd1313ac
+  run_git_commit: d09f976e6772ec35a05493d6e8b1f88e3daa843f
+  model_family: realmlp
+  lineage:
+    group: exp124_realmlp_dtype_fix
+    role: 특성 묶음 추가판
+    predecessor: exp134_realmlp_muon
+    predecessor_in_pool: true
+    evidence: 'artifacts/pool.yaml 진입 근거(판정 issue302-exp136-realmlp-widths-confirm): exp134 직접 짝비교'
+    predecessor_config_source: 실행 산출물
+    config_delta:
+      shape: 진부분집합 확장
+      added_leaves: 13
+      removed_leaves: 0
+      changed_leaves: 0
+      changed_keys: []
+  config_relations:
+    config_subset_of:
+    - exp139_realmlp_reference_qnormal_train_test
+    config_superset_of:
+    - exp124_realmlp_dtype_fix
+    - exp134_realmlp_muon
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 제약 기반 결측 복원 구간 폭
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 61490376cc8f8a7d49e57c4ee614950a140746838b118e8919213b3eb9f792f9
+    test_sha256: 21f4f333b205bdd0cf64f9d8e8c5b090022ff6060e45d2f01c66d6233c473845
+- config: exp137_tabm_recon_widths
+  run_id: e7682b186be14dea822d41d7d411bb98
+  oof_auc: 0.9683846688118484
+  ledger_oof_auc: 0.9683846688118484
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-20'
+  config_path: configs/exp137_tabm_recon_widths.yaml
+  config_sha256: b4b818d80aff90cc4199d4022d761531621070d3077b34c968ebd7c0bb6f30a3
+  run_git_commit: 1bdbce6f21f2c38aa1cd99553ac22998c6ad1387
+  model_family: tabm
+  lineage:
+    group: exp137_tabm_recon_widths
+    role: 특성 묶음 추가판 교체
+    predecessor: exp065_tabm
+    predecessor_in_pool: false
+    evidence: 'artifacts/pool.yaml 진입 근거(판정 issue294-exp137-tabm-widths-confirm): exp065 직접 짝비교로 교체'
+    predecessor_config_source: 저장소 현재 파일
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 0
+      removed_leaves: 0
+      changed_leaves: 1
+      changed_keys:
+      - features.providers[2].widths
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 제약 기반 결측 복원 구간 폭
+  - 제약 기반 결측 복원값
+  - 학습 기반 결측 복원
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 895eace593d884dc911aa1d2c6090aba8d2791ce068e28f4f136d6fe4898946c
+    test_sha256: 1680157e667eb64edcbb6604a88210c6d07f7158e84271cd08740dc508e41b77
+- config: exp133_scalar_token_transformer_oof_te
+  run_id: f16dbc88860a41f39194da2f581f057d
+  oof_auc: 0.9678155177269718
+  ledger_oof_auc: 0.9678155177269718
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-21'
+  config_path: configs/exp133_scalar_token_transformer_oof_te.yaml
+  config_sha256: af1a1049b706152faad8274cd47443eb3c1f17f20f46f78e6798f0e54eee8b10
+  run_git_commit: 76ed92d415283692e6bddef0456e4c44643ed407
+  model_family: scalar_token_transformer
+  lineage:
+    group: exp133_scalar_token_transformer_oof_te
+    role: 묶음 시작
+    predecessor: null
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 제약 기반 결측 복원값
+  - 학습 기반 결측 복원
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 9528f1971b3d8d453f567358b94f18836b9bccd3b9bbfcd54a1615fbea9e5d86
+    test_sha256: 63410f9ed2fe6f53ad7f695ede661218d7837332f1902a39050ccbc79a9d9e01
+- config: exp131_tab_cnn_oof_target_mean
+  run_id: ea78fe0dbe2442788580dec56cf7f3ad
+  oof_auc: 0.9679518485344029
+  ledger_oof_auc: 0.9679518485344029
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-21'
+  config_path: configs/exp131_tab_cnn_oof_target_mean.yaml
+  config_sha256: 36c92397da6b36f3232a153a2693426c9a150560f718f850c0107b0a8d532b6a
+  run_git_commit: f3f7862e447083ef354b1c436d79752ec496f107
+  model_family: tab_cnn
+  lineage:
+    group: exp113_tab_cnn_m0
+    role: 단일 변경 개선판
+    predecessor: exp113_tab_cnn_m0
+    predecessor_in_pool: true
+    evidence: '이슈 #333: #303에서 exp113_tab_cnn_m0 대비 단일 변경으로 확인된 개선'
+    predecessor_config_source: 실행 산출물
+    config_delta:
+      shape: 진부분집합 확장
+      added_leaves: 16
+      removed_leaves: 0
+      changed_leaves: 0
+      changed_keys: []
+  config_relations:
+    config_subset_of: []
+    config_superset_of:
+    - exp113_tab_cnn_m0
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 목표값 부호화
+  - 산술 파생 조합
+  - 제약 기반 결측 복원값
+  - 학습 기반 결측 복원
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: fc02cb262dd32ec69e3ae776b45997a452ea72a09186e2214c9e637c34ef0505
+    test_sha256: e0cc675ffa36e1e1eb55ade768ca241c8d203fbfab2e0a5af3989ebd4c7a775d
+- config: exp132_tab_cnn_epochs100
+  run_id: 09d17ca4091e45118d201ba7a321f956
+  oof_auc: 0.9627879146500447
+  ledger_oof_auc: 0.9627879146500447
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-21'
+  config_path: configs/exp132_tab_cnn_epochs100.yaml
+  config_sha256: 64fd99949f46df6cd9483195a58854989cce6f6e7de6eee2b715772a8a4e41a3
+  run_git_commit: f3f7862e447083ef354b1c436d79752ec496f107
+  model_family: tab_cnn
+  lineage:
+    group: exp113_tab_cnn_m0
+    role: 단일 변경 개선판
+    predecessor: exp113_tab_cnn_m0
+    predecessor_in_pool: true
+    evidence: '이슈 #333: #303에서 exp113_tab_cnn_m0 대비 단일 변경으로 확인된 개선'
+    predecessor_config_source: 실행 산출물
+    config_delta:
+      shape: 혼합 변경
+      added_leaves: 0
+      removed_leaves: 0
+      changed_leaves: 1
+      changed_keys:
+      - model.params.epochs
+  config_relations:
+    config_subset_of: []
+    config_superset_of: []
+  preprocessing_reference_scope: fold_train
+  information_perspectives:
+  - 산술 파생 조합
+  - 제약 기반 결측 복원값
+  - 학습 기반 결측 복원
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: ed6ef11b04834abf1b3da83964e1c3e8cf98bb741ec8b211cc4b8f3d4a92c3c8
+    test_sha256: 19848eaa7221e0fa2566c8d9b2ff1f359777d7c791f49042b658b036541eb8f5
+- config: exp139_realmlp_reference_qnormal_train_test
+  run_id: 1af9442e67c14a96a5256251f23a1b9d
+  oof_auc: 0.9685456290878953
+  ledger_oof_auc: 0.9685456290878953
+  seeds:
+  - 42
+  - 43
+  - 44
+  entered_at: '2026-08-21'
+  config_path: configs/exp139_realmlp_reference_qnormal_train_test.yaml
+  config_sha256: 85c74e4ec735fbd4934ea8541600d5c65fc33d7fed5cd9d85613f635ce1ac3e2
+  run_git_commit: 781b3e58222ef8a808adf942085fa4cf8b98dba8
+  model_family: realmlp
+  lineage:
+    group: exp124_realmlp_dtype_fix
+    role: 전처리 기준 범위 변형판
+    predecessor: exp136_realmlp_muon_recon_widths
+    predecessor_in_pool: true
+    evidence: '이슈 #331 고정 실행 계약: 직접 기준 설정은 exp136_realmlp_muon_recon_widths'
+    predecessor_config_source: 실행 산출물
+    config_delta:
+      shape: 진부분집합 확장
+      added_leaves: 10
+      removed_leaves: 0
+      changed_leaves: 0
+      changed_keys: []
+  config_relations:
+    config_subset_of: []
+    config_superset_of:
+    - exp124_realmlp_dtype_fix
+    - exp134_realmlp_muon
+    - exp136_realmlp_muon_recon_widths
+  preprocessing_reference_scope: train_test
+  information_perspectives:
+  - 전처리 기준 집합 값 좌표
+  - 제약 기반 결측 복원 구간 폭
+  full_refit_count: 3
+  integrity:
+    verdict: 통과
+    failures: []
+    seed_mean_status: 완전 확인
+    oof_missing: 0
+    test_missing: 0
+    oof_sha256: 93b787afe2f8212865a6975e3bc64a1d68c7efdb14c15c8b0178f2f0f39aeea6
+    test_sha256: c68c546f8223fbbf3abc647e67f848e406ffdf333d452e36f183b45e03becd3b
