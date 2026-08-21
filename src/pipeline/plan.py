@@ -256,19 +256,33 @@ class FeaturePlan:
         """fold 루프가 fit할 fold-fit 제공자들. providers 목록 순서."""
         return [provider for _, provider in self._stages[FOLD_FIT]]
 
+    def fold_fit_providers(self) -> list[tuple[str, FoldFitTransformer]]:
+        """관측 가능한 제공자 이름과 구현을 설정의 선언 순서로 돌려준다."""
+        return list(self._stages[FOLD_FIT])
+
+    @staticmethod
+    def add_fold_fit_provider_columns(
+        X: pd.DataFrame,
+        df: pd.DataFrame,
+        kind: str,
+        transformer: FoldFitTransformer,
+    ) -> pd.DataFrame:
+        """fit이 끝난 제공자 하나의 선언 검증과 컬럼 추가를 수행한다."""
+        new = transformer.transform(df)
+        assert new.index.equals(df.index), f"{kind}의 transform 인덱스가 원본과 다르다."
+        assert list(new.columns) == transformer.columns(), (
+            f"{kind}의 산출 컬럼이 선언과 다르다: "
+            f"{list(new.columns)} != {transformer.columns()}"
+        )
+        collision = set(new.columns) & set(X.columns)
+        assert not collision, f"fold-fit 컬럼 이름 충돌: {sorted(collision)}"
+        return pd.concat([X, new], axis=1)
+
     def add_fold_fit_columns(self, X: pd.DataFrame, df: pd.DataFrame) -> pd.DataFrame:
         """fit된 fold-fit 제공자들의 새 컬럼을 X에 붙인 행렬을 돌려준다. 추가 전용."""
         out = X
         for kind, transformer in self._stages[FOLD_FIT]:
-            new = transformer.transform(df)
-            assert new.index.equals(df.index), f"{kind}의 transform 인덱스가 원본과 다르다."
-            assert list(new.columns) == transformer.columns(), (
-                f"{kind}의 산출 컬럼이 선언과 다르다: "
-                f"{list(new.columns)} != {transformer.columns()}"
-            )
-            collision = set(new.columns) & set(out.columns)
-            assert not collision, f"fold-fit 컬럼 이름 충돌: {sorted(collision)}"
-            out = pd.concat([out, new], axis=1)
+            out = self.add_fold_fit_provider_columns(out, df, kind, transformer)
         return out
 
     def build_full_matrices(

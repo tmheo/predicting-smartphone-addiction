@@ -30,6 +30,8 @@ class RunRecorder(Protocol):
 
     def fold_completed(self, seed_index: int, fold_index: int, auc: float) -> None: ...
 
+    def record_timing(self, event: dict[str, object]) -> None: ...
+
 
 @dataclass
 class CVResult:

@@ -68,7 +68,8 @@ def main() -> None:
         print("기록될 것   : params(feature 목록, 모델 파라미터), metrics(auc_fold_*, auc_oof, auc_oof_seed_*),")
         print("             progress.*/time.* 진행 기록, artifacts(설정 yaml, oof.parquet, oof_seed_*.parquet,")
         print("             test_pred.parquet, feature_importance.parquet, submission.csv,")
-        print("             model_training_diagnostics.json, summary.html 등 결과 요약, logs/run.log)")
+        print("             model_training_diagnostics.json, summary.html 등 결과 요약,")
+        print("             observability/fold_execution.jsonl.gz, logs/run.log)")
         print(f"fold 복구    : {args.recovery_dir or _default_recovery_dir(cfg)}")
         return
 
@@ -85,6 +86,7 @@ def main() -> None:
             input_hashes,
             git_commit=tracking.git_state()["git_commit"],
         )
+        observer.record_execution_identity(recovery.execution_identity)
 
         observer.stage("data_load")
         train = data.load_csv(cfg.data.train)

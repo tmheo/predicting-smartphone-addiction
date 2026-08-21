@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import socket
 import subprocess
@@ -44,6 +45,12 @@ import yaml
 from . import tracking
 from .cv import score_predictions
 from .data import ID, file_sha256, labels
+from .fold_observability import (
+    ARTIFACT_PATH as OBSERVABILITY_ARTIFACT_PATH,
+    MLFLOW_METRICS as OBSERVABILITY_MLFLOW_METRICS,
+    ObservabilitySchemaError,
+    read_fold_observability,
+)
 from .judgment import seed_auc_metric
 from .runs import TRACKING_URI, MlflowRunStore, RunStoreError
 
@@ -62,6 +69,22 @@ class BundleError(Exception):
 
 def _seeds_of(params: dict[str, str]) -> list[int]:
     return [int(s) for s in params["seeds"].split(",")]
+
+
+def _observability_metric_history(client, run_id: str) -> dict[str, list[dict[str, object]]]:
+    history: dict[str, list[dict[str, object]]] = {}
+    for name in sorted(OBSERVABILITY_MLFLOW_METRICS):
+        values = client.get_metric_history(run_id, name)
+        if values:
+            history[name] = [
+                {
+                    "value": float(metric.value),
+                    "step": int(metric.step),
+                    "timestamp": int(metric.timestamp),
+                }
+                for metric in values
+            ]
+    return history
 
 
 # ---------------------------------------------------------------------- export
@@ -104,6 +127,7 @@ def export_bundle(
             "params": meta.params,
             "metrics": meta.metrics,  # 주장값. 반입은 재채점과 대조만 하고 기록하지 않는다.
             "tags": meta.tags,
+            "observability_metric_history": _observability_metric_history(client, run_id),
             "config_artifact": config_names[0],
             "config_path": f"configs/{config_names[0]}",
             "config_sha256": file_sha256(art_dir / config_names[0]),
@@ -188,6 +212,63 @@ def _verify_input_hashes(manifest: dict, bundle_dir: Path) -> dict[str, Path]:
     return local_paths
 
 
+def _verify_observability(manifest: dict, bundle_dir: Path) -> None:
+    """관측 원본이 있으면 원격 내용 해시 그대로인지 반입 전에 확인한다."""
+    artifact = bundle_dir / ARTIFACTS_DIR / OBSERVABILITY_ARTIFACT_PATH
+    claimed = manifest["tags"].get("sha256.observability.fold_execution")
+    if claimed is None and not artifact.exists():
+        return  # 관측 계약 이전 실행은 observability_unavailable이다.
+    if claimed is None or not artifact.is_file():
+        raise BundleError("반입 거부: fold 관측 원본과 내용 해시가 함께 있지 않다.")
+    if file_sha256(artifact) != claimed:
+        raise BundleError("반입 거부: fold 관측 원본의 내용 해시가 manifest와 다르다.")
+    try:
+        read_fold_observability(artifact)
+    except ObservabilitySchemaError as exc:
+        raise BundleError(f"반입 거부: fold 관측 원본 형식이 잘못됐다: {exc}") from exc
+
+
+def _validated_observability_metric_history(
+    manifest: dict,
+) -> dict[str, list[dict[str, object]]]:
+    raw = manifest.get("observability_metric_history", {})
+    if not isinstance(raw, dict):
+        raise BundleError("반입 거부: fold 관측 MLflow 요약이 객체가 아니다.")
+    if raw and "sha256.observability.fold_execution" not in manifest["tags"]:
+        raise BundleError("반입 거부: fold 관측 원본 없이 MLflow 요약만 있다.")
+    unknown = set(raw) - set(OBSERVABILITY_MLFLOW_METRICS)
+    if unknown:
+        raise BundleError(f"반입 거부: 알 수 없는 fold 관측 MLflow 지표다: {sorted(unknown)}")
+    validated: dict[str, list[dict[str, object]]] = {}
+    for name, values in raw.items():
+        if not isinstance(values, list):
+            raise BundleError(f"반입 거부: {name} 지표 이력이 목록이 아니다.")
+        rows: list[dict[str, object]] = []
+        for value in values:
+            if not isinstance(value, dict):
+                raise BundleError(f"반입 거부: {name} 지표 이력 항목이 객체가 아니다.")
+            metric = value.get("value")
+            step = value.get("step")
+            timestamp = value.get("timestamp")
+            if (
+                isinstance(metric, bool)
+                or not isinstance(metric, (int, float))
+                or not math.isfinite(metric)
+                or isinstance(step, bool)
+                or not isinstance(step, int)
+                or step < 0
+                or isinstance(timestamp, bool)
+                or not isinstance(timestamp, int)
+                or timestamp < 0
+            ):
+                raise BundleError(f"반입 거부: {name} 지표 이력 값이 잘못됐다.")
+            rows.append(
+                {"value": float(metric), "step": step, "timestamp": timestamp}
+            )
+        validated[name] = rows
+    return validated
+
+
 def _rescore(manifest: dict, bundle_dir: Path, inputs: dict[str, Path]) -> dict[str, float]:
     """시드별 OOF를 로컬 라벨로 재채점한다. 재채점이 기록될 유일한 지표다."""
     art = bundle_dir / ARTIFACTS_DIR
@@ -247,6 +328,8 @@ def import_bundle(zip_path: Path, tracking_uri: str = TRACKING_URI) -> str:
 
         inputs = _verify_input_hashes(manifest, bundle_dir)
         _verify_provenance(manifest, bundle_dir)
+        _verify_observability(manifest, bundle_dir)
+        observability_metrics = _validated_observability_metric_history(manifest)
         metrics = _rescore(manifest, bundle_dir, inputs)
 
         client, experiment_id = tracking.mlflow_client(tracking_uri)
@@ -264,6 +347,15 @@ def import_bundle(zip_path: Path, tracking_uri: str = TRACKING_URI) -> str:
             client.log_param(run_id, key, value)
         for name, value in metrics.items():
             client.log_metric(run_id, name, value)
+        for name, history in observability_metrics.items():
+            for metric in history:
+                client.log_metric(
+                    run_id,
+                    name,
+                    metric["value"],
+                    timestamp=metric["timestamp"],
+                    step=metric["step"],
+                )
         for key in ("git_commit", "git_dirty"):
             client.set_tag(run_id, key, manifest["tags"][key])
         for key, value in manifest["tags"].items():

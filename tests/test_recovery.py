@@ -78,12 +78,16 @@ class ProgressRecorder:
     def __init__(self) -> None:
         self.stages: list[str] = []
         self.folds: list[tuple[int, int, float]] = []
+        self.timings: list[dict[str, object]] = []
 
     def stage(self, name: str) -> None:
         self.stages.append(name)
 
     def fold_completed(self, seed_index: int, fold_index: int, auc: float) -> None:
         self.folds.append((seed_index, fold_index, auc))
+
+    def record_timing(self, event: dict[str, object]) -> None:
+        self.timings.append(dict(event))
 
 
 @pytest.fixture
@@ -188,12 +192,31 @@ def test_interrupted_run_reuses_completed_fold_and_matches_uninterrupted_mlflow(
     cfg, plan, train, test, store = recovery_env
     interrupted_store = store("interrupted")
     RecoveryFakeAdapter.fail_fold = 1
+    interrupted_recorder = ProgressRecorder()
 
     with pytest.raises(KeyboardInterrupt, match="fold 1"):
-        run_cv(cfg, plan, train, test, SEED, recovery=interrupted_store)
+        run_cv(
+            cfg,
+            plan,
+            train,
+            test,
+            SEED,
+            recorder=interrupted_recorder,
+            recovery=interrupted_store,
+        )
     assert RecoveryFakeAdapter.fitted_folds == [0, 1]
     assert (tmp_path / "interrupted" / f"seed_{SEED}" / "fold_0" / "manifest.json").is_file()
     assert not (tmp_path / "interrupted" / f"seed_{SEED}" / "fold_1").exists()
+    failed = [
+        event
+        for event in interrupted_recorder.timings
+        if event["fold"] == 1 and event["outcome"] == "failed"
+    ]
+    assert [event["operation"] for event in failed] == [
+        "fold_finalize.model_fit",
+        "fold_finalize",
+    ]
+    assert all(event["reason"] == "KeyboardInterrupt" for event in failed)
 
     RecoveryFakeAdapter.fail_fold = None
     RecoveryFakeAdapter.fitted_folds = []
@@ -327,6 +350,37 @@ def test_four_of_five_and_full_recovery_keep_public_result_and_progress(
     for recorder in (baseline_recorder, partial_recorder, full_recorder):
         assert recorder.stages == ["feature_build", "training"]
         assert recorder.folds == expected_progress
+
+    partial_finalize = [
+        event
+        for event in partial_recorder.timings
+        if event["operation"] == "fold_finalize"
+    ]
+    assert [event["outcome"] for event in partial_finalize] == [
+        "reused",
+        "reused",
+        "reused",
+        "reused",
+        "success",
+    ]
+    full_finalize = [
+        event
+        for event in full_recorder.timings
+        if event["operation"] == "fold_finalize"
+    ]
+    assert [event["outcome"] for event in full_finalize] == ["reused"] * N_FOLDS
+    skipped_model_work = [
+        event
+        for event in full_recorder.timings
+        if str(event["operation"]).startswith("fold_finalize.")
+    ]
+    assert skipped_model_work
+    assert all(
+        event["outcome"] == "skipped"
+        and event["duration_ns"] is None
+        and event["reason"] == "checkpoint_reused"
+        for event in skipped_model_work
+    )
 
 
 def _save_fold_zero(recovery_env) -> tuple[FoldRecovery, ExperimentConfig, FeaturePlan, pd.DataFrame, pd.DataFrame]:
