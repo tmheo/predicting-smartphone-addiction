@@ -58,3 +58,6 @@ run-issue283/
 
 # 전체 자료 재학습 산출물(이슈 #66). codex/issue-66-full-refit의 항목을 미리 반영한다.
 artifacts/full-refit/
+
+# 성능 동등 대역 측정의 로컬 작업 디렉터리 (issue #342: 결과는 docs/research에 커밋)
+run-issue342/
