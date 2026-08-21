@@ -75,6 +75,8 @@ Lookup-Transformer의 조회 열(lookup_cols)은 원시 12열뿐이라, 잔차�
 
 ## 후보 2: 실측 결측 마스크 정합 증강
 
+발주 완료(2026-08-21): [champion 값 가리기 증강의 분포 형태를 실측 결측 마스크로 교체해 짝비교한다](https://github.com/tmheo/predicting-smartphone-addiction/issues/360).
+
 ### 근거
 
 [숨은 제약 진단](hidden-constraint-diagnosis.md)의 결측 실측은 다음과 같다.
@@ -92,6 +94,13 @@ champion의 값 가리기 증강은 셀별 독립 균등 Bernoulli 0.10이다([�
 
 [#108](https://github.com/tmheo/predicting-smartphone-addiction/issues/108)은 가리기 비율만 0.05와 0.15로 바꿔 둘 다 기각했고(각 -0.000038, -0.000013), 분포 형태는 바꾸지 않았다.
 비율 민감도가 1e-5에서 5e-5 규모로 실재한다는 사실은 이 증강 축이 성능에 닿아 있다는 근거이면서, 동시에 형태 교체의 이득도 그 규모 부근일 수 있다는 경고다.
+
+외부 대조(2026-08-21): 디스커션 [736522](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/736522)가 같은 증강을 독립 제안했고 단독 신경망 k-fold OOF +0.0014와 "비율 0.3까지 단조 증가"를 주장했다.
+그러나 그 글의 동반 노트북 [talhatursun/missingness-augmentation](https://www.kaggle.com/code/talhatursun/missingness-augmentation)의 저장 실행 결과는 정반대다.
+15만/3만 단일 분할 단일 시드 MLP에서 기준 0.93869 대비 비율 0.1이 +0.00043으로 꼭대기이고 0.2는 +0.00013, 0.3은 -0.00042, 0.4는 -0.00105로 떨어진다.
+주장의 근거가 된 k-fold 코드는 공개되지 않았고, 노트북 쪽 측정은 30 epoch 중 검증 AUC 최댓값을 취해 검증 집합에서 고른 낙관 편향이 있으며 두 팔의 학습률 스케줄 발동 시점도 달라 통제된 대조가 아니다.
+따라서 비율 축의 추가 탐색 근거로는 쓰지 않는다.
+다만 그 노트북의 꼭대기 비율 0.1이 우리 채택값 0.10과 일치한다는 점은 비율 조율이 이미 끝났다는 [#108](https://github.com/tmheo/predicting-smartphone-addiction/issues/108) 판정과 같은 방향의 약한 방증이고, 남은 미개척 축은 비율이 아니라 이 절이 다루는 분포 형태라는 판단을 강화한다.
 
 ### 최소 실험 설계
 

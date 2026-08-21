@@ -7,6 +7,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 같은 날 새 스레드 [735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861)(앙상블 다양성, 코멘트 1개)과 [735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421)(spline Transformer, 코멘트 5개)을 표적 반영했다.
 2026-08-19에 735861의 새 코멘트(작성자 YKuma의 답글, 코멘트 1개 → 2개)를 표적 반영했다.
 2026-08-21에 스레드 [734628](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/734628)(Private-LB 검증, 코멘트 1개)을 표적 반영했다.
+같은 날 새 스레드 [736522](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/736522)(결측 가리기 증강, 코멘트 0개)를 표적 검토했고, 새 정보가 없어 본문 반입 없이 장부에만 남겼다.
 전체 회차가 아니므로 다른 스레드의 코멘트 수는 2026-08-10 기준 그대로다.
 
 원자료는 세 개의 리딩 노트다.
@@ -336,6 +337,7 @@ Kaggle Playground Series S6E8 (Predicting Smartphone Addiction) 대회 디스커
 
 | id | 제목 | 코멘트 수 | 재방문 |
 | --- | --- | --- | --- |
+| [736522](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/736522) | Neural nets vs boosting: a missing-data blind spot? (+0.0014 AUC) - 학습 중에만 관측값을 결측 표현으로 덮는 증강 제안. champion Lookup-Transformer가 이미 `value_dropout` 0.10으로 시행 중이고 [#108](https://github.com/tmheo/predicting-smartphone-addiction/issues/108)이 비율 0.05·0.15를 이미 기각해, 저장소에 새 정보가 없다. 동반 노트북 [talhatursun/missingness-augmentation](https://www.kaggle.com/code/talhatursun/missingness-augmentation)의 저장 실행 결과가 글의 "0.3까지 단조 증가" 주장을 반박한다(0.1이 꼭대기 +0.00043, 0.3은 -0.00042, 0.4는 -0.00105). 본문 반입 없음 | 0 (2026-08-21) | |
 | [736062](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/736062) | Achieving 0.971+ LB: Residual NN + LightGBM Stacking Strategy - 정량 근거 없는 홍보성 글로 저신뢰 판정, 본문 반입 없음([검토 문서](discussion-736062-cv-gain-noise.md)) | 0 (2026-08-19) | |
 | [735861](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735861) | What actually creates a decorrelated model when you work alone? | 2 (2026-08-19) | O |
 | [735421](https://www.kaggle.com/competitions/playground-series-s6e8/discussion/735421) | Contextualized Deep Univariate Spline Transformer | 5 (2026-08-18) | O |
