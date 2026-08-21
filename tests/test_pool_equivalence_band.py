@@ -187,3 +187,75 @@ def test_band_takes_the_union_of_observed_and_bootstrap_envelopes() -> None:
     assert measured["observed_maximum"] == pytest.approx(3e-5)
     assert measured["max_negative_folds"] == 3
     assert measured["best_strategy_changes"] == 1
+
+
+def _arm(index: int, size: int, kind: str, auc: float) -> dict:
+    return {
+        "index": index,
+        "size": size,
+        "kind": kind,
+        "label": f"{kind} g={size} #{index}",
+        "large_best_auc": auc,
+        "delta_best": 0.0,
+        "negative_folds": 0,
+        "fold_total": 5,
+        "best_strategy_changed": False,
+        "bootstrap": {"percentile_2p5": 0.0, "percentile_97p5": 0.0},
+    }
+
+
+def test_same_size_pairs_only_join_arms_of_the_same_removal_size() -> None:
+    records = [
+        _arm(0, 1, band.CLONE, 0.96),
+        _arm(1, 1, band.NOISE, 0.97),
+        _arm(2, 2, band.NOISE, 0.95),
+    ]
+
+    pairs = band.same_size_pairs(records)
+
+    assert {pair["size"] for pair in pairs} == {1}
+    assert len(pairs) == 2
+
+
+def test_same_size_distribution_is_symmetric_about_zero() -> None:
+    records = [
+        _arm(0, 1, band.NOISE, 0.960),
+        _arm(1, 1, band.NOISE, 0.961),
+        _arm(2, 1, band.NOISE, 0.964),
+    ]
+
+    summary = band.same_size_summary(records)["by_size"]["1"]["all"]
+
+    assert summary["pairs"] == 6
+    assert summary["observed_minimum"] == pytest.approx(-summary["observed_maximum"])
+    assert summary["symmetric_envelope"] == pytest.approx(0.004)
+
+
+def test_same_size_summary_splits_clone_and_noise_pairings() -> None:
+    records = [
+        _arm(0, 1, band.CLONE, 0.960),
+        _arm(1, 1, band.CLONE, 0.962),
+        _arm(2, 1, band.NOISE, 0.965),
+    ]
+
+    by_size = band.same_size_summary(records)["by_size"]["1"]
+
+    mixed = " vs ".join(sorted((band.CLONE, band.NOISE)))
+    assert by_size[f"{band.CLONE} vs {band.CLONE}"]["pairs"] == 2
+    assert by_size[mixed]["pairs"] == 4
+    assert f"{band.NOISE} vs {band.NOISE}" not in by_size
+
+
+def test_summary_union_covers_both_bands() -> None:
+    records = [
+        {**_arm(0, 1, band.CLONE, 0.960), "delta_best": 2e-5},
+        {**_arm(1, 1, band.NOISE, 0.966), "delta_best": 3e-5},
+    ]
+
+    summary = band.summarize(records)
+
+    assert summary["union"]["lower"] <= summary["overall"]["lower"]
+    assert summary["union"]["upper"] >= summary["overall"]["upper"]
+    assert summary["union"]["lower"] == pytest.approx(
+        summary["same_size"]["overall"]["observed_minimum"]
+    )

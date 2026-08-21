@@ -34,7 +34,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from pipeline import ensemble as ensemble_module  # noqa: E402
-from pipeline.data import labels  # noqa: E402
+from pipeline.data import ID, labels  # noqa: E402
 from pipeline.runs import MlflowRunStore  # noqa: E402
 
 BASELINE_PATH = Path("artifacts/pool-baseline-2026-08-21.yaml")
@@ -327,6 +327,63 @@ def band_for_records(records: list[dict]) -> dict:
     }
 
 
+def same_size_pairs(records: list[dict]) -> list[dict]:
+    """크기가 같은 무정보 팔끼리의 차이. 추가 실행 없이 기록된 팔만 짝짓는다.
+
+    증강 제거형은 두 팔의 풀 크기가 달라 쏠림과 잡음이 한 숫자에 섞인다. 여기서는 두
+    팔이 같은 크기이고 둘 다 기준 풀에 정보를 더하지 않았으므로, 남는 것은 "어느
+    무정보 열이 하필 들어왔는가"뿐이다. 양쪽 순서를 모두 넣어 분포를 0에 대칭으로 둔다.
+    """
+    pairs: list[dict] = []
+    for size in sorted({record["size"] for record in records}):
+        subset = [record for record in records if record["size"] == size]
+        for left in subset:
+            for right in subset:
+                if left["index"] == right["index"]:
+                    continue
+                kinds = tuple(sorted((left["kind"], right["kind"])))
+                pairs.append(
+                    {
+                        "size": size,
+                        "kind_pair": " vs ".join(kinds),
+                        "left": left["label"],
+                        "right": right["label"],
+                        "delta": left["large_best_auc"] - right["large_best_auc"],
+                    }
+                )
+    return pairs
+
+
+def _same_size_band(pairs: list[dict]) -> dict | None:
+    if not pairs:
+        return None
+    deltas = [pair["delta"] for pair in pairs]
+    return {
+        "pairs": len(pairs),
+        "observed_minimum": min(deltas),
+        "observed_maximum": max(deltas),
+        "symmetric_envelope": max(abs(value) for value in deltas),
+    }
+
+
+def same_size_summary(records: list[dict]) -> dict:
+    """동일 크기 영점 대조의 전체·크기별·짝 종류별 대역."""
+    pairs = same_size_pairs(records)
+    by_size = {}
+    for size in sorted({pair["size"] for pair in pairs}):
+        subset = [pair for pair in pairs if pair["size"] == size]
+        by_size[str(size)] = {
+            "all": _same_size_band(subset),
+            **{
+                kind_pair: _same_size_band(
+                    [pair for pair in subset if pair["kind_pair"] == kind_pair]
+                )
+                for kind_pair in sorted({pair["kind_pair"] for pair in subset})
+            },
+        }
+    return {"overall": _same_size_band(pairs), "by_size": by_size}
+
+
 def _band_or_none(records: list[dict]) -> dict | None:
     """대조가 하나도 없는 칸은 대역을 만들지 않는다(점검 실행에서만 생긴다)."""
     return band_for_records(records) if records else None
@@ -342,7 +399,7 @@ def summarize(records: list[dict]) -> dict:
             CLONE: _band_or_none([r for r in subset if r["kind"] == CLONE]),
             NOISE: _band_or_none([r for r in subset if r["kind"] == NOISE]),
         }
-    return {
+    augmented = {
         "overall": band_for_records(records),
         "by_kind": {
             CLONE: _band_or_none([r for r in records if r["kind"] == CLONE]),
@@ -350,6 +407,152 @@ def summarize(records: list[dict]) -> dict:
         },
         "by_size": by_size,
     }
+    same_size = same_size_summary(records)
+    union = None
+    if same_size["overall"] is not None:
+        union = {
+            "lower": min(
+                augmented["overall"]["lower"], same_size["overall"]["observed_minimum"]
+            ),
+            "upper": max(
+                augmented["overall"]["upper"], same_size["overall"]["observed_maximum"]
+            ),
+        }
+    return {
+        **augmented,
+        "same_size": same_size,
+        "union": union,
+    }
+
+
+SEED_READOUT_EVIDENCE = Path(
+    "docs/research/pool-reduction-equivalence-band-seed-readout.json"
+)
+CONFIRM_SEEDS = (42, 43, 44)
+
+
+def load_seed_matrices(
+    index: pd.Index,
+) -> tuple[dict[str, pd.DataFrame], list[str], list[str]]:
+    """시드별 OOF 산출물이 있는 구성원만 모아 시드 조각 행렬을 만든다.
+
+    설계가 약속한 보조 판독의 입력이다. 이 행렬은 대역을 정하는 데 쓰지 않는다.
+    풀 장부가 시드 평균본만 구성원으로 받으므로 시드 조각 풀은 재심사의 판정 대상이
+    아니고, 35개 중 8개가 #98 이전 실행이라 같은 대조를 낼 수 없기 때문이다.
+    """
+    from mlflow.tracking import MlflowClient
+
+    from pipeline.runs import TRACKING_URI
+
+    baseline = yaml.safe_load(BASELINE_PATH.read_text())
+    client = MlflowClient(tracking_uri=TRACKING_URI)
+    columns: dict[int, dict[str, pd.Series]] = {seed: {} for seed in CONFIRM_SEEDS}
+    mean_columns: dict[str, pd.Series] = {}
+    covered: list[str] = []
+    missing: list[str] = []
+    for member in baseline["members"]:
+        run_id = member["run_id"]
+        names = {artifact.path for artifact in client.list_artifacts(run_id)}
+        wanted = {seed: f"oof_seed_{seed}.parquet" for seed in CONFIRM_SEEDS}
+        if not set(wanted.values()) <= names:
+            missing.append(member["config"])
+            continue
+        per_seed = []
+        for seed, name in wanted.items():
+            frame = pd.read_parquet(client.download_artifacts(run_id, name))
+            series = frame.set_index(ID)["pred"].reindex(index).astype(np.float64)
+            if series.isna().any():
+                raise MeasurementError(
+                    f"{member['config']} 시드 {seed} OOF가 fold 배정과 맞지 않는다."
+                )
+            columns[seed][member["config"]] = series
+            per_seed.append(series)
+        mean_columns[member["config"]] = sum(per_seed) / len(per_seed)
+        covered.append(member["config"])
+    matrices = {f"시드 {seed}": pd.DataFrame(columns[seed]) for seed in CONFIRM_SEEDS}
+    matrices["시드 평균"] = pd.DataFrame(mean_columns)
+    return matrices, covered, missing
+
+
+def seed_readout(evidence_path: Path) -> dict:
+    """시드 잡음이 행 재표집 잡음보다 큰지 작은지만 알려주는 보조 판독.
+
+    시드 조각 풀마다 같은 복제 영점 짝을 만들어 Δ를 재고, 그 Δ가 시드에 따라 흔들리는
+    폭을 시드 평균 짝의 짝지은 행 부트스트랩 폭과 나란히 놓는다. 대역은 바꾸지 않는다.
+    """
+    base, fold_of, y = load_inputs()
+    matrices, covered, missing = load_seed_matrices(fold_of.index)
+    if not covered:
+        raise MeasurementError("시드별 OOF 산출물이 있는 구성원이 없다.")
+    target = covered[0]
+    positions = fold_positions_of(fold_of)
+    print(
+        f"보조 판독 구성원 {len(covered)}개, 제외 {len(missing)}개, 복제 대상 {target}",
+        flush=True,
+    )
+
+    results = []
+    for label in ["시드 평균", *[f"시드 {seed}" for seed in CONFIRM_SEEDS]]:
+        matrix = matrices[label]
+        small = evaluate_arm(f"{label} 작은 팔", matrix, fold_of, y)
+        clone = matrix[[target]].to_numpy(dtype=np.float64)
+        large_matrix = pd.concat(
+            [
+                matrix,
+                pd.DataFrame(clone, index=matrix.index, columns=[f"{target}__복제0"]),
+            ],
+            axis=1,
+        )
+        large = evaluate_arm(f"{label} 큰 팔", large_matrix, fold_of, y)
+        bootstrap = paired_row_bootstrap(
+            small.best_prediction.to_numpy(dtype=np.float64),
+            large.best_prediction.to_numpy(dtype=np.float64),
+            y.to_numpy(),
+            positions,
+        )
+        delta = small.best_auc - large.best_auc
+        results.append(
+            {
+                "pool": label,
+                "members": small.members,
+                "small_best_strategy": small.best_strategy,
+                "large_best_strategy": large.best_strategy,
+                "small_best_auc": small.best_auc,
+                "large_best_auc": large.best_auc,
+                "delta_best": delta,
+                "bootstrap": bootstrap,
+            }
+        )
+        print(f"{label}: Δ={delta:+.12f}", flush=True)
+
+    slices = [r for r in results if r["pool"] != "시드 평균"]
+    seed_spread = max(r["delta_best"] for r in slices) - min(
+        r["delta_best"] for r in slices
+    )
+    mean_result = next(r for r in results if r["pool"] == "시드 평균")
+    bootstrap_width = (
+        mean_result["bootstrap"]["percentile_97p5"]
+        - mean_result["bootstrap"]["percentile_2p5"]
+    )
+    evidence = {
+        "ticket_issue": TICKET_ISSUE,
+        "purpose": "보조 판독. 성능 동등 대역을 정하는 데 쓰지 않는다.",
+        "clone_target": target,
+        "covered_members": covered,
+        "excluded_members": missing,
+        "confirm_seeds": list(CONFIRM_SEEDS),
+        "results": results,
+        "seed_delta_spread": seed_spread,
+        "seed_mean_bootstrap_width": bootstrap_width,
+        "seed_noise_exceeds_row_noise": seed_spread > bootstrap_width,
+    }
+    evidence_path.parent.mkdir(parents=True, exist_ok=True)
+    evidence_path.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n")
+    print(
+        f"시드 Δ 폭 {seed_spread:+.12f}, 행 재표집 Δ 폭 {bootstrap_width:+.12f}",
+        flush=True,
+    )
+    return evidence
 
 
 _WORKER_STATE: dict = {}
@@ -519,6 +722,30 @@ def render_markdown(evidence: dict) -> str:
             f"| {kind} 구성원 제거 | {band['contrasts']} | {_fmt(band['lower'])} | "
             f"{_fmt(band['upper'])} | {band['max_negative_folds']}/{band['fold_total']} |"
         )
+    same_size = summary.get("same_size")
+    if same_size and same_size["overall"]:
+        lines += [
+            "",
+            "## 동일 크기 영점 대역",
+            "",
+            "크기가 같은 무정보 팔끼리의 차이다.",
+            "두 팔이 같은 크기이고 둘 다 기준 풀에 정보를 더하지 않았으므로 분포는 0에 대칭이며, 풀 크기 변화가 만드는 쏠림이 빠진다.",
+            "추가 실행 없이 위 표의 큰 팔들을 서로 짝지어 얻는다.",
+            "",
+            "| 제거 집합 크기 | 짝 수 | 최솟값 | 최댓값 | 대칭 봉투 |",
+            "| ---: | ---: | ---: | ---: | ---: |",
+        ]
+        for size in sorted(same_size["by_size"], key=int):
+            entry = same_size["by_size"][size]["all"]
+            lines.append(
+                f"| {size} | {entry['pairs']} | {_fmt(entry['observed_minimum'])} | "
+                f"{_fmt(entry['observed_maximum'])} | {_fmt(entry['symmetric_envelope'])} |"
+            )
+        if summary.get("union"):
+            lines += [
+                "",
+                f"증강 제거형 대역과 동일 크기 대역의 합집합은 `{_fmt(summary['union']['lower'])}`에서 `{_fmt(summary['union']['upper'])}`다.",
+            ]
     lines += [
         "",
         "## 크기 1 복제 대조 전수",
@@ -576,11 +803,14 @@ def render_markdown(evidence: dict) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="후보 풀 축소의 성능 동등 대역 측정 (#342)")
-    parser.add_argument("command", choices=["plan", "measure", "report"])
+    parser.add_argument(
+        "command", choices=["plan", "measure", "seed-readout", "report"]
+    )
     parser.add_argument("--jobs", type=int, default=1, help="동시에 돌릴 대조 수")
     parser.add_argument("--limit", type=int, help="앞에서부터 이만큼의 대조만 실행(점검용)")
     parser.add_argument("--evidence", type=Path, default=DEFAULT_EVIDENCE)
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
+    parser.add_argument("--seed-evidence", type=Path, default=SEED_READOUT_EVIDENCE)
     args = parser.parse_args()
 
     if args.command == "plan":
@@ -597,7 +827,13 @@ def main() -> None:
         measure(args.jobs, args.limit, args.evidence)
         return
 
+    if args.command == "seed-readout":
+        seed_readout(args.seed_evidence)
+        return
+
     evidence = json.loads(args.evidence.read_text())
+    evidence["summary"] = summarize(evidence["contrasts"])
+    args.evidence.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n")
     args.report.write_text(render_markdown(evidence))
     print(f"보고서: {args.report}")
 
