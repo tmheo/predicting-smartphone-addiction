@@ -23,7 +23,7 @@ from pipeline.plan import FeaturePlan
 from pipeline.recovery import FoldRecovery, RecoveryError
 
 SEED = 7
-N_FOLDS = 3
+N_FOLDS = 5
 
 
 class RecoveryFakeAdapter:
@@ -72,6 +72,18 @@ class RecoveryFakeAdapter:
 
     def training_diagnostics(self) -> dict[str, object]:
         return {"fake_fold": self.fold, "losses": [0.5, 0.4]}
+
+
+class ProgressRecorder:
+    def __init__(self) -> None:
+        self.stages: list[str] = []
+        self.folds: list[tuple[int, int, float]] = []
+
+    def stage(self, name: str) -> None:
+        self.stages.append(name)
+
+    def fold_completed(self, seed_index: int, fold_index: int, auc: float) -> None:
+        self.folds.append((seed_index, fold_index, auc))
 
 
 @pytest.fixture
@@ -188,16 +200,18 @@ def test_interrupted_run_reuses_completed_fold_and_matches_uninterrupted_mlflow(
     resumed = _with_seed_metric(
         run_cv(cfg, plan, train, test, SEED, recovery=interrupted_store)
     )
-    assert RecoveryFakeAdapter.fitted_folds == [1, 2]
+    assert RecoveryFakeAdapter.fitted_folds == [1, 2, 3, 4]
     assert [(item["fold"], item["reused"]) for item in resumed.recovery_evidence] == [
         (0, True),
         (1, False),
         (2, False),
+        (3, False),
+        (4, False),
     ]
 
     RecoveryFakeAdapter.fitted_folds = []
     uninterrupted = _with_seed_metric(run_cv(cfg, plan, train, test, SEED, recovery=store("full")))
-    assert RecoveryFakeAdapter.fitted_folds == [0, 1, 2]
+    assert RecoveryFakeAdapter.fitted_folds == [0, 1, 2, 3, 4]
     pd.testing.assert_frame_equal(resumed.oof, uninterrupted.oof, check_exact=True)
     pd.testing.assert_frame_equal(resumed.test_pred, uninterrupted.test_pred, check_exact=True)
     pd.testing.assert_frame_equal(resumed.importance, uninterrupted.importance, check_exact=True)
@@ -238,6 +252,81 @@ def test_interrupted_run_reuses_completed_fold_and_matches_uninterrupted_mlflow(
     assert "artifacts/oof.parquet" in names
     assert "artifacts/test_pred.parquet" in names
     assert not any(name.endswith(".tmp") or "/.fold_" in name for name in names)
+
+
+def test_four_of_five_and_full_recovery_keep_public_result_and_progress(
+    recovery_env, tmp_path
+):
+    cfg, plan, train, test, store = recovery_env
+    baseline_store = store("baseline")
+    baseline_recorder = ProgressRecorder()
+    baseline = run_cv(
+        cfg,
+        plan,
+        train,
+        test,
+        SEED,
+        recorder=baseline_recorder,
+        recovery=baseline_store,
+    )
+
+    partial_store = store("four-of-five")
+    partial_seed_dir = partial_store.root / f"seed_{SEED}"
+    partial_seed_dir.mkdir(parents=True)
+    for fold in range(N_FOLDS - 1):
+        shutil.copytree(
+            baseline_store.root / f"seed_{SEED}" / f"fold_{fold}",
+            partial_seed_dir / f"fold_{fold}",
+        )
+
+    RecoveryFakeAdapter.fitted_folds = []
+    partial_recorder = ProgressRecorder()
+    partial = run_cv(
+        cfg,
+        plan,
+        train,
+        test,
+        SEED,
+        recorder=partial_recorder,
+        recovery=partial_store,
+    )
+    assert RecoveryFakeAdapter.fitted_folds == [N_FOLDS - 1]
+    assert [item["reused"] for item in partial.recovery_evidence] == [
+        True,
+        True,
+        True,
+        True,
+        False,
+    ]
+
+    RecoveryFakeAdapter.fitted_folds = []
+    full_recorder = ProgressRecorder()
+    fully_recovered = run_cv(
+        cfg,
+        plan,
+        train,
+        test,
+        SEED,
+        recorder=full_recorder,
+        recovery=baseline_store,
+    )
+    assert RecoveryFakeAdapter.fitted_folds == []
+    assert [item["reused"] for item in fully_recovered.recovery_evidence] == [True] * N_FOLDS
+
+    for recovered in (partial, fully_recovered):
+        pd.testing.assert_frame_equal(recovered.oof, baseline.oof, check_exact=True)
+        pd.testing.assert_frame_equal(recovered.test_pred, baseline.test_pred, check_exact=True)
+        pd.testing.assert_frame_equal(recovered.importance, baseline.importance, check_exact=True)
+        assert recovered.fold_aucs == baseline.fold_aucs
+        assert recovered.feature_names == baseline.feature_names
+        assert recovered.model_training_diagnostics == baseline.model_training_diagnostics
+
+    expected_progress = [
+        (0, fold, baseline.fold_aucs[f"auc_fold_{fold}"]) for fold in range(N_FOLDS)
+    ]
+    for recorder in (baseline_recorder, partial_recorder, full_recorder):
+        assert recorder.stages == ["feature_build", "training"]
+        assert recorder.folds == expected_progress
 
 
 def _save_fold_zero(recovery_env) -> tuple[FoldRecovery, ExperimentConfig, FeaturePlan, pd.DataFrame, pd.DataFrame]:

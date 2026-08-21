@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import inspect
 from pathlib import Path
 
 import numpy as np
@@ -151,6 +152,30 @@ def test_unregistered_kind_fails_with_clear_error():
         model_mod.create(cfg, seed=SEED)
 
 
+def test_run_cv_keeps_public_signature():
+    signature = inspect.signature(cv.run_cv)
+    parameters = list(signature.parameters.values())
+
+    assert [parameter.name for parameter in parameters] == [
+        "cfg",
+        "plan",
+        "train",
+        "test",
+        "seed",
+        "recorder",
+        "recovery",
+    ]
+    assert all(
+        parameter.kind is inspect.Parameter.POSITIONAL_OR_KEYWORD
+        for parameter in parameters
+    )
+    assert all(
+        parameter.default is inspect.Parameter.empty for parameter in parameters[:5]
+    )
+    assert [parameter.default for parameter in parameters[5:]] == [None, None]
+    assert signature.return_annotation == "CVResult"
+
+
 def test_fit_full_validates_budget_and_dispatches_optional_contract():
     X = pd.DataFrame({"x": [0.0, 1.0]})
     y = pd.Series([0, 1])
@@ -251,6 +276,30 @@ def test_run_cv_with_fake_adapter_verifies_loop_wiring(monkeypatch):
     features_per_fold = set(result.importance[result.importance["fold"] == 0]["feature"])
     assert features_per_fold == set(result.feature_names)
     assert PLACEBO in features_per_fold  # placebo 자동 삽입까지 fake 학습 입력에 닿는다.
+
+
+def test_run_cv_propagates_model_error_before_fold_completion(monkeypatch):
+    class FailingAdapter(FakeAdapter):
+        def fit(self, *args, **kwargs) -> np.ndarray:
+            raise RuntimeError("model-fit-failed")
+
+    monkeypatch.setitem(
+        model_mod.MODEL_REGISTRY,
+        "fake",
+        lambda params, fit, seed: FailingAdapter(params, fit, seed, fold_value=0.5),
+    )
+    cfg = fake_experiment_config()
+    plan = FeaturePlan.from_config(cfg.features)
+    train, test = toy_train_test()
+    train, test = plan.apply_dataset_wide(train, test)
+    train["fold"] = np.arange(len(train)) % N_FOLDS
+    recorder = SpyRecorder()
+
+    with pytest.raises(RuntimeError, match="model-fit-failed"):
+        cv.run_cv(cfg, plan, train, test, seed=SEED, recorder=recorder)
+
+    assert recorder.stages == ["feature_build", "training"]
+    assert recorder.folds == []
 
 
 def test_lightgbm_adapter_smoke():

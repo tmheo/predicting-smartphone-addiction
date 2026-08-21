@@ -1,0 +1,516 @@
+{
+  "schema_version": 1,
+  "purpose": "issue-353-pre-implementation-fold-execution-baseline",
+  "ticket": "https://github.com/tmheo/predicting-smartphone-addiction/issues/353",
+  "measurement_contract": {
+    "phase": "pre_implementation",
+    "seed": 42,
+    "folds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "stage": "screen",
+    "scenarios": [
+      "tabcnn-normal",
+      "tabcnn-four-of-five",
+      "tabcnn-full-recovery",
+      "lightgbm-normal"
+    ],
+    "provider_billable_whole_time": "Vast.ai start_date부터 원격 valid-result-complete-at.txt까지의 초",
+    "valid_result_complete": "성공한 MLflow 실행, 5폴드 복구 결과와 검증 가능한 실행 기록 묶음이 모두 완성된 시각",
+    "resource_sampling_period_seconds": 2,
+    "exact_result_fields": [
+      "oof",
+      "test_pred",
+      "feature_importance",
+      "fold_aucs",
+      "feature_names",
+      "deterministic_model_training_diagnostics"
+    ],
+    "per_run_observation_fields_excluded_from_exactness": [
+      "epoch_seconds",
+      "fit_seconds",
+      "fold_adapter_seconds",
+      "importance_seconds",
+      "resource_telemetry",
+      "provider_timestamps"
+    ]
+  },
+  "provenance": {
+    "execution_commit": "36262bf49892ab9107ab5ef98534efb6e7816207",
+    "git_dirty": false,
+    "input_sha256": {
+      "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+      "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+      "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+      "private_inputs_manifest": "f72f4b3cc787312fa28ee1264e2efbf34aa746271d3341203242fcdb5c36c64c"
+    },
+    "configs": {
+      "tabcnn": {
+        "path": "configs/exp113_tab_cnn_m0.yaml",
+        "sha256": "6ea07223019f68ab86683bdcd7d55cc15eed7a72ce830bb068bf53c3ceaca886"
+      },
+      "lightgbm": {
+        "path": "configs/exp050_lgb_xgb_impute.yaml",
+        "sha256": "7798321ecd222bdf43ceb67a32d886fe782ebe83800198b8a42af2d235564427"
+      }
+    },
+    "uv_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+    "container_image": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+    "remote_runner": {
+      "remote_job_sha256": "f69b641f77242264f8293013cc96c134db4e72e3a5f8bf476b934783ec39bdd8",
+      "remote_driver_sha256": "4f029c5b1d19a27b89074f71ced35a9e21c9e0d3e46553a2ea7413f5978f9b2f",
+      "telemetry_sha256": "2ae990746257ea95f5d7e571ac8c56e989e5e3f7850b801047d6d9124df16603"
+    },
+    "valid_run_resource": {
+      "provider": "Vast.ai",
+      "offer_id": 48228034,
+      "machine_id": 140486,
+      "gpu": "NVIDIA GeForce RTX 5080",
+      "gpu_count": 1,
+      "gpu_uuid": "GPU-e065b072-b9c6-285d-0cc1-289757e93db9",
+      "gpu_memory_mib": 16303,
+      "driver_version": "580.159.03",
+      "cpu": "AMD Ryzen 9 7900 12-Core Processor",
+      "cpu_cores_effective": 24.0,
+      "cpu_ram_mib": 63982,
+      "hourly_total_usd": 0.18444444444444444,
+      "python": "3.12.3",
+      "torch": "2.13.0+cu130",
+      "torch_cuda": "13.0"
+    }
+  },
+  "prepaid_gates": {
+    "isolated_environment_gate": {
+      "command": "scripts/verify_environment_gates.sh --isolated --source-root /Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction",
+      "private_inputs": "pass",
+      "collected_tests": 428,
+      "remote_python_contract_tests": 4,
+      "passed_tests": 428,
+      "status": "pass"
+    },
+    "fixed_image_gate": {
+      "command": "scripts/verify_remote_image_python.sh --platform linux/amd64 nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+      "status": "pass"
+    }
+  },
+  "final_worktree_gate": {
+    "command": "scripts/verify_environment_gates.sh --source-root /Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction",
+    "private_inputs": "pass",
+    "collected_tests": 431,
+    "remote_python_contract_tests": 4,
+    "passed_tests": 431,
+    "full_suite_seconds": 151.61,
+    "status": "pass"
+  },
+  "invalid_attempts": [
+    {
+      "instance_id": 48301562,
+      "offer_id": 48234928,
+      "machine_id": 135777,
+      "gpu": "NVIDIA GeForce RTX 5080",
+      "cpu": "AMD EPYC 7K62 48-Core Processor",
+      "provider_start": "2026-08-21T11:48:18Z",
+      "deleted_at": "2026-08-21T12:10:30Z",
+      "provider_reported_duration_before_deletion_seconds": 1330.907971382141,
+      "classification": "image_registry_or_host_network_start_failure",
+      "reason": "고정 이미지 계층 9dd0712f6729가 Verifying Checksum에서 15분 넘게 바뀌지 않았다.",
+      "valid_result": false,
+      "result_archive": null,
+      "instance_absent_after_deletion": true
+    },
+    {
+      "instance_id": 48302981,
+      "offer_id": 33785607,
+      "machine_id": 59109,
+      "gpu": "NVIDIA GeForce RTX 5080",
+      "cpu": "AMD EPYC 7642 48-Core Processor",
+      "provider_start": "2026-08-21T12:11:27Z",
+      "job_started_at": "2026-08-21T12:19:22Z",
+      "job_finished_at": "2026-08-21T12:35:29Z",
+      "deleted_at": "2026-08-21T12:36:44Z",
+      "provider_reported_duration_before_deletion_seconds": 1514.0333216190338,
+      "classification": "resource_performance_unsuitable",
+      "reason": "첫 폴드 epoch가 약 58초여서 5폴드 150 epoch가 독립 종료 상한 2시간을 넘을 것으로 예측됐다.",
+      "completed_training_epochs": 12,
+      "valid_result": false,
+      "partial_result_archive": {
+        "sha256": "157ee53545688aa94cd95127fde91b72be7ba6a78bf2fd41e0cf0e93b9714505",
+        "size_bytes": 25502,
+        "internal_manifest_verified": true,
+        "job_exit_code": 1
+      },
+      "instance_absent_after_deletion": true
+    }
+  ],
+  "runs": [
+    {
+      "label": "tabcnn-normal",
+      "config": "configs/exp113_tab_cnn_m0.yaml",
+      "input_archive": {
+        "sha256": "5265633286bf973f40ff7f7fd3abbd15eb3e080345cd5eacddaf28fd1ca5fb7b",
+        "size_bytes": 44575748,
+        "file_count": 4969,
+        "manifest_sha256": "549f40beac2e42aeb697c4ce78def7e45865a939c6f495e97d7b19c7e99f6a1a",
+        "execution_spec_sha256": "b9d673b0ff09340cb48de6dfc80d0634599c6caf9e95ea9ab0717a7d92b74645"
+      },
+      "instance_id": 48304789,
+      "provider_start": "2026-08-21T12:37:06Z",
+      "job_started_at": "2026-08-21T12:39:42Z",
+      "valid_result_complete_at": "2026-08-21T13:15:50Z",
+      "deleted_at": "2026-08-21T13:17:44Z",
+      "provider_billable_whole_seconds": 2324.0,
+      "recorded_run_seconds": 2113.2795963509707,
+      "provider_outside_recorded_run_seconds": 210.72040364902932,
+      "provider_reported_duration_before_deletion_seconds": 2434.6468675136566,
+      "preflight_incidents": [
+        {
+          "classification": "input_manifest_mismatch",
+          "cause": "원격 작업 시작 전에 실행한 git status가 repo/.git/index를 갱신했다.",
+          "training_started": false,
+          "job_exit_code": 1,
+          "resolution": "입력 묶음에서 Git 인덱스를 복원하고 작업 자체가 매니페스트 뒤 Git 상태를 확인하도록 순서를 바로잡았다."
+        }
+      ],
+      "remote_run_id": "638264d38b11474682dd3e478d864c65",
+      "main_mlflow_run_id": "048c45db369c4c2fa74a0e9552725c61",
+      "auc_oof": 0.9600513115450972,
+      "training_epoch_count": 150,
+      "reused_folds": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "result_archive": {
+        "sha256": "fd25ee40cd9a06d82ca7c348f3bd0f4c5e1eaaa7e349779d3365becdd7e93096",
+        "size_bytes": 18345767,
+        "internal_manifest_sha256": "d858cbb1430af62067185fa70999605effd5d87d9b1484ec764a1a05f2a323fe",
+        "internal_manifest_verified": true
+      },
+      "run_bundle": {
+        "sha256": "722d289a998f246d19180592c28bb5b0a428302cbeda523237d381abefadf7af",
+        "import_verified": true
+      },
+      "artifacts": {
+        "oof_sha256": "8949a421ded140132a8f749a4c485d529cf204939014abf12245556fd3924688",
+        "test_pred_sha256": "b70087a0392f12e69234e091b5cfff08ab4f06c3cab21baa542ba8b5f5fd7f36",
+        "feature_importance_sha256": "05e0698cf9ad53938e8da9c0ac6ecd3ceaeebd44382e1a4753d0cc3e23052c41",
+        "fold_recovery_sha256": "2ca8efadc63c15d1975f64b9a90ebcfd9e19be6e8ba9c023496c45e43906132e",
+        "model_training_diagnostics_sha256": "1f53009f9759928291e0cdb655899f38e243ba73cbc68b83cb0bc374eaaa3f44",
+        "gpu_preflight_sha256": "a60ae6435a173f147272ed566c12dea6709414b9c771028ce14dd015219161b2",
+        "python_environment_sha256": "c542ea699d641d578b67e6d6c4a044996111d40446f2837618ec4601a80acbfb",
+        "pipeline_log_sha256": "e639b9a109df96eacb46aa111d1f54314bab7cf335a04be76cb205f57b16d709",
+        "resource_telemetry_sha256": "cf9ae175f85f222179f4d9233fbd725faf338796c4a4781f0a885e0ef5361629"
+      },
+      "gpu_telemetry": {
+        "sample_count": 1084,
+        "missing_percent": 0.0,
+        "observed_seconds": 2166.126099232002,
+        "utilization_mean_percent": 26.55258302583026,
+        "utilization_median_percent": 27.0,
+        "utilization_p95_percent": 33.0,
+        "utilization_max_percent": 62.0,
+        "zero_percent": 9.96309963099631,
+        "at_most_10_percent": 10.14760147601476,
+        "memory_max_mib": 902.0,
+        "power_mean_watts": 69.57491697416975,
+        "power_max_watts": 97.29
+      }
+    },
+    {
+      "label": "tabcnn-four-of-five",
+      "config": "configs/exp113_tab_cnn_m0.yaml",
+      "input_archive": {
+        "sha256": "7fef9ee27aa6cbd1fb73686ada8ef13dcf355e399718ec3685473dbfaa98eef9",
+        "size_bytes": 51183427,
+        "file_count": 4985,
+        "manifest_sha256": "9f0a845680993023160b5b109f36586b5fb3db97a991fb0e0d02dbff7f4f1533",
+        "execution_spec_sha256": "6c35c32fa4cf26cb33ba7bf61dcb6a6020cfc3204797b02eaf54f3a9291e6bc1",
+        "recovery_source_result_sha256": "fd25ee40cd9a06d82ca7c348f3bd0f4c5e1eaaa7e349779d3365becdd7e93096",
+        "recovery_source_folds": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "instance_id": 48307812,
+      "provider_start": "2026-08-21T13:19:53Z",
+      "job_started_at": "2026-08-21T13:21:09Z",
+      "valid_result_complete_at": "2026-08-21T13:31:08Z",
+      "deleted_at": "2026-08-21T13:33:29Z",
+      "provider_billable_whole_seconds": 675.0,
+      "recorded_run_seconds": 544.7515693610767,
+      "provider_outside_recorded_run_seconds": 130.2484306389233,
+      "provider_reported_duration_before_deletion_seconds": 813.5057902336121,
+      "remote_run_id": "2c67248a9d41499da9862cf6b5dd3e5a",
+      "main_mlflow_run_id": "1d3bc9d40e334a2783d27db0802d5d63",
+      "auc_oof": 0.9600513115450972,
+      "training_epoch_count": 30,
+      "reused_folds": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "result_archive": {
+        "sha256": "915abe2fb9506b9527cb964e19d04cf39a3db77d1b3b14fbb02486edf324b68c",
+        "size_bytes": 18322799,
+        "internal_manifest_sha256": "c4f7834b632a7d786292ecc1e9ecded13e354f1f6a49c95bc17e0272d02c5e54",
+        "internal_manifest_verified": true
+      },
+      "run_bundle": {
+        "sha256": "82c5c03b2574d0ec92f8b69df3504d9928d2508b1053e6318d672f7298c633c6",
+        "import_verified": true
+      },
+      "artifacts": {
+        "oof_sha256": "8949a421ded140132a8f749a4c485d529cf204939014abf12245556fd3924688",
+        "test_pred_sha256": "b70087a0392f12e69234e091b5cfff08ab4f06c3cab21baa542ba8b5f5fd7f36",
+        "feature_importance_sha256": "05e0698cf9ad53938e8da9c0ac6ecd3ceaeebd44382e1a4753d0cc3e23052c41",
+        "fold_recovery_sha256": "11e821d224a0052a14607c7093347da42de15fea7fa48290509bc0508b603dfc",
+        "model_training_diagnostics_sha256": "1c62ac9a48f9a581e14e0e8870dddc628b91876dd628a41fc7dc24c60b599070",
+        "gpu_preflight_sha256": "a60ae6435a173f147272ed566c12dea6709414b9c771028ce14dd015219161b2",
+        "python_environment_sha256": "68128baeda9608d9ce1ab44160c094646899c7cf197acbc65aa9be606858f520",
+        "pipeline_log_sha256": "753ae9b1664eb29e6366f362424297c2ac8897d5e91b72f2810ab07ef80eeeb6",
+        "resource_telemetry_sha256": "31cfc8cc85a702e06cc3534afdd60752313020d0f40aff8509a791581d95976f"
+      },
+      "exact_match_to_tabcnn_normal": {
+        "oof": true,
+        "test_pred": true,
+        "feature_importance": true,
+        "deterministic_model_training_diagnostics": true,
+        "only_diagnostic_differences": "새로 계산한 fold 4의 실행별 시간 33개"
+      },
+      "gpu_telemetry": {
+        "sample_count": 300,
+        "missing_percent": 0.0,
+        "observed_seconds": 598.078731033951,
+        "utilization_mean_percent": 18.973333333333333,
+        "utilization_median_percent": 26.0,
+        "utilization_p95_percent": 33.0,
+        "utilization_max_percent": 65.0,
+        "zero_percent": 33.0,
+        "at_most_10_percent": 33.333333333333336,
+        "memory_max_mib": 902.0,
+        "power_mean_watts": 55.94050000000001,
+        "power_max_watts": 89.54
+      }
+    },
+    {
+      "label": "tabcnn-full-recovery",
+      "config": "configs/exp113_tab_cnn_m0.yaml",
+      "input_archive": {
+        "sha256": "5d096474f8be2f4cab14ad6601bb4cbe58635134e80c70b026872a12aa3587ed",
+        "size_bytes": 52833483,
+        "file_count": 4989,
+        "manifest_sha256": "f0aedce7ab2a32ad97fda4bf296d8b8f5d09c93c889235c68492c7716dd65ef4",
+        "execution_spec_sha256": "774ab976dad1d50aaaebeef42669fdc4a2e0e8ddd92c6a9741fb43d42e978130",
+        "recovery_source_result_sha256": "fd25ee40cd9a06d82ca7c348f3bd0f4c5e1eaaa7e349779d3365becdd7e93096",
+        "recovery_source_folds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "instance_id": 48308658,
+      "provider_start": "2026-08-21T13:34:04Z",
+      "job_started_at": "2026-08-21T13:35:20Z",
+      "valid_result_complete_at": "2026-08-21T13:38:27Z",
+      "deleted_at": "2026-08-21T13:39:55Z",
+      "provider_billable_whole_seconds": 263.0,
+      "recorded_run_seconds": 133.6904022670351,
+      "provider_outside_recorded_run_seconds": 129.3095977329649,
+      "provider_reported_duration_before_deletion_seconds": 347.29390597343445,
+      "remote_run_id": "334050b1bc594625b5cafcdfe712fc06",
+      "main_mlflow_run_id": "3b35101d714849cb8038ad2aae47ea27",
+      "auc_oof": 0.9600513115450972,
+      "training_epoch_count": 0,
+      "reused_folds": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "result_archive": {
+        "sha256": "6044eb09e306e7088684e0ab19206e313e6edea8c0314eecb5bde5eca4a55024",
+        "size_bytes": 18317740,
+        "internal_manifest_sha256": "21b53b862c40572a661daaaffdc2726875610c251f4514dd733a2c8aa82f62cb",
+        "internal_manifest_verified": true
+      },
+      "run_bundle": {
+        "sha256": "27680d292ec6b4580ccaa730a7223b892d3debc1f722c7a547755bb5da8983f1",
+        "import_verified": true
+      },
+      "artifacts": {
+        "oof_sha256": "8949a421ded140132a8f749a4c485d529cf204939014abf12245556fd3924688",
+        "test_pred_sha256": "b70087a0392f12e69234e091b5cfff08ab4f06c3cab21baa542ba8b5f5fd7f36",
+        "feature_importance_sha256": "05e0698cf9ad53938e8da9c0ac6ecd3ceaeebd44382e1a4753d0cc3e23052c41",
+        "fold_recovery_sha256": "c1c010c3accef6fbb0e091dfd715696ec995b8f119c866e9b2d831e38f2b8202",
+        "model_training_diagnostics_sha256": "1f53009f9759928291e0cdb655899f38e243ba73cbc68b83cb0bc374eaaa3f44",
+        "gpu_preflight_sha256": "a60ae6435a173f147272ed566c12dea6709414b9c771028ce14dd015219161b2",
+        "python_environment_sha256": "518a842428c0623b28a1e292a2de2c6fb741ca2b87bebebfbc23c727ead05cf6",
+        "pipeline_log_sha256": "35f60419e5f3e9b0dfce27cb7cae24d149729dc11b317297b47508c67f81cb62",
+        "resource_telemetry_sha256": "7607760508b10f03c4b6aaec6b9bce13f3b442935ca69a0c02503a52b89d1467"
+      },
+      "exact_match_to_tabcnn_normal": {
+        "oof": true,
+        "test_pred": true,
+        "feature_importance": true,
+        "model_training_diagnostics": true
+      },
+      "gpu_telemetry": {
+        "sample_count": 94,
+        "missing_percent": 0.0,
+        "observed_seconds": 186.0707883250434,
+        "utilization_mean_percent": 0.010638297872340425,
+        "utilization_median_percent": 0.0,
+        "utilization_p95_percent": 0.0,
+        "utilization_max_percent": 1.0,
+        "zero_percent": 98.93617021276596,
+        "at_most_10_percent": 100.0,
+        "memory_max_mib": 270.0,
+        "power_mean_watts": 19.602978723404256,
+        "power_max_watts": 50.48
+      }
+    },
+    {
+      "label": "lightgbm-normal",
+      "config": "configs/exp050_lgb_xgb_impute.yaml",
+      "input_archive": {
+        "sha256": "4867b30d1c0852ccba35647f153468c17aae609b99734c038b9236be107882b7",
+        "size_bytes": 44631763,
+        "file_count": 4969,
+        "manifest_sha256": "48670e3a7acb1addb8fd5e04a66ee45862a53da5b37734a15bee43b93cbf3a31",
+        "execution_spec_sha256": "683f3099d4b1ce6a1f32505cbbdcc4c0a3046b0dc11a57d35b8e67464d2a667a"
+      },
+      "instance_id": 48308989,
+      "provider_start": "2026-08-21T13:40:18Z",
+      "job_started_at": "2026-08-21T13:41:34Z",
+      "valid_result_complete_at": "2026-08-21T13:46:59Z",
+      "deleted_at": "2026-08-21T13:53:40Z",
+      "provider_billable_whole_seconds": 401.0,
+      "recorded_run_seconds": 271.37233430705965,
+      "provider_outside_recorded_run_seconds": 129.62766569294035,
+      "provider_reported_duration_before_deletion_seconds": 799.0514514446259,
+      "remote_run_id": "8769618c7b9b411ebaf108c5e537ff0d",
+      "main_mlflow_run_id": "472c2f43b1d2477e9657737e218bb9dd",
+      "auc_oof": 0.9673938549131327,
+      "reused_folds": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "result_archive": {
+        "sha256": "86fdbc4bb88f68e7e6912cd80087186a87505b07939732567af4637ce93f779b",
+        "size_bytes": 39751264,
+        "internal_manifest_sha256": "f53a6c756b29f503a1401a03f645b0b30784e00a7f136805e5effe1cd6c1dabe",
+        "internal_manifest_verified": true
+      },
+      "run_bundle": {
+        "sha256": "cf0cb8d41cb162becef621b64e49ce6a041a1139d1ce5f5774bcb70dfd59b0cb",
+        "import_verified": true
+      },
+      "artifacts": {
+        "oof_sha256": "511f3f01190b9bdbdddc86431b1d54f8ff727e9873852d5ac87b5703b8a14b42",
+        "test_pred_sha256": "630e864d2c2e439b872f4cdb8adfbf924d0d1565533d6e190ed3d2d45f88a10d",
+        "feature_importance_sha256": "08132a7e2adbb6a475d9e61c457de0d1583ebade8d093fbbb9f13eb83c29d880",
+        "fold_recovery_sha256": "ccf501131cbd77beb551aee1e9378b15796d41c42e55b608e2e1eb029623caa5",
+        "model_training_diagnostics_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+        "gpu_preflight_sha256": "292682a5846da031e758238370041a38d4dbffe422d6dfdcfb9fd5a15e43c146",
+        "python_environment_sha256": "68caefb531eaa5cdb670026f5bec132f40ff401df3750c2c57dfe8f06f471e9d",
+        "pipeline_log_sha256": "480aba1dbe4bcfcf2c444bf1916f80af0fbdffbceebe349cb4f0ac7a7e1403d1",
+        "resource_telemetry_sha256": "849f1029c06d64ce57d4d7afb524c9249a1cbe5eae44cf67b0e051a042c4bc52"
+      },
+      "gpu_telemetry": {
+        "sample_count": 163,
+        "missing_percent": 0.0,
+        "observed_seconds": 324.11593214794993,
+        "utilization_mean_percent": 0.0,
+        "utilization_median_percent": 0.0,
+        "utilization_p95_percent": 0.0,
+        "utilization_max_percent": 0.0,
+        "zero_percent": 100.0,
+        "at_most_10_percent": 100.0,
+        "memory_max_mib": 270.0,
+        "power_mean_watts": 18.188159509202453,
+        "power_max_watts": 49.35
+      }
+    }
+  ],
+  "baseline_comparisons": {
+    "tabcnn_four_of_five_vs_normal": {
+      "provider_billable_reduction_percent": 70.9552495697074,
+      "recorded_run_reduction_percent": 74.22245639896838,
+      "exact_result_match": true,
+      "note": "구현 전 현재 복구 동작끼리의 기술 통계이며 후속 구현 인수 판정값이 아니다."
+    },
+    "tabcnn_full_recovery_vs_normal": {
+      "provider_billable_reduction_percent": 88.68330464716007,
+      "recorded_run_reduction_percent": 93.67379486851242,
+      "exact_result_match": true,
+      "training_epoch_count": 0,
+      "recorded_run_30_second_target_met": false,
+      "note": "구현 전 현재 복구 동작끼리의 기술 통계이며 후속 구현 인수 판정값이 아니다."
+    }
+  },
+  "rerun_procedure": {
+    "baseline_commit": "36262bf49892ab9107ab5ef98534efb6e7816207",
+    "fixed_conditions": [
+      "seed 42",
+      "fold 0-4",
+      "screen stage",
+      "recorded input, config and uv.lock hashes",
+      "recorded container image digest",
+      "NVIDIA GeForce RTX 5080 x1"
+    ],
+    "steps": [
+      "기준 커밋을 깨끗한 저장소에 체크아웃하고 private-inputs.sha256을 확인한다.",
+      "격리 환경 관문과 고정 이미지 관문을 유료 자원 생성 전에 통과시킨다.",
+      "Vast.ai 일반 임대 RTX 5080 한 장 자원을 만들고 독립 종료 예약을 등록한다.",
+      "입력 묶음을 SSH 표준 입력으로 전송하고 로컬과 원격 SHA-256을 비교한다.",
+      "원격 입력 매니페스트, 커밋, 설정, 잠금 파일, 비커밋 입력과 GPU를 확인한다.",
+      "python -m pipeline.run <config> --stage screen --recovery-dir <path>를 잠긴 원격 Python 환경에서 실행한다.",
+      "4/5 복구는 정상 실행 결과의 fold 0-3만 넣고 완전 복구는 fold 0-4를 모두 넣는다.",
+      "유효 결과 시각 뒤 결과 묶음을 SSH 표준 출력으로 반입하고 바깥과 내부 SHA-256을 확인한다.",
+      "실행 기록 묶음을 python -m pipeline.bundle import로 주 작업공간 MLflow에 반입하고 필수 산출물을 다시 연다.",
+      "인스턴스와 볼륨을 삭제하고 공급자 목록에서 부재와 종료 예약 해제를 확인한다."
+    ],
+    "post_implementation_pair_order": [
+      [
+        "baseline",
+        "candidate"
+      ],
+      [
+        "candidate",
+        "baseline"
+      ]
+    ]
+  },
+  "account_cleanup": {
+    "initial_credit_usd": 11.653114362538957,
+    "final_credit_usd": 11.28847949616894,
+    "total_credit_delta_usd": 0.3646348663700181,
+    "includes_invalid_attempts_and_result_transfer_cleanup": true,
+    "active_instances": 0,
+    "active_volumes": 0,
+    "termination_schedules": [],
+    "provider_billing_rate_after_cleanup_usd_per_hour": 0.0
+  },
+  "limitations": [
+    "유효 실행 네 건은 같은 물리 장비와 GPU UUID를 사용했지만 Vast.ai의 다음 임대에서 같은 장비가 항상 제공된다고 보장할 수 없다.",
+    "원격 컨테이너에서 cgroup CPU와 메모리 파일을 읽을 수 없어 해당 두 필드는 null이었다. GPU 표본은 네 실행 모두 누락 0%이며 GPU 유휴 시간은 계산할 수 있다.",
+    "LightGBM 결과 반입은 원격 송신 속도가 느려 유효 결과 완성 뒤 삭제까지 401초가 걸렸다. 주 지표는 사전에 정한 유효 결과 완성 시각에서 끝난다.",
+    "macOS 출처 확장 속성에 대한 Linux tar 경고는 입력 파일 SHA-256 검증으로 무해함을 확인했다."
+  ]
+}
