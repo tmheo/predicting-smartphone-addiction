@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 from .config import ModelConfig
+from .data import TARGET
 
 
 class ModelAdapter(Protocol):
@@ -1098,6 +1099,25 @@ class RealMLPAdapter:
         self._fit = fit
         self._seed = seed
         self._impl = None
+        self._dataset_reference: tuple[pd.DataFrame, pd.DataFrame] | None = None
+
+    def set_dataset_reference(
+        self, X_train: pd.DataFrame, X_test: pd.DataFrame
+    ) -> None:
+        """분위-정규 좌표에 쓸 목표값 비참조 기준 집합을 보관한다."""
+        if self._impl is not None:
+            raise RuntimeError("전처리 기준 집합은 RealMLP 학습 전에 정해야 한다.")
+        if TARGET in X_train.columns or TARGET in X_test.columns:
+            raise ValueError("RealMLP 전처리 기준 집합은 목표값을 포함할 수 없다.")
+        self._dataset_reference = (X_train, X_test)
+
+    def _new_impl(self):
+        from . import realmlp
+
+        impl = realmlp.RealMLPFold(self._params, self._seed)
+        if self._dataset_reference is not None:
+            impl.set_dataset_reference(*self._dataset_reference)
+        return impl
 
     def fit(
         self,
@@ -1108,12 +1128,10 @@ class RealMLPAdapter:
         initial_score_tr: pd.Series | None = None,
         initial_score_va: pd.Series | None = None,
     ) -> np.ndarray:
-        from . import realmlp
-
         _reject_initial_score("realmlp", initial_score_tr, initial_score_va)
         if self._fit:
             raise ValueError(f"realmlp가 모르는 fit 설정: {sorted(self._fit)}")
-        self._impl = realmlp.RealMLPFold(self._params, self._seed)
+        self._impl = self._new_impl()
         return self._impl.fit(X_tr, y_tr, X_va, y_va)
 
     def fit_full(
@@ -1123,14 +1141,12 @@ class RealMLPAdapter:
         training_budget: int | None,
         initial_score: pd.Series | None = None,
     ) -> None:
-        from . import realmlp
-
         _reject_initial_score("realmlp", initial_score, None)
         if self._fit:
             raise ValueError(f"realmlp가 모르는 fit 설정: {sorted(self._fit)}")
         if training_budget is None:
             raise ValueError("realmlp 전체 자료 재학습에는 고정 epoch 수가 필요하다.")
-        self._impl = realmlp.RealMLPFold(self._params, self._seed)
+        self._impl = self._new_impl()
         self._impl.fit_full(X, y, training_budget)
 
     def predict(

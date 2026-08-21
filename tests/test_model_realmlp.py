@@ -143,6 +143,135 @@ def test_realmlp_muon_recon_widths_config_is_exp134_feature_only_delta():
     ]
 
 
+def test_realmlp_reference_qnormal_configs_change_only_the_declared_scope():
+    from pipeline.realmlp import RAW_NUMERICAL
+
+    baseline = load_config(
+        REPO / "configs" / "exp136_realmlp_muon_recon_widths.yaml", "screen"
+    )
+    control = load_config(
+        REPO / "configs" / "exp138_realmlp_reference_qnormal_fold_train.yaml",
+        "screen",
+    )
+    candidate = load_config(
+        REPO / "configs" / "exp139_realmlp_reference_qnormal_train_test.yaml",
+        "screen",
+    )
+
+    assert control.data == baseline.data == candidate.data
+    assert control.features == baseline.features == candidate.features
+    assert control.model.kind == baseline.model.kind == candidate.model.kind
+    assert control.model.fit == baseline.model.fit == candidate.model.fit
+    expected = {
+        **baseline.model.params,
+        "reference_qnormal_columns": RAW_NUMERICAL,
+        "preprocessing_scope": "fold_train",
+    }
+    assert control.model.params == expected
+    assert candidate.model.params == {**expected, "preprocessing_scope": "train_test"}
+
+
+def test_reference_qnormal_uses_only_declared_reference_and_keeps_fold_state():
+    from sklearn.preprocessing import QuantileTransformer
+
+    from pipeline.realmlp import (
+        RAW_NUMERICAL,
+        REFERENCE_QNORMAL_SUFFIX,
+        _FoldFeatureEngineer,
+    )
+
+    X, _ = _data(120)
+    train = X.iloc[:90].copy()
+    extra = X.iloc[90:].copy()
+    extra["age"] = extra["age"] + 1000.0
+    reference = pd.concat([X, extra], ignore_index=True)
+
+    control = _FoldFeatureEngineer(RAW_NUMERICAL, reference_seed=SEED)
+    candidate = _FoldFeatureEngineer(RAW_NUMERICAL, reference_seed=SEED)
+    control_values = control.fit_transform(train, train[RAW_NUMERICAL])
+    candidate_values = candidate.fit_transform(train, reference[RAW_NUMERICAL])
+
+    assert control.fit_rows == candidate.fit_rows == 90
+    assert control.medians == candidate.medians
+    assert control.category_maps == candidate.category_maps
+    assert control.reference_qnormal_reference_rows == 90
+    assert candidate.reference_qnormal_reference_rows == len(reference)
+    expected_fit_rows = {
+        column: int(reference[column].notna().sum()) for column in RAW_NUMERICAL
+    }
+    assert candidate.reference_qnormal_fit_rows == expected_fit_rows
+    assert not np.array_equal(
+        control_values[f"age{REFERENCE_QNORMAL_SUFFIX}"].to_numpy(),
+        candidate_values[f"age{REFERENCE_QNORMAL_SUFFIX}"].to_numpy(),
+    )
+
+    observed = reference["age"].dropna().to_numpy(dtype="float64")
+    expected = QuantileTransformer(
+        n_quantiles=min(1000, len(observed)),
+        output_distribution="normal",
+        subsample=2_000_000_000,
+        random_state=SEED,
+    ).fit(observed.reshape(-1, 1))
+    expected_train = expected.transform(
+        train["age"].to_numpy(dtype="float64").reshape(-1, 1)
+    ).ravel()
+    assert np.allclose(
+        candidate_values[f"age{REFERENCE_QNORMAL_SUFFIX}"],
+        expected_train.astype("float32"),
+    )
+    missing = train["social_media_hours"].isna()
+    assert (
+        candidate_values.loc[
+            missing, f"social_media_hours{REFERENCE_QNORMAL_SUFFIX}"
+        ]
+        == 0.0
+    ).all()
+    assert not set(candidate.reference_qnormal_output_columns) & set(
+        candidate.output_cat_cols
+    )
+
+
+def test_realmlp_train_test_reference_scope_is_target_free_and_diagnostic():
+    from pipeline.realmlp import RAW_NUMERICAL, REFERENCE_QNORMAL_SUFFIX
+
+    X, y = _data(120)
+    adapter = _adapter(
+        perm_sample=24,
+        reference_qnormal_columns=RAW_NUMERICAL,
+        preprocessing_scope="train_test",
+    )
+    reference_test = X.iloc[:18].copy()
+    model_mod.set_dataset_reference(adapter, X, reference_test)
+    prediction = adapter.fit(
+        X.iloc[:90], y.iloc[:90], X.iloc[90:], y.iloc[90:]
+    )
+    assert np.isfinite(prediction).all()
+
+    diagnostics = adapter.entry_diagnostics()
+    assert all(diagnostics.assertions.values())
+    observations = diagnostics.observations
+    assert observations["preprocessing_fit_rows"] == 90
+    assert observations["target_encoding_fit_rows"] == 90
+    assert observations["reference_qnormal_reference_rows"] == 138
+    assert observations["dataset_reference_train_rows"] == 120
+    assert observations["dataset_reference_test_rows"] == 18
+    assert observations["engineered_feature_count"] == 63
+    assert observations["reference_qnormal_columns"] == [
+        f"{column}{REFERENCE_QNORMAL_SUFFIX}" for column in RAW_NUMERICAL
+    ]
+
+    with_target = X.assign(addicted_label=y.to_numpy())
+    rejected = _adapter(
+        n_init_avg=1,
+        reference_qnormal_columns=RAW_NUMERICAL,
+        preprocessing_scope="train_test",
+    )
+    with pytest.raises(ValueError, match="목표값"):
+        model_mod.set_dataset_reference(
+            rejected, with_target, with_target.iloc[:18].copy()
+        )
+
+
 def test_realmlp_fold_preprocessing_is_train_only_and_has_54_features():
     from pipeline.realmlp import _FoldFeatureEngineer, _FoldTargetEncoder
 
