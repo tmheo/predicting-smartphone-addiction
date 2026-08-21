@@ -1,0 +1,151 @@
+schema_version: 1
+judgment_id: issue296-exp137-spline-widths-screen
+created_at: '2026-08-20T17:13:14Z'
+stage: screening
+route: candidate_pool
+supersedes: null
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: Contextualized Spline Transformer에 제약 복원 구간 폭 3열 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/296
+
+feature_bundle:
+  name: reconstruction_widths
+  columns:
+    - gaming_hours_recon_width
+    - social_media_hours_recon_width
+    - work_study_hours_recon_width
+  provider: constrained_impute_aux
+  preregistration:
+    kind: committed_config
+    reference: configs/exp137_contextual_spline_recon_widths.yaml@43738535e92c2d99eb0509b4af536cc3311a0e4e
+    description: exp085 Contextualized Spline Transformer 설정에 폭 3열만 더하는 짝비교를 결과 확인 전에 고정했다.
+  content_sha256: 9dad127be2c2c4817e308e1fed569ce0871cb4a566c73c15712ff5e8a50a8dcc
+
+lineage:
+  included:
+    config: exp137_contextual_spline_recon_widths
+    config_path: configs/exp137_contextual_spline_recon_widths.yaml
+    config_sha256: efe64656d95efb9c0472341e9ee401405af7f96a07d774c91ba818ddd609eb6f
+    source_run_id: 30eabe7f2e2249659b7fbb8127b11590
+    imported_run_id: d96c06ab2a4f49178465b8e67a00ce73
+    import_bundle_sha256: 0cc2420cf8ca790f577fbea8f8ca0fa64d5d4991730657227f75912374c19e99
+    git_commit: 43738535e92c2d99eb0509b4af536cc3311a0e4e
+    seeds: [42]
+  excluded:
+    config: exp085_contextual_spline_m0
+    config_path: configs/exp085_contextual_spline_m0.yaml
+    config_sha256: 0c498704cb79af55924e0173bc6803558b3500ed0a2bf9c2b2964b1ea8085135
+    source_run_id: 8dc1a2ed76c64713b70f0e5837424065
+    imported_run_id: dc1ce01277f5472987e83b2135ad32dd
+    import_bundle_sha256: c3f99059bced777a935e1cb466ee39de35ad280f28483ad9567f4767b1211044
+    git_commit: 43738535e92c2d99eb0509b4af536cc3311a0e4e
+    seeds: [42]
+  allowed_differences:
+    - features.providers.constrained_impute_aux.widths
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  model_contract_match: true
+  allowed_config_difference_match: true
+  added_feature_columns_match: true
+  included_feature_total: 36
+  excluded_feature_total: 33
+  adoption_eligibility:
+    seeds_ok: false
+    clean_commit_ok: true
+    folds_ok: true
+    ok: false
+    reason: seed 42 선별 짝차이가 음수여서 3시드 확인 실행으로 확장하지 않았다.
+  canary:
+    state: 유효
+    placebo_present: true
+    target_using_provider_total: 0
+    derived_canary_checks: []
+    reason: 새 제공자는 목표값을 참조하지 않으며 계획의 상시 플라시보 불변식을 유지했다.
+
+paired_oof:
+  comparison: included_minus_excluded
+  seed: 42
+  included_auc: 0.9659886216052438
+  excluded_auc: 0.9671782981239406
+  overall_delta: -0.001189676518696836
+  fold_deltas:
+    0: -0.00008989843339568537
+    1: 0.0001330178243937885
+    2: 0.00004326210826866017
+    3: -0.00014504058099618078
+    4: -0.00004231984454006188
+  fold_wins: 2
+  fold_total: 5
+  thresholds:
+    screening_delta_min: 0.0
+  screening_passed: false
+
+selection_procedure:
+  required: false
+  reason: 결과 확인 전에 폭 3열 전체와 단일 포함 설정을 고정했고 같은 OOF로 하위 묶음이나 변형을 고르지 않았다.
+  candidate_set: [exp137_contextual_spline_recon_widths]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호 미확인
+  reason: seed 42 짝차이가 음수여서 3시드 반복성 확인 자격을 얻지 못했다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 후보 풀의 exp085 직접 교체 경로이며 현재 champion 교체를 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: false
+  state: null
+  reason: seed 42 선별을 통과하지 못해 3시드 채택 자격, 직접 교체와 포함·제외 nested OOF를 평가하지 않았다.
+
+auxiliary_importance:
+  method: contextualized_spline_transformer_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: 0.000007997634204937042
+  cell_total: 5
+  features:
+    gaming_hours_recon_width:
+      mean: 0.00006921057244049233
+      above_placebo_cells: 5
+    social_media_hours_recon_width:
+      mean: 0.00009893597129921883
+      above_placebo_cells: 5
+    work_study_hours_recon_width:
+      mean: 0.000013183503950964237
+      above_placebo_cells: 3
+  conflicts_with_oof: true
+  used_as_gate: false
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호 미확인
+  champion_route: null
+  candidate_pool_route: null
+  actual_ledger_change: none
+  reason_codes:
+    - screening_delta_negative
+    - screening_fold_wins_2_of_5
+    - clean_commit
+    - folds_match
+    - canary_valid
+    - confirmation_not_started
+    - candidate_pool_not_evaluated
+    - placebo_importance_conflict

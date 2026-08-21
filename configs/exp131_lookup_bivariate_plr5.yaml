@@ -1,0 +1,98 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #267: exp129(이변수 조성 9열)의 seed 42 스크리닝에서 플라시보 게이트를 통과한
+# 5열만 남긴 절단판. exp129는 AUC 관문(+0.0000188, 비음수)을 통과했지만 4열
+# (screen_over_sleep, min_per_open, notif_per_open, wk_ratio)의 gain이 플라시보
+# 미달이라 그대로는 확정 재검증의 새 피처 게이트에서 실패가 예정돼 절단한다
+# (#74의 경계 폭 열 절단, #90의 12열 중 5열 채택과 같은 전례).
+# champion exp127과의 유일한 차이는 xgb_impute_aux.compositions의 5열 추가다:
+#   awake_screen_frac(플라시보 21.4배), screen_mean_dw(98.1배),
+#   gaming_over_daily(45.6배), screen_minus_sleep(2.5배), weekend_minus_daily(1.15배)
+# 전부 lookup_cols 밖 수치라 PLR 전용 토큰이 된다.
+# 판정 앵커: champion exp127(run 7124425b) seed 42 짝비교(pipeline.compare).
+# 미달 시 계열 즉시 닫음. 원격 GPU 실행 대상(Vast.ai). 근거 run: exp129 스크리닝
+# 2872cd03360742d79f9bd38d70e01ab4.
+name: exp131_lookup_bivariate_plr5
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions:
+        [
+          social_frac,
+          work_frac,
+          leisure_frac,
+          resid_frac,
+          week_total,
+          awake_screen_frac,
+          screen_minus_sleep,
+          gaming_over_daily,
+          weekend_minus_daily,
+          screen_mean_dw,
+        ]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: lookup_transformer
+  params:
+    lookup_cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+    fold_seed_offsets: [0, 1000, 2000]
+    optimizer: muon
+  fit: {}

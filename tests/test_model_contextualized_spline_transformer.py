@@ -120,6 +120,50 @@ def test_multilevel_config_is_exp085_single_output_path_delta():
     }
 
 
+def test_recon_widths_config_is_exp085_three_feature_delta():
+    from pipeline.features import ConstrainedImputeAux
+
+    baseline = load_config("configs/exp085_contextual_spline_m0.yaml", "screen")
+    challenger = load_config(
+        "configs/exp137_contextual_spline_recon_widths.yaml", "screen"
+    )
+
+    assert challenger.name == "exp137_contextual_spline_recon_widths"
+    assert challenger.data == baseline.data
+    assert challenger.features.base == baseline.features.base
+    assert challenger.features.categorical == baseline.features.categorical
+    assert challenger.features.exclude == baseline.features.exclude
+    assert challenger.model == baseline.model
+
+    expected_providers = [dict(provider) for provider in baseline.features.providers]
+    constrained = next(
+        provider
+        for provider in expected_providers
+        if provider["kind"] == "constrained_impute_aux"
+    )
+    constrained["widths"] = True
+    assert challenger.features.providers == expected_providers
+
+    baseline_provider = next(
+        provider
+        for provider in FeaturePlan.from_config(baseline.features).fold_fit_transformers()
+        if isinstance(provider, ConstrainedImputeAux)
+    )
+    challenger_provider = next(
+        provider
+        for provider in FeaturePlan.from_config(challenger.features).fold_fit_transformers()
+        if isinstance(provider, ConstrainedImputeAux)
+    )
+    baseline_columns = baseline_provider.columns()
+    challenger_columns = challenger_provider.columns()
+    assert challenger_columns[: len(baseline_columns)] == baseline_columns
+    assert set(challenger_columns) - set(baseline_columns) == {
+        "gaming_hours_recon_width",
+        "social_media_hours_recon_width",
+        "work_study_hours_recon_width",
+    }
+
+
 def test_multilevel_path_preserves_shared_initial_weights_and_favors_final_head():
     import torch
 

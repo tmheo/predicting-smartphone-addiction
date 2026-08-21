@@ -237,6 +237,47 @@ def test_composition_columns_computed_on_recon_matrix(recording):
     assert out["imp_awake_screen_frac"].dtype == "float64"
 
 
+def test_bivariate_composition_formulas_follow_notebook_definitions(recording):
+    # szymonkapiski build_continuous 이식 조성(#267). 복원 행렬 위 순수 산술이며
+    # 원본의 epsilon 방어는 규율대로 뺀다.
+    rng = np.random.default_rng(1)
+    n = 90
+    df = make_df(n)
+    df["gaming_hours"] = rng.uniform(0, 5, n).round(1)
+    df["weekend_screen_time"] = rng.uniform(1, 12, n).round(1)
+    df.loc[2::9, "gaming_hours"] = np.nan
+    df.loc[3::11, "weekend_screen_time"] = np.nan
+    cols = [*COLS, "gaming_hours", "weekend_screen_time"]
+    names = [
+        "screen_over_sleep",
+        "screen_minus_sleep",
+        "gaming_over_daily",
+        "weekend_minus_daily",
+        "screen_mean_dw",
+    ]
+    provider = XgbImputeAux(cols=cols, cat_cols=CATS, emit=[cols[0]], compositions=names)
+    provider.fit(df, seed=42)
+    out = provider.transform(df)
+    assert list(out.columns) == [
+        f"{cols[0]}_xgb_recon",
+        *(f"imp_{name}" for name in names),
+    ]
+    recon = {c: df[c].astype("float64").fillna(7.0) for c in cols}
+    daily = recon["daily_screen_time_hours"]
+    sleep = recon["sleep_hours"]
+    gaming = recon["gaming_hours"]
+    weekend = recon["weekend_screen_time"]
+    expected = {
+        "imp_screen_over_sleep": daily / sleep,
+        "imp_screen_minus_sleep": daily - sleep,
+        "imp_gaming_over_daily": gaming / daily,
+        "imp_weekend_minus_daily": weekend - daily,
+        "imp_screen_mean_dw": (daily + weekend) / 2,
+    }
+    for column, series in expected.items():
+        pd.testing.assert_series_equal(out[column], series, check_names=False)
+
+
 def test_emitted_recon_values_are_unchanged_by_compositions():
     # 조성이 sleep 복원기를 추가해도 열마다 독립 fit이므로 emit 복원 열 값은 같아야 한다.
     # (#86 채택 열의 보존 근거, #90)

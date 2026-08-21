@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: 85d20803a780aff85580b7376d1b8211caa9915471f9acce70e2a519f445b01b
+source_pool_sha256: 15949b76e814c43dfb1a0d6021448976b7f3c16bf59993e6f3b125de25de4d42
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -149,6 +149,11 @@ members:
     run_id: 119b9c4e44674d38a6f758b65a68593e
     budget_source: fold_median
     budgets: {42: 9758, 43: 10393, 44: 10368}
+  - config: exp131_lookup_bivariate_plr5
+    config_path: configs/exp131_lookup_bivariate_plr5.yaml
+    run_id: 54acd002d3c04ec3a74c09871e83da50
+    budget_source: fold_median
+    budgets: {42: 14, 43: 14, 44: 14}
   - config: exp136_realmlp_muon_recon_widths
     config_path: configs/exp136_realmlp_muon_recon_widths.yaml
     run_id: bd2bd1154e6343f68b364714e2fedcc4
