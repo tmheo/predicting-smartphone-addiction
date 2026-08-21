@@ -184,6 +184,28 @@ def test_diagnostics_count_target_encoding_columns():
     assert adapter.entry_diagnostics().observations["target_encodings"] == 1
 
 
+def test_full_fit_uses_fixed_epoch_budget_and_is_deterministic():
+    X, y = _data(128)
+    first = _adapter()
+    second = _adapter()
+
+    model_mod.fit_full(first, X, y, 2)
+    model_mod.fit_full(second, X, y, 2)
+
+    assert first._impl._best_epoch == 2
+    assert second._impl._best_epoch == 2
+    first_prediction = first.predict(X.iloc[:12])
+    second_prediction = second.predict(X.iloc[:12])
+    assert np.isfinite(first_prediction).all()
+    np.testing.assert_array_equal(first_prediction, second_prediction)
+
+
+def test_full_fit_requires_fixed_epoch_budget():
+    X, y = _data(64)
+    with pytest.raises(ValueError, match="고정 epoch"):
+        model_mod.fit_full(_adapter(), X, y, None)
+
+
 def test_training_only_category_mapping_distinguishes_unknown_and_missing():
     X, y = _data()
     adapter = _adapter()

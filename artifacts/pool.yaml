@@ -491,3 +491,19 @@ members:
     ensemble_auc_with: 0.9690840204152809
     ensemble_auc_without: 0.9690716394524127
     contribution: 1.23809628681526e-05
+- run_id: f16dbc88860a41f39194da2f581f057d
+  config: exp133_scalar_token_transformer_oof_te
+  oof_auc: 0.9678155177269718
+  seeds: 42,43,44
+  entered_at: '2026-08-21'
+  reason: '이슈 309 후속: 3시드 OOF 0.96781552, 최근접 exp067 스피어만 0.97018로 중복 아님, 표준 순위 평균
+    기여 +0.00000413'
+  evidence:
+    champion_run_id: 54acd002d3c04ec3a74c09871e83da50
+    champion_oof_auc: 0.9693397329635609
+    floor_margin: 0.008475784763410932
+    nearest_run_id: 85b09132aae543aab16e69dea5906a30
+    nearest_spearman: 0.9701801785379391
+    ensemble_auc_with: 0.9691419155689435
+    ensemble_auc_without: 0.9691377808394744
+    contribution: 4.134729469029708e-06
