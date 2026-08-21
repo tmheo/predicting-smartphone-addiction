@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: 943cbfd760cfe81036ec8551d9368b640f3873c1e6d8b16a2f487e1095db4f1d
+source_pool_sha256: 4b995fbce96fd573cc1e39b30c00ac2c40607cbe6f32c4351cf9ba833dd32061
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -169,3 +169,13 @@ members:
     run_id: f16dbc88860a41f39194da2f581f057d
     budget_source: fold_median
     budgets: {42: 20, 43: 18, 44: 15}
+  - config: exp131_tab_cnn_oof_target_mean
+    config_path: configs/exp131_tab_cnn_oof_target_mean.yaml
+    run_id: ea78fe0dbe2442788580dec56cf7f3ad
+    budget_source: fold_median
+    budgets: {42: 16, 43: 16, 44: 19}
+  - config: exp132_tab_cnn_epochs100
+    config_path: configs/exp132_tab_cnn_epochs100.yaml
+    run_id: 09d17ca4091e45118d201ba7a321f956
+    budget_source: fold_median
+    budgets: {42: 53, 43: 71, 44: 89}

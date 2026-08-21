@@ -507,3 +507,33 @@ members:
     ensemble_auc_with: 0.9691419155689435
     ensemble_auc_without: 0.9691377808394744
     contribution: 4.134729469029708e-06
+- run_id: ea78fe0dbe2442788580dec56cf7f3ad
+  config: exp131_tab_cnn_oof_target_mean
+  oof_auc: 0.9679518485344029
+  seeds: 42,43,44
+  entered_at: '2026-08-21'
+  reason: '이슈 333: 내부 OOF 정확값 목표 평균 3시드 확정, 진입 하한과 중복 게이트 통과'
+  evidence:
+    champion_run_id: 54acd002d3c04ec3a74c09871e83da50
+    champion_oof_auc: 0.9693397329635609
+    floor_margin: 0.00861211557084196
+    nearest_run_id: bd2bd1154e6343f68b364714e2fedcc4
+    nearest_spearman: 0.9688751117260681
+    ensemble_auc_with: 0.9691465332850875
+    ensemble_auc_without: 0.9691419155689435
+    contribution: 4.617716144017514e-06
+- run_id: 09d17ca4091e45118d201ba7a321f956
+  config: exp132_tab_cnn_epochs100
+  oof_auc: 0.9627879146500447
+  seeds: 42,43,44
+  entered_at: '2026-08-21'
+  reason: '이슈 333: 100 epoch 학습 길이 3시드 확정, 진입 하한과 중복 게이트 통과'
+  evidence:
+    champion_run_id: 54acd002d3c04ec3a74c09871e83da50
+    champion_oof_auc: 0.9693397329635609
+    floor_margin: 0.0034481816864837533
+    nearest_run_id: b47a4184249746cdb1d062aa98364437
+    nearest_spearman: 0.9767318721014987
+    ensemble_auc_with: 0.9691474903122669
+    ensemble_auc_without: 0.9691465332850875
+    contribution: 9.570271793934992e-07

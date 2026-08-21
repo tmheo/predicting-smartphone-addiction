@@ -14,7 +14,7 @@ from pipeline.refit import RefitMember, RefitPlan, mix_member_predictions
 def test_committed_refit_plan_matches_candidate_pool():
     plan = RefitPlan.load(Path("artifacts/full-refit-plan.yaml"))
 
-    assert len(plan.members) == 32
+    assert len(plan.members) == 34
     assert plan.cv_model_weight == 5
     assert plan.full_model_weight == 1
     ag25_gbm = plan.member("exp117_ag25_gbm_r21")
@@ -60,6 +60,12 @@ def test_committed_refit_plan_matches_candidate_pool():
     scalar_token = plan.member("exp133_scalar_token_transformer_oof_te")
     assert scalar_token.budgets == {42: 20, 43: 18, 44: 15}
     assert scalar_token.budget_source == "fold_median"
+    tab_cnn_target_mean = plan.member("exp131_tab_cnn_oof_target_mean")
+    assert tab_cnn_target_mean.budgets == {42: 16, 43: 16, 44: 19}
+    assert tab_cnn_target_mean.budget_source == "fold_median"
+    tab_cnn_longer = plan.member("exp132_tab_cnn_epochs100")
+    assert tab_cnn_longer.budgets == {42: 53, 43: 71, 44: 89}
+    assert tab_cnn_longer.budget_source == "fold_median"
 
 
 def test_mix_member_predictions_uses_model_count_weights():
