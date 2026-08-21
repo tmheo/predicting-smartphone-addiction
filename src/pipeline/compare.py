@@ -49,14 +49,20 @@ from .ledger import CHAMPION_PATH, Champion
 from .runs import MlflowRunStore, RunStoreError
 
 
+def _gain(value: float) -> str:
+    # 트리 gain(수백~수천)과 신경망 순열 importance(1e-5 규모)를 한 형식으로 담는다.
+    # 고정 소수 한 자리는 작은 값을 전부 0.0으로 뭉개 판정 근거가 안 보였다(#267).
+    return f"{value:.4g}"
+
+
 def _canary_lines(report: CanaryReport) -> list[str]:
     if report.placebo_gain is None:
         reference = "영가설 상한 기록 없음"
     else:
         ceiling = max(report.placebo_gain, 0.0)
-        reference = f"영가설 상한 {ceiling:.1f} (플라시보 {report.placebo_gain:.1f})"
+        reference = f"영가설 상한 {_gain(ceiling)} (플라시보 {_gain(report.placebo_gain)})"
     return [
-        f"카나리아 {check.feature}: 평균 gain {check.gain:.1f} vs {reference} "
+        f"카나리아 {check.feature}: 평균 gain {_gain(check.gain)} vs {reference} "
         f"→ {'통과' if check.ok else '누수 의심(판정 불가)'}"
         for check in report.checks
     ]
@@ -69,9 +75,9 @@ def _new_feature_lines(report: NewFeatureReport) -> list[str]:
         return ["challenger run에 플라시보 피처가 없어 새 피처의 importance를 판정할 수 없다."]
     lines = []
     for check in report.checks:
-        shown = f"{check.gain:.1f}" if check.gain is not None else "기록 없음"
+        shown = _gain(check.gain) if check.gain is not None else "기록 없음"
         lines.append(
-            f"새 피처 {check.feature}: 평균 gain {shown} vs 플라시보 {report.placebo_gain:.1f} "
+            f"새 피처 {check.feature}: 평균 gain {shown} vs 플라시보 {_gain(report.placebo_gain)} "
             f"→ {'통과' if check.ok else '미달'}"
         )
     return lines

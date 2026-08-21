@@ -4,7 +4,7 @@ exit: 0
 champion  : exp057_cat_xgb_impute_comps5 run 3d5239b07c6e475baa7dde03fb0b99bc
 challenger: exp057_cat_xgb_impute_comps5 run dd1369ef67ba4f768a0819e97f8fdf0a
 스크리닝(seed 42 짝지은 비교) OOF AUC: champion 0.96833 → challenger 0.96833 (delta +0.00000, 문턱 개선 >= 0) → 통과
-카나리아 placebo_noise_te: 평균 gain 0.2 vs 플라시보 0.4 → 통과
+카나리아 placebo_noise_te: 평균 gain 0.1653 vs 영가설 상한 0.3902 (플라시보 0.3902) → 통과
 새 피처 없음: importance 조건은 묻지 않는다.
 확정 재검증 자격 획득: 같은 config를 --stage confirm으로 재실행한 뒤 그 run으로 다시 판정할 것. 스크리닝 통과는 채택이 아니다.
 판정: 스크리닝 통과
