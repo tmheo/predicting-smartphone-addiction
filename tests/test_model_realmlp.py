@@ -116,6 +116,33 @@ def test_realmlp_muon_config_is_exp124_single_optimizer_delta():
     assert challenger.model.params == {**baseline.model.params, "optimizer": "muon"}
 
 
+def test_realmlp_muon_recon_widths_config_is_exp134_feature_only_delta():
+    from pipeline.features import ConstrainedImputeAux
+    from pipeline.plan import FeaturePlan
+
+    baseline = load_config(REPO / "configs" / "exp134_realmlp_muon.yaml", "screen")
+    challenger = load_config(
+        REPO / "configs" / "exp136_realmlp_muon_recon_widths.yaml", "screen"
+    )
+
+    assert challenger.name == "exp136_realmlp_muon_recon_widths"
+    assert challenger.data == baseline.data
+    assert challenger.features.base == baseline.features.base
+    assert challenger.features.categorical == baseline.features.categorical
+    assert challenger.features.exclude == baseline.features.exclude
+    assert challenger.model == baseline.model
+
+    plan = FeaturePlan.from_config(challenger.features)
+    providers = plan.fold_fit_transformers()
+    assert len(providers) == 1
+    assert isinstance(providers[0], ConstrainedImputeAux)
+    assert providers[0].columns() == [
+        "gaming_hours_recon_width",
+        "social_media_hours_recon_width",
+        "work_study_hours_recon_width",
+    ]
+
+
 def test_realmlp_fold_preprocessing_is_train_only_and_has_54_features():
     from pipeline.realmlp import _FoldFeatureEngineer, _FoldTargetEncoder
 

@@ -125,6 +125,38 @@ def test_widths_false_emits_recon_columns_only():
     assert list(out.columns) == provider.columns()
 
 
+def test_emit_width_subset_keeps_same_state_and_drops_recon_columns():
+    df = make_df()
+    estimate = df.ffill().bfill()
+    full = ConstrainedImputeAux(cols=COLS)
+    full.imputer_ = FakeImputer(estimate)
+    widths = [f"{c}_recon_width" for c in SCREEN_PARTS]
+    reduced = ConstrainedImputeAux(cols=COLS, emit=widths)
+    reduced.imputer_ = FakeImputer(estimate)
+
+    assert reduced.columns() == widths
+    pd.testing.assert_frame_equal(full.transform(df)[widths], reduced.transform(df))
+    assert not any(c.endswith("_recon") for c in reduced.transform(df).columns)
+
+
+@pytest.mark.parametrize(
+    "emit, match",
+    [
+        ([], "비어 있지 않은"),
+        (
+            ["gaming_hours_recon_width", "gaming_hours_recon_width"],
+            "중복 없는",
+        ),
+        (["daily_screen_time_hours_recon_width"], "알 수 없는 열"),
+        (["gaming_hours_recon_width"], "알 수 없는 열"),
+    ],
+)
+def test_emit_rejects_invalid_output_subset(emit, match):
+    widths = emit != ["gaming_hours_recon_width"]
+    with pytest.raises(ValueError, match=match):
+        ConstrainedImputeAux(cols=COLS, widths=widths, emit=emit)
+
+
 def test_fit_transform_respects_feasible_intervals():
     rng = np.random.default_rng(0)
     n = 400

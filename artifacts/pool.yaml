@@ -475,3 +475,19 @@ members:
     ensemble_auc_with: 0.9691178229365589
     ensemble_auc_without: 0.9690554221704453
     contribution: 6.240076611363499e-05
+- run_id: bd2bd1154e6343f68b364714e2fedcc4
+  config: exp136_realmlp_muon_recon_widths
+  oof_auc: 0.9684765044445613
+  seeds: 42,43,44
+  entered_at: '2026-08-20'
+  reason: '판정 issue302-exp136-realmlp-widths-confirm: exp134 직접 짝비교 3시드 +0.00005044,
+    시드 3/3·분할 5/5 실신호, 최근접 상관 0.99721로 중복 아님, 고정 nested 포함 기여 +0.00000183·외부 분할 4/5'
+  evidence:
+    champion_run_id: 7124425b5b51421dbbeba597229554da
+    champion_oof_auc: 0.9692840450124712
+    floor_margin: 0.009192459432090128
+    nearest_run_id: f72eeee10b1b4947af79228f888e7a81
+    nearest_spearman: 0.9972106548157474
+    ensemble_auc_with: 0.9690810541075118
+    ensemble_auc_without: 0.9690544410043349
+    contribution: 2.6613103176864605e-05
