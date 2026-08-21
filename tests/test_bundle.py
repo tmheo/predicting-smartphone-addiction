@@ -8,6 +8,7 @@ monkeypatch로 대체한다(진짜 git 대조는 사용 시점의 저장소 상�
 from __future__ import annotations
 
 import json
+import time
 import zipfile
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from sklearn.metrics import roc_auc_score
 from pipeline import bundle as bundle_mod
 from pipeline.bundle import BundleError, export_bundle, import_bundle
 from pipeline.data import file_sha256
+from pipeline.fold_observability import ARTIFACT_NAME, FoldExecutionRecorder
 from pipeline.runs import MlflowRunStore
 
 SEEDS = [42, 43]
@@ -151,6 +153,49 @@ def _export(env) -> Path:
     )
 
 
+def _add_observability(env) -> Path:
+    class Probe:
+        metadata = {"cpu_scope": "test", "gpu_expected": False}
+
+        def sample(self, observed_ns: int):
+            raise AssertionError("자동 표본을 사용하지 않는다.")
+
+    recorder = FoldExecutionRecorder(
+        env["tmp_path"] / "fold-observability",
+        {"seeds": SEEDS, "source": "remote_measured"},
+        resource_probe=Probe(),
+        start_sampler=False,
+    )
+    recorder.start()
+    recorder.configure_run_shape(seed_total=len(SEEDS), fold_total=2, provider_total=0)
+    recorder.record_timing(
+        {
+            "seed": SEEDS[0],
+            "fold": 0,
+            "operation": "fold_finalize",
+            "actor_kind": "pipeline",
+            "actor_name": "fold_result",
+            "worker_id": "worker-1",
+            "device_id": "0",
+            "dataset": None,
+            "started_ns": time.monotonic_ns(),
+            "duration_ns": 123_000_000,
+            "outcome": "success",
+            "reason": None,
+        }
+    )
+    finalized = recorder.finalize()
+    env["client"].log_artifact(
+        env["run_id"], str(finalized.path), artifact_path="observability"
+    )
+    env["client"].set_tag(
+        env["run_id"], "sha256.observability.fold_execution", finalized.sha256
+    )
+    for name, value, step in finalized.metrics:
+        env["client"].log_metric(env["run_id"], name, value, step=step or 0)
+    return finalized.path
+
+
 def test_roundtrip_reproduces_run(env):
     out = _export(env)
     new_run_id = import_bundle(out, tracking_uri=env["local_uri"])
@@ -170,6 +215,46 @@ def test_roundtrip_reproduces_run(env):
     assert not store.importance_of(new_run_id).empty
     assert store.config_of(new_run_id)["name"] == "exp_test"
     assert store.submission_path_of(new_run_id).exists()
+
+
+def test_roundtrip_preserves_observability_raw_bytes_and_hash(env, tmp_path):
+    source = _add_observability(env)
+    out = _export(env)
+    new_run_id = import_bundle(out, tracking_uri=env["local_uri"])
+
+    from mlflow.tracking import MlflowClient
+
+    local = MlflowClient(tracking_uri=env["local_uri"])
+    imported = Path(
+        local.download_artifacts(
+            new_run_id,
+            f"observability/{ARTIFACT_NAME}",
+            tmp_path / "imported-observability",
+        )
+    )
+    assert imported.read_bytes() == source.read_bytes()
+    assert (
+        local.get_run(new_run_id).data.tags["sha256.observability.fold_execution"]
+        == file_sha256(source)
+    )
+    history = local.get_metric_history(new_run_id, "time.fold_finalize_seconds")
+    assert [(metric.value, metric.step) for metric in history] == [(0.123, 0)]
+
+
+def test_import_refuses_tampered_observability(env):
+    _add_observability(env)
+    out = _export(env)
+    tampered = env["tmp_path"] / "tampered-observability.bundle.zip"
+    target = f"artifacts/observability/{ARTIFACT_NAME}"
+    with zipfile.ZipFile(out) as source, zipfile.ZipFile(tampered, "w") as destination:
+        for item in source.infolist():
+            data = source.read(item.filename)
+            if item.filename == target:
+                data += b"tampered"
+            destination.writestr(item, data)
+
+    with pytest.raises(BundleError, match="관측 원본.*내용 해시"):
+        import_bundle(tampered, tracking_uri=env["local_uri"])
 
 
 def test_import_refuses_duplicate_bundle(env):

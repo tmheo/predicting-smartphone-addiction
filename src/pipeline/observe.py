@@ -25,6 +25,11 @@ import pandas as pd
 from . import cleanup, summary, tracking
 from .config import ExperimentConfig
 from .cv import CVResult
+from .fold_observability import (
+    FoldExecutionRecorder,
+    ObservabilityPersistenceError,
+    runtime_metadata,
+)
 
 # 저장소 루트 기준. tracking URI와 같은 이유로 루트 실행이 전제다. (#39)
 RUN_LOGS_ROOT = Path("run-logs")
@@ -119,6 +124,10 @@ class RunObserver:
         self._stage_end_counts: dict[str, int] = {}
         self._durations: list[tuple[str, int, float]] = []  # (stage, step, seconds)
         self._completed_units = 0
+        self._fold_observability: FoldExecutionRecorder | None = None
+        self._observability_uploaded = False
+        self._finalized = False
+        self._finalization_error: ObservabilityPersistenceError | None = None
 
     # ------------------------------------------------------------------ 생성
 
@@ -131,6 +140,7 @@ class RunObserver:
         obs = cls(cfg, client, run.info.run_id)
         try:
             obs._open_log()
+            obs._start_fold_observability()
             obs._start_heartbeat()
             # 백그라운드 셸에서 시작되면 SIGINT가 무시 상태로 상속될 수 있으므로,
             # 사용자 중단(#42)이 항상 KeyboardInterrupt로 전달되게 명시적으로 설치한다.
@@ -139,6 +149,13 @@ class RunObserver:
             obs._log_start_records()
         except BaseException:
             # 준비 중 실패한 실행을 RUNNING으로 남기지 않는다.
+            if obs._fold_observability is not None:
+                obs._fold_observability.abandon()
+            if obs._capture is not None:
+                try:
+                    obs._capture.stop()
+                except Exception:
+                    pass
             client.set_terminated(obs.run_id, status="FAILED")
             raise
         return obs
@@ -152,6 +169,13 @@ class RunObserver:
         # 파일 기록 연결 직후의 첫 기록. 터미널에도 그대로 보인다. (#39)
         print(f"run_id={self.run_id}")
         print(f"run_log={self._log_path.resolve()}")
+
+    def _start_fold_observability(self) -> None:
+        self._fold_observability = FoldExecutionRecorder(
+            self._run_dir / "observability",
+            runtime_metadata(self.cfg, self.run_id),
+        )
+        self._fold_observability.start()
 
     def _start_heartbeat(self) -> None:
         self._beat()  # 시작 즉시 첫 신호를 남겨 마지막 활동 시각이 항상 존재하게 한다.
@@ -228,6 +252,26 @@ class RunObserver:
             self._client.log_metric(self.run_id, "progress.total_units", seed_total * fold_total)
             self._client.log_metric(self.run_id, "progress.seed_total", seed_total)
             self._client.log_metric(self.run_id, "progress.fold_total", fold_total)
+        if self._fold_observability is not None:
+            from .plan import FOLD_FIT, REGISTRY
+
+            provider_total = sum(
+                REGISTRY[spec["kind"]].stage == FOLD_FIT
+                for spec in self.cfg.features.providers
+            )
+            self._fold_observability.configure_run_shape(
+                seed_total=seed_total,
+                fold_total=fold_total,
+                provider_total=provider_total,
+            )
+
+    def record_execution_identity(self, identity: dict[str, object]) -> None:
+        if self._fold_observability is not None:
+            self._fold_observability.record_execution_identity(identity)
+
+    def record_timing(self, event: dict[str, object]) -> None:
+        if self._fold_observability is not None:
+            self._fold_observability.record_timing(event)
 
     def fold_completed(self, seed_index: int, fold_index: int, auc: float) -> None:
         """fold 하나가 끝날 때마다 진행률과 실행 중 fold AUC를 쌓는다. (#40)"""
@@ -262,8 +306,12 @@ class RunObserver:
 
     def succeed(self) -> None:
         self._finalize("FINISHED", None)
+        if self._finalization_error is not None:
+            raise self._finalization_error
 
     def fail(self, exc: BaseException) -> None:
+        if self._finalized:
+            return
         status = (
             "KILLED"
             if isinstance(exc, (KeyboardInterrupt, TerminationRequested))
@@ -273,6 +321,9 @@ class RunObserver:
 
     def _finalize(self, status: str, exc: BaseException | None) -> None:
         """#42의 종료 처리 순서. 중간 단계가 실패해도 끝까지 시도한다."""
+        if self._finalized:
+            return
+        self._finalized = True
         # 정리 중 두 번째 신호는 막지 않는다: 기본 동작으로 되돌려 즉시 종료를 허용한다. (#42)
         signal.signal(signal.SIGINT, signal.default_int_handler)
         signal.signal(signal.SIGTERM, signal.SIG_DFL)
@@ -287,6 +338,44 @@ class RunObserver:
         self._stop_heartbeat.set()
         if self._heartbeat_thread is not None:
             self._heartbeat_thread.join(timeout=10)
+
+        # 시간 사건은 성공과 실패 실행 모두 압축하고 실행 로그보다 먼저 보존한다.
+        # 자원 측정 실패는 원본의 결측 상태지만, 원본 자체의 보존 실패는 실행 실패다.
+        if self._fold_observability is not None:
+            try:
+                finalized = self._fold_observability.finalize()
+                with self._mlflow_lock:
+                    for name, value, step in finalized.metrics:
+                        if step is None:
+                            self._client.log_metric(self.run_id, name, value)
+                        else:
+                            self._client.log_metric(self.run_id, name, value, step=step)
+                    self._client.set_tag(
+                        self.run_id,
+                        "sha256.observability.fold_execution",
+                        finalized.sha256,
+                    )
+                    self._client.log_artifact(
+                        self.run_id,
+                        str(finalized.path),
+                        artifact_path="observability",
+                    )
+                self._observability_uploaded = True
+            except BaseException as observation_exc:  # noqa: BLE001 - 상태 종료와 로그 보존은 계속한다.
+                self._fold_observability.abandon()
+                observation_error = (
+                    observation_exc
+                    if isinstance(observation_exc, ObservabilityPersistenceError)
+                    else ObservabilityPersistenceError("fold 관측 산출물을 보존할 수 없다.")
+                )
+                if observation_error is not observation_exc:
+                    observation_error.__cause__ = observation_exc
+                print(f"fold 관측 산출물 보존 실패: {observation_exc}", file=sys.stderr)
+                if exc is None:
+                    exc = observation_error
+                    status = "FAILED"
+                    self._finalization_error = observation_error
+                    traceback.print_exception(observation_error, file=sys.stderr)
 
         # 2) 실행 로그를 동기화하고 닫는다. 이후의 정리 출력은 기록 범위 밖이다. (#39)
         if self._capture is not None:
@@ -323,6 +412,10 @@ class RunObserver:
         if uploaded:
             try:
                 self._log_path.unlink()
+                if self._observability_uploaded and self._fold_observability is not None:
+                    finalized = self._fold_observability.finalize()
+                    finalized.path.unlink()
+                    finalized.path.parent.rmdir()
                 self._run_dir.rmdir()
             except OSError as rm_exc:
                 print(f"경고: 로컬 실행 로그 정리 실패: {rm_exc}", file=sys.stderr)
