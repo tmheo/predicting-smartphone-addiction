@@ -1,0 +1,3972 @@
+{
+  "anchor_nested_auc": 0.7455308113827028,
+  "cost": {
+    "fits": 13685,
+    "rows_fitted": 35040000
+  },
+  "equivalence_lower": -2.7669802e-05,
+  "final_run": {
+    "anchor_auc": 0.7458503114625779,
+    "anchor_strategy": "shrunk_rank_logit_logistic",
+    "final_auc": 0.7472121868030467,
+    "final_members": 11,
+    "final_pool": [
+      "expA2_tree_v2",
+      "expB1_lookup_v1",
+      "expB2_lookup_v2",
+      "expD1_knn",
+      "expA3_tree_v3",
+      "expB3_lookup_v3",
+      "expC2_linear_v2",
+      "expE1_spline",
+      "expF1_recon",
+      "expG1_proxy",
+      "expZ1_clone"
+    ],
+    "final_strategy": "performance_weighted_rank_mean",
+    "fits": 2735,
+    "label": "final",
+    "trajectory": [
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "shrunk_rank_logit_logistic",
+        "delta_vs_anchor": -0.008118627029656711,
+        "delta_vs_working": -0.008118627029656711,
+        "fold_delta": {
+          "0": -0.007574904961984652,
+          "1": -0.008973277074542763,
+          "2": -0.007072149069256239,
+          "3": -0.008751367401156562,
+          "4": -0.008968160525063218
+        },
+        "fold_total": 5,
+        "negative_folds": 5,
+        "removed": [
+          "expB1_lookup_v1",
+          "expB2_lookup_v2",
+          "expB3_lookup_v3"
+        ],
+        "stage": 1,
+        "step": 1,
+        "strategy_changed": true,
+        "verdict": "유지",
+        "working_members_after": 11,
+        "working_members_before": 14
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "shrunk_rank_logit_logistic",
+        "delta_vs_anchor": -0.0014158753539688096,
+        "delta_vs_working": -0.0014158753539688096,
+        "fold_delta": {
+          "0": 0.0024165916366547524,
+          "1": -0.0028973277074542114,
+          "2": -0.00012835684455048124,
+          "3": -0.008532583216127598,
+          "4": 0.0013276885693530582
+        },
+        "fold_total": 5,
+        "negative_folds": 3,
+        "removed": [
+          "expA1_tree_v1",
+          "expA2_tree_v2",
+          "expA3_tree_v3"
+        ],
+        "stage": 1,
+        "step": 2,
+        "strategy_changed": true,
+        "verdict": "유지",
+        "working_members_after": 11,
+        "working_members_before": 14
+      },
+      {
+        "after_strategy": "shrunk_rank_logit_logistic",
+        "before_strategy": "shrunk_rank_logit_logistic",
+        "delta_vs_anchor": -0.000783500195875031,
+        "delta_vs_working": -0.000783500195875031,
+        "fold_delta": {
+          "0": -0.0022977941176469674,
+          "1": -0.0012814502265978689,
+          "2": 0.00010644226133449397,
+          "3": -0.002775433661509674,
+          "4": 0.002858914301460458
+        },
+        "fold_total": 5,
+        "negative_folds": 3,
+        "removed": [
+          "expC1_linear",
+          "expC2_linear_v2"
+        ],
+        "stage": 1,
+        "step": 3,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 12,
+        "working_members_before": 14
+      },
+      {
+        "after_strategy": "ridge_logit_alpha_100",
+        "before_strategy": "shrunk_rank_logit_logistic",
+        "delta_vs_anchor": -0.0003526250881562554,
+        "delta_vs_working": -0.0003526250881562554,
+        "fold_delta": {
+          "0": 0.001416191476590667,
+          "1": 0.0018346616658853065,
+          "2": 0.00021601517741420828,
+          "3": -0.0012751992498829523,
+          "4": 0.0014592048899021437
+        },
+        "fold_total": 5,
+        "negative_folds": 1,
+        "removed": [
+          "expB1_lookup_v1"
+        ],
+        "stage": 2,
+        "step": 4,
+        "strategy_changed": true,
+        "verdict": "유지",
+        "working_members_after": 13,
+        "working_members_before": 14
+      },
+      {
+        "after_strategy": "shrunk_rank_logit_logistic",
+        "before_strategy": "shrunk_rank_logit_logistic",
+        "delta_vs_anchor": -0.00218825054706262,
+        "delta_vs_working": -0.00218825054706262,
+        "fold_delta": {
+          "0": -0.0012848889555822085,
+          "1": -0.0013783403656820736,
+          "2": 0.0002066232131787693,
+          "3": -0.004950773558368482,
+          "4": -0.004480948921566141
+        },
+        "fold_total": 5,
+        "negative_folds": 4,
+        "removed": [
+          "expB2_lookup_v2"
+        ],
+        "stage": 2,
+        "step": 5,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 13,
+        "working_members_before": 14
+      },
+      {
+        "after_strategy": "nnls_logit",
+        "before_strategy": "shrunk_rank_logit_logistic",
+        "delta_vs_anchor": -0.0010533752633438143,
+        "delta_vs_working": -0.0010533752633438143,
+        "fold_delta": {
+          "0": 0.0016975540216087603,
+          "1": 0.002534771057977947,
+          "2": -0.004110549680360176,
+          "3": -0.0004750742303485378,
+          "4": -0.0007139457401237337
+        },
+        "fold_total": 5,
+        "negative_folds": 3,
+        "removed": [
+          "expB3_lookup_v3"
+        ],
+        "stage": 2,
+        "step": 6,
+        "strategy_changed": true,
+        "verdict": "유지",
+        "working_members_after": 13,
+        "working_members_before": 14
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "shrunk_rank_logit_logistic",
+        "delta_vs_anchor": 0.0010056252514063502,
+        "delta_vs_working": 0.0010056252514063502,
+        "fold_delta": {
+          "0": 0.0018788765506203564,
+          "1": 0.0017346460384435325,
+          "2": 0.0012741764812693734,
+          "3": -0.003269260822003517,
+          "4": 0.0034444750620005182
+        },
+        "fold_total": 5,
+        "negative_folds": 1,
+        "removed": [
+          "expA1_tree_v1"
+        ],
+        "stage": 2,
+        "step": 7,
+        "strategy_changed": true,
+        "verdict": "제거",
+        "working_members_after": 13,
+        "working_members_before": 14
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": 0.0004401251100313308,
+        "delta_vs_working": -0.0005655001413750194,
+        "fold_delta": {
+          "0": 0.0015006002400959062,
+          "1": -0.001093920925144487,
+          "2": -0.00045707559278940213,
+          "3": -0.0014127207376153361,
+          "4": -0.0019664821263056798
+        },
+        "fold_total": 5,
+        "negative_folds": 4,
+        "removed": [
+          "expA2_tree_v2"
+        ],
+        "stage": 2,
+        "step": 8,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 12,
+        "working_members_before": 13
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": -9.462502365620296e-05,
+        "delta_vs_working": -0.0011002502750625531,
+        "fold_delta": {
+          "0": -0.00023134253701484475,
+          "1": -0.002056571339271618,
+          "2": -0.0007388345198515722,
+          "3": -0.002069073292702006,
+          "4": 0.00072020842205478
+        },
+        "fold_total": 5,
+        "negative_folds": 4,
+        "removed": [
+          "expA3_tree_v3"
+        ],
+        "stage": 2,
+        "step": 9,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 12,
+        "working_members_before": 13
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": 0.0013618753404688322,
+        "delta_vs_working": 0.000356250089062482,
+        "fold_delta": {
+          "0": -0.001494347739095736,
+          "1": 0.00020003125488354812,
+          "2": 0.00202866427484627,
+          "3": -0.0004125644631973735,
+          "4": 0.0006513189208148251
+        },
+        "fold_total": 5,
+        "negative_folds": 2,
+        "removed": [
+          "expC1_linear"
+        ],
+        "stage": 2,
+        "step": 10,
+        "strategy_changed": false,
+        "verdict": "제거",
+        "working_members_after": 12,
+        "working_members_before": 13
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": -0.0001548750387188047,
+        "delta_vs_working": -0.0015167503791876369,
+        "fold_delta": {
+          "0": -0.003501400560223966,
+          "1": -0.0013377090170338946,
+          "2": -0.0026735791523437857,
+          "3": -0.00232536333802158,
+          "4": 0.0013590019790075125
+        },
+        "fold_total": 5,
+        "negative_folds": 4,
+        "removed": [
+          "expC2_linear_v2"
+        ],
+        "stage": 2,
+        "step": 11,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 11,
+        "working_members_before": 12
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": 0.0013618753404688322,
+        "delta_vs_working": 0.0,
+        "fold_delta": {
+          "0": 0.0,
+          "1": 0.0,
+          "2": 0.0,
+          "3": 0.0,
+          "4": 0.0
+        },
+        "fold_total": 5,
+        "negative_folds": 0,
+        "removed": [
+          "expZ2_noise"
+        ],
+        "stage": 3,
+        "step": 12,
+        "strategy_changed": false,
+        "verdict": "제거",
+        "working_members_after": 11,
+        "working_members_before": 12
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": 0.0010401252600313882,
+        "delta_vs_working": -0.000321750080437444,
+        "fold_delta": {
+          "0": 0.00013755502200885061,
+          "1": -0.0013564619471790884,
+          "2": -0.0005635178541238961,
+          "3": 0.0015689951554931358,
+          "4": -0.0012901124777676687
+        },
+        "fold_total": 5,
+        "negative_folds": 3,
+        "removed": [
+          "expD1_knn",
+          "expG1_proxy"
+        ],
+        "stage": 3,
+        "step": 13,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 9,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": -0.006657626664406724,
+        "delta_vs_working": -0.008019502004875556,
+        "fold_delta": {
+          "0": -0.008678471388555264,
+          "1": -0.00918268479449913,
+          "2": -0.00714415412839442,
+          "3": -0.0041506485388341785,
+          "4": -0.011247776747914662
+        },
+        "fold_total": 5,
+        "negative_folds": 5,
+        "removed": [
+          "expB1_lookup_v1",
+          "expB2_lookup_v2",
+          "expB3_lookup_v3"
+        ],
+        "stage": 3,
+        "step": 14,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 8,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "shrunk_rank_logit_logistic",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": -0.0016615004153750501,
+        "delta_vs_working": -0.0030233757558438823,
+        "fold_delta": {
+          "0": -0.004051620648259147,
+          "1": 0.0001281450226597869,
+          "2": -0.004921389259349596,
+          "3": -0.004763244256915211,
+          "4": -0.0007577845136401695
+        },
+        "fold_total": 5,
+        "negative_folds": 4,
+        "removed": [
+          "expC2_linear_v2",
+          "expE1_spline",
+          "expF1_recon"
+        ],
+        "stage": 3,
+        "step": 15,
+        "strategy_changed": true,
+        "verdict": "유지",
+        "working_members_after": 8,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "shrunk_rank_logit_logistic",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": -0.002321875580468813,
+        "delta_vs_working": -0.003683750920937645,
+        "fold_delta": {
+          "0": -0.0009191176470587648,
+          "1": -0.00534145960306287,
+          "2": -0.004514404142482387,
+          "3": -0.005872792623847545,
+          "4": -0.002526992159122221
+        },
+        "fold_total": 5,
+        "negative_folds": 5,
+        "removed": [
+          "expA2_tree_v2",
+          "expA3_tree_v3",
+          "expZ1_clone"
+        ],
+        "stage": 3,
+        "step": 16,
+        "strategy_changed": true,
+        "verdict": "유지",
+        "working_members_after": 8,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": 0.001232375308093836,
+        "delta_vs_working": -0.0001295000323749962,
+        "fold_delta": {
+          "0": -0.00030012004801915904,
+          "1": -5.625879043591464e-05,
+          "2": -0.0011708648746798778,
+          "3": -0.00040631348648212384,
+          "4": 0.0007890979232946238
+        },
+        "fold_total": 5,
+        "negative_folds": 4,
+        "removed": [
+          "expZ1_clone"
+        ],
+        "stage": 4,
+        "step": 17,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 10,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": 0.001165375291343751,
+        "delta_vs_working": -0.00019650004912508123,
+        "fold_delta": {
+          "0": -0.0005627250900359648,
+          "1": 0.002006563525550953,
+          "2": -0.00128982975499492,
+          "3": 0.0008313799031098856,
+          "4": -0.002260828177058638
+        },
+        "fold_total": 5,
+        "negative_folds": 3,
+        "removed": [
+          "expF1_recon"
+        ],
+        "stage": 4,
+        "step": 18,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 10,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": 0.001182625295656381,
+        "delta_vs_working": -0.00017925004481245121,
+        "fold_delta": {
+          "0": -0.0005127050820328272,
+          "1": 0.0010564150648538773,
+          "2": -0.0005635178541237851,
+          "3": 0.00038756055633681896,
+          "4": -0.0007139457401239557
+        },
+        "fold_total": 5,
+        "negative_folds": 3,
+        "removed": [
+          "expD1_knn"
+        ],
+        "stage": 4,
+        "step": 19,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 10,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "shrunk_rank_logit_logistic",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": 0.0011012502753127151,
+        "delta_vs_working": -0.00026062506515611705,
+        "fold_delta": {
+          "0": -0.0007659313725489891,
+          "1": -0.0007907485544614845,
+          "2": -0.0006417842227522952,
+          "3": 0.0027785591498672435,
+          "4": -0.0014560735489367316
+        },
+        "fold_total": 5,
+        "negative_folds": 4,
+        "removed": [
+          "expB1_lookup_v1"
+        ],
+        "stage": 4,
+        "step": 20,
+        "strategy_changed": true,
+        "verdict": "유지",
+        "working_members_after": 10,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": 0.001284625321156363,
+        "delta_vs_working": -7.725001931246922e-05,
+        "fold_delta": {
+          "0": 0.0009128651460584836,
+          "1": -0.0017440225035161294,
+          "2": 9.391964235394568e-05,
+          "3": 0.0010501640881387386,
+          "4": 0.00013777900248002073
+        },
+        "fold_total": 5,
+        "negative_folds": 1,
+        "removed": [
+          "expG1_proxy"
+        ],
+        "stage": 4,
+        "step": 21,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 10,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": 0.0005693751423436755,
+        "delta_vs_working": -0.0007925001981251567,
+        "fold_delta": {
+          "0": -0.0009503801520606148,
+          "1": -0.00016252539459293835,
+          "2": 6.2613094903296584e-06,
+          "3": -0.0037630879824972485,
+          "4": 0.0006387935569528436
+        },
+        "fold_total": 5,
+        "negative_folds": 3,
+        "removed": [
+          "expE1_spline"
+        ],
+        "stage": 4,
+        "step": 22,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 10,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": 0.0007468751867188983,
+        "delta_vs_working": -0.0006150001537499339,
+        "fold_delta": {
+          "0": 0.000806572629051705,
+          "1": -0.0005313330207844524,
+          "2": 0.00021914583215942862,
+          "3": -0.0013252070636036173,
+          "4": -0.0019852701720985966
+        },
+        "fold_total": 5,
+        "negative_folds": 3,
+        "removed": [
+          "expA2_tree_v2"
+        ],
+        "stage": 4,
+        "step": 23,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 10,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": 0.00016587504146881038,
+        "delta_vs_working": -0.0011960002990000218,
+        "fold_delta": {
+          "0": -0.0007065326130450966,
+          "1": -0.001956555711829955,
+          "2": -0.0008264928527151882,
+          "3": -0.002794186591654979,
+          "4": 0.000601217465367343
+        },
+        "fold_total": 5,
+        "negative_folds": 4,
+        "removed": [
+          "expA3_tree_v3"
+        ],
+        "stage": 4,
+        "step": 24,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 10,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "shrunk_rank_logit_logistic",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": 0.00044650011162494785,
+        "delta_vs_working": -0.0009153752288438843,
+        "fold_delta": {
+          "0": -0.002710459183673408,
+          "1": -0.0009126426004062438,
+          "2": -0.0028363731990908025,
+          "3": 0.00010626660415680167,
+          "4": 0.0018380971467220064
+        },
+        "fold_total": 5,
+        "negative_folds": 3,
+        "removed": [
+          "expC2_linear_v2"
+        ],
+        "stage": 4,
+        "step": 25,
+        "strategy_changed": true,
+        "verdict": "유지",
+        "working_members_after": 10,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "performance_weighted_rank_mean",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": -0.0005776251444062908,
+        "delta_vs_working": -0.001939500484875123,
+        "fold_delta": {
+          "0": -0.001944527811124308,
+          "1": -0.0020128145022659805,
+          "2": -0.003963408907338928,
+          "3": -0.00034380371933107057,
+          "4": -0.0017660763045166394
+        },
+        "fold_total": 5,
+        "negative_folds": 5,
+        "removed": [
+          "expB3_lookup_v3"
+        ],
+        "stage": 4,
+        "step": 26,
+        "strategy_changed": false,
+        "verdict": "유지",
+        "working_members_after": 10,
+        "working_members_before": 11
+      },
+      {
+        "after_strategy": "shrunk_rank_logit_logistic",
+        "before_strategy": "performance_weighted_rank_mean",
+        "delta_vs_anchor": -0.0010768752692188466,
+        "delta_vs_working": -0.0024387506096876788,
+        "fold_delta": {
+          "0": -0.002022684073629266,
+          "1": -0.0027598062197217166,
+          "2": 0.00040072380737721236,
+          "3": -0.0022941084544458867,
+          "4": -0.0056614644655428314
+        },
+        "fold_total": 5,
+        "negative_folds": 4,
+        "removed": [
+          "expB2_lookup_v2"
+        ],
+        "stage": 4,
+        "step": 27,
+        "strategy_changed": true,
+        "verdict": "유지",
+        "working_members_after": 10,
+        "working_members_before": 11
+      }
+    ]
+  },
+  "nested_auc": 0.743433435858359,
+  "nested_delta_vs_anchor": -0.0020973755243438585,
+  "outer": {
+    "0": {
+      "anchor_auc": 0.7465001822323285,
+      "anchor_strategy": "performance_weighted_rank_mean",
+      "final_auc": 0.7483611786154172,
+      "final_members": 10,
+      "final_pool": [
+        "expA2_tree_v2",
+        "expB2_lookup_v2",
+        "expD1_knn",
+        "expA3_tree_v3",
+        "expB3_lookup_v3",
+        "expC2_linear_v2",
+        "expE1_spline",
+        "expF1_recon",
+        "expG1_proxy",
+        "expZ1_clone"
+      ],
+      "final_strategy": "performance_weighted_rank_mean",
+      "fits": 2188,
+      "label": "outer-0",
+      "trajectory": [
+        {
+          "after_strategy": "greedy_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.00764614036616007,
+          "delta_vs_working": -0.00764614036616007,
+          "fold_delta": {
+            "1": -0.008929520237537125,
+            "2": -0.004874429438172845,
+            "3": -0.005566494764806973,
+            "4": -0.01229364463037641
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB1_lookup_v1",
+            "expB2_lookup_v2",
+            "expB3_lookup_v3"
+          ],
+          "stage": 1,
+          "step": 1,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.00219342877645734,
+          "delta_vs_working": -0.00219342877645734,
+          "fold_delta": {
+            "1": -0.003500546960462536,
+            "2": -0.0008828446381277111,
+            "3": -0.004719487419909463,
+            "4": -0.0004634384628874333
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expA1_tree_v1",
+            "expA2_tree_v2",
+            "expA3_tree_v3"
+          ],
+          "stage": 1,
+          "step": 2,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0005722837324150243,
+          "delta_vs_working": -0.0005722837324150243,
+          "fold_delta": {
+            "1": -0.001550242225347609,
+            "2": -0.0009705029709914381,
+            "3": -0.0033630254727301523,
+            "4": 0.001997795535960356
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC1_linear",
+            "expC2_linear_v2"
+          ],
+          "stage": 1,
+          "step": 3,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.00026094575648694107,
+          "delta_vs_working": -0.00026094575648694107,
+          "fold_delta": {
+            "1": -0.000825128926394747,
+            "2": -0.0009705029709913271,
+            "3": 0.001869042037818458,
+            "4": -0.0010646559282547763
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expB1_lookup_v1"
+          ],
+          "stage": 2,
+          "step": 4,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0025434398510265632,
+          "delta_vs_working": -0.0025434398510265632,
+          "fold_delta": {
+            "1": -0.003431786216596233,
+            "2": -0.0008577994001666145,
+            "3": -0.0032567588685732396,
+            "4": -0.003676194293444235
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB2_lookup_v2"
+          ],
+          "stage": 2,
+          "step": 5,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.002098503897974946,
+          "delta_vs_working": -0.002098503897974946,
+          "fold_delta": {
+            "1": -0.0030879824972651626,
+            "2": -0.003449981529136892,
+            "3": -0.0006688545085169473,
+            "4": -0.002166887948094942
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB3_lookup_v3"
+          ],
+          "stage": 2,
+          "step": 6,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0010426111138672756,
+          "delta_vs_working": 0.0010426111138672756,
+          "fold_delta": {
+            "1": 0.0011751836224410672,
+            "2": 0.0005196886876921436,
+            "3": 0.0005438349742147297,
+            "4": 0.0017848643503094452
+          },
+          "fold_total": 4,
+          "negative_folds": 0,
+          "removed": [
+            "expA1_tree_v1"
+          ],
+          "stage": 2,
+          "step": 7,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -5.5861142481461457e-05,
+          "delta_vs_working": -0.001098472256348737,
+          "fold_delta": {
+            "1": -0.001062666041569016,
+            "2": -0.0003631559504355675,
+            "3": -0.0015127363650571102,
+            "4": -0.0020979984468549873
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expA2_tree_v2"
+          ],
+          "stage": 2,
+          "step": 8,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.00023867942696631506,
+          "delta_vs_working": -0.0012812905408335906,
+          "fold_delta": {
+            "1": -0.002087826222847311,
+            "2": -0.0006261309490267486,
+            "3": -0.002125332083138032,
+            "4": 0.000720208422054669
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA3_tree_v3"
+          ],
+          "stage": 2,
+          "step": 9,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0018453708886881914,
+          "delta_vs_working": 0.0008027597748209159,
+          "fold_delta": {
+            "1": 0.000168776371308077,
+            "2": 0.0018846541565702424,
+            "3": -0.00048132520706367643,
+            "4": 0.0005886921015055835
+          },
+          "fold_total": 4,
+          "negative_folds": 1,
+          "removed": [
+            "expC1_linear"
+          ],
+          "stage": 2,
+          "step": 10,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.000760961577299879,
+          "delta_vs_working": -0.0010844093113883124,
+          "fold_delta": {
+            "1": -0.0013439599937490332,
+            "2": -0.002548352962538525,
+            "3": -0.0022315986872948335,
+            "4": 0.0011398081114255554
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC2_linear_v2"
+          ],
+          "stage": 2,
+          "step": 11,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.001846933438128251,
+          "delta_vs_working": 1.562549440059513e-06,
+          "fold_delta": {
+            "1": 0.0,
+            "2": 3.7567856941644884e-05,
+            "3": 0.0,
+            "4": 1.8788045792694774e-05
+          },
+          "fold_total": 4,
+          "negative_folds": 0,
+          "removed": [
+            "expZ2_noise"
+          ],
+          "stage": 3,
+          "step": 12,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 11,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0013953566499564918,
+          "delta_vs_working": -0.00045157678817175917,
+          "fold_delta": {
+            "1": -0.0014502265979059459,
+            "2": -0.0006574374964779528,
+            "3": 0.0016940146897953534,
+            "4": -0.0012212229765276028
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expD1_knn",
+            "expG1_proxy"
+          ],
+          "stage": 3,
+          "step": 13,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0059232342898351,
+          "delta_vs_working": -0.007770167727963351,
+          "fold_delta": {
+            "1": -0.009201437724644657,
+            "2": -0.00714415412839442,
+            "3": -0.004050632911392293,
+            "4": -0.011135048473158271
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB1_lookup_v1",
+            "expB2_lookup_v2",
+            "expB3_lookup_v3"
+          ],
+          "stage": 3,
+          "step": 14,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.001563721352120906,
+          "delta_vs_working": -0.003410654790249157,
+          "fold_delta": {
+            "1": -0.0006938584153773908,
+            "2": -0.005603871993788756,
+            "3": -0.007601187685575828,
+            "4": -0.0008329366968111707
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expC2_linear_v2",
+            "expE1_spline",
+            "expF1_recon"
+          ],
+          "stage": 3,
+          "step": 15,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.002783291190072923,
+          "delta_vs_working": -0.004630224628201174,
+          "fold_delta": {
+            "1": -0.0054821065791531565,
+            "2": -0.002949076769915626,
+            "3": -0.008407563681825159,
+            "4": -0.0014278914802474674
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expA2_tree_v2",
+            "expA3_tree_v3",
+            "expZ1_clone"
+          ],
+          "stage": 3,
+          "step": 16,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0017184137466847993,
+          "delta_vs_working": -0.00012851969144345166,
+          "fold_delta": {
+            "1": -0.0001750273480231046,
+            "2": -0.0010518999943648355,
+            "3": -0.0003375527426158209,
+            "4": 0.0007515218317092343
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expZ1_clone"
+          ],
+          "stage": 4,
+          "step": 17,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 10,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.001722320120284948,
+          "delta_vs_working": -0.00012461331784330287,
+          "fold_delta": {
+            "1": 0.0017877793405219888,
+            "2": -0.0012084327316214116,
+            "3": 0.0009876543209877964,
+            "4": -0.0022921415867132033
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expF1_recon"
+          ],
+          "stage": 4,
+          "step": 18,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 10,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0018609963830886755,
+          "delta_vs_working": 1.4062944960424595e-05,
+          "fold_delta": {
+            "1": -0.0003938115330520686,
+            "2": -0.0005259499971823622,
+            "3": 0.0027066729176433713,
+            "4": -0.001202434930734797
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expB1_lookup_v1"
+          ],
+          "stage": 4,
+          "step": 19,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 10,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0016164573957222483,
+          "delta_vs_working": -0.0002445389873664272,
+          "fold_delta": {
+            "1": -0.002069073292702006,
+            "2": -9.39196423540567e-05,
+            "3": 0.0014377246444756686,
+            "4": -0.00046343846288732227
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expG1_proxy"
+          ],
+          "stage": 4,
+          "step": 20,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0017793531748465652,
+          "delta_vs_working": -8.164320824211035e-05,
+          "fold_delta": {
+            "1": 0.0009814033442726577,
+            "2": -0.0005447339256533512,
+            "3": 0.0005438349742148407,
+            "4": -0.0006638442846764736
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expD1_knn"
+          ],
+          "stage": 4,
+          "step": 21,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0010973003442686924,
+          "delta_vs_working": -0.0007636960388199832,
+          "fold_delta": {
+            "1": -9.376465072674645e-05,
+            "2": 0.00011270357082482363,
+            "3": -0.0037193311454915,
+            "4": 0.0009519276534982746
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expE1_spline"
+          ],
+          "stage": 4,
+          "step": 22,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0007672117750601171,
+          "delta_vs_working": -0.0010937846080285585,
+          "fold_delta": {
+            "1": -0.0014689795280512508,
+            "2": -0.0027674987946979535,
+            "3": -0.0018627910611033194,
+            "4": 0.001991532854029421
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC2_linear_v2"
+          ],
+          "stage": 4,
+          "step": 23,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0008242448296215121,
+          "delta_vs_working": -0.0010367515534671634,
+          "fold_delta": {
+            "1": -0.0005750898577903119,
+            "2": 0.0005071660687115953,
+            "3": -0.0007438662290981668,
+            "4": -0.0024925474085022437
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA2_tree_v2"
+          ],
+          "stage": 4,
+          "step": 24,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.00042735727185105876,
+          "delta_vs_working": -0.0014336391112376168,
+          "fold_delta": {
+            "1": -0.0025879043600562923,
+            "2": -0.0009078898760886966,
+            "3": -0.0021003281762774773,
+            "4": 0.0006325308750219083
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA3_tree_v3"
+          ],
+          "stage": 4,
+          "step": 25,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.000783227906820616,
+          "delta_vs_working": -0.0026442242899092916,
+          "fold_delta": {
+            "1": -0.0034442881700266215,
+            "2": -0.004382916643186685,
+            "3": -0.001243944366307148,
+            "4": -0.0022483028131967675
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB3_lookup_v3"
+          ],
+          "stage": 4,
+          "step": 26,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.00133129212291494,
+          "delta_vs_working": -0.0031922885060036155,
+          "fold_delta": {
+            "1": -0.0035130489138928134,
+            "2": -0.000688744043929379,
+            "3": -0.0041506485388341785,
+            "4": -0.005335805005135419
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB2_lookup_v2"
+          ],
+          "stage": 4,
+          "step": 27,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        }
+      ]
+    },
+    "1": {
+      "anchor_auc": 0.7469314261339133,
+      "anchor_strategy": "shrunk_rank_logit_logistic",
+      "final_auc": 0.7480464721654511,
+      "final_members": 9,
+      "final_pool": [
+        "expA2_tree_v2",
+        "expB2_lookup_v2",
+        "expD1_knn",
+        "expA3_tree_v3",
+        "expB3_lookup_v3",
+        "expC2_linear_v2",
+        "expE1_spline",
+        "expF1_recon",
+        "expZ1_clone"
+      ],
+      "final_strategy": "performance_weighted_rank_mean",
+      "fits": 2112,
+      "label": "outer-1",
+      "trajectory": [
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": -0.008250442190263607,
+          "delta_vs_working": -0.008250442190263607,
+          "fold_delta": {
+            "0": -0.007968812525010138,
+            "2": -0.008477813049821203,
+            "3": -0.004838255977496542,
+            "4": -0.011451313910669114
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB1_lookup_v1",
+            "expB2_lookup_v2",
+            "expB3_lookup_v3"
+          ],
+          "stage": 1,
+          "step": 1,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": -0.001413876024225269,
+          "delta_vs_working": -0.001413876024225269,
+          "fold_delta": {
+            "0": 0.0023665716286512817,
+            "2": -0.0020317949295916016,
+            "3": -0.007273011408032604,
+            "4": 0.0015531451188657286
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expA1_tree_v1",
+            "expA2_tree_v2",
+            "expA3_tree_v3"
+          ],
+          "stage": 1,
+          "step": 2,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": -0.0007884814905092519,
+          "delta_vs_working": -0.0007884814905092519,
+          "fold_delta": {
+            "0": -0.0027729841936776634,
+            "2": -0.0004226383905930886,
+            "3": -0.004503828723238068,
+            "4": 0.00363235551992791
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC1_linear",
+            "expC2_linear_v2"
+          ],
+          "stage": 1,
+          "step": 3,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0001306648791554732,
+          "delta_vs_working": 0.0001306648791554732,
+          "fold_delta": {
+            "0": -0.0006846488595437794,
+            "2": -0.00016592470149212613,
+            "3": 0.000884513205188231,
+            "4": 0.0010677872692200774
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expB1_lookup_v1"
+          ],
+          "stage": 2,
+          "step": 4,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": -0.0035455299720622557,
+          "delta_vs_working": -0.003676194851217729,
+          "fold_delta": {
+            "0": -0.003567051820728473,
+            "2": -9.078898760883636e-05,
+            "3": -0.003956868260665769,
+            "4": -0.006885818783035513
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB2_lookup_v2"
+          ],
+          "stage": 2,
+          "step": 5,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": -0.001473837336483319,
+          "delta_vs_working": -0.0016045022156387923,
+          "fold_delta": {
+            "0": -0.002041441576630776,
+            "2": -0.004082373787653748,
+            "3": 0.0012408188779496898,
+            "4": -0.0027117412760838677
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expB3_lookup_v3"
+          ],
+          "stage": 2,
+          "step": 6,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0003531272070450564,
+          "delta_vs_working": 0.0002224623278895832,
+          "fold_delta": {
+            "0": 0.0004282963185273658,
+            "2": -0.0002598443438459608,
+            "3": 0.0006375996249413651,
+            "4": -3.1313409653010993e-06
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expA1_tree_v1"
+          ],
+          "stage": 2,
+          "step": 7,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": -0.00034277557984729867,
+          "delta_vs_working": -0.0006959027868923551,
+          "fold_delta": {
+            "0": 0.00038452881152450935,
+            "2": -5.3221130667302496e-05,
+            "3": -0.0013470854821066025,
+            "4": -0.002357899746987746
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA2_tree_v2"
+          ],
+          "stage": 2,
+          "step": 8,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": -0.0006451212195075495,
+          "delta_vs_working": -0.000998248426552606,
+          "fold_delta": {
+            "0": -0.0004970738295319022,
+            "2": -0.0009298044593046839,
+            "3": -0.0024816377558992686,
+            "4": 3.1313409654565305e-05
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA3_tree_v3"
+          ],
+          "stage": 2,
+          "step": 9,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0005548862805394572,
+          "delta_vs_working": 0.0002017590734944008,
+          "fold_delta": {
+            "0": -0.000941001400560415,
+            "2": 0.001512106241899236,
+            "3": -0.0014877324581965556,
+            "4": 0.0023485057240911766
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expC1_linear"
+          ],
+          "stage": 2,
+          "step": 10,
+          "strategy_changed": true,
+          "verdict": "제거",
+          "working_members_after": 11,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0004105494409338828,
+          "delta_vs_working": -0.00096543572147334,
+          "fold_delta": {
+            "0": -0.002957432973189178,
+            "2": -0.0011270357082477922,
+            "3": -0.002503516174402254,
+            "4": 0.0008204113329493001
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC2_linear_v2"
+          ],
+          "stage": 2,
+          "step": 11,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 10,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0010246157788486032,
+          "delta_vs_working": 0.000469729498309146,
+          "fold_delta": {
+            "0": 0.000941001400560304,
+            "2": 0.0010049401731879737,
+            "3": 0.0001750273480231046,
+            "4": -0.0005792980786091251
+          },
+          "fold_total": 4,
+          "negative_folds": 1,
+          "removed": [
+            "expZ2_noise"
+          ],
+          "stage": 3,
+          "step": 12,
+          "strategy_changed": true,
+          "verdict": "제거",
+          "working_members_after": 10,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0008240285876787157,
+          "delta_vs_working": -0.00020058719116988755,
+          "fold_delta": {
+            "0": 4.3767507002856476e-05,
+            "2": -0.00170620683609779,
+            "3": 0.0018159087357400017,
+            "4": -0.0017410255767930094
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expD1_knn",
+            "expG1_proxy"
+          ],
+          "stage": 3,
+          "step": 13,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": -0.006838519303245638,
+          "delta_vs_working": -0.007863135082094241,
+          "fold_delta": {
+            "0": -0.008062600040016021,
+            "2": -0.007648189542360795,
+            "3": -0.006713548992030138,
+            "4": -0.009735339061599735
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB2_lookup_v2",
+            "expB3_lookup_v3"
+          ],
+          "stage": 3,
+          "step": 14,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": -0.0027306811292570066,
+          "delta_vs_working": -0.00375529690810561,
+          "fold_delta": {
+            "0": -0.005142682072828975,
+            "2": -0.006417842227523507,
+            "3": -0.007001093920925072,
+            "4": 0.002454971316916743
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC2_linear_v2",
+            "expE1_spline",
+            "expF1_recon"
+          ],
+          "stage": 3,
+          "step": 15,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 7,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": -0.0026271648572803175,
+          "delta_vs_working": -0.0036517806361289207,
+          "fold_delta": {
+            "0": -0.0011879751900759628,
+            "2": -0.004038544621222218,
+            "3": -0.007976246288482591,
+            "4": -0.00286204564242587
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expA2_tree_v2",
+            "expA3_tree_v3",
+            "expZ1_clone"
+          ],
+          "stage": 3,
+          "step": 16,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 7,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0005736363977275616,
+          "delta_vs_working": -0.00045097938112104163,
+          "fold_delta": {
+            "0": -0.0006846488595437794,
+            "2": -0.0014745383849579241,
+            "3": 0.0002437880918892965,
+            "4": 0.0011993035897692739
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expZ1_clone"
+          ],
+          "stage": 4,
+          "step": 17,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0006337930237063638,
+          "delta_vs_working": -0.0003908227551422394,
+          "fold_delta": {
+            "0": -0.000790941376550558,
+            "2": -0.0011614729104445498,
+            "3": 0.0012064385060165383,
+            "4": -0.001947694080512985
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expF1_recon"
+          ],
+          "stage": 4,
+          "step": 18,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0004376980481128889,
+          "delta_vs_working": -0.0005869177307357143,
+          "fold_delta": {
+            "0": -0.000837835134053555,
+            "2": -8.452767811861772e-05,
+            "3": -0.002834817940303158,
+            "4": 0.001036473859565623
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expE1_spline"
+          ],
+          "stage": 4,
+          "step": 19,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0006490274939219276,
+          "delta_vs_working": -0.0003755882849266756,
+          "fold_delta": {
+            "0": -0.0005408413365346476,
+            "2": -0.0014714077302128148,
+            "3": 0.0006438506016566148,
+            "4": -0.0008485934016383423
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expD1_knn"
+          ],
+          "stage": 4,
+          "step": 20,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0011150460315377808,
+          "delta_vs_working": 9.043025268917759e-05,
+          "fold_delta": {
+            "0": 0.000134428771508599,
+            "2": -0.0010925985060517007,
+            "3": 0.0012564463197375364,
+            "4": 3.444475061997743e-05
+          },
+          "fold_total": 4,
+          "negative_folds": 1,
+          "removed": [
+            "expG1_proxy"
+          ],
+          "stage": 4,
+          "step": 21,
+          "strategy_changed": true,
+          "verdict": "제거",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.000315041031506591,
+          "delta_vs_working": -0.0008000050000311898,
+          "fold_delta": {
+            "0": -0.0007002801120448154,
+            "2": -0.0005635178541238961,
+            "3": -0.0019503047351149272,
+            "4": 0.0006701069666072978
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA3_tree_v3"
+          ],
+          "stage": 4,
+          "step": 22,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 9
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0007033247082794958,
+          "delta_vs_working": -0.00041172132325828503,
+          "fold_delta": {
+            "0": 0.0007377951180471687,
+            "2": 0.0012773071360144828,
+            "3": -0.0011251758087201802,
+            "4": -0.0028056815050476747
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expA2_tree_v2"
+          ],
+          "stage": 4,
+          "step": 23,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 9
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0003525412658829108,
+          "delta_vs_working": -0.0014675872974206916,
+          "fold_delta": {
+            "0": -0.004161039415766177,
+            "2": -0.0022634633807312454,
+            "3": -0.0032880137521489328,
+            "4": 0.0027117412760840898
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC2_linear_v2"
+          ],
+          "stage": 4,
+          "step": 24,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 9
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0017302842517764594,
+          "delta_vs_working": -0.00284533028331424,
+          "fold_delta": {
+            "0": -0.0022008803521408327,
+            "2": -0.005043484794409858,
+            "3": -0.0005188310673543972,
+            "4": -0.002674165184498589
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB3_lookup_v3"
+          ],
+          "stage": 4,
+          "step": 25,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 9
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.002436148038425179,
+          "delta_vs_working": -0.0035511940699629596,
+          "fold_delta": {
+            "0": -0.004339235694277632,
+            "2": -0.0008264928527151882,
+            "3": -0.004400687607438725,
+            "4": -0.005943285152433697
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB2_lookup_v2"
+          ],
+          "stage": 4,
+          "step": 26,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 9
+        }
+      ]
+    },
+    "2": {
+      "anchor_auc": 0.7463426030103009,
+      "anchor_strategy": "performance_weighted_rank_mean",
+      "final_auc": 0.7482015779702971,
+      "final_members": 9,
+      "final_pool": [
+        "expA2_tree_v2",
+        "expB1_lookup_v1",
+        "expB2_lookup_v2",
+        "expC1_linear",
+        "expA3_tree_v3",
+        "expB3_lookup_v3",
+        "expC2_linear_v2",
+        "expE1_spline",
+        "expG1_proxy"
+      ],
+      "final_strategy": "shrunk_rank_logit_logistic",
+      "fits": 2264,
+      "label": "outer-2",
+      "trajectory": [
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.008258247699769794,
+          "delta_vs_working": -0.008258247699769794,
+          "fold_delta": {
+            "0": -0.008747248899559912,
+            "1": -0.010064072511329902,
+            "3": -0.005032036255665062,
+            "4": -0.010784338285027117
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB1_lookup_v1",
+            "expB2_lookup_v2",
+            "expB3_lookup_v3"
+          ],
+          "stage": 1,
+          "step": 1,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.001732204470446752,
+          "delta_vs_working": -0.001732204470446752,
+          "fold_delta": {
+            "0": 0.0013567927170868854,
+            "1": -0.003919362400375159,
+            "3": -0.0048070010939208485,
+            "4": -0.0007014203762618632
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA1_tree_v1",
+            "expA2_tree_v2",
+            "expA3_tree_v3"
+          ],
+          "stage": 1,
+          "step": 2,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0007578882888288341,
+          "delta_vs_working": -0.0007578882888288341,
+          "fold_delta": {
+            "0": -0.005608493397359027,
+            "1": -0.0003531801844037785,
+            "3": 0.0010970464135020563,
+            "4": 0.0004008116435783027
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expC1_linear",
+            "expC2_linear_v2"
+          ],
+          "stage": 1,
+          "step": 3,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "ridge_logit_alpha_100",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0004723128562854617,
+          "delta_vs_working": -0.0004723128562854617,
+          "fold_delta": {
+            "0": -0.0007377951180471687,
+            "1": -0.00018752930145338187,
+            "3": 0.002744178777933981,
+            "4": -0.0012901124777674466
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expB1_lookup_v1"
+          ],
+          "stage": 2,
+          "step": 4,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.003161253625362459,
+          "delta_vs_working": -0.003161253625362459,
+          "fold_delta": {
+            "0": -0.002538515406162567,
+            "1": -0.003469292076886954,
+            "3": -0.0033380215658697088,
+            "4": -0.0038828627971642105
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB2_lookup_v2"
+          ],
+          "stage": 2,
+          "step": 5,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0010921013976394889,
+          "delta_vs_working": -0.0010921013976394889,
+          "fold_delta": {
+            "0": -0.002744847939175621,
+            "1": -0.0008626347866854678,
+            "3": 0.003528676355680549,
+            "4": -0.0040049850948169485
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expB3_lookup_v3"
+          ],
+          "stage": 2,
+          "step": 6,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0010504956745677196,
+          "delta_vs_working": 0.0010504956745677196,
+          "fold_delta": {
+            "0": 0.0007002801120448154,
+            "1": 0.0009438974839818259,
+            "3": 0.000437568370057817,
+            "4": 0.0015719331646584234
+          },
+          "fold_total": 4,
+          "negative_folds": 0,
+          "removed": [
+            "expA1_tree_v1"
+          ],
+          "stage": 2,
+          "step": 7,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0003148752375239372,
+          "delta_vs_working": -0.0007356204370437824,
+          "fold_delta": {
+            "0": 0.0016944277711085087,
+            "1": -0.0012376933895920095,
+            "3": -0.001412720737615225,
+            "4": -0.0018474911696183538
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA2_tree_v2"
+          ],
+          "stage": 2,
+          "step": 8,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -6.524089908976904e-05,
+          "delta_vs_working": -0.0011157365736574887,
+          "fold_delta": {
+            "0": 7.503001200481751e-05,
+            "1": -0.0022816065010158315,
+            "3": -0.002106579152992727,
+            "4": 0.0006951576943311499
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expA3_tree_v3"
+          ],
+          "stage": 2,
+          "step": 9,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.001002053330333319,
+          "delta_vs_working": -4.8442344234400636e-05,
+          "fold_delta": {
+            "0": -0.001431822729091592,
+            "1": 0.00013752148773249484,
+            "3": -0.0004563213002032329,
+            "4": 0.0006888950124001036
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expC1_linear"
+          ],
+          "stage": 2,
+          "step": 10,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.00010977660266042744,
+          "delta_vs_working": -0.0009407190719072922,
+          "fold_delta": {
+            "0": -0.0025572729091636326,
+            "1": -0.0012751992498827303,
+            "3": -0.001362712923894449,
+            "4": 0.0006888950124002147
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC2_linear_v2"
+          ],
+          "stage": 2,
+          "step": 11,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0010551836433645434,
+          "delta_vs_working": 4.6879687968237604e-06,
+          "fold_delta": {
+            "0": 6.25250100050323e-06,
+            "1": 0.0,
+            "3": 0.0,
+            "4": 2.5050727723741062e-05
+          },
+          "fold_total": 4,
+          "negative_folds": 0,
+          "removed": [
+            "expZ2_noise"
+          ],
+          "stage": 3,
+          "step": 12,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0008938393839384995,
+          "delta_vs_working": -0.0001613442594260439,
+          "fold_delta": {
+            "0": 0.0005877350940374226,
+            "1": -0.0018315361775276262,
+            "3": 0.0019315518049695113,
+            "4": -0.0011899095668729265
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expD1_knn",
+            "expG1_proxy"
+          ],
+          "stage": 3,
+          "step": 13,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 10,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.006749503075307417,
+          "delta_vs_working": -0.00780468671867196,
+          "fold_delta": {
+            "0": -0.007853141256502605,
+            "1": -0.00987654320987641,
+            "3": -0.0038818565400843275,
+            "4": -0.01043989077882701
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB1_lookup_v1",
+            "expB2_lookup_v2",
+            "expB3_lookup_v3"
+          ],
+          "stage": 3,
+          "step": 14,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0013177098959894495,
+          "delta_vs_working": -0.002372893539353993,
+          "fold_delta": {
+            "0": -0.0055866096438575985,
+            "1": 0.00024691358024697685,
+            "3": -0.0037912173777152613,
+            "4": -0.00010333425186015432
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC1_linear",
+            "expC2_linear_v2",
+            "expE1_spline",
+            "expF1_recon"
+          ],
+          "stage": 3,
+          "step": 15,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0015780874962494362,
+          "delta_vs_working": -0.0026332711396139796,
+          "fold_delta": {
+            "0": 0.0006596388555422106,
+            "1": -0.004147523050476498,
+            "3": -0.004797624628848252,
+            "4": -0.0034037676294497166
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA2_tree_v2",
+            "expA3_tree_v3",
+            "expZ1_clone"
+          ],
+          "stage": 3,
+          "step": 16,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.001255984973497437,
+          "delta_vs_working": 0.0002008013301328937,
+          "fold_delta": {
+            "0": 0.0006627651060422401,
+            "1": -0.00053758399749948,
+            "3": 0.0004125644631972625,
+            "4": 0.0007264711039854932
+          },
+          "fold_total": 4,
+          "negative_folds": 1,
+          "removed": [
+            "expZ1_clone"
+          ],
+          "stage": 4,
+          "step": 17,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 11,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0013681055605561099,
+          "delta_vs_working": 0.00011212058705867278,
+          "fold_delta": {
+            "0": -0.0005064525810323239,
+            "1": 0.00205657133927184,
+            "3": 0.0005938427879357278,
+            "4": -0.0023171923144366113
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expF1_recon"
+          ],
+          "stage": 4,
+          "step": 18,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 10,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.00126184493449355,
+          "delta_vs_working": -0.00010626062606255982,
+          "fold_delta": {
+            "0": 0.0013567927170868854,
+            "1": -0.00229410845444622,
+            "3": 0.0014877324581965556,
+            "4": 0.00019414313985810505
+          },
+          "fold_total": 4,
+          "negative_folds": 1,
+          "removed": [
+            "expG1_proxy"
+          ],
+          "stage": 4,
+          "step": 19,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0012442650515053222,
+          "delta_vs_working": -0.0001238405090507877,
+          "fold_delta": {
+            "0": -0.0018882553021207782,
+            "1": 0.0014689795280511397,
+            "3": -0.0008438818565401629,
+            "4": 0.0010646559282545542
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expC1_linear"
+          ],
+          "stage": 4,
+          "step": 20,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0018589749599962069,
+          "delta_vs_working": 0.000490869399440097,
+          "fold_delta": {
+            "0": 0.00065651260504207,
+            "1": 0.0010689170182839325,
+            "3": 0.0018252852008125986,
+            "4": -0.0014811242766602506
+          },
+          "fold_total": 4,
+          "negative_folds": 1,
+          "removed": [
+            "expD1_knn"
+          ],
+          "stage": 4,
+          "step": 21,
+          "strategy_changed": true,
+          "verdict": "제거",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.001536481773177334,
+          "delta_vs_working": -0.00032249318681887296,
+          "fold_delta": {
+            "0": -0.0021383553421369106,
+            "1": -4.3756837005748395e-05,
+            "3": 0.001969057665260121,
+            "4": -0.0011679901801148196
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expB1_lookup_v1"
+          ],
+          "stage": 4,
+          "step": 22,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 9
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0008700088758877289,
+          "delta_vs_working": -0.000988966084108478,
+          "fold_delta": {
+            "0": 0.0007315426170467765,
+            "1": -0.001581497108923191,
+            "3": -0.0016783872480075068,
+            "4": -0.00228901024574768
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA2_tree_v2"
+          ],
+          "stage": 4,
+          "step": 23,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 9
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0003996493399340828,
+          "delta_vs_working": -0.001459325620062124,
+          "fold_delta": {
+            "0": -0.0011754701880754004,
+            "1": -0.0001125175808719403,
+            "3": -0.0064572589467104535,
+            "4": 0.0010928379969437074
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expE1_spline"
+          ],
+          "stage": 4,
+          "step": 24,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 9
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0010915154015402884,
+          "delta_vs_working": -0.0007674595584559185,
+          "fold_delta": {
+            "0": -0.0031668917567025945,
+            "1": -0.001381465854039532,
+            "3": -0.0005000781372089813,
+            "4": 0.0018067837370675521
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC2_linear_v2"
+          ],
+          "stage": 4,
+          "step": 25,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 9
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0005260291654166638,
+          "delta_vs_working": -0.001332945794579543,
+          "fold_delta": {
+            "0": -0.0014130652260905263,
+            "1": -0.0024128770120330767,
+            "3": -0.0031192373808407448,
+            "4": 0.0005699040557126667
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA3_tree_v3"
+          ],
+          "stage": 4,
+          "step": 26,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 9
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": 0.0007948060431045567,
+          "delta_vs_working": -0.0010641689168916502,
+          "fold_delta": {
+            "0": -0.001866371548619461,
+            "1": -0.0029473355211750984,
+            "3": 0.001440850132833238,
+            "4": -0.001684661439414925
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expB3_lookup_v3"
+          ],
+          "stage": 4,
+          "step": 27,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 9
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "shrunk_rank_logit_logistic",
+          "delta_vs_anchor": -0.001637859098409633,
+          "delta_vs_working": -0.00349683405840584,
+          "fold_delta": {
+            "0": -0.003582683073229287,
+            "1": -0.002065947804344326,
+            "3": -0.004353805282075407,
+            "4": -0.004474686239635317
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB2_lookup_v2"
+          ],
+          "stage": 4,
+          "step": 28,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 9
+        }
+      ]
+    },
+    "3": {
+      "anchor_auc": 0.7423218270114189,
+      "anchor_strategy": "performance_weighted_rank_mean",
+      "final_auc": 0.7438730085813036,
+      "final_members": 10,
+      "final_pool": [
+        "expA2_tree_v2",
+        "expB1_lookup_v1",
+        "expB2_lookup_v2",
+        "expD1_knn",
+        "expA3_tree_v3",
+        "expB3_lookup_v3",
+        "expC2_linear_v2",
+        "expF1_recon",
+        "expG1_proxy",
+        "expZ1_clone"
+      ],
+      "final_strategy": "performance_weighted_rank_mean",
+      "fits": 2188,
+      "label": "outer-3",
+      "trajectory": [
+        {
+          "after_strategy": "greedy_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.008702984081150555,
+          "delta_vs_working": -0.008702984081150555,
+          "fold_delta": {
+            "0": -0.010082157863145258,
+            "1": -0.009035786841694038,
+            "2": -0.007526094007300643,
+            "4": -0.008893008341892328
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB1_lookup_v1",
+            "expB2_lookup_v2",
+            "expB3_lookup_v3"
+          ],
+          "stage": 1,
+          "step": 1,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0006882855517846842,
+          "delta_vs_working": -0.0006882855517846842,
+          "fold_delta": {
+            "0": 0.0012880152060824601,
+            "1": -0.003819346772933163,
+            "2": -0.0011395583272285625,
+            "4": -0.0005260652821965639
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA1_tree_v1",
+            "expA2_tree_v2",
+            "expA3_tree_v3"
+          ],
+          "stage": 1,
+          "step": 2,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0011695385596161012,
+          "delta_vs_working": -0.0011695385596161012,
+          "fold_delta": {
+            "0": -0.004939475790316283,
+            "1": -0.0017315205500859632,
+            "2": -0.0008891059476180407,
+            "4": 0.0019852701720985966
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC1_linear",
+            "expC2_linear_v2"
+          ],
+          "stage": 1,
+          "step": 3,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "nnls_logit",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0007468796679980239,
+          "delta_vs_working": -0.0007468796679980239,
+          "fold_delta": {
+            "0": -0.004176670668267213,
+            "1": 0.004363181747148004,
+            "2": -0.0009391964235401229,
+            "4": -0.0012149602945965565
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expB1_lookup_v1"
+          ],
+          "stage": 2,
+          "step": 4,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0021798964368526796,
+          "delta_vs_working": -0.0021798964368526796,
+          "fold_delta": {
+            "0": -0.0033482142857141906,
+            "1": -0.0020253164556960357,
+            "2": -0.0003036735102779353,
+            "4": -0.004900548610937028
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB2_lookup_v2"
+          ],
+          "stage": 2,
+          "step": 5,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "nnls_logit",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0015039156494729422,
+          "delta_vs_working": -0.0015039156494729422,
+          "fold_delta": {
+            "0": -0.0004689375750300817,
+            "1": 0.002006563525551064,
+            "2": -0.005315851757236589,
+            "4": -0.0005761667376436019
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expB3_lookup_v3"
+          ],
+          "stage": 2,
+          "step": 6,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.001131647697798055,
+          "delta_vs_working": 0.001131647697798055,
+          "fold_delta": {
+            "0": 0.0008753501400560193,
+            "1": 0.0011564306922956513,
+            "2": 0.0004695982117699504,
+            "4": 0.0015468824369347933
+          },
+          "fold_total": 4,
+          "negative_folds": 0,
+          "removed": [
+            "expA1_tree_v1"
+          ],
+          "stage": 2,
+          "step": 7,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0007734423340144403,
+          "delta_vs_working": -0.00035820536378361467,
+          "fold_delta": {
+            "0": 0.001525610244097697,
+            "1": -0.0013564619471790884,
+            "2": -0.0004257690453381979,
+            "4": -0.0018913299431349007
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA2_tree_v2"
+          ],
+          "stage": 2,
+          "step": 8,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0002988299926873772,
+          "delta_vs_working": -0.0008328177051106778,
+          "fold_delta": {
+            "0": -7.503001200481751e-05,
+            "1": -0.0023691201750273283,
+            "2": -0.0005447339256532402,
+            "4": 0.0007139457401238447
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA3_tree_v3"
+          ],
+          "stage": 2,
+          "step": 9,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0015480565503533938,
+          "delta_vs_working": 0.0004164088525553389,
+          "fold_delta": {
+            "0": -0.0016256502601040834,
+            "1": 1.2501953430166246e-05,
+            "2": 0.002053709512807589,
+            "4": 0.0006763696485384552
+          },
+          "fold_total": 4,
+          "negative_folds": 1,
+          "removed": [
+            "expC1_linear"
+          ],
+          "stage": 2,
+          "step": 10,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 8.39848999055759e-05,
+          "delta_vs_working": -0.001464071650447818,
+          "fold_delta": {
+            "0": -0.00340136054421758,
+            "1": -0.001600250039068385,
+            "2": -0.0026422726048926926,
+            "4": 0.0011711215210801207
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC2_linear_v2"
+          ],
+          "stage": 2,
+          "step": 11,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0015480565503533938,
+          "delta_vs_working": 0.0,
+          "fold_delta": {
+            "0": 0.0,
+            "1": 0.0,
+            "2": 0.0,
+            "4": 0.0
+          },
+          "fold_total": 4,
+          "negative_folds": 0,
+          "removed": [
+            "expZ2_noise"
+          ],
+          "stage": 3,
+          "step": 12,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 11,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0008253957837235371,
+          "delta_vs_working": -0.0007226607666298568,
+          "fold_delta": {
+            "0": 0.00048144257703097715,
+            "1": -0.0013752148773245043,
+            "2": -0.0006574374964780638,
+            "4": -0.00149051829955682
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expD1_knn",
+            "expG1_proxy"
+          ],
+          "stage": 3,
+          "step": 13,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.007548094050587872,
+          "delta_vs_working": -0.009096150600941266,
+          "fold_delta": {
+            "0": -0.008497148859543668,
+            "1": -0.009338959212376818,
+            "2": -0.007181721985335954,
+            "4": -0.011347979658809182
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB1_lookup_v1",
+            "expB2_lookup_v2",
+            "expB3_lookup_v3"
+          ],
+          "stage": 3,
+          "step": 14,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0009912171326071917,
+          "delta_vs_working": -0.0025392736829605855,
+          "fold_delta": {
+            "0": -0.005242722088835472,
+            "1": 0.00016252539459304938,
+            "2": -0.005115489853547928,
+            "4": -0.00115546481625306
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC2_linear_v2",
+            "expE1_spline",
+            "expF1_recon"
+          ],
+          "stage": 3,
+          "step": 15,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0010613347583423582,
+          "delta_vs_working": -0.002609391308695752,
+          "fold_delta": {
+            "0": -0.0010816826730690732,
+            "1": -0.005507110486013267,
+            "2": -0.0030868255787015464,
+            "4": -0.0013903153886620778
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expA2_tree_v2",
+            "expA3_tree_v3",
+            "expZ1_clone"
+          ],
+          "stage": 3,
+          "step": 16,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.001517196982481095,
+          "delta_vs_working": -3.085956787229893e-05,
+          "fold_delta": {
+            "0": -3.7515006002353246e-05,
+            "1": -9.37646507265244e-05,
+            "2": -0.0011082517797773583,
+            "4": 0.0006701069666072978
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expZ1_clone"
+          ],
+          "stage": 4,
+          "step": 17,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 10,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.001551181569884652,
+          "delta_vs_working": 3.1250195312582107e-06,
+          "fold_delta": {
+            "0": -0.0007002801120447044,
+            "1": -0.00011876855758696792,
+            "2": -3.1306547451315225e-05,
+            "4": 0.000457175780956276
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expE1_spline"
+          ],
+          "stage": 4,
+          "step": 18,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 10,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0014203213770085377,
+          "delta_vs_working": -0.0001308601928761144,
+          "fold_delta": {
+            "0": 0.0015193577430973049,
+            "1": -0.0006000937646507554,
+            "2": -0.00019410059419833203,
+            "4": -0.0017660763045166394
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA2_tree_v2"
+          ],
+          "stage": 4,
+          "step": 19,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0010367252295324647,
+          "delta_vs_working": -0.0005144563403521873,
+          "fold_delta": {
+            "0": 1.2505002000784415e-05,
+            "1": 0.0010814189717144318,
+            "2": -0.0012960910644853607,
+            "4": -0.002448708634985808
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expF1_recon"
+          ],
+          "stage": 4,
+          "step": 20,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.001172272951705966,
+          "delta_vs_working": -0.00037890861817868604,
+          "fold_delta": {
+            "0": 0.0011754701880751783,
+            "1": -0.0018440381309579035,
+            "2": -0.0002003619036886617,
+            "4": -8.767754703276065e-05
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expG1_proxy"
+          ],
+          "stage": 4,
+          "step": 21,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.001108600678754068,
+          "delta_vs_working": -0.00044258089113058396,
+          "fold_delta": {
+            "0": -0.0003001200480193811,
+            "1": 0.0014564775746210845,
+            "2": -0.0005447339256533512,
+            "4": -0.0011899095668729265
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expD1_knn"
+          ],
+          "stage": 4,
+          "step": 22,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0007046919043243172,
+          "delta_vs_working": -0.0008464896655603349,
+          "fold_delta": {
+            "0": -0.0007503001200480641,
+            "1": -0.00232536333802158,
+            "2": -0.001220955350602071,
+            "4": 0.0012587990681129924
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA3_tree_v3"
+          ],
+          "stage": 4,
+          "step": 23,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0006765667285419941,
+          "delta_vs_working": -0.000874614841342658,
+          "fold_delta": {
+            "0": -0.001613145258103299,
+            "1": -0.0004563213002032329,
+            "2": -0.0003381107124745819,
+            "4": -0.0008767754703274955
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB1_lookup_v1"
+          ],
+          "stage": 4,
+          "step": 24,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.00024531403321281786,
+          "delta_vs_working": -0.00179649560309747,
+          "fold_delta": {
+            "0": -0.0039890956382554466,
+            "1": -0.0014939834349116943,
+            "2": -0.004213861286949672,
+            "4": 0.0015218317092112743
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC2_linear_v2"
+          ],
+          "stage": 4,
+          "step": 25,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0009511778198614262,
+          "delta_vs_working": -0.0025023593897460783,
+          "fold_delta": {
+            "0": -0.002782362945178196,
+            "1": -0.002625410220346902,
+            "2": -0.0011019904702870287,
+            "4": -0.0039204388887496
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB2_lookup_v2"
+          ],
+          "stage": 4,
+          "step": 26,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0009703185644911461,
+          "delta_vs_working": -0.002521500134375798,
+          "fold_delta": {
+            "0": -0.0014443277310925984,
+            "1": -0.0028566963588059213,
+            "2": -0.0038319214080433373,
+            "4": -0.0013903153886619668
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB3_lookup_v3"
+          ],
+          "stage": 4,
+          "step": 27,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        }
+      ]
+    },
+    "4": {
+      "anchor_auc": 0.747642147974773,
+      "anchor_strategy": "performance_weighted_rank_mean",
+      "final_auc": 0.7493259791712815,
+      "final_members": 8,
+      "final_pool": [
+        "expA2_tree_v2",
+        "expB2_lookup_v2",
+        "expA3_tree_v3",
+        "expB3_lookup_v3",
+        "expC2_linear_v2",
+        "expE1_spline",
+        "expG1_proxy",
+        "expZ1_clone"
+      ],
+      "final_strategy": "performance_weighted_rank_mean",
+      "fits": 2188,
+      "label": "outer-4",
+      "trajectory": [
+        {
+          "after_strategy": "nnls_logit",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0064255154730804565,
+          "delta_vs_working": -0.0064255154730804565,
+          "fold_delta": {
+            "0": -0.006627651060424067,
+            "1": -0.004475699328019944,
+            "2": -0.012553925527985066,
+            "3": -0.0009126426004062438
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB1_lookup_v1",
+            "expB2_lookup_v2",
+            "expB3_lookup_v3"
+          ],
+          "stage": 1,
+          "step": 1,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0015287311999856446,
+          "delta_vs_working": -0.0015287311999856446,
+          "fold_delta": {
+            "0": 0.0015318627450979783,
+            "1": -0.0035755586810438666,
+            "2": -0.0007764023767932171,
+            "3": -0.004513205188310554
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA1_tree_v1",
+            "expA2_tree_v2",
+            "expA3_tree_v3"
+          ],
+          "stage": 1,
+          "step": 2,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0017756410181279936,
+          "delta_vs_working": -0.0017756410181279936,
+          "fold_delta": {
+            "0": -0.006111819727891099,
+            "1": -0.0006626035318016976,
+            "2": -0.002260332725986469,
+            "3": 0.0010157837162055872
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC1_linear",
+            "expC2_linear_v2"
+          ],
+          "stage": 1,
+          "step": 3,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "greedy_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.00013576133196913087,
+          "delta_vs_working": -0.00013576133196913087,
+          "fold_delta": {
+            "0": -0.0016068927571027958,
+            "1": 0.00044069385841538633,
+            "2": -0.000591693746830324,
+            "3": -0.0007688701359588324
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expB1_lookup_v1"
+          ],
+          "stage": 2,
+          "step": 4,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "ridge_logit_alpha_100",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0019471495785148285,
+          "delta_vs_working": -0.0019471495785148285,
+          "fold_delta": {
+            "0": -0.0024384753901560696,
+            "1": 0.0011001719018597367,
+            "2": -0.0009579803520110008,
+            "3": -0.0024628848257539637
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expB2_lookup_v2"
+          ],
+          "stage": 2,
+          "step": 5,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "nnls_logit",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0007290090516670622,
+          "delta_vs_working": -0.0007290090516670622,
+          "fold_delta": {
+            "0": -0.00030012004801915904,
+            "1": 0.0010814189717143208,
+            "2": -0.007238073770748588,
+            "3": 0.0054133458352868535
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expB3_lookup_v3"
+          ],
+          "stage": 2,
+          "step": 6,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0010106893979971998,
+          "delta_vs_working": 0.0010106893979971998,
+          "fold_delta": {
+            "0": 0.0009003601440575881,
+            "1": 0.0010314111579934337,
+            "2": 0.0007325732103610205,
+            "3": 0.0005938427879357278
+          },
+          "fold_total": 4,
+          "negative_folds": 0,
+          "removed": [
+            "expA1_tree_v1"
+          ],
+          "stage": 2,
+          "step": 7,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 13,
+          "working_members_before": 14
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0007325251724950022,
+          "delta_vs_working": -0.00027816422550219766,
+          "fold_delta": {
+            "0": 0.001581882753101338,
+            "1": -0.0010001562744177406,
+            "2": -0.0005384726161629105,
+            "3": -0.0014689795280512508
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expA2_tree_v2"
+          ],
+          "stage": 2,
+          "step": 8,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0005121816006085078,
+          "delta_vs_working": -0.0015228709986057076,
+          "fold_delta": {
+            "0": -6.877751100431428e-05,
+            "1": -0.0020753242694170337,
+            "2": -0.0010644226133452728,
+            "3": -0.002006563525551064
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expA3_tree_v3"
+          ],
+          "stage": 2,
+          "step": 9,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0012204846073997633,
+          "delta_vs_working": 0.00020979520940256347,
+          "fold_delta": {
+            "0": -0.001406812725090023,
+            "1": 0.0006250976715111989,
+            "2": 0.0017531666572747628,
+            "3": -0.0004500703234880943
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expC1_linear"
+          ],
+          "stage": 2,
+          "step": 10,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 12,
+          "working_members_before": 13
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0011376604278963143,
+          "delta_vs_working": -0.0023581450352960776,
+          "fold_delta": {
+            "0": -0.0035951880752299603,
+            "1": -0.0015127363650571102,
+            "2": -0.0025859208194803918,
+            "3": -0.0023441162681667738
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expC2_linear_v2"
+          ],
+          "stage": 2,
+          "step": 11,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 11,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0012243914083196472,
+          "delta_vs_working": 3.906800919883935e-06,
+          "fold_delta": {
+            "0": -5.0020008003248684e-05,
+            "1": 0.0,
+            "2": 8.13970233735084e-05,
+            "3": 0.0
+          },
+          "fold_total": 4,
+          "negative_folds": 1,
+          "removed": [
+            "expZ2_noise"
+          ],
+          "stage": 3,
+          "step": 12,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 11,
+          "working_members_before": 12
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.00108062113446461,
+          "delta_vs_working": -0.00014377027385503727,
+          "fold_delta": {
+            "0": 8.128251300520972e-05,
+            "1": -0.0016627598062196602,
+            "2": -0.00045707559278951315,
+            "3": 0.0016440068760743554
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expD1_knn",
+            "expG1_proxy"
+          ],
+          "stage": 3,
+          "step": 13,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.006150476688314255,
+          "delta_vs_working": -0.007374868096633902,
+          "fold_delta": {
+            "0": -0.008597188875550166,
+            "1": -0.009513986560400145,
+            "2": -0.006887440439293457,
+            "3": -0.0037443350523519436
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB1_lookup_v1",
+            "expB2_lookup_v2",
+            "expB3_lookup_v3"
+          ],
+          "stage": 3,
+          "step": 14,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0026070082538982575,
+          "delta_vs_working": -0.0038313996622179047,
+          "fold_delta": {
+            "0": -0.004354866946778668,
+            "1": 0.000496952648851412,
+            "2": -0.005807364552222527,
+            "3": -0.0054633536490075185
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expC2_linear_v2",
+            "expE1_spline",
+            "expF1_recon"
+          ],
+          "stage": 3,
+          "step": 15,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0029218964080481857,
+          "delta_vs_working": -0.004146287816367833,
+          "fold_delta": {
+            "0": -0.0011129451780711452,
+            "1": -0.005644631973745873,
+            "2": -0.002842634508581132,
+            "3": -0.00829504610095333
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expA2_tree_v2",
+            "expA3_tree_v3",
+            "expZ1_clone"
+          ],
+          "stage": 3,
+          "step": 16,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 8,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.000908331213893776,
+          "delta_vs_working": -0.0003160601944258712,
+          "fold_delta": {
+            "0": -0.0004251700680271142,
+            "1": -0.00041881543991251213,
+            "2": -0.0010581613038551652,
+            "3": -0.00020628223159868675
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expZ1_clone"
+          ],
+          "stage": 4,
+          "step": 17,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 10,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0014689571459099993,
+          "delta_vs_working": 0.00024456573759035205,
+          "fold_delta": {
+            "0": -0.0005064525810322129,
+            "1": 0.0016065010157837456,
+            "2": -0.0010832065418160397,
+            "3": 0.000875136740115523
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expF1_recon"
+          ],
+          "stage": 4,
+          "step": 18,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 10,
+          "working_members_before": 11
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0014220755348702818,
+          "delta_vs_working": -4.688161103971744e-05,
+          "fold_delta": {
+            "0": 0.0009378751500599414,
+            "1": -0.0018065322706672937,
+            "2": 0.0004821208307504987,
+            "3": 0.0004688232536335102
+          },
+          "fold_total": 4,
+          "negative_folds": 1,
+          "removed": [
+            "expG1_proxy"
+          ],
+          "stage": 4,
+          "step": 19,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.001242753372643568,
+          "delta_vs_working": -0.00022620377326643126,
+          "fold_delta": {
+            "0": 0.001044167667066831,
+            "1": -0.00046882325363339916,
+            "2": 0.0003318494029839192,
+            "3": -0.0015939990623533573
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expA2_tree_v2"
+          ],
+          "stage": 4,
+          "step": 20,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0015228709986057076,
+          "delta_vs_working": 5.3913852695708364e-05,
+          "fold_delta": {
+            "0": -0.00020633253301327592,
+            "1": 0.0006000937646507554,
+            "2": -0.0006574374964781748,
+            "3": 0.0006250976715113099
+          },
+          "fold_total": 4,
+          "negative_folds": 2,
+          "removed": [
+            "expD1_knn"
+          ],
+          "stage": 4,
+          "step": 21,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 9,
+          "working_members_before": 10
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 0.0016838311965085007,
+          "delta_vs_working": 0.00016096019790279303,
+          "fold_delta": {
+            "0": -0.0016256502601040834,
+            "1": -3.750586029072078e-05,
+            "2": -5.009047592219318e-05,
+            "3": 0.0034255352398812056
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expB1_lookup_v1"
+          ],
+          "stage": 4,
+          "step": 22,
+          "strategy_changed": false,
+          "verdict": "제거",
+          "working_members_after": 8,
+          "working_members_before": 9
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.00010313954428731176,
+          "delta_vs_working": -0.0017869707407958124,
+          "fold_delta": {
+            "0": -0.0015631252501000503,
+            "1": -0.000168776371308077,
+            "2": -0.0011019904702869177,
+            "3": -0.005644631973745873
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expE1_spline"
+          ],
+          "stage": 4,
+          "step": 23,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 7,
+          "working_members_before": 8
+        },
+        {
+          "after_strategy": "performance_weighted_rank_mean",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": 9.571662253926583e-05,
+          "delta_vs_working": -0.0015881145739692348,
+          "fold_delta": {
+            "0": -0.0004689375750299707,
+            "1": -0.002119081106423004,
+            "2": -0.0013712267783684284,
+            "3": -0.0029192061259571966
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expA3_tree_v3"
+          ],
+          "stage": 4,
+          "step": 24,
+          "strategy_changed": false,
+          "verdict": "유지",
+          "working_members_after": 7,
+          "working_members_before": 8
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0009870532524313136,
+          "delta_vs_working": -0.0026708844489398142,
+          "fold_delta": {
+            "0": -0.0021477340936374434,
+            "1": -0.005528988904516252,
+            "2": -0.005221932114882422,
+            "3": 0.0016221284575715922
+          },
+          "fold_total": 4,
+          "negative_folds": 3,
+          "removed": [
+            "expB3_lookup_v3"
+          ],
+          "stage": 4,
+          "step": 25,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 7,
+          "working_members_before": 8
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0011339489670222358,
+          "delta_vs_working": -0.0028177801635307365,
+          "fold_delta": {
+            "0": -0.004673744497799115,
+            "1": -0.0022691045475855542,
+            "2": -0.003550162480981167,
+            "3": -0.0028785747773089065
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expC2_linear_v2"
+          ],
+          "stage": 4,
+          "step": 26,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 7,
+          "working_members_before": 8
+        },
+        {
+          "after_strategy": "shrunk_rank_logit_logistic",
+          "before_strategy": "performance_weighted_rank_mean",
+          "delta_vs_anchor": -0.0009716213887974723,
+          "delta_vs_working": -0.002655452585305973,
+          "fold_delta": {
+            "0": -0.0038234043617446645,
+            "1": -0.0032161275199250605,
+            "2": -8.13970233735084e-05,
+            "3": -0.0049757774652290365
+          },
+          "fold_total": 4,
+          "negative_folds": 4,
+          "removed": [
+            "expB2_lookup_v2"
+          ],
+          "stage": 4,
+          "step": 27,
+          "strategy_changed": true,
+          "verdict": "유지",
+          "working_members_after": 7,
+          "working_members_before": 8
+        }
+      ]
+    }
+  }
+}
