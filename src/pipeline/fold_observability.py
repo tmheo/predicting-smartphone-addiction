@@ -13,6 +13,7 @@ import json
 import math
 import os
 import platform
+import queue
 import shutil
 import socket
 import subprocess
@@ -600,6 +601,11 @@ class FoldExecutionRecorder:
         self._lock = threading.Lock()
         self._stop = threading.Event()
         self._sampler: threading.Thread | None = None
+        self._timing_writer: threading.Thread | None = None
+        self._timing_queue: queue.SimpleQueue[dict[str, object] | object] = (
+            queue.SimpleQueue()
+        )
+        self._timing_sentinel = object()
         self._stream = None
         self._raw_path = root / ARTIFACT_NAME.removesuffix(".gz")
         self._final_path = root / ARTIFACT_NAME
@@ -619,6 +625,12 @@ class FoldExecutionRecorder:
             self.root.mkdir(mode=0o700, parents=True, exist_ok=False)
             self._stream = self._raw_path.open("x", encoding="utf-8", buffering=64 * 1024)
             self.record_metadata({**self._metadata, "resource_probe": self._probe.metadata})
+            self._timing_writer = threading.Thread(
+                target=self._timing_writer_loop,
+                name="fold-timing-writer",
+                daemon=True,
+            )
+            self._timing_writer.start()
             if self._start_sampler:
                 self._sampler = threading.Thread(
                     target=self._resource_loop,
@@ -651,6 +663,27 @@ class FoldExecutionRecorder:
         self._instrumentation_cpu_ns += cost_ns
         if measure_cost:
             self._recording_cost_ns.append(cost_ns)
+
+    def _timing_writer_loop(self) -> None:
+        while True:
+            persisted = self._timing_queue.get()
+            if persisted is self._timing_sentinel:
+                return
+            if self._fatal_error is not None:
+                continue
+            try:
+                self._write(persisted, measure_cost=False)
+            except BaseException as exc:  # noqa: BLE001 - 부모 호출이나 finalize가 치명 오류로 올린다.
+                self._fatal_error = exc
+
+    def _stop_timing_writer(self) -> None:
+        if self._timing_writer is None:
+            return
+        self._timing_queue.put(self._timing_sentinel)
+        self._timing_writer.join(timeout=10.0)
+        if self._timing_writer.is_alive():
+            self._fatal_error = TimeoutError("fold 시간 사건 기록 스레드가 끝나지 않았다.")
+        self._timing_writer = None
 
     def record_metadata(self, values: dict[str, object]) -> None:
         self._write(
@@ -722,12 +755,18 @@ class FoldExecutionRecorder:
             "reason": reason,
             "source": self._metadata.get("source", "local_measured"),
         }
-        self._write(persisted)
-        self._timings.append(persisted)
-        if self._event_count_limit is not None and len(self._timings) > self._event_count_limit:
+        if self._event_count_limit is not None and len(self._timings) >= self._event_count_limit:
             raise ObservabilityPersistenceError(
-                f"fold 시간 사건 수가 상한을 넘었다: {len(self._timings)} > {self._event_count_limit}"
+                f"fold 시간 사건 수가 상한을 넘었다: "
+                f"{len(self._timings) + 1} > {self._event_count_limit}"
             )
+        self._check_fatal()
+        started_cpu_ns = time.thread_time_ns()
+        self._timing_queue.put(persisted)
+        cost_ns = time.thread_time_ns() - started_cpu_ns
+        self._instrumentation_cpu_ns += cost_ns
+        self._recording_cost_ns.append(cost_ns)
+        self._timings.append(persisted)
 
     def record_resource(self, sample: dict[str, object]) -> None:
         observed_ns = sample.get("observed_ns")
@@ -1031,6 +1070,7 @@ class FoldExecutionRecorder:
             self._stop.set()
             if self._sampler is not None:
                 self._sampler.join(timeout=max(10.0, self._sample_interval_seconds * 2))
+            self._stop_timing_writer()
             self._check_fatal()
             timing, timing_metrics = self._timing_summary()
             resource, resource_metrics = self._resource_summary()
@@ -1103,6 +1143,7 @@ class FoldExecutionRecorder:
         self._stop.set()
         if self._sampler is not None:
             self._sampler.join(timeout=max(10.0, self._sample_interval_seconds * 2))
+        self._stop_timing_writer()
         if self._stream is not None:
             try:
                 self._stream.flush()

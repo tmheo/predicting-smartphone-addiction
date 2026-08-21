@@ -415,14 +415,15 @@ def test_timing_persistence_failure_is_fatal(tmp_path):
 
     recorder._stream = BrokenStream(recorder._stream)
 
-    with pytest.raises(ObservabilityPersistenceError, match="직렬화하거나 기록"):
-        recorder.record_timing(
-            _event(
-                started_ns=time.monotonic_ns(),
-                duration_ns=1,
-                operation="fold_feature",
-            )
+    recorder.record_timing(
+        _event(
+            started_ns=time.monotonic_ns(),
+            duration_ns=1,
+            operation="fold_feature",
         )
+    )
+    with pytest.raises(ObservabilityPersistenceError, match="기록이 실패"):
+        recorder.finalize()
     recorder.abandon()
 
 
