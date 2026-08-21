@@ -533,6 +533,110 @@ class ScalarTokenTransformerFold:
         self._validation = (X_va.copy(), y_va_array)
         return _sigmoid(validation_logit)
 
+    def fit_full(self, X: pd.DataFrame, y: pd.Series, epochs: int) -> None:
+        """검증 자료 없이 미리 확정한 epoch 수만큼 전체 자료를 학습한다."""
+        if isinstance(epochs, bool) or not isinstance(epochs, int) or epochs < 1:
+            raise ValueError(
+                "scalar_token_transformer 전체 자료 학습 epoch 수는 "
+                "양의 정수여야 한다."
+            )
+        self._seed_everything()
+        transformed = self._fit_preprocessing(X)
+        train = torch.from_numpy(transformed).to(self._device)
+        model = self._build_model(train.shape[1]).to(self._device)
+        self._trainable_parameters = sum(
+            parameter.numel()
+            for parameter in model.parameters()
+            if parameter.requires_grad
+        )
+        print(
+            f"[scalar_token_transformer] mixing={self._mixing} "
+            f"features={train.shape[1]} parameters={self._trainable_parameters:,}",
+            flush=True,
+        )
+
+        target = torch.from_numpy(y.to_numpy(dtype="float32")).to(self._device)
+        soft_target = target * (1.0 - self._label_smoothing) + 0.5 * self._label_smoothing
+        optimizer = torch.optim.AdamW(
+            model.parameters(), lr=self._lr, weight_decay=self._weight_decay
+        )
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+            optimizer, T_0=self._restart_epochs, T_mult=1, eta_min=self._min_lr
+        )
+        ema_model = AveragedModel(
+            model, multi_avg_fn=get_ema_multi_avg_fn(self._ema_decay)
+        )
+        generator = torch.Generator(device=self._device).manual_seed(self._seed)
+        numpy_generator = np.random.default_rng(self._seed)
+        amp_enabled = self._device == "cuda"
+        grad_scaler = torch.amp.GradScaler("cuda", enabled=amp_enabled)
+
+        for epoch in range(1, epochs + 1):
+            model.train()
+            permutation = torch.randperm(
+                len(X), generator=generator, device=self._device
+            )
+            usable = (
+                len(X) - len(X) % self._batch_size
+                if len(X) >= self._batch_size
+                else len(X)
+            )
+            if usable < 2:
+                raise ValueError("BatchNorm 학습에는 batch에 두 행 이상이 필요하다.")
+            epoch_loss = 0.0
+            batches = 0
+            for start in range(0, usable, self._batch_size):
+                rows = permutation[start : min(start + self._batch_size, usable)]
+                batch_x = train[rows]
+                batch_target = soft_target[rows]
+                if self._mixup_alpha > 0:
+                    lam = float(
+                        numpy_generator.beta(self._mixup_alpha, self._mixup_alpha)
+                    )
+                    paired = torch.randperm(
+                        len(rows), generator=generator, device=self._device
+                    )
+                    model_x = lam * batch_x + (1.0 - lam) * batch_x[paired]
+                    target_a, target_b = batch_target, batch_target[paired]
+                else:
+                    lam = 1.0
+                    model_x = batch_x
+                    target_a = target_b = batch_target
+
+                optimizer.zero_grad(set_to_none=True)
+                autocast = (
+                    torch.amp.autocast("cuda")
+                    if amp_enabled
+                    else contextlib.nullcontext()
+                )
+                with autocast:
+                    logits = model(model_x)
+                    loss = lam * F.binary_cross_entropy_with_logits(logits, target_a)
+                    if lam < 1.0:
+                        loss = loss + (1.0 - lam) * F.binary_cross_entropy_with_logits(
+                            logits, target_b
+                        )
+                grad_scaler.scale(loss).backward()
+                grad_scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), self._grad_clip)
+                grad_scaler.step(optimizer)
+                grad_scaler.update()
+                ema_model.update_parameters(model)
+                epoch_loss += float(loss.detach())
+                batches += 1
+
+            scheduler.step()
+            print(
+                f"[scalar_token_transformer] mixing={self._mixing} "
+                f"full_epoch={epoch:03d} loss={epoch_loss / batches:.6f}",
+                flush=True,
+            )
+
+        self._model = ema_model
+        self._best_epoch = epochs
+        self._validation = None
+        self._validation_auc = None
+
     def _predict_tensor(self, model: nn.Module, values: torch.Tensor) -> np.ndarray:
         model.eval()
         parts: list[torch.Tensor] = []
