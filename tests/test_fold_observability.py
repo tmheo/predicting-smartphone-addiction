@@ -6,6 +6,7 @@ import gzip
 import json
 import signal
 import time
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -17,7 +18,7 @@ from pipeline import cv
 from pipeline import fold_observability as observability_mod
 from pipeline import model as model_mod
 from pipeline import plan as plan_mod
-from pipeline.config import FeatureConfig
+from pipeline.config import FeatureConfig, ModelConfig
 from pipeline.fold_observability import (
     ARTIFACT_NAME,
     FoldExecutionRecorder,
@@ -136,6 +137,57 @@ def test_enabled_observability_keeps_cv_result_exactly_equal(monkeypatch):
         and event["reason"] == "disabled"
         for event in disabled
     )
+
+
+def test_enabled_observability_keeps_lightgbm_result_exactly_equal():
+    cfg = replace(
+        fake_experiment_config(),
+        name="lightgbm_observability_equivalence",
+        model=ModelConfig(
+            kind="lightgbm",
+            params={
+                "objective": "binary",
+                "n_estimators": 30,
+                "num_leaves": 7,
+                "learning_rate": 0.1,
+                "verbosity": -1,
+                "deterministic": True,
+                "force_row_wise": True,
+                "n_jobs": 1,
+            },
+            fit={"early_stopping_rounds": 5},
+        ),
+    )
+    plan, train, test = _prepared_inputs(cfg)
+
+    without_observability = cv.run_cv(cfg, plan, train, test, seed=SEED)
+    recorder = TimingRecorder()
+    with_observability = cv.run_cv(
+        cfg,
+        plan,
+        train,
+        test,
+        seed=SEED,
+        recorder=recorder,
+    )
+
+    pd.testing.assert_frame_equal(
+        with_observability.oof,
+        without_observability.oof,
+        check_exact=True,
+    )
+    pd.testing.assert_frame_equal(
+        with_observability.test_pred,
+        without_observability.test_pred,
+        check_exact=True,
+    )
+    pd.testing.assert_frame_equal(
+        with_observability.importance,
+        without_observability.importance,
+        check_exact=True,
+    )
+    assert with_observability.fold_aucs == without_observability.fold_aucs
+    assert with_observability.recovery_evidence == without_observability.recovery_evidence
 
 
 def test_model_failure_records_failed_leaf_and_parent(monkeypatch):
