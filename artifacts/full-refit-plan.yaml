@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: 943cbfd760cfe81036ec8551d9368b640f3873c1e6d8b16a2f487e1095db4f1d
+source_pool_sha256: 1983d3bdee7cd6fb1904552d971b865ec40ce032de244b7131cdd2e3317ebe07
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -169,3 +169,8 @@ members:
     run_id: f16dbc88860a41f39194da2f581f057d
     budget_source: fold_median
     budgets: {42: 20, 43: 18, 44: 15}
+  - config: exp139_realmlp_reference_qnormal_train_test
+    config_path: configs/exp139_realmlp_reference_qnormal_train_test.yaml
+    run_id: 1af9442e67c14a96a5256251f23a1b9d
+    budget_source: fold_median
+    budgets: {42: 5, 43: 5, 44: 5}

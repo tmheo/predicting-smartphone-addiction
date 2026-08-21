@@ -1,0 +1,284 @@
+schema_version: 1
+judgment_id: issue331-realmlp-reference-qnormal-confirm
+created_at: '2026-08-21T05:20:00Z'
+stage: confirmation
+route: candidate_pool
+supersedes: issue331-realmlp-reference-qnormal-screen
+
+contract:
+  decision:
+    title: 전처리 기준 집합 값 좌표의 비조회 계열 이식 범위 결정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/315
+  execution:
+    title: RealMLP 전처리 기준 집합 값 좌표의 기준 범위 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/331
+  screening_judgment: artifacts/judgments/issue331-realmlp-reference-qnormal-screen.yaml
+
+feature_bundle:
+  name: raw_numeric_reference_qnormal
+  columns:
+    - age_reference_qnormal
+    - daily_screen_time_hours_reference_qnormal
+    - social_media_hours_reference_qnormal
+    - gaming_hours_reference_qnormal
+    - work_study_hours_reference_qnormal
+    - sleep_hours_reference_qnormal
+    - notifications_per_day_reference_qnormal
+    - app_opens_per_day_reference_qnormal
+    - weekend_screen_time_reference_qnormal
+  transformer:
+    kind: QuantileTransformer
+    n_quantiles: min(1000, observed_rows)
+    output_distribution: normal
+    subsample: 2000000000
+    random_state: run_seed
+    missing_coordinate: 0.0
+  target_free: true
+  preregistration:
+    kind: committed_config_pair
+    reference: configs/exp138_realmlp_reference_qnormal_fold_train.yaml@781b3e58222ef8a808adf942085fa4cf8b98dba8
+    candidate: configs/exp139_realmlp_reference_qnormal_train_test.yaml@781b3e58222ef8a808adf942085fa4cf8b98dba8
+    description: 원시 수치 9열의 분위-정규 좌표와 기준 범위 한 쌍을 결과 확인 전에 고정했다.
+  content_sha256: f709132b84b14586901c4d13fb7a16fec26a8df2d3e04f1f0dbcab40f6025a8e
+
+lineage:
+  candidate:
+    config: exp139_realmlp_reference_qnormal_train_test
+    config_path: configs/exp139_realmlp_reference_qnormal_train_test.yaml
+    config_sha256: 85c74e4ec735fbd4934ea8541600d5c65fc33d7fed5cd9d85613f635ce1ac3e2
+    source_run_id: aa44483584224732a568e1b117cc6fd7
+    imported_run_id: 1af9442e67c14a96a5256251f23a1b9d
+    import_bundle_sha256: 04db5cf55bd81f4b1b1fe2fd827920e9c6724038d01aee7c5d48edf7305434a3
+    git_commit: 781b3e58222ef8a808adf942085fa4cf8b98dba8
+    seeds: [42, 43, 44]
+  control:
+    config: exp138_realmlp_reference_qnormal_fold_train
+    config_path: configs/exp138_realmlp_reference_qnormal_fold_train.yaml
+    config_sha256: 7e942880dcd24ff62969fc7f5c43c85dcaa6127041784a632b2b6f84daa687a6
+    source_run_id: 07684d51197443dda2dd419aea7f7aee
+    imported_run_id: 15240f90f6144e7f95d58508420c2961
+    import_bundle_sha256: 1158491a239dd4b5c49ff0cd5e07e20944f76aa803434c5cac39a635ddb3e704
+    git_commit: 781b3e58222ef8a808adf942085fa4cf8b98dba8
+    seeds: [42, 43, 44]
+  direct_baseline:
+    config: exp136_realmlp_muon_recon_widths
+    config_sha256: 9556597389aff1dd9f038c68a6a3e80bbbb200bd6047e61c673084badd1313ac
+  allowed_differences:
+    - model.params.preprocessing_scope
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+    starting_pool: 943cbfd760cfe81036ec8551d9368b640f3873c1e6d8b16a2f487e1095db4f1d
+    champion: ab1ee3a4ff3a8797da1deeab3d6f0c114b3f76fffbae5bb6409ec81fab189674
+
+execution_validity:
+  state: 유효
+  candidate_git_dirty: false
+  control_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  row_order_match: true
+  model_contract_match: true
+  allowed_difference_only: true
+  target_free_reference: true
+  qnormal_fit_contract_match: true
+  candidate_reference_rows: 987671
+  control_reference_rows_by_fold: [553095, 553096]
+  unique_oof_rows_per_seed: 691369
+  screening_seed_42_prediction_exact_match: true
+  screening_seed_42_max_abs_difference: 0.0
+  adoption_eligibility:
+    seeds_ok: true
+    clean_commit_ok: true
+    folds_ok: true
+    ok: true
+
+paired_oof:
+  comparison: candidate_minus_control
+  candidate_auc: 0.9685456290878953
+  control_auc: 0.9685410190594707
+  overall_delta: 0.0000046100284247
+  seed_aucs:
+    candidate:
+      42: 0.968431321459998
+      43: 0.9684525878939326
+      44: 0.9684637772603059
+    control:
+      42: 0.9684311576227744
+      43: 0.9684523007436614
+      44: 0.9684524428066252
+  seed_deltas:
+    42: 0.0000001638372236
+    43: 0.0000002871502712
+    44: 0.0000113344536806
+  fold_deltas:
+    0: 0.0000260240185860
+    1: 0.0000065302348677
+    2: 0.0000096735668967
+    3: -0.0000106822291361
+    4: -0.0000073672040457
+  seed_wins: 3
+  seed_total: 3
+  fold_wins: 3
+  fold_total: 5
+  thresholds:
+    mean_must_be_positive: true
+    seed_win_min: 2
+    boundary_upper: 0.0002
+    boundary_fold_win_min: 3
+
+selection_procedure:
+  required: false
+  reason: 결과 확인 전에 두 기준 범위와 좌표 9열 전체를 고정했고 같은 OOF에서 변형을 고르지 않았다.
+  candidate_set:
+    - exp138_realmlp_reference_qnormal_fold_train
+    - exp139_realmlp_reference_qnormal_train_test
+
+scope_signal:
+  state: train_test 기준 범위의 양의 기여 확인
+  reasons:
+    - 3시드 평균 짝차이가 양수다.
+    - 같은 시드 3개가 모두 양수다.
+    - 경계 구간에서 시드 평균 분할 3개가 양수다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 후보 풀 RealMLP 구성원의 전처리 기준 범위 판정이며 champion 교체를 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: true
+  state: 후보 풀 기여
+  ledger_action: add_member
+  replacement:
+    performed: false
+    compared_config: exp136_realmlp_muon_recon_widths
+    reason: 최근접 구성원과의 스피어만 상관이 중복 문턱보다 낮아 별도 구성원 진입 경로를 적용했다.
+  added:
+    config: exp139_realmlp_reference_qnormal_train_test
+    run_id: 1af9442e67c14a96a5256251f23a1b9d
+  fixed_snapshot:
+    source_pool_size: 32
+    source_pool_sha256: 943cbfd760cfe81036ec8551d9368b640f3873c1e6d8b16a2f487e1095db4f1d
+    concurrent_main_pool_ignored: true
+    reason: 실행 계약이 고정한 작업 트리의 32개 후보 집합만 판정에 사용했다.
+  entry_snapshot:
+    champion_run_id: 54acd002d3c04ec3a74c09871e83da50
+    champion_oof_auc: 0.9693397329635609
+    floor: 0.9593397329635609
+    floor_margin: 0.009205896124334423
+    floor_ok: true
+    nearest_run_id: bd2bd1154e6343f68b364714e2fedcc4
+    nearest_config: exp136_realmlp_muon_recon_widths
+    nearest_auc: 0.9684765044445613
+    nearest_spearman: 0.9973634796135972
+    duplicate_threshold: 0.998
+    duplicate: false
+    uniform_rank_ensemble:
+      candidate_included_auc: 0.9691623933545127
+      candidate_excluded_auc: 0.9691419155689435
+      marginal_delta: 0.000020477785569239515
+      used_as_gate: false
+  nested_contribution:
+    strategy: missing_segmented_rank_logit
+    candidate_included_auc: 0.9697365223213779
+    candidate_excluded_auc: 0.9697295308810784
+    marginal_delta: 0.000006991440299475293
+    outer_fold_deltas:
+      0: 0.000007578096783977806
+      1: 0.000004986858587519016
+      2: 0.000017753521034724606
+      3: -0.000008177889900484736
+      4: 0.000010957246014964284
+    outer_fold_wins: 4
+    outer_fold_total: 5
+    status: 후보 풀 기여
+  coefficient_readout:
+    selected_folds: 5
+    fold_total: 5
+    mean_weight: 0.6352401781894359
+    interpretation: 결합 계수의 부호와 크기는 보조 설명이며 개별 후보의 인과적 기여로 해석하지 않는다.
+
+ensemble_reevaluation:
+  pool_size: 33
+  strategy_count: 22
+  excluded_strategy_count: 0
+  best_strategy: shrunk_rank_logit_logistic
+  nested_oof_auc: 0.9697408942943726
+  champion_auc: 0.9693397329635609
+  champion_delta: 0.0004011613308116946
+  outer_fold_aucs:
+    0: 0.9691595762157676
+    1: 0.969834857253761
+    2: 0.9698822614612341
+    3: 0.9703066209265552
+    4: 0.969521153374462
+  fixed_strategy:
+    name: missing_segmented_rank_logit
+    nested_oof_auc: 0.9697365223213779
+  champion_changed: false
+  full_refit_combiner_changed: false
+  reason: 이 티켓은 구성원 진입 판정만 수행하며 champion과 전체 자료 결합 규약을 다시 열지 않는다.
+
+full_refit_plan:
+  path: artifacts/full-refit-plan.yaml
+  source_pool_sha256: 1983d3bdee7cd6fb1904552d971b865ec40ce032de244b7131cdd2e3317ebe07
+  action: add_member
+  added_config: exp139_realmlp_reference_qnormal_train_test
+  budget_source: fold_median
+  fold_best_iteration_medians:
+    42: 4
+    43: 4
+    44: 4
+  iteration_multiplier: 1.25
+  budgets:
+    42: 5
+    43: 5
+    44: 5
+  combiner_changed: false
+
+remote_execution:
+  provider: Vast.ai
+  instance_id: 48268912
+  gpu: 2x RTX A4000 16376MiB
+  hourly_total_usd: 0.17540740740740743
+  image: nvcr.io/nvidia/pytorch@sha256:38ed2ecb2c16d10677006d73fb0a150855d6ec81db8fc66e800b5ae92741007e
+  input_archive_sha256: 3bc16d35c8849901702c87ccc64511bf672865fa5eba53aff24bca89cb2f7007
+  result_archive_sha256: 626e7fe50f6b29125dbad15c15775b2b39c226b9a4bf04852b599276c9ba217c
+  transfer: ssh_standard_stream
+  estimated_total_cost_usd_upper: 0.47
+  cost_attribution:
+    exact_account_delta_available: false
+    reason: 같은 계정에서 다른 두 작업이 동시에 실행돼 계정 잔액 차이를 이 작업 단독 비용으로 해석하지 않았다.
+  prior_failed_attempt:
+    instance_id: 48262827
+    model_training_started: false
+    reason: 실행 제어 파일이 이미지 CUDA 13.1과 잠금 환경 PyTorch CUDA 13.0이 같아야 한다고 잘못 검사했다.
+    evidence_archive_sha256: ab35dc401be296acba3ed2269ecfb5c02d51226f6ceb123974eec58ea553739a
+    cleaned: true
+  cleanup:
+    instance_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+
+result:
+  execution_validity: 유효
+  scope_signal: train_test 기준 범위의 양의 기여 확인
+  champion_route: null
+  candidate_pool_route: 후보 풀 기여
+  actual_ledger_change: exp139_added_without_replacement
+  full_refit_plan_change: exp139_added_without_replacement
+  reason_codes:
+    - paired_mean_positive
+    - seed_wins_3_of_3
+    - boundary_fold_wins_3_of_5
+    - screening_seed_42_exact_match
+    - adoption_eligibility_passed
+    - target_free_reference
+    - nearest_spearman_below_duplicate_threshold
+    - nested_marginal_positive
+    - nested_outer_fold_wins_4_of_5
+    - pool_member_added
+    - champion_unchanged
+    - full_refit_combiner_unchanged
