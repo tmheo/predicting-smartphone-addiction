@@ -1,7 +1,7 @@
 """nested OOF 평가기와 결합 전략 계약. (ADR 0001 계열 3, #104)
 
 사용법:
-    uv run python -m pipeline.ensemble                    # registry 전 전략 평가·비교·판정
+    uv run python -m pipeline.ensemble                    # 기본 전략 평가·비교·판정
     uv run python -m pipeline.ensemble --only rank_mean   # 개발·디버깅용 부분 실행
     uv run python -m pipeline.ensemble --only rank_mean --only ridge_logit
     uv run python -m pipeline.ensemble --only rank_logit_logistic --submission <path>
@@ -33,6 +33,8 @@ nested OOF 정의(ADR 0001 계열 3): outer fold k마다 나머지 4개 fold의 
 리포트 머리에 한 번 출력한다.
 
 평가 자체는 MLflow run을 만들지 않고 stdout으로 남긴다(실험 하나 = run 하나 규약).
+각 실행은 전략별 nested OOF AUC와 경과 시간, 기본 평가에서 제외한 정밀 결합 전략을
+run-logs/ensemble-evaluation.json에 함께 남긴다.
 --record-issue가 주어지면 최선 전략의 nested 결과 하나를 파생 앙상블 실행
 (source.kind=derived_ensemble)으로 MLflow에 기록한다(#179·#183 선례의 상설화, #202).
 채택 전략은 전체 OOF로 다시 학습해 구성원 시험 예측에 적용한 제출 파일을 명시적
@@ -42,7 +44,9 @@ nested OOF 정의(ADR 0001 계열 3): outer fold k마다 나머지 4개 fold의 
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+import time
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -1123,6 +1127,35 @@ COMBINER_REGISTRY: dict[str, Combiner] = {
     )
 }
 
+PRECISION_COMBINER_NAMES = (
+    "bagged_greedy_rank_mean",
+    "optuna_subset_rank_mean",
+    "optuna_subset_ridge_logit",
+)
+DEFAULT_COMBINER_NAMES = tuple(
+    name for name in COMBINER_REGISTRY if name not in PRECISION_COMBINER_NAMES
+)
+DEFAULT_EVALUATION_OUTPUT = Path("run-logs/ensemble-evaluation.json")
+EVALUATION_ARTIFACT_NAME = "ensemble_evaluation.json"
+
+
+def select_combiners(
+    only: list[str] | None,
+) -> tuple[list[Combiner], tuple[str, ...]]:
+    """기본 평가 범위 또는 사용자가 명시한 등록 전략을 돌려준다."""
+    if only is None:
+        return (
+            [COMBINER_REGISTRY[name] for name in DEFAULT_COMBINER_NAMES],
+            PRECISION_COMBINER_NAMES,
+        )
+    missing = [name for name in only if name not in COMBINER_REGISTRY]
+    if missing:
+        raise ValueError(
+            f"결합 전략 없음: {', '.join(missing)} "
+            f"(등록: {', '.join(COMBINER_REGISTRY)})"
+        )
+    return [COMBINER_REGISTRY[name] for name in only], ()
+
 
 @dataclass(frozen=True)
 class FoldOutcome:
@@ -1139,14 +1172,34 @@ class NestedEvaluation:
 
     name: str
     nested_auc: float
+    elapsed_seconds: float
     folds: list[FoldOutcome]
     prediction: pd.Series  # id 인덱스의 nested OOF 예측. 파생 앙상블 실행 기록의 원본.
+
+
+@dataclass(frozen=True)
+class FailedStrategyEvaluation:
+    """미수렴으로 점수 비교에서 빠진 전략의 비용과 이유."""
+
+    name: str
+    elapsed_seconds: float
+    reason: str
+
+
+@dataclass(frozen=True)
+class NestedEvaluationReport:
+    """한 번의 결합 전략 비교에서 나온 성공, 실패와 기본 제외 범위."""
+
+    evaluations: list[NestedEvaluation]
+    failures: list[FailedStrategyEvaluation]
+    default_excluded: tuple[str, ...]
 
 
 def evaluate_nested(
     combiner: Combiner, preds: pd.DataFrame, fold_of: pd.Series, y: pd.Series
 ) -> NestedEvaluation:
     """outer fold 루프: 나머지 fold의 OOF로 fit하고 fold k만 predict해 합쳐 채점한다."""
+    started = time.monotonic()
     preds = preds.astype(np.float64)  # 결합 전략에는 float64 원시 예측만 건넨다.
     nested = np.full(len(preds), np.nan)
     outcomes = []
@@ -1172,6 +1225,7 @@ def evaluate_nested(
     return NestedEvaluation(
         name=combiner.name,
         nested_auc=float(roc_auc_score(y.to_numpy(), nested)),
+        elapsed_seconds=time.monotonic() - started,
         folds=outcomes,
         prediction=pd.Series(nested, index=preds.index, name="prediction"),
     )
@@ -1271,12 +1325,72 @@ class NestedBaseline:
     new_member_configs: list[str]
 
 
+def evaluation_artifact_payload(
+    report: NestedEvaluationReport,
+    members: list[tuple[str, str]],
+) -> dict[str, Any]:
+    """결합 전략 비교 결과를 장기 비교 가능한 JSON 값으로 만든다."""
+    best = (
+        max(report.evaluations, key=lambda evaluation: evaluation.nested_auc)
+        if report.evaluations
+        else None
+    )
+    strategies: list[dict[str, Any]] = [
+        {
+            "name": evaluation.name,
+            "status": "completed",
+            "elapsed_seconds": evaluation.elapsed_seconds,
+            "nested_oof_auc": evaluation.nested_auc,
+        }
+        for evaluation in report.evaluations
+    ]
+    strategies.extend(
+        {
+            "name": failure.name,
+            "status": "failed",
+            "elapsed_seconds": failure.elapsed_seconds,
+            "reason": failure.reason,
+        }
+        for failure in report.failures
+    )
+    return {
+        "schema_version": 1,
+        "member_count": len(members),
+        "members": [
+            {"config": config, "run_id": run_id} for config, run_id in members
+        ],
+        "default_excluded_strategies": list(report.default_excluded),
+        "best_strategy": best.name if best is not None else None,
+        "best_nested_oof_auc": best.nested_auc if best is not None else None,
+        "strategies": strategies,
+    }
+
+
+def write_evaluation_artifact(
+    report: NestedEvaluationReport,
+    members: list[tuple[str, str]],
+    output_path: Path,
+) -> None:
+    """전략별 점수와 경과 시간을 기계 판독 JSON으로 저장한다."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps(
+            evaluation_artifact_payload(report, members),
+            ensure_ascii=False,
+            allow_nan=False,
+            indent=2,
+        )
+        + "\n"
+    )
+
+
 def record_nested_evaluation(
     evaluation: NestedEvaluation,
     members: list[tuple[str, str]],
     *,
     issue: int,
     baseline: NestedBaseline | None,
+    evaluation_report: NestedEvaluationReport | None = None,
     input_hashes: dict[str, str],
     tracking_uri: str = TRACKING_URI,
 ) -> str:
@@ -1284,8 +1398,8 @@ def record_nested_evaluation(
 
     #179(run 7fbe590b)·#183(run d845b5d1) 사후 등록의 스키마를 그대로 따른다:
     params에 구성원 계보와 git 상태, metrics에 auc_oof·fold별 AUC·직전 기록 대비 증분,
-    artifacts에 oof.parquet(id, prediction)과 member_weights.csv, tags에
-    source.kind=derived_ensemble와 입력 sha256·산출물 sha256을 남긴다.
+    artifacts에 oof.parquet(id, prediction), member_weights.csv와 전략별 비교 JSON,
+    tags에 source.kind=derived_ensemble와 입력 sha256·산출물 sha256을 남긴다.
     """
     import hashlib
     import tempfile
@@ -1361,6 +1475,10 @@ def record_nested_evaluation(
         ).to_csv(weights_path, index=False)
         client.log_artifact(run_id, str(oof_path))
         client.log_artifact(run_id, str(weights_path))
+        if evaluation_report is not None:
+            evaluation_path = tmp_dir / EVALUATION_ARTIFACT_NAME
+            write_evaluation_artifact(evaluation_report, members, evaluation_path)
+            client.log_artifact(run_id, str(evaluation_path))
         oof_sha256 = hashlib.sha256(oof_path.read_bytes()).hexdigest()
 
     tags = {
@@ -1429,7 +1547,9 @@ def run_report(
     fold_of: pd.Series,
     y: pd.Series,
     champion_auc: float,
-) -> list[NestedEvaluation]:
+    *,
+    default_excluded: tuple[str, ...] = (),
+) -> NestedEvaluationReport:
     """nested 평가부터 계열 3 판정까지의 stdout 리포트. CLI와 golden 테스트가 공유한다."""
     # 최상단 import는 judgment → ensemble 단방향만 둔다(module docstring). 지역 import.
     from .judgment import AUC_THRESHOLD, StrategyOutcome, judge_ensemble
@@ -1439,14 +1559,26 @@ def run_report(
     print(f"구성원 {len(members)}명 (config → run_id):")
     for config, run_id in members:
         print(f"  {config} → {run_id}")
+    if default_excluded:
+        print(
+            "기본 평가에서 제외한 정밀 결합 전략 "
+            f"(--only로 명시 선택 가능): {', '.join(default_excluded)}"
+        )
 
     evaluations = []
-    excluded: list[tuple[str, str]] = []
+    failures = []
     for combiner in combiners:
+        started = time.monotonic()
         try:
             evaluations.append(evaluate_nested(combiner, matrix, fold_of, y))
         except CombinerConvergenceError as exc:
-            excluded.append((combiner.name, str(exc)))
+            failures.append(
+                FailedStrategyEvaluation(
+                    name=combiner.name,
+                    elapsed_seconds=time.monotonic() - started,
+                    reason=str(exc),
+                )
+            )
     for evaluation in evaluations:
         print(f"전략 {evaluation.name}: nested OOF AUC {evaluation.nested_auc:.5f}")
         folds = " ".join(f"{o.fold}={o.auc:.5f}" for o in evaluation.folds)
@@ -1458,8 +1590,14 @@ def run_report(
                 f"{stat.mean_weight:+.5f}"
             )
 
-    for name, reason in excluded:
-        print(f"전략 {name}: 점수 비교 제외 ({reason})")
+    for failure in failures:
+        print(f"전략 {failure.name}: 점수 비교 제외 ({failure.reason})")
+
+    report = NestedEvaluationReport(
+        evaluations=evaluations,
+        failures=failures,
+        default_excluded=default_excluded,
+    )
 
     verdict = judge_ensemble(
         [
@@ -1488,9 +1626,9 @@ def run_report(
         )
     if verdict.recommended is None:
         print("판정: 채택 없음, 단독 champion 유지")
-        return evaluations
+        return report
     print(f"판정: {verdict.recommended} 채택 추천 (nested OOF AUC 최고)")
-    return evaluations
+    return report
 
 
 def main() -> None:
@@ -1500,7 +1638,16 @@ def main() -> None:
     parser.add_argument(
         "--only",
         action="append",
-        help="이 이름의 결합 전략만 평가. 여러 번 지정할 수 있다.",
+        help=(
+            "이 이름의 등록 결합 전략만 평가. 여러 번 지정할 수 있으며, "
+            "정밀 결합 전략도 이 인자로 실행한다."
+        ),
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_EVALUATION_OUTPUT,
+        help="전략별 nested OOF AUC와 경과 시간을 저장할 JSON 경로",
     )
     parser.add_argument(
         "--submission", type=Path, help="--only 전략의 전체 OOF 학습 제출 파일 경로"
@@ -1523,15 +1670,10 @@ def main() -> None:
     if args.baseline_run is not None and args.record_issue is None:
         sys.exit("--baseline-run에는 기록을 여는 --record-issue가 필요하다.")
 
-    combiners = list(COMBINER_REGISTRY.values())
-    if args.only is not None:
-        missing = [name for name in args.only if name not in COMBINER_REGISTRY]
-        if missing:
-            sys.exit(
-                f"결합 전략 없음: {', '.join(missing)} "
-                f"(등록: {', '.join(COMBINER_REGISTRY)})"
-            )
-        combiners = [COMBINER_REGISTRY[name] for name in args.only]
+    try:
+        combiners, default_excluded = select_combiners(args.only)
+    except ValueError as exc:
+        sys.exit(str(exc))
 
     if not CHAMPION_PATH.exists():
         sys.exit(f"{CHAMPION_PATH} 없음: 계열 3 판정의 기준 champion이 필요하다.")
@@ -1547,14 +1689,18 @@ def main() -> None:
     store = MlflowRunStore()
     try:
         members = [(member.config, member.run_id) for member in pool.members]
-        evaluations = run_report(
+        report = run_report(
             combiners,
             members,
             store,
             fold_of,
             y,
             champion.oof_auc,
+            default_excluded=default_excluded,
         )
+        write_evaluation_artifact(report, members, args.output)
+        print(f"평가 산출물 저장: {args.output}")
+        evaluations = report.evaluations
         if args.record_issue is not None:
             from .tracking import git_state
 
@@ -1573,6 +1719,7 @@ def main() -> None:
                 members,
                 issue=args.record_issue,
                 baseline=baseline,
+                evaluation_report=report,
                 input_hashes={
                     "train": file_sha256(TRAIN_PATH),
                     "test": file_sha256(MISSINGNESS_TEST_PATH),

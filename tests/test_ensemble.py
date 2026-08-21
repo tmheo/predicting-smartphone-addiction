@@ -8,6 +8,9 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -16,6 +19,8 @@ from sklearn.metrics import roc_auc_score
 from pipeline.data import ID, TARGET
 from pipeline.ensemble import (
     COMBINER_REGISTRY,
+    DEFAULT_COMBINER_NAMES,
+    PRECISION_COMBINER_NAMES,
     BaggedGreedyRankMeanCombiner,
     CombinerConvergenceError,
     EmpiricalCDFTransformer,
@@ -25,6 +30,7 @@ from pipeline.ensemble import (
     MissingnessInteractionLogisticCombiner,
     MissingnessSegmentedLogisticCombiner,
     NestedBaseline,
+    NestedEvaluationReport,
     NNLSCombiner,
     OptunaSubsetRankMeanCombiner,
     OptunaSubsetRidgeLogitCombiner,
@@ -42,6 +48,9 @@ from pipeline.ensemble import (
     nested_baseline,
     rank_mean,
     record_nested_evaluation,
+    run_report,
+    select_combiners,
+    write_evaluation_artifact,
 )
 from pipeline.judgment import rank_ensemble_auc
 from pipeline.runs import InMemoryRunStore
@@ -91,6 +100,26 @@ def test_registry_holds_reference_and_issue_64_adapters():
         "nnls_rank",
         "shrunk_rank_logit_logistic",
     ]
+
+
+def test_default_selection_excludes_precision_strategies_without_removing_them():
+    assert PRECISION_COMBINER_NAMES == (
+        "bagged_greedy_rank_mean",
+        "optuna_subset_rank_mean",
+        "optuna_subset_ridge_logit",
+    )
+    assert DEFAULT_COMBINER_NAMES == tuple(
+        name for name in COMBINER_REGISTRY if name not in PRECISION_COMBINER_NAMES
+    )
+
+    selected, excluded = select_combiners(None)
+
+    assert [combiner.name for combiner in selected] == list(DEFAULT_COMBINER_NAMES)
+    assert excluded == PRECISION_COMBINER_NAMES
+    for name in PRECISION_COMBINER_NAMES:
+        explicit, explicit_excluded = select_combiners([name])
+        assert [combiner.name for combiner in explicit] == [name]
+        assert explicit_excluded == ()
 
 
 def test_rank_ensemble_auc_uses_rank_mean_formula():
@@ -630,6 +659,63 @@ def test_full_fit_predictions_supports_missingness_context_on_test_ids():
     assert np.isfinite(actual).all()
 
 
+def test_evaluation_artifact_records_default_scope_auc_and_elapsed_time(
+    tmp_path, capsys
+):
+    index = make_index()
+    y = make_labels()
+    fold_of = make_fold_of()
+    preds = make_preds(members=2)
+    store = InMemoryRunStore()
+    members = [("exp_0", "run-0"), ("exp_1", "run-1")]
+    for config, run_id in members:
+        store.add_run(
+            run_id,
+            oof=pd.DataFrame({ID: index, "pred": preds[config].to_numpy()}),
+        )
+
+    report = run_report(
+        [COMBINER_REGISTRY["rank_mean"]],
+        members,
+        store,
+        fold_of,
+        y,
+        champion_auc=0.5,
+        default_excluded=PRECISION_COMBINER_NAMES,
+    )
+    output = tmp_path / "ensemble-evaluation.json"
+    write_evaluation_artifact(report, members, output)
+
+    transcript = capsys.readouterr().out
+    assert "기본 평가에서 제외한 정밀 결합 전략" in transcript
+    for name in PRECISION_COMBINER_NAMES:
+        assert name in transcript
+
+    artifact = json.loads(output.read_text())
+    assert artifact["schema_version"] == 1
+    assert artifact["member_count"] == 2
+    assert artifact["members"] == [
+        {"config": "exp_0", "run_id": "run-0"},
+        {"config": "exp_1", "run_id": "run-1"},
+    ]
+    assert artifact["default_excluded_strategies"] == list(
+        PRECISION_COMBINER_NAMES
+    )
+    assert artifact["best_strategy"] == "rank_mean"
+    assert artifact["best_nested_oof_auc"] == pytest.approx(
+        report.evaluations[0].nested_auc
+    )
+    assert artifact["strategies"] == [
+        {
+            "name": "rank_mean",
+            "status": "completed",
+            "elapsed_seconds": pytest.approx(report.evaluations[0].elapsed_seconds),
+            "nested_oof_auc": pytest.approx(report.evaluations[0].nested_auc),
+        }
+    ]
+    assert report.evaluations[0].elapsed_seconds >= 0.0
+
+
 def make_fold_of() -> pd.Series:
     return pd.Series(np.arange(N) % 5, index=make_index())
 
@@ -699,6 +785,11 @@ def test_record_nested_evaluation_writes_derived_ensemble_run(tmp_path, monkeypa
         same_strategy_auc=0.89,
         new_member_configs=["exp_2"],
     )
+    report = NestedEvaluationReport(
+        evaluations=[evaluation],
+        failures=[],
+        default_excluded=PRECISION_COMBINER_NAMES,
+    )
     tracking_uri = f"sqlite:///{tmp_path}/mlflow.db"
 
     run_id = record_nested_evaluation(
@@ -706,6 +797,7 @@ def test_record_nested_evaluation_writes_derived_ensemble_run(tmp_path, monkeypa
         members,
         issue=999,
         baseline=baseline,
+        evaluation_report=report,
         input_hashes={"train": "t1", "test": "t2", "folds": "t3"},
         tracking_uri=tracking_uri,
     )
@@ -750,3 +842,16 @@ def test_record_nested_evaluation_writes_derived_ensemble_run(tmp_path, monkeypa
     assert list(weights.columns) == ["member", "selected", "fold_total", "mean_weight"]
     assert list(weights["member"]) == ["exp_0", "exp_1", "exp_2"]
     assert (weights["selected"] == 5).all()
+    report_artifact = json.loads(
+        Path(
+            client.download_artifacts(run_id, "ensemble_evaluation.json")
+        ).read_text()
+    )
+    assert report_artifact["default_excluded_strategies"] == list(
+        PRECISION_COMBINER_NAMES
+    )
+    assert report_artifact["strategies"][0]["name"] == "rank_mean"
+    assert report_artifact["strategies"][0]["elapsed_seconds"] >= 0.0
+    assert report_artifact["strategies"][0]["nested_oof_auc"] == pytest.approx(
+        evaluation.nested_auc
+    )
