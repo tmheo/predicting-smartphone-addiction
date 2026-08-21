@@ -259,3 +259,52 @@ def test_summary_union_covers_both_bands() -> None:
     assert summary["union"]["lower"] == pytest.approx(
         summary["same_size"]["overall"]["observed_minimum"]
     )
+
+
+def test_checkpoint_round_trips_and_drops_a_truncated_last_line(tmp_path) -> None:
+    path = tmp_path / "contrasts.jsonl"
+    band.append_checkpoint(path, {"index": 0, "delta_best": 1.0})
+    band.append_checkpoint(path, {"index": 2, "delta_best": 2.0})
+    with path.open("a") as handle:
+        handle.write('{"index": 3, "delta_be')
+
+    done = band.load_checkpoint(path)
+
+    assert sorted(done) == [0, 2]
+    assert done[2]["delta_best"] == 2.0
+
+
+def test_checkpoint_of_a_missing_file_is_empty(tmp_path) -> None:
+    assert band.load_checkpoint(tmp_path / "absent.jsonl") == {}
+
+
+def test_baseline_cache_round_trips_the_arm_and_its_prediction(tmp_path) -> None:
+    path = tmp_path / "baseline-arm.json"
+    arm = band.ArmResult(
+        label="기준 풀",
+        members=35,
+        strategy_auc={"rank_mean": 0.9},
+        strategy_fold_auc={},
+        failures={"greedy_rank_mean": "미수렴"},
+        best_strategy="rank_mean",
+        best_auc=0.9,
+        best_fold_auc={0: 0.91, 1: 0.89},
+        elapsed_seconds=671.0,
+    )
+    prediction = np.asarray([0.1, 0.2, 0.3])
+
+    band.save_baseline_cache(path, arm, prediction)
+    restored, restored_prediction = band.load_baseline_cache(path)
+
+    assert restored.best_strategy == "rank_mean"
+    assert restored.best_auc == 0.9
+    assert restored.best_fold_auc == {0: 0.91, 1: 0.89}
+    assert sorted(restored.failures) == ["greedy_rank_mean"]
+    np.testing.assert_array_equal(restored_prediction, prediction)
+
+
+def test_baseline_cache_is_absent_without_its_prediction_file(tmp_path) -> None:
+    path = tmp_path / "baseline-arm.json"
+    path.write_text("{}")
+
+    assert band.load_baseline_cache(path) is None

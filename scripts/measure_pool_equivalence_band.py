@@ -39,6 +39,8 @@ from pipeline.runs import MlflowRunStore  # noqa: E402
 
 BASELINE_PATH = Path("artifacts/pool-baseline-2026-08-21.yaml")
 DEFAULT_EVIDENCE = Path("docs/research/pool-reduction-equivalence-band-evidence.json")
+DEFAULT_CHECKPOINT = Path("run-issue342/contrasts.jsonl")
+DEFAULT_BASELINE_CACHE = Path("run-issue342/baseline-arm.json")
 DEFAULT_REPORT = Path("docs/research/pool-reduction-equivalence-band.md")
 TICKET_ISSUE = 342
 MAP_ISSUE = 338
@@ -598,7 +600,83 @@ def fold_positions_of(fold_of: pd.Series) -> list[np.ndarray]:
     return [np.flatnonzero(values == fold) for fold in sorted(fold_of.unique())]
 
 
-def measure(jobs: int, limit: int | None, evidence_path: Path) -> dict:
+def load_checkpoint(path: Path) -> dict[int, dict]:
+    """이미 끝난 대조 기록. 잘린 마지막 줄은 버린다.
+
+    측정이 여러 시간 걸리므로 잠자기·강제 종료·재부팅을 건너뛰고 이어 달릴 수 있어야
+    한다. 대조 하나가 끝날 때마다 한 줄씩 덧붙이고, 다시 시작할 때 그 줄들을 읽어
+    남은 대조만 실행한다.
+    """
+    if not path.exists():
+        return {}
+    done: dict[int, dict] = {}
+    for line in path.read_text().splitlines():
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue  # 기록 도중 끊긴 마지막 줄.
+        done[record["index"]] = record
+    return done
+
+
+def append_checkpoint(path: Path, record: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a") as handle:
+        handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+        handle.flush()
+
+
+def load_baseline_cache(path: Path) -> tuple[ArmResult, np.ndarray] | None:
+    """기준 풀 팔은 한 번 재면 충분하다. 다시 시작할 때 11분을 아낀다."""
+    prediction_path = path.with_suffix(".npy")
+    if not path.exists() or not prediction_path.exists():
+        return None
+    payload = json.loads(path.read_text())
+    arm = ArmResult(
+        label=payload["label"],
+        members=payload["members"],
+        strategy_auc=payload["strategy_auc"],
+        strategy_fold_auc={},
+        failures={name: "" for name in payload["failures"]},
+        best_strategy=payload["best_strategy"],
+        best_auc=payload["best_auc"],
+        best_fold_auc={int(k): v for k, v in payload["best_fold_auc"].items()},
+        elapsed_seconds=payload["elapsed_seconds"],
+    )
+    return arm, np.load(prediction_path)
+
+
+def save_baseline_cache(path: Path, arm: ArmResult, prediction: np.ndarray) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {
+                "label": arm.label,
+                "members": arm.members,
+                "strategy_auc": arm.strategy_auc,
+                "failures": sorted(arm.failures),
+                "best_strategy": arm.best_strategy,
+                "best_auc": arm.best_auc,
+                "best_fold_auc": {str(k): v for k, v in arm.best_fold_auc.items()},
+                "elapsed_seconds": arm.elapsed_seconds,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n"
+    )
+    np.save(path.with_suffix(".npy"), prediction)
+
+
+def measure(
+    jobs: int,
+    limit: int | None,
+    evidence_path: Path,
+    checkpoint_path: Path = DEFAULT_CHECKPOINT,
+    baseline_cache_path: Path = DEFAULT_BASELINE_CACHE,
+) -> dict:
     base, fold_of, y = load_inputs()
     configs = list(base.columns)
     plan = build_contrast_plan(configs)
@@ -606,8 +684,14 @@ def measure(jobs: int, limit: int | None, evidence_path: Path) -> dict:
         plan = plan[:limit]
     print(f"기준 풀 {len(configs)}개, 행 {len(base)}, 영점 대조 {len(plan)}개", flush=True)
 
-    baseline_arm = evaluate_arm("기준 풀", base, fold_of, y)
-    baseline_prediction = baseline_arm.best_prediction.to_numpy(dtype=np.float64)
+    cached = load_baseline_cache(baseline_cache_path)
+    if cached is None:
+        baseline_arm = evaluate_arm("기준 풀", base, fold_of, y)
+        baseline_prediction = baseline_arm.best_prediction.to_numpy(dtype=np.float64)
+        save_baseline_cache(baseline_cache_path, baseline_arm, baseline_prediction)
+    else:
+        baseline_arm, baseline_prediction = cached
+        print(f"기준 풀 팔은 {baseline_cache_path}에서 재사용한다.", flush=True)
     print(
         f"기준 풀 최선 전략 {baseline_arm.best_strategy} "
         f"nested OOF AUC {baseline_arm.best_auc:.12f} "
@@ -615,10 +699,21 @@ def measure(jobs: int, limit: int | None, evidence_path: Path) -> dict:
         flush=True,
     )
 
+    done = load_checkpoint(checkpoint_path)
+    remaining = [contrast for contrast in plan if contrast.index not in done]
+    records: list[dict] = [done[contrast.index] for contrast in plan if contrast.index in done]
+    if records:
+        print(
+            f"{checkpoint_path}에서 끝난 대조 {len(records)}개를 이어받고 "
+            f"{len(remaining)}개를 남긴다.",
+            flush=True,
+        )
     positions = [list(map(int, group)) for group in fold_positions_of(fold_of)]
-    payloads = [(contrast, baseline_prediction, positions) for contrast in plan]
-    records: list[dict] = []
-    if jobs <= 1:
+    payloads = [(contrast, baseline_prediction, positions) for contrast in remaining]
+    executor = None
+    if not payloads:
+        outcomes = iter(())
+    elif jobs <= 1:
         _init_worker()
         outcomes = (_run_contrast(payload) for payload in payloads)
     else:
@@ -629,6 +724,7 @@ def measure(jobs: int, limit: int | None, evidence_path: Path) -> dict:
             outcome["contrast"], baseline_arm, outcome["arm"], outcome["bootstrap"]
         )
         records.append(record)
+        append_checkpoint(checkpoint_path, record)
         print(
             f"[{len(records)}/{len(plan)}] {record['label']} "
             f"Δ={record['delta_best']:+.12f} "
@@ -636,7 +732,7 @@ def measure(jobs: int, limit: int | None, evidence_path: Path) -> dict:
             f"전략 {record['small_best_strategy']}→{record['large_best_strategy']}",
             flush=True,
         )
-    if jobs > 1:
+    if executor is not None:
         executor.shutdown()
 
     records.sort(key=lambda record: record["index"])
@@ -811,6 +907,8 @@ def main() -> None:
     parser.add_argument("--evidence", type=Path, default=DEFAULT_EVIDENCE)
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     parser.add_argument("--seed-evidence", type=Path, default=SEED_READOUT_EVIDENCE)
+    parser.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
+    parser.add_argument("--baseline-cache", type=Path, default=DEFAULT_BASELINE_CACHE)
     args = parser.parse_args()
 
     if args.command == "plan":
@@ -824,7 +922,13 @@ def main() -> None:
         return
 
     if args.command == "measure":
-        measure(args.jobs, args.limit, args.evidence)
+        measure(
+            args.jobs,
+            args.limit,
+            args.evidence,
+            args.checkpoint,
+            args.baseline_cache,
+        )
         return
 
     if args.command == "seed-readout":
