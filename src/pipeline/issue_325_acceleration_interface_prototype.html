@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>가속 모듈 호출 규약 비교 시제품</title>
+  <style>
+    :root {
+      --cloud: #e7edf1;
+      --paper: #f8fbfc;
+      --ink: #14242f;
+      --muted: #5a6b75;
+      --line: #b8c6ce;
+      --ocean: #176b78;
+      --ocean-dark: #0d4e59;
+      --copper: #c36f2e;
+      --berry: #9a3c55;
+      --safe: #2f7359;
+      --shadow: 0 18px 48px rgba(31, 53, 66, 0.12);
+      --radius: 18px;
+      font-family: "Avenir Next", "Apple SD Gothic Neo", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--cloud);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(90deg, rgba(23, 107, 120, 0.045) 1px, transparent 1px) 0 0 / 48px 48px,
+        linear-gradient(rgba(23, 107, 120, 0.045) 1px, transparent 1px) 0 0 / 48px 48px,
+        var(--cloud);
+    }
+
+    button { font: inherit; }
+
+    button:focus-visible {
+      outline: 3px solid rgba(195, 111, 46, 0.48);
+      outline-offset: 3px;
+    }
+
+    .shell {
+      width: min(1440px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 38px 0 64px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+      gap: 30px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow,
+    .utility {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.74rem;
+      color: var(--ocean-dark);
+    }
+
+    h1 {
+      margin: 8px 0 12px;
+      max-width: 920px;
+      font-family: "Avenir Next Condensed", "Apple SD Gothic Neo", system-ui, sans-serif;
+      font-size: clamp(2.8rem, 7vw, 6.8rem);
+      font-weight: 760;
+      line-height: 0.9;
+      letter-spacing: -0.052em;
+    }
+
+    .hero-copy {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.04rem;
+      line-height: 1.72;
+    }
+
+    .question-card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-top: 5px solid var(--copper);
+      border-radius: 4px 4px var(--radius) var(--radius);
+      background: rgba(248, 251, 252, 0.82);
+      box-shadow: var(--shadow);
+    }
+
+    .question-card strong {
+      display: block;
+      margin: 9px 0 7px;
+      font-size: 1.1rem;
+    }
+
+    .question-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .facts {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      margin: 26px 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--line);
+    }
+
+    .fact {
+      min-height: 126px;
+      padding: 19px;
+      background: var(--paper);
+    }
+
+    .fact b {
+      display: block;
+      margin-top: 10px;
+      font-size: clamp(1.3rem, 2.2vw, 2rem);
+      letter-spacing: -0.03em;
+    }
+
+    .fact span:last-child {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(248, 251, 252, 0.94);
+      box-shadow: var(--shadow);
+    }
+
+    .design-switcher {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      overflow: hidden;
+      background: var(--line);
+    }
+
+    .design-button {
+      min-height: 132px;
+      padding: 20px;
+      border: 0;
+      background: var(--paper);
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .design-button[aria-selected="true"] {
+      background: var(--ocean);
+      color: white;
+    }
+
+    .design-button .tag {
+      display: block;
+      margin-bottom: 13px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      opacity: 0.78;
+    }
+
+    .design-button b {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 1.16rem;
+    }
+
+    .design-button small {
+      display: block;
+      max-width: 34ch;
+      line-height: 1.45;
+      opacity: 0.78;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
+      gap: 1px;
+      border-top: 1px solid var(--line);
+      background: var(--line);
+    }
+
+    .design-detail,
+    .state-panel {
+      padding: 26px;
+      background: var(--paper);
+    }
+
+    h2, h3 { letter-spacing: -0.025em; }
+
+    h2 {
+      margin: 6px 0 10px;
+      font-size: clamp(1.7rem, 3vw, 2.55rem);
+    }
+
+    .stance {
+      margin: 0 0 22px;
+      color: var(--muted);
+      line-height: 1.62;
+    }
+
+    .code {
+      margin: 0;
+      padding: 20px;
+      overflow-x: auto;
+      border-left: 5px solid var(--ocean);
+      background: #172a34;
+      color: #e8f3f4;
+      font: 0.84rem/1.65 "SFMono-Regular", Consolas, monospace;
+      white-space: pre;
+    }
+
+    .interface-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .interface-card {
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+    }
+
+    .interface-card h3 {
+      margin: 0 0 10px;
+      font-size: 0.96rem;
+    }
+
+    .interface-card ul,
+    .state-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .state-panel {
+      position: relative;
+    }
+
+    .state-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .state-head h3 { margin: 0; }
+
+    .status {
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(47, 115, 89, 0.12);
+      color: var(--safe);
+      font: 0.76rem "SFMono-Regular", Consolas, monospace;
+    }
+
+    .status.failed {
+      background: rgba(154, 60, 85, 0.12);
+      color: var(--berry);
+    }
+
+    .rail {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 7px;
+      margin: 19px 0 22px;
+    }
+
+    .rail-step {
+      min-height: 68px;
+      padding: 9px 7px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-align: center;
+    }
+
+    .rail-step.active {
+      border-color: var(--copper);
+      background: rgba(195, 111, 46, 0.12);
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .rail-step.complete {
+      border-color: var(--ocean);
+      background: rgba(23, 107, 120, 0.1);
+      color: var(--ocean-dark);
+    }
+
+    .rail-step.failed {
+      border-color: var(--berry);
+      background: rgba(154, 60, 85, 0.1);
+      color: var(--berry);
+    }
+
+    .state-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .datum {
+      min-height: 88px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+    }
+
+    .datum span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .datum strong {
+      display: block;
+      overflow-wrap: anywhere;
+      font-size: 0.92rem;
+      line-height: 1.42;
+    }
+
+    .state-block {
+      margin-top: 14px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+    }
+
+    .state-block h4 {
+      margin: 0 0 9px;
+      font-size: 0.82rem;
+    }
+
+    .lab {
+      margin-top: 24px;
+      overflow: hidden;
+    }
+
+    .lab-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 24px 26px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .lab-header h2 { margin: 0 0 5px; }
+
+    .lab-header p {
+      max-width: 720px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .reset {
+      align-self: center;
+      padding: 10px 15px;
+      border: 1px solid var(--ocean);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ocean-dark);
+      cursor: pointer;
+    }
+
+    .free-play {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      padding: 20px 26px 26px;
+    }
+
+    .case-button,
+    .step-button {
+      min-height: 54px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      color: var(--ink);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .case-button:hover,
+    .step-button:hover { border-color: var(--ocean); }
+
+    .walkthroughs {
+      border-top: 1px solid var(--line);
+      padding: 22px 26px 28px;
+    }
+
+    .walk-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .walk-tab {
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .walk-tab[aria-selected="true"] {
+      border-color: var(--ocean);
+      background: var(--ocean);
+      color: white;
+    }
+
+    .walk-copy {
+      margin: 0 0 15px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .walk-steps {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .step-button[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .recommendation {
+      display: grid;
+      grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+      gap: 28px;
+      margin-top: 24px;
+      padding: 28px;
+      border: 1px solid var(--ocean);
+      border-radius: var(--radius);
+      background: var(--ocean-dark);
+      color: white;
+      box-shadow: var(--shadow);
+    }
+
+    .recommendation h2 { margin: 4px 0 0; }
+
+    .recommendation p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.78);
+      line-height: 1.7;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .workspace,
+      .recommendation { grid-template-columns: 1fr; }
+      .facts { grid-template-columns: repeat(2, 1fr); }
+      .free-play { grid-template-columns: repeat(2, 1fr); }
+      .walk-steps { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 660px) {
+      .shell { width: min(100% - 20px, 1440px); padding-top: 22px; }
+      .design-switcher,
+      .facts,
+      .interface-grid,
+      .state-grid,
+      .free-play,
+      .walk-steps { grid-template-columns: 1fr; }
+      .hero { gap: 18px; }
+      .lab-header { display: block; }
+      .reset { margin-top: 16px; }
+      .rail { overflow-x: auto; grid-template-columns: repeat(5, minmax(100px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <span class="eyebrow">Issue 325 / throwaway logic prototype</span>
+        <h1>호출자는 얼마나 알아야 하는가</h1>
+        <p class="hero-copy">
+          부분 복구, fold-fit 재사용 결과, 세부 관측, CPU/GPU 실행을 한 시드 안에서 조율하되 CV 호출자에게 내부 순서를 누출하지 않는 module interface를 비교한다.
+        </p>
+      </div>
+      <aside class="question-card">
+        <span class="utility">시제품 질문</span>
+        <strong>어느 seam이 가장 깊은 module을 만드는가?</strong>
+        <p>설계안을 바꾸고 대표 상황을 눌러 호출자가 보는 상태와 내부에 숨는 상태를 비교한다.</p>
+      </aside>
+    </section>
+
+    <section class="facts" aria-label="실측 근거">
+      <div class="fact"><span class="utility">TabCNN 정상 실행</span><b>4,557.23초</b><span>모델 학습이 93.99%</span></div>
+      <div class="fact"><span class="utility">4/5 복구 실행</span><b>185.57초</b><span>피할 수 있는 피처 재계산 하한</span></div>
+      <div class="fact"><span class="utility">LightGBM 실행</span><b>65.89%</b><span>fold-fit 피처 준비 비중</span></div>
+      <div class="fact"><span class="utility">관측 기록</span><b>&lt; 0.00122초</b><span>550개 사건의 99백분위 추정 합계</span></div>
+    </section>
+
+    <section class="panel" aria-labelledby="comparison-title">
+      <div class="design-switcher" id="design-switcher" role="tablist" aria-label="설계안 선택"></div>
+      <div class="workspace">
+        <article class="design-detail">
+          <span class="utility" id="design-kicker"></span>
+          <h2 id="comparison-title"></h2>
+          <p class="stance" id="design-stance"></p>
+          <pre class="code" id="design-code"></pre>
+          <div class="interface-grid">
+            <section class="interface-card"><h3>호출자가 알아야 할 것</h3><ul id="caller-knows"></ul></section>
+            <section class="interface-card"><h3>seam 뒤에 숨는 것</h3><ul id="module-hides"></ul></section>
+            <section class="interface-card"><h3>depth와 locality</h3><ul id="design-strengths"></ul></section>
+            <section class="interface-card"><h3>약점</h3><ul id="design-risks"></ul></section>
+          </div>
+        </article>
+        <aside class="state-panel" aria-live="polite">
+          <div class="state-head">
+            <h3>현재 실행 상태</h3>
+            <span class="status" id="status-badge"></span>
+          </div>
+          <div class="rail" id="execution-rail"></div>
+          <div class="state-grid">
+            <div class="datum"><span>선택한 상황</span><strong id="state-case"></strong></div>
+            <div class="datum"><span>CV가 보는 단계</span><strong id="state-visible"></strong></div>
+            <div class="datum"><span>복구 상태</span><strong id="state-recovery"></strong></div>
+            <div class="datum"><span>실행 방식</span><strong id="state-mode"></strong></div>
+            <div class="datum"><span>피처 계산</span><strong id="state-feature"></strong></div>
+            <div class="datum"><span>결과</span><strong id="state-outcome"></strong></div>
+          </div>
+          <section class="state-block"><h4>이번 단계에서 module이 숨긴 일</h4><ul class="state-list" id="state-hidden"></ul></section>
+          <section class="state-block"><h4>오류 또는 생략 근거</h4><ul class="state-list" id="state-events"></ul></section>
+        </aside>
+      </div>
+    </section>
+
+    <section class="panel lab" aria-labelledby="lab-title">
+      <div class="lab-header">
+        <div><h2 id="lab-title">실행 상황 실험실</h2><p>자유 실행은 상황을 끝까지 적용한다. 단계별 예시는 버튼을 순서대로 눌러 상태 변화를 확인한다.</p></div>
+        <button class="reset" id="reset-button" type="button">상태 초기화</button>
+      </div>
+      <div class="free-play" id="free-play"></div>
+      <div class="walkthroughs">
+        <div class="walk-tabs" id="walk-tabs" role="tablist" aria-label="단계별 예시"></div>
+        <p class="walk-copy" id="walk-copy"></p>
+        <div class="walk-steps" id="walk-steps"></div>
+      </div>
+    </section>
+
+    <section class="recommendation">
+      <div><span class="utility" style="color:#8fd3d7">현재 권고</span><h2>기본 호출자 우선안을 중심으로 합친다</h2></div>
+      <p>
+        기존 <code>cv.run_cv</code> interface는 유지하고 내부 <code>execute_seed</code>가 복구 선검증부터 폴드 결과 확정까지 소유하는 안이 가장 강하다.
+        여기에 최소 호출 규약안의 엄격한 사전 검증과 명시적인 <code>cpu | cuda</code> 선택을 넣는다.
+        준비 세션안의 <code>readiness</code>는 호출자가 실행 중간에 개입해야 할 실제 요구가 생기기 전까지 외부 interface로 노출하지 않는다.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const DecisionLab = (() => {
+      const phases = ["복구 선검증", "공통 피처", "fold-fit", "모델", "결과 확정"];
+
+      const designs = {
+        minimal: {
+          id: "minimal",
+          tag: "대안 A / 최소 호출 규약",
+          title: "시드 실행 객체에 모두 맡긴다",
+          short: "bind 뒤 run_seed 한 번으로 전체 수명주기를 실행한다.",
+          stance: "새 FoldExecutor module을 정식 진입점으로 삼는다. 메서드 수는 가장 적지만 호출자가 저장 경로와 관측 의존성을 LocalRunContext로 구성해야 한다.",
+          code: `context = LocalRunContext(\n    recovery_root=...,\n    fold_fit_reuse_root=...,\n    observation_root=...,\n)\nexecutor = FoldExecutor.bind(cfg, plan, context)\nresult = executor.run_seed(train, test, seed=42)`,
+          caller: ["LocalRunContext 구성", "bind를 먼저 호출", "run_seed는 한 번만 실행", "정식 실행과 단독 실행의 context 차이"],
+          hides: ["복구 선검증과 지연 계산", "제공자별 재사용과 실행 방식", "모델 호출과 폴드 결과 확정", "판본화 관측 파일과 MLflow 요약"],
+          strengths: ["두 진입점이 큰 leverage를 제공", "시드 수명주기가 한 implementation에 모임", "삭제하면 복잡성이 여러 호출자로 되돌아감"],
+          risks: ["LocalRunContext가 interface 사실을 늘림", "큰 implementation이 여러 수명주기를 소유", "기존 run_cv와 역할 중복 가능"],
+          visible: {0: "bind 검증", 1: "run_seed 실행 중", 2: "run_seed 실행 중", 3: "run_seed 실행 중", 4: "CVResult 반환"}
+        },
+        extensible: {
+          id: "extensible",
+          tag: "대안 B / 확장성 우선",
+          title: "선검증과 실행 사이에 준비 세션을 둔다",
+          short: "prepare_seed가 readiness를 만들고 execute가 계산을 이어간다.",
+          stance: "FoldExecutionModule이 준비된 시드 실행 세션을 돌려준다. 호출자는 완료·미완료 폴드를 실행 전에 볼 수 있고 관측·재사용 연결을 바꿀 수 있지만, 두 단계 순서와 입력 불변 조건을 배워야 한다.",
+          code: `prepared = module.prepare_seed(\n    SeedExecutionRequest(cfg, plan, train, test, 42),\n    SeedExecutionBindings(recovery, reuse, recorder),\n)\nassert prepared.readiness.pending_folds == (4,)\nresult = prepared.execute()`,
+          caller: ["request와 bindings 구성", "prepare_seed 뒤 입력을 바꾸지 않음", "readiness 해석", "execute는 한 번만 호출"],
+          hides: ["복구 파일 검증 세부", "제공자 catalog와 재사용 저장", "장치별 실행 연결부", "모델 계산과 결과 확정"],
+          strengths: ["선검증 결과를 확장 지점으로 사용", "검사와 운영 연결을 명시적으로 교체", "변화가 FoldExecutionModule과 FeaturePlan에 모임"],
+          risks: ["가장 넓은 interface와 가장 많은 타입", "prepare와 execute 사이의 오용 가능", "현재 호출자에게 readiness 개입 요구가 없음"],
+          visible: {0: "readiness 공개", 1: "execute 내부", 2: "execute 내부", 3: "execute 내부", 4: "CVResult 반환"}
+        },
+        default: {
+          id: "default",
+          tag: "대안 C / 기본 호출자 우선",
+          title: "run_cv는 그대로 두고 내부 실행만 깊게 만든다",
+          short: "기존 호출은 바뀌지 않고 execute_seed가 내부 순서를 소유한다.",
+          stance: "cv.run_cv의 기존 interface를 유지한다. 새 CVSeedExecution module은 내부 seam으로 두고 FeaturePlan에는 미완료 폴드 피처를 만드는 단일 연산만 추가한다.",
+          code: `result = cv.run_cv(\n    cfg, plan, train, test, seed=42,\n    recorder=observer,\n    recovery=recovery,\n)\n\n# run_cv 내부\nexecuted = execute_seed(...)`,
+          caller: ["기존 run_cv 입력 불변 조건", "recorder와 recovery의 기존 선택 규약", "CVResult의 기존 의미"],
+          hides: ["execute_seed의 복구 우선 상태 기계", "공통 행렬 1회 준비와 미완료 fold 계산", "재사용·CPU/GPU·관측 세부", "모델 호출, 중요도, 원자적 결과 확정"],
+          strengths: ["호출자가 새 사실을 거의 배우지 않음", "현재 사용자 경로와 시드 병렬 경로를 그대로 유지", "전체 자료 재학습과 진입 진단을 잘못 합치지 않음"],
+          risks: ["중간 readiness를 외부에서 읽기 어려움", "CV 전용으로 범위가 제한됨", "내부 module이 커질 수 있어 private 단계 분리가 필요"],
+          visible: {0: "run_cv 실행 중", 1: "run_cv 실행 중", 2: "run_cv 실행 중", 3: "run_cv 실행 중", 4: "CVResult 반환"}
+        }
+      };
+
+      const cases = {
+        partial: {
+          label: "4/5 부분 복구",
+          final: {phase: 4, recovery: "완료 4개, 미완료 1개", mode: "CPU 명시", feature: "공통 1회, fold-fit 1개 fold", outcome: "5개 fold 결과 확정", hidden: ["모든 복구 산출물을 먼저 검증", "완료 4개 fold의 재사용 저장소 조회와 계산 생략"], events: ["checkpoint_reused: 4", "pending_fold: 4"]}
+        },
+        cache: {
+          label: "재사용 결과 적중",
+          final: {phase: 4, recovery: "미완료 fold 계산", mode: "CPU 명시", feature: "내용 키 검증 뒤 fit/transform 생략", outcome: "모델 실행 후 결과 확정", hidden: ["manifest와 표 값 내용 해시 재검증", "잠금 획득 뒤 완성 항목 재확인"], events: ["reuse_hit: XgbImputeAux", "provider_fit: skipped"]}
+        },
+        gpuMissing: {
+          label: "CUDA 사용 불가",
+          final: {phase: 0, recovery: "선검증 완료", mode: "CUDA 명시", feature: "계산 시작 전 중단", outcome: "실행 실패", hidden: ["지원 판본과 장치 능력 확인", "CPU로 조용히 바꾸지 않음"], events: ["ExecutionModeError", "fallback: forbidden"], failed: true}
+        },
+        mismatch: {
+          label: "CPU/GPU 정확 동등성 실패",
+          final: {phase: 2, recovery: "미완료 fold 계산", mode: "CUDA 후보", feature: "승인 관문에서 중단", outcome: "CUDA 구현 채택 거부", hidden: ["seed 42 고정 5폴드 결과 정확 비교", "CPU 구현만 유지하고 가상 seam을 만들지 않음"], events: ["exact_equality: failed", "cuda_adapter: rejected"], failed: true}
+        },
+        corruption: {
+          label: "재사용 저장 손상",
+          final: {phase: 2, recovery: "미완료 fold 계산", mode: "CPU 명시", feature: "예상 키 검증에서 중단", outcome: "실행 실패", hidden: ["파일 SHA-256과 표 값 내용 해시 확인", "손상 항목 삭제나 재계산 금지"], events: ["FoldFitReuseError", "silent_recompute: forbidden"], failed: true}
+        }
+      };
+
+      const walkthroughs = {
+        recovery: {
+          label: "부분 복구",
+          copy: "완료된 네 fold를 건너뛰고 미완료 fold 하나만 확정하는 흐름이다.",
+          steps: [
+            {label: "복구 5개 선검증", patch: {phase: 0, recovery: "완료 4개, 미완료 1개", feature: "아직 계산 안 함", hidden: ["선언 피처 순서로 checkpoint 전부 검증"], events: ["preflight: valid"]}},
+            {label: "공통 행렬 1회", patch: {phase: 1, feature: "공통 행렬 1회", hidden: ["초기 점수와 공통 host 행렬 지연 계산"], events: ["pending_fold: 4"]}},
+            {label: "fold 4만 계산", patch: {phase: 3, feature: "fold-fit 1개 fold", hidden: ["제공자별 재사용 확인과 모델 실행"], events: ["folds_0_3: skipped"]}},
+            {label: "결과 확정", patch: {phase: 4, outcome: "5개 fold 결과 확정", hidden: ["완료 통지 각 fold 정확히 1회"], events: ["reused: 4", "computed: 1"]}}
+          ]
+        },
+        gpu: {
+          label: "명시적 GPU",
+          copy: "실행 방식은 제공자나 모델별로 명시한다. CUDA를 요청했는데 지원되지 않으면 CPU로 바꾸지 않는다.",
+          steps: [
+            {label: "CUDA 명시", patch: {phase: 0, mode: "CUDA 명시", hidden: ["실행 방식은 제공자 설정에서 읽음"], events: ["auto: forbidden"]}},
+            {label: "지원 조합 검증", patch: {phase: 0, hidden: ["라이브러리, 장치, 드라이버와 승인 근거 확인"], events: ["support: unavailable"]}},
+            {label: "즉시 실패", patch: {phase: 0, feature: "계산 시작 전 중단", outcome: "실행 실패", hidden: ["CPU 경로는 보존하지만 자동 대체하지 않음"], events: ["ExecutionModeError"], failed: true}},
+            {label: "CPU로 새 실행", patch: {phase: 4, mode: "CPU 명시", feature: "CPU 제공자와 모델 계산", outcome: "새 정체성으로 결과 확정", hidden: ["CPU/GPU 재사용 결과를 교차 사용하지 않음"], events: ["execution_identity: cpu"], failed: false}}
+          ]
+        },
+        integrity: {
+          label: "손상과 관측 실패",
+          copy: "재사용 결과 손상과 영구 관측 보존 실패는 결과 신뢰를 깨므로 실행을 실패시킨다.",
+          steps: [
+            {label: "예상 키 발견", patch: {phase: 2, feature: "재사용 결과 검증 중", hidden: ["manifest, 파일과 표 값 해시 확인"], events: ["reuse_key: expected"]}},
+            {label: "내용 불일치", patch: {phase: 2, feature: "계산 시작 전 중단", outcome: "실행 실패", hidden: ["손상 항목을 덮어쓰지 않음"], events: ["ReuseCorruptionError"], failed: true}},
+            {label: "관측 보존 실패", patch: {phase: 3, outcome: "실행 실패", hidden: ["시간 사건 원문 없이는 완료로 보지 않음"], events: ["observation_write: failed"], failed: true}},
+            {label: "자원 표본만 실패", patch: {phase: 4, outcome: "결과 확정", hidden: ["지원 불가와 누락 구간을 기록"], events: ["resource_sampling: missing"], failed: false}}
+          ]
+        }
+      };
+
+      const initialState = (designId = "default") => ({
+        designId,
+        caseLabel: "선택 전",
+        phase: 0,
+        recovery: "아직 확인하지 않음",
+        mode: "CPU 기본",
+        feature: "아직 계산하지 않음",
+        outcome: "대기",
+        hidden: ["상황을 선택하면 내부 작업이 표시된다"],
+        events: ["없음"],
+        failed: false,
+        walkthroughId: "recovery",
+        walkthroughStep: 0
+      });
+
+      function reduce(state, action) {
+        if (action.type === "SELECT_DESIGN") return {...initialState(action.designId), walkthroughId: state.walkthroughId};
+        if (action.type === "RESET") return initialState(state.designId);
+        if (action.type === "RUN_CASE") return {...state, ...cases[action.caseId].final, caseLabel: cases[action.caseId].label};
+        if (action.type === "SELECT_WALKTHROUGH") return {...initialState(state.designId), walkthroughId: action.walkthroughId};
+        if (action.type === "RUN_STEP") {
+          const walk = walkthroughs[state.walkthroughId];
+          const patch = walk.steps[action.step].patch;
+          return {...state, ...patch, caseLabel: walk.label, walkthroughStep: action.step + 1};
+        }
+        return state;
+      }
+
+      return {phases, designs, cases, walkthroughs, initialState, reduce};
+    })();
+
+    let state = DecisionLab.initialState();
+
+    const byId = id => document.getElementById(id);
+    const list = (target, values) => { target.innerHTML = values.map(value => `<li>${value}</li>`).join(""); };
+
+    function renderDesign() {
+      const design = DecisionLab.designs[state.designId];
+      const switcher = byId("design-switcher");
+      switcher.innerHTML = Object.values(DecisionLab.designs).map(item => `
+        <button class="design-button" type="button" role="tab" aria-selected="${item.id === state.designId}" data-design="${item.id}">
+          <span class="tag">${item.tag}</span><b>${item.title}</b><small>${item.short}</small>
+        </button>`).join("");
+      switcher.querySelectorAll("[data-design]").forEach(button => button.addEventListener("click", () => dispatch({type: "SELECT_DESIGN", designId: button.dataset.design})));
+      byId("design-kicker").textContent = design.tag;
+      byId("comparison-title").textContent = design.title;
+      byId("design-stance").textContent = design.stance;
+      byId("design-code").textContent = design.code;
+      list(byId("caller-knows"), design.caller);
+      list(byId("module-hides"), design.hides);
+      list(byId("design-strengths"), design.strengths);
+      list(byId("design-risks"), design.risks);
+    }
+
+    function renderState() {
+      const design = DecisionLab.designs[state.designId];
+      const badge = byId("status-badge");
+      badge.textContent = state.failed ? "FAILED" : state.outcome === "대기" ? "READY" : "ACTIVE";
+      badge.classList.toggle("failed", state.failed);
+      byId("execution-rail").innerHTML = DecisionLab.phases.map((name, index) => {
+        const kind = state.failed && index === state.phase ? "failed" : index < state.phase ? "complete" : index === state.phase ? "active" : "";
+        return `<div class="rail-step ${kind}"><span class="utility">${index + 1}</span><br>${name}</div>`;
+      }).join("");
+      byId("state-case").textContent = state.caseLabel;
+      byId("state-visible").textContent = design.visible[state.phase];
+      byId("state-recovery").textContent = state.recovery;
+      byId("state-mode").textContent = state.mode;
+      byId("state-feature").textContent = state.feature;
+      byId("state-outcome").textContent = state.outcome;
+      list(byId("state-hidden"), state.hidden);
+      list(byId("state-events"), state.events);
+    }
+
+    function renderLab() {
+      byId("free-play").innerHTML = Object.entries(DecisionLab.cases).map(([id, item]) => `<button class="case-button" type="button" data-case="${id}">${item.label}</button>`).join("");
+      byId("free-play").querySelectorAll("[data-case]").forEach(button => button.addEventListener("click", () => dispatch({type: "RUN_CASE", caseId: button.dataset.case})));
+
+      byId("walk-tabs").innerHTML = Object.entries(DecisionLab.walkthroughs).map(([id, item]) => `<button class="walk-tab" type="button" role="tab" aria-selected="${id === state.walkthroughId}" data-walk="${id}">${item.label}</button>`).join("");
+      byId("walk-tabs").querySelectorAll("[data-walk]").forEach(button => button.addEventListener("click", () => dispatch({type: "SELECT_WALKTHROUGH", walkthroughId: button.dataset.walk})));
+      const walk = DecisionLab.walkthroughs[state.walkthroughId];
+      byId("walk-copy").textContent = walk.copy;
+      byId("walk-steps").innerHTML = walk.steps.map((step, index) => `<button class="step-button" type="button" data-step="${index}" ${index > state.walkthroughStep ? "disabled" : ""}>${index + 1}. ${step.label}</button>`).join("");
+      byId("walk-steps").querySelectorAll("[data-step]").forEach(button => button.addEventListener("click", () => dispatch({type: "RUN_STEP", step: Number(button.dataset.step)})));
+    }
+
+    function dispatch(action) {
+      state = DecisionLab.reduce(state, action);
+      render();
+    }
+
+    function render() {
+      renderDesign();
+      renderState();
+      renderLab();
+    }
+
+    byId("reset-button").addEventListener("click", () => dispatch({type: "RESET"}));
+    render();
+  </script>
+</body>
+</html>
