@@ -537,3 +537,19 @@ members:
     ensemble_auc_with: 0.9691474903122669
     ensemble_auc_without: 0.9691465332850875
     contribution: 9.570271793934992e-07
+- run_id: 1af9442e67c14a96a5256251f23a1b9d
+  config: exp139_realmlp_reference_qnormal_train_test
+  oof_auc: 0.9685456290878953
+  seeds: 42,43,44
+  entered_at: '2026-08-21'
+  reason: '판정 issue331-realmlp-reference-qnormal-confirm: exp138 대비 3시드 +0.00000461,
+    시드 3/3·분할 3/5, 최근접 상관 0.99736으로 중복 아님, 고정 nested 포함 기여 +0.00000699·외부 분할 4/5'
+  evidence:
+    champion_run_id: 54acd002d3c04ec3a74c09871e83da50
+    champion_oof_auc: 0.9693397329635609
+    floor_margin: 0.009205896124334423
+    nearest_run_id: bd2bd1154e6343f68b364714e2fedcc4
+    nearest_spearman: 0.9973634796135972
+    ensemble_auc_with: 0.9691623933545127
+    ensemble_auc_without: 0.9691419155689435
+    contribution: 2.0477785569239515e-05

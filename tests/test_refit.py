@@ -14,7 +14,7 @@ from pipeline.refit import RefitMember, RefitPlan, mix_member_predictions
 def test_committed_refit_plan_matches_candidate_pool():
     plan = RefitPlan.load(Path("artifacts/full-refit-plan.yaml"))
 
-    assert len(plan.members) == 34
+    assert len(plan.members) == 35
     assert plan.cv_model_weight == 5
     assert plan.full_model_weight == 1
     ag25_gbm = plan.member("exp117_ag25_gbm_r21")
@@ -66,6 +66,11 @@ def test_committed_refit_plan_matches_candidate_pool():
     tab_cnn_longer = plan.member("exp132_tab_cnn_epochs100")
     assert tab_cnn_longer.budgets == {42: 53, 43: 71, 44: 89}
     assert tab_cnn_longer.budget_source == "fold_median"
+    realmlp_reference_qnormal = plan.member(
+        "exp139_realmlp_reference_qnormal_train_test"
+    )
+    assert realmlp_reference_qnormal.budgets == {42: 5, 43: 5, 44: 5}
+    assert realmlp_reference_qnormal.budget_source == "fold_median"
 
 
 def test_mix_member_predictions_uses_model_count_weights():

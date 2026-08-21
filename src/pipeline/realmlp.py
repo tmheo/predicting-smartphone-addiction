@@ -37,10 +37,15 @@ if os.environ.get("CUBLAS_WORKSPACE_CONFIG") not in {":4096:8", ":16:8"}:
 import torch
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import StratifiedKFold
-from sklearn.preprocessing import KBinsDiscretizer, TargetEncoder
+from sklearn.preprocessing import (
+    KBinsDiscretizer,
+    QuantileTransformer,
+    TargetEncoder,
+)
 from sklearn.utils.class_weight import compute_class_weight
 from torch import nn
 
+from .data import TARGET
 from .model import AdapterDiagnostics
 
 
@@ -62,6 +67,7 @@ RAW_NUMERICAL = [
     "app_opens_per_day",
     "weekend_screen_time",
 ]
+REFERENCE_QNORMAL_SUFFIX = "_reference_qnormal"
 
 _DEFAULTS = {
     "optimizer": "adamw",
@@ -101,6 +107,8 @@ _DEFAULTS = {
     "inner_folds": 5,
     "perm_sample": 8192,
     "perm_repeats": 1,
+    "reference_qnormal_columns": [],
+    "preprocessing_scope": "fold_train",
     "device": "cuda",
     "verbosity": 1,
 }
@@ -118,10 +126,34 @@ class _FoldFeatureEngineer:
         "social_media_hours": 10,
     }
 
-    def fit(self, frame: pd.DataFrame) -> _FoldFeatureEngineer:
+    def __init__(
+        self,
+        reference_qnormal_columns: list[str] | None = None,
+        reference_seed: int = 42,
+    ) -> None:
+        self.reference_qnormal_columns = list(reference_qnormal_columns or [])
+        self.reference_qnormal_output_columns = [
+            f"{column}{REFERENCE_QNORMAL_SUFFIX}"
+            for column in self.reference_qnormal_columns
+        ]
+        self.reference_seed = reference_seed
+        self.reference_qnormal_estimators: dict[str, QuantileTransformer] = {}
+        self.reference_qnormal_fit_rows: dict[str, int] = {}
+        self.reference_qnormal_reference_rows = 0
+
+    def fit(
+        self,
+        frame: pd.DataFrame,
+        reference_frame: pd.DataFrame | None = None,
+    ) -> _FoldFeatureEngineer:
         missing = sorted(set(RAW_CATEGORICAL + RAW_NUMERICAL) - set(frame.columns))
         if missing:
             raise ValueError(f"RealMLP 원문 입력 열이 없다: {missing}")
+        collisions = sorted(
+            set(self.reference_qnormal_output_columns) & set(frame.columns)
+        )
+        if collisions:
+            raise ValueError(f"RealMLP 기준 집합 값 좌표 열이 입력과 충돌한다: {collisions}")
         unexpected_categorical = [
             column
             for column in frame.columns
@@ -185,6 +217,39 @@ class _FoldFeatureEngineer:
             self.bin_estimators[name] = (column, estimator)
             self.category_dims_by_name[name] = int(estimator.n_bins_[0])
 
+        if self.reference_qnormal_columns:
+            if reference_frame is None:
+                raise ValueError("RealMLP 기준 집합 값 좌표에는 전처리 기준 집합이 필요하다.")
+            missing_reference = sorted(
+                set(self.reference_qnormal_columns) - set(reference_frame.columns)
+            )
+            if missing_reference:
+                raise ValueError(
+                    "RealMLP 전처리 기준 집합에 원시 수치 열이 없다: "
+                    f"{missing_reference}"
+                )
+            self.reference_qnormal_reference_rows = len(reference_frame)
+            for column in self.reference_qnormal_columns:
+                values = (
+                    pd.to_numeric(reference_frame[column], errors="coerce")
+                    .replace([np.inf, -np.inf], np.nan)
+                    .dropna()
+                    .to_numpy(dtype="float64")
+                )
+                if len(values) == 0:
+                    raise ValueError(
+                        f"RealMLP 전처리 기준 집합에서 관측값이 없는 열이다: {column}"
+                    )
+                estimator = QuantileTransformer(
+                    n_quantiles=min(1000, len(values)),
+                    output_distribution="normal",
+                    subsample=2_000_000_000,
+                    random_state=self.reference_seed,
+                )
+                estimator.fit(values.reshape(-1, 1))
+                self.reference_qnormal_estimators[column] = estimator
+                self.reference_qnormal_fit_rows[column] = len(values)
+
         missing_columns = [f"_miss_{column}" for column in RAW_NUMERICAL]
         numeric_category_columns = [f"{column}_cat_" for column in RAW_NUMERICAL]
         bin_columns = list(self.bin_estimators)
@@ -196,6 +261,7 @@ class _FoldFeatureEngineer:
         )
         self.output_columns = sorted(
             self.input_columns
+            + self.reference_qnormal_output_columns
             + missing_columns
             + numeric_category_columns
             + bin_columns
@@ -215,6 +281,17 @@ class _FoldFeatureEngineer:
         for column in RAW_NUMERICAL:
             values = pd.to_numeric(output[column], errors="coerce")
             output[f"_miss_{column}"] = values.isna().astype("int32")
+        for column, estimator in self.reference_qnormal_estimators.items():
+            values = pd.to_numeric(frame[column], errors="coerce").replace(
+                [np.inf, -np.inf], np.nan
+            )
+            observed = values.notna().to_numpy()
+            coordinates = np.zeros(len(frame), dtype="float64")
+            if observed.any():
+                coordinates[observed] = estimator.transform(
+                    values.loc[values.notna()].to_numpy(dtype="float64").reshape(-1, 1)
+                ).ravel()
+            output[f"{column}{REFERENCE_QNORMAL_SUFFIX}"] = coordinates
         for column in RAW_CATEGORICAL:
             values = output[column].astype("string").fillna("missing").astype(str)
             output[column] = (
@@ -240,7 +317,11 @@ class _FoldFeatureEngineer:
             output[name] = (
                 estimator.transform(output[[column]]).ravel().astype("int32")
             )
-        for column in RAW_NUMERICAL + self.passthrough_numeric:
+        for column in (
+            RAW_NUMERICAL
+            + self.passthrough_numeric
+            + self.reference_qnormal_output_columns
+        ):
             output[column] = output[column].astype("float32")
         output = output.reindex(self.output_columns, axis=1)
         if output.isna().any().any():
@@ -250,8 +331,12 @@ class _FoldFeatureEngineer:
                 raise RuntimeError(f"RealMLP 범주 코드가 범위를 벗어났다: {column}")
         return output
 
-    def fit_transform(self, frame: pd.DataFrame) -> pd.DataFrame:
-        return self.fit(frame).transform(frame)
+    def fit_transform(
+        self,
+        frame: pd.DataFrame,
+        reference_frame: pd.DataFrame | None = None,
+    ) -> pd.DataFrame:
+        return self.fit(frame, reference_frame).transform(frame)
 
     def unknown_value_count(self, transformed: pd.DataFrame) -> int:
         return int(
@@ -877,6 +962,9 @@ class RealMLPFold:
             )
         self.config["hidden_dims"] = list(self.config["hidden_dims"])
         self.config["tfms"] = list(self.config["tfms"])
+        self.config["reference_qnormal_columns"] = list(
+            self.config["reference_qnormal_columns"]
+        )
         self.seed = seed
         self._validate_config()
         self.device = str(self.config["device"])
@@ -896,6 +984,10 @@ class RealMLPFold:
         self._importance_seconds: float | None = None
         self._prediction_calls = 0
         self._all_predictions_finite = True
+        self._dataset_reference: tuple[pd.DataFrame, pd.DataFrame] | None = None
+        self._dataset_reference_target_free = True
+        self._dataset_reference_train_rows: int | None = None
+        self._dataset_reference_test_rows: int | None = None
 
     def _validate_config(self) -> None:
         positive_ints = [
@@ -939,6 +1031,47 @@ class RealMLPFold:
         ]:
             if float(self.config[name]) <= 0:
                 raise ValueError(f"realmlp {name}은 양수여야 한다.")
+        columns = self.config["reference_qnormal_columns"]
+        if columns and columns != RAW_NUMERICAL:
+            raise ValueError(
+                "realmlp reference_qnormal_columns는 원시 수치 9열을 순서대로 "
+                f"선언해야 한다: {RAW_NUMERICAL}"
+            )
+        scope = str(self.config["preprocessing_scope"])
+        if scope not in {"fold_train", "train_test"}:
+            raise ValueError(
+                "realmlp preprocessing_scope은 'fold_train' 또는 'train_test'여야 한다: "
+                f"{scope!r}"
+            )
+        if scope == "train_test" and not columns:
+            raise ValueError(
+                "realmlp preprocessing_scope='train_test'에는 "
+                "reference_qnormal_columns 선언이 필요하다."
+            )
+
+    def set_dataset_reference(
+        self, X_train: pd.DataFrame, X_test: pd.DataFrame
+    ) -> None:
+        if self.engineer is not None or self.models:
+            raise RuntimeError("전처리 기준 집합은 RealMLP 학습 전에 정해야 한다.")
+        if list(X_train.columns) != list(X_test.columns):
+            raise ValueError("RealMLP 전처리 기준 집합의 train/test 열이 다르다.")
+        if TARGET in X_train.columns or TARGET in X_test.columns:
+            self._dataset_reference_target_free = False
+            raise ValueError("RealMLP 전처리 기준 집합은 목표값을 포함할 수 없다.")
+        columns = self.config["reference_qnormal_columns"]
+        if columns:
+            missing = sorted(set(columns) - set(X_train.columns))
+            if missing:
+                raise ValueError(
+                    f"RealMLP 전처리 기준 집합에 원시 수치 열이 없다: {missing}"
+                )
+            self._dataset_reference = (
+                X_train[columns].copy(),
+                X_test[columns].copy(),
+            )
+        self._dataset_reference_train_rows = len(X_train)
+        self._dataset_reference_test_rows = len(X_test)
 
     def _fold_seed(self, index: pd.Index) -> int:
         hashed = pd.util.hash_pandas_object(index, index=False).to_numpy(
@@ -954,8 +1087,22 @@ class RealMLPFold:
         y_train: pd.Series,
         X_validation: pd.DataFrame | None,
     ) -> _PreparedFold:
-        self.engineer = _FoldFeatureEngineer()
-        train = self.engineer.fit_transform(X_train)
+        reference_columns = self.config["reference_qnormal_columns"]
+        reference_frame = None
+        if reference_columns:
+            if self.config["preprocessing_scope"] == "fold_train":
+                reference_frame = X_train[reference_columns]
+            else:
+                if self._dataset_reference is None:
+                    raise RuntimeError(
+                        "preprocessing_scope='train_test'에는 train+test "
+                        "전처리 기준 집합이 필요하다."
+                    )
+                reference_frame = pd.concat(
+                    list(self._dataset_reference), ignore_index=True
+                )
+        self.engineer = _FoldFeatureEngineer(reference_columns, self.seed)
+        train = self.engineer.fit_transform(X_train, reference_frame)
         validation = (
             self.engineer.transform(X_validation)
             if X_validation is not None
@@ -1053,6 +1200,20 @@ class RealMLPFold:
             "source_backend": "custom_pytorch_realmlp",
             "pytabkit_estimator_used": False,
             "optimizer": self.config["optimizer"],
+            "preprocessing_scope": self.config["preprocessing_scope"],
+            "reference_qnormal_columns": list(
+                self.engineer.reference_qnormal_output_columns
+            ),
+            "reference_qnormal_reference_rows": (
+                self.engineer.reference_qnormal_reference_rows
+            ),
+            "reference_qnormal_fit_rows_by_column": dict(
+                self.engineer.reference_qnormal_fit_rows
+            ),
+            "reference_qnormal_random_state": self.seed,
+            "reference_qnormal_target_free": self._dataset_reference_target_free,
+            "dataset_reference_train_rows": self._dataset_reference_train_rows,
+            "dataset_reference_test_rows": self._dataset_reference_test_rows,
             "preprocessing_fit_rows": self.engineer.fit_rows,
             "target_encoding_fit_rows": self.target_encoder.fit_rows,
             "training_rows": len(X_train),
@@ -1129,6 +1290,20 @@ class RealMLPFold:
             "source_backend": "custom_pytorch_realmlp",
             "pytabkit_estimator_used": False,
             "optimizer": self.config["optimizer"],
+            "preprocessing_scope": self.config["preprocessing_scope"],
+            "reference_qnormal_columns": list(
+                self.engineer.reference_qnormal_output_columns
+            ),
+            "reference_qnormal_reference_rows": (
+                self.engineer.reference_qnormal_reference_rows
+            ),
+            "reference_qnormal_fit_rows_by_column": dict(
+                self.engineer.reference_qnormal_fit_rows
+            ),
+            "reference_qnormal_random_state": self.seed,
+            "reference_qnormal_target_free": self._dataset_reference_target_free,
+            "dataset_reference_train_rows": self._dataset_reference_train_rows,
+            "dataset_reference_test_rows": self._dataset_reference_test_rows,
             "full_fit": True,
             "full_training_budget": training_budget,
             "preprocessing_fit_rows": len(X),
@@ -1203,6 +1378,19 @@ class RealMLPFold:
             == self._diagnostics["training_rows"],
             "target_encoding_training_rows_only": self.target_encoder.fit_rows
             == self._diagnostics["training_rows"],
+            "reference_qnormal_target_free": self._diagnostics[
+                "reference_qnormal_target_free"
+            ],
+            "reference_qnormal_scope_matches_contract": (
+                not self.config["reference_qnormal_columns"]
+                or self.engineer.reference_qnormal_reference_rows
+                == (
+                    self._diagnostics["training_rows"]
+                    if self.config["preprocessing_scope"] == "fold_train"
+                    else self._dataset_reference_train_rows
+                    + self._dataset_reference_test_rows
+                )
+            ),
             "validation_labels_excluded_from_training": True,
             "validation_checkpoint_selection_absent": True,
             "fixed_epoch_state_used": self._diagnostics["validation_selection"]

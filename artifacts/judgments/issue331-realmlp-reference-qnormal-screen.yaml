@@ -1,0 +1,137 @@
+schema_version: 1
+judgment_id: issue331-realmlp-reference-qnormal-screen
+created_at: '2026-08-21T03:32:09Z'
+stage: screening
+route: candidate_pool
+supersedes: null
+
+contract:
+  decision:
+    title: 전처리 기준 집합 값 좌표의 비조회 계열 이식 범위 결정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/315
+  execution:
+    title: RealMLP 전처리 기준 집합 값 좌표의 기준 범위 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/331
+
+feature_bundle:
+  name: raw_numeric_reference_qnormal
+  columns:
+    - age_reference_qnormal
+    - daily_screen_time_hours_reference_qnormal
+    - social_media_hours_reference_qnormal
+    - gaming_hours_reference_qnormal
+    - work_study_hours_reference_qnormal
+    - sleep_hours_reference_qnormal
+    - notifications_per_day_reference_qnormal
+    - app_opens_per_day_reference_qnormal
+    - weekend_screen_time_reference_qnormal
+  transformer:
+    kind: QuantileTransformer
+    n_quantiles: min(1000, observed_rows)
+    output_distribution: normal
+    subsample: 2000000000
+    random_state: run_seed
+    missing_coordinate: 0.0
+  target_free: true
+  preregistration:
+    kind: committed_config_pair
+    reference: configs/exp138_realmlp_reference_qnormal_fold_train.yaml@781b3e58222ef8a808adf942085fa4cf8b98dba8
+    candidate: configs/exp139_realmlp_reference_qnormal_train_test.yaml@781b3e58222ef8a808adf942085fa4cf8b98dba8
+    description: 원시 수치 9열의 분위-정규 좌표와 기준 범위 한 쌍을 결과 확인 전에 고정했다.
+  content_sha256: f709132b84b14586901c4d13fb7a16fec26a8df2d3e04f1f0dbcab40f6025a8e
+
+lineage:
+  candidate:
+    config: exp139_realmlp_reference_qnormal_train_test
+    config_path: configs/exp139_realmlp_reference_qnormal_train_test.yaml
+    config_sha256: 85c74e4ec735fbd4934ea8541600d5c65fc33d7fed5cd9d85613f635ce1ac3e2
+    source_run_id: b8fc143884d84b70b62ba6dc529161a8
+    imported_run_id: 549126dbc5ed4e83a3e9ca726b08f49d
+    import_bundle_sha256: 1e421d8b32849b74f0113459818598cdf98584ae1f4c1a12b8574ac9ce91530f
+    git_commit: 781b3e58222ef8a808adf942085fa4cf8b98dba8
+    seeds: [42]
+  control:
+    config: exp138_realmlp_reference_qnormal_fold_train
+    config_path: configs/exp138_realmlp_reference_qnormal_fold_train.yaml
+    config_sha256: 7e942880dcd24ff62969fc7f5c43c85dcaa6127041784a632b2b6f84daa687a6
+    source_run_id: 84457e7529304820aa9e1e8bab2e2405
+    imported_run_id: e5fa08e79a3142b894ce7013906990ea
+    import_bundle_sha256: c36b48333ac6f61404d980a30c095d79facd0f2da914d97cc4ba18265e09ebf8
+    git_commit: 781b3e58222ef8a808adf942085fa4cf8b98dba8
+    seeds: [42]
+  direct_baseline:
+    config: exp136_realmlp_muon_recon_widths
+    config_sha256: 9556597389aff1dd9f038c68a6a3e80bbbb200bd6047e61c673084badd1313ac
+  allowed_differences:
+    - model.params.preprocessing_scope
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  candidate_git_dirty: false
+  control_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  row_order_match: true
+  model_contract_match: true
+  allowed_difference_only: true
+  target_free_reference: true
+  qnormal_fit_contract_match: true
+  candidate_reference_rows: 987671
+  control_reference_rows_by_fold: [553095, 553096]
+  unique_oof_rows: 691369
+  adoption_eligibility:
+    seeds_ok: false
+    clean_commit_ok: true
+    folds_ok: true
+    ok: false
+    reason: 선별은 시드 42만 실행하므로 후보 풀 등록 자격을 아직 평가하지 않는다.
+
+paired_oof:
+  comparison: candidate_minus_control
+  seed: 42
+  candidate_auc: 0.968431321459998
+  control_auc: 0.9684311576227744
+  overall_delta: 0.0000001638372236
+  fold_wins: 1
+  fold_total: 5
+  thresholds:
+    screening_delta_min: 0.0
+  screening_passed: true
+
+selection_procedure:
+  required: false
+  reason: 결과 확인 전에 두 기준 범위와 좌표 9열 전체를 고정했고 같은 OOF에서 변형을 고르지 않았다.
+  candidate_set:
+    - exp138_realmlp_reference_qnormal_fold_train
+    - exp139_realmlp_reference_qnormal_train_test
+
+remote_execution:
+  provider: Vast.ai
+  instance_id: 48264008
+  gpu: 2x RTX A4000 16376MiB
+  hourly_total_usd: 0.17540740740740743
+  image: nvcr.io/nvidia/pytorch@sha256:38ed2ecb2c16d10677006d73fb0a150855d6ec81db8fc66e800b5ae92741007e
+  input_archive_sha256: 82c610796a0ac6c50f0caa38f24b522ed9dd528b46dd135ec70e5e1eee470123
+  result_archive_sha256: 7efa81ab422b4bfff2cbd82169565c7047d8adc803d958260b329b255291d9a2
+  transfer: ssh_standard_stream
+  cleanup:
+    instance_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+
+result:
+  execution_validity: 유효
+  screening: 통과
+  candidate_pool_route: 확정 재검증 필요
+  actual_ledger_change: none
+  reason_codes:
+    - screening_delta_nonnegative
+    - clean_commit
+    - folds_match
+    - row_order_match
+    - target_free_reference
+    - confirmation_required
