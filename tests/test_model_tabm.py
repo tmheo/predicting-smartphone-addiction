@@ -8,15 +8,20 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
 from sklearn.metrics import roc_auc_score
 
 from pipeline import model as model_mod
-from pipeline.config import ModelConfig
+from pipeline.config import ModelConfig, load_config
+from pipeline.features import ConstrainedImputeAux
+from pipeline.plan import FeaturePlan
 
 SEED = 7
+REPO = Path(__file__).resolve().parents[1]
 
 SMALL_PARAMS = {
     "tabm_k": 4,
@@ -171,3 +176,49 @@ def test_tabm_muon_full_fit_uses_hybrid_optimizer():
     diagnostics = adapter.training_diagnostics()
     assert diagnostics["full_fit"] is True
     assert diagnostics["optimizer"] == "muon"
+
+
+def test_tabm_recon_widths_config_is_exp065_widths_only_delta():
+    baseline = load_config(REPO / "configs" / "exp065_tabm.yaml", "screen")
+    challenger = load_config(
+        REPO / "configs" / "exp137_tabm_recon_widths.yaml", "screen"
+    )
+
+    assert challenger.name == "exp137_tabm_recon_widths"
+    assert challenger.data == baseline.data
+    assert challenger.model == baseline.model
+    assert challenger.initial_score == baseline.initial_score
+    assert challenger.features.base == baseline.features.base
+    assert challenger.features.categorical == baseline.features.categorical
+    assert challenger.features.exclude == baseline.features.exclude
+    assert len(challenger.features.providers) == len(baseline.features.providers)
+
+    for baseline_provider, challenger_provider in zip(
+        baseline.features.providers,
+        challenger.features.providers,
+        strict=True,
+    ):
+        if baseline_provider["kind"] == "constrained_impute_aux":
+            assert baseline_provider["widths"] is False
+            assert challenger_provider == {**baseline_provider, "widths": True}
+        else:
+            assert challenger_provider == baseline_provider
+
+    baseline_aux = next(
+        provider
+        for provider in FeaturePlan.from_config(baseline.features).fold_fit_transformers()
+        if isinstance(provider, ConstrainedImputeAux)
+    )
+    challenger_aux = next(
+        provider
+        for provider in FeaturePlan.from_config(challenger.features).fold_fit_transformers()
+        if isinstance(provider, ConstrainedImputeAux)
+    )
+    baseline_columns = baseline_aux.columns()
+    challenger_columns = challenger_aux.columns()
+    assert [c for c in challenger_columns if c not in baseline_columns] == [
+        "social_media_hours_recon_width",
+        "gaming_hours_recon_width",
+        "work_study_hours_recon_width",
+    ]
+    assert [c for c in baseline_columns if c not in challenger_columns] == []

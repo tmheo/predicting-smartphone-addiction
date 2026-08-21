@@ -158,23 +158,6 @@ members:
     ensemble_auc_with: 0.9683856530124514
     ensemble_auc_without: 0.9681324114087981
     contribution: 0.00025324160365325366
-- run_id: df2023d4bd71429b88a8026d52f5258c
-  config: exp065_tabm
-  oof_auc: 0.9683261181773571
-  seeds: 42,43,44
-  entered_at: '2026-08-14'
-  reason: '이슈 #61: TabM(pytabkit tabm-mini-normal, fold 내 3시드 평균) 원문 레시피의 fold 규율판.
-    champion 교체는 3시드 -0.00060 미달이나 최근접 스피어만 0.99345로 트리·lookup 계열과 독립인 오류 계열, 표준 평가
-    앙상블 기여 +0.00008'
-  evidence:
-    champion_run_id: b951fac51b6b44298f7fdb0b543caba6
-    champion_oof_auc: 0.9689221785328946
-    floor_margin: 0.009403939644462511
-    nearest_run_id: e2c432b487564df990a4cc3baf3d6fc0
-    nearest_spearman: 0.9934466938168667
-    ensemble_auc_with: 0.968468467459211
-    ensemble_auc_without: 0.9683856530124514
-    contribution: 8.281444675961591e-05
 - run_id: 6238d8c58beb42ee8102209ded92516e
   config: exp070_cat_exact_cats
   oof_auc: 0.9685793468869544
@@ -491,3 +474,20 @@ members:
     ensemble_auc_with: 0.9690810541075118
     ensemble_auc_without: 0.9690544410043349
     contribution: 2.6613103176864605e-05
+- run_id: e7682b186be14dea822d41d7d411bb98
+  config: exp137_tabm_recon_widths
+  oof_auc: 0.9683846688118484
+  seeds: 42,43,44
+  entered_at: '2026-08-20'
+  reason: '판정 issue294-exp137-tabm-widths-confirm: exp065 직접 짝비교 3시드 +0.00005855,
+    시드 3/3·분할 5/5 실신호, 중복 상관 0.99956에서 OOF 개선 교체, 고정 nested 포함 기여 +0.00000285·외부 분할
+    3/5'
+  evidence:
+    champion_run_id: 7124425b5b51421dbbeba597229554da
+    champion_oof_auc: 0.9692840450124712
+    floor_margin: 0.00910062379937715
+    nearest_run_id: df2023d4bd71429b88a8026d52f5258c
+    nearest_spearman: 0.9995586453825588
+    ensemble_auc_with: 0.9690840204152809
+    ensemble_auc_without: 0.9690716394524127
+    contribution: 1.23809628681526e-05

@@ -1,0 +1,287 @@
+schema_version: 1
+judgment_id: issue294-exp137-tabm-widths-confirm
+created_at: '2026-08-20T19:03:09Z'
+stage: confirmation
+route: candidate_pool
+supersedes: issue294-exp137-tabm-widths-screen
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: TabM에 제약 복원 구간 폭 3열 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/294
+  screening_judgment: artifacts/judgments/issue294-exp137-tabm-widths-screen.yaml
+
+feature_bundle:
+  name: reconstruction_widths
+  columns:
+    - gaming_hours_recon_width
+    - social_media_hours_recon_width
+    - work_study_hours_recon_width
+  provider: constrained_impute_aux
+  preregistration:
+    kind: committed_config
+    reference: configs/exp137_tabm_recon_widths.yaml@1bdbce6f21f2c38aa1cd99553ac22998c6ad1387
+    description: exp065 TabM 설정에 폭 3열만 더하는 짝비교를 결과 확인 전에 고정했다.
+  content_sha256: 2c53da70b1b0c9ded02728654913740115a225153a5d3229ab2f3854fdca3379
+
+lineage:
+  included:
+    config: exp137_tabm_recon_widths
+    config_path: configs/exp137_tabm_recon_widths.yaml
+    config_sha256: b4b818d80aff90cc4199d4022d761531621070d3077b34c968ebd7c0bb6f30a3
+    source_run_id: b7cb6eb0d37449bab965a009527bf776
+    imported_run_id: e7682b186be14dea822d41d7d411bb98
+    import_bundle_sha256: 1db6e3ddf08f9a8a2a20551d64c3018d2fea037be19c0fdd54de12f9eb356dca
+    git_commit: 1bdbce6f21f2c38aa1cd99553ac22998c6ad1387
+    seeds: [42, 43, 44]
+  excluded:
+    config: exp065_tabm
+    config_path: configs/exp065_tabm.yaml
+    config_sha256: e082e096f8b800e030c1b3ebcc284e95e792b5084d598dbb84608eb20a4708fb
+    imported_run_id: df2023d4bd71429b88a8026d52f5258c
+    import_bundle_sha256: a70e34404c7c7eedfec1f38e7cfe612a06a03a20fae208bac72f3eaf79b1acef
+    git_commit: 9b4da0715010744119e6d6db0718e86dac5ee06b
+    seeds: [42, 43, 44]
+  allowed_differences:
+    - name
+    - features.providers.constrained_impute_aux.widths
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  model_contract_match: true
+  emitted_feature_columns_match: true
+  screening_seed_42_prediction_exact_match: true
+  adoption_eligibility:
+    seeds_ok: true
+    clean_commit_ok: true
+    folds_ok: true
+    ok: true
+  canary:
+    state: 유효
+    placebo_present: true
+    placebo_gain_mean: 0.000045020112502169865
+    placebo_te_gain_mean: 0.0
+    placebo_te_below_placebo_cells: 15
+    cell_total: 15
+    reason: 목표값을 쓰는 플라시보 파생 열의 중요도가 모든 시드와 분할에서 원본 플라시보보다 낮다.
+
+paired_oof:
+  comparison: included_minus_excluded
+  included_auc: 0.9683846688118484
+  excluded_auc: 0.9683261181773571
+  overall_delta: 0.00005855063449122788
+  seed_aucs:
+    included:
+      42: 0.9682870232880149
+      43: 0.9682563025678997
+      44: 0.9682612197651125
+    excluded:
+      42: 0.968189328608447
+      43: 0.9681872241117746
+      44: 0.9682498439550539
+  seed_deltas:
+    42: 0.00009769467956788347
+    43: 0.00006907845612513785
+    44: 0.000011375810058611435
+  fold_deltas:
+    0: 0.00008407518817232784
+    1: 0.00004492625507479531
+    2: 0.00009714783644776404
+    3: 0.00007174149820943221
+    4: 0.00005471658333677798
+  seed_wins: 3
+  seed_total: 3
+  fold_wins: 5
+  fold_total: 5
+  thresholds:
+    mean_must_be_positive: true
+    seed_win_min: 2
+    boundary_upper: 0.0002
+    boundary_fold_win_min: 3
+
+selection_procedure:
+  required: false
+  reason: 폭 3열 전체의 포함과 제외 한 쌍을 결과 확인 전에 고정했으며 같은 OOF에서 여러 변형을 고르지 않았다.
+  candidate_set: [exp137_tabm_recon_widths, exp065_tabm]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호
+  reasons:
+    - 3시드 평균 짝차이가 양수다.
+    - 같은 시드 3개가 모두 양수다.
+    - 경계 구간에서 평균본 분할 5개가 모두 양수다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 후보 풀의 TabM 구성원 경로이며 현재 champion 교체를 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: true
+  state: 후보 풀 기여
+  ledger_action: replace_existing_member
+  replacement:
+    removed_config: exp065_tabm
+    removed_run_id: df2023d4bd71429b88a8026d52f5258c
+    added_config: exp137_tabm_recon_widths
+    added_run_id: e7682b186be14dea822d41d7d411bb98
+    basis: 중복 문턱을 넘는 같은 모델 계열에서 후보의 깨끗한 3시드 단독 OOF가 더 높다.
+  entry_snapshot:
+    champion_run_id: 7124425b5b51421dbbeba597229554da
+    champion_oof_auc: 0.9692840450124712
+    floor: 0.9592840450124712
+    floor_margin: 0.00910062379937715
+    floor_ok: true
+    nearest_run_id: df2023d4bd71429b88a8026d52f5258c
+    nearest_config: exp065_tabm
+    nearest_spearman: 0.9995586453825588
+    duplicate_threshold: 0.998
+    duplicate: true
+    replacement: true
+    uniform_rank_ensemble:
+      candidate_included_auc: 0.9690840204152809
+      candidate_excluded_auc: 0.9690716394524127
+      marginal_delta: 0.0000123809628681526
+      used_as_gate: false
+  nested_contribution:
+    strategy: missing_interaction_rank_logit
+    candidate_included_auc: 0.9697072156696986
+    candidate_excluded_auc: 0.9697043649415884
+    marginal_delta: 0.000002850728110237455
+    outer_fold_deltas:
+      0: 0.00000911538379377852
+      1: 0.000006196847323391985
+      2: 0.00000680755038184877
+      3: -0.000009285629640198856
+      4: -0.0000003295851104256897
+    outer_fold_wins: 3
+    outer_fold_total: 5
+    status: 후보 풀 기여
+  direct_replacement_readout:
+    strategy: missing_interaction_rank_logit
+    candidate_auc: 0.9697072156696986
+    exp065_auc: 0.9697085773043366
+    delta: -0.0000013616346379308197
+    outer_fold_deltas:
+      0: 0.000007476608946954677
+      1: 0.0000035903859513242153
+      2: 0.000005140612660214927
+      3: 0.0000030108904021108884
+      4: -0.000006971270585465206
+    outer_fold_wins: 4
+    outer_fold_total: 5
+    interpretation: 직접 교체 nested 차이는 음수지만 단독 OOF 품질 개선으로 중복 구성원을 교체하며, 포함·제외 한계 기여는 별도 후보 풀 기여로 판정한다.
+  coefficient_readout:
+    selected_folds: 5
+    fold_total: 5
+    mean_weight: 0.34953367894373033
+    interpretation: 결합 계수의 부호와 크기는 보조 설명이며 개별 후보의 인과적 기여로 해석하지 않는다.
+
+ensemble_reevaluation:
+  pool_size: 30
+  strategy_count: 22
+  excluded_strategy_count: 0
+  best_strategy: shrunk_rank_logit_logistic
+  nested_oof_auc: 0.9697156936967155
+  champion_auc: 0.9692840450124712
+  champion_delta: 0.00043164868424434164
+  outer_fold_aucs:
+    0: 0.969140426729536
+    1: 0.9698134334251036
+    2: 0.9698372127864563
+    3: 0.9702758262184745
+    4: 0.9695115672431013
+  fixed_strategy:
+    name: missing_interaction_rank_logit
+    nested_oof_auc: 0.9697072156696986
+  full_refit_combiner_changed: false
+  reason: 이 티켓은 TabM 구성원 교체 판정만 수행하며 전체 재학습 결합 규약을 다시 열지 않는다.
+
+full_refit_plan:
+  path: artifacts/full-refit-plan.yaml
+  source_pool_sha256: 85d20803a780aff85580b7376d1b8211caa9915471f9acce70e2a519f445b01b
+  action: replace_member
+  removed_config: exp065_tabm
+  added_config: exp137_tabm_recon_widths
+  budget_source: fold_median
+  fold_best_iteration_medians:
+    42: 14
+    43: 13
+    44: 13
+  iteration_multiplier: 1.25
+  budgets:
+    42: 18
+    43: 16
+    44: 16
+
+auxiliary_importance:
+  method: tabm_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: 0.000045020112502169865
+  cell_total: 15
+  features:
+    gaming_hours_recon_width:
+      mean: 0.0000309594581923441
+      median: 0.00002211171477040086
+      above_placebo_cells: 7
+    social_media_hours_recon_width:
+      mean: 0.0000666586513560737
+      median: 0.00007111177278623648
+      above_placebo_cells: 11
+    work_study_hours_recon_width:
+      mean: 0.0000055031036275502805
+      median: 0.000004781929124841877
+      above_placebo_cells: 1
+  conflicts_with_oof: true
+  used_as_gate: false
+
+remote_execution:
+  provider: Vast.ai
+  gpu: 2x RTX A4000 16376MiB
+  image: nvcr.io/nvidia/pytorch@sha256:38ed2ecb2c16d10677006d73fb0a150855d6ec81db8fc66e800b5ae92741007e
+  result_archive_sha256: 080e7111bd9acf04294ff6c6d46dad73158d6ebdf5000fa47075748083947928
+  pipeline_duration_seconds: 5926.650907902978
+  actual_cost_usd: 0.353
+  package_recovery:
+    required: true
+    reason: 고정 포장 스크립트가 임시 manifest 자신을 검증 목록에 포함했다.
+    training_rerun: false
+    recovered_artifact_count: 5
+  cleanup:
+    instance_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호
+  champion_route: null
+  candidate_pool_route: 후보 풀 기여
+  actual_ledger_change: exp065_replaced_by_exp137
+  full_refit_plan_change: exp065_replaced_by_exp137
+  reason_codes:
+    - paired_mean_positive
+    - seed_wins_3_of_3
+    - boundary_fold_wins_5_of_5
+    - adoption_eligibility_passed
+    - canary_valid
+    - duplicate_replacement_higher_oof
+    - nested_marginal_positive
+    - nested_outer_fold_wins_3_of_5
+    - direct_replacement_nested_delta_negative
+    - pool_member_replaced
+    - full_refit_plan_updated
