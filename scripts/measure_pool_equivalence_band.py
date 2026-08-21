@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import argparse
+import collections
 import json
 import sys
 import time
@@ -787,7 +788,8 @@ def render_markdown(evidence: dict) -> str:
         f"제거 집합 크기 1만 보면 대역은 `{_fmt(summary['by_size']['1']['all']['lower'])}`에서 `{_fmt(summary['by_size']['1']['all']['upper'])}`다.",
         "",
         "크기 1의 대역을 큰 제거 집합에 그대로 쓰면 안 된다.",
-        "아래 크기별 표가 대역이 제거 집합 크기와 함께 어떻게 움직이는지 보여준다.",
+        "다만 대역은 제거 집합 크기에 대해 단조롭게 넓어지지 않는다.",
+        "크기마다 반복이 6건뿐이라 꼬리를 만날 기회가 크기 1(전수 45건)보다 적기 때문이며, 크기별 대역을 단조 함수로 외삽하면 안 된다.",
         "",
         "## 크기별 대역",
         "",
@@ -880,7 +882,84 @@ def render_markdown(evidence: dict) -> str:
             f"{_fmt(record['bootstrap']['percentile_2p5'])} | "
             f"{_fmt(record['bootstrap']['percentile_97p5'])} |"
         )
+    negative_counts = collections.Counter(
+        record["negative_folds"] for record in evidence["contrasts"]
+    )
+    fold_total = evidence["contrasts"][0]["fold_total"]
+    swept = negative_counts.get(fold_total, 0) + negative_counts.get(0, 0)
+    leaning = sum(
+        count for folds, count in negative_counts.items() if folds >= fold_total - 1
+    )
+    disagreeing = sum(
+        1
+        for record in evidence["contrasts"]
+        if (record["delta_best"] > 0) != (record["negative_folds"] < fold_total / 2)
+    )
+    switches = [
+        record for record in evidence["contrasts"] if record["best_strategy_changed"]
+    ]
+    total = len(evidence["contrasts"])
+    largest = max(abs(record["delta_best"]) for record in evidence["contrasts"])
     lines += [
+        "",
+        "## 판정에 넘기는 재료",
+        "",
+        "이 절은 #347이 문턱과 적용 규칙을 정할 때 쓸 사실만 모은다.",
+        "판정 규칙은 정하지 않는다.",
+        "",
+        "### 1. 바깥쪽 검증 분할 부호는 영점에서도 자주 쏠린다",
+        "",
+        f"영점 대조 {total}개의 음수 fold 분포는 다음과 같다.",
+        "",
+        "| 음수 fold 수 | 대조 수 |",
+        "| ---: | ---: |",
+    ]
+    for folds in sorted(negative_counts):
+        lines.append(f"| {folds}/{fold_total} | {negative_counts[folds]} |")
+    lines += [
+        "",
+        f"정보량이 전혀 바뀌지 않은 짝인데도 {leaning}/{total}이 fold {fold_total - 1}개 이상 한 방향으로 몰렸고, "
+        f"{swept}/{total}은 fold {fold_total}개가 전부 한 방향이었다.",
+        f"따라서 실제 대조에서 fold {fold_total - 1}/{fold_total}이나 {fold_total}/{fold_total}이 나왔다는 사실만으로는 유지 증거가 되지 않는다.",
+        "fold 반복성을 판정 조건에 넣으려면 이 영점 빈도를 넘는 기준이어야 한다.",
+        "",
+        "### 2. 전체 차이의 부호와 fold 다수 부호가 어긋난다",
+        "",
+        f"{disagreeing}/{total} 대조에서 전체 nested OOF AUC 차이의 부호와 fold 다수결의 부호가 반대였다.",
+        "nested OOF AUC는 fold별 AUC의 평균이 아니라 fold 예측을 합쳐 한 번에 채점한 값이라 이 어긋남은 원리적으로 가능하다.",
+        "#344가 두 기록을 함께 남기라고 정했으므로, #347은 둘 중 무엇을 주 판정으로 두고 다른 하나를 어떻게 쓸지 명시해야 한다.",
+        "\"둘 다 같은 방향일 때만 유지\"로 두면 유지 판정이 크게 줄어든다.",
+        "",
+        "### 3. 최선 전략은 무정보 교란만으로도 바뀐다",
+        "",
+        f"{len(switches)}/{total} 대조에서 짝의 두 팔이 서로 다른 등록 전략을 최선으로 골랐다.",
+    ]
+    if switches:
+        destinations = collections.Counter(
+            record["large_best_strategy"] for record in switches
+        )
+        lines.append(
+            "교체가 향한 전략은 "
+            + ", ".join(f"`{name}` {count}건" for name, count in destinations.most_common())
+            + "이다."
+        )
+    lines += [
+        "최선 전략 판독의 도약이 실재한다는 뜻이며, 전략을 하나로 고정해 잰 대역은 이 도약을 담지 못해 좁아진다.",
+        "",
+        "### 4. 기존 채택 문턱 0.00002와의 비교",
+        "",
+        f"관측된 영점 Δ의 절댓값 최댓값은 `{largest:.12f}`로 `0.00002`보다 작다.",
+        "그러나 짝지은 행 부트스트랩을 더한 대역은 "
+        f"`{_fmt(overall['lower'])}`에서 `{_fmt(overall['upper'])}`이고, "
+        "동일 크기 영점 대조까지 합치면 "
+        + (
+            f"`{_fmt(summary['union']['lower'])}`에서 `{_fmt(summary['union']['upper'])}`"
+            if summary.get("union")
+            else "더 넓어진다"
+        )
+        + "다.",
+        "즉 `0.00002`는 안전한 여유가 아니라 측정된 잡음 폭의 경계에 걸쳐 있다.",
+        "관측값만 보고 그 문턱을 재사용했다면 대역을 실제보다 좁게 잡았을 것이다.",
         "",
         "## 해석 제약",
         "",
