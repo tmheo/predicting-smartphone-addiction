@@ -61,6 +61,11 @@ Runpod의 이전 대회용 고아 공개 키와 종료된 이슈 102·106의 작
 10. SSH 호스트 키를 미리 확인하고 `StrictHostKeyChecking=yes`를 사용한다.
 11. 공급자별 대회 전용 SSH 접속 키를 사용하고 원격 실행 작업별 키를 만들거나 삭제하지 않는다.
 12. SSH 호스트 키와 `known_hosts` 파일은 원격 실행 작업별로 분리한다.
+13. Git 저장소를 포함한 묶음의 파일별 해시 목록에서는 `.git/` 아래를 제외하고, 저장소 무결성과 상태는 별도 Git 관문으로 확인한다.
+14. 원격 저장소의 `safe.directory`는 검증된 작업 경로 하나에만 자식 프로세스 환경으로 지정하고 전역 설정이나 `*`를 사용하지 않는다.
+15. 자동 시작 프로그램의 `git status`는 선택적 잠금을 끈 상태로 실행하고, 제어 세션에서 시작 직전에 별도로 실행하지 않는다.
+16. 파일별 해시 검증, Git 관문과 작업 시작은 하나의 고정 시작 프로그램이 순서대로 소유한다.
+17. 시작 관문을 다시 수행할 때는 사용하던 디렉터리를 고쳐 쓰지 않고 검증된 원본 묶음을 새 작업 경로에 다시 푼다.
 
 ## 접속 변수
 
@@ -116,6 +121,86 @@ manifest에 절대 경로를 기록하면 원격에서 만든 결과를 로컬�
 zsh에서 manifest를 읽는 반복문의 변수 이름으로 `path`를 쓰지 않는다.
 `path`는 zsh의 명령 검색 경로와 연결된 예약 배열이므로 덮어쓰면 반복문 안에서 `shasum`, `awk` 같은 명령을 찾지 못한다.
 `file_path`처럼 역할이 분명한 이름을 사용한다.
+
+## Git 저장소를 포함한 입력 묶음
+
+실행 커밋을 기록하려고 `.git`을 포함한 작업 사본을 전송할 때는 Git 저장소 내부 상태와 실행 입력 내용을 같은 방식으로 검증하지 않는다.
+전체 압축 파일의 SHA-256은 `.git`까지 포함한 전송 무결성을 보장하고, 파일별 해시 목록인 `input-manifest.sha256`은 제품 파일, 비공개 입력, 설정과 실행 제어 파일을 검증한다.
+저장소의 객체와 실행 커밋, 작업 폴더 상태는 원격 Git 관문이 별도로 검증한다.
+
+`.git/index`는 제품 입력이 아니라 Git이 관리하는 가변 상태다.
+Git 공식 문서에 따르면 `git status`는 기본적으로 작업 폴더의 통계 정보를 인덱스에 새로 기록할 수 있다.
+제품 파일이 바뀌지 않아도 전송 직후의 `.git/index` 해시가 달라질 수 있으므로 `.git/` 아래 파일을 파일별 해시 목록에 넣지 않는다.
+자동화에서 상태를 읽을 때는 [`git --no-optional-locks status`](https://git-scm.com/docs/git-status#_background_refresh)를 사용한다.
+
+입력 준비는 연결된 작업 폴더의 `.git` 연결 정보 파일이 아니라 독립된 Git 복제본을 사용한다.
+로컬 준비 폴더에서 Git 상태를 먼저 확인한 뒤 `.git/`을 제외한 파일별 해시 목록을 만든다.
+
+```bash
+GPU_INPUT_ROOT=/absolute/path/to/prepared-input
+GPU_STAGED_REPO_REL=repo
+GPU_EXPECTED_COMMIT=0123456789abcdef0123456789abcdef01234567
+GPU_STAGED_REPO="$GPU_INPUT_ROOT/$GPU_STAGED_REPO_REL"
+
+test -d "$GPU_STAGED_REPO/.git"
+test "$(git -C "$GPU_STAGED_REPO" rev-parse HEAD)" = "$GPU_EXPECTED_COMMIT"
+test -z "$(git -C "$GPU_STAGED_REPO" --no-optional-locks \
+  status --porcelain=v1 --untracked-files=normal)"
+
+(
+  cd "$GPU_INPUT_ROOT"
+  find . -type f \
+    ! -path "./$GPU_STAGED_REPO_REL/.git/*" \
+    ! -name input-manifest.sha256 \
+    -print0 \
+    | LC_ALL=C sort -z \
+    | xargs -0 shasum -a 256 \
+    > input-manifest.sha256
+)
+```
+
+원격에서는 전체 묶음 해시가 일치한 뒤 새 디렉터리에 압축을 푼다.
+압축을 푼 사용자와 실제 작업 사용자가 달라질 수 있으므로, 저장소의 정규화된 절대 경로 하나만 [`safe.directory`](https://git-scm.com/docs/git-config#Documentation/git-config.txt-safedirectory)로 자식 프로세스 환경에 전달한다.
+`git config --global --add safe.directory ...`로 원격 계정의 지속 설정을 바꾸거나 `safe.directory=*`로 소유권 검사를 끄지 않는다.
+
+다음 순서를 하나의 원격 시작 프로그램에 고정한다.
+제어 세션은 이 프로그램을 시작하기 직전에 별도의 `git status`, `git update-index` 또는 다른 Git 명령을 실행하지 않는다.
+
+```bash
+GPU_REMOTE_INPUT="$GPU_REMOTE_ROOT/input"
+GPU_REMOTE_PROJECT="$(realpath -e "$GPU_REMOTE_INPUT/repo")"
+GPU_EXPECTED_COMMIT=0123456789abcdef0123456789abcdef01234567
+
+case "$GPU_REMOTE_PROJECT" in
+  "$GPU_REMOTE_INPUT"/*) ;;
+  *) printf '원격 저장소가 작업 입력 경로 밖에 있다.\n' >&2; exit 1 ;;
+esac
+
+export GIT_CONFIG_COUNT=1
+export GIT_CONFIG_KEY_0=safe.directory
+export GIT_CONFIG_VALUE_0="$GPU_REMOTE_PROJECT"
+export GIT_OPTIONAL_LOCKS=0
+
+(
+  cd "$GPU_REMOTE_INPUT"
+  sha256sum --check input-manifest.sha256
+)
+git -C "$GPU_REMOTE_PROJECT" fsck --strict --no-progress --no-dangling
+test "$(git -C "$GPU_REMOTE_PROJECT" rev-parse HEAD)" = "$GPU_EXPECTED_COMMIT"
+test -z "$(git -C "$GPU_REMOTE_PROJECT" \
+  status --porcelain=v1 --untracked-files=normal)"
+(
+  cd "$GPU_REMOTE_INPUT"
+  sha256sum --check input-manifest.sha256
+)
+
+exec "$GPU_REMOTE_INPUT/remote-job.sh"
+```
+
+첫 파일별 해시 검사는 전송한 실행 내용을 확인한다.
+Git 관문 뒤의 두 번째 검사는 상태 확인 과정이 해시 목록 대상 파일을 바꾸지 않았음을 확인한다.
+`.git/`은 파일별 해시 목록 대상이 아니므로 Git이 인덱스 통계 정보를 다뤄도 제품 파일 불일치로 잘못 판정하지 않는다.
+같은 환경 변수는 `exec` 뒤의 작업과 그 자식 프로세스에도 이어져 `pipeline.entry_diagnostic` 같은 후속 Git 명령이 소유권 검사에서 멈추지 않는다.
 
 ## 실행 제어 파일 고정
 
@@ -185,7 +270,8 @@ ssh \
   -o IdentitiesOnly=yes \
   -o StrictHostKeyChecking=yes \
   "$GPU_SSH_TARGET" \
-  "mkdir -p '$GPU_REMOTE_ROOT/input' && \
+  "test ! -e '$GPU_REMOTE_ROOT/input' && \
+   mkdir -p '$GPU_REMOTE_ROOT/input' && \
    tar --no-same-owner \
        --no-same-permissions \
        --warning=no-unknown-keyword \
@@ -198,6 +284,8 @@ ssh \
 ```
 
 묶음 해시와 내부 파일 해시를 모두 통과해야 원격 실행을 시작할 수 있다.
+Git 저장소를 포함한 묶음에서 이 검사는 압축 해제 직후의 예비 확인이다.
+이후 제어 세션은 Git 명령을 실행하지 않고, 위의 고정 시작 프로그램이 파일별 해시 목록을 다시 검증한 뒤 Git 관문과 작업 시작을 이어서 수행한다.
 
 ## 입력 자료를 저장소에 연결하기
 
@@ -385,6 +473,12 @@ mv "$GPU_LOCAL_RESULT.part" "$GPU_LOCAL_RESULT"
 SSH 명령 자체가 실패하면 파일 전송 방식 문제가 아니라 접속 정보, SSH 키, 호스트 키, 방화벽 또는 공급 환경 문제로 분류한다.
 원격 `.part` 파일의 크기가 0보다 크더라도 해시가 일치하지 않으면 사용할 수 없다.
 
+`detected dubious ownership`은 공급자 호스트 장애가 아니라 원격 시작 프로그램이 저장소의 정확한 `safe.directory` 환경을 준비하지 않은 입력 절차 실패다.
+`.git/index: FAILED`가 유일한 파일별 해시 목록 불일치이고 추적 파일 상태가 깨끗하더라도 이를 제품 파일 변경으로 해석하지 않는다.
+이 경우 현재 디렉터리에서 해시 목록을 다시 만들거나 실패 결과를 정상 결과로 고치지 않는다.
+실패 결과를 보존하고 검증된 원본 묶음을 새 입력 경로에 다시 푼 뒤, `.git/`을 제외한 해시 목록과 단일 시작 프로그램 관문으로 다시 수행한다.
+두 실패는 다른 호스트에서 반복해도 해결되지 않으므로 공급자 전환을 위한 서로 다른 호스트 실패 횟수에 포함하지 않는다.
+
 브라우저 업로드는 정상 운영 경로가 아니다.
 SSH 표준 스트림도 사용할 수 없고 결과 손실을 막기 위한 긴급 회수만 남았을 때 사용자 승인을 받은 뒤에만 사용한다.
 
@@ -395,3 +489,7 @@ SSH 표준 스트림도 사용할 수 없고 결과 손실을 막기 위한 긴�
 - 같은 작업에서 Vast.ai 인스턴스에도 실행 스크립트와 약 11MB 입력 묶음을 SSH 표준 입력 방식으로 전송하고 원격 해시와 크기를 확인했다.
 - [GitHub 이슈 185](https://github.com/tmheo/predicting-smartphone-addiction/issues/185)에서는 결과 묶음을 이슈 작업 트리의 MLflow에만 반입한 뒤 작업 트리를 삭제해 main MLflow 기록이 남지 않았다.
   이 사례를 계기로 main MLflow 반입과 산출물 재조회가 작업 트리 삭제의 선행 관문이 됐다.
+- [exp115 스칼라 token Transformer에 OOF 목표 평균 축을 fold 0 짝비교로 선별한다](https://github.com/tmheo/predicting-smartphone-addiction/issues/286)와 [exp131·exp132 CNN 개선을 exp113 대조군과 3시드로 재검증한다](https://github.com/tmheo/predicting-smartphone-addiction/issues/303)에서는 전체 Git 작업 사본을 파일별 해시 목록에 넣은 뒤 상태 확인으로 `.git/index`가 바뀌어 시작을 다시 수행했다.
+- [RealMLP 전처리 기준 집합 값 좌표의 기준 범위 짝비교](https://github.com/tmheo/predicting-smartphone-addiction/issues/331)과 [구현 전 fold 실행 기준과 cv.run_cv 회귀 계약을 고정한다](https://github.com/tmheo/predicting-smartphone-addiction/issues/353)에서는 원격 저장소의 소유권 관문이 시작 프로그램에 고정되지 않아 첫 Git 명령이 중단됐다.
+- `구현 전 fold 실행 기준과 cv.run_cv 회귀 계약을 고정한다`에서는 소유권 문제를 고친 뒤 제어 세션이 별도의 `git status`를 실행해 `.git/index` 파일별 해시 목록 불일치까지 연달아 일어났다.
+  이 사례를 계기로 `.git/`을 파일별 해시 목록에서 제외하고, 범위가 제한된 `safe.directory`, 선택적 잠금을 끈 상태 확인과 앞뒤 해시 검증을 하나의 시작 프로그램이 소유하게 했다.
