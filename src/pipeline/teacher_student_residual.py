@@ -350,8 +350,13 @@ class FeatureMatrixFactory:
         self.plan = FeaturePlan.from_config(cfg.experiment.features)
         prepared_train, prepared_test = self.plan.apply_dataset_wide(train, test)
         self.train = prepared_train
+        self.test = prepared_test
         self.static = self.plan.build_matrix(prepared_train, cfg.seed)
+        self.test_static = self.plan.build_matrix(prepared_test, cfg.seed)
         self.fold_input = prepare_fold_fit_input(prepared_train, self.static)
+        self.test_fold_input = prepare_fold_fit_input(
+            prepared_test, self.test_static
+        )
         self.transformers = self.plan.fold_fit_transformers()
         if any(transformer.uses_target for transformer in self.transformers):
             raise ResidualEvaluationError(
@@ -383,6 +388,23 @@ class FeatureMatrixFactory:
         expected = self.feature_names
         if list(X_fit.columns) != expected or list(X_predict.columns) != expected:
             raise ResidualEvaluationError("실제 교사-학생 피처 열이 선언과 다르다.")
+        return X_fit, X_predict
+
+    def external_pair(self, fit_index: pd.Index) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """지정한 훈련 행으로 상태를 맞춘 훈련 및 시험 행렬을 만든다."""
+        if len(fit_index) == 0 or len(self.test_static) == 0:
+            raise ResidualEvaluationError("피처 행렬의 학습 부분과 시험 부분은 비어 있을 수 없다.")
+        X_fit = self.static.loc[fit_index].copy()
+        X_predict = self.test_static.copy()
+        for transformer in self.transformers:
+            transformer.fit(self.fold_input.loc[fit_index], self.seed)
+            fit_new = transformer.transform(self.fold_input.loc[fit_index])
+            predict_new = transformer.transform(self.test_fold_input)
+            X_fit = pd.concat([X_fit, fit_new], axis=1)
+            X_predict = pd.concat([X_predict, predict_new], axis=1)
+        expected = self.feature_names
+        if list(X_fit.columns) != expected or list(X_predict.columns) != expected:
+            raise ResidualEvaluationError("실제 교사-학생 시험 피처 열이 선언과 다르다.")
         return X_fit, X_predict
 
 
@@ -707,6 +729,7 @@ def record_evaluation(
     out_dir: Path,
     *,
     tracking_uri: str = TRACKING_URI,
+    source_issue: int = 186,
 ) -> str:
     """묶음 반입이 재채점할 수 있는 완료 실행으로 평가를 기록한다."""
     from .tracking import git_state, mlflow_client
@@ -776,7 +799,7 @@ def record_evaluation(
             client.set_tag(run_id, f"sha256.{name}", digest)
         client.set_tag(run_id, "sha256.oof_prediction", file_sha256(oof_path))
         client.set_tag(run_id, "source.kind", "derived_ensemble_postprocess")
-        client.set_tag(run_id, "source.issue", "186")
+        client.set_tag(run_id, "source.issue", str(source_issue))
         client.log_artifact(run_id, str(cfg.experiment.source_path))
         client.log_artifact(run_id, str(oof_path))
         client.log_artifact(run_id, str(seed_oof_path))
@@ -807,6 +830,7 @@ def run_command(
     baseline_oof_path: Path,
     out_dir: Path,
     tracking_uri: str,
+    source_issue: int = 186,
 ) -> str:
     from .tracking import git_state
 
@@ -834,6 +858,7 @@ def run_command(
         payload,
         out_dir,
         tracking_uri=tracking_uri,
+        source_issue=source_issue,
     )
     print(f"현재 풀 OOF AUC: {evaluation.source_baseline_auc:.16f}")
     print(f"분할별 순위 대조 AUC: {evaluation.rank_control_auc:.16f}")
@@ -852,9 +877,16 @@ def main() -> None:
     parser.add_argument("--baseline-oof", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--tracking-uri", default=TRACKING_URI)
+    parser.add_argument("--source-issue", type=int, default=186)
     args = parser.parse_args()
     try:
-        run_command(args.config, args.baseline_oof, args.out_dir, args.tracking_uri)
+        run_command(
+            args.config,
+            args.baseline_oof,
+            args.out_dir,
+            args.tracking_uri,
+            source_issue=args.source_issue,
+        )
     except ResidualEvaluationError as exc:
         sys.exit(str(exc))
 

@@ -1,0 +1,106 @@
+# 이슈 316: 현재 32개 풀 위에서 의사 목표 총 영향력과 잔차 보정 가중치를 중첩 OOF로 선택한다.
+# pipeline.teacher_student_residual은 rho=0, beta=0.10 고정 대조군으로 이 설정을 읽는다.
+# pipeline.teacher_student_residual_selection은 nested_selection 블록을 추가로 읽는다.
+name: exp138_teacher_student_nested_selection
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [other_screen, sgw_sum, slack_frac, wk_other, notif_per_app]
+    - kind: missing_indicators
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          gender,
+          stress_level,
+          academic_work_impact,
+        ]
+    - kind: frequency_encoding
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          gender,
+          stress_level,
+          academic_work_impact,
+        ]
+
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.05
+    num_leaves: 255
+    max_bin: 1023
+    n_estimators: 10000
+    deterministic: true
+    force_row_wise: true
+    verbosity: -1
+    n_jobs: -1
+  fit:
+    early_stopping_rounds: 200
+
+teacher_student_residual:
+  baseline:
+    run_id: e5efdf08435e40368add5f0dcb1771b1
+    strategy: shrunk_rank_logit_logistic
+    pool_members: 32
+    auc_oof: 0.9697435407980921
+    oof_sha256: 2f5f46a95d3788cacf1aef4e76b092e9b875586426b603fe04a4d1b20b6eb153
+  seed: 42
+  refit_iteration_multiplier: 1.25
+  student:
+    params:
+      objective: regression
+      metric: l2
+      learning_rate: 0.03
+      num_leaves: 31
+      min_data_in_leaf: 1000
+      lambda_l2: 10.0
+      max_bin: 255
+      n_estimators: 4000
+      deterministic: true
+      force_row_wise: true
+      verbosity: -1
+      n_jobs: -1
+    fit:
+      early_stopping_rounds: 100
+  correction:
+    weight: 0.10
+    clip_to_reference_range: true
+  judgment:
+    minimum_auc_gain: 0.00002
+    minimum_fold_wins: 3
+
+nested_selection:
+  inputs:
+    pool_sha256: 943cbfd760cfe81036ec8551d9368b640f3873c1e6d8b16a2f487e1095db4f1d
+    selection_baseline_sha256: 434c9aa2cbb642be9fa0db5b948a4db8249004c1d759ed7db7fd117ddbb7fd79
+    baseline_test_sha256: ad7f473c88446b4e9403eaed721250f0c0897d143802b5e47b78a78a0997c7b2
+  search:
+    rhos: [0, 0.025, 0.05, 0.10, 0.125, 0.20, 0.40, 0.80]
+    betas: [0, 0.0125, 0.025, 0.05, 0.075, 0.10, 0.15, 0.20, 0.30]
