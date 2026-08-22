@@ -398,15 +398,6 @@ class TabCNNFold:
         fold_component = int.from_bytes(digest[:8], "little")
         return int((self._seed * 1_000_003 + fold_component) % (2**31 - 1))
 
-    def _epoch_permutation(
-        self, row_count: int, generator: torch.Generator
-    ) -> torch.Tensor:
-        permutation = torch.randperm(row_count, generator=generator)
-        usable = (len(permutation) // self._batch_size) * self._batch_size
-        if usable == 0:
-            usable = len(permutation)
-        return permutation[:usable].to(self._device)
-
     @staticmethod
     def _seed_everything(seed: int) -> None:
         random.seed(seed)
@@ -472,24 +463,29 @@ class TabCNNFold:
         for epoch in range(1, self._epochs + 1):
             started = time.monotonic()
             model.train()
-            permutation = self._epoch_permutation(len(train), generator)
+            permutation = torch.randperm(len(train), generator=generator)
+            usable = (len(permutation) // self._batch_size) * self._batch_size
+            if usable == 0:
+                usable = len(permutation)
+            permutation = permutation[:usable]
             loss_sum = 0.0
             batches = 0
-            for offset in range(0, len(permutation), self._batch_size):
-                rows = permutation[offset : offset + self._batch_size]
+            for offset in range(0, usable, self._batch_size):
+                rows = permutation[offset : offset + self._batch_size].to(
+                    self._device
+                )
                 optimizer.zero_grad(set_to_none=True)
                 with self._autocast():
                     logit = model(train[rows])
                     loss = nn.functional.binary_cross_entropy_with_logits(
                         logit, smooth_target[rows]
                     )
-                loss_value = float(loss.detach())
-                if not math.isfinite(loss_value):
+                if not bool(torch.isfinite(loss)):
                     raise RuntimeError("tab_cnn 학습 손실에 유한하지 않은 값이 생겼다.")
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
                 scaler.update()
-                loss_sum += loss_value
+                loss_sum += float(loss.detach())
                 batches += 1
 
             validation_logit = self._predict_tensor(validation)
@@ -641,24 +637,29 @@ class TabCNNFold:
         for epoch in range(1, training_budget + 1):
             started = time.monotonic()
             model.train()
-            permutation = self._epoch_permutation(len(train), generator)
+            permutation = torch.randperm(len(train), generator=generator)
+            usable = (len(permutation) // self._batch_size) * self._batch_size
+            if usable == 0:
+                usable = len(permutation)
+            permutation = permutation[:usable]
             loss_sum = 0.0
             batches = 0
-            for offset in range(0, len(permutation), self._batch_size):
-                rows = permutation[offset : offset + self._batch_size]
+            for offset in range(0, usable, self._batch_size):
+                rows = permutation[offset : offset + self._batch_size].to(
+                    self._device
+                )
                 optimizer.zero_grad(set_to_none=True)
                 with self._autocast():
                     logit = model(train[rows])
                     loss = nn.functional.binary_cross_entropy_with_logits(
                         logit, smooth_target[rows]
                     )
-                loss_value = float(loss.detach())
-                if not math.isfinite(loss_value):
+                if not bool(torch.isfinite(loss)):
                     raise RuntimeError("tab_cnn 전체 자료 학습 손실에 유한하지 않은 값이 생겼다.")
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
                 scaler.update()
-                loss_sum += loss_value
+                loss_sum += float(loss.detach())
                 batches += 1
             scheduler.step()
             elapsed = time.monotonic() - started

@@ -217,13 +217,6 @@ def test_adapter_contract_learning_importance_and_determinism():
     assert diagnostics.observations["source_script_version_id"] == 342747549
 
     training = first.training_diagnostics()
-    second_training = second.training_diagnostics()
-    np.testing.assert_array_equal(
-        training["training_losses"], second_training["training_losses"]
-    )
-    np.testing.assert_array_equal(
-        training["epoch_validation_aucs"], second_training["epoch_validation_aucs"]
-    )
     assert all(training["integrity_assertions"].values())
     assert training["preprocessing_fit_rows"] == 240
     assert training["training_rows"] == 240
@@ -238,28 +231,6 @@ def test_adapter_contract_learning_importance_and_determinism():
     assert training["cuda_max_allocated_bytes"] is None
     assert training["cuda_max_reserved_bytes"] is None
     assert training["cuda_device_total_bytes"] is None
-
-
-@pytest.mark.parametrize(
-    ("row_count", "batch_size", "expected_rows"),
-    [(70, 32, 64), (20, 32, 20)],
-)
-def test_epoch_permutation_keeps_cpu_order_and_batch_truncation(
-    row_count, batch_size, expected_rows
-):
-    from pipeline import tab_cnn
-
-    fold = tab_cnn.TabCNNFold(_params(batch_size=batch_size), seed=7)
-    expected_generator = tab_cnn.torch.Generator().manual_seed(177)
-    actual_generator = tab_cnn.torch.Generator().manual_seed(177)
-    expected = tab_cnn.torch.randperm(
-        row_count, generator=expected_generator
-    )[:expected_rows]
-
-    actual = fold._epoch_permutation(row_count, actual_generator)
-
-    assert actual.device.type == "cpu"
-    assert tab_cnn.torch.equal(actual, expected)
 
 
 def test_full_fit_uses_fixed_budget_and_predicts_finite_values():

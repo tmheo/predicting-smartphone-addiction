@@ -640,6 +640,254 @@
     "other_issue_instance_left_untouched": 48364969,
     "passed": true
   },
+  "conditional_candidate_acceptance": {
+    "schema_version": 1,
+    "ticket": "https://github.com/tmheo/predicting-smartphone-addiction/issues/359",
+    "evaluated_at": "2026-08-22T12:52:36Z",
+    "status": "completed_with_both_candidates_rejected",
+    "evaluation_order": [
+      "xgb_impute_aux_cuda",
+      "tabcnn_adapter_throughput"
+    ],
+    "provenance": {
+      "baseline_commit": "8fcaf1df8338f684d79ee9ad6ef7796b0dfefefe",
+      "tabcnn_screening_candidate_commit": "e8199f297e24fdb5c91686687d196893af127722",
+      "image": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+      "gpu": "NVIDIA GeForce RTX 5080",
+      "machine_id": 61162,
+      "seed": 42,
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "xgb_config": "configs/exp050_lgb_xgb_impute.yaml",
+      "xgb_config_sha256": "7798321ecd222bdf43ceb67a32d886fe782ebe83800198b8a42af2d235564427",
+      "tabcnn_config": "configs/exp113_tab_cnn_m0.yaml",
+      "tabcnn_config_sha256": "6ea07223019f68ab86683bdcd7d55cc15eed7a72ce830bb068bf53c3ceaca886",
+      "uv_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+      "baseline_tabcnn_source_sha256": "4d65d26d6ad316771a7f8cd0d53c5c266ea842b990732c4945ce3bd029ad76a9",
+      "candidate_tabcnn_source_sha256": "cba947a305358e016c0e4db2a3a47822787a224fc0409a8a69c2d3472c8ecbdd"
+    },
+    "evidence": {
+      "local_root": "/Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction/run-logs/issue359-throughput-candidates",
+      "input_archive": "issue359-pilot-input-v2.tar.gz",
+      "input_archive_sha256": "325fca17360a11032c78bb6135baeda7951f5073b3195bbd35fec5313bf7c286",
+      "input_manifest_sha256": "6614e180a134e004cf84c7d22d5fa9697cfa8d0495890d42fade06ca5d440639",
+      "execution_spec_sha256": "d2aac407475d906e4b7fa568979275254d411fcc0a58ee829bad0d0cbad922d9",
+      "result_archive": "results/issue359-pilot-result.tar.gz",
+      "result_archive_sha256": "3390b12cf9bc2fc89f94b419e74f2686f4e3fd13b80e765c72cd0457f810aedd",
+      "result_manifest_sha256": "1eac4e80916de9b8a4d692c97401173ef525333e54dee7e0f04a5fa972aa4c8b",
+      "xgb_evidence_sha256": "8a525925f5f2f14935a6a2c0e747a667f5d958375409da79a4b96f324cc4ec26",
+      "resource_telemetry_sha256": "878e4daf09700b4981fc3d7364f240ab40cbe67ee7f7c3823afb67adc413ecca",
+      "result_archive_retrieved_and_verified": true,
+      "all_inner_artifacts_verified": true
+    },
+    "execution_classification": {
+      "kind": "early_rejection_screening",
+      "representative_paired_acceptance": false,
+      "xgb_uses_all_fixed_folds": true,
+      "tabcnn_screening_fold": 0,
+      "tabcnn_candidate_repeat_count": 2,
+      "formal_reversed_five_fold_pairs_run": false,
+      "reason": "표 합성곱망 후보는 한 폴드 완주와 독립 재현 실행에서 학습, 전체 시간과 GPU 유휴 시간의 최소 문턱에 크게 못 미쳤다. 채택 가능성이 사라진 후보에 추가 유료 5폴드 네 작업을 쓰지 않고 제품에서 제거했다."
+    },
+    "xgb_impute_aux_cuda": {
+      "status": "reject",
+      "xgboost_version": "3.4.0",
+      "cuda_build": true,
+      "fixed_fold_count": 5,
+      "cpu_provider_seconds_total": 87.73058177065104,
+      "cuda_provider_seconds_total": 33.46551431529224,
+      "cuda_repeat_provider_seconds_total": 32.975421922281384,
+      "cuda_provider_reduction_percent": 61.85422045555428,
+      "cuda_repeat_provider_reduction_percent": 62.41285392534258,
+      "provider_reduction_required_percent": 50.0,
+      "cuda_repeat_exact": true,
+      "cpu_cuda_feature_schema_exact": true,
+      "cpu_cuda_feature_values_exact": false,
+      "different_train_feature_cells_total": 3709767,
+      "different_test_feature_cells_total": 1587987,
+      "train_max_absolute_difference": 32.85017395019531,
+      "test_max_absolute_difference": 33.43656921386719,
+      "first_difference": {
+        "fold": 0,
+        "split": "train",
+        "row_position": 0,
+        "row_index": 0,
+        "column": "daily_screen_time_hours_xgb_recon",
+        "cpu": 6.5611491203308105,
+        "cuda": 6.26512336730957
+      },
+      "later_performance_gates_run": false,
+      "reason": "CUDA 반복은 결정적이고 제공자 시간 문턱도 넘었지만 CPU와 CUDA의 재구성 특징값이 모든 폴드에서 정확히 다르므로 첫 정확 동등성 관문에서 탈락했다.",
+      "product_code_registered": false,
+      "config_registered": false,
+      "dependency_registered": false,
+      "single_use_seam_registered": false
+    },
+    "tabcnn_adapter_throughput": {
+      "status": "reject",
+      "exactness": {
+        "baseline_candidate_validation_predictions_exact": true,
+        "baseline_candidate_feature_importance_exact": true,
+        "baseline_candidate_semantic_diagnostics_exact": true,
+        "candidate_repeat_validation_predictions_exact": true,
+        "candidate_repeat_feature_importance_exact": true,
+        "candidate_repeat_semantic_diagnostics_exact": true,
+        "maximum_numeric_difference": 0.0,
+        "recovery_exactness_evaluated": false,
+        "reason_recovery_not_evaluated": "처리량 문턱을 명백히 통과하지 못해 후보를 조기 탈락시키고 제품에서 제거했다."
+      },
+      "timing_seconds": {
+        "baseline": {
+          "epoch_sum": 357.04070822056383,
+          "fit_and_validation_predict": 363.8745014797896,
+          "diagnostic_total": 395.6445317212492,
+          "probe_wall": 397.4210775149986
+        },
+        "candidate": {
+          "epoch_sum": 355.9809514414519,
+          "fit_and_validation_predict": 361.1911936737597,
+          "diagnostic_total": 391.998060698621,
+          "probe_wall": 393.827008176595
+        },
+        "candidate_repeat": {
+          "epoch_sum": 361.01709257252514,
+          "fit_and_validation_predict": 366.22147177532315,
+          "diagnostic_total": 397.09186927601695,
+          "probe_wall": 398.92520549334586
+        }
+      },
+      "change_percent": {
+        "candidate_epoch_sum_reduction": 0.2968167927947452,
+        "candidate_fit_and_validation_predict_reduction": 0.7374267213331936,
+        "candidate_diagnostic_total_reduction": 0.9216533353220622,
+        "candidate_probe_wall_reduction": 0.9043479427102109,
+        "candidate_repeat_epoch_sum_reduction": -1.1137061574236184,
+        "candidate_repeat_fit_and_validation_predict_reduction": -0.6449944379144394,
+        "candidate_repeat_diagnostic_total_reduction": -0.3658176566907406,
+        "candidate_repeat_probe_wall_reduction": -0.378472120238886
+      },
+      "resource_observation": {
+        "sample_period_seconds": 2,
+        "gpu_observation_missing_percent": 0.0,
+        "baseline_samples": 199,
+        "candidate_samples": 197,
+        "candidate_repeat_samples": 199,
+        "baseline_idle_seconds": 40.016000000000005,
+        "candidate_idle_seconds": 36.007999999999996,
+        "candidate_repeat_idle_seconds": 36.003,
+        "candidate_idle_reduction_percent": 10.015993602559,
+        "candidate_repeat_idle_reduction_percent": 10.02848860455819,
+        "baseline_idle_fraction": 0.10104361571307004,
+        "candidate_idle_fraction": 0.09185175359609002,
+        "candidate_repeat_idle_fraction": 0.09091322298397787,
+        "idle_fraction_not_worse": true
+      },
+      "thresholds": {
+        "model_fit_reduction_percent": 20.0,
+        "billable_total_reduction_percent": 15.0,
+        "gpu_idle_time_reduction_percent": 20.0,
+        "gpu_idle_fraction_must_not_worsen": true
+      },
+      "thresholds_passed": {
+        "model_fit": false,
+        "billable_total": false,
+        "gpu_idle_time": false,
+        "gpu_idle_fraction": true,
+        "all": false
+      },
+      "reason": "후보는 결과를 정확히 보존했지만 첫 실행의 학습 구간 단축은 0.737%이고 재현 실행은 0.645% 길었다. 전체 시간은 0.922% 단축과 0.366% 증가로 방향도 재현되지 않았고 GPU 유휴 시간 단축도 약 10.0%에 그쳤다.",
+      "product_code_removed": true,
+      "tests_only_for_rejected_candidate_removed": true,
+      "config_registered": false,
+      "dependency_registered": false
+    },
+    "operational_incidents": [
+      {
+        "classification": "provider_did_not_auto_attach_account_ssh_key",
+        "effect": "사전 검증한 같은 공개 키를 이 인스턴스에만 명시적으로 연결했고 준비 지연을 비용에 포함했다.",
+        "result_artifacts_valid": true
+      },
+      {
+        "classification": "postprocessing_summary_field_path_error",
+        "effect": "모든 원시 비교 실행과 결과 묶음 생성 뒤 요약기가 존재하지 않는 adapter.observations.fit_seconds를 읽어 KeyError로 끝났다. 회수한 원시 진단의 timing_seconds와 관측 자료로 판정을 다시 계산했다.",
+        "result_artifacts_valid": true,
+        "new_paid_run_required": false
+      }
+    ],
+    "remote_resource": {
+      "provider": "vast.ai",
+      "instance_id": 48393161,
+      "offer_id": 34178264,
+      "host_id": 283684,
+      "machine_id": 61162,
+      "hourly_price_usd": 0.18851851851851853,
+      "created_at": "2026-08-22T12:15:50Z",
+      "running_verified_at": "2026-08-22T12:16:23Z",
+      "last_valid_result_completed_at": "2026-08-22T12:48:33.791Z",
+      "result_retrieved_at": "2026-08-22T12:48:53Z",
+      "absent_verified_at": "2026-08-22T12:52:36Z",
+      "instance_absent": true,
+      "matching_label_instances": 0,
+      "volumes_created": 0,
+      "remaining_volumes": 0,
+      "hourly_billing_rate_usd": 0.0,
+      "other_issue_instance_left_untouched": 48364969
+    },
+    "billing": {
+      "pilot_budget_max_usd": 0.2,
+      "issue_budget_max_usd": 1.2,
+      "instance_charge_usd": 0.111,
+      "within_pilot_budget": true,
+      "within_issue_budget": true
+    },
+    "environment_gates": {
+      "working_tree": {
+        "private_inputs": "pass",
+        "collected_tests": 489,
+        "remote_python_contract_tests": 4,
+        "passed_tests": 489,
+        "full_suite_seconds": 89.75,
+        "status": "pass"
+      },
+      "isolated_candidate_commit": {
+        "commit": "e8199f297e24fdb5c91686687d196893af127722",
+        "collected_tests": 489,
+        "remote_python_contract_tests": 4,
+        "passed_tests": 489,
+        "full_suite_seconds": 98.59,
+        "status": "pass"
+      },
+      "fixed_image_python_contract": "pass",
+      "final_post_rejection": {
+        "private_inputs": "pass",
+        "collected_tests": 489,
+        "remote_python_contract_tests": 4,
+        "passed_tests": 489,
+        "full_suite_seconds": 80.79,
+        "status": "pass"
+      }
+    },
+    "final_product_state": {
+      "xgb_cuda_candidate_absent": true,
+      "tabcnn_candidate_absent": true,
+      "source_and_test_diff_against_baseline_commit_empty": true,
+      "uv_lock_unchanged": true,
+      "configs_unchanged": true,
+      "rejected_single_use_seams_absent": true
+    },
+    "verdict": {
+      "xgb_impute_aux_cuda": "reject_exactness_failure",
+      "tabcnn_adapter_throughput": "reject_performance_failure",
+      "core_acceleration_acceptance_unchanged": true,
+      "issue_complete": true,
+      "next_action": "두 조건부 후보 없이 인수된 핵심 구현을 유지한다."
+    }
+  },
   "final_worktree_gate": {
     "command": "scripts/verify_environment_gates.sh --source-root /Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction",
     "private_inputs": "pass",
