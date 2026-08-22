@@ -1,12 +1,12 @@
 schema_version: 1
-source_pool_sha256: e6f093c08af4d09a70e2ee9a7cc99f9d099b06b7505116005464b5ae1240712a
+source_pool_sha256: 4de11cb13122c0c70fef1d17939daa690289237017f5f0093fbf847fb4222242
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
   budget_rounding: half_up
   cv_model_weight: 5
   full_model_weight: 1
-  combiner: missing_interaction_rank_logit
+  combiner: shrunk_rank_logit_logistic
 
 members:
   - config: exp006_te_drop_gaming
@@ -39,11 +39,6 @@ members:
     run_id: b1bd4b08386946c9a4e05b755dbd5f26
     budget_source: fold_median
     budgets: {42: 468, 43: 400, 44: 461}
-  - config: exp033_recon_orig_mean_top3_raw
-    config_path: configs/exp033_recon_orig_mean_top3_raw.yaml
-    run_id: c34f1da180544c3ba022140d394cb055
-    budget_source: fold_median
-    budgets: {42: 483, 43: 446, 44: 460}
   - config: exp035_lattice_te
     config_path: configs/exp035_lattice_te.yaml
     run_id: c62a9ad334bf486cb46d738474ccd767
@@ -94,16 +89,6 @@ members:
     run_id: 547e7bc90b9f4c448307d406f053629a
     budget_source: configured_cap
     budgets: {42: 30, 43: 30, 44: 30}
-  - config: exp107_logreg_onehot_nn10
-    config_path: configs/exp107_logreg_onehot_nn10.yaml
-    run_id: c4c4c780acab4b83baf10d67b98cc85a
-    budget_source: not_applicable
-    budgets: {42: null}
-  - config: exp108_logreg_onehot_nn10_l1
-    config_path: configs/exp108_logreg_onehot_nn10_l1.yaml
-    run_id: 83f7977a87ef46679c26824c5b85f928
-    budget_source: not_applicable
-    budgets: {42: null}
   - config: exp117_ag25_gbm_r21
     config_path: configs/exp117_ag25_gbm_r21.yaml
     run_id: d107ea874ebe4dbe8094694141a162b6

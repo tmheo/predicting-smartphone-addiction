@@ -11,8 +11,15 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import yaml
 
-from pipeline.ledger import Champion, EntryEvidence, Pool, PoolMember
+from pipeline.ledger import (
+    Champion,
+    EntryEvidence,
+    Pool,
+    PoolJudgmentPointer,
+    PoolMember,
+)
 
 REPO = Path(__file__).resolve().parent.parent
 
@@ -29,6 +36,60 @@ def test_pool_committed_ledger_roundtrips_bytes(tmp_path):
     saved = tmp_path / "pool.yaml"
     Pool.load(committed).save(saved)
     assert saved.read_bytes() == committed.read_bytes()
+
+
+def test_pool_is_frozen_35_member_order_with_only_decided_removals():
+    baseline = yaml.safe_load(
+        (REPO / "artifacts" / "pool-baseline-2026-08-21.yaml").read_text()
+    )
+    removed = {
+        "exp033_recon_orig_mean_top3_raw",
+        "exp107_logreg_onehot_nn10",
+        "exp108_logreg_onehot_nn10_l1",
+    }
+    expected = [
+        (member["config"], member["run_id"])
+        for member in baseline["members"]
+        if member["config"] not in removed
+    ]
+    actual = [
+        (member.config, member.run_id)
+        for member in Pool.load(REPO / "artifacts" / "pool.yaml").members
+    ]
+
+    assert len(actual) == 32
+    assert actual == expected
+
+
+def test_pool_reduction_judgment_matches_committed_32_member_result():
+    judgment = yaml.safe_load(
+        (
+            REPO / "artifacts" / "judgments" / "issue346-pool-reduction.yaml"
+        ).read_text()
+    )
+    pool_configs = [
+        member.config
+        for member in Pool.load(REPO / "artifacts" / "pool.yaml").members
+    ]
+
+    assert judgment["contract_version"] == "candidate-pool-v1"
+    assert judgment["frozen_input"]["candidate_pool"]["member_count"] == 35
+    assert judgment["final_result"]["members"] == pool_configs
+    assert judgment["final_result"]["member_count"] == 32
+    assert judgment["final_result"]["full_refit_count_after"] == 94
+    assert sum(
+        removal["full_refit_reduction"] for removal in judgment["removals"]
+    ) == 5
+    for removal in judgment["removals"]:
+        comparison = removal["comparison"]
+        assert comparison["after_auc"] - comparison["before_auc"] == pytest.approx(
+            comparison["delta"], abs=1e-15
+        )
+        for fold in range(5):
+            assert (
+                comparison["outer_fold_auc_after"][fold]
+                - comparison["outer_fold_auc_before"][fold]
+            ) == pytest.approx(comparison["outer_fold_delta"][fold], abs=1e-15)
 
 
 def test_champion_load_normalizes_string_keys(tmp_path):
@@ -70,6 +131,12 @@ def test_pool_roundtrips_values(tmp_path):
                     ensemble_auc_with=None,
                     ensemble_auc_without=None,
                     contribution=None,
+                ),
+                judgment=PoolJudgmentPointer(
+                    judgment_id="test-admission",
+                    contract_version="candidate-pool-v1",
+                    path="artifacts/judgments/test-admission.yaml",
+                    sha256="a" * 64,
                 ),
             )
         ]
