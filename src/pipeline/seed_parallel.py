@@ -51,7 +51,7 @@ def run_seeds(
 
 
 class _QueueRecorder:
-    """워커 안에서 cv 루프의 fold 완료 통지를 부모로 보낼 큐에 옮긴다."""
+    """워커의 진행 및 시간 사건을 부모 기록기 큐로 옮긴다."""
 
     def __init__(self, events) -> None:
         self._events = events
@@ -60,7 +60,17 @@ class _QueueRecorder:
         pass  # 시드별 단계가 겹치므로 병렬 경로의 단계 기록은 부모가 소유한다.
 
     def fold_completed(self, seed_index: int, fold_index: int, auc: float) -> None:
-        self._events.put((seed_index, fold_index, auc))
+        self._events.put(
+            {
+                "kind": "fold_completed",
+                "seed_index": seed_index,
+                "fold_index": fold_index,
+                "auc": auc,
+            }
+        )
+
+    def record_timing(self, event: dict[str, object]) -> None:
+        self._events.put({"kind": "timing", "event": event})
 
 
 def _pin_gpu(gpu_queue) -> None:
@@ -86,7 +96,14 @@ def _forward_events(events, recorder: cv.RunRecorder, done: threading.Event) -> 
             item = events.get(timeout=0.2)
         except queue.Empty:
             continue
-        recorder.fold_completed(*item)
+        if item["kind"] == "fold_completed":
+            recorder.fold_completed(item["seed_index"], item["fold_index"], item["auc"])
+        elif item["kind"] == "timing":
+            sink = getattr(recorder, "record_timing", None)
+            if sink is not None:
+                sink(item["event"])
+        else:
+            raise ValueError(f"알 수 없는 시드 워커 사건이다: {item['kind']}")
 
 
 def _run_parallel(

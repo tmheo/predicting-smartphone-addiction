@@ -23,6 +23,15 @@ N_FOLDS = 3
 SEEDS = [7, 11, 13]
 
 
+class TimingSpyRecorder(SpyRecorder):
+    def __init__(self) -> None:
+        super().__init__()
+        self.timings: list[dict[str, object]] = []
+
+    def record_timing(self, event: dict[str, object]) -> None:
+        self.timings.append(dict(event))
+
+
 def experiment_config(kind: str, params: dict) -> ExperimentConfig:
     from pathlib import Path
 
@@ -80,7 +89,7 @@ def test_parallel_execution_matches_sequential_and_forwards_folds(monkeypatch, t
     sequential = seed_parallel.run_seeds(cfg, plan, train, test)
 
     monkeypatch.setenv(seed_parallel.ENV_GPUS, "0,1")
-    recorder = SpyRecorder()
+    recorder = TimingSpyRecorder()
     recovery = FoldRecovery(tmp_path / "recovery", {"execution": "parallel-test"})
     parallel = seed_parallel.run_seeds(
         cfg, plan, train, test, recorder=recorder, recovery=recovery
@@ -109,3 +118,55 @@ def test_parallel_execution_matches_sequential_and_forwards_folds(monkeypatch, t
         for seed_index in range(len(SEEDS))
         for fold in range(N_FOLDS)
     )
+    high_level = [
+        event
+        for event in recorder.timings
+        if event["operation"] in {"fold_feature", "fold_finalize"}
+    ]
+    assert len(high_level) == len(SEEDS) * N_FOLDS * 2
+    assert {event["seed"] for event in high_level} == set(SEEDS)
+    assert len({event["worker_id"] for event in high_level}) >= 2
+
+    recovered_recorder = TimingSpyRecorder()
+    recovered = seed_parallel.run_seeds(
+        cfg,
+        plan,
+        train,
+        test,
+        recorder=recovered_recorder,
+        recovery=recovery,
+    )
+
+    for original, reused in zip(parallel, recovered):
+        pd.testing.assert_frame_equal(original.oof, reused.oof, check_exact=True)
+        pd.testing.assert_frame_equal(
+            original.test_pred, reused.test_pred, check_exact=True
+        )
+        pd.testing.assert_frame_equal(
+            original.importance, reused.importance, check_exact=True
+        )
+        assert original.fold_aucs == reused.fold_aucs
+        assert all(item["reused"] for item in reused.recovery_evidence)
+    assert recovered_recorder.stages == ["training"]
+    assert sorted(
+        (seed_index, fold) for seed_index, fold, _ in recovered_recorder.folds
+    ) == sorted(
+        (seed_index, fold) for seed_index in range(len(SEEDS)) for fold in range(N_FOLDS)
+    )
+    recovered_features = [
+        event
+        for event in recovered_recorder.timings
+        if event["operation"] == "fold_feature"
+    ]
+    recovered_finalizes = [
+        event
+        for event in recovered_recorder.timings
+        if event["operation"] == "fold_finalize"
+    ]
+    assert len(recovered_features) == len(SEEDS) * N_FOLDS
+    assert all(
+        event["outcome"] == "skipped" and event["reason"] == "checkpoint_reused"
+        for event in recovered_features
+    )
+    assert len(recovered_finalizes) == len(SEEDS) * N_FOLDS
+    assert all(event["outcome"] == "reused" for event in recovered_finalizes)

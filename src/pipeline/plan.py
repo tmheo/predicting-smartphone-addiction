@@ -19,6 +19,8 @@ compare의 카나리아 게이트를 공허하게 통과하는 구멍을 적재 
 
 from __future__ import annotations
 
+import copy
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Protocol
@@ -29,6 +31,16 @@ from . import features
 from .config import FeatureConfig
 from .data import ID, TARGET
 from .features import PLACEBO
+from .fold_fit_reuse import (
+    FoldFitReuseError,
+    FoldFitReuseRequest,
+    FoldFitReuseStore,
+    canonical_json_bytes,
+    provider_identity_document,
+    validate_input_files,
+    validate_runtime_identity,
+)
+from .fold_observability import recorded_operation, skipped_operation, timed_operation
 
 # 적용 단계. 원본 프록시 prior(#53)는 별도 단계 대신 row-wise로 들어갔다:
 # 통계표가 해시 고정된 외부 파일에서 학습 전에 확정되므로 행 단위 결정적 매핑이고,
@@ -86,6 +98,10 @@ class FoldFitTransformer(Protocol):
 
     def columns(self) -> list[str]: ...
 
+    def reuse_input_columns(self) -> list[str]: ...
+
+    def reuse_settings(self) -> dict[str, object]: ...
+
     def fit(self, train_fold: pd.DataFrame, seed: int) -> None: ...
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame: ...
@@ -95,6 +111,10 @@ class FoldFitTransformer(Protocol):
 class ProviderKind:
     stage: str
     factory: Callable[..., Any]
+
+
+class FeatureContractError(Exception):
+    """컬럼 제공자의 선언 입력·출력 계약 위반."""
 
 
 # kind -> (적용 단계, 팩토리). 새 컬럼 제공자는 features에 구현을 추가하고 여기 등록한다.
@@ -125,10 +145,19 @@ def _base_columns_of(df: pd.DataFrame) -> list[str]:
 class FeaturePlan:
     """실험이 학습할 컬럼 전체의 선언. run.py가 설정에서 한 번 만들어 cv에 주입한다."""
 
-    def __init__(self, stages: dict[str, list[tuple[str, Any]]], exclude: list[str]) -> None:
+    def __init__(
+        self,
+        stages: dict[str, list[tuple[str, Any]]],
+        exclude: list[str],
+        fold_fit_specs: list[tuple[str, Callable[..., Any], dict[str, Any]]],
+    ) -> None:
         self._stages = stages  # stage -> [(kind, provider), ...] providers 목록 순서 유지
         self._exclude = exclude  # base에서 뺄 raw 컬럼. 제공자 입력에는 남는다. (#79)
+        self._fold_fit_specs = fold_fit_specs
         self._base_columns: list[str] | None = None
+        self._fold_fit_reuse_store: FoldFitReuseStore | None = None
+        self._fold_fit_runtime_identity: dict[str, object] | None = None
+        self._fold_fit_input_files: dict[str, str] | None = None
 
     @classmethod
     def from_config(cls, cfg: FeatureConfig) -> FeaturePlan:
@@ -150,6 +179,7 @@ class FeaturePlan:
                 "제외한 컬럼은 학습 행렬에 없으므로 categorical 선언도 같이 뺄 것."
             )
         stages: dict[str, list[tuple[str, Any]]] = {stage: [] for stage in STAGE_ORDER}
+        fold_fit_specs: list[tuple[str, Callable[..., Any], dict[str, Any]]] = []
         for i, spec in enumerate(cfg.providers):
             params = dict(spec)
             kind = params.pop("kind", None)
@@ -164,7 +194,9 @@ class FeaturePlan:
             except (TypeError, ValueError) as exc:
                 raise ValueError(f"providers[{i}] {kind}: {exc}") from exc
             stages[entry.stage].append((kind, provider))
-        plan = cls(stages, list(cfg.exclude))
+            if entry.stage == FOLD_FIT:
+                fold_fit_specs.append((kind, entry.factory, params))
+        plan = cls(stages, list(cfg.exclude), fold_fit_specs)
         plan._validate_declarations()
         return plan
 
@@ -183,6 +215,8 @@ class FeaturePlan:
                         "가져야 한다(단일이면 placebo_noise 자체, 결합이면 placebo_noise가 "
                         "든 목록). 카나리아 없는 타깃 참조는 누출 판정이 불가능하다. (#33, #71)"
                     )
+                if stage == FOLD_FIT:
+                    self._validate_fold_fit_reuse_declaration(kind, provider)
                 for col in provider.columns():
                     if col in declared:
                         raise ValueError(
@@ -195,6 +229,36 @@ class FeaturePlan:
                 f"features.exclude는 raw 컬럼 전용인데 제공자 컬럼이 섞였다: "
                 f"{sorted(provider_overlap)}. 제공자 컬럼을 빼려면 provider 선언을 고칠 것."
             )
+
+    @staticmethod
+    def _validate_fold_fit_reuse_declaration(
+        kind: str, provider: FoldFitTransformer
+    ) -> None:
+        try:
+            inputs = provider.reuse_input_columns()
+            settings = provider.reuse_settings()
+        except AttributeError as exc:
+            raise ValueError(
+                f"{kind} fold-fit 제공자가 재사용 입력·설정 선언을 구현하지 않았다."
+            ) from exc
+        if not isinstance(inputs, list) or any(
+            not isinstance(column, str) or not column for column in inputs
+        ):
+            raise ValueError(f"{kind} 재사용 입력 열 선언이 잘못됐다: {inputs!r}")
+        if len(set(inputs)) != len(inputs):
+            raise ValueError(f"{kind} 재사용 입력 열 선언에 중복이 있다: {inputs}")
+        forbidden = {ID, TARGET} & set(inputs)
+        if forbidden:
+            raise ValueError(
+                f"{kind} 재사용 입력 열에는 행 식별자와 타깃을 직접 선언하지 않는다: "
+                f"{sorted(forbidden)}"
+            )
+        if not isinstance(settings, dict):
+            raise ValueError(f"{kind} 재사용 설정 선언은 객체여야 한다.")
+        try:
+            canonical_json_bytes(settings)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{kind} 재사용 설정 선언을 정규 JSON으로 만들 수 없다.") from exc
 
     # ------------------------------------------------------------- 적용
 
@@ -256,19 +320,290 @@ class FeaturePlan:
         """fold 루프가 fit할 fold-fit 제공자들. providers 목록 순서."""
         return [provider for _, provider in self._stages[FOLD_FIT]]
 
+    def fold_fit_providers(self) -> list[tuple[str, FoldFitTransformer]]:
+        """관측 가능한 제공자 이름과 구현을 설정의 선언 순서로 돌려준다."""
+        return list(self._stages[FOLD_FIT])
+
+    def new_fold_fit_providers(self) -> list[tuple[str, FoldFitTransformer]]:
+        """한 폴드에만 사용할 새 fold-fit 제공자들을 선언 순서로 만든다."""
+        return [
+            (kind, factory(**copy.deepcopy(params)))
+            for kind, factory, params in self._fold_fit_specs
+        ]
+
+    def configure_fold_fit_reuse(
+        self,
+        store: FoldFitReuseStore,
+        *,
+        runtime_identity: dict[str, object],
+        input_files: dict[str, str],
+    ) -> None:
+        """실행 진입점이 검증한 공유 저장소와 판본 정체성을 내부 연산에 연결한다."""
+        validate_runtime_identity(runtime_identity)
+        validate_input_files(input_files)
+        self._fold_fit_reuse_store = store
+        self._fold_fit_runtime_identity = copy.deepcopy(runtime_identity)
+        self._fold_fit_input_files = dict(input_files)
+
+    def fold_fit_reuse_enabled(self) -> bool:
+        return self._fold_fit_reuse_store is not None
+
+    def unused_fold_fit_reuse_evidence(
+        self, *, seed: int, fold: int, reason: str
+    ) -> list[dict[str, object]]:
+        return [
+            {
+                "seed": seed,
+                "fold": fold,
+                "provider": kind,
+                "status": "unused",
+                "reason": reason,
+                "key": None,
+                "manifest_sha256": None,
+            }
+            for kind, _ in self._stages[FOLD_FIT]
+        ]
+
+    def materialize_fold_fit_provider(
+        self,
+        *,
+        kind: str,
+        transformer: FoldFitTransformer,
+        train_input: pd.DataFrame,
+        test_input: pd.DataFrame,
+        training_index: pd.Index,
+        validation_index: pd.Index,
+        seed: int,
+        fold: int,
+        recorder: object | None,
+    ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
+        """제공자 하나의 입력 제한, 재사용, 계산과 산출 선언 검증을 소유한다."""
+        declared_inputs = transformer.reuse_input_columns()
+        self._validate_fold_fit_reuse_declaration(kind, transformer)
+        required = [ID, *declared_inputs]
+        missing_train = [column for column in required if column not in train_input.columns]
+        missing_test = [column for column in required if column not in test_input.columns]
+        if missing_train or missing_test:
+            raise FeatureContractError(
+                f"{kind} 선언 입력이 없다: train={missing_train}, test={missing_test}"
+            )
+        provider_train = train_input[required].copy(deep=False)
+        provider_test = test_input[required].copy(deep=False)
+        fit_train = provider_train
+        if transformer.uses_target:
+            if TARGET not in train_input.columns:
+                raise FeatureContractError(f"{kind} 타깃 참조 제공자의 학습 타깃이 없다.")
+            fit_train = pd.concat([provider_train, train_input[[TARGET]]], axis=1)
+
+        output_columns = transformer.columns()
+
+        def compute() -> tuple[pd.DataFrame, pd.DataFrame]:
+            try:
+                with timed_operation(
+                    recorder,
+                    seed=seed,
+                    fold=fold,
+                    operation="fold_feature.provider_fit",
+                    actor_kind="column_provider",
+                    actor_name=kind,
+                ):
+                    transformer.fit(fit_train.loc[training_index], seed)
+                with timed_operation(
+                    recorder,
+                    seed=seed,
+                    fold=fold,
+                    operation="fold_feature.provider_transform",
+                    actor_kind="column_provider",
+                    actor_name=kind,
+                    dataset="train",
+                ):
+                    new_train = transformer.transform(provider_train)
+                    self._validate_fold_fit_output(
+                        kind, transformer, provider_train, new_train, "train"
+                    )
+                with timed_operation(
+                    recorder,
+                    seed=seed,
+                    fold=fold,
+                    operation="fold_feature.provider_transform",
+                    actor_kind="column_provider",
+                    actor_name=kind,
+                    dataset="test",
+                ):
+                    new_test = transformer.transform(provider_test)
+                    self._validate_fold_fit_output(
+                        kind, transformer, provider_test, new_test, "test"
+                    )
+            except KeyError as exc:
+                raise FeatureContractError(
+                    f"{kind}가 선언하지 않은 입력 열을 읽으려 했다: {exc}"
+                ) from exc
+            return (
+                pd.concat([provider_train[[ID]], new_train], axis=1),
+                pd.concat([provider_test[[ID]], new_test], axis=1),
+            )
+
+        if self._fold_fit_reuse_store is None:
+            train_values, test_values = compute()
+            return (
+                train_values.drop(columns=[ID]),
+                test_values.drop(columns=[ID]),
+                {
+                    "seed": seed,
+                    "fold": fold,
+                    "provider": kind,
+                    "status": "unused",
+                    "reason": "disabled",
+                    "key": None,
+                    "manifest_sha256": None,
+                },
+            )
+
+        assert self._fold_fit_runtime_identity is not None
+        assert self._fold_fit_input_files is not None
+        external_hashes = getattr(
+            transformer, "reuse_external_file_sha256", lambda: {}
+        )()
+        execution = getattr(transformer, "reuse_execution", lambda: {"mode": "cpu"})()
+        provider_identity = provider_identity_document(
+            kind=kind,
+            provider=transformer,
+            input_columns=declared_inputs,
+            output_columns=output_columns,
+            uses_target=transformer.uses_target,
+            settings=transformer.reuse_settings(),
+            external_file_sha256=external_hashes,
+            execution=execution,
+        )
+        request = FoldFitReuseRequest(
+            provider=provider_identity,
+            runtime=self._fold_fit_runtime_identity,
+            input_files=self._fold_fit_input_files,
+            seed=seed,
+            fold=fold,
+            train_input=provider_train,
+            test_input=provider_test,
+            training_ids=provider_train.loc[training_index, ID],
+            validation_ids=provider_train.loc[validation_index, ID],
+            test_ids=provider_test[ID],
+            training_target=(
+                train_input.loc[training_index, TARGET]
+                if transformer.uses_target
+                else None
+            ),
+        )
+        started_ns = time.monotonic_ns()
+        computed = False
+
+        def tracked_compute() -> tuple[pd.DataFrame, pd.DataFrame]:
+            nonlocal computed
+            computed = True
+            return compute()
+
+        try:
+            result = self._fold_fit_reuse_store.resolve(request, tracked_compute)
+        except FoldFitReuseError:
+            if not computed:
+                recorded_operation(
+                    recorder,
+                    seed=seed,
+                    fold=fold,
+                    operation="fold_feature.provider_fit",
+                    actor_kind="column_provider",
+                    actor_name=kind,
+                    started_ns=started_ns,
+                    duration_ns=time.monotonic_ns() - started_ns,
+                    outcome="failed",
+                    reason="FoldFitReuseError",
+                )
+            raise
+        if not computed:
+            recorded_operation(
+                recorder,
+                seed=seed,
+                fold=fold,
+                operation="fold_feature.provider_fit",
+                actor_kind="column_provider",
+                actor_name=kind,
+                started_ns=started_ns,
+                duration_ns=time.monotonic_ns() - started_ns,
+                outcome="reused",
+                reason="fold_fit_reuse_hit",
+            )
+            for dataset in ("train", "test"):
+                skipped_operation(
+                    recorder,
+                    seed=seed,
+                    fold=fold,
+                    operation="fold_feature.provider_transform",
+                    actor_kind="column_provider",
+                    actor_name=kind,
+                    dataset=dataset,
+                    reason="fold_fit_reuse_hit",
+                )
+        if not result.train[ID].reset_index(drop=True).equals(
+            provider_train[ID].reset_index(drop=True)
+        ) or not result.test[ID].reset_index(drop=True).equals(
+            provider_test[ID].reset_index(drop=True)
+        ):
+            raise FoldFitReuseError(f"{kind} 재사용 결과의 행 식별자나 순서가 다르다.")
+        train_values = result.train.drop(columns=[ID])
+        test_values = result.test.drop(columns=[ID])
+        train_values.index = provider_train.index
+        test_values.index = provider_test.index
+        return (
+            train_values,
+            test_values,
+            {
+                "seed": seed,
+                "fold": fold,
+                "provider": kind,
+                "status": result.status,
+                "reason": None,
+                "key": result.key,
+                "manifest_sha256": result.manifest_sha256,
+            },
+        )
+
+    @staticmethod
+    def _validate_fold_fit_output(
+        kind: str,
+        transformer: FoldFitTransformer,
+        source: pd.DataFrame,
+        new: pd.DataFrame,
+        dataset: str,
+    ) -> None:
+        if not new.index.equals(source.index):
+            raise FeatureContractError(f"{kind}의 {dataset} 산출 인덱스가 다르다.")
+        if list(new.columns) != transformer.columns():
+            raise FeatureContractError(
+                f"{kind}의 {dataset} 산출 컬럼이 선언과 다르다: "
+                f"{list(new.columns)} != {transformer.columns()}"
+            )
+
+    @staticmethod
+    def add_fold_fit_provider_columns(
+        X: pd.DataFrame,
+        df: pd.DataFrame,
+        kind: str,
+        transformer: FoldFitTransformer,
+    ) -> pd.DataFrame:
+        """fit이 끝난 제공자 하나의 선언 검증과 컬럼 추가를 수행한다."""
+        new = transformer.transform(df)
+        assert new.index.equals(df.index), f"{kind}의 transform 인덱스가 원본과 다르다."
+        assert list(new.columns) == transformer.columns(), (
+            f"{kind}의 산출 컬럼이 선언과 다르다: "
+            f"{list(new.columns)} != {transformer.columns()}"
+        )
+        collision = set(new.columns) & set(X.columns)
+        assert not collision, f"fold-fit 컬럼 이름 충돌: {sorted(collision)}"
+        return pd.concat([X, new], axis=1)
+
     def add_fold_fit_columns(self, X: pd.DataFrame, df: pd.DataFrame) -> pd.DataFrame:
         """fit된 fold-fit 제공자들의 새 컬럼을 X에 붙인 행렬을 돌려준다. 추가 전용."""
         out = X
         for kind, transformer in self._stages[FOLD_FIT]:
-            new = transformer.transform(df)
-            assert new.index.equals(df.index), f"{kind}의 transform 인덱스가 원본과 다르다."
-            assert list(new.columns) == transformer.columns(), (
-                f"{kind}의 산출 컬럼이 선언과 다르다: "
-                f"{list(new.columns)} != {transformer.columns()}"
-            )
-            collision = set(new.columns) & set(out.columns)
-            assert not collision, f"fold-fit 컬럼 이름 충돌: {sorted(collision)}"
-            out = pd.concat([out, new], axis=1)
+            out = self.add_fold_fit_provider_columns(out, df, kind, transformer)
         return out
 
     def build_full_matrices(

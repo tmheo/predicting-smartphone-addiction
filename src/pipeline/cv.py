@@ -30,6 +30,8 @@ class RunRecorder(Protocol):
 
     def fold_completed(self, seed_index: int, fold_index: int, auc: float) -> None: ...
 
+    def record_timing(self, event: dict[str, object]) -> None: ...
+
 
 @dataclass
 class CVResult:
@@ -39,6 +41,7 @@ class CVResult:
     feature_names: list[str]
     importance: pd.DataFrame  # columns: feature, fold, seed, gain (#19)
     recovery_evidence: list[dict[str, object]] = field(default_factory=list)
+    fold_feature_reuse_evidence: list[dict[str, object]] = field(default_factory=list)
     model_training_diagnostics: list[dict[str, object]] = field(default_factory=list)
 
 

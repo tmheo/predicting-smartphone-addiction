@@ -231,6 +231,43 @@ uv run python -m pipeline.run configs/expNNN.yaml --stage confirm \
 완료 실행은 `fold_recovery.json`을 MLflow 산출물로 남기며, 실행 기록 묶음에도 최종 예측 및 중요도와 함께 포함된다.
 복구 디렉터리 자체와 임시 상태는 실행 기록 묶음에 포함하지 않는다.
 
+## fold-fit 결과 공유
+
+정식 CV 실행은 기본적으로 `run-cache/fold-fit/v1/`에서 내용 기반 fold-fit 재사용 결과를 공유한다.
+제공자 선언, 실제 입력 값과 행, 시드와 fold, 입력 파일, Git 커밋, Python과 의존성, 운영체제와 실제 실행 방식이 모두 같은 항목만 사용한다.
+예상 내용 키의 항목이 손상됐거나 저장소가 파일 잠금과 원자적 공개를 보장하지 못하면 재계산하지 않고 실행을 중단한다.
+
+검증된 원본 작업 공간의 공유 위치를 명시하려면 다음처럼 실행한다.
+
+```bash
+uv run python -m pipeline.run configs/expNNN.yaml --stage screen \
+  --fold-fit-reuse-dir /absolute/verified/workspace/run-cache/fold-fit/v1
+```
+
+공유 기능을 끈 결과와 비교할 때만 명시적으로 `--no-fold-fit-reuse`를 사용한다.
+
+```bash
+uv run python -m pipeline.run configs/expNNN.yaml --stage screen \
+  --no-fold-fit-reuse
+```
+
+각 실행은 적중, 생성 또는 미사용 상태와 내용 키를 `fold_feature_reuse.json` 산출물에 남긴다.
+원격 실행 작업 사이에는 이 근거 파일이 가리키는 항목만 별도 검증 묶음으로 옮긴다.
+
+```bash
+uv run python -m pipeline.fold_fit_reuse export \
+  --store /absolute/source/run-cache/fold-fit/v1 \
+  --evidence /absolute/source/fold_feature_reuse.json \
+  --out /absolute/output/fold-fit-reuse.zip
+
+uv run python -m pipeline.fold_fit_reuse import \
+  --store /absolute/destination/run-cache/fold-fit/v1 \
+  /absolute/input/fold-fit-reuse.zip
+```
+
+큰 Parquet 항목은 MLflow 산출물이나 실행 기록 묶음에 넣지 않는다.
+작은 `fold_feature_reuse.json`만 실행 기록 묶음에 포함한다.
+
 ## 제출
 
 제출은 마일스톤 단위 건전성 점검 용도다.

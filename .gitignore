@@ -29,6 +29,9 @@ run-logs/
 # 정식 CV fold 복구 상태 (issue #141)
 run-recovery/
 
+# 내용 기반 fold-fit 재사용 결과 저장소 (issue #357)
+run-cache/
+
 # 전체 자료 재학습의 모델별 중간 예측과 최종 제출 후보 (#66)
 artifacts/full-refit/
 

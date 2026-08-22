@@ -287,6 +287,32 @@ ssh \
 Git 저장소를 포함한 묶음에서 이 검사는 압축 해제 직후의 예비 확인이다.
 이후 제어 세션은 Git 명령을 실행하지 않고, 위의 고정 시작 프로그램이 파일별 해시 목록을 다시 검증한 뒤 Git 관문과 작업 시작을 이어서 수행한다.
 
+## fold-fit 재사용 결과 묶음
+
+여러 원격 실행 작업이 같은 fold-fit 결과를 공유할 때는 전체 `run-cache/` 디렉터리를 전송하지 않는다.
+완료 실행의 `fold_feature_reuse.json`이 가리키는 불변 항목만 `pipeline.fold_fit_reuse export`로 묶는다.
+
+```bash
+uv run python -m pipeline.fold_fit_reuse export \
+  --store /absolute/source/run-cache/fold-fit/v1 \
+  --evidence /absolute/source/fold_feature_reuse.json \
+  --out /absolute/output/fold-fit-reuse.zip
+```
+
+이 ZIP은 일반 입력 전송 묶음과 같은 SSH 표준 입력 절차로 `.part` 경로에 보낸다.
+로컬과 원격의 전체 ZIP SHA-256이 일치한 뒤에만 최종 이름으로 바꾼다.
+원격 실행 전에는 새 작업 경로의 저장소로 묶음을 반입한다.
+
+```bash
+uv run python -m pipeline.fold_fit_reuse import \
+  --store /absolute/job/run-cache/fold-fit/v1 \
+  /absolute/job/fold-fit-reuse.zip
+```
+
+반입은 묶음 파일 해시, 각 항목 명세, Parquet 파일 해시와 값 내용 해시를 모두 검증한다.
+같은 내용 키의 기존 불변 항목이 묶음과 다르면 덮어쓰지 않고 실패한다.
+원격 실행 뒤에는 결과 실행 기록 묶음과 별도로 새 `fold_feature_reuse.json` 기준 재사용 묶음을 만들어 같은 표준 출력 절차와 SHA-256 검증으로 회수한다.
+
 ## 입력 자료를 저장소에 연결하기
 
 저장소가 `data/`처럼 디렉터리 형태만 무시할 때는 외부 입력 디렉터리 전체를 같은 이름의 심볼릭 링크로 만들지 않는다.
