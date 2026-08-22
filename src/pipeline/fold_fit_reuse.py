@@ -67,9 +67,6 @@ class FoldFitReuseRequest:
         validate_runtime_identity(self.runtime)
         validate_input_files(self.input_files)
         _validate_provider_identity(self.provider)
-        train_ids = _json_scalars(self.training_ids)
-        validation_ids = _json_scalars(self.validation_ids)
-        test_ids = _json_scalars(self.test_ids)
         document: dict[str, object] = {
             "schema_version": SCHEMA_VERSION,
             "provider": self.provider,
@@ -81,13 +78,13 @@ class FoldFitReuseRequest:
             "seed": int(self.seed),
             "fold": int(self.fold),
             "row_ids": {
-                "training": train_ids,
-                "validation": validation_ids,
-                "test": test_ids,
+                "training": series_value_document(self.training_ids),
+                "validation": series_value_document(self.validation_ids),
+                "test": series_value_document(self.test_ids),
             },
             "output_row_ids": {
-                "train": _json_scalars(self.train_input[ID]),
-                "test": _json_scalars(self.test_input[ID]),
+                "train": series_value_document(self.train_input[ID]),
+                "test": series_value_document(self.test_input[ID]),
             },
             "runtime": self.runtime,
         }
@@ -168,10 +165,6 @@ def _json_scalar(value: object) -> object:
     }
 
 
-def _json_scalars(values: pd.Series) -> list[object]:
-    return [_json_scalar(value) for value in values.tolist()]
-
-
 def dtype_document(series: pd.Series) -> dict[str, object]:
     dtype = series.dtype
     document: dict[str, object] = {"dtype": str(dtype)}
@@ -250,6 +243,17 @@ def dataframe_value_sha256(frame: pd.DataFrame) -> str:
         for value in series.tolist():
             _update_length_prefixed(digest, canonical_json_bytes(_json_scalar(value)))
     return digest.hexdigest()
+
+
+def series_value_document(series: pd.Series) -> dict[str, object]:
+    """행 식별자 값과 순서를 큰 JSON 배열 없이 내용 해시로 고정한다."""
+    normalized = series.reset_index(drop=True)
+    frame = normalized.to_frame(name="value")
+    return {
+        "row_count": len(normalized),
+        "dtype": dtype_document(normalized),
+        "value_sha256": dataframe_value_sha256(frame),
+    }
 
 
 def build_runtime_identity(
@@ -687,7 +691,7 @@ class FoldFitReuseStore:
                     raise FoldFitReuseError(f"{table} 재사용 결과 값 내용 해시가 다르다.")
                 if not frame[ID].is_unique:
                     raise FoldFitReuseError(f"{table} 재사용 결과 행 식별자가 고유하지 않다.")
-                if _json_scalars(frame[ID]) != output_row_ids.get(table):
+                if series_value_document(frame[ID]) != output_row_ids.get(table):
                     raise FoldFitReuseError(f"{table} 재사용 결과 행 식별자나 순서가 다르다.")
                 frames[table] = frame
             return frames["train"], frames["test"], file_sha256(manifest_path)

@@ -17,6 +17,7 @@ from pipeline.fold_fit_reuse import (
     FoldFitReuseError,
     FoldFitReuseRequest,
     FoldFitReuseStore,
+    canonical_json_bytes,
     dataframe_value_sha256,
     keys_from_evidence,
     provider_identity_document,
@@ -135,7 +136,16 @@ def test_dataframe_hash_preserves_category_missing_order_and_float_bits() -> Non
 
 def test_identity_changes_for_inputs_rows_seed_fold_git_and_target_use() -> None:
     base = _request()
-    base_key = FoldFitReuseStore.key_of(base.identity_document())
+    base_identity = base.identity_document()
+    base_key = FoldFitReuseStore.key_of(base_identity)
+
+    assert set(base_identity["row_ids"]["training"]) == {
+        "row_count",
+        "dtype",
+        "value_sha256",
+    }
+    assert not isinstance(base_identity["row_ids"]["training"], list)
+    assert len(canonical_json_bytes(base_identity)) < 10_000
 
     changed_input = replace(base, train_input=base.train_input.assign(x=[9.0, -0.0, np.nan, 2.0]))
     changed_rows = replace(base, training_ids=base.training_ids.iloc[::-1])
