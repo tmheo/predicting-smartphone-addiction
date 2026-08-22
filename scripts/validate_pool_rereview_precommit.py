@@ -1,10 +1,16 @@
-"""35개 후보 풀 재심사 사전 고정 장부의 내부 일관성을 검사한다."""
+"""35개 후보 풀 재심사 사전 고정 장부의 내부 일관성을 검사한다.
+
+현재 후보 풀과 재학습 계획은 판정 뒤 바뀔 수 있으므로, Git 추적 출처는 이
+장부를 처음 추가한 커밋의 내용으로 검사한다.
+비공개 입력만 현재 작업 폴더에서 검사한다.
+"""
 
 from __future__ import annotations
 
 import argparse
 import hashlib
 from pathlib import Path
+import subprocess
 from typing import Any
 
 import yaml
@@ -14,10 +20,7 @@ from pipeline.ensemble import DEFAULT_COMBINER_NAMES, PRECISION_COMBINER_NAMES
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_LEDGER = REPO_ROOT / "artifacts/pool-rereview-precommit-2026-08-22.yaml"
-HISTORICAL_SOURCE_SHA256 = {
-    "pool": "e6f093c08af4d09a70e2ee9a7cc99f9d099b06b7505116005464b5ae1240712a",
-    "full_refit_plan": "cb42b27f01abecdc51784e224d3346b27910d29b106171d8cdd471e1246b403f",
-}
+PRIVATE_SOURCE_NAMES = {"train", "test", "external_original"}
 
 
 class PrecommitValidationError(RuntimeError):
@@ -26,6 +29,37 @@ class PrecommitValidationError(RuntimeError):
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _frozen_git_commit() -> str:
+    relative = DEFAULT_LEDGER.relative_to(REPO_ROOT)
+    result = subprocess.run(
+        [
+            "git",
+            "log",
+            "--diff-filter=A",
+            "--format=%H",
+            "--",
+            str(relative),
+        ],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    commits = result.stdout.splitlines()
+    _require(bool(commits), "사전 고정 장부를 처음 추가한 커밋을 찾을 수 없다.")
+    return commits[-1]
+
+
+def _git_source_sha256(commit: str, path: str) -> str:
+    result = subprocess.run(
+        ["git", "show", f"{commit}:{path}"],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+    )
+    return hashlib.sha256(result.stdout).hexdigest()
 
 
 def _require(condition: bool, message: str) -> None:
@@ -55,22 +89,22 @@ def validate(
     _require(ledger["ticket_issue"] == 341, "ticket_issue는 341이어야 한다.")
     _require(ledger["map_issue"] == 338, "map_issue는 338이어야 한다.")
 
+    frozen_commit = _frozen_git_commit()
     missing_private: list[str] = []
     for name, source in ledger["sources"].items():
         source_path = REPO_ROOT / source["path"]
-        if name in HISTORICAL_SOURCE_SHA256:
-            actual = source["sha256"]
-            _require(
-                actual == HISTORICAL_SOURCE_SHA256[name],
-                f"동결 출처 내용 해시 불일치: {source['path']} ({actual})",
-            )
-            continue
-        if not source_path.is_file():
-            if name in {"train", "test", "external_original"}:
+        if name in PRIVATE_SOURCE_NAMES:
+            if not source_path.is_file():
                 missing_private.append(name)
                 continue
-            raise PrecommitValidationError(f"동결 출처 파일이 없다: {source['path']}")
-        actual = _sha256(source_path)
+            actual = _sha256(source_path)
+        else:
+            try:
+                actual = _git_source_sha256(frozen_commit, source["path"])
+            except subprocess.CalledProcessError as exc:
+                raise PrecommitValidationError(
+                    f"동결 커밋에 출처 파일이 없다: {source['path']}"
+                ) from exc
         _require(
             actual == source["sha256"],
             f"동결 출처 내용 해시 불일치: {source['path']} ({actual})",
@@ -84,6 +118,7 @@ def validate(
             "현재 작업 폴더에 없는 비공개 입력은 실행 환경에서 검사한다: "
             + ", ".join(missing_private)
         )
+    notes.append(f"Git 추적 출처를 사전 고정 커밋 {frozen_commit[:12]}에서 검사했다.")
 
     members = ledger["candidate_pool"]["members"]
     baseline_members = [member["config"] for member in baseline["members"]]

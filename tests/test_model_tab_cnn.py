@@ -156,6 +156,24 @@ def test_issue285_controls_change_only_the_declared_axis():
     assert plan.all_columns()[-13:] == [f"{col}_te" for col in target_provider["cols"]]
 
 
+def test_issue334_combines_target_mean_with_only_the_longer_training_axis():
+    baseline = load_config("configs/exp131_tab_cnn_oof_target_mean.yaml", "screen")
+    candidate = load_config(
+        "configs/exp140_tab_cnn_oof_target_mean_epochs100.yaml", "screen"
+    )
+
+    assert candidate.data == baseline.data
+    assert candidate.features == baseline.features
+    assert candidate.model.kind == baseline.model.kind
+    assert candidate.model.fit == baseline.model.fit
+
+    baseline_params = dict(baseline.model.params)
+    candidate_params = dict(candidate.model.params)
+    assert baseline_params.pop("epochs") == 30
+    assert candidate_params.pop("epochs") == 100
+    assert candidate_params == baseline_params
+
+
 def test_convolution_and_dense_ablation_have_matching_parameter_scale():
     from pipeline import tab_cnn
 

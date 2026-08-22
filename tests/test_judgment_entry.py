@@ -9,13 +9,21 @@ sha256.folds)의 해석까지 함께 검증한다. 라벨은 판정 함수에 �
 
 from __future__ import annotations
 
+import hashlib
+from pathlib import Path
+
 import pandas as pd
 import pytest
+import yaml
 
+from pipeline.ensemble import DEFAULT_COMBINER_NAMES
 from pipeline.judgment import (
+    JudgmentError,
+    canonical_name_list_sha256,
     check_adoption_eligibility,
     judge_entry,
     load_candidate,
+    load_pool_admission_authorization,
 )
 from pipeline.ledger import Champion, EntryEvidence, Pool, PoolMember
 from pipeline.runs import InMemoryRunStore
@@ -187,3 +195,113 @@ def test_adoption_eligibility_rejects_each_condition(seeds, git_dirty, folds_sha
         committed_folds_sha256="abc",
     )
     assert not eligibility.ok
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _write_pool_judgment(tmp_path: Path, *, delta: float = 0.00001) -> Path:
+    pool_path = tmp_path / "pool.yaml"
+    folds_path = tmp_path / "folds.parquet"
+    evidence_path = tmp_path / "evidence.json"
+    pool_path.write_text("members: []\n")
+    folds_path.write_bytes(b"folds")
+    evidence_path.write_text('{"nested_oof": "complete"}\n')
+    record = {
+        "schema_version": 1,
+        "judgment_id": "test-candidate-pool-admission",
+        "contract_version": "candidate-pool-v1",
+        "change": {
+            "action": "admission",
+            "candidate": {
+                "run_id": "cand",
+                "config": "exp_test",
+                "model_lineage_group": "exp_test",
+            },
+            "replaces_run_id": None,
+        },
+        "selection": {
+            "kind": "precommitted_single",
+            "description": "결과를 보기 전에 고정한 후보 하나",
+        },
+        "frozen_input": {
+            "candidate_pool": {"sha256": _sha256(pool_path)},
+            "folds": {"sha256": _sha256(folds_path)},
+            "registered_combiners": {
+                "names": list(DEFAULT_COMBINER_NAMES),
+                "names_sha256": canonical_name_list_sha256(DEFAULT_COMBINER_NAMES),
+            },
+        },
+        "nested_oof_comparison": {
+            "before": {"strategy": "rank_mean", "auc": 0.96},
+            "after": {"strategy": "rank_mean", "auc": 0.96 + delta},
+            "delta": delta,
+            "outer_fold_delta": {
+                0: delta,
+                1: -delta,
+                2: delta,
+                3: -delta,
+                4: delta,
+            },
+            "outer_fold_wins": 3,
+            "boundary_contribution": 0.0 < delta <= 0.000027669802,
+        },
+        "evidence": {
+            "path": "evidence.json",
+            "sha256": _sha256(evidence_path),
+        },
+        "result": {"state": "adopted", "decision": "admit"},
+    }
+    path = tmp_path / "judgment.yaml"
+    path.write_text(yaml.safe_dump(record, allow_unicode=True, sort_keys=False))
+    return path
+
+
+def test_pool_admission_requires_current_positive_nested_oof_judgment(
+    monkeypatch, tmp_path
+):
+    path = _write_pool_judgment(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    authorization = load_pool_admission_authorization(
+        Path("judgment.yaml"),
+        candidate_run_id="cand",
+        candidate_config="exp_test",
+        pool_path=Path("pool.yaml"),
+        folds_path=Path("folds.parquet"),
+    )
+
+    assert authorization.judgment_id == "test-candidate-pool-admission"
+    assert authorization.nested_oof_delta == pytest.approx(0.00001)
+    assert authorization.boundary_contribution
+    assert authorization.replaced_run_id is None
+
+
+def test_pool_admission_rejects_stale_pool_judgment(monkeypatch, tmp_path):
+    _write_pool_judgment(tmp_path)
+    (tmp_path / "pool.yaml").write_text("members:\n- changed\n")
+    monkeypatch.chdir(tmp_path)
+
+    with pytest.raises(JudgmentError, match="동결 후보 풀 해시"):
+        load_pool_admission_authorization(
+            Path("judgment.yaml"),
+            candidate_run_id="cand",
+            candidate_config="exp_test",
+            pool_path=Path("pool.yaml"),
+            folds_path=Path("folds.parquet"),
+        )
+
+
+def test_pool_admission_rejects_nonpositive_nested_oof(monkeypatch, tmp_path):
+    _write_pool_judgment(tmp_path, delta=-0.00001)
+    monkeypatch.chdir(tmp_path)
+
+    with pytest.raises(JudgmentError, match="전체 차이가 양수가 아니다"):
+        load_pool_admission_authorization(
+            Path("judgment.yaml"),
+            candidate_run_id="cand",
+            candidate_config="exp_test",
+            pool_path=Path("pool.yaml"),
+            folds_path=Path("folds.parquet"),
+        )
