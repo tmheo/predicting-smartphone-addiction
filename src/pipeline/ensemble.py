@@ -1139,6 +1139,30 @@ DEFAULT_EVALUATION_OUTPUT = Path("run-logs/ensemble-evaluation.json")
 EVALUATION_ARTIFACT_NAME = "ensemble_evaluation.json"
 
 
+def combiner_for_context(
+    name: str,
+    *,
+    fold_of: pd.Series,
+    band_of: pd.Series,
+) -> Combiner:
+    """행 문맥이 필요한 등록 결합 전략을 현재 평가 입력에 묶어 돌려준다."""
+    if name not in COMBINER_REGISTRY:
+        raise ValueError(f"결합 전략 없음: {name}")
+    if name == "shrunk_rank_logit_logistic":
+        return ShrunkRankLogitCombiner(fold_of=fold_of)
+    if name == "missing_segmented_rank_logit":
+        return MissingnessSegmentedLogisticCombiner(band_of=band_of)
+    if name == "missing_interaction_rank_logit":
+        return MissingnessInteractionLogisticCombiner(band_of=band_of)
+    if name == "missing_4plus_rank_logit":
+        return MissingnessSegmentedLogisticCombiner(
+            band_of=band_of,
+            specialized_bands=(2,),
+            name="missing_4plus_rank_logit",
+        )
+    return COMBINER_REGISTRY[name]
+
+
 def select_combiners(
     only: list[str] | None,
 ) -> tuple[list[Combiner], tuple[str, ...]]:
