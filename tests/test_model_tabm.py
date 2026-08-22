@@ -15,6 +15,7 @@ import pandas as pd
 import pytest
 from sklearn.metrics import roc_auc_score
 
+from pipeline import features as features_mod
 from pipeline import model as model_mod
 from pipeline.config import ModelConfig, load_config
 from pipeline.features import ConstrainedImputeAux
@@ -222,3 +223,60 @@ def test_tabm_recon_widths_config_is_exp065_widths_only_delta():
         "work_study_hours_recon_width",
     ]
     assert [c for c in baseline_columns if c not in challenger_columns] == []
+
+
+def test_tabm_orig_cdf_diff_config_is_exp137_five_columns_only_delta(monkeypatch):
+    proxy_columns = [
+        "daily_screen_time_hours",
+        "weekend_screen_time",
+        "social_media_hours",
+        "notifications_per_day",
+        "app_opens_per_day",
+    ]
+    proxy = pd.DataFrame(
+        {
+            **{column: [0.0, 1.0] for column in proxy_columns},
+            "addicted_label": [0, 1],
+        }
+    )
+    monkeypatch.setattr(features_mod, "_load_locked_proxy", lambda *_args: proxy)
+
+    baseline = load_config(
+        REPO / "configs" / "exp137_tabm_recon_widths.yaml", "screen"
+    )
+    challenger = load_config(
+        REPO / "configs" / "exp140_tabm_orig_cdf_diff.yaml", "screen"
+    )
+
+    assert challenger.name == "exp140_tabm_orig_cdf_diff"
+    assert challenger.data == baseline.data
+    assert challenger.model == baseline.model
+    assert challenger.initial_score == baseline.initial_score
+    assert challenger.features.base == baseline.features.base
+    assert challenger.features.categorical == baseline.features.categorical
+    assert challenger.features.exclude == baseline.features.exclude
+
+    baseline_providers = baseline.features.providers
+    challenger_providers = challenger.features.providers
+    assert challenger_providers[:1] == baseline_providers[:1]
+    assert challenger_providers[2:] == baseline_providers[1:]
+
+    cdf_provider = challenger_providers[1]
+    assert cdf_provider == {
+        "kind": "original_cdf_diff",
+        "path": "data/external/Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv",
+        "cols": [
+            "daily_screen_time_hours",
+            "weekend_screen_time",
+            "social_media_hours",
+            "notifications_per_day",
+            "app_opens_per_day",
+        ],
+    }
+    assert [f"{column}_orig_cdf_diff" for column in cdf_provider["cols"]] == [
+        "daily_screen_time_hours_orig_cdf_diff",
+        "weekend_screen_time_orig_cdf_diff",
+        "social_media_hours_orig_cdf_diff",
+        "notifications_per_day_orig_cdf_diff",
+        "app_opens_per_day_orig_cdf_diff",
+    ]
