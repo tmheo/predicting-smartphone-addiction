@@ -62,16 +62,20 @@ metric 이름 규약(auc_oof_seed_*, auc_fold_*)의 의미 해석도 이 module 
 
 from __future__ import annotations
 
+import hashlib
+import json
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import yaml
 from sklearn.metrics import roc_auc_score
 
-from .ensemble import rank_mean
+from .ensemble import DEFAULT_COMBINER_NAMES, rank_mean
 from .features import PLACEBO
-from .ledger import Champion, Pool
+from .ledger import POOL_PATH, Champion, Pool
 from .runs import RunStore
 
 AUC_THRESHOLD = 0.00002  # 계열 1·3 공통 채택 문턱. (#15, #64, ADR 0001)
@@ -83,6 +87,8 @@ FOLD_WIN_MIN = 3  # 경계 구간에서 5개 fold 중 필요한 최소 승리 �
 ENTRY_FLOOR_MARGIN = 0.01  # champion − 0.01이 풀 진입 하한. (ADR 0001)
 DUPLICATE_SPEARMAN = 0.998  # 이 이상이면 중복으로 본다. (ADR 0001)
 FOLDS_PATH = Path("artifacts/folds.parquet")
+POOL_JUDGMENT_CONTRACT_VERSION = "candidate-pool-v1"
+POOL_EQUIVALENCE_BAND_UPPER = 0.000027669802
 
 
 class JudgmentError(Exception):
@@ -599,6 +605,259 @@ def judge_entry(
     return EntryVerdict(
         **base, duplicate=duplicate, drop_run_id=drop_run_id, contribution=contribution,
         admit=floor_ok,
+    )
+
+
+@dataclass(frozen=True)
+class PoolAdmissionAuthorization:
+    """후보 풀 판정 기록이 허용한 장부 변경 한 건."""
+
+    judgment_id: str
+    contract_version: str
+    action: str
+    candidate_run_id: str
+    candidate_config: str
+    replaced_run_id: str | None
+    nested_oof_delta: float
+    boundary_contribution: bool
+    evidence_path: Path
+    evidence_sha256: str
+    record_path: Path
+    record_sha256: str
+
+
+def canonical_name_list_sha256(names: tuple[str, ...] | list[str]) -> str:
+    """순서를 보존한 이름 목록의 정규 JSON SHA-256."""
+    payload = json.dumps(
+        list(names), ensure_ascii=False, separators=(",", ":")
+    ).encode() + b"\n"
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _require_pool_record(condition: bool, message: str) -> None:
+    if not condition:
+        raise JudgmentError(f"후보 풀 판정 기록 거부: {message}")
+
+
+def load_pool_admission_authorization(
+    path: Path,
+    *,
+    candidate_run_id: str,
+    candidate_config: str,
+    pool_path: Path = POOL_PATH,
+    folds_path: Path = FOLDS_PATH,
+    registered_combiner_names: tuple[str, ...] = DEFAULT_COMBINER_NAMES,
+) -> PoolAdmissionAuthorization:
+    """`candidate-pool-v1` 기록을 검증해 장부 변경 권한으로 좁힌다.
+
+    판정 기록 생성은 별도 절차의 소관이다.
+    이 함수는 현재 장부와 판정 입력이 그대로일 때만 이미 끝난 nested OOF 판정을
+    소비하도록 쓰기 경계를 닫는다.
+    """
+    _require_pool_record(
+        not path.is_absolute() and ".." not in path.parts,
+        "판정 기록은 저장소 상대 경로여야 한다.",
+    )
+    _require_pool_record(path.is_file(), f"파일이 없다: {path}")
+    try:
+        raw = yaml.safe_load(path.read_text())
+    except (OSError, yaml.YAMLError) as exc:
+        raise JudgmentError(f"후보 풀 판정 기록을 읽을 수 없다: {exc}") from exc
+    _require_pool_record(isinstance(raw, dict), "최상위 값은 사전이어야 한다.")
+    _require_pool_record(raw.get("schema_version") == 1, "schema_version은 1이어야 한다.")
+    _require_pool_record(
+        raw.get("contract_version") == POOL_JUDGMENT_CONTRACT_VERSION,
+        f"계약 판본은 {POOL_JUDGMENT_CONTRACT_VERSION}이어야 한다.",
+    )
+    judgment_id = raw.get("judgment_id")
+    _require_pool_record(isinstance(judgment_id, str) and judgment_id, "judgment_id가 없다.")
+
+    change = raw.get("change")
+    _require_pool_record(isinstance(change, dict), "change가 없다.")
+    action = change.get("action")
+    _require_pool_record(
+        action in {"admission", "replacement", "restoration"},
+        "--admit이 소비할 수 있는 action이 아니다.",
+    )
+    candidate = change.get("candidate")
+    _require_pool_record(isinstance(candidate, dict), "change.candidate가 없다.")
+    _require_pool_record(
+        candidate.get("run_id") == candidate_run_id,
+        "후보 run_id가 명령 인자와 다르다.",
+    )
+    _require_pool_record(
+        candidate.get("config") == candidate_config,
+        "후보 config가 실행 기록과 다르다.",
+    )
+    lineage = candidate.get("model_lineage_group")
+    _require_pool_record(
+        isinstance(lineage, str) and lineage,
+        "후보의 모델 계보 묶음이 없다.",
+    )
+    replaced_run_id = change.get("replaces_run_id")
+    if action == "replacement":
+        _require_pool_record(
+            isinstance(replaced_run_id, str) and replaced_run_id,
+            "replacement에는 replaces_run_id가 필요하다.",
+        )
+    else:
+        _require_pool_record(
+            replaced_run_id is None,
+            f"{action}에는 replaces_run_id를 쓸 수 없다.",
+        )
+
+    selection = raw.get("selection")
+    _require_pool_record(isinstance(selection, dict), "selection이 없다.")
+    _require_pool_record(
+        selection.get("kind") in {"precommitted_single", "nested_selection"},
+        "selection.kind가 올바르지 않다.",
+    )
+    _require_pool_record(
+        isinstance(selection.get("description"), str)
+        and bool(selection["description"].strip()),
+        "후보 선택 경위가 없다.",
+    )
+
+    frozen = raw.get("frozen_input")
+    _require_pool_record(isinstance(frozen, dict), "frozen_input이 없다.")
+    frozen_pool = frozen.get("candidate_pool")
+    _require_pool_record(isinstance(frozen_pool, dict), "동결 후보 풀이 없다.")
+    _require_pool_record(pool_path.is_file(), f"현재 후보 풀 파일이 없다: {pool_path}")
+    _require_pool_record(
+        frozen_pool.get("sha256") == _file_sha256(pool_path),
+        "동결 후보 풀 해시가 현재 장부와 다르다.",
+    )
+    frozen_folds = frozen.get("folds")
+    _require_pool_record(isinstance(frozen_folds, dict), "동결 folds가 없다.")
+    _require_pool_record(folds_path.is_file(), f"현재 folds 파일이 없다: {folds_path}")
+    _require_pool_record(
+        frozen_folds.get("sha256") == _file_sha256(folds_path),
+        "동결 folds 해시가 현재 파일과 다르다.",
+    )
+    combiners = frozen.get("registered_combiners")
+    _require_pool_record(isinstance(combiners, dict), "동결 등록 결합 방식 집합이 없다.")
+    current_names = list(registered_combiner_names)
+    current_names_sha256 = canonical_name_list_sha256(registered_combiner_names)
+    _require_pool_record(
+        combiners.get("names") == current_names,
+        "등록 결합 방식의 이름이나 순서가 현재 등록부와 다르다.",
+    )
+    _require_pool_record(
+        combiners.get("names_sha256") == current_names_sha256,
+        "등록 결합 방식 이름 목록 해시가 다르다.",
+    )
+
+    comparison = raw.get("nested_oof_comparison")
+    _require_pool_record(isinstance(comparison, dict), "nested OOF 대조가 없다.")
+    before = comparison.get("before")
+    after = comparison.get("after")
+    _require_pool_record(
+        isinstance(before, dict) and isinstance(after, dict),
+        "nested OOF 대조의 before 또는 after가 없다.",
+    )
+    _require_pool_record(
+        before.get("strategy") in current_names and after.get("strategy") in current_names,
+        "대조의 최선 결합 방식이 현재 기본 등록부에 없다.",
+    )
+    try:
+        before_auc = float(before["auc"])
+        after_auc = float(after["auc"])
+        nested_oof_delta = float(comparison["delta"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise JudgmentError("후보 풀 판정 기록 거부: nested OOF 수치가 올바르지 않다.") from exc
+    _require_pool_record(
+        all(math.isfinite(value) for value in (before_auc, after_auc, nested_oof_delta)),
+        "nested OOF 수치는 유한해야 한다.",
+    )
+    _require_pool_record(
+        math.isclose(
+            nested_oof_delta,
+            after_auc - before_auc,
+            rel_tol=0.0,
+            abs_tol=1e-15,
+        ),
+        "nested OOF 전체 차이가 before와 after의 차이와 맞지 않는다.",
+    )
+    _require_pool_record(nested_oof_delta > 0.0, "nested OOF 전체 차이가 양수가 아니다.")
+    fold_delta = comparison.get("outer_fold_delta")
+    _require_pool_record(isinstance(fold_delta, dict), "바깥쪽 분할별 차이가 없다.")
+    try:
+        normalized_fold_delta = {
+            int(key): float(value) for key, value in fold_delta.items()
+        }
+    except (TypeError, ValueError) as exc:
+        raise JudgmentError(
+            "후보 풀 판정 기록 거부: 바깥쪽 분할별 차이가 올바르지 않다."
+        ) from exc
+    _require_pool_record(
+        set(normalized_fold_delta) == set(range(5)),
+        "바깥쪽 분할별 차이는 0부터 4까지 모두 있어야 한다.",
+    )
+    _require_pool_record(
+        all(math.isfinite(value) for value in normalized_fold_delta.values()),
+        "바깥쪽 분할별 차이는 유한해야 한다.",
+    )
+    fold_wins = sum(value > 0.0 for value in normalized_fold_delta.values())
+    _require_pool_record(
+        comparison.get("outer_fold_wins") == fold_wins,
+        "바깥쪽 분할 승수가 분할별 차이와 맞지 않는다.",
+    )
+    expected_boundary = nested_oof_delta <= POOL_EQUIVALENCE_BAND_UPPER
+    _require_pool_record(
+        comparison.get("boundary_contribution") == expected_boundary,
+        "경계 기여 표시가 성능 동등 대역과 맞지 않는다.",
+    )
+
+    evidence = raw.get("evidence")
+    _require_pool_record(isinstance(evidence, dict), "근거 산출물이 없다.")
+    evidence_value = evidence.get("path")
+    _require_pool_record(
+        isinstance(evidence_value, str) and evidence_value,
+        "근거 산출물 경로가 없다.",
+    )
+    evidence_path = Path(evidence_value)
+    _require_pool_record(
+        not evidence_path.is_absolute() and ".." not in evidence_path.parts,
+        "근거 산출물은 저장소 상대 경로여야 한다.",
+    )
+    _require_pool_record(evidence_path.is_file(), f"근거 산출물이 없다: {evidence_path}")
+    evidence_sha256 = evidence.get("sha256")
+    _require_pool_record(
+        evidence_sha256 == _file_sha256(evidence_path),
+        "근거 산출물 해시가 다르다.",
+    )
+    result = raw.get("result")
+    _require_pool_record(
+        isinstance(result, dict) and result.get("state") == "adopted",
+        "최종 판정 상태가 adopted가 아니다.",
+    )
+    expected_decision = "replace" if action == "replacement" else "admit"
+    _require_pool_record(
+        result.get("decision") == expected_decision,
+        "최종 판정과 변경 종류가 맞지 않는다.",
+    )
+
+    return PoolAdmissionAuthorization(
+        judgment_id=judgment_id,
+        contract_version=POOL_JUDGMENT_CONTRACT_VERSION,
+        action=action,
+        candidate_run_id=candidate_run_id,
+        candidate_config=candidate_config,
+        replaced_run_id=replaced_run_id,
+        nested_oof_delta=nested_oof_delta,
+        boundary_contribution=expected_boundary,
+        evidence_path=evidence_path,
+        evidence_sha256=evidence_sha256,
+        record_path=path,
+        record_sha256=_file_sha256(path),
     )
 
 

@@ -94,22 +94,6 @@ members:
     ensemble_auc_with: 0.9677517186433671
     ensemble_auc_without: 0.9676591285688336
     contribution: 9.259007453343848e-05
-- run_id: c34f1da180544c3ba022140d394cb055
-  config: exp033_recon_orig_mean_top3_raw
-  oof_auc: 0.9676202184993681
-  seeds: 42,43,44
-  entered_at: '2026-08-12'
-  reason: '이슈 #80: exp032의 평활 제거(m=0) 변형. champion 교체는 +0.00007로 문턱 미달·work_study
-    새 피처 게이트 미달 기각(3/3 시드 개선), 최근접 exp032와 스피어만 0.99795로 중복 아님, 표준 평가 앙상블 기여 +0.00004'
-  evidence:
-    champion_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
-    champion_oof_auc: 0.9675476423592995
-    floor_margin: 0.010072576140068623
-    nearest_run_id: b1bd4b08386946c9a4e05b755dbd5f26
-    nearest_spearman: 0.9979461305118936
-    ensemble_auc_with: 0.96779600305279
-    ensemble_auc_without: 0.9677517186433671
-    contribution: 4.4284409422945537e-05
 - run_id: c62a9ad334bf486cb46d738474ccd767
   config: exp035_lattice_te
   oof_auc: 0.9672897196399213
@@ -269,40 +253,6 @@ members:
     ensemble_auc_with: 0.9689519956034673
     ensemble_auc_without: 0.9688087354207501
     contribution: 0.00014326018271726415
-- run_id: c4c4c780acab4b83baf10d67b98cc85a
-  config: exp107_logreg_onehot_nn10
-  oof_auc: 0.9599906992621854
-  seeds: 42,43,44
-  entered_at: '2026-08-18'
-  reason: '이슈 #200: exp058 계열 orig_nn10_mean 열 추가 변형. 단독 OOF 0.95999로 exp058 대비 +0.00033(3/3
-    시드 개선), 최근접 exp058 스피어만 0.99647로 중복 아님. 개선이 결측 3개 이상 구간(+0.00168)에 집중돼 결측 구간 독립
-    결합(#67)이 활용 가능'
-  evidence:
-    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
-    champion_oof_auc: 0.9691957618114269
-    floor_margin: 0.0007949374507585372
-    nearest_run_id: e2b76edd9d204290810e39a7457c4c48
-    nearest_spearman: 0.9964707052198585
-    ensemble_auc_with: 0.9686192227064963
-    ensemble_auc_without: 0.9686779787020444
-    contribution: -5.875599554816535e-05
-- run_id: 83f7977a87ef46679c26824c5b85f928
-  config: exp108_logreg_onehot_nn10_l1
-  oof_auc: 0.9602293969491845
-  seeds: 42,43,44
-  entered_at: '2026-08-18'
-  reason: '이슈 #200: exp058 계열 orig_nn10_mean + L1(liblinear) 조합 변형. 단독 OOF 0.96023으로
-    exp058 대비 +0.00057(3/3 시드), 최근접 exp058 스피어만 0.99273으로 계열 내 탈상관까지 동반. fold 0 초가산
-    실측(단순 합 +0.00038 대비 +0.00057)'
-  evidence:
-    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
-    champion_oof_auc: 0.9691957618114269
-    floor_margin: 0.0010336351377576714
-    nearest_run_id: e2b76edd9d204290810e39a7457c4c48
-    nearest_spearman: 0.992732550246819
-    ensemble_auc_with: 0.9685231490700812
-    ensemble_auc_without: 0.9686192227064963
-    contribution: -9.607363641506161e-05
 - run_id: d107ea874ebe4dbe8094694141a162b6
   config: exp117_ag25_gbm_r21
   oof_auc: 0.9687158156369342
@@ -349,22 +299,6 @@ members:
     ensemble_auc_with: 0.9689153096546314
     ensemble_auc_without: 0.968844711232371
     contribution: 7.05984222603151e-05
-- run_id: c41c6a4deae04e1fbd8a75193eaaa32c
-  config: exp124_realmlp_dtype_fix
-  oof_auc: 0.9683223457855767
-  seeds: 42,43,44
-  entered_at: '2026-08-19'
-  reason: '이슈 243: exp121의 dtype 정합 결함(어휘 매핑 이전 float32 형 변환) 수정판. 3시드 OOF 0.9683223으로
-    exp121(0.9637132) 대비 +0.0046091 회복, 같은 레시피의 결함 수정이라 exp121을 교체 진입'
-  evidence:
-    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
-    champion_oof_auc: 0.9691957618114269
-    floor_margin: 0.009126583974149893
-    nearest_run_id: d107ea874ebe4dbe8094694141a162b6
-    nearest_spearman: 0.9856624503451126
-    ensemble_auc_with: 0.9689866654973862
-    ensemble_auc_without: 0.9689523578244447
-    contribution: 3.430767294154702e-05
 - run_id: 7124425b5b51421dbbeba597229554da
   config: exp127_lookup_muon
   oof_auc: 0.9692840450124712
@@ -553,3 +487,18 @@ members:
     ensemble_auc_with: 0.9691623933545127
     ensemble_auc_without: 0.9691419155689435
     contribution: 2.0477785569239515e-05
+- run_id: 984b0fd5277243ab95acff71688644a9
+  config: exp140_realmlp_orig_cdf_diff
+  oof_auc: 0.9684119417243193
+  seeds: 42,43,44
+  entered_at: '2026-08-22'
+  reason: 기존 exp124와 중복이나 OOF AUC가 높아 직접 교체; 고정 결합법 포함·제외 양의 기여는 확인되지 않음
+  evidence:
+    champion_run_id: 54acd002d3c04ec3a74c09871e83da50
+    champion_oof_auc: 0.9693397329635609
+    floor_margin: 0.009072208760758427
+    nearest_run_id: c41c6a4deae04e1fbd8a75193eaaa32c
+    nearest_spearman: 0.9990720947503728
+    ensemble_auc_with: 0.9691692063128639
+    ensemble_auc_without: 0.9691545158271768
+    contribution: 1.469048568703002e-05

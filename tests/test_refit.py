@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+import yaml
 
 from pipeline import refit
 from pipeline.config import DataConfig, ExperimentConfig, FeatureConfig, ModelConfig
@@ -14,7 +15,9 @@ from pipeline.refit import RefitMember, RefitPlan, mix_member_predictions
 def test_committed_refit_plan_matches_candidate_pool():
     plan = RefitPlan.load(Path("artifacts/full-refit-plan.yaml"))
 
-    assert len(plan.members) == 35
+    assert len(plan.members) == 32
+    assert sum(len(member.budgets) for member in plan.members) == 94
+    assert plan.combiner == "shrunk_rank_logit_logistic"
     assert plan.cv_model_weight == 5
     assert plan.full_model_weight == 1
     ag25_gbm = plan.member("exp117_ag25_gbm_r21")
@@ -29,7 +32,7 @@ def test_committed_refit_plan_matches_candidate_pool():
     tabm_widths = plan.member("exp137_tabm_recon_widths")
     assert tabm_widths.budgets == {42: 18, 43: 16, 44: 16}
     assert tabm_widths.budget_source == "fold_median"
-    realmlp = plan.member("exp124_realmlp_dtype_fix")
+    realmlp = plan.member("exp140_realmlp_orig_cdf_diff")
     assert realmlp.budgets == {42: 5, 43: 5, 44: 5}
 
     realmlp_muon = plan.member("exp134_realmlp_muon")
@@ -71,6 +74,16 @@ def test_committed_refit_plan_matches_candidate_pool():
     )
     assert realmlp_reference_qnormal.budgets == {42: 5, 43: 5, 44: 5}
     assert realmlp_reference_qnormal.budget_source == "fold_median"
+
+
+def test_refit_plan_rejects_unknown_combiner_before_execution(tmp_path):
+    raw = yaml.safe_load(Path("artifacts/full-refit-plan.yaml").read_text())
+    raw["protocol"]["combiner"] = "unregistered_combiner"
+    path = tmp_path / "unknown-combiner.yaml"
+    path.write_text(yaml.safe_dump(raw, allow_unicode=True, sort_keys=False))
+
+    with pytest.raises(ValueError, match="등록되지 않은 결합 방식"):
+        RefitPlan.load(path)
 
 
 def test_mix_member_predictions_uses_model_count_weights():
@@ -268,3 +281,71 @@ def test_run_member_can_fit_seeds_independently_before_finalizing(monkeypatch, t
     assert (final.parent / "manifest.json").is_file()
     averaged = pd.read_parquet(final)
     assert averaged["pred"].to_numpy() == pytest.approx([0.43, 0.43])
+
+
+def test_assemble_uses_combiner_named_by_plan(monkeypatch, tmp_path):
+    train_index = pd.Index([1, 2, 3, 4], name="id")
+    test_index = pd.Index([10, 11], name="id")
+    train = pd.DataFrame(
+        {"id": train_index, "addicted_label": [0, 0, 1, 1]}
+    )
+    test = pd.DataFrame({"id": test_index})
+    member = RefitMember(
+        config="fake",
+        config_path=tmp_path / "fake.yaml",
+        run_id="run-1",
+        budgets={42: None},
+        budget_source="not_applicable",
+    )
+    plan = RefitPlan(
+        source_path=tmp_path / "plan.yaml",
+        source_pool_sha256="pool-hash",
+        iteration_multiplier=1.25,
+        budget_statistic="median",
+        budget_rounding="half_up",
+        cv_model_weight=5,
+        full_model_weight=1,
+        combiner="recording_combiner",
+        members=(member,),
+    )
+
+    class RecordingCombiner:
+        name = "recording_combiner"
+
+    combiner = RecordingCombiner()
+    calls = []
+    monkeypatch.setitem(refit.COMBINER_REGISTRY, combiner.name, combiner)
+    monkeypatch.setattr(
+        refit.pd,
+        "read_csv",
+        lambda path: train.copy() if path == "data/train.csv" else test.copy(),
+    )
+    monkeypatch.setattr(
+        refit,
+        "member_matrix",
+        lambda members, store, index: pd.DataFrame(
+            {"fake": [0.1, 0.2, 0.8, 0.9]}, index=train_index
+        ),
+    )
+    monkeypatch.setattr(
+        refit,
+        "member_test_matrix",
+        lambda members, store, index: pd.DataFrame(
+            {"fake": [0.25, 0.75]}, index=test_index
+        ),
+    )
+    monkeypatch.setattr(
+        refit,
+        "_load_member_full_prediction",
+        lambda plan, member, output, expected_ids: np.array([0.3, 0.7]),
+    )
+
+    def record_full_fit(selected, oof, y, test_predictions):
+        calls.append(selected)
+        return np.linspace(0.2, 0.8, len(test_predictions), dtype=np.float64)
+
+    monkeypatch.setattr(refit, "full_fit_predictions", record_full_fit)
+
+    refit.assemble(plan, tmp_path / "out")
+
+    assert calls == [combiner, combiner, combiner]

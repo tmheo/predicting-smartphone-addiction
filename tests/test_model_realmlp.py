@@ -116,6 +116,45 @@ def test_realmlp_muon_config_is_exp124_single_optimizer_delta():
     assert challenger.model.params == {**baseline.model.params, "optimizer": "muon"}
 
 
+def test_realmlp_orig_cdf_diff_config_is_exp124_feature_only_delta(monkeypatch):
+    proxy_columns = [
+        "daily_screen_time_hours",
+        "weekend_screen_time",
+        "social_media_hours",
+        "notifications_per_day",
+        "app_opens_per_day",
+    ]
+    proxy = pd.DataFrame(
+        {
+            **{column: [0.0, 1.0] for column in proxy_columns},
+            "addicted_label": [0, 1],
+        }
+    )
+    monkeypatch.setattr(
+        "pipeline.features._load_locked_proxy",
+        lambda path, sha256, cols: proxy,
+    )
+
+    baseline = load_config(REPO / "configs" / "exp124_realmlp_dtype_fix.yaml", "screen")
+    challenger = load_config(
+        REPO / "configs" / "exp140_realmlp_orig_cdf_diff.yaml", "screen"
+    )
+
+    assert challenger.name == "exp140_realmlp_orig_cdf_diff"
+    assert challenger.data == baseline.data
+    assert challenger.features.base == baseline.features.base
+    assert challenger.features.categorical == baseline.features.categorical
+    assert challenger.features.exclude == baseline.features.exclude
+    assert challenger.features.providers == [
+        {
+            "kind": "original_cdf_diff",
+            "path": "data/external/Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv",
+            "cols": proxy_columns,
+        }
+    ]
+    assert challenger.model == baseline.model
+
+
 def test_realmlp_muon_recon_widths_config_is_exp134_feature_only_delta():
     from pipeline.features import ConstrainedImputeAux
     from pipeline.plan import FeaturePlan
