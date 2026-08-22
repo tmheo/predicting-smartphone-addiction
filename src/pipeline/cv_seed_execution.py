@@ -39,97 +39,12 @@ def execute_seed(
 
     if recorder is not None:
         recorder.stage("feature_build")
-    initial_provider = initial_score_mod.create(cfg.initial_score)
-    initial_scores = (
-        initial_provider.compute(train.drop(columns=[TARGET]), test, seed)
-        if initial_provider is not None
-        else None
-    )
-    if initial_scores is not None:
-        assert initial_scores.train.index.equals(train.index), "train 초기 점수 인덱스가 다르다."
-        assert initial_scores.test.index.equals(test.index), "test 초기 점수 인덱스가 다르다."
-    X = plan.build_matrix(train, seed)
-    X_test = plan.build_matrix(test, seed)
     y = train[TARGET]
-    providers = plan.fold_fit_providers()
-    if providers:
-        train_ff = prepare_fold_fit_input(train, X)
-        test_ff = prepare_fold_fit_input(test, X_test)
-
-    oof_pred = np.zeros(len(train))
-    test_pred = np.zeros(len(test))
     n_folds = int(train["fold"].max()) + 1
-    importances: list[pd.DataFrame] = []
-    recovery_records: list[dict[str, object]] = []
-    model_training_diagnostics: list[dict[str, object]] = []
-    feature_names = list(X.columns)
-
-    # fold 안의 fold-fit 변환 fit도 training 단계에 포함한다. (#40)
-    if recorder is not None:
-        recorder.stage("training")
+    feature_names = plan.all_columns()
+    checkpoints = []
     for fold in range(n_folds):
         va_idx = train.index[train["fold"] == fold]
-        tr_idx = train.index[train["fold"] != fold]
-        X_fold, X_test_fold = X, X_test
-        with timed_operation(
-            recorder,
-            seed=seed,
-            fold=fold,
-            operation="fold_feature",
-            actor_kind="pipeline",
-            actor_name="feature_plan",
-        ):
-            if providers:
-                # fold-fit 단계: 학습 fold로만 fit하고, 같은 상태를 검증 fold와 test에 적용한다.
-                # 전체 train으로 fit하는 별도 경로는 없다. (#32 결정 4)
-                # transform은 학습 fold 행과 검증 fold 행이 섞인 train 전체를 받는다.
-                for kind, transformer in providers:
-                    with timed_operation(
-                        recorder,
-                        seed=seed,
-                        fold=fold,
-                        operation="fold_feature.provider_fit",
-                        actor_kind="column_provider",
-                        actor_name=kind,
-                    ):
-                        transformer.fit(train_ff.loc[tr_idx], seed)
-                X_fold = X
-                X_test_fold = X_test
-                for kind, transformer in providers:
-                    with timed_operation(
-                        recorder,
-                        seed=seed,
-                        fold=fold,
-                        operation="fold_feature.provider_transform",
-                        actor_kind="column_provider",
-                        actor_name=kind,
-                        dataset="train",
-                    ):
-                        X_fold = plan.add_fold_fit_provider_columns(
-                            X_fold, train_ff, kind, transformer
-                        )
-                    with timed_operation(
-                        recorder,
-                        seed=seed,
-                        fold=fold,
-                        operation="fold_feature.provider_transform",
-                        actor_kind="column_provider",
-                        actor_name=kind,
-                        dataset="test",
-                    ):
-                        X_test_fold = plan.add_fold_fit_provider_columns(
-                            X_test_fold, test_ff, kind, transformer
-                        )
-                assert list(X_fold.columns) == list(X_test_fold.columns), (
-                    "train/test의 fold-fit 컬럼 집합이 다르다."
-                )
-                if fold == 0:
-                    feature_names = list(X_fold.columns)
-                else:
-                    assert list(X_fold.columns) == feature_names, (
-                        f"fold {fold}의 컬럼 집합이 fold 0과 다르다."
-                    )
-        checkpoint = None
         if recovery is not None:
             with timed_operation(
                 recorder,
@@ -148,6 +63,7 @@ def execute_seed(
                     feature_names=feature_names,
                 )
         else:
+            checkpoint = None
             skipped_operation(
                 recorder,
                 seed=seed,
@@ -157,7 +73,82 @@ def execute_seed(
                 actor_name="fold_recovery",
                 reason="disabled",
             )
+        checkpoints.append(checkpoint)
+
+    provider_declarations = plan.fold_fit_providers()
+    needs_computation = any(checkpoint is None for checkpoint in checkpoints)
+    if needs_computation:
+        initial_provider = initial_score_mod.create(cfg.initial_score)
+        initial_scores = (
+            initial_provider.compute(train.drop(columns=[TARGET]), test, seed)
+            if initial_provider is not None
+            else None
+        )
+        if initial_scores is not None:
+            assert initial_scores.train.index.equals(train.index), (
+                "train 초기 점수 인덱스가 다르다."
+            )
+            assert initial_scores.test.index.equals(test.index), (
+                "test 초기 점수 인덱스가 다르다."
+            )
+        X = plan.build_matrix(train, seed)
+        X_test = plan.build_matrix(test, seed)
+        if provider_declarations:
+            train_ff = prepare_fold_fit_input(train, X)
+            test_ff = prepare_fold_fit_input(test, X_test)
+        else:
+            train_ff = None
+            test_ff = None
+    else:
+        initial_scores = None
+        X = None
+        X_test = None
+        train_ff = None
+        test_ff = None
+
+    oof_pred = np.zeros(len(train))
+    test_pred = np.zeros(len(test))
+    importances: list[pd.DataFrame] = []
+    recovery_records: list[dict[str, object]] = []
+    model_training_diagnostics: list[dict[str, object]] = []
+
+    # fold 안의 fold-fit 변환 fit도 training 단계에 포함한다. (#40)
+    if recorder is not None:
+        recorder.stage("training")
+    for fold, checkpoint in enumerate(checkpoints):
+        va_idx = train.index[train["fold"] == fold]
+        tr_idx = train.index[train["fold"] != fold]
         if checkpoint is not None:
+            skipped_operation(
+                recorder,
+                seed=seed,
+                fold=fold,
+                operation="fold_feature",
+                actor_kind="pipeline",
+                actor_name="feature_plan",
+                reason="checkpoint_reused",
+            )
+            for kind, _ in provider_declarations:
+                skipped_operation(
+                    recorder,
+                    seed=seed,
+                    fold=fold,
+                    operation="fold_feature.provider_fit",
+                    actor_kind="column_provider",
+                    actor_name=kind,
+                    reason="checkpoint_reused",
+                )
+                for dataset in ("train", "test"):
+                    skipped_operation(
+                        recorder,
+                        seed=seed,
+                        fold=fold,
+                        operation="fold_feature.provider_transform",
+                        actor_kind="column_provider",
+                        actor_name=kind,
+                        dataset=dataset,
+                        reason="checkpoint_reused",
+                    )
             with timed_operation(
                 recorder,
                 seed=seed,
@@ -204,6 +195,69 @@ def execute_seed(
             if recorder is not None:
                 recorder.fold_completed(cfg.seeds.index(seed), fold, checkpoint.auc)
             continue
+
+        assert X is not None and X_test is not None
+        providers = plan.new_fold_fit_providers()
+        X_fold, X_test_fold = X, X_test
+        with timed_operation(
+            recorder,
+            seed=seed,
+            fold=fold,
+            operation="fold_feature",
+            actor_kind="pipeline",
+            actor_name="feature_plan",
+        ):
+            if providers:
+                assert train_ff is not None and test_ff is not None
+                # fold-fit 단계: 학습 fold로만 fit하고, 같은 상태를 검증 fold와 test에 적용한다.
+                # 전체 train으로 fit하는 별도 경로는 없다. (#32 결정 4)
+                # transform은 학습 fold 행과 검증 fold 행이 섞인 train 전체를 받는다.
+                for kind, transformer in providers:
+                    with timed_operation(
+                        recorder,
+                        seed=seed,
+                        fold=fold,
+                        operation="fold_feature.provider_fit",
+                        actor_kind="column_provider",
+                        actor_name=kind,
+                    ):
+                        transformer.fit(train_ff.loc[tr_idx], seed)
+                X_fold = X
+                X_test_fold = X_test
+                for kind, transformer in providers:
+                    with timed_operation(
+                        recorder,
+                        seed=seed,
+                        fold=fold,
+                        operation="fold_feature.provider_transform",
+                        actor_kind="column_provider",
+                        actor_name=kind,
+                        dataset="train",
+                    ):
+                        X_fold = plan.add_fold_fit_provider_columns(
+                            X_fold, train_ff, kind, transformer
+                        )
+                    with timed_operation(
+                        recorder,
+                        seed=seed,
+                        fold=fold,
+                        operation="fold_feature.provider_transform",
+                        actor_kind="column_provider",
+                        actor_name=kind,
+                        dataset="test",
+                    ):
+                        X_test_fold = plan.add_fold_fit_provider_columns(
+                            X_test_fold, test_ff, kind, transformer
+                        )
+                assert list(X_fold.columns) == list(X_test_fold.columns), (
+                    "train/test의 fold-fit 컬럼 집합이 다르다."
+                )
+            assert list(X_fold.columns) == feature_names, (
+                f"fold {fold}의 컬럼 집합이 피처 계획 선언과 다르다."
+            )
+            assert list(X_test_fold.columns) == feature_names, (
+                f"fold {fold}의 test 컬럼 집합이 피처 계획 선언과 다르다."
+            )
 
         with timed_operation(
             recorder,

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import shutil
 import zipfile
+from dataclasses import replace
 from pathlib import Path
 from typing import ClassVar
 
@@ -12,14 +13,23 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from pipeline import initial_score as initial_score_mod
 from pipeline import model as model_mod
+from pipeline import plan as plan_mod
 from pipeline import recovery as recovery_mod
 from pipeline import tracking
 from pipeline.bundle import export_bundle
-from pipeline.config import DataConfig, ExperimentConfig, FeatureConfig, ModelConfig
+from pipeline.config import (
+    DataConfig,
+    ExperimentConfig,
+    FeatureConfig,
+    InitialScoreConfig,
+    ModelConfig,
+)
 from pipeline.cv import CVResult, run_cv
 from pipeline.data import file_sha256
-from pipeline.plan import FeaturePlan
+from pipeline.initial_score import InitialScores
+from pipeline.plan import FeaturePlan, ProviderKind
 from pipeline.recovery import FoldRecovery, RecoveryError
 
 SEED = 7
@@ -31,8 +41,10 @@ class RecoveryFakeAdapter:
 
     fail_fold: ClassVar[int | None] = None
     fitted_folds: ClassVar[list[int]] = []
+    created_count: ClassVar[int] = 0
 
     def __init__(self, params: dict, fit: dict, seed: int) -> None:
+        type(self).created_count += 1
         self.seed = seed
         self.fold: int | None = None
         self.features: list[str] = []
@@ -72,6 +84,69 @@ class RecoveryFakeAdapter:
 
     def training_diagnostics(self) -> dict[str, object]:
         return {"fake_fold": self.fold, "losses": [0.5, 0.4]}
+
+
+class RecoveryRowWiseProvider:
+    """공통 행렬 계산 호출을 기록하는 결정적 컬럼 제공자."""
+
+    uses_target = False
+    compute_calls: ClassVar[int] = 0
+
+    def columns(self) -> list[str]:
+        return ["recovery_row_probe"]
+
+    def compute(self, frame: pd.DataFrame) -> pd.DataFrame:
+        type(self).compute_calls += 1
+        return pd.DataFrame(
+            {"recovery_row_probe": frame["daily_screen_time_hours"] * 0.5},
+            index=frame.index,
+        )
+
+
+class RecoveryFoldFitProvider:
+    """폴드별 fit과 학습 및 시험 변환 호출을 기록하는 결정적 컬럼 제공자."""
+
+    uses_target = False
+    fit_calls: ClassVar[int] = 0
+    transform_calls: ClassVar[int] = 0
+
+    def columns(self) -> list[str]:
+        return ["recovery_fold_probe"]
+
+    def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
+        if hasattr(self, "value"):
+            raise AssertionError("같은 fold-fit 제공자 인스턴스를 두 폴드에서 재사용했다.")
+        type(self).fit_calls += 1
+        self.value = float(train_fold["daily_screen_time_hours"].mean())
+
+    def transform(self, frame: pd.DataFrame) -> pd.DataFrame:
+        type(self).transform_calls += 1
+        return pd.DataFrame(
+            {"recovery_fold_probe": self.value},
+            index=frame.index,
+        )
+
+
+class RecoveryInitialScoreProvider:
+    """완전 복구에서 초기 점수 생성도 생략되는지 기록한다."""
+
+    created_count: ClassVar[int] = 0
+    compute_calls: ClassVar[int] = 0
+
+    def __init__(self) -> None:
+        type(self).created_count += 1
+
+    def compute(
+        self, train: pd.DataFrame, test: pd.DataFrame, seed: int
+    ) -> InitialScores:
+        type(self).compute_calls += 1
+        return InitialScores(
+            train=pd.Series(0.0, index=train.index, dtype="float64"),
+            test=pd.Series(0.0, index=test.index, dtype="float64"),
+        )
+
+    def input_paths(self) -> dict[str, Path]:
+        return {}
 
 
 class ProgressRecorder:
@@ -155,12 +230,57 @@ def recovery_env(tmp_path, monkeypatch):
 
     RecoveryFakeAdapter.fail_fold = None
     RecoveryFakeAdapter.fitted_folds = []
+    RecoveryFakeAdapter.created_count = 0
     return cfg, plan, prepared_train, prepared_test, store
 
 
 def _with_seed_metric(result: CVResult) -> CVResult:
     result.fold_aucs[f"auc_oof_seed_{SEED}"] = result.fold_aucs["auc_oof"]
     return result
+
+
+def _tracking_recovery_inputs(recovery_env, monkeypatch):
+    cfg, _, train, test, store = recovery_env
+    monkeypatch.setitem(
+        plan_mod.REGISTRY,
+        "recovery_row_probe",
+        ProviderKind(plan_mod.ROW_WISE, RecoveryRowWiseProvider),
+    )
+    monkeypatch.setitem(
+        plan_mod.REGISTRY,
+        "recovery_fold_probe",
+        ProviderKind(plan_mod.FOLD_FIT, RecoveryFoldFitProvider),
+    )
+    monkeypatch.setitem(
+        initial_score_mod.REGISTRY,
+        "recovery_initial_probe",
+        RecoveryInitialScoreProvider,
+    )
+    cfg = replace(
+        cfg,
+        features=FeatureConfig(
+            base="raw",
+            categorical=[],
+            providers=[
+                {"kind": "recovery_row_probe"},
+                {"kind": "recovery_fold_probe"},
+            ],
+        ),
+        initial_score=InitialScoreConfig(kind="recovery_initial_probe", params={}),
+    )
+    plan = FeaturePlan.from_config(cfg.features)
+    train, test = plan.apply_dataset_wide(train, test)
+    return cfg, plan, train, test, store
+
+
+def _reset_recovery_call_counts() -> None:
+    RecoveryRowWiseProvider.compute_calls = 0
+    RecoveryFoldFitProvider.fit_calls = 0
+    RecoveryFoldFitProvider.transform_calls = 0
+    RecoveryInitialScoreProvider.created_count = 0
+    RecoveryInitialScoreProvider.compute_calls = 0
+    RecoveryFakeAdapter.created_count = 0
+    RecoveryFakeAdapter.fitted_folds = []
 
 
 def _log_final(tmp_path: Path, name: str, cfg: ExperimentConfig, result: CVResult):
@@ -363,12 +483,32 @@ def test_four_of_five_and_full_recovery_keep_public_result_and_progress(
         "reused",
         "success",
     ]
+    partial_feature = [
+        event
+        for event in partial_recorder.timings
+        if event["operation"] == "fold_feature"
+    ]
+    assert [event["outcome"] for event in partial_feature] == [
+        "skipped",
+        "skipped",
+        "skipped",
+        "skipped",
+        "success",
+    ]
+    partial_operations = [event["operation"] for event in partial_recorder.timings]
+    assert partial_operations[:N_FOLDS] == ["recovery.read_validate"] * N_FOLDS
     full_finalize = [
         event
         for event in full_recorder.timings
         if event["operation"] == "fold_finalize"
     ]
     assert [event["outcome"] for event in full_finalize] == ["reused"] * N_FOLDS
+    full_feature = [
+        event
+        for event in full_recorder.timings
+        if event["operation"] == "fold_feature"
+    ]
+    assert [event["outcome"] for event in full_feature] == ["skipped"] * N_FOLDS
     skipped_model_work = [
         event
         for event in full_recorder.timings
@@ -381,6 +521,101 @@ def test_four_of_five_and_full_recovery_keep_public_result_and_progress(
         and event["reason"] == "checkpoint_reused"
         for event in skipped_model_work
     )
+
+
+def test_partial_and_full_recovery_only_compute_missing_fold_work(
+    recovery_env, monkeypatch
+):
+    cfg, plan, train, test, store = _tracking_recovery_inputs(recovery_env, monkeypatch)
+    recovery = store("full-feature-skip")
+    baseline = run_cv(cfg, plan, train, test, SEED, recovery=recovery)
+
+    partial_recovery = store("partial-feature-skip")
+    partial_seed_dir = partial_recovery.root / f"seed_{SEED}"
+    partial_seed_dir.mkdir(parents=True)
+    for fold in range(N_FOLDS - 1):
+        shutil.copytree(
+            recovery.root / f"seed_{SEED}" / f"fold_{fold}",
+            partial_seed_dir / f"fold_{fold}",
+        )
+
+    _reset_recovery_call_counts()
+    partial = run_cv(cfg, plan, train, test, SEED, recovery=partial_recovery)
+
+    assert RecoveryRowWiseProvider.compute_calls == 2
+    assert RecoveryFoldFitProvider.fit_calls == 1
+    assert RecoveryFoldFitProvider.transform_calls == 2
+    assert RecoveryInitialScoreProvider.created_count == 1
+    assert RecoveryInitialScoreProvider.compute_calls == 1
+    assert RecoveryFakeAdapter.created_count == 1
+    assert RecoveryFakeAdapter.fitted_folds == [N_FOLDS - 1]
+    pd.testing.assert_frame_equal(partial.oof, baseline.oof, check_exact=True)
+    pd.testing.assert_frame_equal(partial.test_pred, baseline.test_pred, check_exact=True)
+    pd.testing.assert_frame_equal(partial.importance, baseline.importance, check_exact=True)
+    assert partial.fold_aucs == baseline.fold_aucs
+    assert partial.feature_names == baseline.feature_names
+
+    _reset_recovery_call_counts()
+    recovered = run_cv(cfg, plan, train, test, SEED, recovery=recovery)
+
+    assert RecoveryRowWiseProvider.compute_calls == 0
+    assert RecoveryFoldFitProvider.fit_calls == 0
+    assert RecoveryFoldFitProvider.transform_calls == 0
+    assert RecoveryInitialScoreProvider.created_count == 0
+    assert RecoveryInitialScoreProvider.compute_calls == 0
+    assert RecoveryFakeAdapter.created_count == 0
+    assert RecoveryFakeAdapter.fitted_folds == []
+    pd.testing.assert_frame_equal(recovered.oof, baseline.oof, check_exact=True)
+    pd.testing.assert_frame_equal(recovered.test_pred, baseline.test_pred, check_exact=True)
+    pd.testing.assert_frame_equal(recovered.importance, baseline.importance, check_exact=True)
+    assert recovered.fold_aucs == baseline.fold_aucs
+    assert recovered.feature_names == baseline.feature_names
+
+
+def test_later_fold_feature_mismatch_fails_before_any_computation(
+    recovery_env, monkeypatch
+):
+    cfg, plan, train, test, store = _tracking_recovery_inputs(recovery_env, monkeypatch)
+    recovery = store("later-feature-mismatch")
+    run_cv(cfg, plan, train, test, SEED, recovery=recovery)
+    fold_dir = recovery.root / f"seed_{SEED}" / f"fold_{N_FOLDS - 1}"
+    importance_path = fold_dir / recovery_mod.IMPORTANCE_NAME
+    importance = pd.read_parquet(importance_path)
+    importance.loc[0, "feature"] = "unexpected_recovery_feature"
+    importance.to_parquet(importance_path, index=False)
+    manifest_path = fold_dir / recovery_mod.MANIFEST_NAME
+    manifest = json.loads(manifest_path.read_text())
+    manifest["artifacts"][recovery_mod.IMPORTANCE_NAME]["sha256"] = file_sha256(
+        importance_path
+    )
+    manifest["manifest_content_sha256"] = recovery_mod._content_sha256(
+        {key: value for key, value in manifest.items() if key != "manifest_content_sha256"}
+    )
+    manifest_path.write_text(json.dumps(manifest))
+    _reset_recovery_call_counts()
+    recorder = ProgressRecorder()
+
+    with pytest.raises(RecoveryError, match="특성 행 순서"):
+        run_cv(cfg, plan, train, test, SEED, recorder=recorder, recovery=recovery)
+
+    assert RecoveryRowWiseProvider.compute_calls == 0
+    assert RecoveryFoldFitProvider.fit_calls == 0
+    assert RecoveryFoldFitProvider.transform_calls == 0
+    assert RecoveryInitialScoreProvider.created_count == 0
+    assert RecoveryInitialScoreProvider.compute_calls == 0
+    assert RecoveryFakeAdapter.created_count == 0
+    assert RecoveryFakeAdapter.fitted_folds == []
+    assert recorder.stages == ["feature_build"]
+    assert [event["operation"] for event in recorder.timings] == [
+        "recovery.read_validate"
+    ] * N_FOLDS
+    assert [event["outcome"] for event in recorder.timings] == [
+        "success",
+        "success",
+        "success",
+        "success",
+        "failed",
+    ]
 
 
 def _save_fold_zero(recovery_env) -> tuple[FoldRecovery, ExperimentConfig, FeaturePlan, pd.DataFrame, pd.DataFrame]:

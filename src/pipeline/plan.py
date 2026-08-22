@@ -19,6 +19,7 @@ compare의 카나리아 게이트를 공허하게 통과하는 구멍을 적재 
 
 from __future__ import annotations
 
+import copy
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Protocol
@@ -125,9 +126,15 @@ def _base_columns_of(df: pd.DataFrame) -> list[str]:
 class FeaturePlan:
     """실험이 학습할 컬럼 전체의 선언. run.py가 설정에서 한 번 만들어 cv에 주입한다."""
 
-    def __init__(self, stages: dict[str, list[tuple[str, Any]]], exclude: list[str]) -> None:
+    def __init__(
+        self,
+        stages: dict[str, list[tuple[str, Any]]],
+        exclude: list[str],
+        fold_fit_specs: list[tuple[str, Callable[..., Any], dict[str, Any]]],
+    ) -> None:
         self._stages = stages  # stage -> [(kind, provider), ...] providers 목록 순서 유지
         self._exclude = exclude  # base에서 뺄 raw 컬럼. 제공자 입력에는 남는다. (#79)
+        self._fold_fit_specs = fold_fit_specs
         self._base_columns: list[str] | None = None
 
     @classmethod
@@ -150,6 +157,7 @@ class FeaturePlan:
                 "제외한 컬럼은 학습 행렬에 없으므로 categorical 선언도 같이 뺄 것."
             )
         stages: dict[str, list[tuple[str, Any]]] = {stage: [] for stage in STAGE_ORDER}
+        fold_fit_specs: list[tuple[str, Callable[..., Any], dict[str, Any]]] = []
         for i, spec in enumerate(cfg.providers):
             params = dict(spec)
             kind = params.pop("kind", None)
@@ -164,7 +172,9 @@ class FeaturePlan:
             except (TypeError, ValueError) as exc:
                 raise ValueError(f"providers[{i}] {kind}: {exc}") from exc
             stages[entry.stage].append((kind, provider))
-        plan = cls(stages, list(cfg.exclude))
+            if entry.stage == FOLD_FIT:
+                fold_fit_specs.append((kind, entry.factory, params))
+        plan = cls(stages, list(cfg.exclude), fold_fit_specs)
         plan._validate_declarations()
         return plan
 
@@ -259,6 +269,13 @@ class FeaturePlan:
     def fold_fit_providers(self) -> list[tuple[str, FoldFitTransformer]]:
         """관측 가능한 제공자 이름과 구현을 설정의 선언 순서로 돌려준다."""
         return list(self._stages[FOLD_FIT])
+
+    def new_fold_fit_providers(self) -> list[tuple[str, FoldFitTransformer]]:
+        """한 폴드에만 사용할 새 fold-fit 제공자들을 선언 순서로 만든다."""
+        return [
+            (kind, factory(**copy.deepcopy(params)))
+            for kind, factory, params in self._fold_fit_specs
+        ]
 
     @staticmethod
     def add_fold_fit_provider_columns(
