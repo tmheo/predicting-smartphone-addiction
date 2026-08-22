@@ -2,7 +2,8 @@
 
 사용법:
     uv run python -m pipeline.pool <run_id>                         # 진입 판정 리포트
-    uv run python -m pipeline.pool <run_id> --admit --reason "..."  # 통과 시 장부 등록
+    uv run python -m pipeline.pool <run_id> --admit --reason "..." \
+        --judgment artifacts/judgments/<record>.yaml                # 판정 기록 검증 후 등록
 
 판정 규칙(진입 하한·중복 게이트)과 채택 자격 검사는 judgment module
 소관이다(ADR 0001 계열 2). 이 module은 EntryVerdict의 근거 값을 한국어 리포트로
@@ -10,8 +11,11 @@
 
 - 스크리닝은 단일 시드로 허용하되(리포트만), 등록(--admit)은 채택 자격 검사를
   통과한 3시드 평균본만 가능하다. 후보 풀에는 시드 평균본만 올린다.
+- 진입 하한과 중복 검사는 임시 평가 진단이다.
+  지속 등록과 원자 교체는 현재 후보 풀, folds, 등록 결합 방식 집합을 동결한
+  `candidate-pool-v1` nested OOF 판정 기록이 양수 차이를 증명할 때만 장부를 쓴다.
 - 탈락(중복 교체 포함)은 장부에서 지우고 MLflow 태그(pool.dropped_*)와 티켓
-  코멘트로만 남긴다.
+  코멘트로도 남긴다.
 
 풀 장부의 원본은 커밋되는 artifacts/pool.yaml이다. champion.yaml과 같은 이유로
 "무엇이 풀에 있는가"라는 결정과 진입 근거를 git 이력에 남긴다. 장부의 타입과
@@ -25,6 +29,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import sys
+from pathlib import Path
 
 from .data import file_sha256, labels
 from .judgment import (
@@ -33,11 +38,21 @@ from .judgment import (
     ENTRY_FLOOR_MARGIN,
     FOLDS_PATH,
     EntryVerdict,
+    JudgmentError,
     check_adoption_eligibility,
     judge_entry,
     load_candidate,
+    load_pool_admission_authorization,
 )
-from .ledger import CHAMPION_PATH, POOL_PATH, Champion, EntryEvidence, Pool, PoolMember
+from .ledger import (
+    CHAMPION_PATH,
+    POOL_PATH,
+    Champion,
+    EntryEvidence,
+    Pool,
+    PoolJudgmentPointer,
+    PoolMember,
+)
 from .runs import MlflowRunStore, RunStore, RunStoreError
 
 
@@ -114,10 +129,19 @@ def main() -> None:
     parser.add_argument("run_id", help="후보의 MLflow run_id")
     parser.add_argument("--admit", action="store_true", help="판정 통과 시 pool.yaml에 등록")
     parser.add_argument("--reason", help="--admit에 기록할 한 줄 진입 사유")
+    parser.add_argument(
+        "--judgment",
+        type=Path,
+        help="--admit을 허용한 candidate-pool-v1 판정 기록",
+    )
     args = parser.parse_args()
 
     if args.admit and not args.reason:
         sys.exit("--admit에는 --reason \"한 줄 사유\"가 필요하다.")
+    if args.admit and args.judgment is None:
+        sys.exit("--admit에는 --judgment <candidate-pool-v1 판정 기록>이 필요하다.")
+    if not args.admit and args.judgment is not None:
+        sys.exit("--judgment는 --admit과 함께 사용해야 한다.")
     if not CHAMPION_PATH.exists():
         sys.exit(f"{CHAMPION_PATH} 없음: 진입 하한의 기준 champion이 필요하다.")
 
@@ -143,8 +167,8 @@ def main() -> None:
         if verdict.admit and candidate.seeds != CONFIRM_SEEDS:
             print(f"참고: 등록은 3시드 평균본({CONFIRM_SEEDS})만 가능하다. 재실행 후 --admit할 것.")
         return
-    if not verdict.admit:
-        sys.exit("등록 거부: 판정이 진입이 아니다.")
+    if not verdict.floor_ok:
+        sys.exit("등록 거부: 후보가 진입 하한에 미달한다.")
     eligibility = check_adoption_eligibility(
         seeds=candidate.seeds,
         git_dirty=candidate.git_dirty,
@@ -158,10 +182,34 @@ def main() -> None:
     if not eligibility.folds_ok:
         sys.exit("등록 거부: 이 run의 folds sha256이 커밋된 artifacts/folds.parquet과 다르다.")
 
-    if verdict.drop_run_id is not None:
+    try:
+        authorization = load_pool_admission_authorization(
+            args.judgment,
+            candidate_run_id=candidate.run_id,
+            candidate_config=candidate.experiment,
+        )
+    except JudgmentError as exc:
+        sys.exit(str(exc))
+
+    if verdict.duplicate is not None and verdict.duplicate.duplicate:
+        if authorization.replaced_run_id != verdict.duplicate.nearest_run_id:
+            sys.exit(
+                "등록 거부: 중복 후보의 판정 기록은 최근접 중복 구성원을 "
+                "원자 교체 대상으로 지정해야 한다."
+            )
+    if authorization.replaced_run_id is not None:
+        if not any(
+            member.run_id == authorization.replaced_run_id for member in pool.members
+        ):
+            sys.exit("등록 거부: 판정 기록의 교체 대상이 현재 후보 풀에 없다.")
         _drop_member(
-            pool, verdict.drop_run_id,
-            f"중복 교체: run {candidate.run_id}와 스피어만 {verdict.duplicate.nearest_spearman:.5f}",
+            pool,
+            authorization.replaced_run_id,
+            (
+                f"{authorization.contract_version} 원자 교체: "
+                f"판정 {authorization.judgment_id}, nested OOF "
+                f"{authorization.nested_oof_delta:+.12f}"
+            ),
             store,
         )
 
@@ -173,6 +221,12 @@ def main() -> None:
         entered_at=datetime.datetime.now(datetime.UTC).date().isoformat(),
         reason=args.reason,
         evidence=entry_evidence(verdict),
+        judgment=PoolJudgmentPointer(
+            judgment_id=authorization.judgment_id,
+            contract_version=authorization.contract_version,
+            path=str(authorization.record_path),
+            sha256=authorization.record_sha256,
+        ),
     ))
     pool.save()
     print(f"풀 등록: run {candidate.run_id} → {POOL_PATH}. 커밋할 것.")

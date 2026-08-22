@@ -3,7 +3,7 @@
 재학습 계획은 후보 실행, 시드, CV에서 확정한 학습 길이를 고정한다.
 구성원 실행은 시드별 시험 예측을 먼저 저장한 뒤 평균본과 계보 manifest를 만든다.
 조립은 기존 5-fold 시험 예측과 전체 자료 예측을 모델 개수 기준 5:1로 섞고,
-선택된 결측 구간별 순위+logit 로지스틱 결합을 전체 OOF에서 한 번 맞춘다.
+계획이 지정한 등록 결합 방식을 전체 OOF에서 한 번 맞춘다.
 
 사용법:
     uv run python -m pipeline.refit artifacts/full-refit-plan.yaml --member exp006_te_drop_gaming
@@ -27,11 +27,10 @@ from . import data, initial_score, model, tracking
 from .config import load_config
 from .data import ID, TARGET
 from .ensemble import (
-    MissingnessSegmentedLogisticCombiner,
+    COMBINER_REGISTRY,
     full_fit_predictions,
     member_matrix,
     member_test_matrix,
-    missingness_bands,
 )
 from .ledger import Pool
 from .plan import FeaturePlan
@@ -108,8 +107,11 @@ class RefitPlan:
             raise ValueError("학습 길이 규약은 fold 중앙값과 사사오입이어야 한다.")
         if (self.cv_model_weight, self.full_model_weight) != (5, 1):
             raise ValueError("CV와 전체 자료 예측의 모델 개수 가중치는 5:1이어야 한다.")
-        if self.combiner != "missing_interaction_rank_logit":
-            raise ValueError("확정 결합기는 missing_interaction_rank_logit이어야 한다.")
+        if self.combiner not in COMBINER_REGISTRY:
+            raise ValueError(
+                f"등록되지 않은 결합 방식이다: {self.combiner} "
+                f"(등록: {', '.join(COMBINER_REGISTRY)})"
+            )
         for member in self.members:
             if list(member.budgets) not in ([42], [42, 43, 44]):
                 raise ValueError(f"{member.config}: 허용되지 않은 시드 목록이다.")
@@ -301,8 +303,7 @@ def assemble(plan: RefitPlan, output: Path) -> dict[str, Path]:
         full_weight=plan.full_model_weight,
     )
 
-    band_of = missingness_bands()
-    combiner = MissingnessSegmentedLogisticCombiner(band_of=band_of)
+    combiner = COMBINER_REGISTRY[plan.combiner]
     y = train.set_index(ID).loc[train_index, TARGET]
     predictions = {
         "cv": full_fit_predictions(combiner, oof, y, cv_test),
