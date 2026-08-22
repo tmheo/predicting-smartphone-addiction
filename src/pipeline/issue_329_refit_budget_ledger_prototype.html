@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>시제품: 재학습 예산 근거와 실행 관문</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d7deea;
+      --panel: #ffffff;
+      --soft: #f5f7fb;
+      --accent: #3157d5;
+      --accent-soft: #edf1ff;
+      --good: #087b55;
+      --good-soft: #e9f8f1;
+      --warn: #a05a00;
+      --warn-soft: #fff3de;
+      --bad: #b42318;
+      --bad-soft: #fff0ee;
+      --shadow: 0 12px 34px rgba(35, 47, 75, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #eef2f8;
+      color: var(--ink);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 36px auto 64px;
+    }
+
+    .hero, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero { padding: 30px; }
+    .panel { padding: 24px; margin-top: 20px; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      color: var(--bad);
+      background: var(--bad-soft);
+      font-size: 13px;
+      font-weight: 750;
+      letter-spacing: 0.02em;
+    }
+
+    h1 { margin: 14px 0 8px; font-size: clamp(28px, 4vw, 42px); line-height: 1.15; }
+    h2 { margin: 0 0 14px; font-size: 22px; }
+    h3 { margin: 0 0 8px; font-size: 16px; }
+    p { margin: 0; }
+    .lead { max-width: 900px; color: #46516a; font-size: 17px; }
+    .question { margin-top: 18px; padding: 16px 18px; background: var(--soft); border-radius: 12px; }
+    .question strong { display: block; margin-bottom: 4px; }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .architecture article {
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbfcff;
+    }
+
+    .architecture .owner { color: var(--accent); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+    .architecture code, code { color: #273fa6; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+
+    .tabs, .actions, .walkthrough-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid #bac5d8;
+      border-radius: 10px;
+      background: white;
+      color: var(--ink);
+      padding: 9px 13px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    button:hover { border-color: var(--accent); color: var(--accent); }
+    button.primary { background: var(--accent); border-color: var(--accent); color: white; }
+    button.danger { border-color: #e5aaa5; color: var(--bad); }
+    button.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+    .state-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .state-card {
+      padding: 14px;
+      border-radius: 12px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+    }
+
+    .state-card span { display: block; color: var(--muted); font-size: 12px; }
+    .state-card strong { display: block; margin-top: 4px; font-size: 15px; }
+    .state-card.good { background: var(--good-soft); border-color: #a7ddc8; }
+    .state-card.warn { background: var(--warn-soft); border-color: #efd19e; }
+    .state-card.bad { background: var(--bad-soft); border-color: #efb5b0; }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.75fr);
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .subpanel {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .subpanel > header { padding: 14px 16px; background: var(--soft); border-bottom: 1px solid var(--line); }
+    .subpanel > header p { color: var(--muted); font-size: 13px; }
+    .subpanel-body { padding: 16px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 9px 8px; border-bottom: 1px solid #e8ecf3; text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 12px; font-weight: 750; }
+    tr:last-child td { border-bottom: 0; }
+    td.number { font-variant-numeric: tabular-nums; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pill.good { color: var(--good); background: var(--good-soft); }
+    .pill.warn { color: var(--warn); background: var(--warn-soft); }
+    .pill.bad { color: var(--bad); background: var(--bad-soft); }
+
+    .budget-list { display: grid; gap: 9px; }
+    .budget-row { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: center; }
+    .budget-track { height: 8px; border-radius: 999px; background: #e8ecf4; overflow: hidden; }
+    .budget-track i { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+    .budget-row strong { font-variant-numeric: tabular-nums; }
+
+    .ledger {
+      margin: 0;
+      min-height: 230px;
+      padding: 16px;
+      overflow: auto;
+      border-radius: 12px;
+      background: #172033;
+      color: #e7ecf7;
+      font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: pre-wrap;
+    }
+
+    .actions { margin-top: 12px; }
+    .hint { margin-top: 12px; color: var(--muted); font-size: 13px; }
+
+    .event {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 11px;
+      background: var(--accent-soft);
+      color: #273fa6;
+      font-weight: 650;
+    }
+
+    .event.bad { background: var(--bad-soft); color: var(--bad); }
+    .event.good { background: var(--good-soft); color: var(--good); }
+
+    .walkthrough { margin-top: 14px; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: #fbfcff; }
+    .walkthrough p { color: var(--muted); margin-bottom: 12px; }
+    .step { display: inline-flex; align-items: center; gap: 7px; }
+    .step b { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 11px; }
+
+    .decision-list { display: grid; gap: 10px; margin-top: 14px; }
+    .decision-list article { padding: 14px 16px; border-left: 4px solid var(--accent); background: var(--soft); border-radius: 0 12px 12px 0; }
+    .decision-list p { color: var(--muted); font-size: 14px; }
+
+    @media (max-width: 850px) {
+      .architecture, .state-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .two-column { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      main { width: min(100% - 18px, 1180px); margin-top: 10px; }
+      .hero, .panel { padding: 18px; border-radius: 14px; }
+      .architecture, .state-grid { grid-template-columns: 1fr; }
+      button { width: 100%; }
+      .budget-row { grid-template-columns: 52px 1fr auto; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="eyebrow">버리는 논리 시제품</div>
+      <h1>재학습 예산을 숫자가 아니라 근거에서 실행하기</h1>
+      <p class="lead">원시 선택값을 모델 계열 연결부에서 관측 학습 길이로 바꾸고, 공통 계산부가 재학습 예산을 도출하며, 장부 검증기가 계산을 다시 수행해야만 전체 자료 재학습을 허용하는 계약을 눌러서 시험합니다.</p>
+      <div class="question">
+        <strong>이 시제품이 답하려는 질문</strong>
+        모델별 의미 변환, 공통 예산 계산, 근거 보존, 실행 차단을 각각 어느 경계가 소유해야 미확정 값과 손으로 고친 예산이 전체 자료 재학습으로 넘어가지 않는가?
+      </div>
+      <div class="architecture">
+        <article>
+          <div class="owner">모델 계열 연결부</div>
+          <h3><code>normalize_training_length</code></h3>
+          <p>원시 필드의 의미를 알고 원시 선택값과 관측 학습 길이를 함께 내보냅니다. 공통부는 필드 이름을 추측하지 않습니다.</p>
+        </article>
+        <article>
+          <div class="owner">공통 계산부</div>
+          <h3><code>derive_refit_budgets</code></h3>
+          <p>확정된 관측 학습 길이만 받아 시드별 중앙값, 1.25배, 사사오입을 한 번만 수행합니다.</p>
+        </article>
+        <article>
+          <div class="owner">재학습 계획 장부</div>
+          <h3><code>validate_for_refit</code></h3>
+          <p>원시 근거와 실행 계보에서 예산을 다시 계산합니다. 저장 예산이 다르거나 근거가 미확정이면 실행을 막습니다.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>상태를 직접 흔들어 보기</h2>
+      <div class="tabs" id="scenarioTabs"></div>
+      <div class="state-grid" id="stateCards"></div>
+      <div class="two-column">
+        <section class="subpanel">
+          <header>
+            <h3>원시 근거에서 관측 학습 길이까지</h3>
+            <p>각 행은 원래 모형 상태까지 돌아갈 수 있는 한 건의 근거입니다.</p>
+          </header>
+          <div class="subpanel-body">
+            <div id="observationTable"></div>
+          </div>
+        </section>
+        <section class="subpanel">
+          <header>
+            <h3>시드별 재학습 예산</h3>
+            <p>저장값과 재계산값이 같아야 실행할 수 있습니다.</p>
+          </header>
+          <div class="subpanel-body">
+            <div id="budgetPanel"></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="two-column">
+        <section class="subpanel">
+          <header>
+            <h3>자유 조작</h3>
+            <p>순서와 상관없이 눌러 보면서 어떤 상태가 거부되는지 확인합니다.</p>
+          </header>
+          <div class="subpanel-body">
+            <div class="actions" id="freePlayActions"></div>
+            <p class="hint">`예산만 1 줄이기`는 장부 숫자만 손으로 바꾼 상황을, `근거 실행 ID 훼손`은 실행 계보가 끊긴 상황을 흉내 냅니다.</p>
+            <div id="lastEvent"></div>
+          </div>
+        </section>
+        <section class="subpanel">
+          <header>
+            <h3>장부에 남는 모양</h3>
+            <p>실제 YAML의 최종 형태가 아니라, 필요한 의미를 검토하기 위한 축약 보기입니다.</p>
+          </header>
+          <div class="subpanel-body">
+            <pre class="ledger" id="ledgerPreview"></pre>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>안내 시나리오</h2>
+      <div class="tabs" id="walkthroughTabs"></div>
+      <div class="walkthrough" id="walkthrough"></div>
+    </section>
+
+    <section class="panel">
+      <h2>검토 뒤 확정할 결정</h2>
+      <div class="decision-list">
+        <article>
+          <h3>용어 경계</h3>
+          <p>분할별 변환 결과는 `관측 학습 길이`, 전체 자료 실행에 넘길 최종 횟수는 `재학습 예산`으로 부를지 확인합니다.</p>
+        </article>
+        <article>
+          <h3>소유권 경계</h3>
+          <p>모델 계열 연결부는 원시 의미 변환만, 공통 계산부는 중앙값과 배수와 반올림만, 계획 장부는 계보 보존과 실행 관문만 소유할지 확인합니다.</p>
+        </article>
+        <article>
+          <h3>실행 관문</h3>
+          <p>전체 자료 재학습 진입점이 저장된 예산을 그대로 믿지 않고, 확정 원시 근거에서 매번 다시 계산해 정확히 일치할 때만 실행할지 확인합니다.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // 순수 논리 모듈: DOM을 참조하지 않으며 실제 구현 경계 후보를 드러낸다.
+    const RefitBudgetContract = (() => {
+      const POLICY = Object.freeze({ multiplier: 1.25, statistic: "median", rounding: "half_up" });
+
+      function clone(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function median(values) {
+        const sorted = [...values].sort((a, b) => a - b);
+        const middle = Math.floor(sorted.length / 2);
+        return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+      }
+
+      function halfUp(value) {
+        return Math.floor(value + 0.5);
+      }
+
+      function normalizeOne(observation) {
+        if (observation.rawValue === null) {
+          return { ...observation, trainingLength: null, normalizationError: "원시 선택값이 미확정이다." };
+        }
+        if (!Number.isInteger(observation.rawValue)) {
+          return { ...observation, trainingLength: null, normalizationError: "원시 선택값은 정수여야 한다." };
+        }
+        if (observation.rawSemantics === "zero_based_position") {
+          if (observation.rawValue < 0) {
+            return { ...observation, trainingLength: null, normalizationError: "0부터 세는 위치는 음수일 수 없다." };
+          }
+          return { ...observation, trainingLength: observation.rawValue + 1, normalizationError: null };
+        }
+        if (["one_based_count", "fixed_count"].includes(observation.rawSemantics)) {
+          if (observation.rawValue < 1) {
+            return { ...observation, trainingLength: null, normalizationError: "실제 횟수는 1 이상이어야 한다." };
+          }
+          return { ...observation, trainingLength: observation.rawValue, normalizationError: null };
+        }
+        return { ...observation, trainingLength: null, normalizationError: "지원하지 않는 원시 의미다." };
+      }
+
+      function normalizeEvidence(state) {
+        const next = clone(state);
+        next.observations = next.observations.map(normalizeOne);
+        next.derivation = null;
+        next.gate = { status: "not_checked", reasons: [] };
+        next.lastEvent = { tone: "", message: "모델 계열 연결부가 원시 선택값과 관측 학습 길이를 함께 만들었다." };
+        return next;
+      }
+
+      function coordinateKey(observation) {
+        return `${observation.seed}:${observation.outerFold}:${observation.innerMember ?? "none"}`;
+      }
+
+      function validateEvidence(state) {
+        const reasons = [];
+        const expected = new Set(state.expectedCoordinates);
+        const actual = new Set(state.observations.map(coordinateKey));
+        if (actual.size !== state.observations.length) reasons.push("근거 좌표가 중복됐다.");
+        for (const coordinate of expected) if (!actual.has(coordinate)) reasons.push(`근거 좌표 ${coordinate}가 없다.`);
+        for (const coordinate of actual) if (!expected.has(coordinate)) reasons.push(`예상하지 않은 근거 좌표 ${coordinate}가 있다.`);
+        for (const observation of state.observations) {
+          if (observation.sourceRunId !== state.lineage.sourceRunId) reasons.push(`${coordinateKey(observation)}의 실행 ID가 구성원 계보와 다르다.`);
+          if (!observation.sourceArtifactSha256) reasons.push(`${coordinateKey(observation)}의 원시 근거 해시가 없다.`);
+          const normalized = normalizeOne(observation);
+          if (normalized.normalizationError) reasons.push(`${coordinateKey(observation)}: ${normalized.normalizationError}`);
+          if (observation.trainingLength !== normalized.trainingLength) reasons.push(`${coordinateKey(observation)}의 저장 관측 학습 길이가 원시 값의 재계산 결과와 다르다.`);
+        }
+        return reasons;
+      }
+
+      function deriveRefitBudgets(state) {
+        const next = clone(state);
+        const reasons = validateEvidence(next);
+        if (reasons.length) {
+          next.derivation = { status: "blocked", reasons };
+          next.gate = { status: "blocked", reasons };
+          next.lastEvent = { tone: "bad", message: `예산 계산을 막았다: ${reasons[0]}` };
+          return next;
+        }
+
+        const bySeed = {};
+        for (const seed of next.seeds) {
+          const lengths = next.observations.filter(item => item.seed === seed).map(item => item.trainingLength);
+          const middle = median(lengths);
+          const scaled = POLICY.multiplier * middle;
+          bySeed[seed] = { trainingLengths: lengths, median: middle, scaled, budget: halfUp(scaled) };
+        }
+        next.derivation = { status: "computed", policy: POLICY, bySeed };
+        next.gate = { status: "not_checked", reasons: [] };
+        next.lastEvent = { tone: "", message: "공통 계산부가 시드별 중앙값, 1.25배, 사사오입으로 예산을 계산했다." };
+        return next;
+      }
+
+      function storeDerivedBudgets(state) {
+        const next = clone(state);
+        if (!next.derivation || next.derivation.status !== "computed") {
+          next.lastEvent = { tone: "bad", message: "계산 결과가 없어 장부 예산을 기록하지 않았다." };
+          return next;
+        }
+        next.ledgerBudgets = Object.fromEntries(Object.entries(next.derivation.bySeed).map(([seed, row]) => [seed, row.budget]));
+        next.budgetWriteKind = "derived";
+        next.gate = { status: "not_checked", reasons: [] };
+        next.lastEvent = { tone: "", message: "계산 결과를 장부에 기록했다. 실행 관문은 같은 계산을 다시 수행한다." };
+        return next;
+      }
+
+      function manuallyLowerBudget(state) {
+        const next = clone(state);
+        const seed = String(next.seeds[0]);
+        const current = next.ledgerBudgets[seed];
+        next.ledgerBudgets[seed] = Number.isInteger(current) ? Math.max(1, current - 1) : 1;
+        next.budgetWriteKind = "manual";
+        next.gate = { status: "not_checked", reasons: [] };
+        next.lastEvent = { tone: "", message: `시드 ${seed}의 저장 예산만 손으로 1 줄였다.` };
+        return next;
+      }
+
+      function restoreEvidenceRunId(state) {
+        const next = clone(state);
+        next.observations = next.observations.map(item => ({ ...item, sourceRunId: next.lineage.sourceRunId }));
+        next.gate = { status: "not_checked", reasons: [] };
+        next.lastEvent = { tone: "", message: "모든 원시 근거의 실행 ID를 구성원 계보와 다시 맞췄다." };
+        return next;
+      }
+
+      function corruptEvidenceRunId(state) {
+        const next = clone(state);
+        next.observations[0].sourceRunId = "different-run";
+        next.gate = { status: "not_checked", reasons: [] };
+        next.lastEvent = { tone: "", message: "첫 원시 근거의 실행 ID를 다른 실행으로 바꿨다." };
+        return next;
+      }
+
+      function resolveAmbiguity(state, rawValue) {
+        const next = clone(state);
+        const target = next.observations.find(item => item.candidates);
+        if (!target) {
+          next.lastEvent = { tone: "bad", message: "이 사례에는 미확정 원시 선택값이 없다." };
+          return next;
+        }
+        target.rawValue = rawValue;
+        target.resolution = `재진단에서 ${rawValue}로 확정`;
+        next.derivation = null;
+        next.gate = { status: "not_checked", reasons: [] };
+        next.lastEvent = { tone: "", message: `미확정 원시 선택값을 ${rawValue}로 확정했다. 관측 학습 길이 변환은 아직 다시 해야 한다.` };
+        return next;
+      }
+
+      function validateForRefit(state) {
+        const next = clone(state);
+        const evidenceReasons = validateEvidence(next);
+        if (evidenceReasons.length) {
+          next.gate = { status: "blocked", reasons: evidenceReasons };
+          return next;
+        }
+
+        const recomputed = deriveRefitBudgets(next);
+        const expected = recomputed.derivation.bySeed;
+        const reasons = [];
+        for (const seed of next.seeds) {
+          const stored = next.ledgerBudgets[String(seed)];
+          if (!Number.isInteger(stored)) reasons.push(`시드 ${seed}의 저장 재학습 예산이 없다.`);
+          else if (stored !== expected[seed].budget) reasons.push(`시드 ${seed} 저장 예산 ${stored}이 근거 재계산값 ${expected[seed].budget}와 다르다.`);
+        }
+        if (Object.keys(next.ledgerBudgets).some(seed => !next.seeds.includes(Number(seed)))) reasons.push("계획에 없는 시드 예산이 저장됐다.");
+        next.gate = reasons.length ? { status: "blocked", reasons } : { status: "ready", reasons: [] };
+        return next;
+      }
+
+      function attemptRefit(state) {
+        const next = validateForRefit(state);
+        if (next.gate.status === "ready") {
+          next.lastEvent = { tone: "good", message: "전체 자료 재학습 진입을 허용했다. 실행기는 재계산된 예산만 전달받는다." };
+        } else {
+          next.lastEvent = { tone: "bad", message: `전체 자료 재학습을 막았다: ${next.gate.reasons[0]}` };
+        }
+        return next;
+      }
+
+      return {
+        clone,
+        normalizeEvidence,
+        deriveRefitBudgets,
+        storeDerivedBudgets,
+        manuallyLowerBudget,
+        corruptEvidenceRunId,
+        restoreEvidenceRunId,
+        resolveAmbiguity,
+        validateForRefit,
+        attemptRefit,
+      };
+    })();
+
+    const commonArtifact = {
+      sourceArtifact: "model_training_diagnostics.json",
+      sourceArtifactSha256: "7ae10c...4d19",
+    };
+
+    function coordinatesFor(seed, values, fields) {
+      return values.map((rawValue, outerFold) => ({
+        seed,
+        outerFold,
+        innerMember: null,
+        rawField: fields.rawField,
+        rawValue,
+        rawSemantics: fields.rawSemantics,
+        converter: fields.converter,
+        sourceRunId: fields.sourceRunId,
+        ...commonArtifact,
+        trainingLength: null,
+        normalizationError: null,
+      }));
+    }
+
+    const scenarios = {
+      xgb: () => {
+        const sourceRunId = "119b9c4e44674d38a6f758b65a68593e";
+        const fields = { sourceRunId, rawField: "details.best_iteration", rawSemantics: "zero_based_position", converter: "xgboost.best_iteration.v1" };
+        const observations = [
+          ...coordinatesFor(42, [8491, 7806, 7382, 7488, 8320], fields),
+          ...coordinatesFor(43, [8314, 7608, 7032, 8450, 8404], fields),
+          ...coordinatesFor(44, [8057, 8484, 7157, 8294, 8442], fields),
+        ];
+        return {
+          scenario: "xgb",
+          title: "XGBoost의 0부터 세는 위치",
+          member: "exp135_xgb_hpo_trial30",
+          modelKind: "xgboost",
+          seeds: [42, 43, 44],
+          lineage: { sourceRunId, sourceGitCommit: "f9a03a7...", configSha256: "55b749..." },
+          expectedCoordinates: observations.map(item => `${item.seed}:${item.outerFold}:none`),
+          observations,
+          derivation: null,
+          ledgerBudgets: {},
+          budgetWriteKind: "none",
+          gate: { status: "not_checked", reasons: [] },
+          lastEvent: { tone: "", message: "실제 XGBoost 근거를 불러왔다. 아직 의미 변환과 예산 계산을 하지 않았다." },
+        };
+      },
+      lookup: () => {
+        const sourceRunId = "b951fac51b6b44298f7fdb0b543caba6";
+        const fields = { sourceRunId, rawField: "details.members[*].best_epoch", rawSemantics: "zero_based_position", converter: "lookup_transformer.best_epoch.v1" };
+        const observations = coordinatesFor(44, [11, 11, 13, 13, null], fields);
+        observations[4].candidates = [11, 13];
+        return {
+          scenario: "lookup",
+          title: "Lookup-Transformer의 미확정 위치",
+          member: "exp059_lookup_transformer",
+          modelKind: "lookup_transformer",
+          seeds: [44],
+          lineage: { sourceRunId, sourceGitCommit: "495cc49...", configSha256: "b2318d..." },
+          expectedCoordinates: observations.map(item => `${item.seed}:${item.outerFold}:none`),
+          observations,
+          derivation: null,
+          ledgerBudgets: { "44": 15 },
+          budgetWriteKind: "legacy",
+          gate: { status: "not_checked", reasons: [] },
+          lastEvent: { tone: "", message: "시드 44, 바깥쪽 분할 4의 원시 위치가 11 또는 13으로 남아 있다." },
+        };
+      },
+      scalar: () => {
+        const sourceRunId = "f16dbc88860a41f39194da2f581f057d";
+        const fields = { sourceRunId, rawField: "observations.best_epoch", rawSemantics: "one_based_count", converter: "scalar_token_transformer.best_epoch.v1" };
+        const observations = coordinatesFor(44, [null, 12, 11, 14, 13], fields);
+        observations[0].candidates = [12, 14];
+        return {
+          scenario: "scalar",
+          title: "실제 횟수 필드의 미확정 값",
+          member: "exp133_scalar_token_transformer_oof_te",
+          modelKind: "scalar_token_transformer",
+          seeds: [44],
+          lineage: { sourceRunId, sourceGitCommit: "76ed92d...", configSha256: "6cc1c3..." },
+          expectedCoordinates: observations.map(item => `${item.seed}:${item.outerFold}:none`),
+          observations,
+          derivation: null,
+          ledgerBudgets: { "44": 15 },
+          budgetWriteKind: "legacy",
+          gate: { status: "not_checked", reasons: [] },
+          lastEvent: { tone: "", message: "시드 44, 바깥쪽 분할 0의 실제 학습 횟수가 12 또는 14로 남아 있다." },
+        };
+      },
+    };
+
+    const scenarioLabels = {
+      xgb: "XGBoost 정상 근거",
+      lookup: "Lookup 미확정",
+      scalar: "Scalar 미확정",
+    };
+
+    let state = scenarios.xgb();
+    let walkthroughKey = "happy";
+
+    const actions = {
+      resetXgb: () => { state = scenarios.xgb(); },
+      resetLookup: () => { state = scenarios.lookup(); },
+      resetScalar: () => { state = scenarios.scalar(); },
+      normalize: () => { state = RefitBudgetContract.normalizeEvidence(state); },
+      derive: () => { state = RefitBudgetContract.deriveRefitBudgets(state); },
+      store: () => { state = RefitBudgetContract.storeDerivedBudgets(state); },
+      lower: () => { state = RefitBudgetContract.manuallyLowerBudget(state); },
+      corrupt: () => { state = RefitBudgetContract.corruptEvidenceRunId(state); },
+      restoreLineage: () => { state = RefitBudgetContract.restoreEvidenceRunId(state); },
+      choose11: () => { state = RefitBudgetContract.resolveAmbiguity(state, 11); },
+      choose13: () => { state = RefitBudgetContract.resolveAmbiguity(state, 13); },
+      choose12: () => { state = RefitBudgetContract.resolveAmbiguity(state, 12); },
+      choose14: () => { state = RefitBudgetContract.resolveAmbiguity(state, 14); },
+      verify: () => {
+        state = RefitBudgetContract.validateForRefit(state);
+        state.lastEvent = state.gate.status === "ready"
+          ? { tone: "good", message: "실행 전 검증을 통과했다." }
+          : { tone: "bad", message: `실행 전 검증을 통과하지 못했다: ${state.gate.reasons[0]}` };
+      },
+      attempt: () => { state = RefitBudgetContract.attemptRefit(state); },
+    };
+
+    function dispatch(actionName) {
+      actions[actionName]();
+      render();
+    }
+
+    const freePlay = [
+      ["normalize", "원시 의미 변환", "primary"],
+      ["derive", "예산 계산", "primary"],
+      ["store", "계산값 장부 기록", ""],
+      ["choose11", "미확정 값을 11로 확정", ""],
+      ["choose13", "미확정 값을 13으로 확정", ""],
+      ["choose12", "미확정 값을 12로 확정", ""],
+      ["choose14", "미확정 값을 14로 확정", ""],
+      ["lower", "예산만 1 줄이기", "danger"],
+      ["corrupt", "근거 실행 ID 훼손", "danger"],
+      ["restoreLineage", "근거 실행 ID 복원", ""],
+      ["verify", "실행 전 검증", ""],
+      ["attempt", "전체 자료 재학습 시도", "primary"],
+    ];
+
+    const walkthroughs = {
+      happy: {
+        label: "정상 계산",
+        description: "0부터 세는 XGBoost 최적 위치가 먼저 실제 횟수로 바뀌고, 현재 장부보다 1 큰 예산이 도출되는지 확인합니다.",
+        steps: [["resetXgb", "XGBoost 사례 불러오기"], ["normalize", "관측 학습 길이로 변환"], ["derive", "재학습 예산 계산"], ["store", "계산값을 장부에 기록"], ["attempt", "전체 자료 재학습 시도"]],
+      },
+      unresolved: {
+        label: "미확정 근거",
+        description: "후보가 둘 남은 원시 값으로는 현재 장부 예산이 있더라도 재학습을 시작할 수 없는지 확인합니다. 이 안내에서는 재진단 결과가 13이었다고 가정합니다.",
+        steps: [["resetLookup", "Lookup 사례 불러오기"], ["normalize", "미확정 상태로 변환 시도"], ["attempt", "현재 장부로 재학습 시도"], ["choose13", "재진단 결과 13 확정"], ["normalize", "관측 학습 길이로 변환"], ["derive", "예산 다시 계산"], ["store", "18을 장부에 기록"], ["attempt", "재학습 다시 시도"]],
+      },
+      manual: {
+        label: "손으로 바꾼 예산",
+        description: "근거와 계산이 온전해도 저장 예산 한 개만 손으로 바꾸면 실행 관문이 재계산 차이를 찾아내는지 확인합니다.",
+        steps: [["resetXgb", "XGBoost 사례 불러오기"], ["normalize", "관측 학습 길이로 변환"], ["derive", "예산 계산"], ["store", "계산값 장부 기록"], ["lower", "시드 42 예산만 1 줄이기"], ["attempt", "전체 자료 재학습 시도"], ["store", "계산값으로 복구"], ["attempt", "재학습 다시 시도"]],
+      },
+      lineage: {
+        label: "끊어진 실행 계보",
+        description: "숫자가 모두 맞더라도 원시 근거가 다른 실행을 가리키면 계산과 재학습을 모두 막는지 확인합니다.",
+        steps: [["resetXgb", "XGBoost 사례 불러오기"], ["normalize", "관측 학습 길이로 변환"], ["corrupt", "근거 실행 ID 하나 훼손"], ["derive", "예산 계산 시도"], ["attempt", "전체 자료 재학습 시도"], ["restoreLineage", "실행 ID 복원"], ["derive", "예산 다시 계산"], ["store", "계산값 장부 기록"], ["attempt", "재학습 다시 시도"]],
+      },
+    };
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
+    }
+
+    function statusSummary() {
+      const unresolved = state.observations.filter(item => item.rawValue === null).length;
+      const normalized = state.observations.filter(item => item.trainingLength !== null).length;
+      const evidence = unresolved ? { label: `${unresolved}건 미확정`, tone: "bad" } : normalized === state.observations.length ? { label: "전부 변환됨", tone: "good" } : { label: "변환 전", tone: "warn" };
+      const calculation = state.derivation?.status === "computed" ? { label: "계산 완료", tone: "good" } : state.derivation?.status === "blocked" ? { label: "계산 차단", tone: "bad" } : { label: "계산 전", tone: "warn" };
+      const stored = Object.keys(state.ledgerBudgets).length ? { label: `${Object.keys(state.ledgerBudgets).length}개 시드 저장`, tone: state.budgetWriteKind === "manual" ? "bad" : "good" } : { label: "저장값 없음", tone: "warn" };
+      const gate = state.gate.status === "ready" ? { label: "실행 가능", tone: "good" } : state.gate.status === "blocked" ? { label: "실행 차단", tone: "bad" } : { label: "검증 전", tone: "warn" };
+      return { evidence, calculation, stored, gate };
+    }
+
+    function renderStateCards() {
+      const summary = statusSummary();
+      const cards = [
+        ["원시 근거", summary.evidence],
+        ["공통 계산", summary.calculation],
+        ["장부 저장값", summary.stored],
+        ["전체 자료 실행", summary.gate],
+      ];
+      document.getElementById("stateCards").innerHTML = cards.map(([label, value]) => `<div class="state-card ${value.tone}"><span>${label}</span><strong>${value.label}</strong></div>`).join("");
+    }
+
+    function renderObservations() {
+      const rows = state.observations.map(item => {
+        const raw = item.rawValue === null ? `<span class="pill bad">미확정 ${item.candidates.join(" 또는 ")}</span>` : escapeHtml(item.rawValue);
+        const length = item.trainingLength === null ? `<span class="pill warn">아직 없음</span>` : `<span class="pill good">${item.trainingLength}</span>`;
+        const lineageTone = item.sourceRunId === state.lineage.sourceRunId ? "good" : "bad";
+        const lineage = item.sourceRunId === state.lineage.sourceRunId ? "일치" : "불일치";
+        return `<tr><td class="number">${item.seed}</td><td class="number">${item.outerFold}</td><td><code>${escapeHtml(item.rawField)}</code></td><td class="number">${raw}</td><td><code>${escapeHtml(item.rawSemantics)}</code></td><td class="number">${length}</td><td><span class="pill ${lineageTone}">${lineage}</span></td></tr>`;
+      }).join("");
+      document.getElementById("observationTable").innerHTML = `<table><thead><tr><th>시드</th><th>분할</th><th>원시 필드</th><th>원시 값</th><th>원시 의미</th><th>관측 길이</th><th>실행 계보</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }
+
+    function renderBudgets() {
+      if (!state.derivation || state.derivation.status !== "computed") {
+        const reasons = state.derivation?.reasons?.slice(0, 3) || [];
+        document.getElementById("budgetPanel").innerHTML = `<p class="hint">계산된 예산이 없습니다.</p>${reasons.map(reason => `<div class="event bad">${escapeHtml(reason)}</div>`).join("")}`;
+        return;
+      }
+      const values = Object.values(state.derivation.bySeed).map(item => item.budget);
+      const max = Math.max(...values, 1);
+      const rows = Object.entries(state.derivation.bySeed).map(([seed, item]) => {
+        const stored = state.ledgerBudgets[seed];
+        const match = stored === item.budget;
+        return `<div class="budget-row"><span>시드 ${seed}</span><div><div class="budget-track"><i style="width:${Math.max(6, item.budget / max * 100)}%"></i></div><small>중앙값 ${item.median} × 1.25 = ${item.scaled}</small></div><strong>${item.budget}</strong></div><p class="hint">장부 ${stored ?? "없음"} <span class="pill ${match ? "good" : "bad"}">${match ? "일치" : "불일치"}</span></p>`;
+      }).join("");
+      document.getElementById("budgetPanel").innerHTML = `<div class="budget-list">${rows}</div>`;
+    }
+
+    function renderLedger() {
+      const evidenceStatus = state.observations.some(item => item.rawValue === null) ? "unresolved" : "confirmed";
+      const observation = state.observations[0];
+      const budgets = Object.entries(state.ledgerBudgets).map(([seed, value]) => `      ${seed}: ${value}`).join("\n") || "      {}";
+      const calculated = state.derivation?.status === "computed" ? Object.entries(state.derivation.bySeed).map(([seed, value]) => `      ${seed}: {median: ${value.median}, scaled: ${value.scaled}, budget: ${value.budget}}`).join("\n") : "      {}";
+      document.getElementById("ledgerPreview").textContent = `schema_version: 2\nmember: ${state.member}\nmodel_kind: ${state.modelKind}\nlineage:\n  source_run_id: ${state.lineage.sourceRunId}\n  source_git_commit: ${state.lineage.sourceGitCommit}\n  config_sha256: ${state.lineage.configSha256}\ntraining_length_evidence:\n  status: ${evidenceStatus}\n  converter: ${observation.converter}\n  observations: ${state.observations.length} records\n  raw_artifact_sha256: ${observation.sourceArtifactSha256}\nrefit_budget_derivation:\n  policy: {statistic: median, multiplier: 1.25, rounding: half_up}\n  calculated:\n${calculated}\n  stored_budgets:\n${budgets}\nexecution_gate: ${state.gate.status}`;
+    }
+
+    function renderActions() {
+      document.getElementById("freePlayActions").innerHTML = freePlay.map(([name, label, className]) => `<button class="${className}" data-action="${name}">${label}</button>`).join("");
+      document.querySelectorAll("#freePlayActions [data-action]").forEach(button => button.addEventListener("click", () => dispatch(button.dataset.action)));
+    }
+
+    function renderScenarioTabs() {
+      document.getElementById("scenarioTabs").innerHTML = Object.entries(scenarioLabels).map(([key, label]) => `<button class="${state.scenario === key ? "active" : ""}" data-scenario="${key}">${label}</button>`).join("");
+      document.querySelectorAll("[data-scenario]").forEach(button => button.addEventListener("click", () => {
+        state = scenarios[button.dataset.scenario]();
+        render();
+      }));
+    }
+
+    function renderWalkthrough() {
+      document.getElementById("walkthroughTabs").innerHTML = Object.entries(walkthroughs).map(([key, item]) => `<button class="${walkthroughKey === key ? "active" : ""}" data-walkthrough="${key}">${item.label}</button>`).join("");
+      document.querySelectorAll("[data-walkthrough]").forEach(button => button.addEventListener("click", () => {
+        walkthroughKey = button.dataset.walkthrough;
+        renderWalkthrough();
+      }));
+      const item = walkthroughs[walkthroughKey];
+      document.getElementById("walkthrough").innerHTML = `<h3>${item.label}</h3><p>${item.description}</p><div class="walkthrough-actions">${item.steps.map(([action, label], index) => `<button class="step" data-step-action="${action}"><b>${index + 1}</b>${label}</button>`).join("")}</div>`;
+      document.querySelectorAll("[data-step-action]").forEach(button => button.addEventListener("click", () => dispatch(button.dataset.stepAction)));
+    }
+
+    function renderEvent() {
+      const event = state.lastEvent;
+      document.getElementById("lastEvent").innerHTML = `<div class="event ${event.tone}">${escapeHtml(event.message)}</div>`;
+    }
+
+    function render() {
+      renderScenarioTabs();
+      renderStateCards();
+      renderObservations();
+      renderBudgets();
+      renderLedger();
+      renderActions();
+      renderEvent();
+      renderWalkthrough();
+    }
+
+    render();
+  </script>
+</body>
+</html>
