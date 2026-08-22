@@ -170,7 +170,7 @@
   "verification": {
     "isolated_environment_gate": true,
     "remote_python_contract_tests_passed": 4,
-    "full_tests_passed": 505
+    "full_tests_passed": 512
   },
   "vast_cleanup": {
     "instance_id": 48411061,

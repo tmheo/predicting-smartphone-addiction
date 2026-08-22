@@ -77,7 +77,7 @@ MLflow 실행 묶음 SHA-256은 `96dc015dfa37fa4382a35c13e2d818451f9691a2fb07c87
 Runpod은 실행, 장애 복구와 재개 경로에서 사용하지 않았다.
 
 격리된 작업 폴더에서 `scripts/verify_environment_gates.sh --isolated`를 실행했다.
-원격 Python 계약 시험 4개와 전체 시험 505개가 모두 통과했다.
+원격 Python 계약 시험 4개와 전체 시험 512개가 모두 통과했다.
 
 ## Vast.ai 자원 정리
 
