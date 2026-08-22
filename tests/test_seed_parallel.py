@@ -8,6 +8,9 @@
 
 from __future__ import annotations
 
+import os
+import queue
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -56,6 +59,18 @@ def prepared_inputs(cfg: ExperimentConfig) -> tuple[FeaturePlan, pd.DataFrame, p
     train, test = plan.apply_dataset_wide(train, test)
     train["fold"] = np.arange(len(train)) % N_FOLDS
     return plan, train, test
+
+
+def test_worker_initializer_assigns_gpu_and_xgb_cpu_budget(monkeypatch):
+    gpu_queue: queue.Queue[str] = queue.Queue()
+    gpu_queue.put("2")
+    monkeypatch.delenv("CUDA_VISIBLE_DEVICES", raising=False)
+    monkeypatch.delenv(seed_parallel.XGB_N_JOBS_ENV, raising=False)
+
+    seed_parallel._pin_gpu(gpu_queue, xgb_n_jobs=30)
+
+    assert os.environ["CUDA_VISIBLE_DEVICES"] == "2"
+    assert os.environ[seed_parallel.XGB_N_JOBS_ENV] == "30"
 
 
 def test_without_env_runs_sequentially_with_per_seed_stages(monkeypatch):
