@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
 
+from .cpu_budget import xgb_n_jobs_from_environment
 from .data import ID, TARGET, file_sha256, union_categorical
 
 PLACEBO = "placebo_noise"
@@ -1690,12 +1691,17 @@ class XgbImputeAux:
                 [train_fold[[*self.cols, *self.cat_cols]], test], ignore_index=True
             )
         self.models_: dict[str, XGBRegressor] = {}
+        xgb_n_jobs = xgb_n_jobs_from_environment()
+        parallel_params = {"n_jobs": xgb_n_jobs} if xgb_n_jobs is not None else {}
         for c in self._recon_cols:
             observed = fit_df[c].notna()
             if not observed.any():
                 raise ValueError(f"학습 fold에서 {c}의 관측 행이 없어 복원기를 만들 수 없다.")
             model = XGBRegressor(
-                **XGB_IMPUTE_PARAMS, enable_categorical=True, random_state=seed
+                **XGB_IMPUTE_PARAMS,
+                **parallel_params,
+                enable_categorical=True,
+                random_state=seed,
             )
             model.fit(
                 fit_df.loc[observed, self._predictors(c)], fit_df.loc[observed, c]

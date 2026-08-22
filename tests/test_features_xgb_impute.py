@@ -17,6 +17,7 @@ import pandas as pd
 import pytest
 
 from pipeline.data import ID, TARGET
+from pipeline.cpu_budget import XGB_N_JOBS_ENV
 from pipeline.features import PLACEBO, XgbImputeAux
 
 COLS = ["daily_screen_time_hours", "sleep_hours"]
@@ -122,6 +123,17 @@ def test_fit_uses_only_observed_rows_and_excludes_target_column(recording):
         assert len(model.fit_y) == df[col].notna().sum()
         expected = [c for c in COLS if c != col] + CATS
         assert list(model.fit_X.columns) == expected  # 대상 열 자신은 예측 입력에서 뺀다
+
+
+def test_fit_limits_only_xgboost_when_parallel_worker_budget_is_present(
+    recording, monkeypatch
+):
+    monkeypatch.setenv(XGB_N_JOBS_ENV, "30")
+    provider = XgbImputeAux(cols=COLS, cat_cols=CATS)
+
+    provider.fit(make_df(), seed=42)
+
+    assert {model.params["n_jobs"] for model in recording.instances} == {30}
 
 
 def test_emit_subset_keeps_full_predictor_inputs_and_skips_non_emitted_models(recording):

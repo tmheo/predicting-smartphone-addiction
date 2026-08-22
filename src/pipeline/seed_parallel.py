@@ -8,6 +8,8 @@ Kaggle T4 x2처럼 GPU가 여럿일 때 PIPELINE_SEED_GPUS(예: "0,1")를 주면
 시드 간 실행 순서로 상태가 흐르지 않고, 같은 GPU 모델이면 병렬 결과가 순차
 실행과 같다. 워커는 첫 CUDA 초기화 전에 CUDA_VISIBLE_DEVICES를 배정받아
 자기 GPU 하나만 본다(adapter의 device="cuda"는 그 GPU로 해석된다).
+같은 머신의 CPU 할당량은 워커 수로 나눠 XgbImputeAux에만 전달한다. 전역 BLAS
+작업 흐름 수는 바꾸지 않아 ConstrainedImputeAux의 정확한 산출값을 보존한다.
 
 진행 기록: 순차 경로는 시드별 feature_build/training 단계 전환과 fold 완료를
 기존처럼 통지한다. 병렬 경로는 시드별 단계가 겹치므로 부모가 training 단계
@@ -26,6 +28,7 @@ import pandas as pd
 
 from . import cv
 from .config import ExperimentConfig
+from .cpu_budget import XGB_N_JOBS_ENV, threads_per_worker
 from .plan import FeaturePlan
 from .recovery import FoldRecovery
 
@@ -73,9 +76,10 @@ class _QueueRecorder:
         self._events.put({"kind": "timing", "event": event})
 
 
-def _pin_gpu(gpu_queue) -> None:
-    """워커 시작 직후, torch의 CUDA 초기화 전에 GPU 하나를 배정받는다."""
+def _pin_gpu(gpu_queue, xgb_n_jobs: int) -> None:
+    """워커 시작 직후 GPU 하나와 XGBoost 전용 CPU 몫을 배정받는다."""
     os.environ["CUDA_VISIBLE_DEVICES"] = gpu_queue.get()
+    os.environ[XGB_N_JOBS_ENV] = str(xgb_n_jobs)
 
 
 def _run_seed(cfg, plan, train, test, seed, events, recovery) -> cv.CVResult:
@@ -113,6 +117,8 @@ def _run_parallel(
         recorder.stage("training")
     # fork는 부모의 CUDA·MLflow 상태를 물려받으므로 spawn으로 깨끗하게 시작한다.
     ctx = get_context("spawn")
+    worker_count = min(len(gpus), len(cfg.seeds))
+    xgb_n_jobs = threads_per_worker(worker_count)
     with ctx.Manager() as manager:
         gpu_queue = manager.Queue()
         for gpu in gpus:
@@ -127,10 +133,10 @@ def _run_parallel(
             forwarder.start()
         try:
             with ProcessPoolExecutor(
-                max_workers=min(len(gpus), len(cfg.seeds)),
+                max_workers=worker_count,
                 mp_context=ctx,
                 initializer=_pin_gpu,
-                initargs=(gpu_queue,),
+                initargs=(gpu_queue, xgb_n_jobs),
             ) as pool:
                 futures = [
                     pool.submit(_run_seed, cfg, plan, train, test, seed, events, recovery)
