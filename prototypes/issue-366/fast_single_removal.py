@@ -28,6 +28,7 @@ from pipeline.pool_rereview import (
 
 
 FIXED_STRATEGY = "shrunk_rank_logit_logistic"
+SCREEN_STRATEGY = "rank_mean"
 
 
 def _json_bytes(payload: Any) -> bytes:
@@ -49,28 +50,32 @@ def _batch_single_removals(
     evaluator: StrategyEvaluator,
     members: tuple[str, ...],
     excluded_fold: int | None,
+    *,
+    strategy: str = FIXED_STRATEGY,
+    removal_candidates: tuple[str, ...] | None = None,
 ) -> dict[str, dict[str, Any]]:
+    removed_members = removal_candidates or members
     requests = [
         (
-            FIXED_STRATEGY,
+            strategy,
             tuple(candidate for candidate in members if candidate != removed),
             excluded_fold,
             None,
             False,
         )
-        for removed in members
+        for removed in removed_members
     ]
     outcomes = evaluator._map(requests)  # 일회성 원형은 기존 일괄 실행 통로를 재사용한다.
     failures = [
         (removed, outcome["failure"])
-        for removed, outcome in zip(members, outcomes, strict=True)
+        for removed, outcome in zip(removed_members, outcomes, strict=True)
         if outcome["failure"] is not None
     ]
     if failures:
         raise RuntimeError(f"단일 제거 평가 실패: {failures}")
     evaluator.fits += sum(int(outcome["fits"]) for outcome in outcomes)
     evaluator.arm_evaluations += len(outcomes)
-    return dict(zip(members, outcomes, strict=True))
+    return dict(zip(removed_members, outcomes, strict=True))
 
 
 def _greedy_split(
@@ -79,6 +84,7 @@ def _greedy_split(
     excluded_fold: int | None,
     max_steps: int,
     deadline: float,
+    screen_limit: int,
     resume: dict[str, Any] | None = None,
     checkpoint: Callable[[dict[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
@@ -136,10 +142,29 @@ def _greedy_split(
     for step in range(len(trajectory) + 1, max_steps + 1):
         if time.monotonic() >= deadline:
             raise TimeoutError("실행 상한에 도달해 새 제거 단계를 시작하지 않는다.")
+        screen_anchor = evaluator.evaluate_one(
+            SCREEN_STRATEGY,
+            working_members,
+            excluded_fold=excluded_fold,
+        )
+        screen_outcomes = _batch_single_removals(
+            evaluator,
+            working_members,
+            excluded_fold,
+            strategy=SCREEN_STRATEGY,
+        )
+        screened_removals = tuple(
+            removed
+            for removed, _outcome in sorted(
+                screen_outcomes.items(),
+                key=lambda item: (-float(item[1]["auc"]), item[0]),
+            )[:screen_limit]
+        )
         outcomes = _batch_single_removals(
             evaluator,
             working_members,
             excluded_fold,
+            removal_candidates=screened_removals,
         )
         ordered = sorted(
             outcomes.items(),
@@ -159,6 +184,15 @@ def _greedy_split(
             }
             for candidate, outcome in sorted(outcomes.items())
         ]
+        screen_table = [
+            {
+                "removed": candidate,
+                "auc": float(outcome["auc"]),
+                "delta_vs_working": float(outcome["auc"] - screen_anchor.auc),
+                "selected_for_exact_evaluation": candidate in screened_removals,
+            }
+            for candidate, outcome in sorted(screen_outcomes.items())
+        ]
         accepted = delta > 0.0
         trajectory.append(
             {
@@ -171,6 +205,9 @@ def _greedy_split(
                 },
                 "delta_vs_working": delta,
                 "accepted": accepted,
+                "screen_strategy": SCREEN_STRATEGY,
+                "screen_limit": screen_limit,
+                "screen_candidates": screen_table,
                 "candidates": candidate_table,
             }
         )
@@ -242,6 +279,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             raise ValueError("중간 저장 결합 전략이 현재 실행과 다르다.")
         if int(saved_execution["max_steps"]) != args.max_steps:
             raise ValueError("중간 저장 최대 제거 횟수가 현재 실행과 다르다.")
+        if int(saved_execution["screen_limit"]) != args.screen_limit:
+            raise ValueError("중간 저장 정밀 평가 후보 수가 현재 실행과 다르다.")
         split_results = saved["splits"]
         resumed_from_checkpoint = True
 
@@ -263,6 +302,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                         "git_commit": git_commit,
                         "fixed_strategy": FIXED_STRATEGY,
                         "max_steps": args.max_steps,
+                        "screen_strategy": SCREEN_STRATEGY,
+                        "screen_limit": args.screen_limit,
                         "jobs": args.jobs,
                         "deadline_seconds": args.deadline_seconds,
                         "elapsed_seconds": time.monotonic() - started,
@@ -293,6 +334,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 excluded_fold=fold,
                 max_steps=args.max_steps,
                 deadline=deadline,
+                screen_limit=args.screen_limit,
                 resume=saved_split,
                 checkpoint=save_outer_partial,
             )
@@ -360,6 +402,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 excluded_fold=None,
                 max_steps=args.max_steps,
                 deadline=deadline,
+                screen_limit=args.screen_limit,
                 resume=saved_final,
                 checkpoint=save_final_partial,
             )
@@ -430,6 +473,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "git_commit": git_commit,
             "fixed_strategy": FIXED_STRATEGY,
             "max_steps": args.max_steps,
+            "screen_strategy": SCREEN_STRATEGY,
+            "screen_limit": args.screen_limit,
             "jobs": args.jobs,
             "deadline_seconds": args.deadline_seconds,
             "elapsed_seconds": time.monotonic() - started,
@@ -459,6 +504,7 @@ def main() -> None:
     parser.add_argument("--checkpoint", type=Path)
     parser.add_argument("--jobs", type=int, default=10)
     parser.add_argument("--max-steps", type=int, default=5)
+    parser.add_argument("--screen-limit", type=int, default=1)
     parser.add_argument("--deadline-seconds", type=float, default=10800.0)
     args = parser.parse_args()
     checkpoint_path = args.checkpoint or args.output.with_name(
