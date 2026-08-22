@@ -333,6 +333,13 @@ def test_lightgbm_adapter_smoke():
     assert list(imp.columns) == ["feature", "gain"]
     assert list(imp["feature"]) == ["a", "b"]
 
+    repeated = model_mod.create(cfg, seed=SEED)
+    repeated_pred = repeated.fit(
+        X.iloc[:180], y.iloc[:180], X.iloc[180:], y.iloc[180:]
+    )
+    np.testing.assert_array_equal(repeated_pred, va_pred)
+    pd.testing.assert_frame_equal(repeated.importance(), imp, check_exact=True)
+
 
 def test_lightgbm_max_bin_by_feature_resolves_names_in_matrix_order():
     params = {
@@ -345,7 +352,16 @@ def test_lightgbm_max_bin_by_feature_resolves_names_in_matrix_order():
     )
 
     assert resolved["max_bin_by_feature"] == [1023, 1439, 1023, 2047]
+    assert resolved["deterministic"] is True
     assert params["max_bin_by_feature"] == {"screen": 1439, "weekend": 2047}
+
+
+def test_lightgbm_explicit_deterministic_setting_is_preserved():
+    resolved = model_mod._resolve_lightgbm_params(
+        {"deterministic": False}, ["screen"]
+    )
+
+    assert resolved["deterministic"] is False
 
 
 def test_lightgbm_max_bin_by_feature_rejects_unknown_feature():

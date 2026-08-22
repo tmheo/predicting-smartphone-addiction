@@ -544,17 +544,16 @@ class FoldFitReuseStore:
             train, test = compute()
             self._validate_computed_output(request, train, test)
             manifest_sha = self._publish(key, identity, train, test)
-            loaded_train, loaded_test, loaded_manifest_sha = self._read_item(
-                final, expected_key=key, expected_identity=identity
-            )
-            if loaded_manifest_sha != manifest_sha:
-                raise FoldFitReuseError("공개 직후 명세 기록 내용 해시가 바뀌었다.")
+            # 생성 경로는 이미 메모리에 있는 검증된 값을 그대로 사용한다.
+            # 공개 직후 Parquet 전체를 다시 읽고 해시하면 미적중 실행이 같은 값을
+            # 두 번 순회한다. 최종 파일은 쓰기와 동기화 중 계산한 해시로 고정되고,
+            # 다음 적중과 묶음 반입 시 _read_item이 모든 파일과 값을 다시 검증한다.
             return FoldFitReuseResult(
-                loaded_train,
-                loaded_test,
+                train,
+                test,
                 "generated",
                 key,
-                loaded_manifest_sha,
+                manifest_sha,
             )
 
     def _remove_leftover_temporary_directories(self, key: str) -> None:
