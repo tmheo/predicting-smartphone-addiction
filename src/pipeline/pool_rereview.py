@@ -529,43 +529,122 @@ class StrategyEvaluator:
         clone_source: str | None = None,
         capture_prediction: bool = False,
     ) -> PoolScore:
-        pool = tuple(members)
+        return self.evaluate_many(
+            [(members, clone_source)],
+            excluded_fold=excluded_fold,
+            capture_prediction=capture_prediction,
+        )[0]
+
+    def evaluate_many(
+        self,
+        arms: Sequence[tuple[Sequence[str], str | None]],
+        *,
+        excluded_fold: int | None,
+        capture_prediction: bool = False,
+    ) -> list[PoolScore]:
+        """서로 독립인 여러 팔의 fold 작업을 하나의 대기열에서 평가한다."""
+        _require(bool(arms), "평가할 풀이 하나 이상 필요하다.")
+        pools = [(tuple(members), clone_source) for members, clone_source in arms]
         payloads = [
-            (name, pool, excluded_fold, clone_source, False) for name in self.names
+            (name, pool, excluded_fold, clone_source, False)
+            for pool, clone_source in pools
+            for name in self.names
         ]
         outcomes = self._map(payloads)
-        failures = {
-            outcome["name"]: outcome["failure"]
-            for outcome in outcomes
+        strategy_count = len(self.names)
+        _require(
+            len(outcomes) == len(pools) * strategy_count,
+            "일괄 평가의 필수 등록 전략 결과 수가 다르다.",
+        )
+        arm_outcomes = [
+            outcomes[index * strategy_count : (index + 1) * strategy_count]
+            for index in range(len(pools))
+        ]
+        failures = [
+            (arm_index, outcome["name"], outcome["failure"])
+            for arm_index, current in enumerate(arm_outcomes)
+            for outcome in current
             if outcome["failure"] is not None
-        }
+        ]
         _require(
             not failures,
             "필수 등록 전략이 실패했다: "
-            + "; ".join(f"{name}={reason}" for name, reason in failures.items()),
+            + "; ".join(
+                f"arm {arm_index} {name}={reason}"
+                for arm_index, name, reason in failures
+            ),
         )
-        _require(len(outcomes) == 19, "필수 등록 전략 19개가 모두 실행되지 않았다.")
-        self.fits += sum(int(outcome["fits"]) for outcome in outcomes)
-        self.arm_evaluations += 1
-        best = max(outcomes, key=lambda item: (item["auc"], -self.names.index(item["name"])))
-        prediction = None
+        _require(
+            all(len(current) == 19 for current in arm_outcomes),
+            "필수 등록 전략 19개가 모든 팔에서 실행되지 않았다.",
+        )
+        best_outcomes = [
+            max(
+                current,
+                key=lambda item: (
+                    item["auc"],
+                    -self.names.index(item["name"]),
+                ),
+            )
+            for current in arm_outcomes
+        ]
+        replays: list[dict[str, Any] | None] = [None] * len(pools)
         if capture_prediction:
-            replay = self._map(
-                [(best["name"], pool, excluded_fold, clone_source, True)]
-            )[0]
-            _require(replay["failure"] is None, f"최선 전략 예측 재현 실패: {replay['failure']}")
-            _require(replay["auc"] == best["auc"], "최선 전략 재실행 AUC가 달라졌다.")
-            self.fits += int(replay["fits"])
-            prediction = np.asarray(replay["prediction"], dtype=np.float64)
-        return PoolScore(
-            members=pool,
-            strategy_auc={outcome["name"]: float(outcome["auc"]) for outcome in outcomes},
-            strategy_fold_auc={outcome["name"]: outcome["fold_auc"] for outcome in outcomes},
-            best_strategy=best["name"],
-            best_auc=float(best["auc"]),
-            best_fold_auc=best["fold_auc"],
-            prediction=prediction,
+            replay_outcomes = self._map(
+                [
+                    (
+                        best["name"],
+                        pool,
+                        excluded_fold,
+                        clone_source,
+                        True,
+                    )
+                    for (pool, clone_source), best in zip(
+                        pools, best_outcomes, strict=True
+                    )
+                ]
+            )
+            for index, (replay, best) in enumerate(
+                zip(replay_outcomes, best_outcomes, strict=True)
+            ):
+                _require(
+                    replay["failure"] is None,
+                    f"arm {index} 최선 전략 예측 재현 실패: {replay['failure']}",
+                )
+                _require(
+                    replay["auc"] == best["auc"],
+                    f"arm {index} 최선 전략 재실행 AUC가 달라졌다.",
+                )
+                replays[index] = replay
+
+        self.fits += sum(int(outcome["fits"]) for outcome in outcomes)
+        self.fits += sum(
+            int(replay["fits"]) for replay in replays if replay is not None
         )
+        self.arm_evaluations += len(pools)
+        return [
+            PoolScore(
+                members=pool,
+                strategy_auc={
+                    outcome["name"]: float(outcome["auc"])
+                    for outcome in current
+                },
+                strategy_fold_auc={
+                    outcome["name"]: outcome["fold_auc"] for outcome in current
+                },
+                best_strategy=best["name"],
+                best_auc=float(best["auc"]),
+                best_fold_auc=best["fold_auc"],
+                prediction=(
+                    np.asarray(replay["prediction"], dtype=np.float64)
+                    if replay is not None
+                    else None
+                ),
+            )
+            for (pool, _clone_source), current, best, replay in zip(
+                pools, arm_outcomes, best_outcomes, replays, strict=True
+            )
+        ]
 
     def evaluate_one(
         self,
@@ -752,13 +831,12 @@ def run_null_band(
         _require(baseline.prediction is not None, "영점 기준 팔 예측이 없다.")
         labels, folds = _scope_arrays(context, excluded_fold)
         contrasts: list[dict[str, Any]] = []
-        for source in context.members:
-            large = evaluator.evaluate(
-                context.members,
-                excluded_fold=excluded_fold,
-                clone_source=source,
-                capture_prediction=True,
-            )
+        large_scores = evaluator.evaluate_many(
+            [(context.members, source) for source in context.members],
+            excluded_fold=excluded_fold,
+            capture_prediction=True,
+        )
+        for source, large in zip(context.members, large_scores, strict=True):
             _require(large.prediction is not None, f"{source} 복제 팔 예측이 없다.")
             fold_delta = _fold_delta(large.best_fold_auc, baseline.best_fold_auc)
             bootstrap = paired_bootstrap(

@@ -164,6 +164,45 @@ def test_fold_parallel_mapper_schedules_every_request_and_fold_once():
     assert outcomes[1]["prediction"] is None
 
 
+def test_independent_arms_share_one_fold_task_queue_and_replay_queue():
+    evaluator = object.__new__(StrategyEvaluator)
+    evaluator.names = ("rank_mean",) * 19
+    evaluator.fits = 0
+    evaluator.arm_evaluations = 0
+    calls = []
+
+    def fake_map(requests):
+        calls.append(requests)
+        return [
+            {
+                "name": name,
+                "auc": 0.75,
+                "fold_auc": {"0": 0.75, "1": 0.75},
+                "fits": 2,
+                "prediction": np.array([0.25, 0.75]) if capture else None,
+                "failure": None,
+            }
+            for name, _members, _excluded, _clone, capture in requests
+        ]
+
+    evaluator._map = fake_map
+    arms = [(("a", "b"), None), (("a", "b"), "a"), (("a", "b"), "b")]
+
+    scores = evaluator.evaluate_many(
+        arms, excluded_fold=None, capture_prediction=True
+    )
+
+    assert len(calls) == 2
+    assert len(calls[0]) == 3 * 19
+    assert [request[3] for request in calls[0][::19]] == [None, "a", "b"]
+    assert len(calls[1]) == 3
+    assert [request[3] for request in calls[1]] == [None, "a", "b"]
+    assert len(scores) == 3
+    assert all(score.prediction is not None for score in scores)
+    assert evaluator.arm_evaluations == 3
+    assert evaluator.fits == (3 * 19 + 3) * 2
+
+
 def test_final_candidate_scans_all_accepted_states_not_only_terminal():
     anchor = _score(tuple("abcdef"), 0.90)
     middle = _score(tuple("abcd"), 0.90 - 0.00002)
