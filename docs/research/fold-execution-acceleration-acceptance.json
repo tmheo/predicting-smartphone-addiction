@@ -1,0 +1,638 @@
+{
+  "schema_version": 1,
+  "purpose": "issue-358-core-fold-execution-acceleration-acceptance",
+  "ticket": "https://github.com/tmheo/predicting-smartphone-addiction/issues/358",
+  "specification": "https://github.com/tmheo/predicting-smartphone-addiction/issues/319#issuecomment-5368015864",
+  "generated_at": "2026-08-22T11:25:43Z",
+  "verdict": {
+    "status": "fail",
+    "passed": false,
+    "blocking_conditions": [
+      {
+        "condition": "tabcnn_reversed_pairs_same_raw_improvement_direction",
+        "passed": false,
+        "pair1_candidate_change_percent": -8.068087759313912,
+        "pair2_candidate_change_percent": 0.3572649660040757,
+        "reason": "첫 쌍은 후보가 짧았지만 역순 쌍은 후보가 7.469초, 0.357% 길어 두 쌍의 raw 개선 방향이 같지 않다. 두 실행 모두 사전 무효 사유에 해당하지 않아 제외하거나 대체하지 않았다."
+      },
+      {
+        "condition": "lightgbm_preimplementation_and_candidate_exact_result_match",
+        "passed": false,
+        "pair1_oof_max_absolute_difference": 8.01447797016408e-11,
+        "pair2_oof_max_absolute_difference": 8.014466867933834e-11,
+        "test_prediction_max_absolute_difference": 2.1103951919343444e-11,
+        "reason": "구현 전 LightGBM 다중 스레드 실행은 반복끼리도 마지막 비트가 달랐고 후보는 결정성을 켰다. 후보 두 실행은 정확히 같고 AUC와 학습 의미 자료도 같지만, 구현 전후 예측 자체는 정확히 같지 않다."
+      }
+    ],
+    "passed_conditions": [
+      "core_function_and_error_path_tests",
+      "candidate_repeat_determinism",
+      "tabcnn_exact_result_match",
+      "tabcnn_five_percent_non_regression",
+      "lightgbm_five_percent_non_regression",
+      "four_of_five_recovery_performance",
+      "full_recovery_performance_and_zero_calls",
+      "lightgbm_full_hit_reuse_performance",
+      "observability_contract_and_overhead",
+      "gpu_resource_observation_missing_rate",
+      "bundle_import_and_revalidation",
+      "remote_resource_cleanup_and_zero_issue358_billing_rate"
+    ],
+    "next_action": "최종 명세를 다시 해석하거나 무효 사유가 없는 실행을 버리지 않는다. raw 방향과 구현 전 LightGBM 비결정성을 어떻게 처리할지 결정한 뒤 새 고정 후보로 전체 짝 비교를 다시 수행해야 한다."
+  },
+  "measurement_contract": {
+    "seed": 42,
+    "folds": [0, 1, 2, 3, 4],
+    "stage": "screen",
+    "provider_billable_whole_time": "Vast.ai start_date부터 원격 valid-result-complete-at.txt까지의 초",
+    "valid_result_complete": "성공한 MLflow 실행, 다섯 폴드 복구 결과와 검증 가능한 실행 기록 묶음이 모두 완성된 시각",
+    "paired_orders": [
+      ["baseline", "candidate"],
+      ["candidate", "baseline"]
+    ],
+    "resource_sampling_period_seconds": 2,
+    "resource_observation_missing_percent_max": 5.0,
+    "tabcnn_miss_candidate_change_percent_max": 5.0,
+    "lightgbm_miss_candidate_change_percent_max": 5.0,
+    "both_pairs_same_raw_improvement_direction_required": true,
+    "exact_result_fields": [
+      "oof",
+      "test_pred",
+      "feature_importance",
+      "fold_aucs",
+      "feature_names",
+      "recovery_parquets",
+      "deterministic_model_training_diagnostics"
+    ],
+    "per_run_observation_fields_excluded_from_exactness": [
+      "epoch_seconds",
+      "fit_seconds",
+      "fold_adapter_seconds",
+      "importance_seconds",
+      "resource_telemetry",
+      "provider_timestamps",
+      "execution_identity"
+    ]
+  },
+  "provenance": {
+    "baseline_commit": "36262bf49892ab9107ab5ef98534efb6e7816207",
+    "candidate_commit": "15144929c961f97fcb154ac72fd503d119c5d1cc",
+    "candidate_git_dirty": false,
+    "input_sha256": {
+      "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+      "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+      "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+      "private_inputs_manifest": "f72f4b3cc787312fa28ee1264e2efbf34aa746271d3341203242fcdb5c36c64c"
+    },
+    "configs": {
+      "tabcnn": {
+        "path": "configs/exp113_tab_cnn_m0.yaml",
+        "sha256": "6ea07223019f68ab86683bdcd7d55cc15eed7a72ce830bb068bf53c3ceaca886"
+      },
+      "lightgbm": {
+        "path": "configs/exp050_lgb_xgb_impute.yaml",
+        "sha256": "7798321ecd222bdf43ceb67a32d886fe782ebe83800198b8a42af2d235564427"
+      }
+    },
+    "uv_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+    "container_image": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+    "remote_runner": {
+      "remote_job_sha256": "057b61baa717ad21defa84aa705c0da41a43738dd3bdc9b186d95cc0d0ea51ce",
+      "remote_driver_sha256": "fd61315591693d44fc2fb42f9c7eb4ffd43f46eacf889bd37ad0e5199ba0b72f",
+      "telemetry_sha256": "94e0fa35f9d9cc5d806c94130fc7009ee6d622d76acf3016b8011d013becb528"
+    },
+    "input_archive_manifest_sha256": "9e968cd2ca33ea37459db3d750f34020f62eb36f50732b653c4207341af54f04",
+    "all_results_archive_sha256": "1530f594f652c6a8d596043071ed6fa042e7d3566521734c82768f47ec577a4a"
+  },
+  "prepaid_gates": {
+    "isolated_environment_gate": {
+      "command": "scripts/verify_environment_gates.sh --isolated --source-root /Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction",
+      "candidate_commit": "15144929c961f97fcb154ac72fd503d119c5d1cc",
+      "private_inputs": "pass",
+      "collected_tests": 489,
+      "remote_python_contract_tests": 4,
+      "passed_tests": 489,
+      "full_suite_seconds": 103.56,
+      "status": "pass"
+    },
+    "fixed_image_gate": {
+      "command": "scripts/verify_remote_image_python.sh --platform linux/amd64 nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+      "status": "pass"
+    }
+  },
+  "integration_validation": {
+    "status": "pass",
+    "full_suite_test_count": 489,
+    "covered_paths": {
+      "normal_partial_and_full_recovery": [
+        "tests/test_recovery.py::test_four_of_five_and_full_recovery_keep_public_result_and_progress",
+        "tests/test_recovery.py::test_partial_and_full_recovery_only_compute_missing_fold_work"
+      ],
+      "recovery_prevalidation_failure": "tests/test_recovery.py::test_later_fold_feature_mismatch_fails_before_any_computation",
+      "sequential_and_seed_parallel": "tests/test_seed_parallel.py::test_parallel_execution_matches_sequential_and_forwards_folds",
+      "cpu_resource_path": "tests/test_fold_observability.py::test_process_tree_cpu_fallback_and_no_gpu_are_normal",
+      "resource_sampling_failure": "tests/test_fold_observability.py::test_resource_sampling_failure_is_nonfatal_and_counted_as_missing",
+      "fatal_observability_failure": "tests/test_fold_observability.py::test_run_observer_fails_successful_run_when_observability_cannot_be_preserved",
+      "reuse_corruption": "tests/test_fold_fit_reuse.py::test_store_generates_once_hits_and_refuses_corrupt_expected_key",
+      "unavailable_explicit_store": "tests/test_fold_fit_reuse.py::test_unavailable_explicit_store_fails_instead_of_recomputing",
+      "bundle_observability_round_trip": "tests/test_bundle.py::test_roundtrip_preserves_observability_raw_bytes_and_hash",
+      "bundle_reuse_round_trip": "tests/test_bundle.py::test_roundtrip_preserves_fold_fit_reuse_evidence_bytes_and_hash"
+    }
+  },
+  "prior_required_performance_gates": {
+    "observability": {
+      "evidence_path": "docs/research/fold-observability-acceptance-2026-08-22.md",
+      "evidence_sha256": "21ed35c0655b8e09c0542affc36530c2372eb8d7f064f06c0d14b393b5437271",
+      "enabled_seconds": 277.934,
+      "disabled_seconds": 283.403,
+      "enabled_change_percent": -1.93,
+      "overhead_percent_max": 1.0,
+      "recording_latency_p99_nanoseconds": 606,
+      "recording_latency_p99_max_nanoseconds": 50000,
+      "passed": true
+    },
+    "four_of_five_recovery": {
+      "evidence_path": "docs/research/fold-recovery-skip-acceptance-2026-08-22.md",
+      "evidence_sha256": "2f69468b18a67942802af54e7c75bb29b1ac330f6ee2a14a01f9a732404fba0d",
+      "normal_internal_seconds": 2041.106,
+      "recovery_internal_seconds": 406.042,
+      "internal_reduction_percent": 80.107,
+      "internal_reduction_percent_min": 15.0,
+      "normal_whole_seconds": 2578.331,
+      "recovery_whole_seconds": 733.619,
+      "whole_reduction_percent": 71.547,
+      "whole_reduction_percent_min": 10.0,
+      "passed": true
+    },
+    "full_recovery": {
+      "evidence_path": "docs/research/fold-recovery-skip-acceptance-2026-08-22.md",
+      "evidence_sha256": "2f69468b18a67942802af54e7c75bb29b1ac330f6ee2a14a01f9a732404fba0d",
+      "pipeline_seconds": 3.078,
+      "observer_complete_seconds": 3.781,
+      "recovery_and_assembly_seconds_max": 30.0,
+      "fold_fit_calls": 0,
+      "model_calls": 0,
+      "passed": true
+    },
+    "lightgbm_full_hit_reuse": {
+      "evidence_path": "docs/research/fold-fit-reuse-acceptance-2026-08-22.md",
+      "evidence_sha256": "b0c73d2ae9ceb3e697bc65060dc1eeb6665f27aac70471d377586b2fc6e6077a",
+      "miss_internal_seconds": 282.936,
+      "hit_internal_seconds": 67.833,
+      "internal_reduction_percent": 76.025,
+      "internal_reduction_percent_min": 45.0,
+      "miss_whole_seconds": 406.906,
+      "hit_whole_seconds": 194.264,
+      "whole_reduction_percent": 52.258,
+      "whole_reduction_percent_min": 25.0,
+      "passed": true
+    }
+  },
+  "remote_resource": {
+    "provider": "Vast.ai",
+    "machine_id": 61162,
+    "gpu": "NVIDIA GeForce RTX 5080",
+    "gpu_count": 1,
+    "gpu_uuid": "GPU-1fe9d7b4-6532-b614-4090-c4fc72a0845f",
+    "gpu_memory_mib": 16303,
+    "driver_version": "580.126.09",
+    "cpu": "AMD Ryzen 9 7900 12-Core Processor",
+    "cpu_cores_effective": 24.0,
+    "cpu_ram_mib": 63907,
+    "hourly_total_usd": 0.1877777777777778,
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130",
+    "torch_cuda": "13.0",
+    "same_physical_gpu_for_all_runs": true
+  },
+  "runs": [
+    {
+      "scenario": "pair1-tabcnn-baseline",
+      "input_archive_sha256": "e0982228aa638b13858657071240aa716436e7e4555774375aeb9e424e240984",
+      "instance_id": 48378480,
+      "provider_start": "2026-08-22T08:17:01.094962Z",
+      "valid_result_complete_at": "2026-08-22T08:55:27Z",
+      "deleted_confirmed_at": "2026-08-22T08:59:08Z",
+      "provider_billable_whole_seconds": 2305.9050376415253,
+      "recorded_run_seconds": 2020.9888132493943,
+      "remote_run_id": "77438ea701484433a4e645056b32299f",
+      "main_mlflow_run_id": "6d7e2b5589f2465c91f4e011895ead27",
+      "result_archive_sha256": "6bdb9750bf2f629e63c0b24cef6b7b73699f9384c3aef204d9c5dc17d0e32440",
+      "run_bundle_sha256": "f011979bf356de2cf33731703c92599d4f44709e6f7e63d80cf2b9c11c884121",
+      "oof_sha256": "8949a421ded140132a8f749a4c485d529cf204939014abf12245556fd3924688",
+      "test_pred_sha256": "b70087a0392f12e69234e091b5cfff08ab4f06c3cab21baa542ba8b5f5fd7f36",
+      "feature_importance_sha256": "05e0698cf9ad53938e8da9c0ac6ecd3ceaeebd44382e1a4753d0cc3e23052c41",
+      "external_telemetry_sha256": "17f6a1316805bdf1d1d5cf36594c2917623de832f7d7a71b60ee4fdad1b22f27",
+      "external_telemetry": {
+        "sample_count": 1116,
+        "missing_percent": 0.0,
+        "gpu_idle_seconds": 390.0830131173134,
+        "gpu_idle_fraction": 0.17475716000296648,
+        "gpu_utilization_mean_percent": 25.67562724014337
+      },
+      "import_verified": true
+    },
+    {
+      "scenario": "pair1-tabcnn-candidate",
+      "input_archive_sha256": "bc23441b8ff3e6f211d990be88f1996fa832772acf608b3abd2e39f7c6461645",
+      "instance_id": 48381154,
+      "provider_start": "2026-08-22T08:59:36.137404Z",
+      "valid_result_complete_at": "2026-08-22T09:34:56Z",
+      "deleted_confirmed_at": "2026-08-22T09:35:57Z",
+      "provider_billable_whole_seconds": 2119.8625955581665,
+      "recorded_run_seconds": 2004.1137873735279,
+      "remote_run_id": "893195757cac4880a63c1e76847a83d8",
+      "main_mlflow_run_id": "444c54d02b3e4bdc8881df95b2224267",
+      "result_archive_sha256": "5297729506201208a9689e1eb91fb3e602e20eb282846d770a6fa6dd309e0392",
+      "run_bundle_sha256": "c5e7ae8ff74c4a277620c455e7fa99df40879ef1bd83b0a9b75075730c5b4cdb",
+      "oof_sha256": "8949a421ded140132a8f749a4c485d529cf204939014abf12245556fd3924688",
+      "test_pred_sha256": "b70087a0392f12e69234e091b5cfff08ab4f06c3cab21baa542ba8b5f5fd7f36",
+      "feature_importance_sha256": "05e0698cf9ad53938e8da9c0ac6ecd3ceaeebd44382e1a4753d0cc3e23052c41",
+      "fold_feature_reuse_sha256": "884781f32bf15af1fedf9928d98b6bfb8c3b59047e6a5bc93c8edf4d544230e1",
+      "fold_feature_reuse_generated_entries": 10,
+      "observability_sha256": "d749babda26006223771edfd184cde83b0d5c76b1f4969a32cf64e077d4567a3",
+      "external_telemetry_sha256": "b171097d73a160c51bb93a5dcf0ef4e5676b964895bc967ab23e9c789a7c2f61",
+      "external_telemetry": {
+        "sample_count": 1015,
+        "missing_percent": 0.0,
+        "gpu_idle_seconds": 190.06314339768142,
+        "gpu_idle_fraction": 0.09362126821433571,
+        "gpu_utilization_mean_percent": 28.599014778325124
+      },
+      "import_verified": true
+    },
+    {
+      "scenario": "pair2-tabcnn-candidate",
+      "input_archive_sha256": "4abbd04b17fd9bc938691ffced7ffb98738a0ba9d89ac2ff6de1558b90762744",
+      "instance_id": 48383420,
+      "provider_start": "2026-08-22T09:36:24.861466Z",
+      "valid_result_complete_at": "2026-08-22T10:11:23Z",
+      "deleted_confirmed_at": "2026-08-22T10:12:07Z",
+      "provider_billable_whole_seconds": 2098.13853430748,
+      "recorded_run_seconds": 2003.1301491335034,
+      "remote_run_id": "b4f93803989c446e8e3ddf504a2607ee",
+      "main_mlflow_run_id": "766f43130ade44349f652d4f637685c6",
+      "result_archive_sha256": "849339f54fad383260f5fe8c7dac8345b5817c48abd3aaff8d200032a55216e8",
+      "run_bundle_sha256": "07180e70907e04f34a0c8c98c5d9eacb4ee9cffe1178e55e1c3f254136be98c6",
+      "oof_sha256": "8949a421ded140132a8f749a4c485d529cf204939014abf12245556fd3924688",
+      "test_pred_sha256": "b70087a0392f12e69234e091b5cfff08ab4f06c3cab21baa542ba8b5f5fd7f36",
+      "feature_importance_sha256": "05e0698cf9ad53938e8da9c0ac6ecd3ceaeebd44382e1a4753d0cc3e23052c41",
+      "fold_feature_reuse_sha256": "884781f32bf15af1fedf9928d98b6bfb8c3b59047e6a5bc93c8edf4d544230e1",
+      "fold_feature_reuse_generated_entries": 10,
+      "observability_sha256": "eb24cc4f5d75757cd69e2784caf09f7da4f7b3b1fadcb089099ebf18faf99050",
+      "external_telemetry_sha256": "04c9e72fe76448280fe56836fc8c3ae492b2500127d2c6c6a63bf4743b3f120e",
+      "external_telemetry": {
+        "sample_count": 1013,
+        "missing_percent": 0.0,
+        "gpu_idle_seconds": 192.07086663274094,
+        "gpu_idle_fraction": 0.09479677892436456,
+        "gpu_utilization_mean_percent": 28.74136229022705
+      },
+      "import_verified": true
+    },
+    {
+      "scenario": "pair2-tabcnn-baseline",
+      "input_archive_sha256": "33314343f6ab43f472e3ae1e98c7799e7d867c6a0302cc229868d54ab48a934a",
+      "instance_id": 48385782,
+      "provider_start": "2026-08-22T10:12:20.330695Z",
+      "valid_result_complete_at": "2026-08-22T10:47:11Z",
+      "deleted_confirmed_at": "2026-08-22T10:47:57Z",
+      "provider_billable_whole_seconds": 2090.6693053245544,
+      "recorded_run_seconds": 1983.0181140014902,
+      "remote_run_id": "fef8486245674760b1b52bdda4922db1",
+      "main_mlflow_run_id": "626b3a68ace64f0195f71a79424b64a0",
+      "result_archive_sha256": "3a15aa873876ac5c75d5ca495352ee1764790df98146bf4d3185a986ca64f8e1",
+      "run_bundle_sha256": "7ceab3592b3384d6b410f0b3a92e5bda0a3f5d49fa9f9deee9b36c94d2bc6a2f",
+      "oof_sha256": "8949a421ded140132a8f749a4c485d529cf204939014abf12245556fd3924688",
+      "test_pred_sha256": "b70087a0392f12e69234e091b5cfff08ab4f06c3cab21baa542ba8b5f5fd7f36",
+      "feature_importance_sha256": "05e0698cf9ad53938e8da9c0ac6ecd3ceaeebd44382e1a4753d0cc3e23052c41",
+      "external_telemetry_sha256": "6a584781c89a263bc1b4595690dd029dfb0d9cba2ea16e5a5343588e581e613d",
+      "external_telemetry": {
+        "sample_count": 1009,
+        "missing_percent": 0.0,
+        "gpu_idle_seconds": 192.05289174383506,
+        "gpu_idle_fraction": 0.09516402949863136,
+        "gpu_utilization_mean_percent": 28.606541129831516
+      },
+      "import_verified": true
+    },
+    {
+      "scenario": "pair1-lightgbm-baseline",
+      "input_archive_sha256": "7142be165bf5f37cdf26abcb2812eb61d3ad22f2086cb4758fd7a2b87e4fc980",
+      "instance_id": 48388136,
+      "provider_start": "2026-08-22T10:51:48.314176Z",
+      "valid_result_complete_at": "2026-08-22T10:58:19Z",
+      "deleted_confirmed_at": "2026-08-22T10:59:06Z",
+      "provider_billable_whole_seconds": 390.6858243942261,
+      "recorded_run_seconds": 277.4049743497744,
+      "remote_run_id": "11787ea222f5465381ce549735735258",
+      "main_mlflow_run_id": "9365b4da89914316b099c9afc6609604",
+      "result_archive_sha256": "951bbf406ca716e3e9cc8e4c89d1d59a5459d8325050bd8ce02b43e587039d15",
+      "run_bundle_sha256": "7b8644c312ae863682643b57393e82914837d6d0965aca072cb947dffde9bd84",
+      "oof_sha256": "4f18c73542eda4c98f8c8ec2592c2240216f160ebda3f541b2da111ca78e264c",
+      "test_pred_sha256": "6193ecb898debab80d118f168ac14cf817de731f3395185113a3e992088afcc0",
+      "feature_importance_sha256": "a633879c19705db6640a9affb775d9297cbba9a4074891b70b1b251e08c44ff9",
+      "external_telemetry_sha256": "4ede809dc0a04c365936db079acb054bfac91b297315260cbb7ac57bebb9b8e8",
+      "external_telemetry": {
+        "sample_count": 150,
+        "missing_percent": 0.0,
+        "gpu_idle_seconds": 300.0984880225733,
+        "gpu_idle_fraction": 1.0,
+        "gpu_utilization_mean_percent": 0.0
+      },
+      "import_verified": true
+    },
+    {
+      "scenario": "pair1-lightgbm-candidate",
+      "input_archive_sha256": "e040f383783a84150d52cffedc80d56e98a4ec1ab95885cdf0f11ae5c853a343",
+      "instance_id": 48388517,
+      "provider_start": "2026-08-22T10:59:08.405527Z",
+      "valid_result_complete_at": "2026-08-22T11:05:25Z",
+      "deleted_confirmed_at": "2026-08-22T11:06:01Z",
+      "provider_billable_whole_seconds": 376.594473361969,
+      "recorded_run_seconds": 284.88373537454754,
+      "remote_run_id": "59b6837da7964041bd245df0217d7a57",
+      "main_mlflow_run_id": "24104cf13e4648bea2325315117fb05a",
+      "result_archive_sha256": "ba79a1c2602072637f92305802a13e4d90e4c5379146c89148c1457282fde192",
+      "run_bundle_sha256": "2e8c389ffe54ed69d712e75b6624200504f61f95fec45a22b6bd8ce515d3290a",
+      "oof_sha256": "a0d03327af0ede6e31bdb5a9ce81788b38bce9bd4c8db3c1dcd045614b26eb25",
+      "test_pred_sha256": "77b199cf386e944e75c287c76158b8e5480fd8f9a004bada28d9f8d67b4ae76c",
+      "feature_importance_sha256": "9c84dd7ad54da8052a3884e609401aaa2565dc727fee6f30b7ad688e20e731b3",
+      "fold_feature_reuse_sha256": "c2c10a644c2d4d46b64443d9dd415502119e64192c8d26fcafd1e7b51032bbfd",
+      "fold_feature_reuse_generated_entries": 15,
+      "observability_sha256": "5c8154ce35973a3b6e344ff9d456f4b4805480b1649af2215398937ffbdf6869",
+      "external_telemetry_sha256": "48dc0091d4693fed7260c7758591633016eeba8a3bcd3695bca3359072973d41",
+      "external_telemetry": {
+        "sample_count": 154,
+        "missing_percent": 0.0,
+        "gpu_idle_seconds": 308.1310536013916,
+        "gpu_idle_fraction": 1.0,
+        "gpu_utilization_mean_percent": 0.0
+      },
+      "import_verified": true
+    },
+    {
+      "scenario": "pair2-lightgbm-candidate",
+      "input_archive_sha256": "f09405c12bae00e1b2abf6f1ca8b791726bb7cb66e78fcd83a6ce26bf7bf81b6",
+      "instance_id": 48388928,
+      "provider_start": "2026-08-22T11:06:07.856467Z",
+      "valid_result_complete_at": "2026-08-22T11:12:26Z",
+      "deleted_confirmed_at": "2026-08-22T11:12:59Z",
+      "provider_billable_whole_seconds": 378.14353251457214,
+      "recorded_run_seconds": 285.4414320597425,
+      "remote_run_id": "8e1edf0de8e849d2b1b493177ac4459e",
+      "main_mlflow_run_id": "0f56098c65764bdab9ccd5c755d4fbca",
+      "result_archive_sha256": "5983773f3d49f2f671433a6b81de8979f79dbf6beb303e163ee8ecfc83b7ee64",
+      "run_bundle_sha256": "dc7ee020c5984692dda2797edc77cb7ce72725549db9883bc91baafe877f1de9",
+      "oof_sha256": "a0d03327af0ede6e31bdb5a9ce81788b38bce9bd4c8db3c1dcd045614b26eb25",
+      "test_pred_sha256": "77b199cf386e944e75c287c76158b8e5480fd8f9a004bada28d9f8d67b4ae76c",
+      "feature_importance_sha256": "9c84dd7ad54da8052a3884e609401aaa2565dc727fee6f30b7ad688e20e731b3",
+      "fold_feature_reuse_sha256": "c2c10a644c2d4d46b64443d9dd415502119e64192c8d26fcafd1e7b51032bbfd",
+      "fold_feature_reuse_generated_entries": 15,
+      "observability_sha256": "d282fdda76916d5168c0471de1025557f81741f99fbcacb08f60dea7624d9307",
+      "external_telemetry_sha256": "72be6e0e5716bc7a943fc225f31c548bc012457b6b18a969c9dc108d7a501c98",
+      "external_telemetry": {
+        "sample_count": 154,
+        "missing_percent": 0.0,
+        "gpu_idle_seconds": 308.0978815369308,
+        "gpu_idle_fraction": 1.0,
+        "gpu_utilization_mean_percent": 0.0
+      },
+      "import_verified": true
+    },
+    {
+      "scenario": "pair2-lightgbm-baseline",
+      "input_archive_sha256": "664ad692defc8b34f8c5ddbe3788c20d00f2c7c43912de2d1349d052e1e17e99",
+      "instance_id": 48389323,
+      "provider_start": "2026-08-22T11:13:05.795665Z",
+      "valid_result_complete_at": "2026-08-22T11:22:34Z",
+      "deleted_confirmed_at": "2026-08-22T11:24:51Z",
+      "provider_billable_whole_seconds": 568.2043354511261,
+      "recorded_run_seconds": 278.5702241361141,
+      "remote_run_id": "5e9981ff3ece47ceabafe8c43ddf38ac",
+      "main_mlflow_run_id": "270af0c455b14c0fa6cf810b0809b9ee",
+      "result_archive_sha256": "4b9e46736ed54385a945f7252b9a21ddfc1913c700cee656824a59563841346f",
+      "run_bundle_sha256": "bf7b35ddae60847b2d440343e6494b81badb350cced4a779f016087a567c0479",
+      "oof_sha256": "86aa8b0b0ed8f93631bbf1ae323929fc4ed1b0ab8e8462b0e15dbad96fc8c4da",
+      "test_pred_sha256": "3d6e24066749e7522a3c6285790148f76eeea39807f000d94255e9d91ad73cc2",
+      "feature_importance_sha256": "b24841e9d62af85c75e1d5758dced647cf604b694d74466b3870e3973ed2510f",
+      "external_telemetry_sha256": "b9e99dba4145ab72e4cf14ffb6e67e86a8f3b9cd14331bd61899dc9713859560",
+      "external_telemetry": {
+        "sample_count": 150,
+        "missing_percent": 0.0,
+        "gpu_idle_seconds": 300.10208074375987,
+        "gpu_idle_fraction": 1.0,
+        "gpu_utilization_mean_percent": 0.0
+      },
+      "import_verified": true
+    }
+  ],
+  "paired_comparisons": {
+    "tabcnn_miss": {
+      "pairs": [
+        {
+          "order": ["baseline", "candidate"],
+          "baseline_seconds": 2305.9050376415253,
+          "candidate_seconds": 2119.8625955581665,
+          "candidate_change_percent": -8.068087759313912,
+          "candidate_faster": true,
+          "within_five_percent_non_regression": true
+        },
+        {
+          "order": ["candidate", "baseline"],
+          "baseline_seconds": 2090.6693053245544,
+          "candidate_seconds": 2098.13853430748,
+          "candidate_change_percent": 0.3572649660040757,
+          "candidate_faster": false,
+          "within_five_percent_non_regression": true
+        }
+      ],
+      "median_candidate_change_percent": -3.855411396654918,
+      "median_within_five_percent_non_regression": true,
+      "both_within_five_percent_non_regression": true,
+      "both_same_raw_improvement_direction": false,
+      "passed": false
+    },
+    "lightgbm_miss": {
+      "pairs": [
+        {
+          "order": ["baseline", "candidate"],
+          "baseline_seconds": 390.6858243942261,
+          "candidate_seconds": 376.594473361969,
+          "candidate_change_percent": -3.6068242440345206,
+          "candidate_faster": true,
+          "within_five_percent_non_regression": true
+        },
+        {
+          "order": ["candidate", "baseline"],
+          "baseline_seconds": 568.2043354511261,
+          "candidate_seconds": 378.14353251457214,
+          "candidate_change_percent": -33.449375704895864,
+          "candidate_faster": true,
+          "within_five_percent_non_regression": true,
+          "operational_incident": "공급자가 계정 SSH 키를 자동 연결하지 않아 같은 검증 공개 키를 명시적으로 연결했다. 사전 무효 사유가 아니므로 인증 지연을 전체 시간에 포함했다."
+        }
+      ],
+      "median_candidate_change_percent": -18.528099974465192,
+      "median_within_five_percent_non_regression": true,
+      "both_within_five_percent_non_regression": true,
+      "both_same_raw_improvement_direction": true,
+      "passed": true
+    }
+  },
+  "exactness_and_determinism": {
+    "tabcnn_baseline_candidate": {
+      "pair1_exact": true,
+      "pair2_exact": true,
+      "candidate_repeat_exact": true,
+      "oof_sha256": "8949a421ded140132a8f749a4c485d529cf204939014abf12245556fd3924688",
+      "test_pred_sha256": "b70087a0392f12e69234e091b5cfff08ab4f06c3cab21baa542ba8b5f5fd7f36",
+      "feature_importance_sha256": "05e0698cf9ad53938e8da9c0ac6ecd3ceaeebd44382e1a4753d0cc3e23052c41",
+      "recovery_parquets_exact": true,
+      "semantic_diagnostics_exact": true,
+      "passed": true
+    },
+    "lightgbm_candidate_repeat": {
+      "oof_exact": true,
+      "test_pred_exact": true,
+      "feature_importance_exact": true,
+      "recovery_parquets_exact": true,
+      "semantic_diagnostics_exact": true,
+      "fold_feature_reuse_evidence_exact": true,
+      "passed": true
+    },
+    "lightgbm_baseline_candidate": {
+      "auc_oof_exact": true,
+      "semantic_diagnostics_exact": true,
+      "schema_and_nonnumeric_values_exact": true,
+      "oof_exact": false,
+      "oof_max_absolute_difference": 8.01447797016408e-11,
+      "test_pred_exact": false,
+      "test_pred_max_absolute_difference": 2.1103951919343444e-11,
+      "feature_importance_exact": false,
+      "feature_importance_max_absolute_difference": 10.741000175476074,
+      "cause": "구현 전 LightGBM 다중 스레드 누적 순서 비결정성",
+      "passed": false
+    }
+  },
+  "resource_observation": {
+    "all_runs_missing_percent_max": 0.0,
+    "required_missing_percent_max": 5.0,
+    "all_runs_idle_time_calculable": true,
+    "candidate_internal_observation_missing_fraction_max": 0.0,
+    "passed": true
+  },
+  "invalid_attempts": [
+    {
+      "label": "pair1-tabcnn-baseline-invalid-mount-path",
+      "instance_id": null,
+      "classification": "invalid_volume_mount_path",
+      "reason": "Vast.ai가 하이픈이 있는 /workspace/issue358-cache 연결 경로를 400 응답으로 거부했다.",
+      "replacement": "pair1-tabcnn-baseline",
+      "paid_resource_created": false,
+      "result_archive": null
+    },
+    {
+      "label": "pair1-lightgbm-baseline-offer-unavailable-1",
+      "instance_id": null,
+      "classification": "offer_race_no_such_ask",
+      "reason": "조회 직후 제안 34178264가 선점돼 no_such_ask 응답을 받았다.",
+      "replacement": "pair1-lightgbm-baseline",
+      "paid_resource_created": false,
+      "result_archive": null
+    },
+    {
+      "label": "pair1-lightgbm-baseline-cli-zero-exit-2",
+      "instance_id": null,
+      "classification": "offer_race_cli_zero_exit",
+      "reason": "Vast CLI가 no_such_ask 오류 JSON을 내보내면서 성공 종료 상태를 반환해 실제 인스턴스 식별자 검사를 추가했다.",
+      "replacement": "pair1-lightgbm-baseline",
+      "paid_resource_created": false,
+      "result_archive": null
+    }
+  ],
+  "input_preparation_replacements": [
+    {
+      "classification": "generated_python_bytecode_in_archive",
+      "replaced_manifest_sha256": "28bd0267bc9b6cde8f6ad52a89f23fc5a316e91bbd3bedabf200076cf0bbbcfc",
+      "paid_resource_created": false
+    },
+    {
+      "classification": "invalid_volume_mount_path_in_execution_spec",
+      "replaced_manifest_sha256": "12051c3a663145135580271b3ef3fdb0e0e319d20268dc9b6604e4353eda5255",
+      "paid_resource_created": false
+    }
+  ],
+  "operational_incidents": [
+    {
+      "scenario": "pair1-tabcnn-baseline",
+      "classification": "interactive_delete_confirmation_delay",
+      "effect": "유효 결과 완성 뒤 삭제 확인이 늦어졌지만 사전 정의한 전체 시간은 유효 결과 완성 시각에서 끝나므로 비교값에는 영향이 없다. 비용에는 포함했다.",
+      "result_valid": true,
+      "excluded": false
+    },
+    {
+      "scenario": "pair2-lightgbm-baseline",
+      "classification": "provider_did_not_auto_attach_account_ssh_key",
+      "effect": "같은 사전 검증 공개 키를 명시적으로 연결했고 인증 준비 지연을 전체 시간과 비용에 포함했다.",
+      "result_valid": true,
+      "excluded": false
+    }
+  ],
+  "bundle_import": {
+    "imported_run_count": 8,
+    "all_finished": true,
+    "all_source_run_ids_verified": true,
+    "all_bundle_sha256_verified": true,
+    "all_oof_reopened": true,
+    "all_candidate_observability_sha256_verified": true,
+    "all_candidate_fold_feature_reuse_sha256_verified": true,
+    "passed": true
+  },
+  "billing": {
+    "budget_max_usd": 1.2,
+    "instance_charges_usd": 0.614,
+    "volume_charges_usd": 0.009,
+    "total_usd": 0.623,
+    "within_budget": true,
+    "charges": {
+      "48378480": 0.143,
+      "48381154": 0.125,
+      "48383420": 0.113,
+      "48385782": 0.121,
+      "48388136": 0.029,
+      "48388517": 0.025,
+      "48388928": 0.019,
+      "48389323": 0.039,
+      "volume_48378296": 0.009
+    }
+  },
+  "cleanup": {
+    "issue358_instances_created": [
+      48378480,
+      48381154,
+      48383420,
+      48385782,
+      48388136,
+      48388517,
+      48388928,
+      48389323
+    ],
+    "all_issue358_instances_absent": true,
+    "persistent_volume_id": 48378296,
+    "persistent_volume_deleted_at": "2026-08-22T11:25:43Z",
+    "persistent_volume_absent": true,
+    "issue358_hourly_billing_rate_usd": 0.0,
+    "other_issue_instance_left_untouched": 48364969,
+    "passed": true
+  },
+  "final_worktree_gate": {
+    "command": "scripts/verify_environment_gates.sh --source-root /Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction",
+    "private_inputs": "pass",
+    "collected_tests": 489,
+    "remote_python_contract_tests": 4,
+    "passed_tests": 489,
+    "full_suite_seconds": 94.25,
+    "status": "pass"
+  }
+}
