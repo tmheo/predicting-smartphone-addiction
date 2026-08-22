@@ -6,7 +6,13 @@ import pandas as pd
 import pytest
 
 from pipeline.features import PLACEBO
-from pipeline.judgment import JudgmentError, RunFacts, judge_proxy_screening
+from pipeline.judgment import (
+    JudgmentError,
+    RunFacts,
+    judge_proxy_screening,
+    load_run_facts,
+)
+from pipeline.runs import InMemoryRunStore
 
 MODEL_PARAMS = {
     "model.force_row_wise": "True",
@@ -101,3 +107,29 @@ def test_proxy_screening_rejects_different_model_settings():
 
     with pytest.raises(JudgmentError, match="모델 설정"):
         judge_proxy_screening(baseline, challenger)
+
+
+def test_run_facts_excludes_result_hashes_from_proxy_input_identity():
+    store = InMemoryRunStore()
+    store.add_run(
+        "candidate",
+        params={"experiment": "exp_test", "features": "age", "seeds": "42"},
+        metrics={"auc_oof": 0.967},
+        tags={
+            "git_commit": "deadbeef",
+            "git_dirty": "False",
+            **INPUT_HASHES,
+            "sha256.fold_feature_reuse": "result-a",
+            "sha256.observability.fold_execution": "result-b",
+            "sha256.oof_prediction": "result-c",
+            "sha256.submission": "result-d",
+        },
+        importance=pd.DataFrame(
+            [{"feature": "age", "fold": 0, "seed": 42, "gain": 1.0}]
+        ),
+        config={"model": {"kind": "test", "params": {}, "fit": {}}},
+    )
+
+    facts = load_run_facts("candidate", store)
+
+    assert facts.input_hashes == INPUT_HASHES
