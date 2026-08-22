@@ -167,6 +167,54 @@ uv run mlflow ui --backend-store-uri sqlite:///mlflow.db
 
 브라우저에서 <http://127.0.0.1:5000> 에 접속하면 run 목록을 시작 시각 순으로 보고 metric·artifact를 확인할 수 있다.
 
+## 후보 풀 판정 기록 생성
+
+새 다양성 후보는 후보 풀 장부를 바꾸기 전에 읽기 전용 후보 평가 사본에서 판정한다.
+단일 후보는 현재 풀의 포함 전후를 비교하고, 기본 결합 전략 19개 가운데 각 풀의 최선 전략으로 만든 nested OOF AUC 차이가 양수일 때만 `adopted` 기록을 만든다.
+
+```bash
+uv run python -m pipeline.pool_judgment \
+  --judgment-id issueNNN-expNNN \
+  --candidate-run <run_id> \
+  --model-lineage-group <lineage> \
+  --selection-description "결과를 보기 전에 고정한 후보"
+```
+
+같은 OOF에서 여러 변형을 비교했다면 `--candidate-run`을 여러 번 지정한다.
+이 경우 후보와 결합 전략 선택 전체를 바깥쪽 검증 분할마다 학습 부분 안에서 다시 수행한다.
+
+```bash
+uv run python -m pipeline.pool_judgment \
+  --judgment-id issueNNN-variant-selection \
+  --candidate-run <run_id_a> \
+  --candidate-run <run_id_b> \
+  --model-lineage-group <lineage> \
+  --selection-description "사전에 고정한 두 변형 중 nested 선택"
+```
+
+기존 구성원을 교체하려면 교체 동작과 현재 풀의 대상 실행을 명시한다.
+
+```bash
+uv run python -m pipeline.pool_judgment \
+  --judgment-id issueNNN-replacement \
+  --candidate-run <new_run_id> \
+  --model-lineage-group <lineage> \
+  --selection-description "기존판과 신규판의 원자 교체 대조" \
+  --action replacement \
+  --replaces-run-id <old_run_id>
+```
+
+명령은 평가 입력 사본과 근거 JSON을 `run-logs/pool-judgments/<judgment-id>/`에, 변경 불가 판정 YAML을 `artifacts/judgments/<judgment-id>.yaml`에 만든다.
+판정 완료 직전에 후보 풀, fold와 기본 결합 전략 이름 목록을 다시 확인하며 하나라도 바뀌면 어떤 결과도 공개하지 않는다.
+`rejected`와 `indeterminate` 기록은 후보 풀을 바꾸지 않으며 `pipeline.pool --admit`도 소비하지 않는다.
+
+```bash
+uv run python -m pipeline.pool <run_id> \
+  --admit \
+  --reason "한 줄 진입 사유" \
+  --judgment artifacts/judgments/issueNNN-expNNN.yaml
+```
+
 ## 모델 진입 진단
 
 새 모델 계열은 정식 스크리닝 전에 공통 fold 진입 진단을 실행한다.
