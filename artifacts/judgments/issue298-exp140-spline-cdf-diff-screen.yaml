@@ -1,0 +1,179 @@
+schema_version: 1
+judgment_id: issue298-exp140-spline-cdf-diff-screen
+created_at: '2026-08-22T21:25:31Z'
+stage: screening
+route: candidate_pool
+supersedes: null
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: Contextualized Spline Transformer에 원본 프록시 CDF 차이 5열 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/298
+
+feature_bundle:
+  name: original_cdf_diff_5
+  columns:
+    - daily_screen_time_hours_orig_cdf_diff
+    - weekend_screen_time_orig_cdf_diff
+    - social_media_hours_orig_cdf_diff
+    - notifications_per_day_orig_cdf_diff
+    - app_opens_per_day_orig_cdf_diff
+  provider: original_cdf_diff
+  preregistration:
+    kind: committed_config
+    reference: configs/exp140_contextual_spline_orig_cdf_diff.yaml@ba908ccb2d3f80bfd1f799cb98c7cf4593899980
+    description: exp085 Contextualized Spline Transformer 설정에 원본 프록시 CDF 차이 5열만 더하는 짝비교를 결과 확인 전에 고정했다.
+  content_sha256: f3d01b3744b440d96e511dc08441eba769aea4043e0439cb3b15f473e2f1162b
+
+lineage:
+  included:
+    config: exp140_contextual_spline_orig_cdf_diff
+    config_path: configs/exp140_contextual_spline_orig_cdf_diff.yaml
+    config_sha256: 67ae894babd26d6de873c61d3e70ea7eac73dc1cb44eefe33b623e04bb564836
+    source_run_id: 9e72e6e645084ab49fd4d3c50c1f4c4a
+    imported_run_id: 80f6f2fc60a24ddfbd9b6821cd526b0d
+    import_bundle_sha256: 72ee60b18c9c401c5b9c337a002e7254ddd1f43accebcbeedff99ba51e521b1c
+    git_commit: ba908ccb2d3f80bfd1f799cb98c7cf4593899980
+    seeds: [42]
+  excluded:
+    config: exp085_contextual_spline_m0
+    config_path: configs/exp085_contextual_spline_m0.yaml
+    config_sha256: 0c498704cb79af55924e0173bc6803558b3500ed0a2bf9c2b2964b1ea8085135
+    source_run_id: 43fb6ed464514d1b9a7d2820cb6000d6
+    imported_run_id: a9ad44bb0ab84d0da9ff61c157ed38b9
+    import_bundle_sha256: 385c271856a00bf009edd29e3b8512e4ff53ceb3af086746c13b80d431a634a8
+    git_commit: ba908ccb2d3f80bfd1f799cb98c7cf4593899980
+    seeds: [42]
+  allowed_differences:
+    - name
+    - features.providers.original_cdf_diff
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  model_contract_match: true
+  allowed_config_difference_match: true
+  added_feature_columns_match: true
+  included_feature_total: 38
+  excluded_feature_total: 33
+  existing_exp085_seed_42_prediction_exact_match: false
+  confirmation_baseline_rerun_required: true
+  adoption_eligibility:
+    seeds_ok: false
+    clean_commit_ok: true
+    folds_ok: true
+    ok: false
+    reason: seed 42 선별은 통과했지만 후보 풀 등록에는 같은 커밋의 기준과 후보 3시드 확인 실행이 필요하다.
+  canary:
+    state: 유효
+    placebo_present: true
+    target_using_provider_total: 0
+    derived_canary_checks: []
+    reason: 새 제공자는 목표값을 참조하지 않으며 계획의 상시 플라시보 불변식을 유지했다.
+
+paired_oof:
+  comparison: included_minus_excluded
+  seed: 42
+  included_auc: 0.9673453694112089
+  excluded_auc: 0.967112365396297
+  overall_delta: 0.00023300401491188683
+  fold_deltas:
+    0: 0.00006819424458892609
+    1: 0.0001409976861522777
+    2: 0.00024162021241691534
+    3: 0.00025821461549402347
+    4: 0.00012449462265351485
+  fold_wins: 5
+  fold_total: 5
+  thresholds:
+    screening_delta_min: 0.0
+  screening_passed: true
+
+selection_procedure:
+  required: false
+  reason: 결과 확인 전에 5열 전체와 단일 포함 설정을 고정했고 같은 OOF로 하위 묶음이나 변형을 고르지 않았다.
+  candidate_set: [exp140_contextual_spline_orig_cdf_diff]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호 가능성
+  reason: seed 42 짝차이와 분할 5개의 짝차이가 모두 양수여서 3시드 반복성 확인 자격을 얻었다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 후보 풀의 exp085 직접 교체 경로이며 현재 champion 교체를 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: false
+  state: null
+  reason: 후보 풀 진입 자격, 같은 모델 계열 직접 교체와 포함·제외 중첩 OOF는 3시드 확인 실행에서 평가한다.
+
+auxiliary_importance:
+  method: contextualized_spline_transformer_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: -0.000004939531539987163
+  cell_total: 5
+  features:
+    daily_screen_time_hours_orig_cdf_diff:
+      mean: 0.0004297281797672081
+      above_placebo_cells: 5
+    weekend_screen_time_orig_cdf_diff:
+      mean: 0.0001942145936465689
+      above_placebo_cells: 5
+    social_media_hours_orig_cdf_diff:
+      mean: 0.00013658521103334653
+      above_placebo_cells: 5
+    notifications_per_day_orig_cdf_diff:
+      mean: 0.006273594461620546
+      above_placebo_cells: 5
+    app_opens_per_day_orig_cdf_diff:
+      mean: 0.004932172054632455
+      above_placebo_cells: 5
+  conflicts_with_oof: false
+  used_as_gate: false
+
+remote_execution:
+  provider: Vast.ai
+  gpu_sequence:
+    - 2x RTX A4000 16376MiB
+    - 2x RTX 5070 Ti 16303MiB
+  image: nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631
+  result_archive_sha256: 663f98e9aec4b7c8f6c3e8f79ed1fe8637db039ba1fcaa6f77f7127ec2a28993
+  estimated_cost_usd: 0.98
+  recovery:
+    required: true
+    reason: 첫 A4000 실행의 속도가 수동 상한을 넘었고 첫 RTX 5070 Ti 인스턴스가 상한에 도달해 같은 장비에서 남은 분할을 복구했다.
+    completed_fold_total_per_run: 5
+  cleanup:
+    instances_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호 가능성
+  champion_route: null
+  candidate_pool_route: null
+  actual_ledger_change: none
+  reason_codes:
+    - screening_delta_nonnegative
+    - screening_fold_wins_5_of_5
+    - clean_commit
+    - folds_match
+    - canary_valid
+    - all_added_features_above_placebo
+    - confirmation_required
+    - confirmation_baseline_rerun_required
