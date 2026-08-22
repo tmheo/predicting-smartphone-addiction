@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "issue": {
+    "number": 334,
+    "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/334"
+  },
+  "decision": {
+    "outcome": "stop_after_seed_42",
+    "interaction_improvement": false,
+    "reason": "candidate_seed_42_paired_delta_is_negative",
+    "candidate_pool_evaluation_applicable": false,
+    "seeds_executed": [42],
+    "seeds_skipped_by_contract": [43, 44]
+  },
+  "configuration": {
+    "baseline": {
+      "path": "configs/exp131_tab_cnn_oof_target_mean.yaml",
+      "sha256": "36c92397da6b36f3232a153a2693426c9a150560f718f850c0107b0a8d532b6a"
+    },
+    "candidate": {
+      "path": "configs/exp140_tab_cnn_oof_target_mean_epochs100.yaml",
+      "sha256": "861da5b7eb4f07caf12c59a88b243e8e9aaaa7cbc0745c8ed112b9b1d4ecdd8a"
+    },
+    "structured_diff": [
+      {
+        "path": "model.params.epochs",
+        "baseline": 30,
+        "candidate": 100
+      }
+    ],
+    "all_other_fields_equal": true
+  },
+  "fixed_inputs": {
+    "train_sha256": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test_sha256": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds_sha256": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+    "row_count": 691369,
+    "fold_count": 5
+  },
+  "baseline_reuse": {
+    "reused": true,
+    "local_mlflow_run_id": "dbadbc325bb74189bdc27c5825fbfeff",
+    "source_mlflow_run_id": "8eb7439a4b63442baadc22563dbef690",
+    "git_commit": "4c25b1de5cf98fdcb7ee92be14d99c3ccec44193",
+    "bundle_sha256": "b509bba8065c5057f3613024db6b7db3fb77b202a98e13fdc024bb06f21f93af",
+    "oof_file_sha256": "c1bb57fb7ea9b8f796d9ab09dd8ea245bafbbe98950fbd52e954da3ef4f50bb5",
+    "oof_prediction_array_sha256": "cb3a0ef11af330c40136eb6009b0caac75bdb8a698296cff0e94ac0d563b2499",
+    "contract_match": true
+  },
+  "candidate_run": {
+    "name": "exp140_tab_cnn_oof_target_mean_epochs100",
+    "stage": "screen",
+    "seed": 42,
+    "git_commit": "12f2978053c2aac090ec01bde35668a6a53c94ab",
+    "git_dirty": false,
+    "provider": "vast.ai",
+    "runpod_used": false,
+    "remote_mlflow_run_id": "f3635d3dd00442fba337cd405571b7b1",
+    "local_mlflow_run_id": "2ac084aa8f204ba7b1bccf9e05768192",
+    "local_mlflow_status": "FINISHED",
+    "started_at_utc": "2026-08-22T17:17:23Z",
+    "completed_at_utc": "2026-08-22T18:36:19Z",
+    "exit_code": 0
+  },
+  "score": {
+    "baseline_seed_42_oof_auc": 0.9674152910858209,
+    "candidate_seed_42_oof_auc": 0.9673913282820161,
+    "paired_delta": -0.00002396280380478899,
+    "screen_extension_threshold": 0.0,
+    "extended_to_three_seeds": false
+  },
+  "folds": [
+    {
+      "fold": 0,
+      "baseline_auc": 0.9667960481818629,
+      "candidate_auc": 0.9666076197745401,
+      "paired_delta": -0.00018842840732280486,
+      "best_epoch": 14,
+      "actual_epochs": 29,
+      "fit_seconds": 965.075084826909,
+      "placebo_noise_te_importance": 0.0,
+      "placebo_noise_importance": 0.000023179204958534427
+    },
+    {
+      "fold": 1,
+      "baseline_auc": 0.967591154513467,
+      "candidate_auc": 0.967669188003847,
+      "paired_delta": 0.00007803349038004725,
+      "best_epoch": 11,
+      "actual_epochs": 26,
+      "fit_seconds": 759.97237768583,
+      "placebo_noise_te_importance": 0.0,
+      "placebo_noise_importance": 0.00004538770174833395
+    },
+    {
+      "fold": 2,
+      "baseline_auc": 0.9677585920646171,
+      "candidate_auc": 0.9675876026928939,
+      "paired_delta": -0.00017098937172321804,
+      "best_epoch": 13,
+      "actual_epochs": 28,
+      "fit_seconds": 730.6740695871413,
+      "placebo_noise_te_importance": 0.0,
+      "placebo_noise_importance": 0.0000669812493251376
+    },
+    {
+      "fold": 3,
+      "baseline_auc": 0.9679459058817708,
+      "candidate_auc": 0.9680172612187607,
+      "paired_delta": 0.00007135533698998664,
+      "best_epoch": 11,
+      "actual_epochs": 26,
+      "fit_seconds": 838.0043873731047,
+      "placebo_noise_te_importance": 0.0,
+      "placebo_noise_importance": 0.00022586715041517103
+    },
+    {
+      "fold": 4,
+      "baseline_auc": 0.9675318263633412,
+      "candidate_auc": 0.9672891214358207,
+      "paired_delta": -0.00024270492752054285,
+      "best_epoch": 15,
+      "actual_epochs": 30,
+      "fit_seconds": 822.960208103992,
+      "placebo_noise_te_importance": 0.0,
+      "placebo_noise_importance": 0.00013441561522931078
+    }
+  ],
+  "timing": {
+    "elapsed_seconds": 4613.544081808068,
+    "training_seconds": 4608.411815977655,
+    "model_fit_seconds_sum": 4116.686127576977,
+    "data_load_seconds": 3.2584625091403723,
+    "feature_build_seconds": 1.4768958827480674,
+    "evaluation_seconds": 0.011614884249866009
+  },
+  "placebo_check": {
+    "placebo_noise_te_fold_importances": [0.0, 0.0, 0.0, 0.0, 0.0],
+    "placebo_noise_te_mean_importance": 0.0,
+    "placebo_noise_mean_importance": 0.00009916618433529756,
+    "leakage_alarm": false
+  },
+  "integrity": {
+    "oof_rows": 691369,
+    "oof_unique_ids": 691369,
+    "oof_nonfinite_predictions": 0,
+    "oof_missing_targets": 0,
+    "oof_recomputed_auc_matches_mlflow": true,
+    "oof_file_sha256": "9791c6030795c4e76b0a7039157b958aa840d7b773b7e74698f75ea7265b3ce8",
+    "oof_prediction_array_sha256": "c649e68cdb47c329ca7485c5cedb775c1d41cdb887b6806da455c7e3101ac1fe",
+    "model_training_diagnostics_sha256": "9df132666db684235f8550ecacf9deab6ec127ff6ba5f79c5912eb4c8b105307",
+    "feature_importance_sha256": "1df5894e104abf1d6e8763e56f01abde333adf9b1728615d57e365d06889bcc7",
+    "fold_execution_observability_sha256": "a56215fb891c4e9aef85687eadaa32b710956653ad0bbf849029c504defd9413",
+    "input_archive_sha256": "05c4cd4dd356bce53d7ca2ac1aa5fec76a7e4635c2f1ff2f640bb7cb3a3a6955",
+    "input_archive_bytes": 45994759,
+    "result_archive_sha256": "c624a95aa186f32201d141d265534c88d68d50bb8ec40b1d5690ddb30f8475ac",
+    "result_archive_bytes": 18368981,
+    "mlflow_bundle_sha256": "96dc015dfa37fa4382a35c13e2d818451f9691a2fb07c8776881337697d5c3f8",
+    "mlflow_bundle_bytes": 10112050,
+    "result_manifest_verified": true
+  },
+  "environment": {
+    "container": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+    "python": "3.12.3",
+    "pytorch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "gpu": "RTX 5070 Ti",
+    "gpu_count": 1
+  },
+  "verification": {
+    "isolated_environment_gate": true,
+    "remote_python_contract_tests_passed": 4,
+    "full_tests_passed": 505
+  },
+  "vast_cleanup": {
+    "instance_id": 48411061,
+    "offer_id": 43421238,
+    "machine_id": 62158,
+    "hourly_total_usd": 0.4106666666666666,
+    "actual_charge_usd": 0.737,
+    "charge_components_usd": {
+      "gpu": 0.616,
+      "disk": 0.017,
+      "download": 0.103,
+      "upload": 0.001
+    },
+    "instance_absent_after_delete": true,
+    "project_volume_count_after_delete": 0,
+    "termination_schedule_removed": true,
+    "unrelated_schedules_preserved": 4
+  }
+}
