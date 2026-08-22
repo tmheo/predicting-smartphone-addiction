@@ -29,7 +29,7 @@ def test_committed_refit_plan_matches_candidate_pool():
     tabm_widths = plan.member("exp137_tabm_recon_widths")
     assert tabm_widths.budgets == {42: 18, 43: 16, 44: 16}
     assert tabm_widths.budget_source == "fold_median"
-    realmlp = plan.member("exp124_realmlp_dtype_fix")
+    realmlp = plan.member("exp140_realmlp_orig_cdf_diff")
     assert realmlp.budgets == {42: 5, 43: 5, 44: 5}
 
     realmlp_muon = plan.member("exp134_realmlp_muon")

@@ -14,6 +14,10 @@ from pipeline.ensemble import DEFAULT_COMBINER_NAMES, PRECISION_COMBINER_NAMES
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_LEDGER = REPO_ROOT / "artifacts/pool-rereview-precommit-2026-08-22.yaml"
+HISTORICAL_SOURCE_SHA256 = {
+    "pool": "e6f093c08af4d09a70e2ee9a7cc99f9d099b06b7505116005464b5ae1240712a",
+    "full_refit_plan": "cb42b27f01abecdc51784e224d3346b27910d29b106171d8cdd471e1246b403f",
+}
 
 
 class PrecommitValidationError(RuntimeError):
@@ -54,6 +58,13 @@ def validate(
     missing_private: list[str] = []
     for name, source in ledger["sources"].items():
         source_path = REPO_ROOT / source["path"]
+        if name in HISTORICAL_SOURCE_SHA256:
+            actual = source["sha256"]
+            _require(
+                actual == HISTORICAL_SOURCE_SHA256[name],
+                f"동결 출처 내용 해시 불일치: {source['path']} ({actual})",
+            )
+            continue
         if not source_path.is_file():
             if name in {"train", "test", "external_original"}:
                 missing_private.append(name)

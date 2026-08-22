@@ -1,5 +1,5 @@
 schema_version: 1
-source_pool_sha256: e6f093c08af4d09a70e2ee9a7cc99f9d099b06b7505116005464b5ae1240712a
+source_pool_sha256: 6047f26a351603888e88acbabf1284fe99cc9db9b052376219d3aa70dc654940
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -119,11 +119,6 @@ members:
     run_id: e84d97e875754af1b073b399db2a0616
     budget_source: fold_median
     budgets: {42: 14, 43: 13, 44: 11}
-  - config: exp124_realmlp_dtype_fix
-    config_path: configs/exp124_realmlp_dtype_fix.yaml
-    run_id: c41c6a4deae04e1fbd8a75193eaaa32c
-    budget_source: fold_median
-    budgets: {42: 5, 43: 5, 44: 5}
   - config: exp127_lookup_muon
     config_path: configs/exp127_lookup_muon.yaml
     run_id: 7124425b5b51421dbbeba597229554da
@@ -182,5 +177,10 @@ members:
   - config: exp139_realmlp_reference_qnormal_train_test
     config_path: configs/exp139_realmlp_reference_qnormal_train_test.yaml
     run_id: 1af9442e67c14a96a5256251f23a1b9d
+    budget_source: fold_median
+    budgets: {42: 5, 43: 5, 44: 5}
+  - config: exp140_realmlp_orig_cdf_diff
+    config_path: configs/exp140_realmlp_orig_cdf_diff.yaml
+    run_id: 984b0fd5277243ab95acff71688644a9
     budget_source: fold_median
     budgets: {42: 5, 43: 5, 44: 5}

@@ -349,22 +349,6 @@ members:
     ensemble_auc_with: 0.9689153096546314
     ensemble_auc_without: 0.968844711232371
     contribution: 7.05984222603151e-05
-- run_id: c41c6a4deae04e1fbd8a75193eaaa32c
-  config: exp124_realmlp_dtype_fix
-  oof_auc: 0.9683223457855767
-  seeds: 42,43,44
-  entered_at: '2026-08-19'
-  reason: '이슈 243: exp121의 dtype 정합 결함(어휘 매핑 이전 float32 형 변환) 수정판. 3시드 OOF 0.9683223으로
-    exp121(0.9637132) 대비 +0.0046091 회복, 같은 레시피의 결함 수정이라 exp121을 교체 진입'
-  evidence:
-    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
-    champion_oof_auc: 0.9691957618114269
-    floor_margin: 0.009126583974149893
-    nearest_run_id: d107ea874ebe4dbe8094694141a162b6
-    nearest_spearman: 0.9856624503451126
-    ensemble_auc_with: 0.9689866654973862
-    ensemble_auc_without: 0.9689523578244447
-    contribution: 3.430767294154702e-05
 - run_id: 7124425b5b51421dbbeba597229554da
   config: exp127_lookup_muon
   oof_auc: 0.9692840450124712
@@ -553,3 +537,18 @@ members:
     ensemble_auc_with: 0.9691623933545127
     ensemble_auc_without: 0.9691419155689435
     contribution: 2.0477785569239515e-05
+- run_id: 984b0fd5277243ab95acff71688644a9
+  config: exp140_realmlp_orig_cdf_diff
+  oof_auc: 0.9684119417243193
+  seeds: 42,43,44
+  entered_at: '2026-08-22'
+  reason: 기존 exp124와 중복이나 OOF AUC가 높아 직접 교체; 고정 결합법 포함·제외 양의 기여는 확인되지 않음
+  evidence:
+    champion_run_id: 54acd002d3c04ec3a74c09871e83da50
+    champion_oof_auc: 0.9693397329635609
+    floor_margin: 0.009072208760758427
+    nearest_run_id: c41c6a4deae04e1fbd8a75193eaaa32c
+    nearest_spearman: 0.9990720947503728
+    ensemble_auc_with: 0.9691692063128639
+    ensemble_auc_without: 0.9691545158271768
+    contribution: 1.469048568703002e-05
