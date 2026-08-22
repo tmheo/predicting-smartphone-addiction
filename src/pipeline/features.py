@@ -413,6 +413,16 @@ def _exact_keys(s: pd.Series, digits: int | None = None) -> pd.Series:
 ColumnSpec = str | list[str]
 
 
+def _spec_input_columns(specs: list[ColumnSpec]) -> list[str]:
+    """결합 키를 펼친 제공자 입력 열. 첫 등장 순서를 유지한다."""
+    columns: list[str] = []
+    for spec in specs:
+        for column in ([spec] if isinstance(spec, str) else spec):
+            if column not in columns:
+                columns.append(column)
+    return columns
+
+
 def _spec_name(spec: ColumnSpec) -> str:
     """spec의 산출 컬럼 이름 어간. 결합 키는 구성 컬럼을 __로 잇는다."""
     return spec if isinstance(spec, str) else "__".join(spec)
@@ -514,6 +524,18 @@ class ExactValueTargetEncoder:
 
     def columns(self) -> list[str]:
         return [f"{_spec_name(spec)}{self.suffix}" for spec in self.cols]
+
+    def reuse_input_columns(self) -> list[str]:
+        return _spec_input_columns(self.cols)
+
+    def reuse_settings(self) -> dict[str, object]:
+        return {
+            "cols": self.cols,
+            "inner_folds": self.inner_folds,
+            "key_digits": self.key_digits,
+            "suffix": self.suffix,
+            "smoothing": self.smoothing,
+        }
 
     def _table(self, y: pd.Series, keys: pd.Series) -> pd.Series:
         if self.smoothing == 0:
@@ -627,6 +649,17 @@ class LatticePairTargetEncoder:
 
     def columns(self) -> list[str]:
         return [f"{stem}_{kind}" for stem, _, _ in self._stems() for kind in ("te", "ct")]
+
+    def reuse_input_columns(self) -> list[str]:
+        return [*self.cols, PLACEBO]
+
+    def reuse_settings(self) -> dict[str, object]:
+        return {
+            "cols": self.cols,
+            "resolutions": self.resolutions,
+            "inner_folds": self.inner_folds,
+            "smoothing": self.smoothing,
+        }
 
     def _pair_keys(
         self,
@@ -797,6 +830,18 @@ class RichLatticeEncoder:
             for name in self._output_names(stem, emits_te)
         ]
 
+    def reuse_input_columns(self) -> list[str]:
+        return [*self.raw_cols, PLACEBO]
+
+    def reuse_settings(self) -> dict[str, object]:
+        return {
+            "raw_cols": self.raw_cols,
+            "numeric_cols": self.numeric_cols,
+            "pairs": [list(pair) for pair in self.pairs],
+            "inner_folds": self.inner_folds,
+            "smoothing": self.smoothing,
+        }
+
     def _keys(
         self,
         df: pd.DataFrame,
@@ -916,6 +961,12 @@ class FrequencyEncoder:
 
     def columns(self) -> list[str]:
         return [f"{col}_ce" for col in self.cols]
+
+    def reuse_input_columns(self) -> list[str]:
+        return list(self.cols)
+
+    def reuse_settings(self) -> dict[str, object]:
+        return {"cols": self.cols}
 
     def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
         self.tables_ = {
@@ -1357,6 +1408,17 @@ class ConstrainedImputeAux:
     def columns(self) -> list[str]:
         return list(self.emit)
 
+    def reuse_input_columns(self) -> list[str]:
+        return list(self.cols)
+
+    def reuse_settings(self) -> dict[str, object]:
+        return {
+            "cols": self.cols,
+            "max_iter": self.max_iter,
+            "widths": self.widths,
+            "emit": self.emit,
+        }
+
     def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
         from sklearn.experimental import enable_iterative_imputer  # noqa: F401
         from sklearn.impute import IterativeImputer
@@ -1509,6 +1571,7 @@ class XgbImputeAux:
             raise ValueError("복원 대상 열마다 예측 입력이 하나 이상 필요하다(cols 2개 이상 또는 cat_cols).")
         self.cols = list(cols)
         self.cat_cols = list(cat_cols)
+        self.transductive_test_sha256 = transductive_test_sha256
         self._test: pd.DataFrame | None = None
         if transductive_test_path is not None:
             from pathlib import Path
@@ -1572,6 +1635,26 @@ class XgbImputeAux:
         return [f"{c}_xgb_recon" for c in self.emit] + [
             f"imp_{name}" for name in self.compositions
         ]
+
+    def reuse_input_columns(self) -> list[str]:
+        return [*self.cols, *self.cat_cols]
+
+    def reuse_settings(self) -> dict[str, object]:
+        return {
+            "cols": self.cols,
+            "cat_cols": self.cat_cols,
+            "emit": self.emit,
+            "compositions": self.compositions,
+            "transductive_test_sha256": self.transductive_test_sha256,
+            "xgb_params": XGB_IMPUTE_PARAMS,
+        }
+
+    def reuse_external_file_sha256(self) -> dict[str, str]:
+        return (
+            {"transductive_test": self.transductive_test_sha256}
+            if self.transductive_test_sha256 is not None
+            else {}
+        )
 
     def _predictors(self, target_col: str) -> list[str]:
         return [c for c in self.cols if c != target_col] + self.cat_cols
@@ -1648,6 +1731,12 @@ class MedianImputeAux:
 
     def columns(self) -> list[str]:
         return [f"{col}_fill" for col in self.cols]
+
+    def reuse_input_columns(self) -> list[str]:
+        return list(self.cols)
+
+    def reuse_settings(self) -> dict[str, object]:
+        return {"cols": self.cols}
 
     def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
         self.medians_ = {col: float(train_fold[col].median()) for col in self.cols}

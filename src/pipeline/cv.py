@@ -41,6 +41,7 @@ class CVResult:
     feature_names: list[str]
     importance: pd.DataFrame  # columns: feature, fold, seed, gain (#19)
     recovery_evidence: list[dict[str, object]] = field(default_factory=list)
+    fold_feature_reuse_evidence: list[dict[str, object]] = field(default_factory=list)
     model_training_diagnostics: list[dict[str, object]] = field(default_factory=list)
 
 
