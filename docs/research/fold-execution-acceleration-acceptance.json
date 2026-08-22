@@ -870,6 +870,15 @@
         "passed_tests": 489,
         "full_suite_seconds": 80.79,
         "status": "pass"
+      },
+      "isolated_final_commit": {
+        "commit": "56a80aefdbda0b170e495de63c385f0595702581",
+        "private_inputs": "pass",
+        "collected_tests": 489,
+        "remote_python_contract_tests": 4,
+        "passed_tests": 489,
+        "full_suite_seconds": 98.45,
+        "status": "pass"
       }
     },
     "final_product_state": {
