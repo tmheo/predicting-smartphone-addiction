@@ -1,0 +1,273 @@
+schema_version: 1
+judgment_id: issue339-pool-rereview
+issue: 339
+map_issue: 338
+handoff_issue: 346
+executed_at: '2026-08-22'
+status: measured_with_decision_boundary
+
+question: >-
+  사전 고정한 35개 후보 풀 재심사 절차가 바깥쪽 검증 분할과 전체 OOF에서
+  어떤 풀과 전략을 고르고 어떤 성능, 안정성, 구성원 수와 실행 결과를 내는가?
+
+scope:
+  changes_pool_ledger: false
+  changes_combiner_contract: false
+  reason: >-
+    이 이슈는 사전 고정 절차의 측정 티켓이며 전체 OOF 선택과 바깥쪽 절차 점수가
+    어긋날 때의 최종 유지 결정은 이슈 346에 넘긴다.
+
+frozen_input:
+  precommit:
+    path: artifacts/pool-rereview-precommit-2026-08-22.yaml
+    sha256: 978b77916e4e7bc00edd1c4f3e72186726ed8ba5ee102f0e550446c9dd89a8bf
+  baseline:
+    path: artifacts/pool-baseline-2026-08-21.yaml
+    sha256: cef5c08efad104580dc9fab7a3c7605d1e5f95ce5f9b825caa66206dc50ff96f
+  predictions:
+    rows: 691369
+    members: 35
+    sha256: 80dba40bbdfad07c08607864b0430787533dd710b850f19a9e72a51208c4a60c
+  execution:
+    git_commit: 97550d0c5844ff5a14ae02e3e291ae553c103aba
+    code_sha256: 8657cca25a3d9b9dc2ff8e634f20c96359fc87e197e01b7d9fc596430e0de196
+    pyproject_sha256: d9c7186959cdfc43a5383d9909755ae52c6b3f087ad275e6c39a25cf779236a9
+    uv_lock_sha256: 27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4
+    clean_worktree: true
+
+null_band:
+  existing_lower: -0.000027669802
+  full_oof_lower: -0.000019662813742216123
+  inner_training_lower: -0.000027666345507215695
+  adopted_lower: -0.000027669802
+  sha256: ecc159377756ed74a8709322ecc73ca682eff097dc30ba49c35571adc0063115
+
+outer_splits:
+  - fold: 0
+    training_anchor_auc: 0.9698778564274935
+    training_terminal_auc: 0.9697991432437261
+    training_delta_vs_anchor: -0.00007871318376739822
+    strategy: missing_segmented_rank_logit
+    members:
+      - exp067_tabpfn3
+      - exp106_lookup_fixed24_train_test_preprocessing
+      - exp131_lookup_bivariate_plr5
+      - exp139_realmlp_reference_qnormal_train_test
+    held_out_selected_auc: 0.969094190647066
+    held_out_anchor_auc: 0.969171529960641
+    held_out_delta: -0.0000773393135750089
+    winner: anchor
+  - fold: 1
+    training_anchor_auc: 0.9697139679957625
+    training_terminal_auc: 0.9696439430572114
+    training_delta_vs_anchor: -0.00007002493855112757
+    strategy: shrunk_rank_logit_logistic
+    members:
+      - exp106_lookup_fixed24_train_test_preprocessing
+      - exp131_lookup_bivariate_plr5
+      - exp133_scalar_token_transformer_oof_te
+      - exp139_realmlp_reference_qnormal_train_test
+    held_out_selected_auc: 0.9697467334620536
+    held_out_anchor_auc: 0.9698191225795225
+    held_out_delta: -0.000072389117468874
+    winner: anchor
+  - fold: 2
+    training_anchor_auc: 0.969703444124261
+    training_terminal_auc: 0.9696287967438927
+    training_delta_vs_anchor: -0.00007464738036833118
+    strategy: shrunk_rank_logit_logistic
+    members:
+      - exp106_lookup_fixed24_train_test_preprocessing
+      - exp131_lookup_bivariate_plr5
+      - exp133_scalar_token_transformer_oof_te
+      - exp139_realmlp_reference_qnormal_train_test
+    held_out_selected_auc: 0.9698122905451999
+    held_out_anchor_auc: 0.9698584859056756
+    held_out_delta: -0.00004619536047567596
+    winner: anchor
+  - fold: 3
+    training_anchor_auc: 0.9696105251760294
+    training_terminal_auc: 0.9695137875479114
+    training_delta_vs_anchor: -0.00009673762811801545
+    strategy: missing_segmented_rank_logit
+    members:
+      - exp067_tabpfn3
+      - exp106_lookup_fixed24_train_test_preprocessing
+      - exp131_lookup_bivariate_plr5
+      - exp139_realmlp_reference_qnormal_train_test
+    held_out_selected_auc: 0.9702603462787069
+    held_out_anchor_auc: 0.9703021927585102
+    held_out_delta: -0.00004184647980320921
+    winner: anchor
+  - fold: 4
+    training_anchor_auc: 0.9697918487382248
+    training_terminal_auc: 0.9697191492265496
+    training_delta_vs_anchor: -0.0000726995116752116
+    strategy: missing_segmented_rank_logit
+    members:
+      - exp067_tabpfn3
+      - exp106_lookup_fixed24_train_test_preprocessing
+      - exp131_lookup_bivariate_plr5
+      - exp139_realmlp_reference_qnormal_train_test
+    held_out_selected_auc: 0.9694012117963073
+    held_out_anchor_auc: 0.9695279120258615
+    held_out_delta: -0.00012670022955418858
+    winner: anchor
+
+procedure_score:
+  nested_oof_auc: 0.9526077862185631
+  anchor_nested_oof_auc: 0.9697358490699927
+  delta_vs_anchor: -0.017128062851429537
+  fold_wins:
+    selected: 0
+    anchor: 5
+    tie: 0
+  output_scale_boundary:
+    present: true
+    contracted_score_is_valid: true
+    explanation: >-
+      분할 0, 3, 4가 고른 missing_segmented_rank_logit의 예측 평균은 약 0.709이고
+      분할 1, 2가 고른 shrunk_rank_logit_logistic의 예측 평균은 약 0.500이다.
+      사전 고정 절차는 원시 예측을 이어붙여 AUC를 재므로 분할 안 AUC와 달리
+      분할 사이 출력 척도 차이가 전체 점수에 반영됐다.
+    diagnostic_fold_rank_auc: 0.9696629548156505
+    diagnostic_is_decision_metric: false
+    reason_diagnostic_not_adopted: >-
+      결과를 본 뒤 fold 안 순위 보정을 판정량으로 쓰면 사전 고정 절차를 변경하므로
+      원인 확인에만 사용한다.
+
+selection_stability:
+  exp106_lookup_fixed24_train_test_preprocessing: 5
+  exp131_lookup_bivariate_plr5: 5
+  exp139_realmlp_reference_qnormal_train_test: 5
+  exp067_tabpfn3: 3
+  exp133_scalar_token_transformer_oof_te: 2
+  zero_of_five_members: 30
+
+full_oof_selection:
+  anchor:
+    strategy: shrunk_rank_logit_logistic
+    auc: 0.9697358490699927
+    member_count: 35
+  selected:
+    step: 14
+    strategy: missing_interaction_rank_logit
+    auc: 0.9697082595858664
+    delta_vs_anchor: -0.000027589484126289143
+    adopted_lower_margin: 0.00000008031787371085728
+    member_count: 12
+    full_refit_count: 36
+    full_refit_reduction_vs_99: 63
+    members:
+      - exp022_orig_knn
+      - exp023_orig_proxy_residual
+      - exp035_lattice_te
+      - exp067_tabpfn3
+      - exp106_lookup_fixed24_train_test_preprocessing
+      - exp085_contextual_spline_m0
+      - exp134_realmlp_muon
+      - exp131_lookup_bivariate_plr5
+      - exp136_realmlp_muon_recon_widths
+      - exp137_tabm_recon_widths
+      - exp133_scalar_token_transformer_oof_te
+      - exp139_realmlp_reference_qnormal_train_test
+  removed:
+    - exp006_te_drop_gaming
+    - exp011_resid_pair
+    - exp025_constrained_impute
+    - exp027_recon_ce
+    - exp032_recon_orig_mean_top3
+    - exp033_recon_orig_mean_top3_raw
+    - exp048_lgb_orig_cdf_diff
+    - exp058_logreg_onehot
+    - exp059_lookup_transformer
+    - exp070_cat_exact_cats
+    - exp071_cat_exact_no_te
+    - exp081_lookup_fold_initialization_avg3
+    - exp107_logreg_onehot_nn10
+    - exp108_logreg_onehot_nn10_l1
+    - exp110_lgb_kitopl_no_te
+    - exp111_xgb_depth8_no_te
+    - exp113_tab_cnn_m0
+    - exp117_ag25_gbm_r21
+    - exp124_realmlp_dtype_fix
+    - exp127_lookup_muon
+    - exp131_tab_cnn_oof_target_mean
+    - exp132_tab_cnn_epochs100
+    - exp135_xgb_hpo_trial30
+  previous_candidate:
+    step: 12
+    strategy: missing_segmented_rank_logit
+    auc: 0.9697115508329799
+    delta_vs_anchor: -0.000024298237012776447
+    member_count: 13
+    additional_member: exp124_realmlp_dtype_fix
+  boundary:
+    is_boundary: true
+    condition: paired bootstrap 2.5 percentile < adopted_lower
+    replicates: 2000
+    minimum: -0.00006398009260544235
+    percentile_2p5: -0.000046347203389796035
+    median: -0.000027745514381893877
+    percentile_97p5: -0.000008023316433078414
+    maximum: 0.0000045096618237483455
+
+execution:
+  workers: 88
+  elapsed_seconds: 27931.26161726797
+  top_level_strategy_fits: 32370
+  pool_arm_evaluations: 390
+  resumed_null_blocks: 1
+  resumed_splits: 0
+  failures_and_retries: []
+  resume_verification:
+    completed_splits_loaded: 6
+    recomputed_outer_fits: 0
+    decision_byte_identical: true
+  estimated_attempt6_cost_usd: 5.55
+  estimated_all_attempts_cost_usd: 6.74
+
+integrity:
+  null_checkpoints:
+    full-oof: 4f08d53f4b58c1a03c53cbe0cb1d9e117d0b80ee051f1d2fa50428a5d00e9ad5
+    outer-0: d40099c517470c0f2afbd704159f3d6bdcb0f04d08be6c06954a8b55dd9cece3
+    outer-1: 45cd9aaba393340c7b21393733f30feebf3110a329b62b2e3d448d72f56e0cb6
+    outer-2: 5c894cca3fc6d36e3d9a9f9917ffe8ce1ac8897c309a64c22f5b2ca4d3634aa1
+    outer-3: 811fd8984e75ba94fd3b19b7ac84a99e0c1bd1929c8a6ff6a5bee00abb220c7b
+    outer-4: f786025ca8bcc45b6ed57f816cd8190f2c6cdde2d5e93a272b57d55113081166
+  procedure_checkpoints:
+    outer-0: 94238edc0d4b5ccdf1da84e1dd70eee0e9bb4ff0f67d14766fd58ad78d99b8b8
+    outer-1: a37d18f3f3ec1049c845e0542944276a8cd10a3eeabe8affafe9993ce99d9941
+    outer-2: 5a0440dfdbd9565af98390fc0b03099e79ecab137fba4f82429683cb0bdabdb8
+    outer-3: 32b2dc2598cabf418cb57180a23389810888f7b4c4c012c678bea6261c586592
+    outer-4: 4c6bad08b4adf9b1e12f55bfb4fbe8ea1c817c2388f530324737334f267f6e00
+    final: 4ab62c2e21f9d164e9cc661160459fe31b6cc542dbe5816eae47700c90377efe
+  prediction_files:
+    outer-0: ce750c04bad1fa285256ce2a38edb7059650383d6f7d7665c467e0e06e8594e1
+    outer-1: 49aaec151e8f40dd1719dcc3fe15d9e8630ddbb52c3d91148b365e35eb10193d
+    outer-2: bfaa21caf8610f2e7a46d26bfef2c09a1bee1437423f9df1611832a78f5e8775
+    outer-3: 6d020002a0f2ff5bf52bc3708c8a131ad558b4ed69cdf9da4c375bc902574e55
+    outer-4: c385a0f0ac3b83ea0651ede5f13ee13de314e14048a2a3d8e4146b069d2a5d01
+  decision_sha256: ac98d1a8906a7cfe7b29693f3c1414daa0da41b768aa588783cd78ac25320a91
+  telemetry_sha256: 9194b810d9815e8aef6222162068429b74ba5efa7cd454956ba7dd4a181f46cc
+  inner_manifest_sha256: 29d7baba4824a708538f89741d1348cb192a85a36dcb37a52e63c5faa528bea0
+  result_manifest_sha256: 1bc2318fcf6b3f90fbbebb5b8e5930fb31d33fe70eb3972b8c911ee1293dd875
+  result_archive_sha256: 44b851e729db560b875c0bddb430e6345b90e76620ba976d4600d5f26387d3d5
+  verification:
+    result_manifest_all_files: passed
+    inner_manifest_all_files: passed
+    independent_auc_and_selection: passed
+    resume_decision_byte_identity: passed
+
+resource_cleanup:
+  vast_instance_id: 48364969
+  instance_absent: true
+  project_volumes: 0
+  termination_schedule_removed: true
+
+conclusion: >-
+  전체 OOF 궤적의 점추정 규칙은 12개 풀을 가장 작은 동등 후보로 고르지만
+  경계 표시는 참이고 사전 고정 절차 nested OOF는 앵커보다 크게 낮으며
+  바깥쪽 검증 5개 모두 앵커가 이겼다.
+  따라서 12개 풀과 직전 13개 풀을 함께 이슈 346에 넘기고 이 티켓에서는
+  후보 풀 장부를 변경하지 않는다.
