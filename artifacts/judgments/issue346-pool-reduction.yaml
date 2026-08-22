@@ -1,0 +1,317 @@
+schema_version: 1
+judgment_id: issue346-pool-reduction
+contract_version: candidate-pool-v1
+created_at: '2026-08-23'
+decision_issue: 346
+implementation_issue: 368
+action: iterative_removal
+status: adopted
+
+question: >-
+  동결한 35개 후보 풀에서 등록 결합 방식을 다시 고르는 nested OOF 대조를
+  반복했을 때 어떤 구성원을 제거해야 전체 AUC가 실제로 높아지는가?
+
+frozen_input:
+  candidate_pool:
+    path: artifacts/pool.yaml
+    sha256: e6f093c08af4d09a70e2ee9a7cc99f9d099b06b7505116005464b5ae1240712a
+    member_count: 35
+    members:
+      - exp006_te_drop_gaming
+      - exp011_resid_pair
+      - exp022_orig_knn
+      - exp023_orig_proxy_residual
+      - exp025_constrained_impute
+      - exp032_recon_orig_mean_top3
+      - exp033_recon_orig_mean_top3_raw
+      - exp035_lattice_te
+      - exp058_logreg_onehot
+      - exp059_lookup_transformer
+      - exp070_cat_exact_cats
+      - exp067_tabpfn3
+      - exp081_lookup_fold_initialization_avg3
+      - exp110_lgb_kitopl_no_te
+      - exp111_xgb_depth8_no_te
+      - exp071_cat_exact_no_te
+      - exp106_lookup_fixed24_train_test_preprocessing
+      - exp107_logreg_onehot_nn10
+      - exp108_logreg_onehot_nn10_l1
+      - exp117_ag25_gbm_r21
+      - exp113_tab_cnn_m0
+      - exp085_contextual_spline_m0
+      - exp124_realmlp_dtype_fix
+      - exp127_lookup_muon
+      - exp027_recon_ce
+      - exp048_lgb_orig_cdf_diff
+      - exp134_realmlp_muon
+      - exp135_xgb_hpo_trial30
+      - exp131_lookup_bivariate_plr5
+      - exp136_realmlp_muon_recon_widths
+      - exp137_tabm_recon_widths
+      - exp133_scalar_token_transformer_oof_te
+      - exp131_tab_cnn_oof_target_mean
+      - exp132_tab_cnn_epochs100
+      - exp139_realmlp_reference_qnormal_train_test
+  champion:
+    path: artifacts/champion.yaml
+    sha256: ab1ee3a4ff3a8797da1deeab3d6f0c114b3f76fffbae5bb6409ec81fab189674
+  full_refit_plan:
+    path: artifacts/full-refit-plan.yaml
+    sha256: cb42b27f01abecdc51784e224d3346b27910d29b106171d8cdd471e1246b403f
+  folds:
+    path: artifacts/folds.parquet
+    sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+  predictions:
+    path: run-logs/issue366-fast-single-removal/predictions.parquet
+    rows: 691369
+    member_count: 35
+    sha256: 80dba40bbdfad07c08607864b0430787533dd710b850f19a9e72a51208c4a60c
+  registered_combiners:
+    names:
+      - rank_mean
+      - performance_weighted_rank_mean
+      - logit_logistic
+      - rank_logistic
+      - ridge_logit_alpha_0p01
+      - ridge_logit_alpha_0p1
+      - ridge_logit
+      - ridge_logit_alpha_10
+      - ridge_logit_alpha_100
+      - rank_gauss_logistic
+      - rank_logit_logistic
+      - greedy_rank_mean
+      - xgb_rank_logit
+      - missing_segmented_rank_logit
+      - missing_interaction_rank_logit
+      - missing_4plus_rank_logit
+      - nnls_logit
+      - nnls_rank
+      - shrunk_rank_logit_logistic
+    names_sha256: fe9e1bdcf17acb70c24250f6f064ea66a15cc4ec2255d6684fa23ecfa9f2abbb
+  supporting_ledgers:
+    - path: artifacts/pool-baseline-2026-08-21.yaml
+      sha256: cef5c08efad104580dc9fab7a3c7605d1e5f95ce5f9b825caa66206dc50ff96f
+    - path: artifacts/pool-rereview-precommit-2026-08-22.yaml
+      sha256: 978b77916e4e7bc00edd1c4f3e72186726ed8ba5ee102f0e550446c9dd89a8bf
+
+procedure:
+  kind: repeated_exact_single_removal
+  fixed_strategy_during_removal: shrunk_rank_logit_logistic
+  acceptance_rule: removal_delta_strictly_positive
+  outer_fold_role: warning_only
+  equivalence_band_upper: 0.000027669802
+  final_strategy_selection: compare_all_registered_combiners_once
+
+removals:
+  - order: 1
+    member:
+      config: exp107_logreg_onehot_nn10
+      run_id: c4c4c780acab4b83baf10d67b98cc85a
+      model_lineage_group: exp058_logreg_onehot
+      information_perspectives:
+        - 원본 프록시 최근접 라벨
+    before_pool:
+      members_ref: frozen_input.candidate_pool.members
+      previously_removed: []
+      member_count: 35
+    comparison:
+      strategy: shrunk_rank_logit_logistic
+      before_auc: 0.9697358491207365
+      after_auc: 0.9697472599796912
+      delta: 0.000011410858954730152
+      outer_fold_auc_before:
+        0: 0.9691715304680804
+        1: 0.9698191225795225
+        2: 0.969858485651956
+        3: 0.9703021927585102
+        4: 0.9695279120258615
+      outer_fold_auc_after:
+        0: 0.9691824076807233
+        1: 0.9698481141024604
+        2: 0.9698809588648473
+        3: 0.9703035258012485
+        4: 0.969521291145605
+      outer_fold_delta:
+        0: 0.000010877212642923517
+        1: 0.00002899152293789342
+        2: 0.000022473212891283012
+        3: 0.0000013330427383051457
+        4: -0.000006620880256491546
+      outer_fold_wins: 4
+      outer_fold_losses: 1
+      boundary_contribution: true
+    full_refit_reduction: 1
+  - order: 2
+    member:
+      config: exp108_logreg_onehot_nn10_l1
+      run_id: 83f7977a87ef46679c26824c5b85f928
+      model_lineage_group: exp058_logreg_onehot
+      information_perspectives:
+        - 원본 프록시 최근접 라벨
+    before_pool:
+      members_ref: frozen_input.candidate_pool.members
+      previously_removed:
+        - exp107_logreg_onehot_nn10
+      member_count: 34
+    comparison:
+      strategy: shrunk_rank_logit_logistic
+      before_auc: 0.9697472599796912
+      after_auc: 0.9697495581257
+      delta: 0.000002298146008716806
+      outer_fold_auc_before:
+        0: 0.9691824076807233
+        1: 0.9698481141024604
+        2: 0.9698809588648473
+        3: 0.9703035258012485
+        4: 0.969521291145605
+      outer_fold_auc_after:
+        0: 0.9691869403812404
+        1: 0.9698411370673907
+        2: 0.9698807284874573
+        3: 0.9703147965329791
+        4: 0.9695241858619432
+      outer_fold_delta:
+        0: 0.000004532700517145827
+        1: -0.0000069770350696884975
+        2: -0.00000023037738994258206
+        3: 0.000011270731730683714
+        4: 0.000002894716338186498
+      outer_fold_wins: 3
+      outer_fold_losses: 2
+      boundary_contribution: true
+    full_refit_reduction: 1
+  - order: 3
+    member:
+      config: exp033_recon_orig_mean_top3_raw
+      run_id: c34f1da180544c3ba022140d394cb055
+      model_lineage_group: exp025_constrained_impute
+      information_perspectives:
+        - 목표값 부호화
+        - 산술 파생 조합
+        - 원본 프록시 통계 사전
+        - 제약 기반 결측 복원값
+    before_pool:
+      members_ref: frozen_input.candidate_pool.members
+      previously_removed:
+        - exp107_logreg_onehot_nn10
+        - exp108_logreg_onehot_nn10_l1
+      member_count: 33
+    comparison:
+      strategy: shrunk_rank_logit_logistic
+      before_auc: 0.9697495581257
+      after_auc: 0.9697497786592194
+      delta: 0.00000022053351944606447
+      outer_fold_auc_before:
+        0: 0.9691869403812404
+        1: 0.9698411370673907
+        2: 0.9698807284874573
+        3: 0.9703147965329791
+        4: 0.9695241858619432
+      outer_fold_auc_after:
+        0: 0.9691918178866835
+        1: 0.9698421755416823
+        2: 0.9698755586970438
+        3: 0.9703129601105698
+        4: 0.9695263787827351
+      outer_fold_delta:
+        0: 0.000004877505443090513
+        1: 0.0000010384742915592327
+        2: -0.000005169790413539488
+        3: -0.000001836422409362548
+        4: 0.0000021929207918436333
+      outer_fold_wins: 3
+      outer_fold_losses: 2
+      boundary_contribution: true
+    full_refit_reduction: 3
+
+convergence:
+  converged: true
+  next_best_removal: exp058_logreg_onehot
+  next_best_auc: 0.9697399104185315
+  next_best_delta: -0.000009868240687938012
+  reason: 양수 개선을 내는 추가 단일 제거 후보가 없다.
+
+final_result:
+  member_count: 32
+  members:
+    - exp006_te_drop_gaming
+    - exp011_resid_pair
+    - exp022_orig_knn
+    - exp023_orig_proxy_residual
+    - exp025_constrained_impute
+    - exp032_recon_orig_mean_top3
+    - exp035_lattice_te
+    - exp058_logreg_onehot
+    - exp059_lookup_transformer
+    - exp070_cat_exact_cats
+    - exp067_tabpfn3
+    - exp081_lookup_fold_initialization_avg3
+    - exp110_lgb_kitopl_no_te
+    - exp111_xgb_depth8_no_te
+    - exp071_cat_exact_no_te
+    - exp106_lookup_fixed24_train_test_preprocessing
+    - exp117_ag25_gbm_r21
+    - exp113_tab_cnn_m0
+    - exp085_contextual_spline_m0
+    - exp124_realmlp_dtype_fix
+    - exp127_lookup_muon
+    - exp027_recon_ce
+    - exp048_lgb_orig_cdf_diff
+    - exp134_realmlp_muon
+    - exp135_xgb_hpo_trial30
+    - exp131_lookup_bivariate_plr5
+    - exp136_realmlp_muon_recon_widths
+    - exp137_tabm_recon_widths
+    - exp133_scalar_token_transformer_oof_te
+    - exp131_tab_cnn_oof_target_mean
+    - exp132_tab_cnn_epochs100
+    - exp139_realmlp_reference_qnormal_train_test
+  baseline_auc: 0.9697358491207365
+  final_auc: 0.9697497786592194
+  delta: 0.000013929538482893022
+  boundary_contribution: true
+  best_strategy: shrunk_rank_logit_logistic
+  registered_strategy_count: 19
+  full_refit_count_before: 99
+  full_refit_count_after: 94
+  full_refit_reduction: 5
+  outer_validation:
+    role: warning_only
+    reversed_adoption: false
+
+strategy_auc:
+  rank_mean: 0.969240344697187
+  performance_weighted_rank_mean: 0.9692418086013266
+  logit_logistic: 0.9697127411963951
+  rank_logistic: 0.9697123178390199
+  ridge_logit_alpha_0p01: 0.9671402149029402
+  ridge_logit_alpha_0p1: 0.9671402221085914
+  ridge_logit: 0.9671402890907004
+  ridge_logit_alpha_10: 0.9671409195445776
+  ridge_logit_alpha_100: 0.9671470193515188
+  rank_gauss_logistic: 0.9697123228525294
+  rank_logit_logistic: 0.9697258531167502
+  greedy_rank_mean: 0.9697034314697842
+  xgb_rank_logit: 0.9696352701205161
+  missing_segmented_rank_logit: 0.969731422039734
+  missing_interaction_rank_logit: 0.969739181034109
+  missing_4plus_rank_logit: 0.9697308289740522
+  nnls_logit: 0.9691497574536783
+  nnls_rank: 0.9693378172549475
+  shrunk_rank_logit_logistic: 0.9697497786592194
+
+evidence:
+  primary:
+    path: run-logs/issue366-fast-single-removal/greedy-after-exp107-exp108.json
+    sha256: 52ef7b97757511330f47780b8412bb3c33e87cdafee66533a30e834d4251496f
+  supporting:
+    - path: run-logs/issue366-fast-single-removal/logreg-single-removals.json
+      sha256: fb1df30b08bc058e199a9c9ce1b38932d348406fd08db7b030eba65cda90e80d
+    - path: run-logs/issue366-fast-single-removal/after-exp107-positive-15.json
+      sha256: 8e3214ddcfff03ad766fac88419bd5f919c653e38a9dbe5aa68edd8315b10260
+    - path: run-logs/issue366-fast-single-removal/exp107-exp108-removed-19-strategies.json
+      sha256: 6e3a7477d469fd48a219e7ffbc7334f06f4e0d618223676200fa2e2fd8a8e12a
+  reproduction:
+    git_branch: codex/prototype-issue-366-fast-single-removal
+    git_commit: d8a40e595fbc8032db9845078d1d15e9f7d36be6
+    code_path: prototypes/issue-366/greedy_exact_candidate_elimination.py
