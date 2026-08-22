@@ -286,6 +286,10 @@ def _resolve_lightgbm_params(params: dict, feature_names: list[str]) -> dict:
     원형을 써야 하는 경우를 위해 그대로 통과시킨다.
     """
     resolved = dict(params)
+    # 같은 피처 값으로 재학습한 실행의 예측과 중요도가 정확히 같아야 한다.
+    # LightGBM의 다중 스레드 누적 순서는 deterministic을 켜야 고정된다.
+    # 명시적 설정은 보존하되 파이프라인 기본값은 결정적으로 둔다.
+    resolved.setdefault("deterministic", True)
     by_feature = resolved.get("max_bin_by_feature")
     if not isinstance(by_feature, dict):
         return resolved

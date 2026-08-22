@@ -113,6 +113,12 @@ class RecoveryFoldFitProvider:
     def columns(self) -> list[str]:
         return ["recovery_fold_probe"]
 
+    def reuse_input_columns(self) -> list[str]:
+        return ["daily_screen_time_hours"]
+
+    def reuse_settings(self) -> dict[str, object]:
+        return {}
+
     def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
         if hasattr(self, "value"):
             raise AssertionError("같은 fold-fit 제공자 인스턴스를 두 폴드에서 재사용했다.")

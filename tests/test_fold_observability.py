@@ -26,6 +26,7 @@ from pipeline.fold_observability import (
     ObservabilitySchemaError,
     read_fold_observability,
 )
+from pipeline.fold_fit_reuse import FoldFitReuseStore
 from pipeline.plan import FeaturePlan, ProviderKind
 from pipeline.observe import RunObserver
 
@@ -222,6 +223,12 @@ def test_fold_fit_provider_emits_fit_and_train_test_transform_events(monkeypatch
         def columns(self) -> list[str]:
             return ["timed_feature"]
 
+        def reuse_input_columns(self) -> list[str]:
+            return []
+
+        def reuse_settings(self) -> dict[str, object]:
+            return {}
+
         def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
             self.value = float(seed)
 
@@ -269,6 +276,101 @@ def test_fold_fit_provider_emits_fit_and_train_test_transform_events(monkeypatch
     assert {event["actor_name"] for event in [*fits, *transforms]} == {
         "timed_provider"
     }
+
+
+def test_fold_fit_reuse_hit_records_validation_and_transform_skips(
+    monkeypatch, tmp_path
+):
+    class TimedProvider:
+        uses_target = False
+
+        def columns(self) -> list[str]:
+            return ["timed_feature"]
+
+        def reuse_input_columns(self) -> list[str]:
+            return []
+
+        def reuse_settings(self) -> dict[str, object]:
+            return {}
+
+        def fit(self, train_fold: pd.DataFrame, seed: int) -> None:
+            self.value = float(seed)
+
+        def transform(self, frame: pd.DataFrame) -> pd.DataFrame:
+            return pd.DataFrame({"timed_feature": self.value}, index=frame.index)
+
+    monkeypatch.setitem(
+        plan_mod.REGISTRY,
+        "timed_reuse_provider",
+        ProviderKind(plan_mod.FOLD_FIT, TimedProvider),
+    )
+    monkeypatch.setitem(
+        model_mod.MODEL_REGISTRY,
+        "fake",
+        lambda params, fit, seed: FakeAdapter(params, fit, seed, fold_value=0.5),
+    )
+    cfg = fake_experiment_config()
+    object.__setattr__(
+        cfg,
+        "features",
+        FeatureConfig(
+            base="raw",
+            categorical=[],
+            providers=[{"kind": "timed_reuse_provider"}],
+        ),
+    )
+    plan, train, test = _prepared_inputs(cfg)
+    plan.configure_fold_fit_reuse(
+        FoldFitReuseStore(tmp_path / "cache"),
+        runtime_identity={
+            "git_commit": "a" * 40,
+            "python": {"implementation": "CPython", "version": "test"},
+            "dependency_lock_sha256": "e" * 64,
+            "installed_packages": [{"name": "pandas", "version": "test"}],
+            "platform": {
+                "operating_system": "test",
+                "release": "test",
+                "machine": "test",
+            },
+        },
+        input_files={"train": "b" * 64, "test": "c" * 64, "folds": "d" * 64},
+    )
+
+    first = cv.run_cv(cfg, plan, train, test, seed=SEED)
+    recorder = TimingRecorder()
+    second = cv.run_cv(cfg, plan, train, test, seed=SEED, recorder=recorder)
+
+    pd.testing.assert_frame_equal(first.oof, second.oof, check_exact=True)
+    pd.testing.assert_frame_equal(first.test_pred, second.test_pred, check_exact=True)
+    pd.testing.assert_frame_equal(first.importance, second.importance, check_exact=True)
+    assert {entry["status"] for entry in first.fold_feature_reuse_evidence} == {
+        "generated"
+    }
+    assert {entry["status"] for entry in second.fold_feature_reuse_evidence} == {"hit"}
+    fits = [
+        event
+        for event in recorder.timings
+        if event["operation"] == "fold_feature.provider_fit"
+    ]
+    transforms = [
+        event
+        for event in recorder.timings
+        if event["operation"] == "fold_feature.provider_transform"
+    ]
+    assert len(fits) == N_FOLDS
+    assert all(
+        event["outcome"] == "reused"
+        and event["reason"] == "fold_fit_reuse_hit"
+        and event["duration_ns"] >= 0
+        for event in fits
+    )
+    assert len(transforms) == N_FOLDS * 2
+    assert all(
+        event["outcome"] == "skipped"
+        and event["reason"] == "fold_fit_reuse_hit"
+        and event["duration_ns"] is None
+        for event in transforms
+    )
 
 
 def test_versioned_artifact_aggregates_union_unclassified_and_resources(tmp_path):

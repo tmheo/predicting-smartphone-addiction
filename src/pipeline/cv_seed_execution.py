@@ -110,6 +110,7 @@ def execute_seed(
     test_pred = np.zeros(len(test))
     importances: list[pd.DataFrame] = []
     recovery_records: list[dict[str, object]] = []
+    fold_feature_reuse_records: list[dict[str, object]] = []
     model_training_diagnostics: list[dict[str, object]] = []
 
     # fold 안의 fold-fit 변환 fit도 training 단계에 포함한다. (#40)
@@ -119,6 +120,11 @@ def execute_seed(
         va_idx = train.index[train["fold"] == fold]
         tr_idx = train.index[train["fold"] != fold]
         if checkpoint is not None:
+            fold_feature_reuse_records.extend(
+                plan.unused_fold_fit_reuse_evidence(
+                    seed=seed, fold=fold, reason="checkpoint_reused"
+                )
+            )
             skipped_operation(
                 recorder,
                 seed=seed,
@@ -213,42 +219,27 @@ def execute_seed(
                 # 전체 train으로 fit하는 별도 경로는 없다. (#32 결정 4)
                 # transform은 학습 fold 행과 검증 fold 행이 섞인 train 전체를 받는다.
                 for kind, transformer in providers:
-                    with timed_operation(
-                        recorder,
-                        seed=seed,
-                        fold=fold,
-                        operation="fold_feature.provider_fit",
-                        actor_kind="column_provider",
-                        actor_name=kind,
-                    ):
-                        transformer.fit(train_ff.loc[tr_idx], seed)
-                X_fold = X
-                X_test_fold = X_test
-                for kind, transformer in providers:
-                    with timed_operation(
-                        recorder,
-                        seed=seed,
-                        fold=fold,
-                        operation="fold_feature.provider_transform",
-                        actor_kind="column_provider",
-                        actor_name=kind,
-                        dataset="train",
-                    ):
-                        X_fold = plan.add_fold_fit_provider_columns(
-                            X_fold, train_ff, kind, transformer
+                    train_values, test_values, reuse_evidence = (
+                        plan.materialize_fold_fit_provider(
+                            kind=kind,
+                            transformer=transformer,
+                            train_input=train_ff,
+                            test_input=test_ff,
+                            training_index=tr_idx,
+                            validation_index=va_idx,
+                            seed=seed,
+                            fold=fold,
+                            recorder=recorder,
                         )
-                    with timed_operation(
-                        recorder,
-                        seed=seed,
-                        fold=fold,
-                        operation="fold_feature.provider_transform",
-                        actor_kind="column_provider",
-                        actor_name=kind,
-                        dataset="test",
-                    ):
-                        X_test_fold = plan.add_fold_fit_provider_columns(
-                            X_test_fold, test_ff, kind, transformer
+                    )
+                    fold_feature_reuse_records.append(reuse_evidence)
+                    collision = set(train_values.columns) & set(X_fold.columns)
+                    if collision:
+                        raise AssertionError(
+                            f"fold-fit 컬럼 이름 충돌: {sorted(collision)}"
                         )
+                    X_fold = pd.concat([X_fold, train_values], axis=1)
+                    X_test_fold = pd.concat([X_test_fold, test_values], axis=1)
                 assert list(X_fold.columns) == list(X_test_fold.columns), (
                     "train/test의 fold-fit 컬럼 집합이 다르다."
                 )
@@ -402,5 +393,6 @@ def execute_seed(
         feature_names=feature_names,
         importance=pd.concat(importances, ignore_index=True),
         recovery_evidence=recovery_records,
+        fold_feature_reuse_evidence=fold_feature_reuse_records,
         model_training_diagnostics=model_training_diagnostics,
     )

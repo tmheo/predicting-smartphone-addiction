@@ -32,8 +32,11 @@ import pandas as pd
 
 from .config import ExperimentConfig
 from .cv import CVResult
-from .data import ID, TARGET
+from .data import ID, TARGET, file_sha256
 from .features import PLACEBO
+from .fold_fit_reuse import EVIDENCE_NAME as FOLD_FIT_REUSE_EVIDENCE_NAME
+from .fold_fit_reuse import SCHEMA_VERSION as FOLD_FIT_REUSE_SCHEMA_VERSION
+from .fold_fit_reuse import canonical_json_bytes
 from .judgment import mean_gain_of, placebo_gain_of
 from .recovery import EVIDENCE_NAME, recovery_evidence
 
@@ -144,6 +147,22 @@ def log_final_records(
             + "\n"
         )
         names.append(EVIDENCE_NAME)
+        reuse_evidence_path = tmp_dir / FOLD_FIT_REUSE_EVIDENCE_NAME
+        reuse_evidence_path.write_bytes(
+            canonical_json_bytes(
+                {
+                    "schema_version": FOLD_FIT_REUSE_SCHEMA_VERSION,
+                    "entries": result.fold_feature_reuse_evidence,
+                }
+            )
+            + b"\n"
+        )
+        client.set_tag(
+            run_id,
+            "sha256.fold_feature_reuse",
+            file_sha256(reuse_evidence_path),
+        )
+        names.append(FOLD_FIT_REUSE_EVIDENCE_NAME)
         diagnostics_name = "model_training_diagnostics.json"
         (tmp_dir / diagnostics_name).write_text(
             json.dumps(

@@ -23,6 +23,8 @@ import pandas as pd
 
 from . import cv, data, initial_score, seed_parallel, tracking
 from .config import STAGES, load_config
+from .fold_fit_reuse import DEFAULT_ROOT as DEFAULT_FOLD_FIT_REUSE_ROOT
+from .fold_fit_reuse import FoldFitReuseStore, build_runtime_identity
 from .plan import FeaturePlan
 from .recovery import FoldRecovery
 
@@ -41,6 +43,17 @@ def main() -> None:
         "--recovery-dir",
         type=Path,
         help="fold 복구 디렉터리. 기본값은 run-recovery/<실험>-<단계>다.",
+    )
+    parser.add_argument(
+        "--fold-fit-reuse-dir",
+        type=Path,
+        default=DEFAULT_FOLD_FIT_REUSE_ROOT,
+        help="내용 기반 fold-fit 재사용 저장소. 기본값은 run-cache/fold-fit/v1이다.",
+    )
+    parser.add_argument(
+        "--no-fold-fit-reuse",
+        action="store_true",
+        help="fold-fit 결과 공유를 명시적으로 끄고 항상 계산한다.",
     )
     args = parser.parse_args()
 
@@ -71,6 +84,14 @@ def main() -> None:
         print("             model_training_diagnostics.json, summary.html 등 결과 요약,")
         print("             observability/fold_execution.jsonl.gz, logs/run.log)")
         print(f"fold 복구    : {args.recovery_dir or _default_recovery_dir(cfg)}")
+        print(
+            "fold-fit 공유: "
+            + (
+                "끔"
+                if args.no_fold_fit_reuse
+                else str(args.fold_fit_reuse_dir)
+            )
+        )
         return
 
     from .observe import RunObserver
@@ -80,13 +101,24 @@ def main() -> None:
         observer.stage("setup")
         input_hashes = _input_hashes(cfg)
         observer.record_input_hashes(input_hashes)
+        git_state = tracking.git_state()
         recovery = FoldRecovery.for_run(
             args.recovery_dir or _default_recovery_dir(cfg),
             cfg,
             input_hashes,
-            git_commit=tracking.git_state()["git_commit"],
+            git_commit=git_state["git_commit"],
         )
         observer.record_execution_identity(recovery.execution_identity)
+        if not args.no_fold_fit_reuse:
+            plan.configure_fold_fit_reuse(
+                FoldFitReuseStore(args.fold_fit_reuse_dir),
+                runtime_identity=build_runtime_identity(
+                    git_commit=git_state["git_commit"],
+                    git_dirty=git_state["git_dirty"] == "True",
+                    lock_path=Path("uv.lock"),
+                ),
+                input_files=input_hashes,
+            )
 
         observer.stage("data_load")
         train = data.load_csv(cfg.data.train)
@@ -127,6 +159,11 @@ def main() -> None:
             ]
         final.recovery_evidence = [
             item for result in results for item in result.recovery_evidence
+        ]
+        final.fold_feature_reuse_evidence = [
+            item
+            for result in results
+            for item in result.fold_feature_reuse_evidence
         ]
         # 확정 재검증의 시드별 비교를 위해 대표 metric과 함께 기록된다. (ADR 0001)
         for seed, auc in seed_aucs.items():

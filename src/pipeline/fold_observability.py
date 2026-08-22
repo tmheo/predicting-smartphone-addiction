@@ -367,6 +367,40 @@ def skipped_operation(
     )
 
 
+def recorded_operation(
+    recorder: object | None,
+    *,
+    seed: int,
+    fold: int,
+    operation: str,
+    actor_kind: str,
+    actor_name: str,
+    started_ns: int,
+    duration_ns: int,
+    outcome: str,
+    reason: str | None = None,
+    dataset: str | None = None,
+) -> None:
+    """다른 구성 요소가 잰 실제 구간을 고정 시간 사건으로 전달한다."""
+    _deliver_timing(
+        recorder,
+        {
+            "seed": seed,
+            "fold": fold,
+            "operation": operation,
+            "actor_kind": actor_kind,
+            "actor_name": actor_name,
+            "worker_id": str(os.getpid()),
+            "device_id": _device_id(),
+            "dataset": dataset,
+            "started_ns": started_ns,
+            "duration_ns": duration_ns,
+            "outcome": outcome,
+            "reason": reason,
+        },
+    )
+
+
 class _CgroupScope:
     name = "cgroup"
 

@@ -22,6 +22,7 @@ from pipeline import bundle as bundle_mod
 from pipeline.bundle import BundleError, export_bundle, import_bundle
 from pipeline.data import file_sha256
 from pipeline.fold_observability import ARTIFACT_NAME, FoldExecutionRecorder
+from pipeline.fold_fit_reuse import EVIDENCE_NAME as FOLD_FIT_REUSE_EVIDENCE_NAME
 from pipeline.runs import MlflowRunStore
 
 SEEDS = [42, 43]
@@ -196,6 +197,35 @@ def _add_observability(env) -> Path:
     return finalized.path
 
 
+def _add_fold_fit_reuse_evidence(env) -> Path:
+    evidence = env["tmp_path"] / FOLD_FIT_REUSE_EVIDENCE_NAME
+    evidence.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "entries": [
+                    {
+                        "seed": 42,
+                        "fold": 0,
+                        "provider": "frequency_encoding",
+                        "status": "hit",
+                        "reason": None,
+                        "key": "a" * 64,
+                        "manifest_sha256": "b" * 64,
+                    }
+                ],
+            },
+            sort_keys=True,
+        )
+        + "\n"
+    )
+    env["client"].log_artifact(env["run_id"], str(evidence))
+    env["client"].set_tag(
+        env["run_id"], "sha256.fold_feature_reuse", file_sha256(evidence)
+    )
+    return evidence
+
+
 def test_roundtrip_reproduces_run(env):
     out = _export(env)
     new_run_id = import_bundle(out, tracking_uri=env["local_uri"])
@@ -239,6 +269,28 @@ def test_roundtrip_preserves_observability_raw_bytes_and_hash(env, tmp_path):
     )
     history = local.get_metric_history(new_run_id, "time.fold_finalize_seconds")
     assert [(metric.value, metric.step) for metric in history] == [(0.123, 0)]
+
+
+def test_roundtrip_preserves_fold_fit_reuse_evidence_bytes_and_hash(env, tmp_path):
+    source = _add_fold_fit_reuse_evidence(env)
+    out = _export(env)
+    new_run_id = import_bundle(out, tracking_uri=env["local_uri"])
+
+    from mlflow.tracking import MlflowClient
+
+    local = MlflowClient(tracking_uri=env["local_uri"])
+    imported = Path(
+        local.download_artifacts(
+            new_run_id,
+            FOLD_FIT_REUSE_EVIDENCE_NAME,
+            tmp_path / "imported-reuse-evidence",
+        )
+    )
+    assert imported.read_bytes() == source.read_bytes()
+    assert (
+        local.get_run(new_run_id).data.tags["sha256.fold_feature_reuse"]
+        == file_sha256(source)
+    )
 
 
 def test_import_refuses_tampered_observability(env):
