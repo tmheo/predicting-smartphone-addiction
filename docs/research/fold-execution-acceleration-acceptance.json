@@ -4,10 +4,21 @@
   "ticket": "https://github.com/tmheo/predicting-smartphone-addiction/issues/358",
   "specification": "https://github.com/tmheo/predicting-smartphone-addiction/issues/319#issuecomment-5368015864",
   "generated_at": "2026-08-22T11:25:43Z",
+  "decision_updated_at": "2026-08-22T11:48:26Z",
   "verdict": {
-    "status": "fail",
-    "passed": false,
-    "blocking_conditions": [
+    "status": "pass_with_accepted_exceptions",
+    "passed": true,
+    "strict_spec_passed": false,
+    "acceptance_basis": "human_review",
+    "human_acceptance": {
+      "accepted_at": "2026-08-22T11:48:26Z",
+      "decision": "사람 검토에서 두 편차를 핵심 범위 인수를 막는 조건으로 보지 않고 진행하기로 했다.",
+      "accepted_exception_conditions": [
+        "tabcnn_reversed_pairs_same_raw_improvement_direction",
+        "lightgbm_preimplementation_and_candidate_exact_result_match"
+      ]
+    },
+    "strict_spec_deviations": [
       {
         "condition": "tabcnn_reversed_pairs_same_raw_improvement_direction",
         "passed": false,
@@ -36,9 +47,10 @@
       "observability_contract_and_overhead",
       "gpu_resource_observation_missing_rate",
       "bundle_import_and_revalidation",
-      "remote_resource_cleanup_and_zero_issue358_billing_rate"
+      "remote_resource_cleanup_and_zero_issue358_billing_rate",
+      "human_review_of_strict_spec_deviations"
     ],
-    "next_action": "최종 명세를 다시 해석하거나 무효 사유가 없는 실행을 버리지 않는다. raw 방향과 구현 전 LightGBM 비결정성을 어떻게 처리할지 결정한 뒤 새 고정 후보로 전체 짝 비교를 다시 수행해야 한다."
+    "next_action": "핵심 범위를 인수하고 후속 이슈로 진행한다. 두 편차와 원시 측정값은 후속 비교의 해석 근거로 유지한다."
   },
   "measurement_contract": {
     "seed": 42,
@@ -451,7 +463,8 @@
       "median_within_five_percent_non_regression": true,
       "both_within_five_percent_non_regression": true,
       "both_same_raw_improvement_direction": false,
-      "passed": false
+      "passed": false,
+      "accepted_for_core_scope": true
     },
     "lightgbm_miss": {
       "pairs": [
@@ -512,7 +525,8 @@
       "feature_importance_exact": false,
       "feature_importance_max_absolute_difference": 10.741000175476074,
       "cause": "구현 전 LightGBM 다중 스레드 누적 순서 비결정성",
-      "passed": false
+      "passed": false,
+      "accepted_for_core_scope": true
     }
   },
   "resource_observation": {
