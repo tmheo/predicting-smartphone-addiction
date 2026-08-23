@@ -315,19 +315,11 @@ def _init_worker(
 
 
 def _registry_combiner(name: str, context: _WorkerContext) -> ensemble_module.Combiner:
-    if name == "shrunk_rank_logit_logistic":
-        return ensemble_module.ShrunkRankLogitCombiner(fold_of=context.folds)
-    if name == "missing_segmented_rank_logit":
-        return ensemble_module.MissingnessSegmentedLogisticCombiner(band_of=context.bands)
-    if name == "missing_interaction_rank_logit":
-        return ensemble_module.MissingnessInteractionLogisticCombiner(band_of=context.bands)
-    if name == "missing_4plus_rank_logit":
-        return ensemble_module.MissingnessSegmentedLogisticCombiner(
-            band_of=context.bands,
-            specialized_bands=(2,),
-            name="missing_4plus_rank_logit",
-        )
-    return ensemble_module.COMBINER_REGISTRY[name]
+    return ensemble_module.combiner_for_context(
+        name,
+        fold_of=context.folds,
+        band_of=context.bands,
+    )
 
 
 def _scope_mask(folds: pd.Series, excluded_fold: int | None) -> np.ndarray:
