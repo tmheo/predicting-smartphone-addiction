@@ -155,6 +155,41 @@ def test_realmlp_orig_cdf_diff_config_is_exp124_feature_only_delta(monkeypatch):
     assert challenger.model == baseline.model
 
 
+def test_realmlp_exact_frequency_config_is_exp124_feature_only_delta():
+    from pipeline.features import FrequencyEncoder
+    from pipeline.plan import FeaturePlan
+
+    columns = [
+        "age",
+        "daily_screen_time_hours",
+        "social_media_hours",
+        "work_study_hours",
+        "sleep_hours",
+        "notifications_per_day",
+        "app_opens_per_day",
+        "weekend_screen_time",
+    ]
+    baseline = load_config(REPO / "configs" / "exp124_realmlp_dtype_fix.yaml", "screen")
+    challenger = load_config(
+        REPO / "configs" / "exp141_realmlp_exact_frequency.yaml", "screen"
+    )
+
+    assert challenger.name == "exp141_realmlp_exact_frequency"
+    assert challenger.data == baseline.data
+    assert challenger.features.base == baseline.features.base
+    assert challenger.features.categorical == baseline.features.categorical
+    assert challenger.features.exclude == baseline.features.exclude
+    assert challenger.features.providers == [
+        {"kind": "frequency_encoding", "cols": columns}
+    ]
+    assert challenger.model == baseline.model
+
+    providers = FeaturePlan.from_config(challenger.features).fold_fit_transformers()
+    assert len(providers) == 1
+    assert isinstance(providers[0], FrequencyEncoder)
+    assert providers[0].columns() == [f"{column}_ce" for column in columns]
+
+
 def test_realmlp_muon_recon_widths_config_is_exp134_feature_only_delta():
     from pipeline.features import ConstrainedImputeAux
     from pipeline.plan import FeaturePlan
