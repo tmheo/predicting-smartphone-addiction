@@ -775,6 +775,7 @@ class _LookupTransformerMember:
                 p.copy_(w)
         self._training_diagnostics = {
             "initialization_seed": self._seed,
+            "device": self._device,
             "preprocessing_scope": self._preprocessing_scope,
             "validation_selection": self._validation_selection,
             "value_dropout": self._value_dropout,
