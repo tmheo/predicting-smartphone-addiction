@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -17,9 +18,10 @@ import pytest
 from sklearn.metrics import roc_auc_score
 
 from pipeline import model as model_mod
-from pipeline.config import ModelConfig
+from pipeline.config import ModelConfig, load_config
 
 SEED = 7
+REPO = Path(__file__).resolve().parents[1]
 
 SMALL_PARAMS = {
     "lookup_cols": ["v", "c"],
@@ -525,3 +527,38 @@ def test_lookup_transformer_muon_learns_on_cpu():
 
     member = adapter.entry_diagnostics().observations["fold_initialization_members"][0]
     assert member["optimizer"] == "muon"
+
+
+def test_lookup_orig_cdf_diff_config_is_exp131_feature_only_delta():
+    proxy_columns = [
+        "daily_screen_time_hours",
+        "weekend_screen_time",
+        "social_media_hours",
+        "notifications_per_day",
+        "app_opens_per_day",
+    ]
+    baseline = load_config(
+        REPO / "configs" / "exp131_lookup_bivariate_plr5.yaml", "screen"
+    )
+    challenger = load_config(
+        REPO / "configs" / "exp141_lookup_orig_cdf_diff.yaml", "screen"
+    )
+
+    assert challenger.name == "exp141_lookup_orig_cdf_diff"
+    assert challenger.data == baseline.data
+    assert challenger.model == baseline.model
+    assert challenger.features.base == baseline.features.base
+    assert challenger.features.categorical == baseline.features.categorical
+    assert challenger.features.exclude == baseline.features.exclude
+    assert challenger.features.providers == [
+        *baseline.features.providers,
+        {
+            "kind": "original_cdf_diff",
+            "path": "data/external/Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv",
+            "cols": proxy_columns,
+        },
+    ]
+    assert all(
+        f"{column}_orig_cdf_diff" not in challenger.model.params["lookup_cols"]
+        for column in proxy_columns
+    )
