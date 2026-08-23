@@ -35,6 +35,10 @@ nested OOF 정의(ADR 0001 계열 3): outer fold k마다 나머지 4개 fold의 
 평가 자체는 MLflow run을 만들지 않고 stdout으로 남긴다(실험 하나 = run 하나 규약).
 각 실행은 전략별 nested OOF AUC와 경과 시간, 기본 평가에서 제외한 정밀 결합 전략을
 run-logs/ensemble-evaluation.json에 함께 남긴다.
+CLI는 전략마다 가중 OOF AUC(test 결측 패턴 구성비 재채점, judgment 소관)를 함께 재서
+같은 JSON에 남기고, 전략별 nested OOF 예측을 run-logs/strategy-oof.parquet에
+저장한다. 점수 하나만 남기면 사후에 다른 눈금으로 다시 비교할 수 없기 때문이다(#383).
+판정은 nested OOF만 쓴다.
 --record-issue가 주어지면 최선 전략의 nested 결과 하나를 파생 앙상블 실행
 (source.kind=derived_ensemble)으로 MLflow에 기록한다(#179·#183 선례의 상설화, #202).
 채택 전략은 전체 OOF로 다시 학습해 구성원 시험 예측에 적용한 제출 파일을 명시적
@@ -52,7 +56,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 import numpy as np
 import pandas as pd
@@ -66,6 +70,9 @@ from sklearn.preprocessing import StandardScaler
 from .data import ID, TARGET, TRAIN_PATH, file_sha256, labels
 from .ledger import CHAMPION_PATH, Champion, Pool
 from .runs import TRACKING_URI, MlflowRunStore, RunStore, RunStoreError
+
+if TYPE_CHECKING:  # 최상단 import는 judgment → ensemble 단방향만 둔다(module docstring).
+    from .judgment import MissingnessReweighting, WeightedOof
 
 
 def rank_mean(preds: pd.DataFrame) -> np.ndarray:
@@ -1136,7 +1143,12 @@ DEFAULT_COMBINER_NAMES = tuple(
     name for name in COMBINER_REGISTRY if name not in PRECISION_COMBINER_NAMES
 )
 DEFAULT_EVALUATION_OUTPUT = Path("run-logs/ensemble-evaluation.json")
+DEFAULT_STRATEGY_OOF_OUTPUT = Path("run-logs/strategy-oof.parquet")
 EVALUATION_ARTIFACT_NAME = "ensemble_evaluation.json"
+STRATEGY_OOF_ARTIFACT_NAME = "strategy_oof.parquet"
+MISSINGNESS_WEIGHTS_ARTIFACT_NAME = "missingness_weights.csv"
+# 2: 전략별 weighted_oof_auc와 best_weighted_oof_auc·weighted_oof_sample 추가. (#383)
+EVALUATION_ARTIFACT_SCHEMA_VERSION = 2
 
 
 def combiner_for_context(
@@ -1199,6 +1211,7 @@ class NestedEvaluation:
     elapsed_seconds: float
     folds: list[FoldOutcome]
     prediction: pd.Series  # id 인덱스의 nested OOF 예측. 파생 앙상블 실행 기록의 원본.
+    weighted: WeightedOof | None = None  # 결측 패턴 재가중을 건넸을 때만 잰다. (#383)
 
 
 @dataclass(frozen=True)
@@ -1220,9 +1233,17 @@ class NestedEvaluationReport:
 
 
 def evaluate_nested(
-    combiner: Combiner, preds: pd.DataFrame, fold_of: pd.Series, y: pd.Series
+    combiner: Combiner,
+    preds: pd.DataFrame,
+    fold_of: pd.Series,
+    y: pd.Series,
+    reweighting: MissingnessReweighting | None = None,
 ) -> NestedEvaluation:
-    """outer fold 루프: 나머지 fold의 OOF로 fit하고 fold k만 predict해 합쳐 채점한다."""
+    """outer fold 루프: 나머지 fold의 OOF로 fit하고 fold k만 predict해 합쳐 채점한다.
+
+    reweighting을 건네면 같은 nested 예측을 test 결측 패턴 구성비로 한 번 더 채점해
+    가중 OOF를 함께 남긴다. nested_auc는 그대로다(#383, 추가 눈금).
+    """
     started = time.monotonic()
     preds = preds.astype(np.float64)  # 결합 전략에는 float64 원시 예측만 건넨다.
     nested = np.full(len(preds), np.nan)
@@ -1246,12 +1267,19 @@ def evaluate_nested(
             )
         )
     assert not np.isnan(nested).any(), "fold 배정이 전 행을 덮지 않는다."
+    prediction = pd.Series(nested, index=preds.index, name="prediction")
+    weighted = None
+    if reweighting is not None:
+        from .judgment import weighted_oof_auc  # 지역 import(module docstring).
+
+        weighted = weighted_oof_auc(prediction, y, reweighting)
     return NestedEvaluation(
         name=combiner.name,
         nested_auc=float(roc_auc_score(y.to_numpy(), nested)),
         elapsed_seconds=time.monotonic() - started,
         folds=outcomes,
-        prediction=pd.Series(nested, index=preds.index, name="prediction"),
+        prediction=prediction,
+        weighted=weighted,
     )
 
 
@@ -1359,15 +1387,17 @@ def evaluation_artifact_payload(
         if report.evaluations
         else None
     )
-    strategies: list[dict[str, Any]] = [
-        {
+    strategies: list[dict[str, Any]] = []
+    for evaluation in report.evaluations:
+        entry: dict[str, Any] = {
             "name": evaluation.name,
             "status": "completed",
             "elapsed_seconds": evaluation.elapsed_seconds,
             "nested_oof_auc": evaluation.nested_auc,
         }
-        for evaluation in report.evaluations
-    ]
+        if evaluation.weighted is not None:
+            entry["weighted_oof_auc"] = evaluation.weighted.auc
+        strategies.append(entry)
     strategies.extend(
         {
             "name": failure.name,
@@ -1377,8 +1407,8 @@ def evaluation_artifact_payload(
         }
         for failure in report.failures
     )
-    return {
-        "schema_version": 1,
+    payload: dict[str, Any] = {
+        "schema_version": EVALUATION_ARTIFACT_SCHEMA_VERSION,
         "member_count": len(members),
         "members": [
             {"config": config, "run_id": run_id} for config, run_id in members
@@ -1388,6 +1418,37 @@ def evaluation_artifact_payload(
         "best_nested_oof_auc": best.nested_auc if best is not None else None,
         "strategies": strategies,
     }
+    if best is not None and best.weighted is not None:
+        payload["best_weighted_oof_auc"] = best.weighted.auc
+        payload["weighted_oof_sample"] = {
+            "effective_sample_size": best.weighted.effective_sample_size,
+            "effective_sample_fraction": best.weighted.effective_sample_fraction,
+            "zero_weight_rows": best.weighted.zero_weight_rows,
+            "test_only_pattern_count": best.weighted.test_only_pattern_count,
+        }
+    return payload
+
+
+def strategy_oof_frame(report: NestedEvaluationReport) -> pd.DataFrame:
+    """완료된 전략별 nested OOF 예측을 id 열 + 전략 열 하나씩으로 모은다. (#383)
+
+    두 눈금 비교와 사후 재채점의 원본이다. 미수렴으로 빠진 전략은 예측이 없어 빠진다.
+    """
+    if not report.evaluations:
+        raise ValueError("전략별 OOF 예측을 남길 완료 전략이 없다.")
+    index = report.evaluations[0].prediction.index
+    columns = {}
+    for evaluation in report.evaluations:
+        if not evaluation.prediction.index.equals(index):
+            raise ValueError(f"전략 {evaluation.name}의 OOF id 순서가 다르다.")
+        columns[evaluation.name] = evaluation.prediction.to_numpy(dtype=np.float64)
+    return pd.DataFrame(columns, index=index).rename_axis(ID).reset_index()
+
+
+def write_strategy_oof(report: NestedEvaluationReport, output_path: Path) -> None:
+    """전략별 nested OOF 예측을 parquet으로 저장한다. (#383)"""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    strategy_oof_frame(report).to_parquet(output_path, index=False)
 
 
 def write_evaluation_artifact(
@@ -1415,6 +1476,7 @@ def record_nested_evaluation(
     issue: int,
     baseline: NestedBaseline | None,
     evaluation_report: NestedEvaluationReport | None = None,
+    reweighting: MissingnessReweighting | None = None,
     input_hashes: dict[str, str],
     tracking_uri: str = TRACKING_URI,
 ) -> str:
@@ -1424,6 +1486,9 @@ def record_nested_evaluation(
     params에 구성원 계보와 git 상태, metrics에 auc_oof·fold별 AUC·직전 기록 대비 증분,
     artifacts에 oof.parquet(id, prediction), member_weights.csv와 전략별 비교 JSON,
     tags에 source.kind=derived_ensemble와 입력 sha256·산출물 sha256을 남긴다.
+
+    가중 OOF를 잰 실행은 전략별 nested OOF 예측(strategy_oof.parquet)과 결측 패턴별
+    가중치 원본(missingness_weights.csv)을 함께 남긴다. (#383)
     """
     import hashlib
     import tempfile
@@ -1459,6 +1524,9 @@ def record_nested_evaluation(
     client.log_metric(run_id, "auc_oof", evaluation.nested_auc)
     for outcome in evaluation.folds:
         client.log_metric(run_id, f"auc_fold_{outcome.fold}", outcome.auc)
+    if evaluation.weighted is not None:
+        for name, value in evaluation.weighted.metrics().items():
+            client.log_metric(run_id, name, value)
     if baseline is not None:
         size = baseline.pool_size
         client.log_metric(
@@ -1499,10 +1567,23 @@ def record_nested_evaluation(
         ).to_csv(weights_path, index=False)
         client.log_artifact(run_id, str(oof_path))
         client.log_artifact(run_id, str(weights_path))
+        strategy_oof_sha256 = None
         if evaluation_report is not None:
             evaluation_path = tmp_dir / EVALUATION_ARTIFACT_NAME
             write_evaluation_artifact(evaluation_report, members, evaluation_path)
             client.log_artifact(run_id, str(evaluation_path))
+            # 전략별 OOF 예측을 남겨야 사후에 두 눈금으로 다시 비교할 수 있다. (#383)
+            strategy_oof_path = tmp_dir / STRATEGY_OOF_ARTIFACT_NAME
+            write_strategy_oof(evaluation_report, strategy_oof_path)
+            client.log_artifact(run_id, str(strategy_oof_path))
+            strategy_oof_sha256 = hashlib.sha256(
+                strategy_oof_path.read_bytes()
+            ).hexdigest()
+        if reweighting is not None:
+            # 어떤 가중치로 잰 값인지가 없으면 가중 OOF는 감사할 수 없는 수치다. (#383)
+            weights_table_path = tmp_dir / MISSINGNESS_WEIGHTS_ARTIFACT_NAME
+            reweighting.patterns.to_csv(weights_table_path, index=False)
+            client.log_artifact(run_id, str(weights_table_path))
         oof_sha256 = hashlib.sha256(oof_path.read_bytes()).hexdigest()
 
     tags = {
@@ -1514,6 +1595,8 @@ def record_nested_evaluation(
         "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         **{f"sha256.{name}": digest for name, digest in input_hashes.items()},
     }
+    if strategy_oof_sha256 is not None:
+        tags["sha256.strategy_oof_prediction"] = strategy_oof_sha256
     for key, value in tags.items():
         client.set_tag(run_id, key, value)
     client.set_terminated(run_id, "FINISHED")
@@ -1573,8 +1656,13 @@ def run_report(
     champion_auc: float,
     *,
     default_excluded: tuple[str, ...] = (),
+    reweighting: MissingnessReweighting | None = None,
 ) -> NestedEvaluationReport:
-    """nested 평가부터 계열 3 판정까지의 stdout 리포트. CLI와 golden 테스트가 공유한다."""
+    """nested 평가부터 계열 3 판정까지의 stdout 리포트. CLI와 golden 테스트가 공유한다.
+
+    reweighting을 건네면 전략마다 가중 OOF를 함께 재서 리포트와 산출물에 남긴다.
+    판정은 nested OOF만 쓰므로 판정 줄과 결론은 달라지지 않는다. (#383)
+    """
     # 최상단 import는 judgment → ensemble 단방향만 둔다(module docstring). 지역 import.
     from .judgment import AUC_THRESHOLD, StrategyOutcome, judge_ensemble
 
@@ -1594,7 +1682,9 @@ def run_report(
     for combiner in combiners:
         started = time.monotonic()
         try:
-            evaluations.append(evaluate_nested(combiner, matrix, fold_of, y))
+            evaluations.append(
+                evaluate_nested(combiner, matrix, fold_of, y, reweighting)
+            )
         except CombinerConvergenceError as exc:
             failures.append(
                 FailedStrategyEvaluation(
@@ -1605,6 +1695,16 @@ def run_report(
             )
     for evaluation in evaluations:
         print(f"전략 {evaluation.name}: nested OOF AUC {evaluation.nested_auc:.5f}")
+        if evaluation.weighted is not None:
+            weighted = evaluation.weighted
+            print(
+                f"  가중 OOF AUC {weighted.auc:.5f} "
+                f"(nested 대비 {weighted.auc - evaluation.nested_auc:+.5f}, "
+                f"유효 표본 {weighted.effective_sample_size:,.0f}"
+                f"/{weighted.effective_sample_fraction:.1%}, "
+                f"0가중 행 {weighted.zero_weight_rows}, "
+                f"test 전용 패턴 {weighted.test_only_pattern_count})"
+            )
         folds = " ".join(f"{o.fold}={o.auc:.5f}" for o in evaluation.folds)
         print(f"  outer fold AUC: {folds}")
         print("  구성원별 선택 빈도·평균 가중치:")
@@ -1671,7 +1771,13 @@ def main() -> None:
         "--output",
         type=Path,
         default=DEFAULT_EVALUATION_OUTPUT,
-        help="전략별 nested OOF AUC와 경과 시간을 저장할 JSON 경로",
+        help="전략별 nested OOF AUC·가중 OOF AUC와 경과 시간을 저장할 JSON 경로",
+    )
+    parser.add_argument(
+        "--strategy-oof-output",
+        type=Path,
+        default=DEFAULT_STRATEGY_OOF_OUTPUT,
+        help="전략별 nested OOF 예측을 저장할 parquet 경로 (#383)",
     )
     parser.add_argument(
         "--submission", type=Path, help="--only 전략의 전체 OOF 학습 제출 파일 경로"
@@ -1706,11 +1812,13 @@ def main() -> None:
     if not pool.members:
         sys.exit("후보 풀이 비어 있다: nested OOF 평가는 풀 구성원이 필요하다.")
 
-    from .judgment import FOLDS_PATH  # run_report와 같은 이유의 지역 import.
+    # run_report와 같은 이유의 지역 import.
+    from .judgment import FOLDS_PATH, missingness_reweighting
 
     fold_of = pd.read_parquet(FOLDS_PATH).set_index(ID)["fold"]
     y = labels(fold_of.index)
     store = MlflowRunStore()
+    reweighting = missingness_reweighting(TRAIN_PATH, MISSINGNESS_TEST_PATH)
     try:
         members = [(member.config, member.run_id) for member in pool.members]
         report = run_report(
@@ -1721,9 +1829,16 @@ def main() -> None:
             y,
             champion.oof_auc,
             default_excluded=default_excluded,
+            reweighting=reweighting,
         )
         write_evaluation_artifact(report, members, args.output)
         print(f"평가 산출물 저장: {args.output}")
+        if report.evaluations:
+            write_strategy_oof(report, args.strategy_oof_output)
+            print(
+                f"전략별 OOF 예측 저장: {args.strategy_oof_output} "
+                f"({len(report.evaluations)}개 전략)"
+            )
         evaluations = report.evaluations
         if args.record_issue is not None:
             from .tracking import git_state
@@ -1744,6 +1859,7 @@ def main() -> None:
                 issue=args.record_issue,
                 baseline=baseline,
                 evaluation_report=report,
+                reweighting=reweighting,
                 input_hashes={
                     "train": file_sha256(TRAIN_PATH),
                     "test": file_sha256(MISSINGNESS_TEST_PATH),
