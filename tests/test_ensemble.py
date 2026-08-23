@@ -24,6 +24,7 @@ from pipeline.ensemble import (
     BaggedGreedyRankMeanCombiner,
     CombinerConvergenceError,
     EmpiricalCDFTransformer,
+    FailedStrategyEvaluation,
     GreedyRankMeanCombiner,
     LogisticLinearCombiner,
     SHRINKAGE_LAMBDA_GRID,
@@ -52,8 +53,9 @@ from pipeline.ensemble import (
     run_report,
     select_combiners,
     write_evaluation_artifact,
+    write_strategy_oof,
 )
-from pipeline.judgment import rank_ensemble_auc
+from pipeline.judgment import MissingnessReweighting, rank_ensemble_auc
 from pipeline.runs import InMemoryRunStore
 
 N = 60
@@ -717,7 +719,7 @@ def test_evaluation_artifact_records_default_scope_auc_and_elapsed_time(
         assert name in transcript
 
     artifact = json.loads(output.read_text())
-    assert artifact["schema_version"] == 1
+    assert artifact["schema_version"] == 2
     assert artifact["member_count"] == 2
     assert artifact["members"] == [
         {"config": "exp_0", "run_id": "run-0"},
@@ -880,3 +882,216 @@ def test_record_nested_evaluation_writes_derived_ensemble_run(tmp_path, monkeypa
     assert report_artifact["strategies"][0]["nested_oof_auc"] == pytest.approx(
         evaluation.nested_auc
     )
+
+
+# --------------------------------------------------------- 두 눈금 기록 (#383)
+
+
+def uniform_reweighting(index: pd.Index) -> MissingnessReweighting:
+    """가중치가 전부 1인 재가중. 가중 OOF가 nested OOF와 같아야 하는 기준선이다."""
+    return MissingnessReweighting(
+        weight=pd.Series(np.ones(len(index)), index=index, name="weight"),
+        train_pattern_count=1,
+        test_pattern_count=1,
+        test_only_pattern_count=0,
+        zero_weight_rows=0,
+    )
+
+
+def tilted_reweighting(index: pd.Index) -> MissingnessReweighting:
+    """짝수 자리에 무게를 실어 가중 OOF가 nested OOF와 갈라지게 만든다."""
+    weight = np.where(np.arange(len(index)) % 2 == 0, 1.5, 0.5)
+    return MissingnessReweighting(
+        weight=pd.Series(weight, index=index, name="weight"),
+        train_pattern_count=2,
+        test_pattern_count=3,
+        test_only_pattern_count=1,
+        zero_weight_rows=0,
+        patterns=pd.DataFrame(
+            {
+                "pattern": [0, 1],
+                "missing_columns": ["-", "x"],
+                "train_rows": [len(index) // 2] * 2,
+                "train_share": [0.5, 0.5],
+                "test_share": [0.75, 0.25],
+                "weight": [1.5, 0.5],
+            }
+        ),
+    )
+
+
+def test_evaluate_nested_leaves_the_nested_score_alone_when_reweighting_is_given():
+    y = make_labels()
+    fold_of = make_fold_of()
+    preds = make_preds()
+
+    plain = evaluate_nested(RankMeanCombiner(), preds, fold_of, y)
+    weighted = evaluate_nested(
+        RankMeanCombiner(), preds, fold_of, y, tilted_reweighting(make_index())
+    )
+
+    assert plain.weighted is None
+    assert weighted.nested_auc == pytest.approx(plain.nested_auc)
+    assert [o.auc for o in weighted.folds] == [o.auc for o in plain.folds]
+    np.testing.assert_allclose(
+        weighted.prediction.to_numpy(), plain.prediction.to_numpy()
+    )
+    assert weighted.weighted is not None
+    assert weighted.weighted.test_only_pattern_count == 1
+
+
+def test_all_ones_reweighting_makes_weighted_and_nested_scores_agree():
+    y = make_labels()
+
+    evaluation = evaluate_nested(
+        RankMeanCombiner(),
+        make_preds(),
+        make_fold_of(),
+        y,
+        uniform_reweighting(make_index()),
+    )
+
+    assert evaluation.weighted.auc == pytest.approx(evaluation.nested_auc)
+
+
+def test_evaluation_artifact_carries_both_scales(tmp_path):
+    index = make_index()
+    y = make_labels()
+    fold_of = make_fold_of()
+    preds = make_preds(members=2)
+    store = InMemoryRunStore()
+    members = [("exp_0", "run-0"), ("exp_1", "run-1")]
+    for config, run_id in members:
+        store.add_run(
+            run_id,
+            oof=pd.DataFrame({ID: index, "pred": preds[config].to_numpy()}),
+        )
+
+    report = run_report(
+        [COMBINER_REGISTRY["rank_mean"]],
+        members,
+        store,
+        fold_of,
+        y,
+        champion_auc=0.5,
+        reweighting=tilted_reweighting(index),
+    )
+    output = tmp_path / "ensemble-evaluation.json"
+    write_evaluation_artifact(report, members, output)
+
+    evaluation = report.evaluations[0]
+    artifact = json.loads(output.read_text())
+    assert artifact["strategies"][0]["nested_oof_auc"] == pytest.approx(
+        evaluation.nested_auc
+    )
+    assert artifact["strategies"][0]["weighted_oof_auc"] == pytest.approx(
+        evaluation.weighted.auc
+    )
+    assert artifact["best_nested_oof_auc"] == pytest.approx(evaluation.nested_auc)
+    assert artifact["best_weighted_oof_auc"] == pytest.approx(evaluation.weighted.auc)
+    assert artifact["weighted_oof_sample"] == {
+        "effective_sample_size": pytest.approx(
+            evaluation.weighted.effective_sample_size
+        ),
+        "effective_sample_fraction": pytest.approx(
+            evaluation.weighted.effective_sample_fraction
+        ),
+        "zero_weight_rows": 0,
+        "test_only_pattern_count": 1,
+    }
+
+
+def test_strategy_oof_artifact_holds_every_completed_strategy(tmp_path):
+    y = make_labels()
+    fold_of = make_fold_of()
+    preds = make_preds()
+    evaluations = [
+        evaluate_nested(COMBINER_REGISTRY[name], preds, fold_of, y)
+        for name in ("rank_mean", "ridge_logit")
+    ]
+    report = NestedEvaluationReport(
+        evaluations=evaluations,
+        failures=[
+            FailedStrategyEvaluation(
+                name="logit_logistic", elapsed_seconds=0.1, reason="미수렴"
+            )
+        ],
+        default_excluded=(),
+    )
+    output = tmp_path / "strategy-oof.parquet"
+
+    write_strategy_oof(report, output)
+
+    frame = pd.read_parquet(output)
+    # 미수렴으로 빠진 전략은 예측이 없어 열이 서지 않는다.
+    assert list(frame.columns) == [ID, "rank_mean", "ridge_logit"]
+    assert list(frame[ID]) == list(make_index())
+    for evaluation in evaluations:
+        np.testing.assert_allclose(
+            frame[evaluation.name].to_numpy(), evaluation.prediction.to_numpy()
+        )
+
+
+def test_record_nested_evaluation_logs_weighted_metrics_and_strategy_oof(
+    tmp_path, monkeypatch
+):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        "pipeline.tracking.git_state",
+        lambda: {"git_commit": "a" * 40, "git_dirty": "False"},
+    )
+    y = make_labels()
+    evaluation = evaluate_nested(
+        RankMeanCombiner(),
+        make_preds(),
+        make_fold_of(),
+        y,
+        tilted_reweighting(make_index()),
+    )
+    members = [(f"exp_{i}", f"run-{i}") for i in range(3)]
+    report = NestedEvaluationReport(
+        evaluations=[evaluation], failures=[], default_excluded=()
+    )
+    reweighting = tilted_reweighting(make_index())
+    tracking_uri = f"sqlite:///{tmp_path}/mlflow.db"
+
+    run_id = record_nested_evaluation(
+        evaluation,
+        members,
+        issue=383,
+        baseline=None,
+        evaluation_report=report,
+        reweighting=reweighting,
+        input_hashes={"train": "t1", "test": "t2", "folds": "t3"},
+        tracking_uri=tracking_uri,
+    )
+
+    from mlflow.tracking import MlflowClient
+
+    client = MlflowClient(tracking_uri=tracking_uri)
+    run = client.get_run(run_id)
+    assert run.data.metrics["auc_oof"] == pytest.approx(evaluation.nested_auc)
+    assert run.data.metrics["auc_oof_weighted"] == pytest.approx(
+        evaluation.weighted.auc
+    )
+    assert run.data.metrics["weighted_oof_effective_sample_size"] == pytest.approx(
+        evaluation.weighted.effective_sample_size
+    )
+    assert run.data.metrics["weighted_oof_test_only_patterns"] == 1.0
+    strategy_oof_path = client.download_artifacts(run_id, "strategy_oof.parquet")
+    strategy_oof = pd.read_parquet(strategy_oof_path)
+    assert list(strategy_oof.columns) == [ID, "rank_mean"]
+    np.testing.assert_allclose(
+        strategy_oof["rank_mean"].to_numpy(), evaluation.prediction.to_numpy()
+    )
+    import hashlib
+
+    with open(strategy_oof_path, "rb") as handle:
+        assert run.data.tags["sha256.strategy_oof_prediction"] == hashlib.sha256(
+            handle.read()
+        ).hexdigest()
+    # 가중치 원본이 없으면 가중 OOF는 감사할 수 없는 수치가 된다.
+    weights_table = pd.read_csv(
+        client.download_artifacts(run_id, "missingness_weights.csv")
+    )
+    pd.testing.assert_frame_equal(weights_table, reweighting.patterns)

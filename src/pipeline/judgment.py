@@ -39,6 +39,16 @@ compare·pool CLI는 이 module의 caller다. 판정 함수는 통과 여부와 
   채택 가능 전략이 없으면 "채택 없음, 단독 champion 유지"다.
 - 전략 간 fold별 승리 수는 보조 증거로 기록만 한다. (ADR 0001)
 
+가중 OOF(test 결측 패턴 구성비로 재채점한 OOF AUC)도 이 module 소관이다(#383).
+
+- train과 test는 어느 칸이 비는지가 다르고(열별 결측률 최대 3.4%p 차이), 결측이
+  난이도를 지배한다. 그래서 OOF는 test보다 어려운 표본에서 잰 값이다.
+- weighted_oof_auc는 12개 설명변수의 결측 마스크를 행 키로 삼아
+  `w = P_test(패턴) / P_train(패턴)`로 재가중해 OOF AUC를 다시 잰다.
+- 추가 눈금이며 기존 판정 경로의 수치를 바꾸지 않는다. 구성원 채택·교체 판정에는
+  쓰지 않고(32구성원이 균일 상승해 선택을 바꾸지 못한다), 최종 결합 전략(#337),
+  제출 2장(#69), 결측 처리 방식 자체를 바꾸는 후보(#360)의 판정에만 쓴다.
+
 계열 2(다양성 구성원)의 풀 진입 판정도 이 module 소관이다(#95).
 
 - 진입 하한: 시드 평균본 OOF AUC가 진입 시점 champion − 0.01 이상. 하한은 진입
@@ -66,6 +76,7 @@ import hashlib
 import json
 import math
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -73,7 +84,8 @@ import pandas as pd
 import yaml
 from sklearn.metrics import roc_auc_score
 
-from .ensemble import DEFAULT_COMBINER_NAMES, rank_mean
+from .data import ID, TARGET, TRAIN_PATH
+from .ensemble import DEFAULT_COMBINER_NAMES, MISSINGNESS_TEST_PATH, rank_mean
 from .features import PLACEBO
 from .ledger import POOL_PATH, Champion, Pool
 from .runs import RunStore
@@ -858,6 +870,186 @@ def load_pool_admission_authorization(
         evidence_sha256=evidence_sha256,
         record_path=path,
         record_sha256=_file_sha256(path),
+    )
+
+
+WEIGHTED_OOF_AUC_METRIC = "auc_oof_weighted"
+WEIGHTED_OOF_ESS_METRIC = "weighted_oof_effective_sample_size"
+WEIGHTED_OOF_ESS_FRACTION_METRIC = "weighted_oof_effective_sample_fraction"
+WEIGHTED_OOF_ZERO_WEIGHT_ROWS_METRIC = "weighted_oof_zero_weight_rows"
+WEIGHTED_OOF_TEST_ONLY_PATTERNS_METRIC = "weighted_oof_test_only_patterns"
+
+
+def _effective_sample_size(weight: np.ndarray) -> float:
+    """Kish 유효 표본 수 (Σw)² / Σw². 가중이 고를수록 표본 수에 가깝다."""
+    total = float(weight.sum())
+    square_total = float(np.square(weight).sum())
+    if square_total == 0.0:
+        raise JudgmentError("가중치가 전부 0이라 유효 표본 수를 잴 수 없다.")
+    return total * total / square_total
+
+
+@dataclass(frozen=True)
+class MissingnessReweighting:
+    """train 행을 test의 결측 패턴 구성비로 옮기는 표본 가중치와 그 계보. (#383)
+
+    행 키는 12개 설명변수의 결측 마스크다. 목표값과 id는 키에서 뺀다. 가중치는
+    `w = P_test(패턴) / P_train(패턴)`이고, test에 없는 패턴의 train 행은 0이다.
+    train에 없는 test 패턴은 실을 행이 없어 재채점에서 빠지므로 그 수를 남긴다.
+    """
+
+    weight: pd.Series  # id 인덱스, train 전 행. float64.
+    train_pattern_count: int
+    test_pattern_count: int
+    test_only_pattern_count: int
+    zero_weight_rows: int
+    # 패턴 하나당 한 행의 가중치 원본(결측 열, train 행 수, 양쪽 구성비, 가중치).
+    # 행 가중치 69만 개를 그대로 남기는 대신 이 표를 실행 기록에 붙인다.
+    # 합성 가중치를 쓰는 테스트에서는 비어 있다.
+    patterns: pd.DataFrame = field(default_factory=pd.DataFrame)
+
+    @property
+    def effective_sample_size(self) -> float:
+        return _effective_sample_size(self.weight.to_numpy(dtype=np.float64))
+
+
+def _missingness_pattern(frame: pd.DataFrame, columns: list[str]) -> pd.Series:
+    """결측 마스크를 id 인덱스의 정수 키로 접는다. 열 순서가 키의 의미를 정한다."""
+    mask = frame[columns].isna().to_numpy()
+    bits = np.left_shift(np.int64(1), np.arange(len(columns), dtype=np.int64))
+    return pd.Series(
+        (mask * bits).sum(axis=1),
+        index=pd.Index(frame[ID], name=ID),
+        dtype=np.int64,
+    )
+
+
+@lru_cache(maxsize=4)
+def missingness_reweighting(
+    train_path: Path = TRAIN_PATH,
+    test_path: Path = MISSINGNESS_TEST_PATH,
+) -> MissingnessReweighting:
+    """train/test 결측 패턴 구성비 차이를 표본 가중치로 만든다. (#383)
+
+    구성비는 자료에서 읽기만 하고 목표값을 보지 않으므로 fold 안팎을 나눌 필요가 없다.
+    """
+    train = pd.read_csv(train_path)
+    test = pd.read_csv(test_path)
+    columns = [column for column in train.columns if column not in {ID, TARGET}]
+    if [column for column in test.columns if column not in {ID, TARGET}] != columns:
+        raise JudgmentError("train과 test의 결측 패턴 대상 열이 다르다.")
+
+    train_pattern = _missingness_pattern(train, columns)
+    test_pattern = _missingness_pattern(test, columns)
+    train_share = train_pattern.value_counts(normalize=True)
+    test_share = test_pattern.value_counts(normalize=True)
+    weight = (
+        train_pattern.map(test_share).fillna(0.0) / train_pattern.map(train_share)
+    ).astype(np.float64)
+    return MissingnessReweighting(
+        weight=weight.rename("weight"),
+        train_pattern_count=int(len(train_share)),
+        test_pattern_count=int(len(test_share)),
+        test_only_pattern_count=int(len(set(test_share.index) - set(train_share.index))),
+        zero_weight_rows=int((weight == 0.0).sum()),
+        patterns=_pattern_table(train_pattern, train_share, test_share, columns),
+    )
+
+
+def _pattern_table(
+    train_pattern: pd.Series,
+    train_share: pd.Series,
+    test_share: pd.Series,
+    columns: list[str],
+) -> pd.DataFrame:
+    """가중치 원본 표. train에 있는 패턴만 담는다(다른 패턴은 실을 행이 없다).
+
+    빈 칸이 없는 패턴의 missing_columns는 "-"다. 빈 문자열은 CSV 왕복에서 결측이 되어
+    "빈 칸 없음"과 "값 없음"이 구분되지 않는다.
+    """
+    keys = sorted(train_share.index)
+    counts = train_pattern.value_counts()
+    return pd.DataFrame(
+        {
+            "pattern": keys,
+            "missing_columns": [
+                ";".join(
+                    column
+                    for position, column in enumerate(columns)
+                    if key >> position & 1
+                )
+                or "-"
+                for key in keys
+            ],
+            "train_rows": [int(counts[key]) for key in keys],
+            "train_share": [float(train_share[key]) for key in keys],
+            "test_share": [float(test_share.get(key, 0.0)) for key in keys],
+            "weight": [
+                float(test_share.get(key, 0.0)) / float(train_share[key])
+                for key in keys
+            ],
+        }
+    )
+
+
+@dataclass(frozen=True)
+class WeightedOof:
+    """test 결측 패턴 구성비로 재채점한 OOF AUC와 그 표본 계보. (#383)
+
+    ADR 0001의 구성원 채택·교체 판정에는 쓰지 않는다. 최종 결합 전략(#337), 제출
+    2장(#69), 결측 처리 방식 자체를 바꾸는 후보(#360)의 판정에만 쓰는 추가 눈금이다.
+    """
+
+    auc: float
+    effective_sample_size: float
+    effective_sample_fraction: float
+    zero_weight_rows: int
+    test_only_pattern_count: int
+
+    def metrics(self) -> dict[str, float]:
+        """실행 기록에 남길 metric 이름과 값. 단독 실행과 중첩 평가가 함께 쓴다."""
+        return {
+            WEIGHTED_OOF_AUC_METRIC: self.auc,
+            WEIGHTED_OOF_ESS_METRIC: self.effective_sample_size,
+            WEIGHTED_OOF_ESS_FRACTION_METRIC: self.effective_sample_fraction,
+            WEIGHTED_OOF_ZERO_WEIGHT_ROWS_METRIC: float(self.zero_weight_rows),
+            WEIGHTED_OOF_TEST_ONLY_PATTERNS_METRIC: float(self.test_only_pattern_count),
+        }
+
+
+def weighted_oof_auc(
+    prediction: pd.Series,
+    y: pd.Series,
+    reweighting: MissingnessReweighting,
+) -> WeightedOof:
+    """OOF 예측을 test의 결측 패턴 구성비로 재채점한다. (#383)
+
+    유효 표본 수와 0 가중 행 수는 재채점한 행에서 다시 세므로, 풀 부분집합이나
+    일부 fold만 건네도 그 표본의 계보가 남는다. 가중치가 전부 1이면 값은 기존
+    OOF AUC와 같다.
+    """
+    weight = reweighting.weight.reindex(prediction.index)
+    if weight.isna().any():
+        raise JudgmentError("가중 OOF 재채점에 결측 패턴 가중치가 없는 id가 들어왔다.")
+    if not prediction.index.equals(y.index):
+        raise JudgmentError("가중 OOF 재채점의 예측과 목표값 id 순서가 다르다.")
+    weight_values = weight.to_numpy(dtype=np.float64)
+    scored = weight_values > 0.0
+    if len(set(y.to_numpy()[scored])) < 2:
+        raise JudgmentError("가중치가 0이 아닌 행에 목표값 두 값이 다 있어야 한다.")
+    effective = _effective_sample_size(weight_values)
+    return WeightedOof(
+        auc=float(
+            roc_auc_score(
+                y.to_numpy(),
+                prediction.to_numpy(dtype=np.float64),
+                sample_weight=weight_values,
+            )
+        ),
+        effective_sample_size=effective,
+        effective_sample_fraction=effective / len(weight_values),
+        zero_weight_rows=int((~scored).sum()),
+        test_only_pattern_count=reweighting.test_only_pattern_count,
     )
 
 

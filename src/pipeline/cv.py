@@ -37,7 +37,8 @@ class RunRecorder(Protocol):
 class CVResult:
     oof: pd.DataFrame  # columns: id, fold, pred
     test_pred: pd.DataFrame  # columns: id, pred
-    fold_aucs: dict[str, float]  # auc_fold_0..N, auc_oof
+    # auc_fold_0..N, auc_oof. run.py가 시드별 auc_oof_seed_*와 가중 OOF metric을 더한다.
+    fold_aucs: dict[str, float]
     feature_names: list[str]
     importance: pd.DataFrame  # columns: feature, fold, seed, gain (#19)
     recovery_evidence: list[dict[str, object]] = field(default_factory=list)

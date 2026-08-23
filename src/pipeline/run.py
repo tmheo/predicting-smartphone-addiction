@@ -25,6 +25,7 @@ from . import cv, data, initial_score, seed_parallel, tracking
 from .config import STAGES, load_config
 from .fold_fit_reuse import DEFAULT_ROOT as DEFAULT_FOLD_FIT_REUSE_ROOT
 from .fold_fit_reuse import FoldFitReuseStore, build_runtime_identity
+from .judgment import missingness_reweighting, weighted_oof_auc
 from .plan import FeaturePlan
 from .recovery import FoldRecovery
 
@@ -78,7 +79,8 @@ def main() -> None:
         for stage, kind, columns, uses_target in plan.describe(raw_columns):
             mark = "타깃 참조" if uses_target else "-"
             print(f"  [{stage}] {kind}: {', '.join(columns)} ({mark})")
-        print("기록될 것   : params(feature 목록, 모델 파라미터), metrics(auc_fold_*, auc_oof, auc_oof_seed_*),")
+        print("기록될 것   : params(feature 목록, 모델 파라미터), metrics(auc_fold_*, auc_oof,")
+        print("             auc_oof_seed_*, auc_oof_weighted와 그 표본 계보),")
         print("             progress.*/time.* 진행 기록, artifacts(설정 yaml, oof.parquet, oof_seed_*.parquet,")
         print("             test_pred.parquet, feature_importance.parquet, submission.csv,")
         print("             model_training_diagnostics.json, summary.html 등 결과 요약,")
@@ -168,15 +170,36 @@ def main() -> None:
         # 확정 재검증의 시드별 비교를 위해 대표 metric과 함께 기록된다. (ADR 0001)
         for seed, auc in seed_aucs.items():
             final.fold_aucs[f"auc_oof_seed_{seed}"] = auc
+        # 두 눈금을 함께 남긴다: nested OOF는 판정용, 가중 OOF는 test 결측 패턴
+        # 구성비로 재채점한 참고값이다. 판정에 쓰이는 수치는 바뀌지 않는다. (#383)
+        final.fold_aucs.update(
+            _weighted_oof_metrics(cfg, final.oof, train[data.TARGET])
+        )
 
         observer.stage("artifacts")
         observer.log_final(final, seed_oofs)
         tracking.warn_below_placebo(final.importance)
-        print(f"run_id={observer.run_id} auc_oof={final.fold_aucs['auc_oof']:.5f}")
+        print(
+            f"run_id={observer.run_id} auc_oof={final.fold_aucs['auc_oof']:.5f} "
+            f"auc_oof_weighted={final.fold_aucs['auc_oof_weighted']:.5f}"
+        )
         observer.succeed()
     except BaseException as exc:  # noqa: BLE001 - 중단 신호까지 관찰 기록 후 종료한다.
         observer.fail(exc)
         sys.exit(130 if isinstance(exc, KeyboardInterrupt) else 1)
+
+
+def _weighted_oof_metrics(cfg, oof: pd.DataFrame, target: pd.Series) -> dict[str, float]:
+    """시드 평균 OOF를 test 결측 패턴 구성비로 재채점한 metric. (#383)
+
+    판정에 쓰는 auc_oof는 그대로 두고 auc_oof_weighted를 나란히 남긴다. oof와 target은
+    같은 행 순서다(score_predictions가 쓰는 것과 같은 전제).
+    """
+    index = pd.Index(oof[data.ID], name=data.ID)
+    prediction = pd.Series(oof["pred"].to_numpy(), index=index)
+    y = pd.Series(target.to_numpy(), index=index)
+    reweighting = missingness_reweighting(cfg.data.train, cfg.data.test)
+    return weighted_oof_auc(prediction, y, reweighting).metrics()
 
 
 def _input_hashes(cfg) -> dict[str, str]:
