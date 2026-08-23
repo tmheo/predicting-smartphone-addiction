@@ -1,0 +1,204 @@
+schema_version: 1
+judgment_id: issue299-realmlp-exact-frequency-screen
+created_at: '2026-08-23T00:57:10Z'
+stage: screening
+route: candidate_pool
+supersedes: null
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: RealMLP에 정확값 빈도 8열 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/299
+
+feature_bundle:
+  name: exp027_frequency_encoding_8
+  provider: frequency_encoding
+  columns:
+    - age_ce
+    - daily_screen_time_hours_ce
+    - social_media_hours_ce
+    - work_study_hours_ce
+    - sleep_hours_ce
+    - notifications_per_day_ce
+    - app_opens_per_day_ce
+    - weekend_screen_time_ce
+  target_free: true
+  preregistration:
+    kind: committed_config
+    reference: configs/exp141_realmlp_exact_frequency.yaml@a6a7af726a8361188d6cb73008edcecfffadce17
+    description: exp124 RealMLP 설정에 정확값 빈도 8열 전체만 더하고 결과를 보고 하위 묶음을 고르지 않는 짝비교를 고정했다.
+  content_sha256: c50dcd944d20d12730fc839dfe1faa8400c241fab5cbd3ee7b83a0c3e6a82aed
+
+lineage:
+  included:
+    config: exp141_realmlp_exact_frequency
+    config_path: configs/exp141_realmlp_exact_frequency.yaml
+    config_sha256: 0ca450f8d0e280a9a80ea595089cc0061a87e6d3d2f56d85b103035302f65c5a
+    source_run_id: b394e3ea614f40699aba9d91bf0a8b1c
+    imported_run_id: 75f943ce68014f639440f4a1d432cd28
+    import_bundle_sha256: 685882afaa1050c38cfd51a4abd0c8ad32132da392742a4e6c7c8769473b7e48
+    git_commit: a6a7af726a8361188d6cb73008edcecfffadce17
+    seeds: [42]
+  excluded:
+    config: exp124_realmlp_dtype_fix
+    config_path: configs/exp124_realmlp_dtype_fix.yaml
+    config_sha256: 3e0fa92985c3ebce4bd67129ccf83c96ca287fd1aa29a14b05610ba5a7eed4e9
+    source_run_id: db5271d16cd6458dba03415e7f7f905d
+    imported_run_id: 7b9d08c19bed4a549f111f250974974a
+    import_bundle_sha256: a9f35d03d062e4096ad48b5c1281f1ee6bb991a195ed997b29de46d03f8db431
+    git_commit: a6a7af726a8361188d6cb73008edcecfffadce17
+    seeds: [42]
+  allowed_differences:
+    - features.providers.frequency_encoding
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  row_order_match: true
+  model_contract_match: true
+  allowed_config_difference_match: true
+  added_feature_columns_match: true
+  included_feature_total: 21
+  excluded_feature_total: 13
+  adoption_eligibility:
+    seeds_ok: false
+    clean_commit_ok: true
+    folds_ok: true
+    ok: false
+    reason: 선별이 시드 42에서 음수여서 3시드 확인 실행과 후보 풀 등록 자격 평가를 열지 않았다.
+  canary:
+    state: 유효
+    placebo_present: true
+    target_using_provider_total: 0
+    derived_canary_checks: []
+    reason: 정확값 빈도 제공자는 목표값을 참조하지 않으며 계획의 상시 플라시보 불변식을 유지했다.
+
+environment_gates:
+  isolated_commit: a6a7af726a8361188d6cb73008edcecfffadce17
+  exact_image_python_gate: passed
+  remote_contract_tests: 4
+  full_tests: 513
+  before_commit: passed
+  after_record: passed
+
+paired_oof:
+  comparison: included_minus_excluded
+  seed: 42
+  included_auc: 0.9682100458043117
+  excluded_auc: 0.96825640714118
+  overall_delta: -0.00004636133686830579
+  fold_deltas:
+    0: -0.00007636769439611779
+    1: -0.00007691763161254972
+    2: -0.000030257076264472715
+    3: -0.00003699789839384238
+    4: -0.000018396760881667085
+  fold_wins: 0
+  fold_total: 5
+  thresholds:
+    screening_delta_min: 0.0
+  screening_passed: false
+
+selection_procedure:
+  required: false
+  reason: 결과 확인 전에 정확값 빈도 8열 전체와 단일 포함 설정을 고정했고 같은 OOF에서 하위 묶음이나 변형을 고르지 않았다.
+  candidate_set: [exp141_realmlp_exact_frequency]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호 미확인
+  reason: 시드 42 짝차이가 음수이고 5개 분할도 모두 음수여서 3시드 확인 실행 조건을 충족하지 못했다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 후보 풀의 RealMLP 구성원 교체 가능성을 묻는 경로이며 champion 교체를 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: false
+  state: null
+  reason: 선별을 통과하지 못해 깨끗한 3시드 평균본이 없으므로 현재 후보 풀의 직접 교체와 포함·제외 nested OOF를 평가하지 않는다.
+
+auxiliary_importance:
+  method: realmlp_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: 0.0000023537325280154065
+  cell_total: 5
+  features:
+    age_ce:
+      mean: 0.000004280705268211449
+      above_placebo_cells: 3
+    daily_screen_time_hours_ce:
+      mean: 0.000022857168034873256
+      above_placebo_cells: 5
+    social_media_hours_ce:
+      mean: 0.00001684022987089584
+      above_placebo_cells: 4
+    work_study_hours_ce:
+      mean: 0.0000076031497763029424
+      above_placebo_cells: 4
+    sleep_hours_ce:
+      mean: -0.000001005294776690313
+      above_placebo_cells: 0
+    notifications_per_day_ce:
+      mean: 0.000011749533162142001
+      above_placebo_cells: 4
+    app_opens_per_day_ce:
+      mean: 0.000007066172399428083
+      above_placebo_cells: 2
+    weekend_screen_time_ce:
+      mean: 0.000004224509231809393
+      above_placebo_cells: 3
+  conflicts_with_oof: true
+  used_as_gate: false
+
+remote_execution:
+  provider: Vast.ai
+  instance_id: 48432904
+  machine_id: 144022
+  gpu: 2x RTX A4000 16376MiB
+  hourly_total_usd: 0.22814814814814816
+  image: nvcr.io/nvidia/pytorch@sha256:38ed2ecb2c16d10677006d73fb0a150855d6ec81db8fc66e800b5ae92741007e
+  input_archive_sha256: c5c2383ba677b645c867ada9faecb7971dc991b018941b7b5cf85a13fbf504ee
+  result_archive_sha256: 520adceebdd1f8beb196a7d61d87f1a739e79764f58411c98f4686b612156e55
+  transfer: ssh_standard_stream
+  performance_diagnosis:
+    valid_first_epoch_seconds: 20.0
+    rejected_attempt_first_epoch_seconds: [115.5, 89.9]
+    cause: 코드와 환경이 같은 상태에서 장비를 바꾸자 정상 처리량이 복구되어 장비별 실제 학습 처리량 차이로 판정했다.
+  cost_attribution:
+    exact_account_delta_available: false
+    reason: 같은 계정의 다른 작업과 잔액 변동이 겹쳐 이 작업의 단독 비용을 계정 차이로 해석하지 않았다.
+  cleanup:
+    instance_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+    unused_confirmation_input_trashed: true
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호 미확인
+  champion_route: null
+  candidate_pool_route: null
+  actual_ledger_change: none
+  reason_codes:
+    - screening_delta_negative
+    - screening_fold_wins_0_of_5
+    - confirmation_not_opened
+    - candidate_pool_not_evaluated
+    - clean_commit
+    - folds_match
+    - row_order_match
+    - canary_valid
