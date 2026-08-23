@@ -250,6 +250,8 @@ def test_lookup_transformer_rejects_unknown_params():
         ("optimizer", "sgd", "optimizer"),
         ("lr_schedule", "exponential", "lr_schedule"),
         ("lr", 0.0, "양수"),
+        ("muon_lr_multiplier", 0.0, "muon_lr_multiplier는 양수"),
+        ("muon_lr_multiplier", 2.0, "optimizer가 muon일 때만"),
     ],
 )
 def test_lookup_transformer_rejects_invalid_training_configuration(
@@ -579,6 +581,159 @@ def test_lookup_transformer_muon_learns_on_cpu():
 
     member = adapter.entry_diagnostics().observations["fold_initialization_members"][0]
     assert member["optimizer"] == "muon"
+
+
+def _three_group_optimizer(lookup_transformer_module):
+    """champion과 같은 그룹 3개(rest·emb·muon) 구조의 최소 optimizer."""
+    torch = lookup_transformer_module.torch
+    groups = [
+        {"params": [torch.nn.Parameter(torch.tensor(1.0))]},
+        {"params": [torch.nn.Parameter(torch.tensor(1.0))]},
+        {"params": [torch.nn.Parameter(torch.tensor(1.0))]},
+    ]
+    return torch.optim.AdamW(groups, lr=2e-3)
+
+
+@pytest.mark.parametrize("name", ["one_cycle", "warmup_cosine"])
+def test_lookup_transformer_group_lr_scales_hold_through_the_schedule(
+    name, lookup_transformer_module
+):
+    """그룹 배율은 일정 전 구간에서 그룹별 학습률 비로 유지된다. (#385)"""
+    optimizer = _three_group_optimizer(lookup_transformer_module)
+    schedule = lookup_transformer_module._LearningRateController(
+        optimizer,
+        name=name,
+        max_lr=2e-3,
+        total_steps=20,
+        group_lr_scales=[1.0, 1.0, 4.0],
+    )
+
+    observed = []
+    for _ in range(20):
+        observed.append([group["lr"] for group in optimizer.param_groups])
+        optimizer.step()
+        schedule.step_batch()
+
+    for first, second, third in observed:
+        assert second == pytest.approx(first)
+        assert third == pytest.approx(first * 4.0)
+    # 배율이 붙은 그룹도 정점에서 자기 최고치에 도달한다.
+    assert max(row[2] for row in observed) == pytest.approx(2e-3 * 4.0, rel=1e-3)
+    # 진단이 읽는 축(param_groups[0])은 배율의 영향을 받지 않는다.
+    assert max(row[0] for row in observed) == pytest.approx(2e-3, rel=1e-3)
+
+
+def test_lookup_transformer_group_lr_scales_default_to_one(lookup_transformer_module):
+    """배율을 주지 않으면 모든 그룹이 같은 학습률을 쓴다(#385 이전과 동일)."""
+    optimizer = _three_group_optimizer(lookup_transformer_module)
+    schedule = lookup_transformer_module._LearningRateController(
+        optimizer,
+        name="one_cycle",
+        max_lr=2e-3,
+        total_steps=20,
+    )
+    assert schedule.group_lr_scales == [1.0, 1.0, 1.0]
+    for _ in range(5):
+        optimizer.step()
+        schedule.step_batch()
+    lrs = [group["lr"] for group in optimizer.param_groups]
+    assert lrs[1] == pytest.approx(lrs[0]) and lrs[2] == pytest.approx(lrs[0])
+
+
+@pytest.mark.parametrize(
+    ("scales", "message"),
+    [([1.0, 1.0], "param_groups 수와 다르다"), ([1.0, 1.0, 0.0], "모두 양수")],
+)
+def test_lookup_transformer_group_lr_scales_reject_invalid_input(
+    scales, message, lookup_transformer_module
+):
+    optimizer = _three_group_optimizer(lookup_transformer_module)
+    with pytest.raises(ValueError, match=message):
+        lookup_transformer_module._LearningRateController(
+            optimizer,
+            name="one_cycle",
+            max_lr=2e-3,
+            total_steps=20,
+            group_lr_scales=scales,
+        )
+
+
+def test_lookup_transformer_muon_group_lr_scale_reaches_the_muon_delegate(
+    lookup_transformer_module,
+):
+    """배율이 Muon 자식 optimizer가 실제로 읽는 그룹 학습률까지 도달한다. (#385)"""
+    model = lookup_transformer_module._LookupTransformer(10, 3, 16, 4, 1, 2, 0.1)
+    names = lookup_transformer_module._muon_parameter_names(model)
+    emb = [p for n, p in model.named_parameters() if n.startswith("emb")]
+    rest = [
+        p
+        for n, p in model.named_parameters()
+        if not n.startswith("emb") and n not in names
+    ]
+    muon = [p for n, p in model.named_parameters() if n in names]
+    optimizer = lookup_transformer_module._create_optimizer(
+        "muon",
+        [
+            {"params": rest, "weight_decay": 1e-5, "algorithm": "adamw"},
+            {"params": emb, "weight_decay": 3e-4, "algorithm": "adamw"},
+            {"params": muon, "weight_decay": 1e-5, "algorithm": "muon"},
+        ],
+        2e-3,
+    )
+    schedule = lookup_transformer_module._LearningRateController(
+        optimizer,
+        name="one_cycle",
+        max_lr=2e-3,
+        total_steps=20,
+        group_lr_scales=[1.0, 1.0, 4.0],
+    )
+    for _ in range(5):
+        optimizer.step()
+        schedule.step_batch()
+
+    from pipeline.muon import ALGORITHM_KEY
+
+    delegate_muon_groups = [
+        group
+        for delegate in optimizer._delegates
+        for group in delegate.param_groups
+        if group.get(ALGORITHM_KEY) == "muon"
+    ]
+    assert delegate_muon_groups
+    shared = optimizer.param_groups[0]["lr"]
+    assert all(
+        group["lr"] == pytest.approx(shared * 4.0) for group in delegate_muon_groups
+    )
+
+
+def test_lookup_transformer_muon_lr_multiplier_records_group_operating_point():
+    """Muon 그룹 전용 학습률이 학습을 유지하고 진단에 그대로 남는다. (#385)"""
+    cfg = ModelConfig(
+        kind="lookup_transformer",
+        params=dict(SMALL_PARAMS, optimizer="muon", muon_lr_multiplier=2.0),
+        fit={},
+    )
+    adapter = model_mod.create(cfg, seed=SEED)
+    X, y = _data()
+    va_pred = adapter.fit(X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:])
+    assert va_pred.shape == (80,)
+
+    member = adapter.entry_diagnostics().observations["fold_initialization_members"][0]
+    assert member["muon_lr_multiplier"] == pytest.approx(2.0)
+    assert member["max_learning_rate"] == pytest.approx(SMALL_PARAMS["lr"])
+    assert member["muon_max_learning_rate"] == pytest.approx(SMALL_PARAMS["lr"] * 2.0)
+
+
+def test_lookup_transformer_records_no_muon_operating_point_without_muon():
+    """muon이 아니면 Muon 전용 운전 지점은 비어 있다. (#385)"""
+    cfg = ModelConfig(kind="lookup_transformer", params=dict(SMALL_PARAMS), fit={})
+    adapter = model_mod.create(cfg, seed=SEED)
+    X, y = _data()
+    adapter.fit(X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:])
+
+    member = adapter.entry_diagnostics().observations["fold_initialization_members"][0]
+    assert member["muon_lr_multiplier"] == pytest.approx(1.0)
+    assert member["muon_max_learning_rate"] is None
 
 
 def test_lookup_orig_cdf_diff_config_is_exp131_feature_only_delta():
