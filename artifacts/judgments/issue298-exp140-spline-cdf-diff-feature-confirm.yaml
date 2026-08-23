@@ -1,0 +1,240 @@
+schema_version: 1
+judgment_id: issue298-exp140-spline-cdf-diff-feature-confirm
+created_at: '2026-08-23T04:57:49Z'
+stage: confirmation
+route: feature_signal
+supersedes: issue298-exp140-spline-cdf-diff-screen
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: Contextualized Spline Transformer에 원본 프록시 CDF 차이 5열 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/298
+  screening_judgment: artifacts/judgments/issue298-exp140-spline-cdf-diff-screen.yaml
+  candidate_pool_judgment: artifacts/judgments/issue298-exp140-spline-cdf-diff-confirm.yaml
+
+feature_bundle:
+  name: original_cdf_diff_5
+  provider: original_cdf_diff
+  columns:
+    - daily_screen_time_hours_orig_cdf_diff
+    - weekend_screen_time_orig_cdf_diff
+    - social_media_hours_orig_cdf_diff
+    - notifications_per_day_orig_cdf_diff
+    - app_opens_per_day_orig_cdf_diff
+  target_free: true
+  kde_columns_opened: false
+  preregistration:
+    kind: committed_config
+    reference: configs/exp140_contextual_spline_orig_cdf_diff.yaml@ba908ccb2d3f80bfd1f799cb98c7cf4593899980
+    description: exp085 Contextualized Spline Transformer 설정에 원본 프록시 CDF 차이 5열만 더하는 짝비교를 결과 확인 전에 고정했다.
+
+lineage:
+  included:
+    config: exp140_contextual_spline_orig_cdf_diff
+    config_path: configs/exp140_contextual_spline_orig_cdf_diff.yaml
+    config_sha256: 67ae894babd26d6de873c61d3e70ea7eac73dc1cb44eefe33b623e04bb564836
+    source_run_id: 1d2ed755390c44f7b64a549ac0296b73
+    imported_run_id: d9fabbc3c0244c2bb086e4b09d9ff4b9
+    import_bundle_sha256: cf9ed42b94475cc5e420a0a47f49db13434d879a9cdd3a1f9bb11045f81104a0
+    git_commit: cd7d77c56068a9b26619336d547da991b2fd3880
+    seeds: [42, 43, 44]
+  excluded:
+    config: exp085_contextual_spline_m0
+    config_path: configs/exp085_contextual_spline_m0.yaml
+    config_sha256: 0c498704cb79af55924e0173bc6803558b3500ed0a2bf9c2b2964b1ea8085135
+    source_run_id: 0a37c71774874c95896df4c7d4ad172f
+    imported_run_id: 54fcea905e3141c3b78b43c662d7ad64
+    import_bundle_sha256: b84015f37b074a345c51b945b20b8601eb1dd0c0a8407b0d5d832bc935b95bdd
+    pool_run_id: e84d97e875754af1b073b399db2a0616
+    git_commit: cd7d77c56068a9b26619336d547da991b2fd3880
+    seeds: [42, 43, 44]
+  allowed_differences:
+    - name
+    - features.providers.original_cdf_diff
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  row_order_match: true
+  model_contract_match: true
+  allowed_config_difference_match: true
+  added_feature_columns_match: true
+  kde_columns_absent: true
+  screening_seed_42_prediction_exact_match: false
+  screening_seed_42_nonmatch_reason: 선별과 확인 실행의 GPU 종류가 달라 같은 설정의 신경망 예측이 행 단위로 재현되지 않았으므로 같은 호스트에서 다시 실행한 확인 기준과 후보만 최종 판정에 썼다.
+  existing_pool_baseline_prediction_exact_match: false
+  existing_pool_baseline_nonmatch_reason: 후보 풀의 과거 exp085 예측과 확인 실행의 GPU 환경이 달라 직접 재사용하지 않고 같은 호스트의 exp085 확인 재실행을 짝비교 기준으로 썼다.
+  adoption_eligibility:
+    seeds_ok: true
+    clean_commit_ok: true
+    folds_ok: true
+    ok: true
+  canary:
+    state: 유효
+    placebo_present: true
+    target_using_provider_total: 0
+    derived_canary_checks: []
+    reason: 원본 분포 제공자는 목표값을 참조하지 않으며 계획의 상시 플라시보 불변식을 유지했다.
+
+paired_oof:
+  comparison: included_minus_excluded
+  included_auc: 0.9682388549768232
+  excluded_auc: 0.9681637495415769
+  overall_delta: 0.00007510543524624769
+  seed_aucs:
+    included:
+      42: 0.9670462179757712
+      43: 0.9668548236833333
+      44: 0.9674006782537108
+    excluded:
+      42: 0.966854271542705
+      43: 0.9670497052521155
+      44: 0.967225505546333
+  seed_deltas:
+    42: 0.0001919464330661924
+    43: -0.00019488156878222362
+    44: 0.0001751727073777687
+  fold_deltas:
+    0: 0.00003266309915872512
+    1: -0.00002551226616809288
+    2: -0.000041339294338138544
+    3: 0.000009179321131091989
+    4: -0.00008418019821476719
+  seed_wins: 2
+  seed_total: 3
+  fold_wins: 2
+  fold_total: 5
+  thresholds:
+    mean_must_be_positive: true
+    seed_win_min: 2
+    boundary_upper: 0.0002
+    boundary_fold_win_min: 3
+
+selection_procedure:
+  required: false
+  reason: 결과 확인 전에 CDF 차이 5열 전체와 단일 포함 설정을 고정했고 같은 OOF에서 하위 묶음이나 변형을 고르지 않았다.
+  candidate_set: [exp140_contextual_spline_orig_cdf_diff, exp085_contextual_spline_m0]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호 미확인
+  reasons:
+    - 3시드 평균 짝차이는 양수다.
+    - 같은 시드 3개 가운데 2개가 양수다.
+    - 평균 차이가 0.0002보다 작은 경계 구간에서 시드 평균 예측의 분할 승리가 2/5여서 필요한 3/5에 미달했다.
+
+candidate_pool_route:
+  evaluated: true
+  contract_version: candidate-pool-v1
+  judgment_path: artifacts/judgments/issue298-exp140-spline-cdf-diff-confirm.yaml
+  judgment_sha256: 698c0c0dd38a0d9fb7ee4e6a4b2cb4b0f711c23dea8722f01b0b379f4fb91144
+  state: rejected
+  ledger_action: none
+  atomic_replacement:
+    before_auc: 0.9697423947951008
+    after_auc: 0.9697387045375944
+    delta: -0.0000036902575064612364
+    before_strategy: shrunk_rank_logit_logistic
+    after_strategy: shrunk_rank_logit_logistic
+    outer_fold_wins: 2
+    outer_fold_total: 5
+  supplemental_include_exclude:
+    evidence_path: run-logs/issue298-candidate-pool/include-exclude.json
+    evidence_sha256: 5b11a58480076f4f970defb11d92444972c44854b57eb2eeaec213664ed656f2
+    excluded_member_count: 31
+    included_member_count: 32
+    excluded_auc: 0.9697267802303283
+    included_auc: 0.9697387045375944
+    delta: 0.000011924307266042433
+    excluded_strategy: missing_interaction_rank_logit
+    included_strategy: shrunk_rank_logit_logistic
+    outer_fold_wins: 2
+    outer_fold_total: 5
+    used_as_gate: false
+  reason: 후보 자체의 포함·제외 참고값은 양수지만 기존 exp085를 후보로 바꾸는 필수 원자 교체값이 음수라 후보 풀을 변경하지 않는다.
+
+auxiliary_importance:
+  method: contextualized_spline_transformer_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: 0.00001028876194760405
+  cell_total: 15
+  features:
+    daily_screen_time_hours_orig_cdf_diff:
+      mean: 0.00044854935530114215
+      median: 0.00044135360361563514
+      above_placebo_cells: 15
+    weekend_screen_time_orig_cdf_diff:
+      mean: 0.00019014736704202987
+      median: 0.00018328272027079429
+      above_placebo_cells: 15
+    social_media_hours_orig_cdf_diff:
+      mean: 0.00014420036494383243
+      median: 0.00014019951807864306
+      above_placebo_cells: 15
+    notifications_per_day_orig_cdf_diff:
+      mean: 0.005925184806326859
+      median: 0.0061351958726227895
+      above_placebo_cells: 15
+    app_opens_per_day_orig_cdf_diff:
+      mean: 0.005175173934893033
+      median: 0.005217081588841266
+      above_placebo_cells: 15
+  conflicts_with_oof: true
+  used_as_gate: false
+
+remote_execution:
+  provider: Vast.ai
+  successful_instance_id: 48429855
+  gpu: 2x RTX 4070 Super 12282MiB
+  image: nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631
+  input_archive_sha256: 2f616b630bf29d44f793a2cf09787d15ffdd2d05f446b78490f1b61c312c2dca
+  result_archive_sha256: 662683e3109ee8c759d7e1bb2aa03164f7d0bb6f585b4db7215ffe973aaef6b6
+  transfer: ssh_standard_stream
+  provider_switch_performed: false
+  runpod_resources_created: false
+  exact_cost_usd: 1.245
+  failed_instances:
+    - instance_id: 48425091
+      cost_usd: 0.013
+      model_training_started: false
+      reason: 호스트 포트 충돌로 컨테이너 네트워크 초기화에 실패했다.
+    - instance_id: 48425936
+      cost_usd: 0.212
+      model_training_started: false
+      reason: 호스트 드라이버가 고정 이미지의 CUDA 요구 수준보다 낮았다.
+  cleanup:
+    successful_instance_absent_after_delete: true
+    failed_instances_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedule_absent: true
+    unrelated_termination_schedules_preserved: 4
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호 미확인
+  candidate_pool_route: rejected
+  actual_ledger_change: none
+  full_refit_plan_change: none
+  reason_codes:
+    - paired_mean_positive
+    - seed_wins_2_of_3
+    - boundary_fold_wins_2_of_5
+    - feature_signal_unconfirmed
+    - candidate_pool_atomic_replacement_negative
+    - supplemental_include_exclude_positive_reference_only
+    - pool_unchanged
+    - full_refit_plan_unchanged
+    - remote_cleanup_complete
+    - no_provider_switch

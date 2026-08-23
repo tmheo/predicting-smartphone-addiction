@@ -138,6 +138,25 @@ class RunFacts:
     folds_sha256: str = ""
 
 
+_RESULT_HASH_TAGS = {
+    "sha256.fold_feature_reuse",
+    "sha256.oof_prediction",
+    "sha256.submission",
+}
+_RESULT_HASH_PREFIXES = ("sha256.observability.",)
+
+
+def _input_hashes_of(tags: dict[str, str]) -> dict[str, str]:
+    """입력 계보 해시만 고른다. 실행 결과물 해시는 짝비교 입력 동일성에서 제외한다."""
+    return {
+        key: value
+        for key, value in tags.items()
+        if key.startswith("sha256.")
+        and key not in _RESULT_HASH_TAGS
+        and not key.startswith(_RESULT_HASH_PREFIXES)
+    }
+
+
 def load_run_facts(run_id: str, store: RunStore) -> RunFacts:
     meta = store.facts_of(run_id)
     config = store.config_of(run_id)
@@ -159,9 +178,7 @@ def load_run_facts(run_id: str, store: RunStore) -> RunFacts:
         git_commit=meta.tags["git_commit"],
         importance=store.importance_of(run_id),
         model_params=model_params,
-        input_hashes={
-            key: value for key, value in meta.tags.items() if key.startswith("sha256.")
-        },
+        input_hashes=_input_hashes_of(meta.tags),
         git_dirty=meta.tags["git_dirty"] == "True",
         folds_sha256=meta.tags["sha256.folds"],
     )

@@ -1,0 +1,86 @@
+# 이슈 #298: exp085_contextual_spline_m0에 원본 프록시 CDF 차이 5열만 더한다.
+# KDE 밀도비와 나머지 피처 계획, Contextualized Spline Transformer 설정은 그대로 유지한다.
+name: exp140_contextual_spline_orig_cdf_diff
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: original_cdf_diff
+      path: data/external/Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv
+      cols:
+        [
+          daily_screen_time_hours,
+          weekend_screen_time,
+          social_media_hours,
+          notifications_per_day,
+          app_opens_per_day,
+        ]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions:
+        [social_frac, work_frac, leisure_frac, resid_frac, week_total]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: contextualized_spline_transformer
+  params:
+    numeric_mode: spline
+    exact_cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+    perm_repeats: 1
+  fit: {}
