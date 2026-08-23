@@ -17,6 +17,14 @@ rank-gauss 수치 embedding(PLR, 완만한 연속 추세)을 더해 Transformer 
 유지하고, train_test는 목표값을 보지 않는 train+test 결합 어휘와 분위 변환을 쓴다.
 validation_selection=final은 검증 점수를 관찰만 하고 고정 epoch 마지막 EMA를 선택한다.
 
+티켓 #360의 값 가리기 증강 분포 형태는 value_dropout_sampler로 고른다. 기본
+independent는 셀별 독립 균등 Bernoulli(기존 경로, 수치 무변경)이고, row_mask는
+mask_pool(fold_train 또는 test)의 실측 행 마스크를 배치 행마다 하나씩 기증받아
+alpha = value_dropout / (기증 열의 셀 단위 평균 결측률)로 채택한다. 풀에 결측이 없는
+열은 기증받을 형태가 없으므로 기존 경로의 value_dropout을 그대로 쓴다. 그래서 기대
+가림 셀 수가 열마다 보존되고, 바뀌는 것은 가리는 양이 아니라 열 사이 상관과 꼬리의
+형태다.
+
 티켓 #127의 fold 내 초기화 평균은 파이프라인 시드와 구분되는
 fold_seed_offsets로 설정한다. 파이프라인 시드 s와 offset o의 합을 초기화 시드로
 쓰고, 같은 fold에서 학습한 구성원의 확률 예측을 평균해 fold 예측 하나를 만든다.
@@ -41,6 +49,8 @@ from torch import nn
 _NA = 0  # 컬럼별 local id 0은 결측 전용. lookup 컬럼의 마지막 id는 UNK.
 _TORCH_INIT_LOCK = threading.Lock()
 _OPTIMIZERS = {"adamw", "radam", "nadam", "muon"}
+_VALUE_DROPOUT_SAMPLERS = {"independent", "row_mask"}
+_MASK_POOLS = {"fold_train", "test"}
 _LR_SCHEDULES = {
     "one_cycle",
     "one_cycle_fixed_momentum",
@@ -58,6 +68,36 @@ _GRADIENT_CLIP_NORM = 1.0
 def _sigmoid(logit: np.ndarray) -> np.ndarray:
     """다른 adapter들과 같은 확률 축으로 돌려준다(AUC는 순위 기반이라 영향 없음)."""
     return 1.0 / (1.0 + np.exp(-np.clip(logit, -60, 60)))
+
+
+def _value_dropout_mask(
+    shape: tuple[int, int],
+    *,
+    device: str,
+    rate: float,
+    pool: torch.Tensor | None,
+    alpha: float | None,
+    donor_columns: torch.Tensor | None,
+) -> torch.Tensor:
+    """값 가리기 증강에서 가릴 셀을 고른다. (#360)
+
+    pool이 None이면 셀별 독립 균등 Bernoulli(기존 경로)다. pool이 있으면 배치 행마다
+    풀에서 실측 행 마스크 하나를 균등 복원 추출해 기증받고, 기증 마스크의 각 셀을
+    확률 alpha로 채택한다.
+
+    donor_columns가 참인 열만 기증 마스크를 쓴다. 풀에 결측이 하나도 없는 열은
+    기증받을 형태가 없으므로 기존 경로의 rate를 그대로 유지한다. alpha는 caller가
+    기증 열 전체의 기대 가림 셀 수를 rate와 같게 맞춘 값이므로, 바뀌는 것은 가리는
+    양이 아니라 열 사이 상관과 꼬리의 형태다.
+    """
+    uniform = torch.rand(shape, device=device)
+    if pool is None:
+        return uniform < rate
+    donor = pool[torch.randint(pool.shape[0], (shape[0],), device=device)]
+    probability = torch.where(
+        donor_columns, donor.to(uniform.dtype) * alpha, uniform.new_full((), rate)
+    )
+    return uniform < probability
 
 
 def _muon_parameter_names(model: nn.Module) -> set[str]:
@@ -268,6 +308,10 @@ class _LookupTransformerMember:
         self._optimizer_name = str(params.pop("optimizer", "adamw")).lower()
         self._lr_schedule = str(params.pop("lr_schedule", "one_cycle")).lower()
         self._value_dropout = float(params.pop("value_dropout", 0.10))
+        self._value_dropout_sampler = str(
+            params.pop("value_dropout_sampler", "independent")
+        ).lower()
+        self._mask_pool = str(params.pop("mask_pool", "fold_train")).lower()
         self._weight_decay = float(params.pop("weight_decay", 1e-5))
         self._emb_weight_decay = float(params.pop("emb_weight_decay", 3e-4))
         self._ema_decay = float(params.pop("ema_decay", 0.999))
@@ -300,6 +344,20 @@ class _LookupTransformerMember:
             raise ValueError(
                 "validation_selection은 'best' 또는 'final'이어야 한다: "
                 f"{self._validation_selection!r}"
+            )
+        if self._value_dropout_sampler not in _VALUE_DROPOUT_SAMPLERS:
+            raise ValueError(
+                "value_dropout_sampler는 "
+                f"{sorted(_VALUE_DROPOUT_SAMPLERS)} 중 하나여야 한다: "
+                f"{self._value_dropout_sampler!r}"
+            )
+        if self._mask_pool not in _MASK_POOLS:
+            raise ValueError(
+                f"mask_pool은 {sorted(_MASK_POOLS)} 중 하나여야 한다: {self._mask_pool!r}"
+            )
+        if self._value_dropout_sampler == "independent" and self._mask_pool != "fold_train":
+            raise ValueError(
+                "mask_pool은 value_dropout_sampler='row_mask'에서만 뜻을 가진다."
             )
         if self._epochs <= 0 or self._batch_size <= 0 or self._lr <= 0:
             raise ValueError("epochs, batch_size와 lr은 양수여야 한다.")
@@ -436,6 +494,18 @@ class _LookupTransformerMember:
             ids[:, j] += self._offsets[j]
         return torch.from_numpy(ids), torch.from_numpy(num), torch.from_numpy(mask)
 
+    def _missing_matrix(self, X: pd.DataFrame) -> torch.Tensor:
+        """행 x 열 실측 결측 지시자. 값 가리기 증강의 기증 마스크 풀 원본이다. (#360)
+
+        인코딩의 mask 채널은 수치 채널이 없는 범주 열에서 항상 1이라 결측 지시자로
+        쓸 수 없다. 여기서는 열마다 원자료의 결측만 읽는다.
+        """
+        assert list(X.columns) == self._columns, "마스크 풀 입력 열이 학습 때와 다르다."
+        missing = np.zeros((len(X), len(self._columns)), dtype=bool)
+        for j, col in enumerate(self._columns):
+            missing[:, j] = X[col].isna().to_numpy()
+        return torch.from_numpy(missing)
+
     # ---- 학습: 분리형 가중치 감쇠 + 학습률 일정 + EMA + 값 dropout ----
 
     def fit(
@@ -474,6 +544,35 @@ class _LookupTransformerMember:
             y_va_np = None
         y = torch.from_numpy(y_tr.to_numpy(dtype="float32")).to(dev)
         na_ids = torch.from_numpy(self._offsets).to(dev)  # 컬럼별 global NA id
+
+        # 값 가리기 증강의 기증 마스크 풀. row_mask 표본기에서만 만든다. (#360)
+        mask_pool: torch.Tensor | None = None
+        donor_columns: torch.Tensor | None = None
+        mask_pool_rate: float | None = None
+        mask_pool_alpha: float | None = None
+        mask_pool_donor_columns: int | None = None
+        if self._value_dropout > 0 and self._value_dropout_sampler == "row_mask":
+            if self._mask_pool == "fold_train":
+                pool_frame = X_tr
+            else:
+                if self._dataset_reference is None:
+                    raise ValueError(
+                        "mask_pool='test'에는 train+test 전처리 기준 집합이 필요하다."
+                    )
+                pool_frame = self._dataset_reference[1]
+            mask_pool = self._missing_matrix(pool_frame).to(dev)
+            # 풀에 결측이 하나도 없는 열은 기증받을 형태가 없다. 그런 열은 기존 경로에
+            # 그대로 두고, alpha 정규화도 기증 열에서만 잰다. 이래야 기대 가림 셀 수가
+            # 열마다 value_dropout으로 보존돼 바뀌는 것이 형태 하나로 좁혀진다.
+            donor_columns = mask_pool.any(dim=0)
+            mask_pool_donor_columns = int(donor_columns.sum())
+            if mask_pool_donor_columns == 0:
+                raise ValueError("기증 마스크 풀에 결측 셀이 없어 값 가리기를 표본할 수 없다.")
+            mask_pool_rate = float(
+                mask_pool[:, donor_columns].to(torch.float32).mean()
+            )
+            mask_pool_alpha = min(1.0, self._value_dropout / mask_pool_rate)
+            donor_columns = donor_columns.reshape(1, -1)
 
         # torch의 모델 초기화 난수는 프로세스 전역이므로 여러 GPU thread에서도
         # 초기화만 직렬화한다. 학습은 GPU별 난수 상태를 다시 고정한 뒤 병렬로 돈다.
@@ -568,7 +667,14 @@ class _LookupTransformerMember:
                 ids_b, mask_b = ids_tr[sl], mask_tr[sl]
                 if self._value_dropout > 0:
                     # 값을 추가로 숨겨 모든 결측 패턴을 학습한다(원문 aug).
-                    drop = torch.rand(ids_b.shape, device=dev) < self._value_dropout
+                    drop = _value_dropout_mask(
+                        ids_b.shape,
+                        device=dev,
+                        rate=self._value_dropout,
+                        pool=mask_pool,
+                        alpha=mask_pool_alpha,
+                        donor_columns=donor_columns,
+                    )
                     ids_b = torch.where(drop, na_ids.expand_as(ids_b), ids_b)
                     mask_b = torch.maximum(mask_b, drop.float())
                 with self._autocast():
@@ -671,6 +777,13 @@ class _LookupTransformerMember:
             "initialization_seed": self._seed,
             "preprocessing_scope": self._preprocessing_scope,
             "validation_selection": self._validation_selection,
+            "value_dropout": self._value_dropout,
+            "value_dropout_sampler": self._value_dropout_sampler,
+            "mask_pool": self._mask_pool if mask_pool is not None else None,
+            "mask_pool_rows": int(mask_pool.shape[0]) if mask_pool is not None else None,
+            "mask_pool_donor_columns": mask_pool_donor_columns,
+            "mask_pool_missing_rate": mask_pool_rate,
+            "value_dropout_alpha": mask_pool_alpha,
             "optimizer": self._optimizer_name,
             "lr_schedule": self._lr_schedule,
             "max_learning_rate": self._lr,
