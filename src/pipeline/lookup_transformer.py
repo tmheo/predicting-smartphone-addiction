@@ -116,14 +116,30 @@ class _LearningRateController:
         name: str,
         max_lr: float,
         total_steps: int,
+        group_lr_scales: list[float] | None = None,
     ) -> None:
         if name not in _LR_SCHEDULES:
             raise ValueError(f"lr_schedule은 {sorted(_LR_SCHEDULES)} 중 하나여야 한다: {name!r}")
         if total_steps <= 0:
             raise ValueError("학습률 일정의 total_steps는 양수여야 한다.")
+        scales = (
+            [1.0] * len(optimizer.param_groups)
+            if group_lr_scales is None
+            else [float(scale) for scale in group_lr_scales]
+        )
+        if len(scales) != len(optimizer.param_groups):
+            raise ValueError(
+                "group_lr_scales의 길이가 param_groups 수와 다르다: "
+                f"{len(scales)} != {len(optimizer.param_groups)}"
+            )
+        if any(scale <= 0 for scale in scales):
+            raise ValueError(f"group_lr_scales는 모두 양수여야 한다: {scales}")
         self.optimizer = optimizer
         self.name = name
+        # max_lr과 min_lr은 첫 그룹(진단이 읽는 축) 기준값이다. 배율이 붙은 그룹은
+        # _set_lr과 OneCycleLR이 그룹별로 곱해 적용한다.
         self.max_lr = max_lr
+        self.group_lr_scales = scales
         self.total_steps = total_steps
         self.completed_steps = 0
         self.warmup_steps = max(1, math.ceil(total_steps * _WARMUP_FRACTION))
@@ -134,7 +150,7 @@ class _LearningRateController:
         if name in {"one_cycle", "one_cycle_fixed_momentum"}:
             self._one_cycle = torch.optim.lr_scheduler.OneCycleLR(
                 optimizer,
-                max_lr,
+                [max_lr * scale for scale in scales],
                 total_steps=total_steps,
                 pct_start=_WARMUP_FRACTION,
                 cycle_momentum=name == "one_cycle",
@@ -151,12 +167,12 @@ class _LearningRateController:
                     patience=1,
                     threshold=0.0,
                     threshold_mode="abs",
-                    min_lr=self.min_lr,
+                    min_lr=[self.min_lr * scale for scale in scales],
                 )
 
     def _set_lr(self, value: float) -> None:
-        for group in self.optimizer.param_groups:
-            group["lr"] = value
+        for group, scale in zip(self.optimizer.param_groups, self.group_lr_scales):
+            group["lr"] = value * scale
 
     def _scheduled_lr(self, completed_steps: int) -> float:
         if completed_steps <= self.warmup_steps:
@@ -266,6 +282,7 @@ class _LookupTransformerMember:
         self._batch_size = int(params.pop("batch_size", 2048))
         self._lr = float(params.pop("lr", 2e-3))
         self._optimizer_name = str(params.pop("optimizer", "adamw")).lower()
+        self._muon_lr_multiplier = float(params.pop("muon_lr_multiplier", 1.0))
         self._lr_schedule = str(params.pop("lr_schedule", "one_cycle")).lower()
         self._value_dropout = float(params.pop("value_dropout", 0.10))
         self._weight_decay = float(params.pop("weight_decay", 1e-5))
@@ -284,6 +301,15 @@ class _LookupTransformerMember:
         if self._optimizer_name not in _OPTIMIZERS:
             raise ValueError(
                 f"optimizer는 {sorted(_OPTIMIZERS)} 중 하나여야 한다: "
+                f"{self._optimizer_name!r}"
+            )
+        if self._muon_lr_multiplier <= 0:
+            raise ValueError(
+                f"muon_lr_multiplier는 양수여야 한다: {self._muon_lr_multiplier!r}"
+            )
+        if self._muon_lr_multiplier != 1.0 and self._optimizer_name != "muon":
+            raise ValueError(
+                "muon_lr_multiplier는 optimizer가 muon일 때만 1이 아닌 값을 가진다: "
                 f"{self._optimizer_name!r}"
             )
         if self._lr_schedule not in _LR_SCHEDULES:
@@ -520,12 +546,15 @@ class _LookupTransformerMember:
                     "algorithm": "muon",
                 },
             ]
+            # Muon 그룹만 공유 학습률의 배수로 운전할 수 있다. (#385 2단계)
+            group_lr_scales = [1.0, 1.0, self._muon_lr_multiplier]
         else:
             rest = [p for n_, p in model.named_parameters() if not n_.startswith("emb")]
             parameter_groups = [
                 {"params": rest, "weight_decay": self._weight_decay},
                 {"params": emb_params, "weight_decay": self._emb_weight_decay},
             ]
+            group_lr_scales = [1.0, 1.0]
         opt = _create_optimizer(self._optimizer_name, parameter_groups, self._lr)
         n_tr = len(X_tr)
         steps = math.ceil(n_tr / self._batch_size) * epochs + 10
@@ -534,6 +563,7 @@ class _LookupTransformerMember:
             name=self._lr_schedule,
             max_lr=self._lr,
             total_steps=steps,
+            group_lr_scales=group_lr_scales,
         )
         device_type = "cuda" if dev.startswith("cuda") else "cpu"
         use_scaler = device_type == "cuda" and self._amp_dtype == torch.float16
@@ -674,6 +704,12 @@ class _LookupTransformerMember:
             "optimizer": self._optimizer_name,
             "lr_schedule": self._lr_schedule,
             "max_learning_rate": self._lr,
+            "muon_lr_multiplier": self._muon_lr_multiplier,
+            "muon_max_learning_rate": (
+                self._lr * self._muon_lr_multiplier
+                if self._optimizer_name == "muon"
+                else None
+            ),
             "start_learning_rate": self._lr / _START_DIVISOR,
             "nominal_min_learning_rate": self._lr / _FINAL_DIVISOR,
             "warmup_fraction": _WARMUP_FRACTION,
