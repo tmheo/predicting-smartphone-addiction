@@ -167,6 +167,48 @@ def test_recon_widths_config_is_exp085_three_feature_delta():
     }
 
 
+def test_exact_frequency_config_is_exp085_eight_feature_delta():
+    from pipeline.features import FrequencyEncoder
+
+    columns = [
+        "age",
+        "daily_screen_time_hours",
+        "social_media_hours",
+        "work_study_hours",
+        "sleep_hours",
+        "notifications_per_day",
+        "app_opens_per_day",
+        "weekend_screen_time",
+    ]
+    baseline = load_config("configs/exp085_contextual_spline_m0.yaml", "screen")
+    challenger = load_config(
+        "configs/exp142_contextual_spline_exact_frequency.yaml", "screen"
+    )
+
+    assert challenger.name == "exp142_contextual_spline_exact_frequency"
+    assert challenger.data == baseline.data
+    assert challenger.features.base == baseline.features.base
+    assert challenger.features.categorical == baseline.features.categorical
+    assert challenger.features.exclude == baseline.features.exclude
+    assert challenger.features.providers == [
+        *baseline.features.providers,
+        {"kind": "frequency_encoding", "cols": columns},
+    ]
+    assert challenger.model == baseline.model
+
+    baseline_providers = FeaturePlan.from_config(
+        baseline.features
+    ).fold_fit_transformers()
+    challenger_providers = FeaturePlan.from_config(
+        challenger.features
+    ).fold_fit_transformers()
+    assert [type(provider) for provider in challenger_providers[:-1]] == [
+        type(provider) for provider in baseline_providers
+    ]
+    assert isinstance(challenger_providers[-1], FrequencyEncoder)
+    assert challenger_providers[-1].columns() == [f"{column}_ce" for column in columns]
+
+
 def test_orig_cdf_diff_config_is_exp085_five_feature_delta():
     baseline = yaml.safe_load(
         Path("configs/exp085_contextual_spline_m0.yaml").read_text(encoding="utf-8")

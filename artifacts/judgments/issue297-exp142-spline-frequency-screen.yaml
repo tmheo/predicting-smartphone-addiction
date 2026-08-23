@@ -1,0 +1,239 @@
+schema_version: 1
+judgment_id: issue297-exp142-spline-frequency-screen
+created_at: '2026-08-23T10:04:42Z'
+stage: screening
+route: candidate_pool
+supersedes: null
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: Contextualized Spline Transformer에 정확값 빈도 8열 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/297
+
+feature_bundle:
+  name: exp027_frequency_encoding_8
+  provider: frequency_encoding
+  columns:
+    - age_ce
+    - daily_screen_time_hours_ce
+    - social_media_hours_ce
+    - work_study_hours_ce
+    - sleep_hours_ce
+    - notifications_per_day_ce
+    - app_opens_per_day_ce
+    - weekend_screen_time_ce
+  target_free: true
+  preregistration:
+    kind: committed_config
+    reference: configs/exp142_contextual_spline_exact_frequency.yaml@47675b4bf5433e5108ea1d36636c1e8abe512440
+    description: exp085 Contextualized Spline Transformer 설정에 정확값 빈도 8열 전체만 더하고 결과를 보고 하위 묶음을 고르지 않는 짝비교를 고정했다.
+  content_sha256: c50dcd944d20d12730fc839dfe1faa8400c241fab5cbd3ee7b83a0c3e6a82aed
+
+lineage:
+  included:
+    config: exp142_contextual_spline_exact_frequency
+    config_path: configs/exp142_contextual_spline_exact_frequency.yaml
+    config_sha256: 02e6a8812e5f879f0d9cef5d985f07719803becef17fa51d2b20e6c7722414cd
+    source_run_id: bfda1788028246909131c166f5f76a48
+    imported_run_id: 3201b2cd8ea34a44babd0efc07001857
+    import_bundle_sha256: c87777d61b62aaae4e072aa2cc15c92ab14297f41739c8e775ac85f62affdd02
+    git_commit: 47675b4bf5433e5108ea1d36636c1e8abe512440
+    seeds: [42]
+  excluded:
+    config: exp085_contextual_spline_m0
+    config_path: configs/exp085_contextual_spline_m0.yaml
+    config_sha256: 0c498704cb79af55924e0173bc6803558b3500ed0a2bf9c2b2964b1ea8085135
+    source_run_id: b9229e09ff004ed791dafbcf40952928
+    imported_run_id: 88315d71cab744eb917baa0d65dae7f6
+    import_bundle_sha256: ff994bae1a130104002785db3774abbe5dca3a79fdfce64000546ec2bc095ab6
+    git_commit: 47675b4bf5433e5108ea1d36636c1e8abe512440
+    seeds: [42]
+  allowed_differences:
+    - name
+    - features.providers.frequency_encoding
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  row_order_match: true
+  model_contract_match: true
+  allowed_config_difference_match: true
+  added_feature_columns_match: true
+  included_feature_total: 41
+  excluded_feature_total: 33
+  adoption_eligibility:
+    seeds_ok: false
+    clean_commit_ok: true
+    folds_ok: true
+    ok: false
+    reason: 시드 42 전체 OOF 짝차이가 음수여서 3시드 확인 실행과 후보 풀 등록 자격 평가를 열지 않았다.
+  canary:
+    state: 유효
+    placebo_present: true
+    target_using_provider_total: 0
+    derived_canary_checks: []
+    reason: 정확값 빈도 제공자는 목표값을 참조하지 않으며 계획의 상시 플라시보 불변식을 유지했다.
+
+environment_gates:
+  isolated_commit: 47675b4bf5433e5108ea1d36636c1e8abe512440
+  exact_image_python_gate: passed
+  remote_contract_tests: 4
+  full_tests: 526
+  before_commit: passed
+  after_record: passed
+
+paired_oof:
+  comparison: included_minus_excluded
+  seed: 42
+  included_auc: 0.9667373767968169
+  excluded_auc: 0.9674029630489673
+  overall_delta: -0.0006655862521504075
+  fold_deltas:
+    0: 0.00017329999605053548
+    1: 0.00030425990083071675
+    2: 0.00017854666350047843
+    3: 0.00011489717110901854
+    4: 0.00025032547316183873
+  fold_wins: 5
+  fold_total: 5
+  thresholds:
+    screening_delta_min: 0.0
+  screening_passed: false
+  aggregation_diagnostic:
+    within_fold_auc_contribution: 0.00004085314940442204
+    cross_fold_auc_contribution: -0.0007064394015550313
+    contribution_sum: -0.0006655862521506092
+    candidate_minus_baseline_prediction_mean_by_fold:
+      0: -0.03785463165363767
+      1: -0.00008476043549610068
+      2: 0.0037624629549048993
+      3: 0.0025520470669071482
+      4: 0.018410713672641132
+    reason: 같은 분할 안의 순위는 모두 개선됐지만 분할별 예측 척도 이동이 서로 다른 분할 사이의 양성-음성 순위를 더 크게 훼손했다.
+
+selection_procedure:
+  required: false
+  reason: 결과 확인 전에 정확값 빈도 8열 전체와 단일 포함 설정을 고정했고 같은 OOF에서 하위 묶음이나 변형을 고르지 않았다.
+  candidate_set: [exp142_contextual_spline_exact_frequency]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호 미확인
+  reason: 5개 분할 안의 짝차이는 모두 양수였지만 판정 기준인 전체 OOF 짝차이가 음수여서 3시드 반복성 확인 자격을 얻지 못했다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 후보 풀의 exp085 직접 교체 경로이며 현재 champion 교체를 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: false
+  state: null
+  reason: 선별을 통과하지 못해 깨끗한 3시드 평균본이 없으므로 현재 후보 풀의 직접 교체와 포함·제외 nested OOF를 평가하지 않는다.
+
+auxiliary_importance:
+  method: contextualized_spline_transformer_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: 0.000008383404473999433
+  cell_total: 5
+  features:
+    age_ce:
+      mean: 0.00006877107330709454
+      above_placebo_cells: 5
+    daily_screen_time_hours_ce:
+      mean: 0.0005494456992700015
+      above_placebo_cells: 5
+    social_media_hours_ce:
+      mean: 0.0002326262002972701
+      above_placebo_cells: 5
+    work_study_hours_ce:
+      mean: 0.00006039733231808508
+      above_placebo_cells: 5
+    sleep_hours_ce:
+      mean: 0.00008555736684090487
+      above_placebo_cells: 5
+    notifications_per_day_ce:
+      mean: 0.0042865667767163496
+      above_placebo_cells: 5
+    app_opens_per_day_ce:
+      mean: 0.004365994418936569
+      above_placebo_cells: 5
+    weekend_screen_time_ce:
+      mean: 0.00044161150631929493
+      above_placebo_cells: 5
+  conflicts_with_oof: true
+  used_as_gate: false
+
+remote_execution:
+  provider: Vast.ai
+  valid_instance:
+    instance_id: 48451090
+    machine_id: 27960
+    host_id: 154152
+    gpu: 2x RTX 5070 Ti 16303MiB
+    hourly_total_usd: 0.2488888888888889
+    billed_usd: 0.749
+  image: nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631
+  python: 3.12.3
+  torch: 2.13.0
+  cuda: '13.0'
+  input_archive_sha256: d0feb5c02ebde942333abc2632d74466995ce3835be2016153cea80b8c523930
+  result_archive_sha256: afc4765746342e4f938bc566bf7af90221be88673aae1569d92939db796283c8
+  transfer: ssh_standard_stream
+  attempts:
+    - instance_id: 48446508
+      billed_usd: 0.031
+      input_transferred: false
+      result_retrieved: false
+      reason: 정상인 시스템 CUDA 13.1을 준비 감시기가 13.0과 다르다고 잘못 기각했다.
+    - instance_id: 48447206
+      billed_usd: 0.042
+      input_transferred: false
+      result_retrieved: false
+      reason: 두 GPU 역전파는 통과했지만 감시기의 장치 수 grep이 JSON 요약 줄까지 세어 잘못 기각했다.
+    - instance_id: 48447571
+      billed_usd: 0.324
+      input_transferred: true
+      result_retrieved: false
+      reason: 일시적 SSH 전송 오류 코드 255를 원격 PID 종료로 잘못 판정해 부분 학습 인스턴스를 정리했다.
+    - instance_id: 48451090
+      billed_usd: 0.749
+      input_transferred: true
+      result_retrieved: true
+      reason: 다른 호스트에서 보강한 SSH 재시도와 감시 인계로 유효 결과를 완료했다.
+  total_billed_usd: 1.146
+  cleanup:
+    instances_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호 미확인
+  champion_route: null
+  candidate_pool_route: null
+  actual_ledger_change: none
+  reason_codes:
+    - screening_delta_negative
+    - screening_fold_wins_5_of_5
+    - cross_fold_rank_loss
+    - confirmation_not_opened
+    - candidate_pool_not_evaluated
+    - clean_commit
+    - folds_match
+    - row_order_match
+    - canary_valid
+    - all_added_features_above_placebo
+    - placebo_importance_conflict
