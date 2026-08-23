@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
+import yaml
 from sklearn.metrics import roc_auc_score
 
 from pipeline import model as model_mod
@@ -204,6 +207,56 @@ def test_exact_frequency_config_is_exp085_eight_feature_delta():
     ]
     assert isinstance(challenger_providers[-1], FrequencyEncoder)
     assert challenger_providers[-1].columns() == [f"{column}_ce" for column in columns]
+
+
+def test_orig_cdf_diff_config_is_exp085_five_feature_delta():
+    baseline = yaml.safe_load(
+        Path("configs/exp085_contextual_spline_m0.yaml").read_text(encoding="utf-8")
+    )
+    challenger = yaml.safe_load(
+        Path("configs/exp140_contextual_spline_orig_cdf_diff.yaml").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert challenger["name"] == "exp140_contextual_spline_orig_cdf_diff"
+    assert challenger["data"] == baseline["data"]
+    assert challenger["features"]["base"] == baseline["features"]["base"]
+    assert (
+        challenger["features"]["categorical"]
+        == baseline["features"]["categorical"]
+    )
+    assert challenger["features"].get("exclude", []) == baseline["features"].get(
+        "exclude", []
+    )
+    assert challenger["model"] == baseline["model"]
+
+    cdf_provider = {
+        "kind": "original_cdf_diff",
+        "path": "data/external/Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv",
+        "cols": [
+            "daily_screen_time_hours",
+            "weekend_screen_time",
+            "social_media_hours",
+            "notifications_per_day",
+            "app_opens_per_day",
+        ],
+    }
+    expected_providers = [
+        dict(provider) for provider in baseline["features"]["providers"]
+    ]
+    expected_providers.insert(1, cdf_provider)
+    assert challenger["features"]["providers"] == expected_providers
+
+    added_columns = [f"{column}_orig_cdf_diff" for column in cdf_provider["cols"]]
+    assert added_columns == [
+        "daily_screen_time_hours_orig_cdf_diff",
+        "weekend_screen_time_orig_cdf_diff",
+        "social_media_hours_orig_cdf_diff",
+        "notifications_per_day_orig_cdf_diff",
+        "app_opens_per_day_orig_cdf_diff",
+    ]
+    assert all("kde" not in column for column in added_columns)
 
 
 def test_multilevel_path_preserves_shared_initial_weights_and_favors_final_head():

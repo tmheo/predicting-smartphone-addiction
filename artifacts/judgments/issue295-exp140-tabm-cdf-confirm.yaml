@@ -1,0 +1,305 @@
+schema_version: 1
+judgment_id: issue295-exp140-tabm-cdf-confirm
+created_at: '2026-08-23T00:21:58Z'
+stage: confirmation
+route: candidate_pool
+supersedes: issue295-exp140-tabm-cdf-screen
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: TabM에 원본 프록시 CDF 차이 5열 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/295
+  screening_judgment: artifacts/judgments/issue295-exp140-tabm-cdf-screen.yaml
+  pool_inclusion_judgment: artifacts/judgments/issue295-exp140-tabm-cdf-pool-inclusion.yaml
+  pool_replacement_judgment: artifacts/judgments/issue295-exp140-tabm-cdf-pool-replacement.yaml
+
+feature_bundle:
+  name: exp048_original_cdf_diff_5
+  provider: original_cdf_diff
+  columns:
+    - daily_screen_time_hours_orig_cdf_diff
+    - weekend_screen_time_orig_cdf_diff
+    - social_media_hours_orig_cdf_diff
+    - notifications_per_day_orig_cdf_diff
+    - app_opens_per_day_orig_cdf_diff
+  target_free: true
+  kde_columns_opened: false
+  preregistration:
+    kind: committed_config
+    reference: configs/exp140_tabm_orig_cdf_diff.yaml@83f97123a2e7c6bdf0dcdbe152db1461f34e41ca
+    description: exp137 TabM 설정에 CDF 차이 5열만 더하고 KDE 3열을 열지 않는 짝비교를 결과 확인 전에 고정했다.
+  content_sha256: 0927c00e138f1f81e1ecd9087ba5bb81e45d71036f6395cf03ffc2c63096043f
+
+lineage:
+  included:
+    config: exp140_tabm_orig_cdf_diff
+    config_path: configs/exp140_tabm_orig_cdf_diff.yaml
+    config_sha256: 2f2d0ca24ddb90be9dba0eaa04d6e617a99d8d4d7b18071e449f990d84f5681e
+    source_run_id: b25e5e0b4a584d099e640e214c2893e8
+    imported_run_id: 147f39a219a04b2685aed487466a2cbb
+    import_bundle_sha256: f89c96ace0f5bee26b606dda88ba7a494cbccac32ed783e2c65130113d5b08b5
+    git_commit: 83f97123a2e7c6bdf0dcdbe152db1461f34e41ca
+    seeds: [42, 43, 44]
+  excluded:
+    config: exp137_tabm_recon_widths
+    config_path: configs/exp137_tabm_recon_widths.yaml
+    config_sha256: b4b818d80aff90cc4199d4022d761531621070d3077b34c968ebd7c0bb6f30a3
+    source_run_id: eadffb12ac2f438ab48161dddbc5f184
+    imported_run_id: 4f6dfe319b974d0baf8231578e1d3ade
+    import_bundle_sha256: 25aca34b7ec1f491d7bc6cf493b9a062516cf2604818f96903a3ff24933b09e7
+    pool_run_id: e7682b186be14dea822d41d7d411bb98
+    git_commit: 83f97123a2e7c6bdf0dcdbe152db1461f34e41ca
+    seeds: [42, 43, 44]
+  allowed_differences:
+    - name
+    - features.providers.original_cdf_diff
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+    starting_pool: 8221c5f334ff19482a6e86c205fe2272b3c3a4bf0c0393e4123899cf43776423
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  row_order_match: true
+  model_contract_match: true
+  allowed_config_difference_match: true
+  added_feature_columns_match: true
+  kde_columns_absent: true
+  fold_feature_reuse_hash_match: true
+  screening_seed_42_prediction_exact_match: true
+  screening_seed_42_max_abs_difference: 0.0
+  excluded_prediction_exact_match_to_pool_run: true
+  excluded_pool_max_abs_difference: 0.0
+  compare_guard:
+    state: expected_refusal
+    reason: 피처 추가로 fold 실행 관찰 산출물 해시가 달라져 자동 비교 명령이 거부했으며 자료, 분할, fold 피처 재사용과 모델 계약은 일치했다.
+    evidence_used: 반입 뒤 식별자, 분할, 목표값과 시드별 OOF 예측을 직접 다시 맞춰 계산했다.
+  adoption_eligibility:
+    seeds_ok: true
+    clean_commit_ok: true
+    folds_ok: true
+    ok: true
+  canary:
+    state: 유효
+    placebo_present: true
+    placebo_gain_mean: 0.00003546627372253604
+    placebo_te_gain_mean: 0.0
+    placebo_te_below_placebo_cells: 15
+    cell_total: 15
+    target_using_provider_total: 0
+    reason: 원본 분포 제공자는 목표값을 참조하지 않으며 목표값 부호화 플라시보 중요도는 모든 시드와 분할에서 원본 플라시보 평균보다 낮다.
+
+environment_gates:
+  isolated_commit: 83f97123a2e7c6bdf0dcdbe152db1461f34e41ca
+  exact_image_python_gate: passed
+  remote_contract_tests: 4
+  full_tests_before_remote: 505
+  full_tests_after_record: 526
+
+paired_oof:
+  comparison: included_minus_excluded
+  included_auc: 0.9685589470340539
+  excluded_auc: 0.9683846688118484
+  overall_delta: 0.00017427822220550393
+  seed_aucs:
+    included:
+      42: 0.9684474232587204
+      43: 0.9684464503892576
+      44: 0.9684006310492873
+    excluded:
+      42: 0.9682870232880149
+      43: 0.9682563025678997
+      44: 0.9682612197651125
+  seed_deltas:
+    42: 0.00016039997070549372
+    43: 0.00019014782135784447
+    44: 0.0001394112841748285
+  fold_deltas:
+    0: 0.00007510315594816408
+    1: 0.00017776952038905947
+    2: 0.00017786250861984154
+    3: 0.00020380089684335356
+    4: 0.00015554831442610162
+  seed_wins: 3
+  seed_total: 3
+  fold_wins: 5
+  fold_total: 5
+  prediction_correlation:
+    spearman: 0.9994663034635717
+    pearson: 0.9992260544187228
+  thresholds:
+    mean_must_be_positive: true
+    seed_win_min: 2
+    boundary_upper: 0.0002
+    boundary_fold_win_min: 3
+
+selection_procedure:
+  required: false
+  reason: CDF 차이 5열 전체의 포함과 제외 한 쌍을 결과 확인 전에 고정했으며 같은 OOF에서 여러 변형을 고르지 않았다.
+  candidate_set: [exp140_tabm_orig_cdf_diff, exp137_tabm_recon_widths]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호
+  reasons:
+    - 3시드 평균 짝차이가 양수다.
+    - 같은 시드 3개가 모두 양수다.
+    - 경계 구간에서 시드 평균 예측의 분할 5개가 모두 양수다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 후보 풀의 TabM 구성원 경로이며 현재 champion 교체를 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: true
+  state: 기각
+  ledger_action: none
+  fixed_snapshot:
+    source_pool_size: 32
+    source_pool_sha256: 8221c5f334ff19482a6e86c205fe2272b3c3a4bf0c0393e4123899cf43776423
+    strategy_count: 19
+  entry_snapshot:
+    champion_run_id: 54acd002d3c04ec3a74c09871e83da50
+    champion_oof_auc: 0.9693397329635609
+    floor: 0.9593397329635609
+    floor_margin: 0.009219214070492976
+    floor_ok: true
+    nearest_run_id: e7682b186be14dea822d41d7d411bb98
+    nearest_config: exp137_tabm_recon_widths
+    nearest_auc: 0.9683846688118484
+    nearest_spearman: 0.9994663034635717
+    duplicate_threshold: 0.998
+    duplicate: true
+    candidate_oof_higher: true
+  nested_inclusion:
+    judgment: artifacts/judgments/issue295-exp140-tabm-cdf-pool-inclusion.yaml
+    judgment_sha256: b4552fcb05cc70724f1a2887b5b2871c3645830faae8f4428023969229960f0c
+    state: rejected
+    before_strategy: shrunk_rank_logit_logistic
+    before_auc: 0.9697423947951008
+    after_strategy: missing_interaction_rank_logit
+    after_auc: 0.9697355801774202
+    marginal_delta: -0.000006814617680594992
+    outer_fold_deltas:
+      0: 0.000023820463926571556
+      1: 0.000019594764116170893
+      2: 0.000024610293017368612
+      3: -0.0000012051680634561635
+      4: -0.0000018983493419444386
+    outer_fold_wins: 3
+    outer_fold_total: 5
+    status: 양의 기여 미확인
+  direct_replacement:
+    judgment: artifacts/judgments/issue295-exp140-tabm-cdf-pool-replacement.yaml
+    judgment_sha256: 423267a7ac13b75105965a6a7e0e3637178efb0e015154ff46dd60bda4c9d316
+    state: rejected
+    strategy_before: shrunk_rank_logit_logistic
+    source_pool_auc: 0.9697423947951008
+    strategy_after: shrunk_rank_logit_logistic
+    replacement_pool_auc: 0.9697409931944713
+    delta: -0.0000014016006295580752
+    outer_fold_deltas:
+      0: -0.00002628281257011089
+      1: 0.0000026782640164535465
+      2: 0.000021953341446390162
+      3: -0.000001854436500248191
+      4: -0.0000035023809563661246
+    outer_fold_wins: 2
+    outer_fold_total: 5
+    status: 교체 기여 미확인
+  reason: 후보 단독 OOF는 더 높지만 포함·제외와 원자 교체의 전체 중첩 OOF가 모두 음수여서 exp137을 유지한다.
+
+full_refit_plan:
+  path: artifacts/full-refit-plan.yaml
+  sha256: dbf2768c24cfd7467d3af252bd5842a5b62838a79fc2804713605af2351258b3
+  source_pool_sha256: 8221c5f334ff19482a6e86c205fe2272b3c3a4bf0c0393e4123899cf43776423
+  action: unchanged
+  retained_config: exp137_tabm_recon_widths
+  retained_run_id: e7682b186be14dea822d41d7d411bb98
+  budgets: {42: 18, 43: 16, 44: 16}
+  reason: 후보 풀 판정 두 건이 모두 기각되어 전체 자료 재학습 계획을 바꾸지 않았다.
+
+auxiliary_importance:
+  method: tabm_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: 0.00003546627372253604
+  cell_total: 15
+  features:
+    daily_screen_time_hours_orig_cdf_diff:
+      mean: 0.0001459879706082227
+      median: 0.0001275516734718929
+      above_placebo_cells: 15
+    weekend_screen_time_orig_cdf_diff:
+      mean: 0.00012670109430176952
+      median: 0.0001295101090912909
+      above_placebo_cells: 15
+    social_media_hours_orig_cdf_diff:
+      mean: 0.000261499554423165
+      median: 0.0002541828890044173
+      above_placebo_cells: 15
+    notifications_per_day_orig_cdf_diff:
+      mean: 0.0003723036895962243
+      median: 0.00037944131743139486
+      above_placebo_cells: 15
+    app_opens_per_day_orig_cdf_diff:
+      mean: 0.00025104857313917503
+      median: 0.00026366030456298484
+      above_placebo_cells: 15
+  conflicts_with_oof: false
+  used_as_gate: false
+
+remote_execution:
+  provider: Vast.ai
+  instance_id: 48422108
+  gpu: 2x RTX A4000 16376MiB
+  hourly_total_usd: 0.2151851851851852
+  image: nvcr.io/nvidia/pytorch@sha256:38ed2ecb2c16d10677006d73fb0a150855d6ec81db8fc66e800b5ae92741007e
+  input_archive_sha256: b7f540e1764b61e90c0169986906882058eeb44119335da9bfe9efcdb52b7975
+  result_archive_sha256: 8c504a445df9a76b852de603334c7d569156d367ace50b1027b95c96db3ada42
+  transfer: ssh_standard_stream
+  actual_cost_usd: 0.832
+  total_issue_vast_cost_usd: 1.312
+  provider_switch_performed: false
+  runpod_resources_created: false
+  cleanup:
+    instance_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+    unrelated_termination_schedules_preserved: 2
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호
+  champion_route: null
+  candidate_pool_route: 기각
+  actual_ledger_change: none
+  full_refit_plan_change: none
+  reason_codes:
+    - paired_mean_positive
+    - seed_wins_3_of_3
+    - boundary_fold_wins_5_of_5
+    - screening_seed_42_exact_match
+    - excluded_pool_prediction_exact_match
+    - adoption_eligibility_passed
+    - canary_valid
+    - nearest_spearman_above_duplicate_threshold
+    - candidate_oof_higher_than_duplicate
+    - nested_inclusion_delta_negative
+    - nested_inclusion_outer_fold_wins_3_of_5
+    - direct_replacement_delta_negative
+    - direct_replacement_outer_fold_wins_2_of_5
+    - pool_unchanged
+    - full_refit_plan_unchanged
+    - remote_cleanup_complete
+    - no_provider_switch

@@ -1,0 +1,206 @@
+schema_version: 1
+judgment_id: issue295-exp140-tabm-cdf-screen
+created_at: '2026-08-23T00:21:58Z'
+stage: screening
+route: candidate_pool
+supersedes: null
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: TabM에 원본 프록시 CDF 차이 5열 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/295
+
+feature_bundle:
+  name: exp048_original_cdf_diff_5
+  provider: original_cdf_diff
+  columns:
+    - daily_screen_time_hours_orig_cdf_diff
+    - weekend_screen_time_orig_cdf_diff
+    - social_media_hours_orig_cdf_diff
+    - notifications_per_day_orig_cdf_diff
+    - app_opens_per_day_orig_cdf_diff
+  target_free: true
+  kde_columns_opened: false
+  preregistration:
+    kind: committed_config
+    reference: configs/exp140_tabm_orig_cdf_diff.yaml@83f97123a2e7c6bdf0dcdbe152db1461f34e41ca
+    description: exp137 TabM 설정에 CDF 차이 5열만 더하고 KDE 3열을 열지 않는 짝비교를 결과 확인 전에 고정했다.
+  content_sha256: 0927c00e138f1f81e1ecd9087ba5bb81e45d71036f6395cf03ffc2c63096043f
+
+lineage:
+  included:
+    config: exp140_tabm_orig_cdf_diff
+    config_path: configs/exp140_tabm_orig_cdf_diff.yaml
+    config_sha256: 2f2d0ca24ddb90be9dba0eaa04d6e617a99d8d4d7b18071e449f990d84f5681e
+    source_run_id: da0cc4f75f48456ba62a4300de64d4b6
+    imported_run_id: 92f8e764f2b54ef8a17cb22cd2442f3a
+    import_bundle_sha256: 66846035ff944d8e30e149ad1d4a8f094b5cd8c340399380bf35b920318eb08e
+    git_commit: 83f97123a2e7c6bdf0dcdbe152db1461f34e41ca
+    seeds: [42]
+  excluded:
+    config: exp137_tabm_recon_widths
+    config_path: configs/exp137_tabm_recon_widths.yaml
+    config_sha256: b4b818d80aff90cc4199d4022d761531621070d3077b34c968ebd7c0bb6f30a3
+    source_run_id: cc6b0c64f92347019e3d5b098f64fd88
+    imported_run_id: a39913a94ba341a797ad8662b60ad869
+    import_bundle_sha256: 8b737fcf970970389d2b8389cea531ae2bf1878b7d48b867596aa0b07f1a4626
+    git_commit: 83f97123a2e7c6bdf0dcdbe152db1461f34e41ca
+    seeds: [42]
+  allowed_differences:
+    - name
+    - features.providers.original_cdf_diff
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  row_order_match: true
+  model_contract_match: true
+  allowed_config_difference_match: true
+  added_feature_columns_match: true
+  kde_columns_absent: true
+  fold_feature_reuse_hash_match: true
+  compare_guard:
+    state: expected_refusal
+    reason: 피처 추가로 fold 실행 관찰 산출물 해시가 달라져 자동 비교 명령이 거부했으며 자료, 분할, fold 피처 재사용과 모델 계약은 일치했다.
+    evidence_used: 반입 뒤 식별자, 분할, 목표값과 OOF 예측을 직접 다시 맞춰 계산했다.
+  adoption_eligibility:
+    seeds_ok: false
+    clean_commit_ok: true
+    folds_ok: true
+    ok: false
+    reason: 선별은 시드 42만 실행하므로 후보 풀 등록 자격을 아직 평가하지 않는다.
+  canary:
+    state: 유효
+    placebo_present: true
+    placebo_gain_mean: 0.000053659905001668395
+    placebo_te_gain_mean: 0.0
+    placebo_te_below_placebo_cells: 5
+    cell_total: 5
+    target_using_provider_total: 0
+    reason: 원본 분포 제공자는 목표값을 참조하지 않으며 목표값 부호화 플라시보 중요도는 모든 분할에서 원본 플라시보 평균보다 낮다.
+
+environment_gates:
+  isolated_commit: 83f97123a2e7c6bdf0dcdbe152db1461f34e41ca
+  exact_image_python_gate: passed
+  remote_contract_tests: 4
+  full_tests: 505
+
+paired_oof:
+  comparison: included_minus_excluded
+  seed: 42
+  included_auc: 0.9684474232587204
+  excluded_auc: 0.9682870232880149
+  overall_delta: 0.00016039997070549372
+  fold_deltas:
+    0: 0.00011914748171992784
+    1: 0.0001429789824487493
+    2: 0.00020605062846845712
+    3: 0.00022406027943133733
+    4: 0.0001749278681673072
+  fold_wins: 5
+  fold_total: 5
+  prediction_correlation:
+    spearman: 0.9988658509941896
+    pearson: 0.9988351478715888
+  thresholds:
+    screening_delta_min: 0.0
+  screening_passed: true
+
+selection_procedure:
+  required: false
+  reason: 결과 확인 전에 CDF 차이 5열 전체와 단일 포함 설정을 고정했고 같은 OOF에서 하위 묶음이나 변형을 고르지 않았다.
+  candidate_set: [exp140_tabm_orig_cdf_diff]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호 가능성
+  reason: 시드 42 짝차이가 양수이고 5개 분할이 모두 양수여서 3시드 확인 실행 자격을 얻었다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 후보 풀의 exp137 직접 교체 경로이며 현재 champion 교체를 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: false
+  state: null
+  reason: 후보 풀 진입 자격, 직접 교체와 포함·제외 중첩 OOF는 3시드 확인 실행에서 평가한다.
+
+auxiliary_importance:
+  method: tabm_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: 0.000053659905001668395
+  cell_total: 5
+  features:
+    daily_screen_time_hours_orig_cdf_diff:
+      mean: 0.00008399687112989885
+      median: 0.00007548122614992048
+      above_placebo_cells: 5
+    weekend_screen_time_orig_cdf_diff:
+      mean: 0.00011907814242066994
+      median: 0.00012278130054843572
+      above_placebo_cells: 5
+    social_media_hours_orig_cdf_diff:
+      mean: 0.00024809297827270703
+      median: 0.00022056024855349188
+      above_placebo_cells: 5
+    notifications_per_day_orig_cdf_diff:
+      mean: 0.0003697542042509383
+      median: 0.0003694889794654266
+      above_placebo_cells: 5
+    app_opens_per_day_orig_cdf_diff:
+      mean: 0.00024143952056185914
+      median: 0.0002705773043653048
+      above_placebo_cells: 5
+  conflicts_with_oof: false
+  used_as_gate: false
+
+remote_execution:
+  provider: Vast.ai
+  successful_instance_id: 48415319
+  interrupted_instance_id: 48411145
+  zero_cost_transient_instance_id: 48415292
+  gpu: RTX A4000 16376MiB
+  image: nvcr.io/nvidia/pytorch@sha256:38ed2ecb2c16d10677006d73fb0a150855d6ec81db8fc66e800b5ae92741007e
+  input_archive_sha256: 4860e90555c501920ecd97674e929cf8461a87dfc1f27f89a12f0a1ad24887fa
+  result_archive_sha256: f073cddb7bd497a2b48b1cc56f14961f8e634248cb89660c7c38055c5d2321e1
+  transfer: ssh_standard_stream
+  actual_cost_usd:
+    interrupted_attempt: 0.214
+    successful_attempt: 0.266
+    transient_attempt: 0.0
+    total: 0.480
+  provider_switch_performed: false
+  runpod_resources_created: false
+  cleanup:
+    instances_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호 가능성
+  champion_route: null
+  candidate_pool_route: null
+  actual_ledger_change: none
+  reason_codes:
+    - screening_delta_nonnegative
+    - screening_fold_wins_5_of_5
+    - clean_commit
+    - folds_match
+    - canary_valid
+    - confirmation_required
+    - remote_cleanup_complete
+    - no_provider_switch
