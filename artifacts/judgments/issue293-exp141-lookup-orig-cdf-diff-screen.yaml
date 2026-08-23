@@ -1,0 +1,229 @@
+schema_version: 1
+judgment_id: issue293-exp141-lookup-orig-cdf-diff-screen
+created_at: '2026-08-23T07:00:26Z'
+stage: screening
+route: champion
+supersedes: null
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: 챔피언에 원본 프록시 CDF 차이 5열 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/293
+
+feature_bundle:
+  name: exp048_original_cdf_diff_5
+  provider: original_cdf_diff
+  columns:
+    - app_opens_per_day_orig_cdf_diff
+    - daily_screen_time_hours_orig_cdf_diff
+    - notifications_per_day_orig_cdf_diff
+    - social_media_hours_orig_cdf_diff
+    - weekend_screen_time_orig_cdf_diff
+  target_free: true
+  plr_numeric_only: true
+  lookup_columns_changed: false
+  kde_columns_opened: false
+  preregistration:
+    kind: committed_config
+    reference: configs/exp141_lookup_orig_cdf_diff.yaml@408b833c8a2b3daa532f1ecec7b5c6a2062098cd
+    description: exp131 조회 변환기 설정에 CDF 차이 5열만 PLR 수치 입력으로 더하고 KDE 열과 조회용 열 목록을 바꾸지 않는 짝비교를 결과 확인 전에 고정했다.
+  content_sha256: 0927c00e138f1f81e1ecd9087ba5bb81e45d71036f6395cf03ffc2c63096043f
+
+lineage:
+  included:
+    config: exp141_lookup_orig_cdf_diff
+    config_path: configs/exp141_lookup_orig_cdf_diff.yaml
+    config_sha256: cc0e439c1b86297e900d2daed832e966558f220ebcf6c2f01993d857f854b834
+    source_run_id: 442abc71ad904f38982aa33a0474f8d9
+    imported_run_id: 62fda29e3d784c248d0edf0d5447d2ea
+    import_bundle_sha256: e2f3c29e6ebfed8760beb87a32c722b2223d5362f7b04dc407cde32a966b9d13
+    git_commit: 408b833c8a2b3daa532f1ecec7b5c6a2062098cd
+    seeds: [42]
+  excluded:
+    config: exp131_lookup_bivariate_plr5
+    config_path: configs/exp131_lookup_bivariate_plr5.yaml
+    config_sha256: d344102b44330a9e89a15e330f90694e19652575595ec5bb8dbb03beaa91b5b2
+    source_run_id: d9f44c44bba9441fa61a3f971e55172e
+    imported_run_id: 54acd002d3c04ec3a74c09871e83da50
+    import_bundle_sha256: ab93840a62e6174c961d814dca83a7366079900be813773b230f53d4b589fa20
+    git_commit: 58719c6b86c8d62a027760ff367892eaed5a141f
+    seeds: [42, 43, 44]
+  allowed_differences:
+    - name
+    - features.providers.original_cdf_diff
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+    original_proxy: 2194ce1946e8559f26780049c8d972857d8378104f2c9ec25ed9ec35409f1074
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  row_order_match: true
+  oof_row_total: 691369
+  model_contract_match: true
+  allowed_config_difference_match: true
+  added_feature_columns_match: true
+  lookup_columns_unchanged: true
+  included_feature_total: 43
+  excluded_feature_total: 38
+  adoption_eligibility:
+    seeds_ok: false
+    clean_commit_ok: true
+    folds_ok: true
+    ok: false
+    reason: seed 42 선별 짝차이가 음수여서 3시드 확인 실행으로 확장하지 않았다.
+  canary:
+    state: 유효
+    placebo_present: true
+    target_using_provider_total: 0
+    derived_canary_checks: []
+    reason: 원본 분포 제공자는 목표값을 참조하지 않으며 계획의 상시 플라시보 불변식을 유지했다.
+
+environment_gates:
+  isolated_commit: 408b833c8a2b3daa532f1ecec7b5c6a2062098cd
+  exact_image_python_gate: passed
+  remote_contract_tests: 4
+  full_tests_before_remote: 526
+  full_tests_after_result_record: 526
+  isolated_environment: passed
+  candidate_config_contract: passed
+
+paired_oof:
+  comparison: included_minus_excluded
+  seed: 42
+  included_auc: 0.9691454430345532
+  excluded_auc: 0.9691984425064686
+  overall_delta: -0.00005299947191539367
+  fold_aucs:
+    0:
+      included: 0.9686547996913567
+      excluded: 0.9686517672347891
+      delta: 0.000003032456567630959
+    1:
+      included: 0.969269199317711
+      excluded: 0.9692300535561085
+      delta: 0.00003914576160257699
+    2:
+      included: 0.9693383890311206
+      excluded: 0.9694514373475603
+      delta: -0.00011304831643976776
+    3:
+      included: 0.9697448252369998
+      excluded: 0.9698140154578483
+      delta: -0.0000691902208485029
+    4:
+      included: 0.9688918390232255
+      excluded: 0.9689868682549458
+      delta: -0.00009502923172033384
+  fold_wins: 2
+  fold_total: 5
+  thresholds:
+    screening_delta_min: 0.0
+  screening_passed: false
+  prediction_spearman: 0.9956250547202244
+
+selection_procedure:
+  required: false
+  reason: 결과 확인 전에 CDF 차이 5열 전체와 단일 포함 설정을 고정했고 같은 OOF로 하위 묶음이나 변형을 고르지 않았다.
+  candidate_set: [exp141_lookup_orig_cdf_diff]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호 미확인
+  reason: seed 42 짝차이가 음수여서 3시드 반복성 확인 자격을 얻지 못했다.
+
+champion_route:
+  evaluated: true
+  state: 유지
+  current_champion: exp131_lookup_bivariate_plr5
+  current_champion_run_id: 54acd002d3c04ec3a74c09871e83da50
+  reason: seed 42 선별을 통과하지 못해 3시드 평균 개선, 분할 승수와 최종 채택 문턱을 평가하지 않았다.
+
+candidate_pool_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 챔피언 직접 이식 경로이며 선별 미달 후보를 후보 풀에 등록하지 않는다.
+
+auxiliary_importance:
+  method: lookup_transformer_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: 0.000005120652426289969
+  cell_total: 5
+  features:
+    app_opens_per_day_orig_cdf_diff:
+      mean: 0.0005815647379930826
+      above_placebo_cells: 5
+    daily_screen_time_hours_orig_cdf_diff:
+      mean: 0.0000662775276020729
+      above_placebo_cells: 5
+    notifications_per_day_orig_cdf_diff:
+      mean: 0.00036419669697336233
+      above_placebo_cells: 5
+    social_media_hours_orig_cdf_diff:
+      mean: 0.000610380861470879
+      above_placebo_cells: 5
+    weekend_screen_time_orig_cdf_diff:
+      mean: 0.00010765319152910014
+      above_placebo_cells: 5
+  conflicts_with_oof: true
+  used_as_gate: false
+
+remote_execution:
+  provider: Vast.ai
+  runpod_used: false
+  gpu: 4x RTX A4000 16376MiB
+  hourly_total_usd: 0.5665185185185185
+  image: nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631
+  transfer: ssh_standard_stream
+  segments:
+    - job_id: issue293-lookup-orig-cdf-screen
+      instance_id: 48443585
+      completed_folds: 4
+      input_archive_sha256: 88f7548c1085c01ac4e2c79e544249cc286d28e4ffe39aca3db14b8796b2e4e4
+      recovery_archive_sha256: 97dbc13a4428b97f5dccae0b0729b427c5f4f0d9f54a2948fe88ac901f2d7ac4
+      partial_result_archive_sha256: a6e3236e8271928b993fdaca31dd445fd2ab027ee817523d7980096c0ee6a84f
+      manual_stop_observed: true
+    - job_id: issue293-lookup-orig-cdf-screen-resume1
+      instance_id: 48449252
+      resumed_folds: 4
+      input_archive_sha256: b4b23985ac47d185c24233c5918d0bd0acf35fd365516aa084cd0699f582028c
+      result_archive_sha256: 6df8cde7aa94f681294880df3bc3bd584fabe0dfc9918693b14354047d5d6131
+      completed_folds: 5
+      job_exit_code: 0
+  cost_attribution:
+    exact_account_delta_available: false
+    reason: 같은 계정의 다른 작업과 잔액 변동이 겹쳐 두 인스턴스의 단독 비용을 계정 잔액 차이로 해석하지 않았다.
+  cleanup:
+    instances_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호 미확인
+  champion_route: 유지
+  candidate_pool_route: null
+  actual_ledger_change: none
+  reason_codes:
+    - screening_delta_negative
+    - screening_fold_wins_2_of_5
+    - clean_commit
+    - folds_match
+    - row_order_match
+    - canary_valid
+    - confirmation_not_started
+    - champion_unchanged
+    - candidate_pool_not_evaluated
+    - placebo_importance_conflict
+    - vast_only_execution
+    - remote_resources_cleaned
