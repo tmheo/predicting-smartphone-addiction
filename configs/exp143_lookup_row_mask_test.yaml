@@ -1,0 +1,100 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #360: champion exp131의 값 가리기 증강을 셀별 독립 균등 Bernoulli에서
+# 실측 행 마스크 표본으로 바꾼 판. 피처 계획, 모형 구조, lr, batch_size, EMA,
+# epochs, lookup_cols, PLR 구성, fold_seed_offsets, Muon 최적화기는 전부 exp131과
+# 같고 유일한 차이는 value_dropout_sampler와 mask_pool이다.
+# alpha = value_dropout / (풀의 셀 단위 평균 결측률)이 기대 가림 셀 수를 exp131과
+# 같게 맞추므로, 바뀌는 것은 가리는 양이 아니라 열 사이 상관과 꼬리의 형태다.
+# 판 360-b: 기증 마스크 풀이 test 행이다. 채점 분포로의 정렬을 잰다.
+# 목표값을 전혀 읽지 않으므로 누수가 없다. #86 전이 학습 기각 전례를 재고하는 근거는
+# 2026-08-23의 train/test 열별 결측률 차이 측정(최대 3.4%p, 표집 표준오차 대비 39시그마)이다.
+# 판정 앵커: champion exp131(run 54acd002) seed 42 짝비교. 단 이 판은 train 분포 기준
+# OOF로 재면 개선인데도 음수로 나올 수 있는 측정 함정이 있어 가중 OOF(auc_oof_weighted)로
+# 판정한다. 원격 GPU 실행 대상(Vast.ai).
+name: exp143_lookup_row_mask_test
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions:
+        [
+          social_frac,
+          work_frac,
+          leisure_frac,
+          resid_frac,
+          week_total,
+          awake_screen_frac,
+          screen_minus_sleep,
+          gaming_over_daily,
+          weekend_minus_daily,
+          screen_mean_dw,
+        ]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: lookup_transformer
+  params:
+    lookup_cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+    fold_seed_offsets: [0, 1000, 2000]
+    optimizer: muon
+    value_dropout_sampler: row_mask
+    mask_pool: test
+  fit: {}
