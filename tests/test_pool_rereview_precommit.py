@@ -37,6 +37,18 @@ def test_validator_rejects_candidate_order_change(tmp_path):
         VALIDATOR.validate(changed)
 
 
+def test_validator_rejects_historical_source_hash_change(tmp_path):
+    payload = yaml.safe_load(VALIDATOR.DEFAULT_LEDGER.read_text(encoding="utf-8"))
+    payload["sources"]["pool"]["sha256"] = "0" * 64
+    changed = tmp_path / "changed.yaml"
+    changed.write_text(
+        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), encoding="utf-8"
+    )
+
+    with pytest.raises(VALIDATOR.PrecommitValidationError, match="동결 출처"):
+        VALIDATOR.validate(changed)
+
+
 def test_validator_rejects_strategy_removal(tmp_path):
     payload = yaml.safe_load(VALIDATOR.DEFAULT_LEDGER.read_text(encoding="utf-8"))
     payload["strategies"]["included"].pop()

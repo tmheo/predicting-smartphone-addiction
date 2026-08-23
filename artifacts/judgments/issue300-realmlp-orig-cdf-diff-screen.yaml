@@ -1,0 +1,186 @@
+schema_version: 1
+judgment_id: issue300-realmlp-orig-cdf-diff-screen
+created_at: '2026-08-22T17:51:56Z'
+stage: screening
+route: candidate_pool
+supersedes: null
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: RealMLP에 원본 프록시 CDF 차이 5열 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/300
+
+feature_bundle:
+  name: exp048_original_cdf_diff_5
+  provider: original_cdf_diff
+  columns:
+    - app_opens_per_day_orig_cdf_diff
+    - daily_screen_time_hours_orig_cdf_diff
+    - notifications_per_day_orig_cdf_diff
+    - social_media_hours_orig_cdf_diff
+    - weekend_screen_time_orig_cdf_diff
+  target_free: true
+  kde_columns_opened: false
+  preregistration:
+    kind: committed_config
+    reference: configs/exp140_realmlp_orig_cdf_diff.yaml@b802367a28de90ad6828f1b691522d578364ef66
+    description: exp124 RealMLP 설정에 CDF 차이 5열만 더하고 KDE 3열을 열지 않는 짝비교를 결과 확인 전에 고정했다.
+  content_sha256: 0927c00e138f1f81e1ecd9087ba5bb81e45d71036f6395cf03ffc2c63096043f
+
+lineage:
+  included:
+    config: exp140_realmlp_orig_cdf_diff
+    config_path: configs/exp140_realmlp_orig_cdf_diff.yaml
+    config_sha256: c9b530a80960f4a129af4550a585f03de4c16fc7550753361e9ac94d5074f820
+    source_run_id: 73f7be49225a487d96bb6e5d4cfbfc2a
+    imported_run_id: 782672e2908d4a14a191dc6afb7d8531
+    import_bundle_sha256: 2cc597f81d9d0715b6b6f3366dfc96efa72cdd9963adfda4748b6a4bee270498
+    git_commit: b802367a28de90ad6828f1b691522d578364ef66
+    seeds: [42]
+  excluded:
+    config: exp124_realmlp_dtype_fix
+    config_path: configs/exp124_realmlp_dtype_fix.yaml
+    config_sha256: 3e0fa92985c3ebce4bd67129ccf83c96ca287fd1aa29a14b05610ba5a7eed4e9
+    source_run_id: de364413183e4fe68f5190d3733e5824
+    imported_run_id: 983417c1d67449058b5534457d166805
+    import_bundle_sha256: ab5bca600a9ebd19b932b4e5f66ee0de6357f9e52510638c021c999038afcdfa
+    git_commit: b802367a28de90ad6828f1b691522d578364ef66
+    seeds: [42]
+  allowed_differences:
+    - features.providers.original_cdf_diff
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  row_order_match: true
+  model_contract_match: true
+  allowed_config_difference_match: true
+  added_feature_columns_match: true
+  included_feature_total: 18
+  excluded_feature_total: 13
+  adoption_eligibility:
+    seeds_ok: false
+    clean_commit_ok: true
+    folds_ok: true
+    ok: false
+    reason: 선별은 시드 42만 실행하므로 후보 풀 등록 자격을 아직 평가하지 않는다.
+  canary:
+    state: 유효
+    placebo_present: true
+    target_using_provider_total: 0
+    derived_canary_checks: []
+    reason: 원본 분포 제공자는 목표값을 참조하지 않으며 계획의 상시 플라시보 불변식을 유지했다.
+
+environment_gates:
+  isolated_commit: b802367a28de90ad6828f1b691522d578364ef66
+  exact_image_python_gate: passed
+  remote_contract_tests: 4
+  full_tests: 505
+  before_commit: passed
+  after_commit: passed
+
+paired_oof:
+  comparison: included_minus_excluded
+  seed: 42
+  included_auc: 0.9683352436270521
+  excluded_auc: 0.96825640714118
+  overall_delta: 0.00007883648587214687
+  fold_deltas:
+    0: 0.000047187657801317506
+    1: 0.00007820614656250946
+    2: 0.00007258333981674525
+    3: 0.00009210833104489335
+    4: 0.00009986340039358499
+  fold_wins: 5
+  fold_total: 5
+  thresholds:
+    screening_delta_min: 0.0
+  screening_passed: true
+
+selection_procedure:
+  required: false
+  reason: 결과 확인 전에 CDF 차이 5열 전체와 단일 포함 설정을 고정했고 같은 OOF로 하위 묶음이나 변형을 고르지 않았다.
+  candidate_set: [exp140_realmlp_orig_cdf_diff]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호 가능성
+  reason: 시드 42 짝차이가 양수이고 5개 분할이 모두 양수여서 3시드 확인 실행 자격을 얻었다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 후보 풀의 exp124 직접 교체 경로이며 현재 champion 교체를 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: false
+  state: null
+  reason: 후보 풀 진입 자격, 직접 교체와 포함·제외 중첩 OOF는 3시드 확인 실행에서 평가한다.
+
+auxiliary_importance:
+  method: realmlp_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: -0.0000013452922855039517
+  cell_total: 5
+  features:
+    app_opens_per_day_orig_cdf_diff:
+      mean: 0.00000016012539261200942
+      above_placebo_cells: 3
+    daily_screen_time_hours_orig_cdf_diff:
+      mean: 0.005887839369457493
+      above_placebo_cells: 5
+    notifications_per_day_orig_cdf_diff:
+      mean: 0.000034533236537526155
+      above_placebo_cells: 5
+    social_media_hours_orig_cdf_diff:
+      mean: 0.002548758961943576
+      above_placebo_cells: 5
+    weekend_screen_time_orig_cdf_diff:
+      mean: 0.0002980715632641129
+      above_placebo_cells: 5
+  conflicts_with_oof: false
+  used_as_gate: false
+
+remote_execution:
+  provider: Vast.ai
+  instance_id: 48411370
+  gpu: 2x RTX A4000 16376MiB
+  hourly_total_usd: 0.23185185185185186
+  image: nvcr.io/nvidia/pytorch@sha256:38ed2ecb2c16d10677006d73fb0a150855d6ec81db8fc66e800b5ae92741007e
+  input_archive_sha256: d4d0549107342119aabc131e72c3b9ed057291990a912456e53036705433c4f3
+  result_archive_sha256: b9887c8c26321d57308fbfda2976215d61da4ca3385c20258d019bbd3747ed5d
+  transfer: ssh_standard_stream
+  cost_attribution:
+    exact_account_delta_available: false
+    reason: 같은 계정의 다른 작업과 계정 변동이 겹쳐 잔액 차이를 이 작업의 단독 비용으로 해석하지 않았다.
+  cleanup:
+    instance_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호 가능성
+  champion_route: null
+  candidate_pool_route: null
+  actual_ledger_change: none
+  reason_codes:
+    - screening_delta_nonnegative
+    - screening_fold_wins_5_of_5
+    - clean_commit
+    - folds_match
+    - row_order_match
+    - canary_valid
+    - confirmation_required

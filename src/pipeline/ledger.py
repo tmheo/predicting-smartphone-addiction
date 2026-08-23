@@ -87,6 +87,16 @@ class EntryEvidence:
 
 
 @dataclass(frozen=True)
+class PoolJudgmentPointer:
+    """후보 풀 장부 변경을 허용한 변경 불가 판정 기록 포인터."""
+
+    judgment_id: str
+    contract_version: str
+    path: str
+    sha256: str
+
+
+@dataclass(frozen=True)
 class PoolMember:
     """후보 풀 구성원 한 명의 등록 기록."""
 
@@ -97,6 +107,7 @@ class PoolMember:
     entered_at: str
     reason: str
     evidence: EntryEvidence
+    judgment: PoolJudgmentPointer | None = None
 
 
 @dataclass
@@ -121,6 +132,11 @@ class Pool:
                     entered_at=str(m["entered_at"]),
                     reason=m["reason"],
                     evidence=EntryEvidence(**m["evidence"]),
+                    judgment=(
+                        PoolJudgmentPointer(**m["judgment"])
+                        if m.get("judgment") is not None
+                        else None
+                    ),
                 )
                 for m in record["members"]
             ]
@@ -129,7 +145,7 @@ class Pool:
     def save(self, path: Path = POOL_PATH) -> None:
         record = {
             "members": [
-                {
+                ({
                     "run_id": member.run_id,
                     "config": member.config,
                     # 작은 채택 문턱과 비교하므로 반올림 없이 전체 정밀도로 남긴다.
@@ -138,7 +154,11 @@ class Pool:
                     "entered_at": member.entered_at,
                     "reason": member.reason,
                     "evidence": asdict(member.evidence),
-                }
+                } | (
+                    {"judgment": asdict(member.judgment)}
+                    if member.judgment is not None
+                    else {}
+                ))
                 for member in self.members
             ]
         }

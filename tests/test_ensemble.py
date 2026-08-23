@@ -39,6 +39,7 @@ from pipeline.ensemble import (
     RidgeLogitCombiner,
     ShrunkRankLogitCombiner,
     XGBoostRankLogitCombiner,
+    combiner_for_context,
     evaluate_nested,
     full_fit_predictions,
     member_matrix,
@@ -120,6 +121,30 @@ def test_default_selection_excludes_precision_strategies_without_removing_them()
         explicit, explicit_excluded = select_combiners([name])
         assert [combiner.name for combiner in explicit] == [name]
         assert explicit_excluded == ()
+
+
+def test_contextual_combiner_factory_binds_fold_and_missingness_inputs():
+    index = make_index()
+    fold_of = pd.Series(np.arange(N) % 5, index=index)
+    band_of = pd.Series(np.arange(N) % 3, index=index)
+
+    shrunk = combiner_for_context(
+        "shrunk_rank_logit_logistic", fold_of=fold_of, band_of=band_of
+    )
+    segmented = combiner_for_context(
+        "missing_segmented_rank_logit", fold_of=fold_of, band_of=band_of
+    )
+    interaction = combiner_for_context(
+        "missing_interaction_rank_logit", fold_of=fold_of, band_of=band_of
+    )
+
+    assert shrunk.fold_of is fold_of
+    assert segmented.band_of is band_of
+    assert interaction.band_of is band_of
+    assert (
+        combiner_for_context("rank_mean", fold_of=fold_of, band_of=band_of)
+        is COMBINER_REGISTRY["rank_mean"]
+    )
 
 
 def test_rank_ensemble_auc_uses_rank_mean_formula():

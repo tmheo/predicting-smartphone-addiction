@@ -1,0 +1,328 @@
+schema_version: 1
+judgment_id: issue300-realmlp-orig-cdf-diff-confirm
+created_at: '2026-08-22T19:14:46Z'
+stage: confirmation
+route: candidate_pool
+supersedes: issue300-realmlp-orig-cdf-diff-screen
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: RealMLP에 원본 프록시 CDF 차이 5열 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/300
+  screening_judgment: artifacts/judgments/issue300-realmlp-orig-cdf-diff-screen.yaml
+
+feature_bundle:
+  name: exp048_original_cdf_diff_5
+  provider: original_cdf_diff
+  columns:
+    - app_opens_per_day_orig_cdf_diff
+    - daily_screen_time_hours_orig_cdf_diff
+    - notifications_per_day_orig_cdf_diff
+    - social_media_hours_orig_cdf_diff
+    - weekend_screen_time_orig_cdf_diff
+  target_free: true
+  kde_columns_opened: false
+  preregistration:
+    kind: committed_config
+    reference: configs/exp140_realmlp_orig_cdf_diff.yaml@b802367a28de90ad6828f1b691522d578364ef66
+    description: exp124 RealMLP 설정에 CDF 차이 5열만 더하고 KDE 3열을 열지 않는 짝비교를 결과 확인 전에 고정했다.
+  content_sha256: 0927c00e138f1f81e1ecd9087ba5bb81e45d71036f6395cf03ffc2c63096043f
+
+lineage:
+  included:
+    config: exp140_realmlp_orig_cdf_diff
+    config_path: configs/exp140_realmlp_orig_cdf_diff.yaml
+    config_sha256: c9b530a80960f4a129af4550a585f03de4c16fc7550753361e9ac94d5074f820
+    source_run_id: 8ffed46418aa431c88ba2793bffd8849
+    imported_run_id: 984b0fd5277243ab95acff71688644a9
+    import_bundle_sha256: 0cd8c766bc4e677c0e569af8fd80ceea1f617eab0bf5522f7fb8bf7cb5178b6a
+    git_commit: b802367a28de90ad6828f1b691522d578364ef66
+    seeds: [42, 43, 44]
+  excluded:
+    config: exp124_realmlp_dtype_fix
+    config_path: configs/exp124_realmlp_dtype_fix.yaml
+    config_sha256: 3e0fa92985c3ebce4bd67129ccf83c96ca287fd1aa29a14b05610ba5a7eed4e9
+    source_run_id: 06cf407974cb48ee986cf7c5da750d4a
+    imported_run_id: fb517dc311d246089fdb0501522307ab
+    import_bundle_sha256: 28ccd611b6ad4e16097465a8f7311d4918a5d6641601f35ace6c65dc17f109ac
+    pool_run_id: c41c6a4deae04e1fbd8a75193eaaa32c
+    git_commit: b802367a28de90ad6828f1b691522d578364ef66
+    seeds: [42, 43, 44]
+  allowed_differences:
+    - features.providers.original_cdf_diff
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+    starting_pool: e6f093c08af4d09a70e2ee9a7cc99f9d099b06b7505116005464b5ae1240712a
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  row_order_match: true
+  model_contract_match: true
+  allowed_config_difference_match: true
+  added_feature_columns_match: true
+  kde_columns_absent: true
+  screening_seed_42_prediction_exact_match: true
+  screening_seed_42_max_abs_difference: 0.0
+  excluded_prediction_exact_match_to_pool_run: true
+  adoption_eligibility:
+    seeds_ok: true
+    clean_commit_ok: true
+    folds_ok: true
+    ok: true
+  canary:
+    state: 유효
+    placebo_present: true
+    target_using_provider_total: 0
+    derived_canary_checks: []
+    reason: 원본 분포 제공자는 목표값을 참조하지 않으며 계획의 상시 플라시보 불변식을 유지했다.
+
+environment_gates:
+  isolated_commit: b802367a28de90ad6828f1b691522d578364ef66
+  exact_image_python_gate: passed
+  remote_contract_tests: 4
+  full_tests_before_remote: 505
+  full_tests_after_screen_record: 505
+  full_tests_after_ledger_change: 506
+
+paired_oof:
+  comparison: included_minus_excluded
+  included_auc: 0.9684119417243193
+  excluded_auc: 0.9683223457855767
+  overall_delta: 0.00008959593874258154
+  seed_aucs:
+    included:
+      42: 0.9683352436270521
+      43: 0.9683375493389949
+      44: 0.9683656999758875
+    excluded:
+      42: 0.96825640714118
+      43: 0.9682484157341104
+      44: 0.968266751680481
+  seed_deltas:
+    42: 0.00007883648587214687
+    43: 0.00008913360488449484
+    44: 0.00009894829540646466
+  fold_deltas:
+    0: 0.00006000278069051568
+    1: 0.00008355836136275663
+    2: 0.0000896971068992114
+    3: 0.00011487205286941915
+    4: 0.00010221477068605989
+  seed_wins: 3
+  seed_total: 3
+  fold_wins: 5
+  fold_total: 5
+  thresholds:
+    mean_must_be_positive: true
+    seed_win_min: 2
+    boundary_upper: 0.0002
+    boundary_fold_win_min: 3
+
+selection_procedure:
+  required: false
+  reason: 결과 확인 전에 CDF 차이 5열 전체와 단일 포함 설정을 고정했고 같은 OOF에서 하위 묶음이나 변형을 고르지 않았다.
+  candidate_set: [exp140_realmlp_orig_cdf_diff, exp124_realmlp_dtype_fix]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호
+  reasons:
+    - 3시드 평균 짝차이가 양수다.
+    - 같은 시드 3개가 모두 양수다.
+    - 경계 구간에서 시드 평균 예측의 분할 5개가 모두 양수다.
+
+champion_route:
+  evaluated: false
+  state: null
+  reason: 이 실행은 후보 풀의 exp124 직접 교체 경로이며 현재 champion 교체를 판정하지 않는다.
+
+candidate_pool_route:
+  evaluated: true
+  state: 양의 기여 미확인
+  ledger_action: replace_member
+  replacement:
+    performed: true
+    removed_config: exp124_realmlp_dtype_fix
+    removed_run_id: c41c6a4deae04e1fbd8a75193eaaa32c
+    added_config: exp140_realmlp_orig_cdf_diff
+    added_run_id: 984b0fd5277243ab95acff71688644a9
+    reason: 최근접 exp124와의 스피어만 상관이 중복 문턱을 넘고 후보 OOF AUC가 더 높아 중복 구성원을 직접 교체했다.
+  fixed_snapshot:
+    source_pool_size: 35
+    source_pool_sha256: e6f093c08af4d09a70e2ee9a7cc99f9d099b06b7505116005464b5ae1240712a
+  entry_snapshot:
+    champion_run_id: 54acd002d3c04ec3a74c09871e83da50
+    champion_oof_auc: 0.9693397329635609
+    floor: 0.9593397329635609
+    floor_margin: 0.009072208760758427
+    floor_ok: true
+    nearest_run_id: c41c6a4deae04e1fbd8a75193eaaa32c
+    nearest_config: exp124_realmlp_dtype_fix
+    nearest_auc: 0.9683223457855767
+    nearest_spearman: 0.9990720947503728
+    duplicate_threshold: 0.998
+    duplicate: true
+    uniform_rank_ensemble:
+      candidate_included_auc: 0.9691692063128639
+      candidate_excluded_auc: 0.9691545158271768
+      marginal_delta: 0.00001469048568703002
+      used_as_gate: false
+  nested_contribution:
+    strategy: missing_interaction_rank_logit
+    candidate_included_auc: 0.9697297265804734
+    candidate_excluded_auc: 0.9697310309860034
+    marginal_delta: -0.0000013044055300337476
+    outer_fold_deltas:
+      0: 0.0000005607202989699189
+      1: -0.000003715977149654215
+      2: 0.0000006962065612903245
+      3: 0.0000022256282639077085
+      4: -0.000016935701714793083
+    outer_fold_wins: 3
+    outer_fold_total: 5
+    status: 양의 기여 미확인
+  direct_replacement_readout:
+    strategy: missing_interaction_rank_logit
+    source_pool_auc: 0.9697297236170225
+    replacement_pool_auc: 0.9697297265804734
+    delta: 0.0000000029634509290943356
+    outer_fold_deltas:
+      0: 0.000006923500235567204
+      1: 0.000007053404666890195
+      2: 0.000002483153650145731
+      3: -0.000009566497228941095
+      4: -0.000012730002878491575
+    outer_fold_wins: 3
+    outer_fold_total: 5
+    interpretation: 직접 교체는 사실상 동률이며 중복 구성원 중 단독 OOF AUC가 높은 후보를 남기는 장부 변경을 지지한다.
+  coefficient_readout:
+    selected_folds: 5
+    fold_total: 5
+    mean_weight: -0.20900045900645217
+    interpretation: 결합 계수의 부호와 크기는 보조 설명이며 개별 후보의 인과적 기여로 해석하지 않는다.
+
+ensemble_reevaluation:
+  pool_size: 35
+  strategy_count: 19
+  failed_strategy_count: 0
+  best_strategy: shrunk_rank_logit_logistic
+  nested_oof_auc: 0.9697407042580104
+  champion_auc: 0.9693397329635609
+  champion_delta: 0.0004009712944494923
+  fixed_strategy:
+    name: missing_interaction_rank_logit
+    nested_oof_auc: 0.9697297265804734
+  champion_changed: false
+  full_refit_combiner_changed: false
+  reason: 이 티켓은 구성원 직접 교체만 수행하며 champion과 전체 자료 결합 규약을 다시 열지 않는다.
+
+full_refit_plan:
+  path: artifacts/full-refit-plan.yaml
+  source_pool_sha256: 6047f26a351603888e88acbabf1284fe99cc9db9b052376219d3aa70dc654940
+  action: replace_member
+  removed_config: exp124_realmlp_dtype_fix
+  added_config: exp140_realmlp_orig_cdf_diff
+  budget_source: fold_median
+  fold_best_iteration_medians:
+    42: 4
+    43: 4
+    44: 4
+  iteration_multiplier: 1.25
+  budgets:
+    42: 5
+    43: 5
+    44: 5
+  combiner_changed: false
+
+auxiliary_importance:
+  method: realmlp_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: 0.000002282349570018975
+  cell_total: 15
+  features:
+    app_opens_per_day_orig_cdf_diff:
+      mean: -0.000004128326463637144
+      median: -0.0000008002249358707303
+      above_placebo_cells: 6
+    daily_screen_time_hours_orig_cdf_diff:
+      mean: 0.006205388890134185
+      median: 0.00615256008091003
+      above_placebo_cells: 15
+    notifications_per_day_orig_cdf_diff:
+      mean: 0.00001712148462507853
+      median: 0.000015421580163321735
+      above_placebo_cells: 10
+    social_media_hours_orig_cdf_diff:
+      mean: 0.0027076589013230513
+      median: 0.0027691759976486985
+      above_placebo_cells: 15
+    weekend_screen_time_orig_cdf_diff:
+      mean: 0.00041568474330686553
+      median: 0.0004357605945575216
+      above_placebo_cells: 15
+  conflicts_with_oof: true
+  conflict_features:
+    - app_opens_per_day_orig_cdf_diff
+  used_as_gate: false
+
+remote_execution:
+  provider: Vast.ai
+  instance_id: 48413563
+  gpu: 2x RTX A4000 16376MiB
+  hourly_total_usd: 0.22814814814814816
+  image: nvcr.io/nvidia/pytorch@sha256:38ed2ecb2c16d10677006d73fb0a150855d6ec81db8fc66e800b5ae92741007e
+  input_archive_sha256: 3c2e8f0a1db12a51a120debb0049a3e93096007c1f07b95bc825ac14c84a23d0
+  result_archive_sha256: abb52540a164b450008c92be53ba953ed13ef6592c365188a9b249d0bc9d959b
+  transfer: ssh_standard_stream
+  provider_switch_performed: false
+  runpod_resources_created: false
+  cost_attribution:
+    exact_account_delta_available: false
+    reason: 같은 계정의 다른 작업과 계정 변동이 겹쳐 잔액 차이를 이 작업의 단독 비용으로 해석하지 않았다.
+  input_preparation_failures:
+    - input_archive_sha256: 42fa5c78c58d3d211f867e8a2f5909fc74bebd5da851a5c29af852174b217f44
+      model_training_started: false
+      reason: macOS AppleDouble 파일이 저장소 청결 검사를 위반했다.
+    - input_archive_sha256: 96dd76f94dc8850172d074346466e6812b6095d9f543dbd4b232239c3cc52733
+      evidence_archive_sha256: faefa28cc8102d47065ed0da1c97808f2dce5324524af70926d97d9e952aa2fe
+      model_training_started: false
+      reason: 비공개 입력 파일이 쓰기 가능해 보호 검사를 위반했다.
+  cleanup:
+    instance_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+    unrelated_termination_schedules_preserved: 3
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호
+  champion_route: null
+  candidate_pool_route: 양의 기여 미확인
+  actual_ledger_change: exp124_replaced_by_exp140
+  full_refit_plan_change: exp124_replaced_by_exp140
+  reason_codes:
+    - paired_mean_positive
+    - seed_wins_3_of_3
+    - boundary_fold_wins_5_of_5
+    - screening_seed_42_exact_match
+    - adoption_eligibility_passed
+    - canary_valid
+    - nearest_spearman_above_duplicate_threshold
+    - candidate_oof_higher_than_duplicate
+    - nested_marginal_not_positive
+    - direct_replacement_effectively_tied
+    - duplicate_member_replaced
+    - full_refit_plan_updated
+    - remote_cleanup_complete
+    - no_provider_switch
