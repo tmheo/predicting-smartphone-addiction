@@ -1,0 +1,220 @@
+schema_version: 1
+judgment_id: issue291-exp140-lookup-widths-confirm
+created_at: '2026-08-23T03:12:00Z'
+stage: confirmation
+route: champion
+supersedes: issue291-exp140-lookup-widths-screen
+
+contract:
+  decision:
+    title: 실증 결과로 새 피처 기여 판정 계약 확정
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/262
+  execution:
+    title: 챔피언에 제약 복원 구간 폭 3열 이식 짝비교
+    url: https://github.com/tmheo/predicting-smartphone-addiction/issues/291
+  screening_judgment: artifacts/judgments/issue291-exp140-lookup-widths-screen.yaml
+
+feature_bundle:
+  name: reconstruction_widths
+  columns:
+    - gaming_hours_recon_width
+    - social_media_hours_recon_width
+    - work_study_hours_recon_width
+  provider: constrained_impute_aux
+  preregistration:
+    kind: committed_config
+    reference: configs/exp140_lookup_bivariate_plr5_recon_widths.yaml@7be93b08adb1998b1f6b9b43e453c540d017c48d
+    description: 챔피언 exp131 설정에서 constrained_impute_aux.widths만 true로 바꾸는 폭 3열 묶음을 결과 확인 전에 고정했다.
+  content_sha256: 2c53da70b1b0c9ded02728654913740115a225153a5d3229ab2f3854fdca3379
+
+lineage:
+  included:
+    config: exp140_lookup_bivariate_plr5_recon_widths
+    config_path: configs/exp140_lookup_bivariate_plr5_recon_widths.yaml
+    config_sha256: ff99066a1d7a4af8a62ccf542c493cc065530a3e625319c4eeb54fc261c11430
+    source_run_id: 959e17b59b764b199fda7d09ea7fc708
+    imported_run_id: d12c3aa05e894aba817db57dec124de2
+    import_bundle_sha256: 1c6d4bd0d378ba467e5ad625b2c1d3d942a0004ce485b6c2ef7b1629d3444b83
+    git_commit: 7be93b08adb1998b1f6b9b43e453c540d017c48d
+    seeds: [42, 43, 44]
+  excluded:
+    config: exp131_lookup_bivariate_plr5
+    config_path: configs/exp131_lookup_bivariate_plr5.yaml
+    config_sha256: d344102b44330a9e89a15e330f90694e19652575595ec5bb8dbb03beaa91b5b2
+    source_run_id: d9f44c44bba9441fa61a3f971e55172e
+    imported_run_id: 54acd002d3c04ec3a74c09871e83da50
+    import_bundle_sha256: ab93840a62e6174c961d814dca83a7366079900be813773b230f53d4b589fa20
+    git_commit: 58719c6b86c8d62a027760ff367892eaed5a141f
+    seeds: [42, 43, 44]
+  allowed_differences:
+    - name
+    - features.providers.constrained_impute_aux.widths
+  input_sha256:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+execution_validity:
+  state: 유효
+  included_git_dirty: false
+  excluded_git_dirty: false
+  folds_match_between_runs: true
+  folds_match_committed: true
+  model_contract_match: true
+  emitted_feature_columns_match: true
+  screening_seed_42_prediction_exact_match: true
+  screening_seed_42_prediction_rows: 691369
+  screening_seed_42_prediction_max_abs_delta: 0.0
+  adoption_eligibility:
+    seeds_ok: true
+    clean_commit_ok: true
+    folds_ok: true
+    ok: true
+  canary:
+    state: 유효
+    placebo_present: true
+    target_using_provider_total: 0
+    derived_canary_checks: []
+    reason: 폭 3열 제공자는 목표값을 참조하지 않으며 계획의 상시 플라시보 불변식을 유지했다.
+
+paired_oof:
+  comparison: included_minus_excluded
+  included_auc: 0.9693473247868301
+  excluded_auc: 0.9693397329635609
+  overall_delta: 0.000007591823269148534
+  seed_aucs:
+    included:
+      42: 0.9692308318016614
+      43: 0.9691652644715708
+      44: 0.9692155267094552
+    excluded:
+      42: 0.9691984425064686
+      43: 0.9692263222971439
+      44: 0.9692147190929743
+  seed_deltas:
+    42: 0.000032389295192780665
+    43: -0.00006105782557308537
+    44: 0.0000008076164809134312
+  fold_deltas:
+    0: 0.000032337830641382403
+    1: -0.00006410479219975951
+    2: -0.000022555671758794915
+    3: -0.000005456493552769004
+    4: 0.00009576718267734208
+  seed_wins: 2
+  seed_total: 3
+  fold_wins: 2
+  fold_total: 5
+  thresholds:
+    mean_must_be_positive: true
+    seed_win_min: 2
+    boundary_upper: 0.0002
+    boundary_fold_win_min: 3
+    champion_delta_min: 0.00002
+
+selection_procedure:
+  required: false
+  reason: 폭 3열 전체의 포함과 제외 한 쌍을 결과 확인 전에 고정했으며 같은 OOF에서 하위 묶음이나 변형을 고르지 않았다.
+  candidate_set: [exp140_lookup_bivariate_plr5_recon_widths, exp131_lookup_bivariate_plr5]
+  inner_selection_rule: null
+  tie_break_rule: null
+  nested_oof: null
+
+feature_signal:
+  state: 실신호 미확인
+  reasons:
+    - 3시드 평균 예측 OOF 짝차가 양수다.
+    - 같은 시드 2개에서 짝차가 양수다.
+    - 평균 차이가 +0.0002 미만인 경계 구간에서 평균 예측 분할 승수가 2/5로 최소 3/5에 미달했다.
+
+champion_route:
+  evaluated: true
+  state: 채택 조건 미달
+  ledger_action: retain_current_champion
+  current_champion:
+    config: exp131_lookup_bivariate_plr5
+    run_id: 54acd002d3c04ec3a74c09871e83da50
+    oof_auc: 0.9693397329635609
+  candidate:
+    config: exp140_lookup_bivariate_plr5_recon_widths
+    run_id: d12c3aa05e894aba817db57dec124de2
+    oof_auc: 0.9693473247868301
+    delta: 0.000007591823269148534
+  gates:
+    feature_signal_required: true
+    feature_signal_ok: false
+    champion_delta_min: 0.00002
+    champion_delta_ok: false
+    adoption_eligibility_ok: true
+    canary_ok: true
+    selection_control_ok: true
+  reason: 경계 구간 분할 반복성과 챔피언 최소 개선폭을 둘 다 충족하지 못했다.
+
+candidate_pool_route:
+  evaluated: false
+  state: null
+  reason: 이 티켓은 현재 챔피언의 직접 교체 경로만 판정한다.
+
+auxiliary_importance:
+  method: lookup_transformer_permutation_auc_drop
+  placebo_reference: placebo_noise
+  placebo_mean: 0.000025321567218005035
+  placebo_median: 0.000021550815313446197
+  cell_total: 15
+  features:
+    gaming_hours_recon_width:
+      mean: 0.000037715424251742265
+      median: 0.00003516456290608705
+      above_placebo_cells: 11
+    social_media_hours_recon_width:
+      mean: 0.000045762614217120185
+      median: 0.000047076232613722326
+      above_placebo_cells: 12
+    work_study_hours_recon_width:
+      mean: 0.000014392296984741844
+      median: 0.000014119512390905106
+      above_placebo_cells: 2
+  conflicts_with_oof: true
+  used_as_gate: false
+  interpretation: 개별 열 중요도는 엇갈리며 평균 예측 분할 반복성 미달 판정을 바꾸지 않는다.
+
+remote_execution:
+  provider: Vast.ai
+  gpu: 4x RTX A4000 16376MiB
+  seed_gpu_assignment:
+    42: 0
+    43: 1
+    44: 2
+  unused_gpu_indices: [3]
+  image: nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631
+  result_archive_sha256: c3108bc572d77c2b516f98ea26f703766aca51db39dcab7e273f7de5c32bec70
+  final_checkpoint_sha256: 477774bac2fb68c59619f14e628b42b493e0ee6d9d4b53d9a2371f304868bbf7
+  pipeline_duration_seconds: 12954
+  instance_duration_seconds_upper_bound: 13401.237
+  estimated_cost_usd: 2.106145
+  interrupted_single_gpu_attempt_cost_usd_estimated: 0.048835
+  confirmation_total_cost_usd_estimated: 2.15498
+  issue_total_cost_usd_estimated: 2.74098
+  recovery:
+    recovered_manifest_count: 15
+    verified_artifact_count: 45
+  cleanup:
+    instance_absent_after_delete: true
+    project_volumes_absent: true
+    termination_schedules_absent: true
+
+result:
+  execution_validity: 유효
+  feature_bundle_signal: 실신호 미확인
+  champion_route: 채택 조건 미달
+  candidate_pool_route: null
+  actual_ledger_change: none
+  reason_codes:
+    - paired_mean_positive
+    - seed_wins_2_of_3
+    - boundary_fold_wins_2_of_5
+    - champion_delta_below_0p00002
+    - adoption_eligibility_passed
+    - canary_valid
+    - screening_seed_42_exact_match
+    - placebo_importance_auxiliary_only
