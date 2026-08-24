@@ -1,0 +1,37 @@
+# 이슈 #387: exp108에서 고유값 1,000개 초과 열을 연속값으로 통과시키는 표현 해상도 변형.
+name: exp155_issue387_logreg_nn10_l1_card1000
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+features:
+  base: raw
+  categorical:
+  - gender
+  - stress_level
+  - academic_work_impact
+  providers:
+  - kind: original_knn
+    path: data/external/Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+    ks:
+    - 10
+model:
+  kind: logistic_onehot
+  params:
+    C: 10.0
+    penalty: l1
+    solver: liblinear
+    max_iter: 1000
+    onehot_max_card: 1000
+  fit: {}

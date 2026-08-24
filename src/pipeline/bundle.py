@@ -13,9 +13,9 @@ import(묶음 반입)의 검증 게이트. 하나라도 실패하면 반입하�
    같은 자료와 같은 5-fold 규율을 강제한다.
 2. 출처: 실행의 git_commit이 로컬 git에 존재하고, 그 커밋의 config 파일과 묶음의
    config가 sha256 동일해야 하며, 원격 실행이 git_dirty=False여야 한다.
-3. 재채점이 진실: 시드별 OOF(oof_seed_*.parquet)와 로컬 라벨로 auc_fold_*·auc_oof·
-   auc_oof_seed_*를 전부 재계산해 기록한다. 시드 평균 예측이 묶음의 oof.parquet과
-   다르거나 주장 지표와 부동소수점 허용 오차를 넘게 다르면 중단한다.
+3. 재채점이 진실: 시드별 OOF(oof_seed_*.parquet)와 로컬 자료로 auc_fold_*·auc_oof·
+   auc_oof_seed_*와 가중 OOF 지표를 전부 재계산해 기록한다. 시드 평균 예측이 묶음의
+   oof.parquet과 다르거나 주장 지표와 부동소수점 허용 오차를 넘게 다르면 중단한다.
    원격이 주장한 지표는 기록하지 않는다.
 
 통과하면 로컬 MLflow에 정상 run으로 재생되므로(산출물 전체 포함) compare·pool·
@@ -51,7 +51,12 @@ from .fold_observability import (
     ObservabilitySchemaError,
     read_fold_observability,
 )
-from .judgment import seed_auc_metric
+from .judgment import (
+    WEIGHTED_OOF_AUC_METRIC,
+    missingness_reweighting,
+    seed_auc_metric,
+    weighted_oof_auc,
+)
 from .runs import TRACKING_URI, MlflowRunStore, RunStoreError
 
 SCHEMA_VERSION = 1
@@ -298,6 +303,12 @@ def _rescore(manifest: dict, bundle_dir: Path, inputs: dict[str, Path]) -> dict[
     metrics.update(
         {k: float(v) for k, v in score_predictions(y, local_folds, mean_pred).items()}
     )
+    # #383 이전 묶음은 가중 지표를 주장하지 않으므로 기존 반입 호환성을 유지한다.
+    # 새 묶음은 train/test 결측 패턴 구성비까지 로컬에서 다시 계산한 값만 기록한다.
+    if WEIGHTED_OOF_AUC_METRIC in manifest["metrics"]:
+        prediction = pd.Series(mean_pred, index=ids, name="pred")
+        reweighting = missingness_reweighting(inputs["train"], inputs["test"])
+        metrics.update(weighted_oof_auc(prediction, y, reweighting).metrics())
 
     for name, value in metrics.items():
         claimed = manifest["metrics"].get(name)

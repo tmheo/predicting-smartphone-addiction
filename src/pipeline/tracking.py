@@ -27,7 +27,10 @@ from __future__ import annotations
 import json
 import subprocess
 import tempfile
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
+from urllib.parse import unquote
 
 import pandas as pd
 
@@ -47,15 +50,64 @@ from .runs import TRACKING_URI
 EXPERIMENT_NAME = "predicting-smartphone-addiction"
 
 
+def _sqlite_database_path(tracking_uri: str) -> Path | None:
+    """SQLite URI의 자료 파일 경로. 메모리·다른 저장소 URI면 None이다."""
+    prefix = "sqlite:///"
+    if not tracking_uri.startswith(prefix):
+        return None
+    database = unquote(tracking_uri[len(prefix) :].partition("?")[0])
+    if not database or database == ":memory:":
+        return None
+    return Path(database).resolve()
+
+
+@contextmanager
+def _sqlite_initialization_lock(tracking_uri: str) -> Iterator[None]:
+    """새 SQLite MLflow 저장소의 스키마·실험 초기화를 프로세스 사이에서 직렬화한다."""
+    database = _sqlite_database_path(tracking_uri)
+    if database is None:
+        yield
+        return
+
+    import fcntl
+
+    lock_path = database.with_name(f"{database.name}.init.lock")
+    try:
+        stream = lock_path.open("a+b")
+    except OSError as exc:
+        raise RuntimeError(
+            f"MLflow SQLite 초기화 잠금 파일을 열 수 없다: {database}"
+        ) from exc
+    with stream:
+        try:
+            fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+        except OSError as exc:
+            raise RuntimeError(
+                f"MLflow SQLite 초기화 잠금을 얻을 수 없다: {database}"
+            ) from exc
+        try:
+            yield
+        finally:
+            try:
+                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+            except OSError as exc:
+                raise RuntimeError(
+                    f"MLflow SQLite 초기화 잠금을 해제할 수 없다: {database}"
+                ) from exc
+
+
 def mlflow_client(tracking_uri: str = TRACKING_URI):
     """(MlflowClient, experiment_id)를 돌려준다. 실험이 없으면 만든다."""
     from mlflow.tracking import MlflowClient
 
-    client = MlflowClient(tracking_uri=tracking_uri)
-    experiment = client.get_experiment_by_name(EXPERIMENT_NAME)
-    experiment_id = (
-        experiment.experiment_id if experiment else client.create_experiment(EXPERIMENT_NAME)
-    )
+    with _sqlite_initialization_lock(tracking_uri):
+        client = MlflowClient(tracking_uri=tracking_uri)
+        experiment = client.get_experiment_by_name(EXPERIMENT_NAME)
+        experiment_id = (
+            experiment.experiment_id
+            if experiment
+            else client.create_experiment(EXPERIMENT_NAME)
+        )
     return client, experiment_id
 
 

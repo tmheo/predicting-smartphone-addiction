@@ -1,0 +1,127 @@
+schema_version: 1
+issue: 387
+selection:
+  target_count: 12
+  principle: fold 0 단독 AUC를 유지하면서 최근접 후보 풀 예측의 스피어만 상관이 낮은 절충선에 놓인 설정을 우선한다.
+  proxy_limit: 저장된 fold 0 예측 상관은 잔차 거리의 대리값일 뿐이며, 실제 잔차 상관은 완성된 3시드 OOF에서 다시 잰다.
+  excluded_xgb_trials:
+  - 15
+  - 30
+  excluded_xgb_reason: 이슈 288에서 이미 승격해 3시드 판정한 설정은 신규 생산 원천에서 제외한다.
+parallelism:
+  jobs: 3
+  threads_per_job: 4
+downstream_registration:
+  selection_procedure_required: true
+  reason: 같은 fold 0 결과로 여러 트리 설정을 골랐고 완성된 OOF로 다시 부분집합을 고를 예정이므로 직접 포함·제외 대조만으로 지속 등록하지 않는다.
+candidates:
+- config: configs/exp144_issue387_xgb_trial6.yaml
+  name: exp144_issue387_xgb_trial6
+  family: xgboost
+  source:
+    issue: 288
+    trial: 6
+  screening_fold0_auc: 0.9659246558535715
+  screening_nearest_spearman: 0.9958664229452806
+  screening_training_seconds: 205.93042204200174
+- config: configs/exp145_issue387_xgb_trial1.yaml
+  name: exp145_issue387_xgb_trial1
+  family: xgboost
+  source:
+    issue: 288
+    trial: 1
+  screening_fold0_auc: 0.9673849193039952
+  screening_nearest_spearman: 0.996496770549412
+  screening_training_seconds: 116.85503945799428
+- config: configs/exp146_issue387_xgb_trial17.yaml
+  name: exp146_issue387_xgb_trial17
+  family: xgboost
+  source:
+    issue: 288
+    trial: 17
+  screening_fold0_auc: 0.9675147264338079
+  screening_nearest_spearman: 0.9965574124064257
+  screening_training_seconds: 145.03133704100037
+- config: configs/exp147_issue387_xgb_trial21.yaml
+  name: exp147_issue387_xgb_trial21
+  family: xgboost
+  source:
+    issue: 288
+    trial: 21
+  screening_fold0_auc: 0.9675380914710661
+  screening_nearest_spearman: 0.9969722085724321
+  screening_training_seconds: 198.20597279100912
+- config: configs/exp148_issue387_xgb_trial33.yaml
+  name: exp148_issue387_xgb_trial33
+  family: xgboost
+  source:
+    issue: 288
+    trial: 33
+  screening_fold0_auc: 0.9675574809760318
+  screening_nearest_spearman: 0.9974245787435955
+  screening_training_seconds: 203.04925925002317
+- config: configs/exp149_issue387_cat_trial20.yaml
+  name: exp149_issue387_cat_trial20
+  family: catboost
+  source:
+    issue: 289
+    trial: 20
+  screening_fold0_auc: 0.9676039742033091
+  screening_nearest_spearman: 0.9938473003057228
+  screening_training_seconds: 21.5734481215477
+  screening_device: GPU
+  confirmation_device: CPU
+- config: configs/exp150_issue387_cat_trial11.yaml
+  name: exp150_issue387_cat_trial11
+  family: catboost
+  source:
+    issue: 289
+    trial: 11
+  screening_fold0_auc: 0.9676437759569176
+  screening_nearest_spearman: 0.9942137083505588
+  screening_training_seconds: 37.99827759061009
+  screening_device: GPU
+  confirmation_device: CPU
+- config: configs/exp151_issue387_cat_trial3.yaml
+  name: exp151_issue387_cat_trial3
+  family: catboost
+  source:
+    issue: 289
+    trial: 3
+  screening_fold0_auc: 0.9676857292526692
+  screening_nearest_spearman: 0.9947143923020154
+  screening_training_seconds: 119.02188272029161
+  screening_device: GPU
+  confirmation_device: CPU
+- config: configs/exp152_issue387_cat_trial6.yaml
+  name: exp152_issue387_cat_trial6
+  family: catboost
+  source:
+    issue: 289
+    trial: 6
+  screening_fold0_auc: 0.9677116977066644
+  screening_nearest_spearman: 0.9948411632020917
+  screening_training_seconds: 49.15773153770715
+  screening_device: GPU
+  confirmation_device: CPU
+- config: configs/exp153_issue387_logreg_raw_l1.yaml
+  name: exp153_issue387_logreg_raw_l1
+  family: logistic_onehot
+  source:
+    issue: 200
+    lineage: exp058/exp108
+  rationale: exp058의 정확값 표현은 유지하고 L2를 L1으로 바꾼 규제 변형
+- config: configs/exp154_issue387_logreg_nn1_nn10_l1.yaml
+  name: exp154_issue387_logreg_nn1_nn10_l1
+  family: logistic_onehot
+  source:
+    issue: 200
+    lineage: exp058/exp108
+  rationale: exp108에 원본 프록시 최근접 1행 표현을 더한 정보 관점 변형
+- config: configs/exp155_issue387_logreg_nn10_l1_card1000.yaml
+  name: exp155_issue387_logreg_nn10_l1_card1000
+  family: logistic_onehot
+  source:
+    issue: 200
+    lineage: exp058/exp108
+  rationale: exp108에서 고유값 1,000개 초과 열을 연속값으로 통과시키는 표현 해상도 변형

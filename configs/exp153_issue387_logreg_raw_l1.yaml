@@ -1,0 +1,23 @@
+# 이슈 #387: exp058의 정확값 표현은 유지하고 L2를 L1으로 바꾼 규제 변형.
+name: exp153_issue387_logreg_raw_l1
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+features:
+  base: raw
+  categorical:
+  - gender
+  - stress_level
+  - academic_work_impact
+  providers: []
+model:
+  kind: logistic_onehot
+  params:
+    C: 10.0
+    penalty: l1
+    solver: liblinear
+    max_iter: 1000
+    onehot_max_card: 5000
+  fit: {}

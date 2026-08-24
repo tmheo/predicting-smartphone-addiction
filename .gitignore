@@ -20,6 +20,7 @@ artifacts/submissions/
 
 # MLflow local tracking (issue #14/#17)
 mlflow.db
+*.db.init.lock
 mlruns/
 mlartifacts/
 

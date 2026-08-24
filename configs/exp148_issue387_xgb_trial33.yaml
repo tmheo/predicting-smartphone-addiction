@@ -1,0 +1,63 @@
+# 이슈 #387: 이슈 #288 XGBoost 탐색의 미승격 시행 33번을 3시드 평균본으로 생산한다.
+# fold 0 AUC 0.967557480976032, 최근접 풀 스피어만 0.997424578743595.
+name: exp148_issue387_xgb_trial33
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+features:
+  base: raw
+  categorical:
+  - gender
+  - stress_level
+  - academic_work_impact
+  providers:
+  - kind: derived
+    names:
+    - other_screen
+    - screen_slack
+  - kind: target_encoding
+    inner_folds: 10
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+    - placebo_noise
+  - kind: constrained_impute_aux
+    widths: false
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+model:
+  kind: xgboost
+  params:
+    tree_method: hist
+    eval_metric: auc
+    n_estimators: 10000
+    learning_rate: 0.0166072589565089
+    max_depth: 7
+    min_child_weight: 0.0015785274131270538
+    subsample: 0.8599383146887035
+    colsample_bylevel: 0.9508937698260161
+    colsample_bynode: 0.6635834956786658
+    reg_alpha: 0.0006769496190853616
+    reg_lambda: 1.7674232506036935
+    grow_policy: depthwise
+    max_cat_to_onehot: 30
+    max_leaves: 18
+    n_jobs: 4
+  fit:
+    early_stopping_rounds: 200
