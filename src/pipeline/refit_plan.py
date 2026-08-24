@@ -37,7 +37,7 @@ import yaml
 from . import data
 from .ensemble import COMBINER_REGISTRY
 from .ledger import POOL_PATH, Pool
-from .runs import MlflowRunStore, RunStore, RunStoreError
+from .runs import MlflowRunStore, RunStore, RunStoreError, sha256_of
 from .training_length import (
     FIXED_COUNT,
     HALF_UP_ROUNDING,
@@ -216,14 +216,23 @@ class RefitProtocol:
 
 @dataclass(frozen=True)
 class ExecutableRefitMember:
-    """관문을 통과한 구성원. `budgets`는 원시 근거에서 다시 계산한 값이다."""
+    """관문을 통과한 구성원. `budgets`는 원시 근거에서 다시 계산한 값이다.
+
+    실행 경로가 시드별 기록과 구성원 manifest에 원시 근거 계보와 파생 규약을 남기므로
+    `lineage`와 `derivation`을 함께 들고 나온다. 실행 식별자는 계보에서 파생하며,
+    같은 값을 두 자리에 두지 않는다.
+    """
 
     config: str
     config_path: Path
-    run_id: str
+    lineage: MemberLineage
     status: str
     budgets: dict[int, int | None]
     derivation: RefitBudgetDerivation | None
+
+    @property
+    def run_id(self) -> str:
+        return self.lineage.source_run_id
 
 
 @dataclass(frozen=True)
@@ -231,6 +240,7 @@ class ExecutableRefitPlan:
     """관문을 통과한 계획. 파생 재학습 예산을 노출하는 유일한 자료형이다."""
 
     source_path: Path
+    content_sha256: str
     source_pool_sha256: str
     protocol: RefitProtocol
     members: tuple[ExecutableRefitMember, ...]
@@ -255,6 +265,7 @@ class RefitPlan:
     """
 
     source_path: Path
+    content_sha256: str
     schema_version: int
     source_pool_sha256: str
     protocol: RefitProtocol
@@ -262,9 +273,14 @@ class RefitPlan:
 
     @classmethod
     def load(cls, path: Path) -> RefitPlan:
-        """장부를 엄격한 문법으로 읽는다. 파일 밖의 무엇도 읽지 않는다."""
-        with path.open() as stream:
-            raw = yaml.safe_load(stream)
+        """장부를 엄격한 문법으로 읽는다. 파일 밖의 무엇도 읽지 않는다.
+
+        읽은 바이트의 SHA-256을 계획 내용 해시로 함께 들고 나온다. 실행 경로는 이 해시를
+        시드별 기록에 남겨, 재개할 때 그때와 같은 장부인지 한 값으로 확인한다.
+        내용 해시는 근거·계보·예산 전부를 덮으므로 어느 칸이 바뀌어도 재개가 막힌다.
+        """
+        payload = path.read_bytes()
+        raw = yaml.safe_load(payload.decode())
         document = _mapping(raw, "장부")
         _exact_fields(document, PLAN_FIELDS, "장부")
 
@@ -284,6 +300,7 @@ class RefitPlan:
             raise RefitPlanError(f"장부에 같은 구성원이 두 번 있다: {duplicates}")
         return cls(
             source_path=path,
+            content_sha256=sha256_of(payload),
             schema_version=version,
             source_pool_sha256=_text(document["source_pool_sha256"], "source_pool_sha256"),
             protocol=_load_protocol(document["protocol"]),
@@ -317,6 +334,7 @@ class RefitPlan:
         )
         return ExecutableRefitPlan(
             source_path=self.source_path,
+            content_sha256=self.content_sha256,
             source_pool_sha256=self.source_pool_sha256,
             protocol=self.protocol,
             members=members,
@@ -377,7 +395,7 @@ def _validate_member(
         return ExecutableRefitMember(
             config=member.config,
             config_path=member.config_path,
-            run_id=member.lineage.source_run_id,
+            lineage=member.lineage,
             status=evidence.status,
             budgets={seed: None for seed in allowed_seeds},
             derivation=None,
@@ -388,7 +406,7 @@ def _validate_member(
     return ExecutableRefitMember(
         config=member.config,
         config_path=member.config_path,
-        run_id=member.lineage.source_run_id,
+        lineage=member.lineage,
         status=evidence.status,
         budgets=dict(derivation.budgets()),
         derivation=derivation,

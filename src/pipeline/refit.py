@@ -1,14 +1,18 @@
-"""후보 풀 전체 자료 재학습과 최종 결합 예측 조립. (#66)
+"""후보 풀 전체 자료 재학습과 최종 결합 예측 조립. (#66, #375)
 
-재학습 계획은 후보 실행, 시드, CV에서 확정한 학습 길이를 고정한다.
+재학습 계획 장부는 후보 실행, 시드, CV에서 확정한 학습 길이를 고정한다.
 구성원 실행은 시드별 시험 예측을 먼저 저장한 뒤 평균본과 계보 manifest를 만든다.
 조립은 기존 5-fold 시험 예측과 전체 자료 예측을 모델 개수 기준 5:1로 섞고,
 계획이 지정한 등록 결합 방식을 전체 OOF에서 한 번 맞춘다.
 
-이 module의 `RefitPlan`은 현행 `artifacts/full-refit-plan.yaml`(문법 판본 1)을 읽는
-실행 경로다. 원시 근거 계보와 예산 재계산을 소유하는 새 장부는 `refit_plan` module에
-있고(문법 판본 2, #373), 32개 구성원의 근거 자료를 그 문법으로 옮기는 후속 이슈에서
-이 자료형과 검증을 대체한다.
+**이 module은 장부의 저장 숫자를 읽지 않는다.** 장부의 문법과 관문은 `refit_plan`이
+소유하고, 여기서 쓰는 재학습 예산은 언제나 그 관문이 원시 근거에서 다시 계산한 값이다.
+그 값을 노출하는 자료형은 `ExecutableRefitPlan` 하나뿐이므로, 이 module의 실행 함수는
+검증을 통과한 계획 말고는 애초에 받을 수 없다. 손으로 예산을 적어 넣는 통로는 없다.
+
+관문은 계획 전체에 걸린다. `--member`로 구성원 하나만 요청해도 후보 풀 정체성과
+모든 반복형 구성원의 근거·예산을 먼저 검증하며, 그 검증은 자료 적재보다,
+피처 계획 생성보다, 모델 연결부 생성보다, 출력 폴더 생성보다 먼저 끝난다.
 
 사용법:
     uv run python -m pipeline.refit artifacts/full-refit-plan.yaml --member exp006_te_drop_gaming
@@ -21,12 +25,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from dataclasses import dataclass
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import yaml
 
 from . import data, initial_score, model, tracking
 from .config import load_config
@@ -40,120 +43,50 @@ from .ensemble import (
 from .ledger import Pool
 from .plan import FeaturePlan
 from .pool_audit import prediction_array_sha256
-from .runs import MlflowRunStore
+from .refit_plan import (
+    ExecutableRefitMember,
+    ExecutableRefitPlan,
+    RefitPlan,
+    RefitPlanError,
+)
+from .runs import MlflowRunStore, RunStore, RunStoreError
 
 DEFAULT_OUTPUT = Path("artifacts/full-refit")
 
-
-@dataclass(frozen=True)
-class RefitMember:
-    config: str
-    config_path: Path
-    run_id: str
-    budgets: dict[int, int | None]
-    budget_source: str
+# 시드별 기록과 구성원 manifest의 문법 판본. 문법 판본 2 장부의 계보와 파생 규약을 남긴다.
+RECORD_SCHEMA_VERSION = 2
 
 
-@dataclass(frozen=True)
-class RefitPlan:
-    source_path: Path
-    source_pool_sha256: str
-    iteration_multiplier: float
-    budget_statistic: str
-    budget_rounding: str
-    cv_model_weight: int
-    full_model_weight: int
-    combiner: str
-    members: tuple[RefitMember, ...]
+def load_executable_plan(
+    path: Path,
+    *,
+    store: RunStore | None = None,
+    pool: Pool | None = None,
+    pool_sha256: str | None = None,
+) -> ExecutableRefitPlan:
+    """장부를 읽어 관문에 통과시킨다. 전체 자료 재학습이 계획을 얻는 유일한 통로다.
 
-    @classmethod
-    def load(cls, path: Path) -> RefitPlan:
-        with path.open() as stream:
-            raw = yaml.safe_load(stream)
-        protocol = raw["protocol"]
-        members = tuple(
-            RefitMember(
-                config=item["config"],
-                config_path=Path(item["config_path"]),
-                run_id=item["run_id"],
-                budgets={
-                    int(seed): (None if budget is None else int(budget))
-                    for seed, budget in item["budgets"].items()
-                },
-                budget_source=item["budget_source"],
-            )
-            for item in raw["members"]
-        )
-        plan = cls(
-            source_path=path,
-            source_pool_sha256=raw["source_pool_sha256"],
-            iteration_multiplier=float(protocol["iteration_multiplier"]),
-            budget_statistic=protocol["budget_statistic"],
-            budget_rounding=protocol["budget_rounding"],
-            cv_model_weight=int(protocol["cv_model_weight"]),
-            full_model_weight=int(protocol["full_model_weight"]),
-            combiner=protocol["combiner"],
-            members=members,
-        )
-        plan.validate()
-        return plan
-
-    def validate(self) -> None:
-        if data.file_sha256(Path("artifacts/pool.yaml")) != self.source_pool_sha256:
-            raise ValueError("재학습 계획의 후보 풀 SHA-256이 현재 장부와 다르다.")
-        pool = Pool.load()
-        expected = [(member.config, member.run_id) for member in pool.members]
-        actual = [(member.config, member.run_id) for member in self.members]
-        if actual != expected:
-            raise ValueError("재학습 계획의 구성원 순서나 실행 ID가 후보 풀과 다르다.")
-        if self.iteration_multiplier != 1.25:
-            raise ValueError("전체 자료 학습 길이 배수는 1.25여야 한다.")
-        if self.budget_statistic != "median" or self.budget_rounding != "half_up":
-            raise ValueError("학습 길이 규약은 fold 중앙값과 사사오입이어야 한다.")
-        if (self.cv_model_weight, self.full_model_weight) != (5, 1):
-            raise ValueError("CV와 전체 자료 예측의 모델 개수 가중치는 5:1이어야 한다.")
-        if self.combiner not in COMBINER_REGISTRY:
-            raise ValueError(
-                f"등록되지 않은 결합 방식이다: {self.combiner} "
-                f"(등록: {', '.join(COMBINER_REGISTRY)})"
-            )
-        for member in self.members:
-            if list(member.budgets) not in ([42], [42, 43, 44]):
-                raise ValueError(f"{member.config}: 허용되지 않은 시드 목록이다.")
-            for budget in member.budgets.values():
-                if budget is not None and budget < 1:
-                    raise ValueError(f"{member.config}: 학습 길이는 양수여야 한다.")
-            allowed_sources = {"fold_median", "configured_cap", "not_applicable"}
-            if member.budget_source not in allowed_sources:
-                raise ValueError(f"{member.config}: 학습 길이 출처가 올바르지 않다.")
-            budgets = list(member.budgets.values())
-            if member.budget_source == "not_applicable" and any(
-                budget is not None for budget in budgets
-            ):
-                raise ValueError(f"{member.config}: 반복 수가 없는 모델에 학습 길이가 있다.")
-            if member.budget_source != "not_applicable" and any(
-                budget is None for budget in budgets
-            ):
-                raise ValueError(f"{member.config}: 반복형 모델의 학습 길이가 비어 있다.")
-            if not member.config_path.is_file():
-                raise ValueError(f"{member.config}: 설정 파일이 없다: {member.config_path}")
-
-    def member(self, name: str) -> RefitMember:
-        matches = [member for member in self.members if member.config == name]
-        if len(matches) != 1:
-            raise ValueError(f"재학습 계획에 구성원 {name!r}이 정확히 하나 있지 않다.")
-        return matches[0]
+    기본값은 운영 경로(MLflow 실행 저장소와 커밋된 후보 풀 장부)이고,
+    시험은 메모리 저장소와 시험용 풀을 넣어 같은 관문을 통과시킨다.
+    """
+    return RefitPlan.load(path).validate_for_refit(
+        store=store, pool=pool, pool_sha256=pool_sha256
+    )
 
 
 def run_member(
-    plan: RefitPlan,
-    member: RefitMember,
+    plan: ExecutableRefitPlan,
+    member: ExecutableRefitMember,
     output: Path,
     *,
     seeds: tuple[int, ...] | None = None,
     finalize: bool = True,
 ) -> Path:
-    """구성원 하나를 전체 자료로 시드별 재학습하고 평균 시험 예측을 저장한다."""
+    """구성원 하나를 전체 자료로 시드별 재학습하고 평균 시험 예측을 저장한다.
+
+    `member`가 `ExecutableRefitMember`라는 사실이 곧 계획 전체가 관문을 통과했다는 뜻이고,
+    `member.budgets`는 원시 근거에서 다시 계산한 재학습 예산이다.
+    """
     cfg = load_config(member.config_path, "confirm")
     if cfg.name != member.config:
         raise ValueError(f"계획 구성원과 설정 name이 다르다: {member.config} != {cfg.name}")
@@ -183,6 +116,7 @@ def run_member(
     y = train[TARGET]
     input_hashes = _input_hashes(cfg)
     config_sha256 = data.file_sha256(member.config_path)
+    provenance = _member_provenance(plan, member)
 
     seed_predictions: list[np.ndarray] = []
     seed_records = []
@@ -191,11 +125,10 @@ def run_member(
         prediction_path = member_dir / f"test_pred_seed_{seed}.parquet"
         record_path = member_dir / f"test_pred_seed_{seed}.json"
         seed_identity = {
-            "schema_version": 1,
+            "schema_version": RECORD_SCHEMA_VERSION,
             "config": member.config,
             "config_sha256": config_sha256,
-            "source_run_id": member.run_id,
-            "source_pool_sha256": plan.source_pool_sha256,
+            **provenance,
             "git_commit": state["git_commit"],
             "input_sha256": input_hashes,
             "seed": seed,
@@ -265,26 +198,56 @@ def run_member(
         pd.DataFrame({ID: test[ID].to_numpy(), "pred": averaged}), averaged_path
     )
     manifest = {
-        "schema_version": 1,
+        "schema_version": RECORD_SCHEMA_VERSION,
         "config": member.config,
         "config_path": str(member.config_path),
         "config_sha256": config_sha256,
-        "source_run_id": member.run_id,
-        "source_pool_sha256": plan.source_pool_sha256,
+        **provenance,
         "git_commit": state["git_commit"],
         "git_dirty": git_dirty,
         "input_sha256": input_hashes,
         "feature_columns": feature_plan.all_columns(),
         "seeds": seed_records,
-        "budget_source": member.budget_source,
         "prediction_sha256": prediction_array_sha256(averaged),
     }
     _atomic_json(manifest, member_dir / "manifest.json")
     return averaged_path
 
 
-def assemble(plan: RefitPlan, output: Path) -> dict[str, Path]:
+def _member_provenance(
+    plan: ExecutableRefitPlan, member: ExecutableRefitMember
+) -> dict:
+    """시드별 기록과 manifest가 함께 남기는 계보·규약 묶음.
+
+    원시 근거가 어느 실행의 어느 산출물에서 왔는지, 그 원시 값을 어떤 규약으로 예산에
+    옮겼는지, 그리고 그 계산이 어느 장부 내용에서 나왔는지를 한자리에 적는다.
+    재개 검증은 이 묶음을 통째로 다시 맞춰 보므로, 장부의 어느 칸이 바뀌어도 걸린다.
+    """
+    lineage = member.lineage
+    derivation = member.derivation
+    return {
+        "source_pool_sha256": plan.source_pool_sha256,
+        "plan_sha256": plan.content_sha256,
+        "evidence_lineage": {
+            "source_run_id": lineage.source_run_id,
+            "source_git_commit": lineage.source_git_commit,
+            "source_config_path": lineage.source_config_path,
+            "source_config_sha256": lineage.source_config_sha256,
+            "evidence_artifact_path": lineage.evidence_artifact_path,
+            "evidence_artifact_sha256": lineage.evidence_artifact_sha256,
+        },
+        "refit_budget_derivation": {
+            "status": member.status,
+            "statistic": None if derivation is None else derivation.policy.statistic,
+            "multiplier": None if derivation is None else derivation.policy.multiplier,
+            "rounding": None if derivation is None else derivation.policy.rounding,
+        },
+    }
+
+
+def assemble(plan: ExecutableRefitPlan, output: Path) -> dict[str, Path]:
     """CV 전용, 전체 자료 전용, 모델 수 5:1 혼합의 최종 결합 예측을 만든다."""
+    protocol = plan.protocol
     train = pd.read_csv("data/train.csv")
     test = pd.read_csv("data/test.csv")
     members = [(member.config, member.run_id) for member in plan.members]
@@ -304,11 +267,11 @@ def assemble(plan: RefitPlan, output: Path) -> dict[str, Path]:
     mixed_test = mix_member_predictions(
         cv_test,
         full_test,
-        cv_weight=plan.cv_model_weight,
-        full_weight=plan.full_model_weight,
+        cv_weight=protocol.cv_model_weight,
+        full_weight=protocol.full_model_weight,
     )
 
-    combiner = COMBINER_REGISTRY[plan.combiner]
+    combiner = COMBINER_REGISTRY[protocol.combiner]
     y = train.set_index(ID).loc[train_index, TARGET]
     predictions = {
         "cv": full_fit_predictions(combiner, oof, y, cv_test),
@@ -332,11 +295,12 @@ def assemble(plan: RefitPlan, output: Path) -> dict[str, Path]:
         for member in plan.members
     }
     manifest = {
-        "schema_version": 1,
+        "schema_version": RECORD_SCHEMA_VERSION,
         "source_pool_sha256": plan.source_pool_sha256,
-        "combiner": plan.combiner,
-        "cv_model_weight": plan.cv_model_weight,
-        "full_model_weight": plan.full_model_weight,
+        "plan_sha256": plan.content_sha256,
+        "combiner": protocol.combiner,
+        "cv_model_weight": protocol.cv_model_weight,
+        "full_model_weight": protocol.full_model_weight,
         "member_spearman_cv_vs_full": correlations,
         "prediction_sha256": {
             name: prediction_array_sha256(prediction)
@@ -379,11 +343,12 @@ def _input_hashes(cfg) -> dict[str, str]:
 
 
 def _load_member_full_prediction(
-    plan: RefitPlan,
-    member: RefitMember,
+    plan: ExecutableRefitPlan,
+    member: ExecutableRefitMember,
     output: Path,
     expected_ids: pd.Series,
 ) -> np.ndarray:
+    """저장해 둔 구성원 평균 예측을 읽고, 그 manifest가 지금 계획과 같은지 본다."""
     member_dir = output / member.config
     prediction = _load_prediction(member_dir / "test_pred_full.parquet", expected_ids)
     manifest_path = member_dir / "manifest.json"
@@ -392,14 +357,18 @@ def _load_member_full_prediction(
     manifest = json.loads(manifest_path.read_text())
     expected = {
         "config": member.config,
-        "source_run_id": member.run_id,
-        "source_pool_sha256": plan.source_pool_sha256,
+        **_member_provenance(plan, member),
         "prediction_sha256": prediction_array_sha256(prediction),
-        "budget_source": member.budget_source,
     }
     for key, value in expected.items():
         if manifest.get(key) != value:
             raise ValueError(f"{member.config}: manifest의 {key} 계보가 다르다.")
+    recorded_budgets = {
+        record.get("seed"): record.get("training_budget")
+        for record in manifest.get("seeds", [])
+    }
+    if recorded_budgets != member.budgets:
+        raise ValueError(f"{member.config}: manifest의 재학습 예산이 검증된 예산과 다르다.")
     return prediction
 
 
@@ -455,12 +424,21 @@ def main() -> None:
     if args.seed is not None and args.member is None:
         parser.error("--seed는 --member와 함께 사용해야 한다.")
 
-    plan = RefitPlan.load(args.plan)
+    # 관문이 먼저다. 여기를 통과하지 못하면 자료도 읽지 않고 폴더도 만들지 않는다.
+    try:
+        plan = load_executable_plan(args.plan)
+        members = (
+            ()
+            if args.assemble
+            else (plan.members if args.all else (plan.member(args.member),))
+        )
+    except (RefitPlanError, RunStoreError) as error:
+        sys.exit(str(error))
+
     if args.assemble:
         for name, path in assemble(plan, args.out_dir).items():
             print(f"{name}: {path}")
         return
-    members = plan.members if args.all else (plan.member(args.member),)
     for member in members:
         print(f"[{member.config}] 전체 자료 재학습 시작", flush=True)
         path = run_member(
