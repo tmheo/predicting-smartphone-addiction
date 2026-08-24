@@ -38,7 +38,7 @@ def test_pool_committed_ledger_roundtrips_bytes(tmp_path):
     assert saved.read_bytes() == committed.read_bytes()
 
 
-def test_pool_applies_decided_removals_replacement_and_issue388_admission():
+def test_pool_applies_decided_removals_and_later_replacements():
     baseline = yaml.safe_load(
         (REPO / "artifacts" / "pool-baseline-2026-08-21.yaml").read_text()
     )
@@ -47,6 +47,7 @@ def test_pool_applies_decided_removals_replacement_and_issue388_admission():
         "exp107_logreg_onehot_nn10",
         "exp108_logreg_onehot_nn10_l1",
         "exp124_realmlp_dtype_fix",
+        "exp127_lookup_muon",
     }
     expected = [
         (member["config"], member["run_id"])
@@ -65,6 +66,12 @@ def test_pool_applies_decided_removals_replacement_and_issue388_admission():
             "89e3913d74a1490792f19e283989116e",
         )
     )
+    expected.append(
+        (
+            "exp157_lookup_muon_initavg8",
+            "bb7be9baf1b64888818600d7e0b5927b",
+        )
+    )
     actual = [
         (member.config, member.run_id)
         for member in Pool.load(REPO / "artifacts" / "pool.yaml").members
@@ -80,9 +87,14 @@ def test_pool_reduction_judgment_matches_historical_32_member_result():
             REPO / "artifacts" / "judgments" / "issue346-pool-reduction.yaml"
         ).read_text()
     )
-    pool_configs = [
-        member.config
-        for member in Pool.load(REPO / "artifacts" / "pool.yaml").members
+    issue388 = yaml.safe_load(
+        (
+            REPO / "artifacts" / "judgments" / "issue388-bulk-selection-2.yaml"
+        ).read_text()
+    )
+    historical_pool_configs = [
+        member["config"]
+        for member in issue388["frozen_input"]["candidate_pool"]["members"]
     ]
 
     reduced_configs = judgment["final_result"]["members"]
@@ -93,8 +105,7 @@ def test_pool_reduction_judgment_matches_historical_32_member_result():
 
     assert judgment["contract_version"] == "candidate-pool-v1"
     assert judgment["frozen_input"]["candidate_pool"]["member_count"] == 35
-    assert expected == pool_configs[:-1]
-    assert pool_configs[-1] == "exp144_issue387_xgb_trial6"
+    assert expected == historical_pool_configs
     assert judgment["final_result"]["member_count"] == 32
     assert judgment["final_result"]["full_refit_count_after"] == 94
     assert sum(

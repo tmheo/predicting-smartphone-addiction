@@ -133,7 +133,7 @@ def main() -> None:
         observer.data_loaded(seed_total=len(cfg.seeds), fold_total=n_folds)
 
         # 시드 반복: 예측은 평균, metric은 평균 예측 기준으로 다시 계산. (#15)
-        # PIPELINE_SEED_GPUS가 있으면 시드 단위 프로세스 병렬로 GPU를 나눠 쓴다. (#99)
+        # 시드별 GPU 배정 또는 fold GPU 공유 워커가 있으면 시드를 병렬 실행한다. (#99)
         results = seed_parallel.run_seeds(
             cfg, plan, train, test, recorder=observer, recovery=recovery
         )

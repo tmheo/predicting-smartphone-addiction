@@ -1026,9 +1026,17 @@ class LookupTransformerFold:
                 member.fit_full(X, y, epochs)
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self._parallel:
+            with ThreadPoolExecutor(max_workers=len(self._members)) as executor:
+                member_predictions = list(
+                    executor.map(lambda member: member.predict(X), self._members)
+                )
+        else:
+            member_predictions = [member.predict(X) for member in self._members]
+
         pred = np.zeros(len(X), dtype="float64")
-        for member in self._members:
-            pred += member.predict(X) / len(self._members)
+        for member_prediction in member_predictions:
+            pred += member_prediction / len(self._members)
         return pred
 
     def importance(self) -> pd.DataFrame:

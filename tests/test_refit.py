@@ -43,7 +43,7 @@ COMMITTED_PLAN = Path("artifacts/full-refit-plan.yaml")
 # 이슈 #375의 완료 조건이 이름을 짚은 예산. 원시 근거에서 다시 계산해 여기에 닿아야 한다.
 CRITERION_BUDGETS = {
     "exp135_xgb_hpo_trial30": {42: 9759, 43: 10394, 44: 10369},
-    "exp127_lookup_muon": {42: 13, 43: 15, 44: 15},
+    "exp157_lookup_muon_initavg8": {42: 14, 43: 15, 44: 15},
     "exp081_lookup_fold_initialization_avg3": {42: 15, 43: 15, 44: 15},
     "exp059_lookup_transformer": {42: 15, 43: 15, 44: 18},
     "exp133_scalar_token_transformer_oof_te": {42: 20, 43: 18, 44: 15},
@@ -309,7 +309,7 @@ def test_invalid_plan_in_another_member_stops_before_data_loading(
 ):
     """요청하지 않은 구성원의 근거가 미확정이어도 실행이 열리지 않는다."""
     document = ledger.edited()
-    ledger.member(document, "exp127_lookup_muon")["training_length_evidence"][
+    ledger.member(document, "exp157_lookup_muon_initavg8")["training_length_evidence"][
         "status"
     ] = "unresolved"
     path = ledger.write(document)
@@ -320,7 +320,9 @@ def test_invalid_plan_in_another_member_stops_before_data_loading(
     with pytest.raises(SystemExit) as failure:
         run_cli(monkeypatch, str(path), "--member", "exp135_xgb_hpo_trial30", "--out-dir", str(output))
 
-    assert "exp127_lookup_muon: 관측 학습 길이 근거가 미확정이다." in str(failure.value)
+    assert "exp157_lookup_muon_initavg8: 관측 학습 길이 근거가 미확정이다." in str(
+        failure.value
+    )
     assert not output.exists()
 
 
@@ -368,7 +370,7 @@ def test_run_member_records_evidence_lineage_and_resumes(
     ledger: MemoryLedger, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):
     plan = ledger.executable()
-    member = plan.member("exp127_lookup_muon")
+    member = plan.member("exp157_lookup_muon_initavg8")
     fits = stub_training(monkeypatch)
     output = tmp_path / "out"
 
@@ -376,11 +378,11 @@ def test_run_member_records_evidence_lineage_and_resumes(
     second = refit.run_member(plan, member, output)
 
     assert first == second
-    assert fits == [(42, 13), (43, 15), (44, 15)]
+    assert fits == [(42, 14), (43, 15), (44, 15)]
 
     record = json.loads((first.parent / "test_pred_seed_42.json").read_text())
     assert record["schema_version"] == 2
-    assert record["training_budget"] == 13
+    assert record["training_budget"] == 14
     assert record["plan_sha256"] == plan.content_sha256
     assert record["source_pool_sha256"] == plan.source_pool_sha256
     assert record["evidence_lineage"] == {
@@ -402,7 +404,7 @@ def test_run_member_records_evidence_lineage_and_resumes(
     assert manifest["plan_sha256"] == plan.content_sha256
     assert manifest["evidence_lineage"] == record["evidence_lineage"]
     assert manifest["refit_budget_derivation"] == record["refit_budget_derivation"]
-    assert [entry["training_budget"] for entry in manifest["seeds"]] == [13, 15, 15]
+    assert [entry["training_budget"] for entry in manifest["seeds"]] == [14, 15, 15]
     assert "budget_source" not in manifest
 
 
@@ -413,7 +415,7 @@ def test_resume_rejects_a_different_plan_content(
     stub_training(monkeypatch)
     output = tmp_path / "out"
     plan = ledger.executable()
-    refit.run_member(plan, plan.member("exp127_lookup_muon"), output)
+    refit.run_member(plan, plan.member("exp157_lookup_muon_initavg8"), output)
 
     document = ledger.edited()
     observations = ledger.member(document, "exp135_xgb_hpo_trial30")[
@@ -422,10 +424,14 @@ def test_resume_rejects_a_different_plan_content(
     observations[0]["raw_field"] = "best_iteration_renamed"
     other = ledger.executable(document)
 
-    assert other.member("exp127_lookup_muon").budgets == {42: 13, 43: 15, 44: 15}
+    assert other.member("exp157_lookup_muon_initavg8").budgets == {
+        42: 14,
+        43: 15,
+        44: 15,
+    }
     assert other.content_sha256 != plan.content_sha256
     with pytest.raises(ValueError, match="현재 재학습 명세와 계보가 다르다"):
-        refit.run_member(other, other.member("exp127_lookup_muon"), output)
+        refit.run_member(other, other.member("exp157_lookup_muon_initavg8"), output)
 
 
 def test_resume_rejects_a_different_refit_budget(
@@ -435,31 +441,31 @@ def test_resume_rejects_a_different_refit_budget(
     stub_training(monkeypatch)
     output = tmp_path / "out"
     plan = ledger.executable()
-    refit.run_member(plan, plan.member("exp127_lookup_muon"), output)
+    refit.run_member(plan, plan.member("exp157_lookup_muon_initavg8"), output)
 
     document = ledger.edited()
-    for observation in ledger.member(document, "exp127_lookup_muon")[
+    for observation in ledger.member(document, "exp157_lookup_muon_initavg8")[
         "training_length_evidence"
     ]["observations"]:
         if observation["seed"] == 42:
             observation["raw_value"] = 15
             observation["observed_training_length"] = 16
-    seeds = ledger.member(document, "exp127_lookup_muon")["refit_budget_derivation"][
-        "seeds"
-    ]
-    seeds[0].update(observed_lengths=[16] * 15, median=16.0, scaled=20.0, budget=20)
+    seeds = ledger.member(document, "exp157_lookup_muon_initavg8")[
+        "refit_budget_derivation"
+    ]["seeds"]
+    seeds[0].update(observed_lengths=[16] * 40, median=16.0, scaled=20.0, budget=20)
     other = ledger.executable(document)
 
-    assert other.member("exp127_lookup_muon").budgets[42] == 20
+    assert other.member("exp157_lookup_muon_initavg8").budgets[42] == 20
     with pytest.raises(ValueError, match="현재 재학습 명세와 계보가 다르다"):
-        refit.run_member(other, other.member("exp127_lookup_muon"), output)
+        refit.run_member(other, other.member("exp157_lookup_muon_initavg8"), output)
 
 
 def test_run_member_can_fit_seeds_independently_before_finalizing(
     ledger: MemoryLedger, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):
     plan = ledger.executable()
-    member = plan.member("exp127_lookup_muon")
+    member = plan.member("exp157_lookup_muon_initavg8")
     fits = stub_training(monkeypatch)
     output = tmp_path / "out"
 
@@ -470,7 +476,7 @@ def test_run_member_can_fit_seeds_independently_before_finalizing(
 
     final = refit.run_member(plan, member, output)
 
-    assert fits == [(42, 13), (43, 15), (44, 15)]
+    assert fits == [(42, 14), (43, 15), (44, 15)]
     assert (final.parent / "manifest.json").is_file()
     averaged = pd.read_parquet(final)
     assert averaged["pred"].to_numpy() == pytest.approx([0.43, 0.43])
@@ -570,7 +576,7 @@ def test_assemble_reads_a_manifest_written_by_the_validated_run(
 ):
     """구성원 실행이 남긴 manifest를 조립이 그대로 받아들이고, 예산이 바뀌면 거부한다."""
     plan = ledger.executable()
-    member = plan.member("exp127_lookup_muon")
+    member = plan.member("exp157_lookup_muon_initavg8")
     stub_training(monkeypatch)
     output = tmp_path / "out"
     refit.run_member(plan, member, output)
@@ -583,7 +589,7 @@ def test_assemble_reads_a_manifest_written_by_the_validated_run(
 
     manifest_path = output / member.config / "manifest.json"
     manifest = json.loads(manifest_path.read_text())
-    manifest["seeds"][0]["training_budget"] = 14
+    manifest["seeds"][0]["training_budget"] = 13
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False))
 
     with pytest.raises(ValueError, match="재학습 예산이 검증된 예산과 다르다"):

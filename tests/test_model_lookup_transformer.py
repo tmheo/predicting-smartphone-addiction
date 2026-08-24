@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 import numpy as np
@@ -425,6 +426,40 @@ def test_lookup_transformer_fold_gpu_assignment(monkeypatch, lookup_transformer_
         "cuda:2",
         "cuda:1",
     ]
+
+
+def test_lookup_transformer_predicts_fold_members_in_parallel(
+    monkeypatch, lookup_transformer_module
+):
+    """GPU별 구성원 예측은 고정 순서로 모으되 동시에 실행한다."""
+    predict_barrier = threading.Barrier(3)
+    predict_threads = set()
+
+    class FakeMember:
+        def __init__(self, params, seed, device=None, init_barrier=None):
+            self._seed = seed
+            self._device = device
+
+        def predict(self, X):
+            predict_threads.add(threading.get_ident())
+            predict_barrier.wait(timeout=1)
+            return np.full(len(X), self._seed / 10_000, dtype="float64")
+
+    monkeypatch.setattr(lookup_transformer_module, "_LookupTransformerMember", FakeMember)
+    monkeypatch.setattr(
+        lookup_transformer_module.LookupTransformerFold,
+        "_parallel_devices",
+        staticmethod(lambda member_count: [f"cuda:{index}" for index in range(member_count)]),
+    )
+    fold = lookup_transformer_module.LookupTransformerFold(
+        {"lookup_cols": ["v"], "fold_seed_offsets": [0, 1000, 2000]},
+        seed=SEED,
+    )
+
+    prediction = fold.predict(pd.DataFrame({"v": [1.0, 2.0]}))
+
+    assert len(predict_threads) == 3
+    assert np.allclose(prediction, 0.1007)
 
 
 @pytest.mark.parametrize("gpu_ids", ["0,0,1", "0,1", "0,1,nope"])

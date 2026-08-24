@@ -7,6 +7,9 @@
 
 `PIPELINE_FOLD_GPUS`가 가리키는 장치마다 초기화 시드가 다른 구성원 하나를 올려
 소형 자료로 짧게 학습하고, 구성원이 실제로 서로 다른 장치에 배정됐는지 확인한다.
+초기화 시드 오프셋은 요청 장치 수에 맞춰 0부터 1000 간격으로 만든다.
+`PIPELINE_SHARED_FOLD_SEED_WORKERS`가 있으면 본 실행처럼 여러 시드 프로세스가
+같은 장치 집합을 공유하는 검사까지 수행한다.
 
 사용법:
     PIPELINE_FOLD_GPUS=0,1,2 python -m scripts.preflight_fold_gpus
@@ -18,6 +21,8 @@ from __future__ import annotations
 import json
 import os
 import sys
+from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import get_context
 from pathlib import Path
 
 import numpy as np
@@ -41,7 +46,6 @@ PARAMS = {
     "ema_decay": 0.7,
     "patience": 2,
     "perm_repeats": 1,
-    "fold_seed_offsets": [0, 1000, 2000],
 }
 
 
@@ -60,6 +64,26 @@ def _data(n: int = 96) -> tuple[pd.DataFrame, pd.Series]:
     return X, y
 
 
+def _run_seed(seed: int, offsets: list[int]) -> dict[str, object]:
+    X, y = _data()
+    params = dict(PARAMS, fold_seed_offsets=offsets)
+    cfg = ModelConfig(kind="lookup_transformer", params=params, fit={})
+    adapter = model_mod.create(cfg, seed=seed)
+    val_pred = adapter.fit(X.iloc[:72], y.iloc[:72], X.iloc[72:], y.iloc[72:])
+    test_pred = adapter.predict(X.iloc[:12])
+
+    if val_pred.shape != (24,) or not np.isfinite(val_pred).all():
+        raise RuntimeError("검증 예측이 온전하지 않다.")
+    if test_pred.shape != (12,) or not np.isfinite(test_pred).all():
+        raise RuntimeError("시험 예측이 온전하지 않다.")
+
+    members = adapter.entry_diagnostics().observations["fold_initialization_members"]
+    return {
+        "seed": seed,
+        "member_devices": [member["device"] for member in members],
+    }
+
+
 def main() -> None:
     gpus = os.environ.get("PIPELINE_FOLD_GPUS", "").strip()
     if not gpus:
@@ -72,21 +96,28 @@ def main() -> None:
     if device_count < len(requested):
         sys.exit(f"장치 {device_count}개로는 PIPELINE_FOLD_GPUS={gpus}를 만족할 수 없다.")
 
-    X, y = _data()
-    cfg = ModelConfig(kind="lookup_transformer", params=dict(PARAMS), fit={})
-    adapter = model_mod.create(cfg, seed=SEED)
-    val_pred = adapter.fit(X.iloc[:72], y.iloc[:72], X.iloc[72:], y.iloc[72:])
-    test_pred = adapter.predict(X.iloc[:12])
+    offsets = [index * 1000 for index in range(len(requested))]
+    raw_workers = os.environ.get("PIPELINE_SHARED_FOLD_SEED_WORKERS", "").strip()
+    try:
+        worker_count = int(raw_workers) if raw_workers else 1
+    except ValueError:
+        sys.exit("PIPELINE_SHARED_FOLD_SEED_WORKERS는 1 이상의 정수여야 한다.")
+    if worker_count < 1:
+        sys.exit("PIPELINE_SHARED_FOLD_SEED_WORKERS는 1 이상의 정수여야 한다.")
+    seeds = [SEED + index * 100 for index in range(worker_count)]
+    if worker_count == 1:
+        results = [_run_seed(SEED, offsets)]
+    else:
+        with ProcessPoolExecutor(
+            max_workers=worker_count,
+            mp_context=get_context("spawn"),
+        ) as executor:
+            results = list(executor.map(_run_seed, seeds, [offsets] * worker_count))
 
-    if val_pred.shape != (24,) or not np.isfinite(val_pred).all():
-        sys.exit("검증 예측이 온전하지 않다.")
-    if test_pred.shape != (12,) or not np.isfinite(test_pred).all():
-        sys.exit("시험 예측이 온전하지 않다.")
-
-    members = adapter.entry_diagnostics().observations["fold_initialization_members"]
-    devices = [member["device"] for member in members]
-    if len(set(devices)) != len(requested):
-        sys.exit(f"구성원이 서로 다른 장치에 배정되지 않았다: {devices}")
+    for result in results:
+        devices = result["member_devices"]
+        if len(set(devices)) != len(requested):
+            sys.exit(f"구성원이 서로 다른 장치에 배정되지 않았다: {devices}")
 
     print(
         json.dumps(
@@ -95,7 +126,9 @@ def main() -> None:
                 "cuda": torch.version.cuda,
                 "device_count": device_count,
                 "requested": requested,
-                "member_devices": devices,
+                "fold_seed_offsets": offsets,
+                "shared_fold_seed_workers": worker_count,
+                "workers": results,
             }
         )
     )

@@ -26,6 +26,7 @@ from pipeline.judgment import (
     load_pool_admission_authorization,
 )
 from pipeline.ledger import Champion, EntryEvidence, Pool, PoolMember
+from pipeline.pool import validate_duplicate_change_route
 from pipeline.runs import InMemoryRunStore
 
 IDS = list(range(1, 9))
@@ -160,6 +161,19 @@ def test_entry_duplicate_with_higher_auc_replaces_member():
     assert verdict.drop_run_id == "m1"
     assert verdict.contribution is None
     assert verdict.admit
+
+
+def test_explicit_lineage_replacement_can_differ_from_nearest_duplicate():
+    store = make_store_with_member(IMPERFECT)
+    candidate = make_candidate(store, auc_oof=0.96400, preds=IMPERFECT)
+    verdict = judge_entry(
+        pool_with([member("m1", 0.96500)]), candidate, make_champion(), store, Y
+    )
+
+    assert verdict.duplicate.duplicate
+    with pytest.raises(JudgmentError, match="원자 교체 대상을 지정"):
+        validate_duplicate_change_route(verdict, None)
+    validate_duplicate_change_route(verdict, "same-lineage-previous-run")
 
 
 def test_entry_replacement_measures_contribution_against_remaining_pool():
