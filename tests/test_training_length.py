@@ -9,9 +9,13 @@ from pipeline.training_length import (
     ONE_BASED_COUNT,
     ZERO_BASED_POSITION,
     ObservedTrainingLength,
+    RawTrainingLengthSelection,
     RefitBudgetPolicy,
+    TrainingLengthContract,
     TrainingLengthError,
+    converter_identifier,
     derive_refit_budgets,
+    observe_declaration,
     observe_training_length,
     observed_length_from_raw,
     round_half_up,
@@ -291,3 +295,190 @@ def test_default_policy_is_the_confirmed_protocol():
 def test_other_protocols_are_rejected(override):
     with pytest.raises(TrainingLengthError):
         RefitBudgetPolicy(**override)
+
+
+# ---- 연결부가 fold 하나마다 선언하는 근거 (#372) ----
+
+
+LIGHTGBM = TrainingLengthContract("lightgbm", "best_iteration_", ONE_BASED_COUNT)
+LOOKUP = TrainingLengthContract("lookup_transformer", "best_epoch", ZERO_BASED_POSITION)
+
+
+def test_converter_identifier_is_fixed_per_raw_meaning():
+    assert converter_identifier(ZERO_BASED_POSITION) == "position_plus_one"
+    assert converter_identifier(ONE_BASED_COUNT) == "count_as_is"
+    assert converter_identifier(FIXED_COUNT) == "fixed_count_as_is"
+
+
+def test_unknown_raw_meaning_has_no_converter():
+    with pytest.raises(TrainingLengthError, match="알 수 없는 원시 의미"):
+        converter_identifier("best_iteration")
+
+
+def test_contract_declares_the_converter_its_raw_meaning_fixes():
+    assert LIGHTGBM.converter == "count_as_is"
+    assert LOOKUP.converter == "position_plus_one"
+
+
+@pytest.mark.parametrize(
+    ("model_family", "raw_field", "raw_meaning"),
+    [
+        ("", "best_epoch", ONE_BASED_COUNT),
+        ("tabm", "", ONE_BASED_COUNT),
+        ("tabm", "best_epoch", "one_based"),
+    ],
+)
+def test_incomplete_contracts_are_rejected(model_family, raw_field, raw_meaning):
+    with pytest.raises(TrainingLengthError):
+        TrainingLengthContract(model_family, raw_field, raw_meaning)
+
+
+def test_observed_evidence_carries_every_field_the_ledger_needs():
+    declaration = LOOKUP.declare(
+        [
+            RawTrainingLengthSelection(
+                raw_path="training_diagnostics.fold_initialization_members[0].best_epoch",
+                raw_value=12,
+                inner_member=0,
+            ),
+            RawTrainingLengthSelection(
+                raw_path="training_diagnostics.fold_initialization_members[1].best_epoch",
+                raw_value=14,
+                inner_member=1,
+            ),
+        ]
+    )
+    evidence = observe_declaration(declaration, seed=42, outer_fold=3)
+
+    assert evidence.to_json() == {
+        "model_family": "lookup_transformer",
+        "converter": "position_plus_one",
+        "raw_field": "best_epoch",
+        "raw_meaning": ZERO_BASED_POSITION,
+        "observations": [
+            {
+                "seed": 42,
+                "outer_fold": 3,
+                "inner_member": 0,
+                "raw_field": "best_epoch",
+                "raw_path": (
+                    "training_diagnostics.fold_initialization_members[0].best_epoch"
+                ),
+                "raw_value": 12,
+                "raw_meaning": ZERO_BASED_POSITION,
+                "observed_training_length": 13,
+            },
+            {
+                "seed": 42,
+                "outer_fold": 3,
+                "inner_member": 1,
+                "raw_field": "best_epoch",
+                "raw_path": (
+                    "training_diagnostics.fold_initialization_members[1].best_epoch"
+                ),
+                "raw_value": 14,
+                "raw_meaning": ZERO_BASED_POSITION,
+                "observed_training_length": 15,
+            },
+        ],
+    }
+
+
+def test_declared_evidence_feeds_the_common_budget_calculation():
+    """계열 연결부의 선언과 공통 계산부가 실제로 이어지는지 본다."""
+    evidence = [
+        observation
+        for seed, positions in {42: (12, 14, 14), 43: (11, 11, 13)}.items()
+        for outer_fold, position in enumerate(positions)
+        for observation in observe_declaration(
+            LOOKUP.declare(
+                [
+                    RawTrainingLengthSelection(
+                        raw_path="training_diagnostics.best_epoch", raw_value=position
+                    )
+                ]
+            ),
+            seed=seed,
+            outer_fold=outer_fold,
+        ).observations
+    ]
+
+    assert derive_refit_budgets(evidence).budgets() == {42: 19, 43: 15}
+
+
+def test_declaration_without_inner_members_allows_only_one_selection():
+    with pytest.raises(TrainingLengthError, match="내부 구성원 좌표 없이"):
+        LIGHTGBM.declare(
+            [
+                RawTrainingLengthSelection(raw_path="a", raw_value=3),
+                RawTrainingLengthSelection(raw_path="b", raw_value=4),
+            ]
+        )
+
+
+@pytest.mark.parametrize(
+    "inner_members",
+    [
+        (0, None),
+        (0, 0),
+        (1, 2),
+        (0, 2),
+        (1, 0),
+    ],
+)
+def test_broken_inner_member_coordinates_are_rejected(inner_members):
+    """빠지거나 중복되거나 순서가 어긋난 내부 구성원 좌표를 모두 막는다."""
+    with pytest.raises(TrainingLengthError, match="내부 구성원"):
+        LOOKUP.declare(
+            [
+                RawTrainingLengthSelection(
+                    raw_path=f"m[{index}]", raw_value=5, inner_member=inner_member
+                )
+                for index, inner_member in enumerate(inner_members)
+            ]
+        )
+
+
+def test_empty_declaration_is_rejected():
+    with pytest.raises(TrainingLengthError, match="원시 선택값이 하나도 없다"):
+        LIGHTGBM.declare([])
+
+
+@pytest.mark.parametrize(
+    ("raw_path", "raw_value", "inner_member"),
+    [
+        ("", 3, None),
+        ("a", True, None),
+        ("a", 3.0, None),
+        ("a", "3", None),
+        ("a", 3, -1),
+        ("a", 3, True),
+    ],
+)
+def test_invalid_raw_selections_are_rejected(raw_path, raw_value, inner_member):
+    with pytest.raises(TrainingLengthError):
+        RawTrainingLengthSelection(
+            raw_path=raw_path, raw_value=raw_value, inner_member=inner_member
+        )
+
+
+def test_declaration_rejects_values_its_raw_meaning_forbids():
+    """선언 시점에는 통과해도 좌표를 채울 때 원시 의미 검증을 다시 받는다."""
+    declaration = LIGHTGBM.declare(
+        [RawTrainingLengthSelection(raw_path="best_iteration_", raw_value=0)]
+    )
+    with pytest.raises(TrainingLengthError, match="횟수는 1 이상"):
+        observe_declaration(declaration, seed=42, outer_fold=0)
+
+
+def test_first_position_zero_becomes_length_one():
+    declaration = LOOKUP.declare(
+        [RawTrainingLengthSelection(raw_path="best_epoch", raw_value=0)]
+    )
+    evidence = observe_declaration(declaration, seed=42, outer_fold=0)
+    assert [item.value for item in evidence.observations] == [1]
+
+
+def test_only_a_declaration_can_be_given_coordinates():
+    with pytest.raises(TrainingLengthError, match="근거 선언 형식이 아니다"):
+        observe_declaration({"model_family": "lightgbm"}, seed=42, outer_fold=0)

@@ -413,6 +413,7 @@ class _LookupTransformerMember:
         self._val: tuple[torch.Tensor, torch.Tensor, torch.Tensor, np.ndarray] | None = None
         self._val_auc: float | None = None
         self._training_diagnostics: dict[str, object] | None = None
+        self._raw_training_length_selection: int | None = None
         self._dataset_reference: tuple[pd.DataFrame, pd.DataFrame] | None = None
 
     def set_dataset_reference(
@@ -837,6 +838,8 @@ class _LookupTransformerMember:
             "planned_total_steps": steps,
             "full_fit": not validation,
         }
+        # 전체 자료 재학습에는 검증 선택이 없다. 없는 관측을 지어내지 않는다. (#372)
+        self._raw_training_length_selection = selected_epoch if validation else None
         if not validation:
             return None
         assert ids_va is not None and num_va is not None and mask_va is not None
@@ -850,6 +853,14 @@ class _LookupTransformerMember:
         if self._training_diagnostics is None:
             raise RuntimeError("training_diagnostics는 fit 뒤에 호출해야 한다.")
         return self._training_diagnostics
+
+    def raw_training_length_selection(self) -> int:
+        """검증이 고른 0부터 세는 epoch 위치. 연결부가 관측 학습 길이로 바꾼다. (#372)"""
+        if self._raw_training_length_selection is None:
+            raise RuntimeError(
+                "Lookup-Transformer 원시 epoch 위치는 검증 분할로 학습한 뒤에만 읽을 수 있다."
+            )
+        return self._raw_training_length_selection
 
     def _autocast(self):
         if self._device.startswith("cuda"):
@@ -1043,3 +1054,9 @@ class LookupTransformerFold:
                 member.training_diagnostics() for member in self._members
             ]
         }
+
+    def raw_training_length_selections(self) -> tuple[int, ...]:
+        """초기화 구성원 순서대로 원시 epoch 위치를 전부 돌려준다. (#372)"""
+        return tuple(
+            member.raw_training_length_selection() for member in self._members
+        )

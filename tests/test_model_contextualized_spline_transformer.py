@@ -13,6 +13,10 @@ from sklearn.metrics import roc_auc_score
 from pipeline import model as model_mod
 from pipeline.config import ModelConfig, load_config
 from pipeline.plan import FeaturePlan
+from pipeline.training_length import (
+    ONE_BASED_COUNT,
+    observe_declaration,
+)
 
 SEED = 7
 SMALL_PARAMS = {
@@ -508,3 +512,31 @@ def test_contextual_spline_rejects_unknown_optimizer():
         _adapter(optimizer="sgd").fit(
             X.iloc[:60], y.iloc[:60], X.iloc[60:], y.iloc[60:]
         )
+
+
+def test_declares_one_based_epoch_count_evidence():
+    """1부터 센 epoch 횟수는 변환 없이 그대로 관측 학습 길이가 된다. (#372)"""
+    X, y = _data()
+    adapter = _adapter()
+    adapter.fit(X.iloc[:180], y.iloc[:180], X.iloc[180:], y.iloc[180:])
+
+    declaration = adapter.training_length_evidence()
+    best_epoch = adapter.training_diagnostics()["best_epoch"]
+    assert declaration.model_family == "contextualized_spline_transformer"
+    assert declaration.raw_field == "best_epoch"
+    assert declaration.raw_meaning == ONE_BASED_COUNT
+    assert [item.raw_value for item in declaration.selections] == [best_epoch]
+    assert [item.inner_member for item in declaration.selections] == [None]
+
+    evidence = observe_declaration(declaration, seed=SEED, outer_fold=0)
+    assert [item.value for item in evidence.observations] == [best_epoch]
+
+
+def test_full_fit_declares_no_training_length_evidence():
+    X, y = _data(96)
+    adapter = _adapter()
+
+    model_mod.fit_full(adapter, X, y, 2)
+
+    with pytest.raises(RuntimeError, match="검증 분할"):
+        adapter.training_length_evidence()

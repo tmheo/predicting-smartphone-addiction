@@ -15,6 +15,7 @@ from sklearn.metrics import roc_auc_score
 
 from . import initial_score as initial_score_mod
 from . import model as model_mod
+from . import training_length as training_length_mod
 from .config import ExperimentConfig
 from .data import ID, TARGET
 from .fold_observability import skipped_operation, timed_operation
@@ -326,14 +327,28 @@ def execute_seed(
                 actor_name=cfg.model.kind,
             ):
                 adapter_training_diagnostics = model_mod.collect_training_diagnostics(adapter)
+                # 반복형 계열은 원시 선택값과 관측 학습 길이를 계열과 무관한 같은
+                # 형식으로 남긴다. 시드와 바깥쪽 분할 좌표는 여기서만 안다. (#372)
+                declaration = model_mod.collect_training_length_declaration(
+                    adapter, cfg.model.kind
+                )
+                training_length_evidence = (
+                    None
+                    if declaration is None
+                    else training_length_mod.observe_declaration(
+                        declaration, seed=seed, outer_fold=fold
+                    ).to_json()
+                )
                 fold_training_diagnostics = (
                     {
                         "model_kind": cfg.model.kind,
                         "seed": seed,
                         "fold": fold,
                         "details": adapter_training_diagnostics,
+                        "training_length_evidence": training_length_evidence,
                     }
                     if adapter_training_diagnostics is not None
+                    or training_length_evidence is not None
                     else None
                 )
                 if fold_training_diagnostics is not None:

@@ -31,9 +31,18 @@ from pipeline.data import file_sha256
 from pipeline.initial_score import InitialScores
 from pipeline.plan import FeaturePlan, ProviderKind
 from pipeline.recovery import FoldRecovery, RecoveryError
+from pipeline.training_length import (
+    ONE_BASED_COUNT,
+    RawTrainingLengthSelection,
+    TrainingLengthContract,
+)
 
 SEED = 7
 N_FOLDS = 5
+# 가짜 계열도 실제 계열과 같은 계약으로만 근거를 낸다. (#372)
+RECOVERY_FAKE_CONTRACT = TrainingLengthContract(
+    "recovery_fake", "selected_rounds", ONE_BASED_COUNT
+)
 
 
 class RecoveryFakeAdapter:
@@ -84,6 +93,17 @@ class RecoveryFakeAdapter:
 
     def training_diagnostics(self) -> dict[str, object]:
         return {"fake_fold": self.fold, "losses": [0.5, 0.4]}
+
+    def training_length_evidence(self):
+        """fold마다 다른 원시 횟수를 선언해 복구 지점이 근거를 보존하는지 본다."""
+        return RECOVERY_FAKE_CONTRACT.declare(
+            [
+                RawTrainingLengthSelection(
+                    raw_path="fake.selected_rounds",
+                    raw_value=10 + self.fold,
+                )
+            ]
+        )
 
 
 class RecoveryRowWiseProvider:
@@ -174,6 +194,9 @@ class ProgressRecorder:
 @pytest.fixture
 def recovery_env(tmp_path, monkeypatch):
     monkeypatch.setitem(model_mod.MODEL_REGISTRY, "recovery_fake", RecoveryFakeAdapter)
+    monkeypatch.setitem(
+        model_mod.TRAINING_LENGTH_CONTRACTS, "recovery_fake", RECOVERY_FAKE_CONTRACT
+    )
     n = 60
     train = pd.DataFrame(
         {
@@ -366,6 +389,29 @@ def test_interrupted_run_reuses_completed_fold_and_matches_uninterrupted_mlflow(
     pd.testing.assert_frame_equal(resumed.importance, uninterrupted.importance, check_exact=True)
     assert resumed.fold_aucs == uninterrupted.fold_aucs
     assert resumed.model_training_diagnostics == uninterrupted.model_training_diagnostics
+    # 재사용한 fold 0의 관측 학습 길이 근거가 새로 학습한 실행과 같아야 한다. (#372)
+    reused_evidence = resumed.model_training_diagnostics[0]["training_length_evidence"]
+    assert reused_evidence["model_family"] == "recovery_fake"
+    assert reused_evidence["converter"] == "count_as_is"
+    assert reused_evidence["observations"] == [
+        {
+            "seed": SEED,
+            "outer_fold": 0,
+            "inner_member": None,
+            "raw_field": "selected_rounds",
+            "raw_path": "fake.selected_rounds",
+            "raw_value": 10,
+            "raw_meaning": ONE_BASED_COUNT,
+            "observed_training_length": 10,
+        }
+    ]
+    assert [
+        (
+            item["training_length_evidence"]["observations"][0]["outer_fold"],
+            item["training_length_evidence"]["observations"][0]["observed_training_length"],
+        )
+        for item in resumed.model_training_diagnostics
+    ] == [(fold, 10 + fold) for fold in range(N_FOLDS)]
 
     resumed_meta, resumed_artifacts, resumed_uri, resumed_run_id = _log_final(
         tmp_path, "resumed", cfg, resumed

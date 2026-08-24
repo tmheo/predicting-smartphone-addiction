@@ -380,6 +380,7 @@ class TabCNNFold:
         self._importance_y: np.ndarray | None = None
         self._importance_base_auc: float | None = None
         self._diagnostics = AdapterDiagnostics()
+        self._raw_training_length_selection: int | None = None
         self._fit_seconds: float | None = None
         self._importance_seconds: float | None = None
         self._prediction_calls = 0
@@ -582,6 +583,7 @@ class TabCNNFold:
                 ),
             },
         )
+        self._raw_training_length_selection = best_epoch
         self._fit_seconds = float(time.monotonic() - fit_started)
         return validation_prediction
 
@@ -713,6 +715,8 @@ class TabCNNFold:
                 ),
             },
         )
+        # 전체 자료 재학습에는 검증 선택이 없다. 없는 관측을 지어내지 않는다. (#372)
+        self._raw_training_length_selection = None
         self._fit_seconds = float(time.monotonic() - fit_started)
 
     def _predict_tensor(self, encoded: torch.Tensor) -> np.ndarray:
@@ -773,6 +777,14 @@ class TabCNNFold:
             }
         )
         return result
+
+    def raw_training_length_selections(self) -> tuple[int, ...]:
+        """검증이 고른 1부터 세는 epoch 횟수 하나. (#372)"""
+        if self._raw_training_length_selection is None:
+            raise RuntimeError(
+                "Tab CNN 원시 epoch 횟수는 검증 분할로 학습한 뒤에만 읽을 수 있다."
+            )
+        return (self._raw_training_length_selection,)
 
     def entry_diagnostics(self) -> AdapterDiagnostics:
         return self._diagnostics

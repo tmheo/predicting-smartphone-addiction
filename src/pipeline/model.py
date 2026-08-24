@@ -19,6 +19,15 @@ import pandas as pd
 
 from .config import ModelConfig
 from .data import TARGET
+from .training_length import (
+    FIXED_COUNT,
+    ONE_BASED_COUNT,
+    ZERO_BASED_POSITION,
+    RawTrainingLengthSelection,
+    TrainingLengthContract,
+    TrainingLengthDeclaration,
+    TrainingLengthError,
+)
 
 
 class ModelAdapter(Protocol):
@@ -181,6 +190,109 @@ def set_dataset_reference(
         provider(X_train, X_test)
 
 
+class TrainingLengthAdapter(Protocol):
+    """관측 학습 길이 근거를 선언하는 선택 계약. (#372)
+
+    반복형 계열만 구현한다. 반복 수가 없는 계열은 이 계약을 구현하지 않으며,
+    그래서 없는 관측을 지어내지 않는다. 좌표 가운데 시드와 바깥쪽 분할은 fold
+    실행부가 채우므로 연결부는 원시 값과 내부 구성원 좌표까지만 안다.
+    """
+
+    def training_length_evidence(self) -> TrainingLengthDeclaration: ...
+
+
+# 계열 -> 원시 선택값 계약. 이 표가 어떤 계열이 `+1`을 받는지 정하는 유일한 자리다.
+# 원시 의미는 #326이 계열별로 확정한 것이고, 연결부는 여기 등록한 계약으로만 선언한다.
+TRAINING_LENGTH_CONTRACTS: dict[str, TrainingLengthContract] = {
+    "lightgbm": TrainingLengthContract("lightgbm", "best_iteration_", ONE_BASED_COUNT),
+    "xgboost": TrainingLengthContract("xgboost", "best_iteration", ZERO_BASED_POSITION),
+    "catboost": TrainingLengthContract(
+        "catboost", "get_best_iteration()", ZERO_BASED_POSITION
+    ),
+    "lookup_transformer": TrainingLengthContract(
+        "lookup_transformer", "best_epoch", ZERO_BASED_POSITION
+    ),
+    "contextualized_spline_transformer": TrainingLengthContract(
+        "contextualized_spline_transformer", "best_epoch", ONE_BASED_COUNT
+    ),
+    "scalar_token_transformer": TrainingLengthContract(
+        "scalar_token_transformer", "best_epoch", ONE_BASED_COUNT
+    ),
+    "tab_cnn": TrainingLengthContract("tab_cnn", "best_epoch", ONE_BASED_COUNT),
+    "tabm": TrainingLengthContract("tabm", "selected_epoch_count", ONE_BASED_COUNT),
+    "realmlp": TrainingLengthContract("realmlp", "fixed_epochs", FIXED_COUNT),
+}
+
+
+def collect_training_length_declaration(
+    adapter: ModelAdapter, kind: str
+) -> TrainingLengthDeclaration | None:
+    """선택 계약을 구현한 adapter의 원시 근거 선언을 계열 계약과 대조해 돌려준다.
+
+    계약을 구현하지 않은 계열은 `None`을 돌려준다. 구현한 계열은 자기 kind로
+    등록된 계약과 모델 계열, 원시 필드, 원시 의미가 모두 같아야 한다. 이 대조가
+    표와 코드가 갈라지는 것을 실행 시점에 막는다.
+    """
+    provider = getattr(adapter, "training_length_evidence", None)
+    if provider is None:
+        return None
+    contract = TRAINING_LENGTH_CONTRACTS.get(kind)
+    if contract is None:
+        raise TrainingLengthError(
+            f"{kind}는 관측 학습 길이 계약이 등록되지 않은 계열인데 근거를 선언했다."
+        )
+    declaration = provider()
+    if not isinstance(declaration, TrainingLengthDeclaration):
+        raise TypeError("training_length_evidence()는 TrainingLengthDeclaration을 돌려줘야 한다.")
+    mismatch = {
+        name: (declared, expected)
+        for name, declared, expected in (
+            ("model_family", declaration.model_family, contract.model_family),
+            ("raw_field", declaration.raw_field, contract.raw_field),
+            ("raw_meaning", declaration.raw_meaning, contract.raw_meaning),
+        )
+        if declared != expected
+    }
+    if mismatch:
+        raise TrainingLengthError(
+            f"{kind} 연결부 선언이 등록된 계약과 다르다: {mismatch}"
+        )
+    return declaration
+
+
+def _declare_training_length(
+    impl: object,
+    kind: str,
+    raw_path: str,
+    *,
+    inner_members: bool,
+) -> TrainingLengthDeclaration:
+    """구현이 남긴 원시 선택값을 그 계열의 계약으로 묶는다. (#372)
+
+    내부 구성원이 있는 계열은 구성원 순서를 그대로 좌표로 쓰고 하나도 빠뜨리지 않는다.
+    없는 계열은 선택값이 정확히 하나여야 하며, 그렇지 않으면 여기서 터진다.
+    """
+    if impl is None:
+        raise TrainingLengthError(
+            f"{kind} 관측 학습 길이는 fold 학습을 마친 뒤에만 읽을 수 있다."
+        )
+    contract = TRAINING_LENGTH_CONTRACTS[kind]
+    selections = impl.raw_training_length_selections()
+    if inner_members:
+        return contract.declare(
+            RawTrainingLengthSelection(
+                raw_path=raw_path.format(index=index),
+                raw_value=raw_value,
+                inner_member=index,
+            )
+            for index, raw_value in enumerate(selections)
+        )
+    (raw_value,) = selections
+    return contract.declare(
+        [RawTrainingLengthSelection(raw_path=raw_path, raw_value=raw_value)]
+    )
+
+
 class LightGBMAdapter:
     """LightGBM 이진 분류 adapter."""
 
@@ -190,6 +302,7 @@ class LightGBMAdapter:
         self._seed = seed
         self._model = None
         self._uses_initial_score = False
+        self._validated_fit = False
 
     def fit(
         self,
@@ -222,6 +335,7 @@ class LightGBMAdapter:
             callbacks=[lgb.early_stopping(self._fit["early_stopping_rounds"])],
             **kwargs,
         )
+        self._validated_fit = True
         return self._predict(X_va, initial_score_va)
 
     def fit_full(
@@ -241,6 +355,8 @@ class LightGBMAdapter:
         self._uses_initial_score = initial_score is not None
         kwargs = {"init_score": initial_score} if self._uses_initial_score else {}
         self._model.fit(X, y, **kwargs)
+        # 전체 자료 재학습은 조기 종료가 없다. 없는 관측을 지어내지 않는다. (#372)
+        self._validated_fit = False
 
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
@@ -274,6 +390,24 @@ class LightGBMAdapter:
                 "feature": booster.feature_name(),
                 "gain": booster.feature_importance(importance_type="gain"),
             }
+        )
+
+    def training_length_evidence(self) -> TrainingLengthDeclaration:
+        """조기 종료가 고른 부스팅 횟수를 원시 근거로 선언한다. (#372)
+
+        LightGBM의 `best_iteration_`은 학습 엔진이 이미 센 실제 횟수라 그대로 쓴다.
+        """
+        if self._model is None or not self._validated_fit:
+            raise TrainingLengthError(
+                "lightgbm 관측 학습 길이는 검증 분할로 학습한 뒤에만 읽을 수 있다."
+            )
+        return TRAINING_LENGTH_CONTRACTS["lightgbm"].declare(
+            [
+                RawTrainingLengthSelection(
+                    raw_path="LGBMClassifier.best_iteration_",
+                    raw_value=int(self._model.best_iteration_),
+                )
+            ]
         )
 
 
@@ -328,6 +462,7 @@ class XGBoostAdapter:
         self._fit = fit
         self._seed = seed
         self._model = None
+        self._validated_fit = False
 
     def fit(
         self,
@@ -350,6 +485,7 @@ class XGBoostAdapter:
         # LightGBM처럼 학습 과정이 실행 로그에 남게 200라운드마다 검증 지표를 찍고,
         # fold의 종착점(best iteration)을 한 줄로 요약한다.
         self._model.fit(X_tr, y_tr, eval_set=[(X_va, y_va)], verbose=200)
+        self._validated_fit = True
         print(
             f"[xgboost] early stopping: best_iteration={self._model.best_iteration} "
             f"best_score={self._model.best_score:.6f}"
@@ -376,6 +512,8 @@ class XGBoostAdapter:
             enable_categorical=True,
         )
         self._model.fit(X, y, verbose=200)
+        # 전체 자료 재학습은 조기 종료가 없다. 없는 관측을 지어내지 않는다. (#372)
+        self._validated_fit = False
 
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
@@ -401,6 +539,24 @@ class XGBoostAdapter:
             "best_score": float(self._model.best_score),
         }
 
+    def training_length_evidence(self) -> TrainingLengthDeclaration:
+        """조기 종료가 고른 반복 위치를 원시 근거로 선언한다. (#372)
+
+        XGBoost의 `best_iteration`은 0부터 세는 위치라 실제 횟수보다 하나 작다.
+        """
+        if self._model is None or not self._validated_fit:
+            raise TrainingLengthError(
+                "xgboost 관측 학습 길이는 검증 분할로 학습한 뒤에만 읽을 수 있다."
+            )
+        return TRAINING_LENGTH_CONTRACTS["xgboost"].declare(
+            [
+                RawTrainingLengthSelection(
+                    raw_path="XGBClassifier.best_iteration",
+                    raw_value=int(self._model.best_iteration),
+                )
+            ]
+        )
+
 
 class CatBoostAdapter:
     """CatBoost 이진 분류 adapter. (#59)
@@ -417,6 +573,7 @@ class CatBoostAdapter:
         self._fit = fit
         self._seed = seed
         self._model = None
+        self._validated_fit = False
 
     @classmethod
     def _prepare(cls, X: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
@@ -460,6 +617,7 @@ class CatBoostAdapter:
             use_best_model=True,
             verbose=200,
         )
+        self._validated_fit = True
         best_score = self._model.get_best_score().get("validation", {})
         print(
             f"[catboost] early stopping: best_iteration={self._model.get_best_iteration()} "
@@ -489,6 +647,8 @@ class CatBoostAdapter:
             allow_writing_files=False,
         )
         self._model.fit(X, y, verbose=200)
+        # 전체 자료 재학습은 조기 종료가 없다. 없는 관측을 지어내지 않는다. (#372)
+        self._validated_fit = False
 
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
@@ -503,6 +663,24 @@ class CatBoostAdapter:
                 "feature": self._model.feature_names_,
                 "gain": self._model.get_feature_importance(type="PredictionValuesChange"),
             }
+        )
+
+    def training_length_evidence(self) -> TrainingLengthDeclaration:
+        """조기 종료가 고른 반복 위치를 원시 근거로 선언한다. (#372)
+
+        CatBoost의 `get_best_iteration()`은 0부터 세는 위치라 실제 횟수보다 하나 작다.
+        """
+        if self._model is None or not self._validated_fit:
+            raise TrainingLengthError(
+                "catboost 관측 학습 길이는 검증 분할로 학습한 뒤에만 읽을 수 있다."
+            )
+        return TRAINING_LENGTH_CONTRACTS["catboost"].declare(
+            [
+                RawTrainingLengthSelection(
+                    raw_path="CatBoostClassifier.get_best_iteration()",
+                    raw_value=int(self._model.get_best_iteration()),
+                )
+            ]
         )
 
 
@@ -857,6 +1035,15 @@ class LookupTransformerAdapter:
     def entry_diagnostics(self) -> AdapterDiagnostics:
         return AdapterDiagnostics(observations=self.training_diagnostics())
 
+    def training_length_evidence(self) -> TrainingLengthDeclaration:
+        """초기화 구성원마다 검증이 고른 0부터 세는 epoch 위치를 선언한다. (#372)"""
+        return _declare_training_length(
+            self._impl,
+            "lookup_transformer",
+            "training_diagnostics.fold_initialization_members[{index}].best_epoch",
+            inner_members=True,
+        )
+
 
 class ContextualizedSplineTransformerAdapter:
     """단변량 선행 학습과 얕은 상호작용을 결합한 모델 adapter. (#149)
@@ -947,6 +1134,15 @@ class ContextualizedSplineTransformerAdapter:
     def entry_diagnostics(self) -> AdapterDiagnostics:
         return self._impl.entry_diagnostics()
 
+    def training_length_evidence(self) -> TrainingLengthDeclaration:
+        """검증이 고른 1부터 세는 epoch 횟수를 선언한다. (#372)"""
+        return _declare_training_length(
+            self._impl,
+            "contextualized_spline_transformer",
+            "training_diagnostics.best_epoch",
+            inner_members=False,
+        )
+
 
 class ScalarTokenTransformerAdapter:
     """ReLU·주기 스칼라 token과 결합 블록을 쓰는 모델 adapter. (#178)
@@ -1029,6 +1225,15 @@ class ScalarTokenTransformerAdapter:
     def entry_diagnostics(self) -> AdapterDiagnostics:
         return self._impl.entry_diagnostics()
 
+    def training_length_evidence(self) -> TrainingLengthDeclaration:
+        """검증이 고른 1부터 세는 epoch 횟수를 선언한다. (#372)"""
+        return _declare_training_length(
+            self._impl,
+            "scalar_token_transformer",
+            "entry_diagnostics.best_epoch",
+            inner_members=False,
+        )
+
 
 class TabMAdapter:
     """TabM(pytabkit) adapter. (#61)
@@ -1087,6 +1292,15 @@ class TabMAdapter:
 
     def training_diagnostics(self) -> dict[str, object]:
         return self._impl.training_diagnostics()
+
+    def training_length_evidence(self) -> TrainingLengthDeclaration:
+        """내부 구성원마다 저장소가 이미 센 선택 epoch 횟수를 선언한다. (#372)"""
+        return _declare_training_length(
+            self._impl,
+            "tabm",
+            "training_diagnostics.members[{index}].selected_epoch_count",
+            inner_members=True,
+        )
 
 
 class RealMLPAdapter:
@@ -1167,6 +1381,15 @@ class RealMLPAdapter:
 
     def training_diagnostics(self) -> dict[str, object]:
         return self._impl.training_diagnostics()
+
+    def training_length_evidence(self) -> TrainingLengthDeclaration:
+        """설정이 고정한 실제 epoch 횟수를 선언한다. 검증이 고른 위치가 아니다. (#372)"""
+        return _declare_training_length(
+            self._impl,
+            "realmlp",
+            "training_diagnostics.fixed_epochs",
+            inner_members=False,
+        )
 
 
 class TabPFN3Adapter:
@@ -1478,6 +1701,15 @@ class TabCNNAdapter:
 
     def training_diagnostics(self) -> dict[str, object]:
         return self._impl.training_diagnostics()
+
+    def training_length_evidence(self) -> TrainingLengthDeclaration:
+        """검증이 고른 1부터 세는 epoch 횟수를 선언한다. (#372)"""
+        return _declare_training_length(
+            self._impl,
+            "tab_cnn",
+            "training_diagnostics.best_epoch",
+            inner_members=False,
+        )
 
 
 class XRFMAdapter:

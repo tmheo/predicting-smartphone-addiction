@@ -99,6 +99,28 @@ exp132의 시드별 바깥쪽 분할 최적 학습 회차 중앙값 `42`, `57`, 
   장부를 불러올 때 원시 근거에서 예산을 다시 계산하고 저장값과 정확히 같을 때만 실행한다.
   손으로 바꾼 예산과 예외 필드는 장부 문법에 두지 않는다.
 
+### 계열별 선언과 근거 기록
+
+이슈 #372에서 아홉 반복형 계열의 연결부가 아래 선언으로만 원시 근거를 낸다.
+
+| 모델 계열 | 원시 필드 | 원시 의미 | 변환기 |
+| --- | --- | --- | --- |
+| `lightgbm` | `best_iteration_` | `one_based_count` | `count_as_is` |
+| `xgboost` | `best_iteration` | `zero_based_position` | `position_plus_one` |
+| `catboost` | `get_best_iteration()` | `zero_based_position` | `position_plus_one` |
+| `lookup_transformer` | `best_epoch` | `zero_based_position` | `position_plus_one` |
+| `contextualized_spline_transformer` | `best_epoch` | `one_based_count` | `count_as_is` |
+| `scalar_token_transformer` | `best_epoch` | `one_based_count` | `count_as_is` |
+| `tab_cnn` | `best_epoch` | `one_based_count` | `count_as_is` |
+| `tabm` | `selected_epoch_count` | `one_based_count` | `count_as_is` |
+| `realmlp` | `fixed_epochs` | `fixed_count` | `fixed_count_as_is` |
+
+연결부는 원시 값과 내부 구성원 좌표까지만 알고, 시드와 바깥쪽 분할 좌표는 fold 실행부가 채운다.
+확정한 근거는 `model_training_diagnostics.json`의 fold 항목과 같은 fold의 복구 지점에 `training_length_evidence`로 남는다.
+복구 지점을 다시 쓴 실행은 새로 학습한 실행과 같은 근거를 보존한다.
+기존 모델별 진단은 그대로 두되, 재학습 장부가 소비할 원시 선택값은 이 표준 근거에서만 읽는다.
+`logistic_onehot`과 `tabpfn3`는 이 계약을 구현하지 않으므로 없는 관측이 만들어지지 않는다.
+
 ### 위 이력 숫자와의 관계
 
 이 문서에 이미 적힌 구성원별 숫자 가운데 일부는 XGBoost, CatBoost, Lookup-Transformer의 원시 위치를 `+1`하지 않고 계산한 값이다.
