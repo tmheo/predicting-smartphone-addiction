@@ -792,7 +792,7 @@ CORRECTED_BUDGETS = {
     "exp059_lookup_transformer": {42: 15, 43: 15, 44: 18},
     "exp111_xgb_depth8_no_te": {42: 1803, 43: 1644, 44: 1566},
     "exp071_cat_exact_no_te": {42: 5265, 43: 5878, 44: 5526},
-    "exp127_lookup_muon": {42: 13, 43: 15, 44: 15},
+    "exp157_lookup_muon_initavg8": {42: 14, 43: 15, 44: 15},
     "exp135_xgb_hpo_trial30": {42: 9759, 43: 10394, 44: 10369},
     "exp131_lookup_bivariate_plr5": {42: 15, 43: 15, 44: 15},
 }

@@ -1,5 +1,5 @@
 schema_version: 2
-source_pool_sha256: e430d32dc6d80b7feb34151ed93d431adc42dc9b61ca344368218768c30fc349
+source_pool_sha256: 20e4a3e332e16e886a8b744ad8a7bc5389caa4dcf218845d9281c81dea90faf9
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -2924,400 +2924,6 @@ members:
       median: 9.0
       scaled: 11.25
       budget: 11
-- config: exp127_lookup_muon
-  config_path: configs/exp127_lookup_muon.yaml
-  lineage:
-    source_run_id: 7124425b5b51421dbbeba597229554da
-    source_git_commit: c2e3e13cf1c4232b37ed064bb219995789be64c9
-    source_config_path: configs/exp127_lookup_muon.yaml
-    source_config_sha256: 19e69910d8ede4b2fb9559685800fa03f0056d635009d7c5296055c0890644cb
-    evidence_artifact_path: model_training_diagnostics.json
-    evidence_artifact_sha256: eda2d6581ebbe9ebb2250e130754edba110a1b2c0dd62fa8b8a79b391bde4210
-  training_length_evidence:
-    status: confirmed
-    model_family: lookup_transformer
-    converter: zero_based_position
-    observations:
-    - seed: 42
-      outer_fold: 0
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 42
-      outer_fold: 0
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 42
-      outer_fold: 0
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 42
-      outer_fold: 1
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 42
-      outer_fold: 1
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 42
-      outer_fold: 1
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 42
-      outer_fold: 2
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 42
-      outer_fold: 2
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 42
-      outer_fold: 2
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 42
-      outer_fold: 3
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 42
-      outer_fold: 3
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 42
-      outer_fold: 3
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 42
-      outer_fold: 4
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 42
-      outer_fold: 4
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 42
-      outer_fold: 4
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 43
-      outer_fold: 0
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 43
-      outer_fold: 0
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 43
-      outer_fold: 0
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 43
-      outer_fold: 1
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 43
-      outer_fold: 1
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 43
-      outer_fold: 1
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 43
-      outer_fold: 2
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 43
-      outer_fold: 2
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 43
-      outer_fold: 2
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 43
-      outer_fold: 3
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 43
-      outer_fold: 3
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 43
-      outer_fold: 3
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 43
-      outer_fold: 4
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 43
-      outer_fold: 4
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 43
-      outer_fold: 4
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 44
-      outer_fold: 0
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 44
-      outer_fold: 0
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 44
-      outer_fold: 0
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 44
-      outer_fold: 1
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 44
-      outer_fold: 1
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 44
-      outer_fold: 1
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 44
-      outer_fold: 2
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 44
-      outer_fold: 2
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 44
-      outer_fold: 2
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 44
-      outer_fold: 3
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 44
-      outer_fold: 3
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-    - seed: 44
-      outer_fold: 3
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 44
-      outer_fold: 4
-      inner_member: 0
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 44
-      outer_fold: 4
-      inner_member: 1
-      raw_field: best_epoch
-      raw_value: 11
-      raw_meaning: zero_based_position
-      observed_training_length: 12
-    - seed: 44
-      outer_fold: 4
-      inner_member: 2
-      raw_field: best_epoch
-      raw_value: 9
-      raw_meaning: zero_based_position
-      observed_training_length: 10
-  refit_budget_derivation:
-    statistic: median
-    multiplier: 1.25
-    rounding: half_up
-    seeds:
-    - seed: 42
-      observed_lengths:
-      - 12
-      - 12
-      - 10
-      - 12
-      - 10
-      - 10
-      - 12
-      - 12
-      - 10
-      - 10
-      - 10
-      - 10
-      - 10
-      - 10
-      - 12
-      median: 10.0
-      scaled: 12.5
-      budget: 13
-    - seed: 43
-      observed_lengths:
-      - 12
-      - 10
-      - 12
-      - 12
-      - 12
-      - 12
-      - 12
-      - 12
-      - 12
-      - 10
-      - 10
-      - 10
-      - 12
-      - 10
-      - 12
-      median: 12.0
-      scaled: 15.0
-      budget: 15
-    - seed: 44
-      observed_lengths:
-      - 12
-      - 12
-      - 12
-      - 12
-      - 10
-      - 12
-      - 12
-      - 12
-      - 12
-      - 12
-      - 10
-      - 12
-      - 12
-      - 12
-      - 10
-      median: 12.0
-      scaled: 15.0
-      budget: 15
 - config: exp027_recon_ce
   config_path: configs/exp027_recon_ce.yaml
   lineage:
@@ -5800,3 +5406,997 @@ members:
       median: 10000.0
       scaled: 12500.0
       budget: 12500
+- config: exp157_lookup_muon_initavg8
+  config_path: configs/exp157_lookup_muon_initavg8.yaml
+  lineage:
+    source_run_id: bb7be9baf1b64888818600d7e0b5927b
+    source_git_commit: 170b4f4faf50e499e30f78d518276203bc16f12e
+    source_config_path: configs/exp157_lookup_muon_initavg8.yaml
+    source_config_sha256: 150c2e3098e182034827bf586b669558dee21fa692222b123ed06ae4a883d3cd
+    evidence_artifact_path: model_training_diagnostics.json
+    evidence_artifact_sha256: 773fbce2815f3bd73c5f1fcbd200354e92548860529b9dc20e49290958696140
+  training_length_evidence:
+    status: confirmed
+    model_family: lookup_transformer
+    converter: zero_based_position
+    observations:
+    - seed: 42
+      outer_fold: 0
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 0
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 0
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 0
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 0
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 0
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 0
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 0
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 1
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 1
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 1
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 1
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 1
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 1
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 1
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 1
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 2
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 2
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 2
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 2
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 2
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 2
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 2
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 2
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 3
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 3
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 3
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 3
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 3
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 3
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 3
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 3
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 4
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 4
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 4
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 4
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 4
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 4
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 42
+      outer_fold: 4
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 42
+      outer_fold: 4
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 0
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 0
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 0
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 0
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 0
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 0
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 0
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 0
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 1
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 1
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 1
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 1
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 1
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 1
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 1
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 1
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 2
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 2
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 2
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 2
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 2
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 2
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 2
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 2
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 3
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 3
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 3
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 3
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 3
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 3
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 3
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 3
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 4
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 4
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 4
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 4
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 4
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 4
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 43
+      outer_fold: 4
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 43
+      outer_fold: 4
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 0
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 0
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 0
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 0
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 0
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 0
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 0
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 0
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 1
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 1
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 1
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 1
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 1
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 1
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 1
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 1
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 2
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 2
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 2
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 2
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 2
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 2
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 2
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 2
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 3
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 3
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 3
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 3
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 3
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 3
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 3
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 3
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 4
+      inner_member: 0
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 4
+      inner_member: 1
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 4
+      inner_member: 2
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 4
+      inner_member: 3
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 4
+      inner_member: 4
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 4
+      inner_member: 5
+      raw_field: best_epoch
+      raw_value: 11
+      raw_meaning: zero_based_position
+      observed_training_length: 12
+    - seed: 44
+      outer_fold: 4
+      inner_member: 6
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+    - seed: 44
+      outer_fold: 4
+      inner_member: 7
+      raw_field: best_epoch
+      raw_value: 9
+      raw_meaning: zero_based_position
+      observed_training_length: 10
+  refit_budget_derivation:
+    statistic: median
+    multiplier: 1.25
+    rounding: half_up
+    seeds:
+    - seed: 42
+      observed_lengths:
+      - 12
+      - 12
+      - 10
+      - 10
+      - 12
+      - 12
+      - 10
+      - 10
+      - 10
+      - 10
+      - 12
+      - 12
+      - 12
+      - 12
+      - 12
+      - 12
+      - 10
+      - 12
+      - 12
+      - 12
+      - 12
+      - 12
+      - 10
+      - 10
+      - 10
+      - 10
+      - 10
+      - 10
+      - 12
+      - 12
+      - 10
+      - 10
+      - 10
+      - 12
+      - 10
+      - 10
+      - 12
+      - 10
+      - 12
+      - 10
+      median: 11.0
+      scaled: 13.75
+      budget: 14
+    - seed: 43
+      observed_lengths:
+      - 10
+      - 12
+      - 10
+      - 10
+      - 12
+      - 12
+      - 10
+      - 12
+      - 12
+      - 12
+      - 12
+      - 12
+      - 10
+      - 12
+      - 12
+      - 12
+      - 12
+      - 10
+      - 12
+      - 12
+      - 12
+      - 12
+      - 12
+      - 12
+      - 10
+      - 10
+      - 10
+      - 10
+      - 10
+      - 12
+      - 10
+      - 10
+      - 12
+      - 12
+      - 12
+      - 12
+      - 10
+      - 10
+      - 12
+      - 10
+      median: 12.0
+      scaled: 15.0
+      budget: 15
+    - seed: 44
+      observed_lengths:
+      - 12
+      - 12
+      - 12
+      - 10
+      - 12
+      - 10
+      - 12
+      - 12
+      - 12
+      - 10
+      - 12
+      - 12
+      - 10
+      - 12
+      - 12
+      - 12
+      - 12
+      - 12
+      - 12
+      - 10
+      - 10
+      - 10
+      - 12
+      - 12
+      - 12
+      - 12
+      - 10
+      - 10
+      - 10
+      - 10
+      - 10
+      - 12
+      - 12
+      - 10
+      - 10
+      - 10
+      - 10
+      - 12
+      - 10
+      - 10
+      median: 12.0
+      scaled: 15.0
+      budget: 15

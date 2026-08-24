@@ -1,18 +1,18 @@
-run_id: 54acd002d3c04ec3a74c09871e83da50
-oof_auc: 0.9693397329635609
+run_id: 6911a461866b43dc9556553eba6783b7
+oof_auc: 0.9693676105620948
 seed_aucs:
-  42: 0.9691984425064686
-  43: 0.9692263222971439
-  44: 0.9692147190929743
+  42: 0.9693147102338494
+  43: 0.9692957756906984
+  44: 0.9692821297453309
 fold_aucs:
-  0: 0.9688016583000918
-  1: 0.9694342441662455
-  2: 0.9695311686025923
-  3: 0.9699135171778142
-  4: 0.9690933006494107
-config: exp131_lookup_bivariate_plr5
+  0: 0.9688237395162128
+  1: 0.9694761951785209
+  2: 0.9695373273919766
+  3: 0.9699053626301164
+  4: 0.9691762424296705
+config: exp156_lookup_bivariate_plr5_initavg8
 features: academic_work_impact,age,app_opens_per_day,daily_screen_time_hours,daily_screen_time_hours_recon,daily_screen_time_hours_xgb_recon,gaming_hours,gaming_hours_recon,gaming_hours_xgb_recon,gender,imp_awake_screen_frac,imp_gaming_over_daily,imp_leisure_frac,imp_resid_frac,imp_screen_mean_dw,imp_screen_minus_sleep,imp_social_frac,imp_week_total,imp_weekend_minus_daily,imp_work_frac,notifications_per_day,placebo_noise,screen_slack,sgw_frac,sgw_sum,slack_frac,sleep_hours,social_media_hours,social_media_hours_recon,social_media_hours_xgb_recon,stress_level,weekend_screen_time,weekend_screen_time_xgb_recon,wk_minus_sgw,wk_other,work_study_hours,work_study_hours_recon,work_study_hours_xgb_recon
-git_commit: 58719c6b86c8d62a027760ff367892eaed5a141f
-adopted_at: '2026-08-20'
-reason: '이슈 267: exp127에 szymonkapiski build_continuous의 수면·화면 이변수 조성 5열을 PLR 토큰으로
-  더한 판. 3시드 +0.0000557, 시드 3/3·fold 4/5 개선'
+git_commit: 170b4f4faf50e499e30f78d518276203bc16f12e
+adopted_at: '2026-08-24'
+reason: '이슈 389: fold 초기화 평균을 3개에서 8개로 늘려 OOF +0.000027877599, 시드 3/3·분할 4/5 개선으로
+  확정 교체'

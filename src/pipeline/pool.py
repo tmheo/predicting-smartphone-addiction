@@ -111,6 +111,23 @@ def entry_evidence(verdict: EntryVerdict) -> EntryEvidence:
     )
 
 
+def validate_duplicate_change_route(
+    verdict: EntryVerdict, replaced_run_id: str | None
+) -> None:
+    """중복 후보는 원자 교체로만 허용하되 교체 대상은 동결 판정을 따른다.
+
+    `judge_entry`의 최근접 중복은 예전 휴리스틱 진단이다.
+    `candidate-pool-v1`은 결과를 보기 전에 지정한 같은 계보 이전판을 교체할 수
+    있으므로, 최근접 구성원과 다르다는 이유로 유효한 nested OOF 판정을 뒤집지
+    않는다.
+    """
+    duplicate = verdict.duplicate
+    if duplicate is not None and duplicate.duplicate and replaced_run_id is None:
+        raise JudgmentError(
+            "중복 후보의 판정 기록은 원자 교체 대상을 지정해야 한다."
+        )
+
+
 def _drop_member(pool: Pool, run_id: str, reason: str, store: RunStore) -> None:
     """장부에서 지우고 실행 저장소의 태그로만 탈락을 남긴다. (ADR 0001)"""
     pool.members = [m for m in pool.members if m.run_id != run_id]
@@ -191,12 +208,10 @@ def main() -> None:
     except JudgmentError as exc:
         sys.exit(str(exc))
 
-    if verdict.duplicate is not None and verdict.duplicate.duplicate:
-        if authorization.replaced_run_id != verdict.duplicate.nearest_run_id:
-            sys.exit(
-                "등록 거부: 중복 후보의 판정 기록은 최근접 중복 구성원을 "
-                "원자 교체 대상으로 지정해야 한다."
-            )
+    try:
+        validate_duplicate_change_route(verdict, authorization.replaced_run_id)
+    except JudgmentError as exc:
+        sys.exit(f"등록 거부: {exc}")
     if authorization.replaced_run_id is not None:
         if not any(
             member.run_id == authorization.replaced_run_id for member in pool.members

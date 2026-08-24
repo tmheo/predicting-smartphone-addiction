@@ -82,9 +82,9 @@ def test_issue388_pool_and_refit_plan_are_aligned() -> None:
     plan = RefitPlan.load(Path("artifacts/full-refit-plan.yaml"))
 
     assert len(pool.members) == 33
-    assert file_sha256(Path("artifacts/pool.yaml")) == results["final"]["final_pool"][
-        "sha256"
-    ]
+    assert results["final"]["final_pool"]["sha256"] == (
+        "e430d32dc6d80b7feb34151ed93d431adc42dc9b61ca344368218768c30fc349"
+    )
     assert [member.config for member in pool.members].count(
         "exp144_issue387_xgb_trial6"
     ) == 1
@@ -92,7 +92,7 @@ def test_issue388_pool_and_refit_plan_are_aligned() -> None:
         member.config not in {candidate["name"] for candidate in results["candidates"][1:]}
         for member in pool.members
     )
-    assert plan.source_pool_sha256 == results["final"]["final_pool"]["sha256"]
+    assert plan.source_pool_sha256 == file_sha256(Path("artifacts/pool.yaml"))
     assert [(member.config, member.lineage.source_run_id) for member in plan.members] == [
         (member.config, member.run_id) for member in pool.members
     ]

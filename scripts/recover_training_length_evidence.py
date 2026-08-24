@@ -157,7 +157,7 @@ RECOVERY: dict[str, MemberRecovery] = {
     "exp085_contextual_spline_m0": MemberRecovery(
         "contextualized_spline_transformer", "run_log", "contextualized_spline"
     ),
-    "exp127_lookup_muon": MemberRecovery(
+    "exp157_lookup_muon_initavg8": MemberRecovery(
         "lookup_transformer", "structured", "lookup_members_structured"
     ),
     "exp027_recon_ce": MemberRecovery("lightgbm", "run_log", "lightgbm"),

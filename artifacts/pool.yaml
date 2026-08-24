@@ -299,22 +299,6 @@ members:
     ensemble_auc_with: 0.9689153096546314
     ensemble_auc_without: 0.968844711232371
     contribution: 7.05984222603151e-05
-- run_id: 7124425b5b51421dbbeba597229554da
-  config: exp127_lookup_muon
-  oof_auc: 0.9692840450124712
-  seeds: 42,43,44
-  entered_at: '2026-08-20'
-  reason: '이슈 196: exp081의 Muon 혼성 optimizer판이자 새 champion. 3시드 +0.0000883으로 champion
-    교체 확정, 최근접 exp081과 스피어만 0.99344로 중복 아님, 표준 평가 앙상블 기여 +0.00007'
-  evidence:
-    champion_run_id: 7124425b5b51421dbbeba597229554da
-    champion_oof_auc: 0.9692840450124712
-    floor_margin: 0.010000000000000009
-    nearest_run_id: d55d1cd49c194eb8bf7b5128e548df81
-    nearest_spearman: 0.9934401522346867
-    ensemble_auc_with: 0.9690554221704453
-    ensemble_auc_without: 0.9689866654973862
-    contribution: 6.875667305905608e-05
 - run_id: e4e81bdce7df4a72bf250ef842fd8781
   config: exp027_recon_ce
   oof_auc: 0.967717165004002
@@ -522,3 +506,23 @@ members:
     contract_version: candidate-pool-v1
     path: artifacts/judgments/issue388-bulk-selection-2.yaml
     sha256: 276218483c8ed9ab594a6e56210fe024984d8043e66516d07df8744f78627bbc
+- run_id: bb7be9baf1b64888818600d7e0b5927b
+  config: exp157_lookup_muon_initavg8
+  oof_auc: 0.9693266193889507
+  seeds: 42,43,44
+  entered_at: '2026-08-24'
+  reason: '이슈 389: exp127 초기화 8개 평균 원자 교체 nested OOF 양수 기여'
+  evidence:
+    champion_run_id: 6911a461866b43dc9556553eba6783b7
+    champion_oof_auc: 0.9693676105620948
+    floor_margin: 0.009959008826855964
+    nearest_run_id: 54acd002d3c04ec3a74c09871e83da50
+    nearest_spearman: 0.998143882239825
+    ensemble_auc_with: null
+    ensemble_auc_without: null
+    contribution: null
+  judgment:
+    judgment_id: issue389-exp157-lookup-muon-initavg8-replacement
+    contract_version: candidate-pool-v1
+    path: artifacts/judgments/issue389-exp157-lookup-muon-initavg8-replacement.yaml
+    sha256: 8f708e0f700abedb2ac4a8c09ea0f53774bb26a27a50fe2197707686807ea681
