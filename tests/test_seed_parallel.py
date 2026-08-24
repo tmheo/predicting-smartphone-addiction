@@ -64,13 +64,44 @@ def prepared_inputs(cfg: ExperimentConfig) -> tuple[FeaturePlan, pd.DataFrame, p
 def test_worker_initializer_assigns_gpu_and_xgb_cpu_budget(monkeypatch):
     gpu_queue: queue.Queue[str] = queue.Queue()
     gpu_queue.put("2")
-    monkeypatch.delenv("CUDA_VISIBLE_DEVICES", raising=False)
+    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "before-test")
     monkeypatch.delenv(seed_parallel.XGB_N_JOBS_ENV, raising=False)
 
     seed_parallel._pin_gpu(gpu_queue, xgb_n_jobs=30)
 
     assert os.environ["CUDA_VISIBLE_DEVICES"] == "2"
     assert os.environ[seed_parallel.XGB_N_JOBS_ENV] == "30"
+
+
+def test_shared_fold_worker_initializer_keeps_gpu_visibility_and_limits_xgb(
+    monkeypatch,
+):
+    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "0,1,2")
+    monkeypatch.setenv(seed_parallel.ENV_FOLD_GPUS, "0,1,2")
+    monkeypatch.delenv(seed_parallel.XGB_N_JOBS_ENV, raising=False)
+
+    seed_parallel._share_fold_gpus(xgb_n_jobs=20)
+
+    assert os.environ["CUDA_VISIBLE_DEVICES"] == "0,1,2"
+    assert os.environ[seed_parallel.ENV_FOLD_GPUS] == "0,1,2"
+    assert os.environ[seed_parallel.XGB_N_JOBS_ENV] == "20"
+
+
+@pytest.mark.parametrize("workers", ["1", "nope"])
+def test_shared_fold_workers_reject_invalid_count(monkeypatch, workers):
+    monkeypatch.setenv(seed_parallel.ENV_FOLD_GPUS, "0,1,2")
+    monkeypatch.setenv(seed_parallel.ENV_SHARED_FOLD_WORKERS, workers)
+
+    with pytest.raises(ValueError, match=seed_parallel.ENV_SHARED_FOLD_WORKERS):
+        seed_parallel._shared_fold_worker_count()
+
+
+def test_shared_fold_workers_require_fold_gpu_assignment(monkeypatch):
+    monkeypatch.delenv(seed_parallel.ENV_FOLD_GPUS, raising=False)
+    monkeypatch.setenv(seed_parallel.ENV_SHARED_FOLD_WORKERS, "3")
+
+    with pytest.raises(ValueError, match=seed_parallel.ENV_FOLD_GPUS):
+        seed_parallel._shared_fold_worker_count()
 
 
 def test_without_env_runs_sequentially_with_per_seed_stages(monkeypatch):
@@ -185,3 +216,23 @@ def test_parallel_execution_matches_sequential_and_forwards_folds(monkeypatch, t
     )
     assert len(recovered_finalizes) == len(SEEDS) * N_FOLDS
     assert all(event["outcome"] == "reused" for event in recovered_finalizes)
+
+
+def test_shared_fold_seed_execution_matches_sequential(monkeypatch):
+    cfg = experiment_config("logistic_onehot", {"onehot_max_card": 10})
+    plan, train, test = prepared_inputs(cfg)
+
+    monkeypatch.delenv(seed_parallel.ENV_GPUS, raising=False)
+    monkeypatch.delenv(seed_parallel.ENV_SHARED_FOLD_WORKERS, raising=False)
+    sequential = seed_parallel.run_seeds(cfg, plan, train, test)
+
+    monkeypatch.setenv(seed_parallel.ENV_FOLD_GPUS, "0,1,2")
+    monkeypatch.setenv(seed_parallel.ENV_SHARED_FOLD_WORKERS, "3")
+    parallel = seed_parallel.run_seeds(cfg, plan, train, test)
+
+    assert len(parallel) == len(sequential) == len(SEEDS)
+    for seq, par in zip(sequential, parallel):
+        pd.testing.assert_frame_equal(seq.oof, par.oof, check_exact=True)
+        pd.testing.assert_frame_equal(seq.test_pred, par.test_pred, check_exact=True)
+        pd.testing.assert_frame_equal(seq.importance, par.importance, check_exact=True)
+        assert seq.fold_aucs == par.fold_aucs

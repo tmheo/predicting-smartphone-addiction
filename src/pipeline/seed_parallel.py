@@ -1,8 +1,10 @@
 """시드 반복 실행. 순차(기본)와 GPU별 프로세스 병렬을 같은 계약으로 제공한다. (#99)
 
 Kaggle T4 x2처럼 GPU가 여럿일 때 PIPELINE_SEED_GPUS(예: "0,1")를 주면 시드
-단위로 워커 프로세스를 띄워 GPU를 나눠 쓴다. 환경 변수가 없거나 시드가
-하나면 기존 순차 경로 그대로다.
+단위로 워커 프로세스를 띄워 GPU를 나눠 쓴다. fold 안 초기화 구성원이 이미
+여러 GPU를 쓰는 모델은 PIPELINE_SHARED_FOLD_SEED_WORKERS(예: "3")를 주면
+각 시드 워커가 같은 GPU 집합을 공유한다. 환경 변수가 없거나 시드가 하나면
+기존 순차 경로 그대로다.
 
 재현성: 각 adapter가 fold 학습 시작 때 자기 시드로 전역 RNG를 다시 심으므로
 시드 간 실행 순서로 상태가 흐르지 않고, 같은 GPU 모델이면 병렬 결과가 순차
@@ -33,6 +35,8 @@ from .plan import FeaturePlan
 from .recovery import FoldRecovery
 
 ENV_GPUS = "PIPELINE_SEED_GPUS"
+ENV_SHARED_FOLD_WORKERS = "PIPELINE_SHARED_FOLD_SEED_WORKERS"
+ENV_FOLD_GPUS = "PIPELINE_FOLD_GPUS"
 
 
 def run_seeds(
@@ -45,12 +49,59 @@ def run_seeds(
 ) -> list[cv.CVResult]:
     """cfg.seeds 전체를 실행해 시드 순서대로 CVResult를 돌려준다."""
     gpus = [g.strip() for g in os.environ.get(ENV_GPUS, "").split(",") if g.strip()]
-    if len(gpus) < 2 or len(cfg.seeds) < 2:
+    shared_workers = _shared_fold_worker_count()
+    if gpus and shared_workers:
+        raise ValueError(
+            f"{ENV_GPUS}와 {ENV_SHARED_FOLD_WORKERS}를 함께 설정할 수 없다."
+        )
+    if len(cfg.seeds) < 2:
         return [
             cv.run_cv(cfg, plan, train, test, seed, recorder=recorder, recovery=recovery)
             for seed in cfg.seeds
         ]
-    return _run_parallel(cfg, plan, train, test, recorder, recovery, gpus)
+    if shared_workers:
+        return _run_parallel(
+            cfg,
+            plan,
+            train,
+            test,
+            recorder,
+            recovery,
+            worker_count=min(shared_workers, len(cfg.seeds)),
+            gpus=None,
+        )
+    if len(gpus) >= 2:
+        return _run_parallel(
+            cfg,
+            plan,
+            train,
+            test,
+            recorder,
+            recovery,
+            worker_count=min(len(gpus), len(cfg.seeds)),
+            gpus=gpus,
+        )
+    return [
+        cv.run_cv(cfg, plan, train, test, seed, recorder=recorder, recovery=recovery)
+        for seed in cfg.seeds
+    ]
+
+
+def _shared_fold_worker_count() -> int:
+    raw = os.environ.get(ENV_SHARED_FOLD_WORKERS, "").strip()
+    if not raw:
+        return 0
+    if not os.environ.get(ENV_FOLD_GPUS, "").strip():
+        raise ValueError(
+            f"{ENV_SHARED_FOLD_WORKERS}에는 {ENV_FOLD_GPUS}가 함께 필요하다."
+        )
+    try:
+        workers = int(raw)
+    except ValueError as exc:
+        raise ValueError(f"{ENV_SHARED_FOLD_WORKERS}는 2 이상의 정수여야 한다.") from exc
+    if workers < 2:
+        raise ValueError(f"{ENV_SHARED_FOLD_WORKERS}는 2 이상의 정수여야 한다.")
+    return workers
 
 
 class _QueueRecorder:
@@ -79,6 +130,11 @@ class _QueueRecorder:
 def _pin_gpu(gpu_queue, xgb_n_jobs: int) -> None:
     """워커 시작 직후 GPU 하나와 XGBoost 전용 CPU 몫을 배정받는다."""
     os.environ["CUDA_VISIBLE_DEVICES"] = gpu_queue.get()
+    os.environ[XGB_N_JOBS_ENV] = str(xgb_n_jobs)
+
+
+def _share_fold_gpus(xgb_n_jobs: int) -> None:
+    """워커마다 전체 fold GPU 집합을 보존하고 CPU 전처리 몫만 나눈다."""
     os.environ[XGB_N_JOBS_ENV] = str(xgb_n_jobs)
 
 
@@ -111,18 +167,27 @@ def _forward_events(events, recorder: cv.RunRecorder, done: threading.Event) -> 
 
 
 def _run_parallel(
-    cfg, plan, train, test, recorder, recovery: FoldRecovery | None, gpus: list[str]
+    cfg,
+    plan,
+    train,
+    test,
+    recorder,
+    recovery: FoldRecovery | None,
+    *,
+    worker_count: int,
+    gpus: list[str] | None,
 ) -> list[cv.CVResult]:
     if recorder is not None:
         recorder.stage("training")
     # fork는 부모의 CUDA·MLflow 상태를 물려받으므로 spawn으로 깨끗하게 시작한다.
     ctx = get_context("spawn")
-    worker_count = min(len(gpus), len(cfg.seeds))
     xgb_n_jobs = threads_per_worker(worker_count)
     with ctx.Manager() as manager:
-        gpu_queue = manager.Queue()
-        for gpu in gpus:
-            gpu_queue.put(gpu)
+        gpu_queue = None
+        if gpus is not None:
+            gpu_queue = manager.Queue()
+            for gpu in gpus[:worker_count]:
+                gpu_queue.put(gpu)
         events = manager.Queue()
         done = threading.Event()
         forwarder = None
@@ -135,8 +200,10 @@ def _run_parallel(
             with ProcessPoolExecutor(
                 max_workers=worker_count,
                 mp_context=ctx,
-                initializer=_pin_gpu,
-                initargs=(gpu_queue, xgb_n_jobs),
+                initializer=_pin_gpu if gpu_queue is not None else _share_fold_gpus,
+                initargs=(gpu_queue, xgb_n_jobs)
+                if gpu_queue is not None
+                else (xgb_n_jobs,),
             ) as pool:
                 futures = [
                     pool.submit(_run_seed, cfg, plan, train, test, seed, events, recovery)

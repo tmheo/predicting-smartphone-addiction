@@ -242,6 +242,7 @@ def runtime_metadata(cfg: Any, run_id: str) -> dict[str, object]:
     """실행 시작 시점에 비밀 없이 고정할 수 있는 장비와 계측기 정보."""
     visible = os.environ.get("CUDA_VISIBLE_DEVICES")
     seed_gpus = os.environ.get("PIPELINE_SEED_GPUS")
+    fold_gpus = os.environ.get("PIPELINE_FOLD_GPUS")
     return {
         "run_id": run_id,
         "experiment": cfg.name,
@@ -255,6 +256,10 @@ def runtime_metadata(cfg: Any, run_id: str) -> dict[str, object]:
         "cpu_model": _cpu_model(),
         "cuda_visible_devices": visible,
         "seed_gpu_assignment": seed_gpus,
+        "fold_gpu_assignment": fold_gpus,
+        "shared_fold_seed_workers": os.environ.get(
+            "PIPELINE_SHARED_FOLD_SEED_WORKERS"
+        ),
         "remote_job_id": os.environ.get("REMOTE_RUN_JOB_ID"),
         "remote_provider": os.environ.get("REMOTE_RUN_PROVIDER"),
         "sample_interval_seconds": SAMPLE_INTERVAL_SECONDS,
