@@ -392,7 +392,7 @@ def test_interrupted_run_reuses_completed_fold_and_matches_uninterrupted_mlflow(
     # 재사용한 fold 0의 관측 학습 길이 근거가 새로 학습한 실행과 같아야 한다. (#372)
     reused_evidence = resumed.model_training_diagnostics[0]["training_length_evidence"]
     assert reused_evidence["model_family"] == "recovery_fake"
-    assert reused_evidence["converter"] == "count_as_is"
+    assert reused_evidence["converter"] == "one_based_count"
     assert reused_evidence["observations"] == [
         {
             "seed": SEED,

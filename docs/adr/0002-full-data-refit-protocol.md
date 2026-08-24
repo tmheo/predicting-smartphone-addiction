@@ -103,23 +103,40 @@ exp132의 시드별 바깥쪽 분할 최적 학습 회차 중앙값 `42`, `57`, 
 
 이슈 #372에서 아홉 반복형 계열의 연결부가 아래 선언으로만 원시 근거를 낸다.
 
-| 모델 계열 | 원시 필드 | 원시 의미 | 변환기 |
-| --- | --- | --- | --- |
-| `lightgbm` | `best_iteration_` | `one_based_count` | `count_as_is` |
-| `xgboost` | `best_iteration` | `zero_based_position` | `position_plus_one` |
-| `catboost` | `get_best_iteration()` | `zero_based_position` | `position_plus_one` |
-| `lookup_transformer` | `best_epoch` | `zero_based_position` | `position_plus_one` |
-| `contextualized_spline_transformer` | `best_epoch` | `one_based_count` | `count_as_is` |
-| `scalar_token_transformer` | `best_epoch` | `one_based_count` | `count_as_is` |
-| `tab_cnn` | `best_epoch` | `one_based_count` | `count_as_is` |
-| `tabm` | `selected_epoch_count` | `one_based_count` | `count_as_is` |
-| `realmlp` | `fixed_epochs` | `fixed_count` | `fixed_count_as_is` |
+| 모델 계열 | 원시 필드 | 원시 의미 |
+| --- | --- | --- |
+| `lightgbm` | `best_iteration_` | `one_based_count` |
+| `xgboost` | `best_iteration` | `zero_based_position` |
+| `catboost` | `get_best_iteration()` | `zero_based_position` |
+| `lookup_transformer` | `best_epoch` | `zero_based_position` |
+| `contextualized_spline_transformer` | `best_epoch` | `one_based_count` |
+| `scalar_token_transformer` | `best_epoch` | `one_based_count` |
+| `tab_cnn` | `best_epoch` | `one_based_count` |
+| `tabm` | `selected_epoch_count` | `one_based_count` |
+| `realmlp` | `fixed_epochs` | `fixed_count` |
+
+변환기 식별자는 원시 의미 문자열 그대로다.
+원시 의미 하나에 변환기 하나가 대응하므로 눈금을 둘로 나누지 않는다.
+장부의 `refit_plan.MODEL_FAMILY_CONVERTERS`가 같은 눈금으로 이 선언을 다시 맞춰 본다.
 
 연결부는 원시 값과 내부 구성원 좌표까지만 알고, 시드와 바깥쪽 분할 좌표는 fold 실행부가 채운다.
 확정한 근거는 `model_training_diagnostics.json`의 fold 항목과 같은 fold의 복구 지점에 `training_length_evidence`로 남는다.
 복구 지점을 다시 쓴 실행은 새로 학습한 실행과 같은 근거를 보존한다.
 기존 모델별 진단은 그대로 두되, 재학습 장부가 소비할 원시 선택값은 이 표준 근거에서만 읽는다.
 `logistic_onehot`과 `tabpfn3`는 이 계약을 구현하지 않으므로 없는 관측이 만들어지지 않는다.
+
+### 장부의 문법과 관문
+
+이슈 #373에서 장부의 문법과 관문을 `pipeline.refit_plan`이 소유하게 했다.
+`RefitPlan.load()`는 파일 밖의 무엇도 읽지 않고 문법만 보며, 알 수 없는 필드와 빠진 필드를 그 자리에서 거부한다.
+`validate_for_refit()`는 실행 저장소에서 근거 산출물을 읽어 계보를 맞춰 보고, 원시 값을 다시 변환하고, 재학습 예산을 다시 계산해 저장값과 정확히 같을 때만 실행 가능한 계획을 돌려준다.
+파생 재학습 예산을 노출하는 자료형은 그 반환형 하나뿐이므로, 검증을 건너뛴 계획으로는 전체 자료 재학습을 시작할 수 없다.
+실행 저장소의 산출물은 `RunStore` 계약으로만 읽고 MLflow 내부 경로를 직접 열지 않는다.
+
+구성원마다 `lineage`, `training_length_evidence`, `refit_budget_derivation` 세 묶음을 보존한다.
+반복 수가 없는 구성원은 `not_applicable` 상태와 빈 예산만 허용하고, 고정 일정 계열도 `fixed_count` 근거를 같은 계산에 통과시킨다.
+손으로 바꾸는 예산과 예외 필드는 문법에 두지 않는다.
+현행 `artifacts/full-refit-plan.yaml`은 아직 이전 문법이며, 32개 구성원의 근거 자료 입력과 실행 명령 연결은 후속 이슈에서 수행한다.
 
 ### 위 이력 숫자와의 관계
 

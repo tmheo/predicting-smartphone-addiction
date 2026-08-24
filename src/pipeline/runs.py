@@ -8,6 +8,9 @@ interface 규약:
 - facts_of는 기록 원형(params/metrics/tags)을 그대로 돌려준다.
   metric 이름 규약(auc_oof_seed_* 등)의 의미 해석은 판정 쪽 소관이다.
 - oof_of는 id 인덱스의 예측 Series를 돌려준다. 모든 소비자가 원하는 최종 형태다.
+- artifact_bytes_of·artifact_sha256_of는 이름 있는 산출물 하나를 원본 바이트로 읽고
+  그 내용 해시를 돌려준다. 계보 검증처럼 형식을 모르는 산출물을 다루는 소비자가
+  MLflow 내부 경로를 직접 열지 않도록 이 계약 하나만 쓴다.
 - 실행 중 기록(생성·진행·종료)은 observe.RunObserver의 소관이고 이 module이 아니다.
 - 오류 모드: 없는 run은 RunNotFound, 있는 run의 없는 산출물은 ArtifactNotFound.
   둘 다 RunStoreError의 하위이므로 CLI는 RunStoreError 하나만 잡아 sys.exit로 번역한다.
@@ -15,6 +18,7 @@ interface 규약:
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
@@ -26,6 +30,11 @@ from .data import ID
 
 # 상대 경로 URI이므로 저장소 루트에서 실행하는 것이 전제다.
 TRACKING_URI = "sqlite:///mlflow.db"
+
+
+def sha256_of(payload: bytes) -> str:
+    """산출물 내용 해시. 계보 기록의 파일 해시(data.file_sha256)와 같은 규약이다."""
+    return hashlib.sha256(payload).hexdigest()
 
 
 class RunStoreError(Exception):
@@ -64,6 +73,14 @@ class RunStore(Protocol):
 
     def config_of(self, run_id: str) -> dict:
         """실행에 남긴 설정 YAML의 파싱본."""
+        ...
+
+    def artifact_bytes_of(self, run_id: str, name: str) -> bytes:
+        """이름 있는 산출물 하나를 원본 바이트로 읽는다."""
+        ...
+
+    def artifact_sha256_of(self, run_id: str, name: str) -> str:
+        """이름 있는 산출물 하나의 내용 SHA-256."""
         ...
 
     def submission_path_of(self, run_id: str) -> Path: ...
@@ -135,6 +152,15 @@ class MlflowRunStore:
         with self._artifact(run_id, names[0]).open() as f:
             return yaml.safe_load(f)
 
+    def artifact_bytes_of(self, run_id: str, name: str) -> bytes:
+        path = self._artifact(run_id, name)
+        if not path.is_file():
+            raise ArtifactNotFound(f"run {run_id}의 산출물 {name}이 파일이 아니다.")
+        return path.read_bytes()
+
+    def artifact_sha256_of(self, run_id: str, name: str) -> str:
+        return sha256_of(self.artifact_bytes_of(run_id, name))
+
     def submission_path_of(self, run_id: str) -> Path:
         return self._artifact(run_id, "submission.csv")
 
@@ -162,6 +188,7 @@ class _StoredRun:
     importance: pd.DataFrame | None
     config: dict | None
     submission_path: Path | None
+    artifacts: dict[str, bytes]
 
 
 @dataclass
@@ -182,6 +209,7 @@ class InMemoryRunStore:
         importance: pd.DataFrame | None = None,
         config: dict | None = None,
         submission_path: Path | None = None,
+        artifacts: dict[str, bytes] | None = None,
     ) -> str:
         self._runs[run_id] = _StoredRun(
             run_name=run_name,
@@ -192,6 +220,7 @@ class InMemoryRunStore:
             importance=importance,
             config=config,
             submission_path=submission_path,
+            artifacts=dict(artifacts or {}),
         )
         return run_id
 
@@ -226,6 +255,12 @@ class InMemoryRunStore:
 
     def config_of(self, run_id: str) -> dict:
         return self._artifact(run_id, "설정 YAML", self._run(run_id).config)
+
+    def artifact_bytes_of(self, run_id: str, name: str) -> bytes:
+        return self._artifact(run_id, name, self._run(run_id).artifacts.get(name))
+
+    def artifact_sha256_of(self, run_id: str, name: str) -> str:
+        return sha256_of(self.artifact_bytes_of(run_id, name))
 
     def submission_path_of(self, run_id: str) -> Path:
         return self._artifact(run_id, "submission.csv", self._run(run_id).submission_path)

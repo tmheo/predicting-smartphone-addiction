@@ -304,10 +304,10 @@ LIGHTGBM = TrainingLengthContract("lightgbm", "best_iteration_", ONE_BASED_COUNT
 LOOKUP = TrainingLengthContract("lookup_transformer", "best_epoch", ZERO_BASED_POSITION)
 
 
-def test_converter_identifier_is_fixed_per_raw_meaning():
-    assert converter_identifier(ZERO_BASED_POSITION) == "position_plus_one"
-    assert converter_identifier(ONE_BASED_COUNT) == "count_as_is"
-    assert converter_identifier(FIXED_COUNT) == "fixed_count_as_is"
+def test_converter_identifier_is_the_raw_meaning_itself():
+    """원시 의미 하나에 변환기 하나라 식별자가 원시 의미와 같은 눈금이다."""
+    for raw_meaning in (ZERO_BASED_POSITION, ONE_BASED_COUNT, FIXED_COUNT):
+        assert converter_identifier(raw_meaning) == raw_meaning
 
 
 def test_unknown_raw_meaning_has_no_converter():
@@ -316,8 +316,8 @@ def test_unknown_raw_meaning_has_no_converter():
 
 
 def test_contract_declares_the_converter_its_raw_meaning_fixes():
-    assert LIGHTGBM.converter == "count_as_is"
-    assert LOOKUP.converter == "position_plus_one"
+    assert LIGHTGBM.converter == "one_based_count"
+    assert LOOKUP.converter == "zero_based_position"
 
 
 @pytest.mark.parametrize(
@@ -352,7 +352,7 @@ def test_observed_evidence_carries_every_field_the_ledger_needs():
 
     assert evidence.to_json() == {
         "model_family": "lookup_transformer",
-        "converter": "position_plus_one",
+        "converter": "zero_based_position",
         "raw_field": "best_epoch",
         "raw_meaning": ZERO_BASED_POSITION,
         "observations": [

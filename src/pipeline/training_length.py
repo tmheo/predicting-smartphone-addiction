@@ -198,23 +198,17 @@ def observe_training_length(
 
 # ---- 연결부가 fold 하나마다 선언하는 근거 (#372) ----
 
-# 변환기 식별자. 원시 의미 하나에 변환기 하나가 대응한다.
-# 장부 검증기는 계열이 선언한 변환기와 원시 의미가 맞는지를 이 대응으로 확인한다.
-CONVERTER_BY_RAW_MEANING = {
-    ZERO_BASED_POSITION: "position_plus_one",
-    ONE_BASED_COUNT: "count_as_is",
-    FIXED_COUNT: "fixed_count_as_is",
-}
-
-
 def converter_identifier(raw_meaning: str) -> str:
-    """원시 의미가 정한 변환기 식별자를 돌려준다."""
-    try:
-        return CONVERTER_BY_RAW_MEANING[raw_meaning]
-    except KeyError:
+    """계열이 선언한 변환기 식별자를 돌려준다.
+
+    원시 의미 하나에 변환기 하나가 대응하므로 식별자는 원시 의미 문자열 그대로다.
+    재학습 계획 장부(`refit_plan.MODEL_FAMILY_CONVERTERS`)도 같은 눈금으로 대조한다.
+    """
+    if raw_meaning not in RAW_MEANINGS:
         raise TrainingLengthError(
             f"알 수 없는 원시 의미다: {raw_meaning!r} (가능한 값: {list(RAW_MEANINGS)})"
-        ) from None
+        )
+    return raw_meaning
 
 
 @dataclass(frozen=True)

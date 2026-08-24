@@ -645,19 +645,15 @@ def test_lightgbm_adapter_adds_initial_score_back_to_predictions():
 
 # 이슈 372가 확정한 아홉 반복형 계열의 표. 코드가 이 표에서 벗어나면 여기서 걸린다.
 TRAINING_LENGTH_TABLE = {
-    "lightgbm": ("best_iteration_", ONE_BASED_COUNT, "count_as_is"),
-    "xgboost": ("best_iteration", ZERO_BASED_POSITION, "position_plus_one"),
-    "catboost": ("get_best_iteration()", ZERO_BASED_POSITION, "position_plus_one"),
-    "lookup_transformer": ("best_epoch", ZERO_BASED_POSITION, "position_plus_one"),
-    "contextualized_spline_transformer": (
-        "best_epoch",
-        ONE_BASED_COUNT,
-        "count_as_is",
-    ),
-    "scalar_token_transformer": ("best_epoch", ONE_BASED_COUNT, "count_as_is"),
-    "tab_cnn": ("best_epoch", ONE_BASED_COUNT, "count_as_is"),
-    "tabm": ("selected_epoch_count", ONE_BASED_COUNT, "count_as_is"),
-    "realmlp": ("fixed_epochs", FIXED_COUNT, "fixed_count_as_is"),
+    "lightgbm": ("best_iteration_", ONE_BASED_COUNT),
+    "xgboost": ("best_iteration", ZERO_BASED_POSITION),
+    "catboost": ("get_best_iteration()", ZERO_BASED_POSITION),
+    "lookup_transformer": ("best_epoch", ZERO_BASED_POSITION),
+    "contextualized_spline_transformer": ("best_epoch", ONE_BASED_COUNT),
+    "scalar_token_transformer": ("best_epoch", ONE_BASED_COUNT),
+    "tab_cnn": ("best_epoch", ONE_BASED_COUNT),
+    "tabm": ("selected_epoch_count", ONE_BASED_COUNT),
+    "realmlp": ("fixed_epochs", FIXED_COUNT),
 }
 
 # 반복 수가 없는 계열. 이 계열들은 관측을 지어내지 않는다.
@@ -682,12 +678,27 @@ def declaration_from_stub(adapter, *selections: int):
 
 def test_training_length_contracts_match_the_confirmed_table():
     assert set(model_mod.TRAINING_LENGTH_CONTRACTS) == set(TRAINING_LENGTH_TABLE)
-    for kind, (raw_field, raw_meaning, converter) in TRAINING_LENGTH_TABLE.items():
+    for kind, (raw_field, raw_meaning) in TRAINING_LENGTH_TABLE.items():
         contract = model_mod.TRAINING_LENGTH_CONTRACTS[kind]
         assert contract.model_family == kind
         assert contract.raw_field == raw_field
         assert contract.raw_meaning == raw_meaning
-        assert contract.converter == converter
+        # 변환기 식별자는 원시 의미와 같은 눈금이다. 장부도 이 눈금으로 대조한다.
+        assert contract.converter == raw_meaning
+
+
+def test_connector_declaration_agrees_with_the_refit_ledger_table():
+    """연결부 선언과 장부 관문이 같은 계열 표를 두고 서로 대조할 수 있어야 한다.
+
+    두 표는 일부러 따로 적는다. 장부는 실행 코드에 기대지 않고 근거를 다시 맞춰 봐야
+    하기 때문이다. 대신 한쪽에만 계열이 늘거나 원시 의미가 갈리면 여기서 걸린다.
+    """
+    from pipeline.refit_plan import MODEL_FAMILY_CONVERTERS
+
+    assert MODEL_FAMILY_CONVERTERS == {
+        kind: contract.converter
+        for kind, contract in model_mod.TRAINING_LENGTH_CONTRACTS.items()
+    }
 
 
 def test_every_contracted_kind_is_a_registered_model_that_declares_evidence():
@@ -725,11 +736,11 @@ def test_each_family_converts_its_own_raw_selection(kind, selections, expected):
     assert checked == declaration
 
     evidence = observe_declaration(declaration, seed=SEED, outer_fold=2)
-    raw_field, raw_meaning, converter = TRAINING_LENGTH_TABLE[kind]
+    raw_field, raw_meaning = TRAINING_LENGTH_TABLE[kind]
     assert evidence.model_family == kind
     assert evidence.raw_field == raw_field
     assert evidence.raw_meaning == raw_meaning
-    assert evidence.converter == converter
+    assert evidence.converter == raw_meaning
     assert [
         (item.inner_member, item.raw_value, item.value) for item in evidence.observations
     ] == expected
@@ -836,7 +847,7 @@ def test_run_cv_records_evidence_with_seed_and_outer_fold_coordinates(monkeypatc
         assert item["details"] is None
         evidence = item["training_length_evidence"]
         assert evidence["model_family"] == "fake_iterative"
-        assert evidence["converter"] == "position_plus_one"
+        assert evidence["converter"] == "zero_based_position"
         assert evidence["observations"] == [
             {
                 "seed": SEED,
@@ -892,7 +903,7 @@ def test_tree_families_declare_evidence_from_their_own_raw_field(kind):
     adapter.fit(X.iloc[:180], y.iloc[:180], X.iloc[180:], y.iloc[180:])
 
     declaration = model_mod.collect_training_length_declaration(adapter, kind)
-    raw_field, raw_meaning, _ = TRAINING_LENGTH_TABLE[kind]
+    raw_field, raw_meaning = TRAINING_LENGTH_TABLE[kind]
     assert declaration.raw_field == raw_field
     assert declaration.raw_meaning == raw_meaning
     (selection,) = declaration.selections
