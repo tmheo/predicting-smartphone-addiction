@@ -5,6 +5,11 @@
 조립은 기존 5-fold 시험 예측과 전체 자료 예측을 모델 개수 기준 5:1로 섞고,
 계획이 지정한 등록 결합 방식을 전체 OOF에서 한 번 맞춘다.
 
+이 module의 `RefitPlan`은 현행 `artifacts/full-refit-plan.yaml`(문법 판본 1)을 읽는
+실행 경로다. 원시 근거 계보와 예산 재계산을 소유하는 새 장부는 `refit_plan` module에
+있고(문법 판본 2, #373), 32개 구성원의 근거 자료를 그 문법으로 옮기는 후속 이슈에서
+이 자료형과 검증을 대체한다.
+
 사용법:
     uv run python -m pipeline.refit artifacts/full-refit-plan.yaml --member exp006_te_drop_gaming
     uv run python -m pipeline.refit artifacts/full-refit-plan.yaml --all
