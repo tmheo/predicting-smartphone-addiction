@@ -1,0 +1,170 @@
+schema_version: 1
+judgment_id: issue388-bulk-selection-3
+contract_version: candidate-pool-v1
+created_at: '2026-08-24'
+change:
+  action: admission
+  candidate:
+    run_id: 71efde515e8b4756a4dd976335f17ae0
+    config: exp151_issue387_cat_trial3
+    model_lineage_group: issue387-bulk-tree-linear
+  replaces_run_id: null
+selection:
+  kind: nested_selection
+  description: 이슈 388 첫 직렬 등록 뒤 갱신된 33개 풀에서 남은 6개 후보 전체를 입력 순서대로 다시 고정하고, 각 평가 범위에서
+    후보 포함 풀의 19개 기본 결합 방식 중 최고 nested OOF AUC가 가장 큰 후보 하나를 선택한다.
+  rule: 각 평가 범위에서 후보 포함 풀의 기본 결합 전략 19개 중 최고 nested OOF AUC가 가장 높은 후보를 고른다.
+  tie_break: 후보 run_id 입력 순서가 먼저이고 결합 전략 등록 순서가 그다음이다.
+  candidates:
+  - run_id: 6357cf0164824c5fb34680d1ffa27b28
+    config: exp149_issue387_cat_trial20
+    oof_sha256: 3c15e7632ef2da3a4ee1ebcf7fd64d7f6eed45852ab38507e64524111473c919
+  - run_id: 0a8125ef7e2443e7ae071425206b7387
+    config: exp150_issue387_cat_trial11
+    oof_sha256: ca92b5794ed9e54568ef197c47eda6fd9f2dc13603df50817fb2594e6581ce33
+  - run_id: 71efde515e8b4756a4dd976335f17ae0
+    config: exp151_issue387_cat_trial3
+    oof_sha256: 6d8db33efa46d8bddfcad4f1c2cc89f194c4eccd68d473399fa979c40f63d56a
+  - run_id: 9bb21834623b4eff8fee0e06d879efe0
+    config: exp152_issue387_cat_trial6
+    oof_sha256: 16f02d629d2ea2152cb7c866892f81245bf8daee353fae4dfa027c8f62b8dd7c
+  - run_id: 65c6d51fc35648bd9699a547ed54ef36
+    config: exp153_issue387_logreg_raw_l1
+    oof_sha256: da24ab6b5c22ed2bf4c07f0234dfaade905d7456357a6abeef47d9771354707a
+  - run_id: e139447d93ad4a169e68e28a6d9a2055
+    config: exp154_issue387_logreg_nn1_nn10_l1
+    oof_sha256: 68ee143e6f9eb692534ca6bbc214066c6594b6aaf8353b2fa84012d1f1319618
+frozen_input:
+  candidate_pool:
+    path: artifacts/pool.yaml
+    sha256: e430d32dc6d80b7feb34151ed93d431adc42dc9b61ca344368218768c30fc349
+    member_count: 33
+    members:
+    - config: exp006_te_drop_gaming
+      run_id: 4aaddd505ade428588cf83659f205cf6
+    - config: exp011_resid_pair
+      run_id: e21d19af37bb461db5dc1a59b66411a6
+    - config: exp022_orig_knn
+      run_id: 52e9c12bcfb94ee9912e4bb7f43e3f09
+    - config: exp023_orig_proxy_residual
+      run_id: 202b7d47c3bd4b8e8904fa5c005c7423
+    - config: exp025_constrained_impute
+      run_id: 9804689a5e3642e586abb972b522f3d4
+    - config: exp032_recon_orig_mean_top3
+      run_id: b1bd4b08386946c9a4e05b755dbd5f26
+    - config: exp035_lattice_te
+      run_id: c62a9ad334bf486cb46d738474ccd767
+    - config: exp058_logreg_onehot
+      run_id: e2b76edd9d204290810e39a7457c4c48
+    - config: exp059_lookup_transformer
+      run_id: b951fac51b6b44298f7fdb0b543caba6
+    - config: exp070_cat_exact_cats
+      run_id: 6238d8c58beb42ee8102209ded92516e
+    - config: exp067_tabpfn3
+      run_id: 85b09132aae543aab16e69dea5906a30
+    - config: exp081_lookup_fold_initialization_avg3
+      run_id: d55d1cd49c194eb8bf7b5128e548df81
+    - config: exp110_lgb_kitopl_no_te
+      run_id: ae829ae3d886402ab100a8e966c3131a
+    - config: exp111_xgb_depth8_no_te
+      run_id: 3cbc2ccce9eb46458d884006a33e516e
+    - config: exp071_cat_exact_no_te
+      run_id: 521b4924b2ef4ba1830724333b83deb2
+    - config: exp106_lookup_fixed24_train_test_preprocessing
+      run_id: 547e7bc90b9f4c448307d406f053629a
+    - config: exp117_ag25_gbm_r21
+      run_id: d107ea874ebe4dbe8094694141a162b6
+    - config: exp113_tab_cnn_m0
+      run_id: b47a4184249746cdb1d062aa98364437
+    - config: exp085_contextual_spline_m0
+      run_id: e84d97e875754af1b073b399db2a0616
+    - config: exp127_lookup_muon
+      run_id: 7124425b5b51421dbbeba597229554da
+    - config: exp027_recon_ce
+      run_id: e4e81bdce7df4a72bf250ef842fd8781
+    - config: exp048_lgb_orig_cdf_diff
+      run_id: 2b5fda6d3ea94ff886c5fe616376f0f0
+    - config: exp134_realmlp_muon
+      run_id: f72eeee10b1b4947af79228f888e7a81
+    - config: exp135_xgb_hpo_trial30
+      run_id: 119b9c4e44674d38a6f758b65a68593e
+    - config: exp131_lookup_bivariate_plr5
+      run_id: 54acd002d3c04ec3a74c09871e83da50
+    - config: exp136_realmlp_muon_recon_widths
+      run_id: bd2bd1154e6343f68b364714e2fedcc4
+    - config: exp137_tabm_recon_widths
+      run_id: e7682b186be14dea822d41d7d411bb98
+    - config: exp133_scalar_token_transformer_oof_te
+      run_id: f16dbc88860a41f39194da2f581f057d
+    - config: exp131_tab_cnn_oof_target_mean
+      run_id: ea78fe0dbe2442788580dec56cf7f3ad
+    - config: exp132_tab_cnn_epochs100
+      run_id: 09d17ca4091e45118d201ba7a321f956
+    - config: exp139_realmlp_reference_qnormal_train_test
+      run_id: 1af9442e67c14a96a5256251f23a1b9d
+    - config: exp140_realmlp_orig_cdf_diff
+      run_id: 984b0fd5277243ab95acff71688644a9
+    - config: exp144_issue387_xgb_trial6
+      run_id: 89e3913d74a1490792f19e283989116e
+  folds:
+    path: artifacts/folds.parquet
+    sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+  registered_combiners:
+    names:
+    - rank_mean
+    - performance_weighted_rank_mean
+    - logit_logistic
+    - rank_logistic
+    - ridge_logit_alpha_0p01
+    - ridge_logit_alpha_0p1
+    - ridge_logit
+    - ridge_logit_alpha_10
+    - ridge_logit_alpha_100
+    - rank_gauss_logistic
+    - rank_logit_logistic
+    - greedy_rank_mean
+    - xgb_rank_logit
+    - missing_segmented_rank_logit
+    - missing_interaction_rank_logit
+    - missing_4plus_rank_logit
+    - nnls_logit
+    - nnls_rank
+    - shrunk_rank_logit_logistic
+    names_sha256: fe9e1bdcf17acb70c24250f6f064ea66a15cc4ec2255d6684fa23ecfa9f2abbb
+nested_oof_comparison:
+  before:
+    strategy: shrunk_rank_logit_logistic
+    auc: 0.9697693513388927
+    strategy_role: full_oof_final_selection_reference
+    outer_fold_strategy:
+      '0': shrunk_rank_logit_logistic
+      '1': shrunk_rank_logit_logistic
+      '2': shrunk_rank_logit_logistic
+      '3': shrunk_rank_logit_logistic
+      '4': shrunk_rank_logit_logistic
+  after:
+    strategy: shrunk_rank_logit_logistic
+    auc: 0.969764221371996
+    strategy_role: full_oof_final_selection_reference
+    outer_fold_strategy:
+      '0': shrunk_rank_logit_logistic
+      '1': shrunk_rank_logit_logistic
+      '2': shrunk_rank_logit_logistic
+      '3': shrunk_rank_logit_logistic
+      '4': shrunk_rank_logit_logistic
+  delta: -5.12996689672196e-06
+  outer_fold_delta:
+    '0': -2.169809953711521e-06
+    '1': -2.6593872790248163e-05
+    '2': -8.603631377335219e-07
+    '3': -7.17011567930026e-06
+    '4': 1.1144492983006238e-05
+  outer_fold_wins: 1
+  boundary_contribution: false
+evidence:
+  path: run-logs/pool-judgments/issue388-bulk-selection-3/evidence.json
+  sha256: cb046b77cf268dafdd66347003d31743cc457a6d2baa5d4d9130ead8627f2c5b
+result:
+  state: rejected
+  decision: do_not_admit
+  reason: 전체 nested OOF AUC 차이가 0 이하라 양의 기여를 확인하지 못했다.

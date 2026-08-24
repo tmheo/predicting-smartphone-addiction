@@ -38,7 +38,7 @@ def test_pool_committed_ledger_roundtrips_bytes(tmp_path):
     assert saved.read_bytes() == committed.read_bytes()
 
 
-def test_pool_applies_decided_removals_then_exp124_replacement():
+def test_pool_applies_decided_removals_replacement_and_issue388_admission():
     baseline = yaml.safe_load(
         (REPO / "artifacts" / "pool-baseline-2026-08-21.yaml").read_text()
     )
@@ -59,16 +59,22 @@ def test_pool_applies_decided_removals_then_exp124_replacement():
             "984b0fd5277243ab95acff71688644a9",
         )
     )
+    expected.append(
+        (
+            "exp144_issue387_xgb_trial6",
+            "89e3913d74a1490792f19e283989116e",
+        )
+    )
     actual = [
         (member.config, member.run_id)
         for member in Pool.load(REPO / "artifacts" / "pool.yaml").members
     ]
 
-    assert len(actual) == 32
+    assert len(actual) == 33
     assert actual == expected
 
 
-def test_pool_reduction_judgment_matches_committed_32_member_result():
+def test_pool_reduction_judgment_matches_historical_32_member_result():
     judgment = yaml.safe_load(
         (
             REPO / "artifacts" / "judgments" / "issue346-pool-reduction.yaml"
@@ -87,7 +93,8 @@ def test_pool_reduction_judgment_matches_committed_32_member_result():
 
     assert judgment["contract_version"] == "candidate-pool-v1"
     assert judgment["frozen_input"]["candidate_pool"]["member_count"] == 35
-    assert expected == pool_configs
+    assert expected == pool_configs[:-1]
+    assert pool_configs[-1] == "exp144_issue387_xgb_trial6"
     assert judgment["final_result"]["member_count"] == 32
     assert judgment["final_result"]["full_refit_count_after"] == 94
     assert sum(

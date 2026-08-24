@@ -1,0 +1,165 @@
+schema_version: 1
+issue: 388
+generated_at: '2026-08-24'
+contract:
+  version: candidate-pool-v1
+  boundary_contribution_upper: 0.000027669802
+  registered_combiner_count: 19
+  registered_combiner_names_sha256: fe9e1bdcf17acb70c24250f6f064ea66a15cc4ec2255d6684fa23ecfa9f2abbb
+  selection_rule: 각 평가 범위에서 후보 포함 풀의 19개 기본 결합 방식 중 최고 nested OOF AUC가 가장 큰 후보 하나를 고른다.
+  admission_rule: 선택 절차 포함 AUC와 기준 풀 AUC의 차이가 엄격히 양수일 때만 한 후보를 등록한다.
+source:
+  issue387_results:
+    path: artifacts/issue387-bulk-candidate-results.yaml
+    sha256: c8a01c9c5023b1b0457c1f1bf5d433eb8035bd49d1e6234639ee315e1e1dfcbf
+  initial_pool:
+    path: artifacts/pool.yaml
+    sha256: 8221c5f334ff19482a6e86c205fe2272b3c3a4bf0c0393e4123899cf43776423
+    member_count: 32
+  folds:
+    path: artifacts/folds.parquet
+    sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+indeterminate_attempt:
+  judgment_id: issue388-bulk-selection-1
+  record:
+    path: artifacts/judgments/issue388-bulk-selection-1.yaml
+    sha256: 42f3596aa63243ca5455f560172a79ebb2799f176a4dd64948ebc2a2ea0a596c
+  evidence:
+    path: run-logs/pool-judgments/issue388-bulk-selection-1/evidence.json
+    sha256: 7720e17a9793726a6b5ae15855e702f519b6586c269c04bd9325d511f74a87a6
+  reason: 심볼릭 링크로 연결한 학습 자료가 저장소 밖으로 해석돼 계산 전에 입력 경로 검사가 거부했다.
+  disposition: 같은 바이트의 학습 자료를 현재 작업 트리에 두고 새 변경 불가 판정 ID로 다시 실행했다.
+rounds:
+  - round: 1
+    judgment_id: issue388-bulk-selection-2
+    input_pool:
+      member_count: 32
+      sha256: 8221c5f334ff19482a6e86c205fe2272b3c3a4bf0c0393e4123899cf43776423
+    candidate_count: 7
+    full_oof_selected_candidate: exp144_issue387_xgb_trial6
+    outer_fold_selected_candidates:
+      '0': exp144_issue387_xgb_trial6
+      '1': exp144_issue387_xgb_trial6
+      '2': exp144_issue387_xgb_trial6
+      '3': exp144_issue387_xgb_trial6
+      '4': exp144_issue387_xgb_trial6
+    comparison:
+      before_strategy: shrunk_rank_logit_logistic
+      after_strategy: shrunk_rank_logit_logistic
+      before_auc: 0.9697423947951008
+      after_auc: 0.9697693513388927
+      delta: 0.000026956543791922805
+      outer_fold_delta:
+        '0': 0.00000971796782589518
+        '1': 0.00003283207640714103
+        '2': 0.000020927806854365016
+        '3': 0.000040824497285263384
+        '4': 0.000030480406509547642
+      outer_fold_wins: 5
+      boundary_contribution: true
+    record:
+      path: artifacts/judgments/issue388-bulk-selection-2.yaml
+      sha256: 276218483c8ed9ab594a6e56210fe024984d8043e66516d07df8744f78627bbc
+    evidence:
+      path: run-logs/pool-judgments/issue388-bulk-selection-2/evidence.json
+      sha256: d805ca397f0e95838f16385e8bb2b7ff89da5e700694c0547c8513e7e84e7b0a
+    input_snapshot:
+      path: run-logs/pool-judgments/issue388-bulk-selection-2/inputs.parquet
+      sha256: 5f35736bcb919ad2b47c02fe496114a7f75172743eb4f44bb9474884358aad88
+    decision: register_exp144
+  - round: 2
+    judgment_id: issue388-bulk-selection-3
+    input_pool:
+      member_count: 33
+      sha256: e430d32dc6d80b7feb34151ed93d431adc42dc9b61ca344368218768c30fc349
+    candidate_count: 6
+    full_oof_selected_candidate: exp151_issue387_cat_trial3
+    outer_fold_selected_candidates:
+      '0': exp151_issue387_cat_trial3
+      '1': exp153_issue387_logreg_raw_l1
+      '2': exp154_issue387_logreg_nn1_nn10_l1
+      '3': exp154_issue387_logreg_nn1_nn10_l1
+      '4': exp154_issue387_logreg_nn1_nn10_l1
+    comparison:
+      before_strategy: shrunk_rank_logit_logistic
+      after_strategy: shrunk_rank_logit_logistic
+      before_auc: 0.9697693513388927
+      after_auc: 0.969764221371996
+      delta: -0.00000512996689672196
+      outer_fold_delta:
+        '0': -0.000002169809953711521
+        '1': -0.000026593872790248163
+        '2': -0.0000008603631377335219
+        '3': -0.00000717011567930026
+        '4': 0.000011144492983006238
+      outer_fold_wins: 1
+      boundary_contribution: false
+    record:
+      path: artifacts/judgments/issue388-bulk-selection-3.yaml
+      sha256: d8fcbf29ed77e77515b7a799927e3bf3cf75c4f698d4cb15e6a8b42c46ecc944
+    evidence:
+      path: run-logs/pool-judgments/issue388-bulk-selection-3/evidence.json
+      sha256: cb046b77cf268dafdd66347003d31743cc457a6d2baa5d4d9130ead8627f2c5b
+    input_snapshot:
+      path: run-logs/pool-judgments/issue388-bulk-selection-3/inputs.parquet
+      sha256: 9033ad75f9a516826e0b874edf7b087c382c293e86638baf3b1f73f5c3ecc978
+    decision: stop_without_further_registration
+candidates:
+  - name: exp144_issue387_xgb_trial6
+    run_id: 89e3913d74a1490792f19e283989116e
+    final_status: registered
+    judgment_id: issue388-bulk-selection-2
+    selection_round: 1
+    full_oof_best_auc: 0.9697693513388927
+  - name: exp149_issue387_cat_trial20
+    run_id: 6357cf0164824c5fb34680d1ffa27b28
+    final_status: not_registered_after_procedure_rejection
+    judgment_id: issue388-bulk-selection-3
+    selection_round: 2
+    full_oof_best_auc: 0.9697617337579582
+  - name: exp150_issue387_cat_trial11
+    run_id: 0a8125ef7e2443e7ae071425206b7387
+    final_status: not_registered_after_procedure_rejection
+    judgment_id: issue388-bulk-selection-3
+    selection_round: 2
+    full_oof_best_auc: 0.9697702052085495
+  - name: exp151_issue387_cat_trial3
+    run_id: 71efde515e8b4756a4dd976335f17ae0
+    final_status: not_registered_after_procedure_rejection
+    judgment_id: issue388-bulk-selection-3
+    selection_round: 2
+    full_oof_best_auc: 0.969772300784423
+  - name: exp152_issue387_cat_trial6
+    run_id: 9bb21834623b4eff8fee0e06d879efe0
+    final_status: not_registered_after_procedure_rejection
+    judgment_id: issue388-bulk-selection-3
+    selection_round: 2
+    full_oof_best_auc: 0.9697669329802958
+  - name: exp153_issue387_logreg_raw_l1
+    run_id: 65c6d51fc35648bd9699a547ed54ef36
+    final_status: not_registered_after_procedure_rejection
+    judgment_id: issue388-bulk-selection-3
+    selection_round: 2
+    full_oof_best_auc: 0.969759725157338
+  - name: exp154_issue387_logreg_nn1_nn10_l1
+    run_id: e139447d93ad4a169e68e28a6d9a2055
+    final_status: not_registered_after_procedure_rejection
+    judgment_id: issue388-bulk-selection-3
+    selection_round: 2
+    full_oof_best_auc: 0.9697670463424406
+final:
+  registered_count: 1
+  registered_candidates:
+    - exp144_issue387_xgb_trial6
+  final_pool:
+    path: artifacts/pool.yaml
+    member_count: 33
+    sha256: e430d32dc6d80b7feb34151ed93d431adc42dc9b61ca344368218768c30fc349
+  full_refit_plan:
+    path: artifacts/full-refit-plan.yaml
+    member_count: 33
+    sha256: 84deef4f6e7040f9daac4a8eb2e45152029c2d5462e2b29ce039d12a63b726ae
+    exp144_budget_by_seed:
+      42: 12500
+      43: 12500
+      44: 12500

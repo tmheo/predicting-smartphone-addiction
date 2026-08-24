@@ -181,6 +181,7 @@ RECOVERY: dict[str, MemberRecovery] = {
         "realmlp", "structured", "single"
     ),
     "exp140_realmlp_orig_cdf_diff": MemberRecovery("realmlp", "structured", "single"),
+    "exp144_issue387_xgb_trial6": MemberRecovery("xgboost", "structured", "single"),
 }
 
 # 문법 판본 1이 쓰던 재학습 설정 경로. 원 실행 설정과 다른 구성원이 있어 그대로 옮긴다.
