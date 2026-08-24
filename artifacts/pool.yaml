@@ -502,3 +502,23 @@ members:
     ensemble_auc_with: 0.9691692063128639
     ensemble_auc_without: 0.9691545158271768
     contribution: 1.469048568703002e-05
+- run_id: 89e3913d74a1490792f19e283989116e
+  config: exp144_issue387_xgb_trial6
+  oof_auc: 0.966584486190345
+  seeds: 42,43,44
+  entered_at: '2026-08-24'
+  reason: candidate-pool-v1 선택 절차 대조 +0.000026956544, 바깥 분할 5/5 양수인 경계 기여. 이슈 388.
+  evidence:
+    champion_run_id: 54acd002d3c04ec3a74c09871e83da50
+    champion_oof_auc: 0.9693397329635609
+    floor_margin: 0.007244753226784084
+    nearest_run_id: 119b9c4e44674d38a6f758b65a68593e
+    nearest_spearman: 0.9961551572341527
+    ensemble_auc_with: 0.9692031718340889
+    ensemble_auc_without: 0.9692390829521562
+    contribution: -3.591111806733327e-05
+  judgment:
+    judgment_id: issue388-bulk-selection-2
+    contract_version: candidate-pool-v1
+    path: artifacts/judgments/issue388-bulk-selection-2.yaml
+    sha256: 276218483c8ed9ab594a6e56210fe024984d8043e66516d07df8744f78627bbc
