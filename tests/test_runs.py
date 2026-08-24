@@ -5,6 +5,8 @@
 - facts_of는 기록 원형(params/metrics/tags)을 그대로 돌려준다.
 - oof_of는 id 인덱스의 예측 Series다.
 - annotate는 뒤늦은 태그·지표를 남기고, facts_of가 이를 반영한다.
+- artifact_bytes_of는 이름 있는 산출물을 원본 바이트로 읽고, artifact_sha256_of는
+  그 내용의 SHA-256을 돌려준다.
 - 없는 run은 RunNotFound, 있는 run의 없는 산출물은 ArtifactNotFound.
 """
 
@@ -21,6 +23,7 @@ from pipeline.runs import (
     InMemoryRunStore,
     MlflowRunStore,
     RunNotFound,
+    sha256_of,
 )
 
 RUN_NAME = "exp_test"
@@ -28,6 +31,10 @@ PARAMS = {"experiment": "exp_test", "seeds": "42"}
 METRICS = {"auc_oof": 0.9}
 TAGS = {"git_commit": "deadbeef", "git_dirty": "False", "sha256.folds": "abc123"}
 CONFIG = {"name": "exp_test", "model": {"kind": "lightgbm", "params": {}, "fit": {}}}
+# 형식을 모르는 산출물의 대표. 계보 검증은 이것을 바이트와 해시로만 다룬다.
+DIAGNOSTICS_NAME = "model_training_diagnostics.json"
+DIAGNOSTICS_BYTES = b'[{"seed": 42, "outer_fold": 0, "raw_value": 7805}]\n'
+
 
 
 def make_oof() -> pd.DataFrame:
@@ -54,6 +61,7 @@ def make_inmemory(tmp_path: Path):
         importance=make_importance(),
         config=CONFIG,
         submission_path=submission,
+        artifacts={DIAGNOSTICS_NAME: DIAGNOSTICS_BYTES},
     )
     empty = store.add_run("run_empty", run_name=RUN_NAME, params=PARAMS)
     return store, full, empty
@@ -83,11 +91,13 @@ def make_mlflow(tmp_path: Path):
             )
             (tmp_path / "exp_test.yaml").write_text(yaml.safe_dump(CONFIG))
             (tmp_path / "submission.csv").write_text("id,addicted_label\n1,0.5\n")
+            (tmp_path / DIAGNOSTICS_NAME).write_bytes(DIAGNOSTICS_BYTES)
             for name in (
                 "oof.parquet",
                 "feature_importance.parquet",
                 "exp_test.yaml",
                 "submission.csv",
+                DIAGNOSTICS_NAME,
             ):
                 client.log_artifact(run_id, str(tmp_path / name))
         return run_id
@@ -146,6 +156,25 @@ def test_annotate_is_visible_through_facts_of(stores):
     assert meta.metrics["public_auc"] == 0.95
 
 
+def test_artifact_bytes_of_returns_stored_content(stores):
+    store, full, _ = stores
+    assert store.artifact_bytes_of(full, DIAGNOSTICS_NAME) == DIAGNOSTICS_BYTES
+
+
+def test_artifact_sha256_of_hashes_stored_content(stores):
+    store, full, _ = stores
+    assert store.artifact_sha256_of(full, DIAGNOSTICS_NAME) == sha256_of(
+        DIAGNOSTICS_BYTES
+    )
+
+
+def test_unknown_artifact_name_raises_artifact_not_found(stores):
+    store, full, _ = stores
+    for op in (store.artifact_bytes_of, store.artifact_sha256_of):
+        with pytest.raises(ArtifactNotFound):
+            op(full, "no_such_artifact.json")
+
+
 def test_unknown_run_raises_run_not_found(stores):
     store, _, _ = stores
     for op in (
@@ -157,6 +186,9 @@ def test_unknown_run_raises_run_not_found(stores):
     ):
         with pytest.raises(RunNotFound):
             op("no_such_run")
+    for op in (store.artifact_bytes_of, store.artifact_sha256_of):
+        with pytest.raises(RunNotFound):
+            op("no_such_run", DIAGNOSTICS_NAME)
     with pytest.raises(RunNotFound):
         store.annotate("no_such_run", tags={"x": "1"})
 
@@ -172,3 +204,6 @@ def test_missing_artifact_raises_artifact_not_found(stores):
     ):
         with pytest.raises(ArtifactNotFound):
             op(empty)
+    for op in (store.artifact_bytes_of, store.artifact_sha256_of):
+        with pytest.raises(ArtifactNotFound):
+            op(empty, DIAGNOSTICS_NAME)
