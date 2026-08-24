@@ -7,6 +7,7 @@
 
 `PIPELINE_FOLD_GPUS`가 가리키는 장치마다 초기화 시드가 다른 구성원 하나를 올려
 소형 자료로 짧게 학습하고, 구성원이 실제로 서로 다른 장치에 배정됐는지 확인한다.
+초기화 시드 오프셋은 요청 장치 수에 맞춰 0부터 1000 간격으로 만든다.
 
 사용법:
     PIPELINE_FOLD_GPUS=0,1,2 python -m scripts.preflight_fold_gpus
@@ -41,7 +42,6 @@ PARAMS = {
     "ema_decay": 0.7,
     "patience": 2,
     "perm_repeats": 1,
-    "fold_seed_offsets": [0, 1000, 2000],
 }
 
 
@@ -73,7 +73,9 @@ def main() -> None:
         sys.exit(f"장치 {device_count}개로는 PIPELINE_FOLD_GPUS={gpus}를 만족할 수 없다.")
 
     X, y = _data()
-    cfg = ModelConfig(kind="lookup_transformer", params=dict(PARAMS), fit={})
+    offsets = [index * 1000 for index in range(len(requested))]
+    params = dict(PARAMS, fold_seed_offsets=offsets)
+    cfg = ModelConfig(kind="lookup_transformer", params=params, fit={})
     adapter = model_mod.create(cfg, seed=SEED)
     val_pred = adapter.fit(X.iloc[:72], y.iloc[:72], X.iloc[72:], y.iloc[72:])
     test_pred = adapter.predict(X.iloc[:12])
@@ -95,6 +97,7 @@ def main() -> None:
                 "cuda": torch.version.cuda,
                 "device_count": device_count,
                 "requested": requested,
+                "fold_seed_offsets": offsets,
                 "member_devices": devices,
             }
         )

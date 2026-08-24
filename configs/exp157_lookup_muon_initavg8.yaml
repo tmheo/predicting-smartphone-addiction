@@ -1,0 +1,76 @@
+# 이슈 #389: 후보 풀 상위 구성원 exp127_lookup_muon의 fold 내 초기화 시드를
+# 3개에서 8개로 늘린 확정 재검증판이다.
+# fold_seed_offsets만 바꾸고 피처 계획, 모델, 최적화와 학습 조건은 그대로 둔다.
+name: exp157_lookup_muon_initavg8
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+    - kind: xgb_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      emit:
+        [
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          weekend_screen_time,
+        ]
+      compositions: [social_frac, work_frac, leisure_frac, resid_frac, week_total]
+      cat_cols: [gender, stress_level, academic_work_impact]
+
+model:
+  kind: lookup_transformer
+  params:
+    lookup_cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+    fold_seed_offsets: [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000]
+    optimizer: muon
+  fit: {}
