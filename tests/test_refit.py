@@ -12,72 +12,54 @@ from pipeline.config import DataConfig, ExperimentConfig, FeatureConfig, ModelCo
 from pipeline.refit import RefitMember, RefitPlan, mix_member_predictions
 
 
-def test_committed_refit_plan_matches_candidate_pool():
-    plan = RefitPlan.load(Path("artifacts/full-refit-plan.yaml"))
+def version1_document() -> dict:
+    """커밋된 문법 판본 2 장부를 판본 1 문법으로 되옮긴 시험용 장부.
+
+    커밋된 `artifacts/full-refit-plan.yaml`은 이슈 #374에서 문법 판본 2로 옮겼고,
+    그 장부의 내용 시험은 `tests/test_refit_plan.py`가 맡는다. 여기서는 아직 판본 1을
+    읽는 `pipeline.refit`의 로더만 시험하므로, 같은 구성원과 같은 예산을 판본 1 문법으로
+    되옮겨 쓴다. 두 문법이 같은 후보 풀을 가리키는지도 이 변환에서 함께 드러난다.
+    """
+    plan = yaml.safe_load(Path("artifacts/full-refit-plan.yaml").read_text())
+    members = []
+    for member in plan["members"]:
+        status = member["training_length_evidence"]["status"]
+        members.append(
+            {
+                "config": member["config"],
+                "config_path": member["config_path"],
+                "run_id": member["lineage"]["source_run_id"],
+                "budget_source": (
+                    "not_applicable" if status == "not_applicable" else "fold_median"
+                ),
+                "budgets": {
+                    seed["seed"]: seed["budget"]
+                    for seed in member["refit_budget_derivation"]["seeds"]
+                },
+            }
+        )
+    return {
+        "schema_version": 1,
+        "source_pool_sha256": plan["source_pool_sha256"],
+        "protocol": plan["protocol"],
+        "members": members,
+    }
+
+
+def test_version1_loader_still_reads_the_current_candidate_pool(tmp_path):
+    path = tmp_path / "version1.yaml"
+    path.write_text(yaml.safe_dump(version1_document(), allow_unicode=True, sort_keys=False))
+
+    plan = RefitPlan.load(path)
 
     assert len(plan.members) == 32
     assert sum(len(member.budgets) for member in plan.members) == 94
-    assert plan.combiner == "shrunk_rank_logit_logistic"
-    assert plan.cv_model_weight == 5
-    assert plan.full_model_weight == 1
-    ag25_gbm = plan.member("exp117_ag25_gbm_r21")
-    assert ag25_gbm.budgets == {42: 23719, 43: 22945, 44: 22746}
-    assert ag25_gbm.budget_source == "fold_median"
-    tab_cnn = plan.member("exp113_tab_cnn_m0")
-    assert tab_cnn.budgets == {42: 36, 43: 36, 44: 36}
-    assert tab_cnn.budget_source == "fold_median"
-    contextualized_spline = plan.member("exp085_contextual_spline_m0")
-    assert contextualized_spline.budgets == {42: 14, 43: 13, 44: 11}
-    assert contextualized_spline.budget_source == "fold_median"
-    tabm_widths = plan.member("exp137_tabm_recon_widths")
-    assert tabm_widths.budgets == {42: 18, 43: 16, 44: 16}
-    assert tabm_widths.budget_source == "fold_median"
-    realmlp = plan.member("exp140_realmlp_orig_cdf_diff")
-    assert realmlp.budgets == {42: 5, 43: 5, 44: 5}
-
-    realmlp_muon = plan.member("exp134_realmlp_muon")
-    assert realmlp_muon.budgets == {42: 5, 43: 5, 44: 5}
-    assert realmlp_muon.budget_source == "fold_median"
-    realmlp_muon_widths = plan.member("exp136_realmlp_muon_recon_widths")
-    assert realmlp_muon_widths.budgets == {42: 5, 43: 5, 44: 5}
-    assert realmlp_muon_widths.budget_source == "fold_median"
-    assert realmlp.budget_source == "fold_median"
-    xgb_hpo = plan.member("exp135_xgb_hpo_trial30")
-    assert xgb_hpo.budgets == {42: 9758, 43: 10393, 44: 10368}
-    assert xgb_hpo.budget_source == "fold_median"
-    constrained_impute = plan.member("exp025_constrained_impute")
-    assert constrained_impute.budgets == {42: 503, 43: 394, 44: 398}
-    assert constrained_impute.budget_source == "fold_median"
-    lookup_muon = plan.member("exp127_lookup_muon")
-    assert lookup_muon.budgets == {42: 11, 43: 14, 44: 14}
-    assert lookup_muon.budget_source == "fold_median"
-    recon_ce = plan.member("exp027_recon_ce")
-    assert recon_ce.budgets == {42: 514, 43: 474, 44: 464}
-    assert recon_ce.budget_source == "fold_median"
-    original_cdf_diff = plan.member("exp048_lgb_orig_cdf_diff")
-    assert original_cdf_diff.budgets == {42: 578, 43: 365, 44: 388}
-    assert original_cdf_diff.budget_source == "fold_median"
-    lookup_bivariate = plan.member("exp131_lookup_bivariate_plr5")
-    assert lookup_bivariate.budgets == {42: 14, 43: 14, 44: 14}
-    assert lookup_bivariate.budget_source == "fold_median"
-    scalar_token = plan.member("exp133_scalar_token_transformer_oof_te")
-    assert scalar_token.budgets == {42: 20, 43: 18, 44: 15}
-    assert scalar_token.budget_source == "fold_median"
-    tab_cnn_target_mean = plan.member("exp131_tab_cnn_oof_target_mean")
-    assert tab_cnn_target_mean.budgets == {42: 16, 43: 16, 44: 19}
-    assert tab_cnn_target_mean.budget_source == "fold_median"
-    tab_cnn_longer = plan.member("exp132_tab_cnn_epochs100")
-    assert tab_cnn_longer.budgets == {42: 53, 43: 71, 44: 89}
-    assert tab_cnn_longer.budget_source == "fold_median"
-    realmlp_reference_qnormal = plan.member(
-        "exp139_realmlp_reference_qnormal_train_test"
-    )
-    assert realmlp_reference_qnormal.budgets == {42: 5, 43: 5, 44: 5}
-    assert realmlp_reference_qnormal.budget_source == "fold_median"
+    assert plan.member("exp127_lookup_muon").budgets == {42: 13, 43: 15, 44: 15}
+    assert plan.member("exp059_lookup_transformer").budgets == {42: 15, 43: 15, 44: 18}
 
 
 def test_refit_plan_rejects_unknown_combiner_before_execution(tmp_path):
-    raw = yaml.safe_load(Path("artifacts/full-refit-plan.yaml").read_text())
+    raw = version1_document()
     raw["protocol"]["combiner"] = "unregistered_combiner"
     path = tmp_path / "unknown-combiner.yaml"
     path.write_text(yaml.safe_dump(raw, allow_unicode=True, sort_keys=False))

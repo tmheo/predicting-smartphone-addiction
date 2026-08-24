@@ -773,3 +773,168 @@ def test_confirmed_member_without_observations_is_rejected(ledger: Ledger):
 
     with pytest.raises(RefitPlanError, match="원시 관측이 없다"):
         ledger.validate(document)
+
+
+# ---------------------------------------------------------------------------
+# 커밋된 장부 자체의 시험. (#374)
+#
+# 실행 저장소가 있어야 통과하는 계보·해시 관문은 여기서 보지 않는다.
+# 그 관문은 `uv run --frozen python -m pipeline.refit_plan artifacts/full-refit-plan.yaml
+# --validate-only`가 실제 저장소에서 본다. 여기서는 저장소 없이도 확인할 수 있는 것,
+# 즉 후보 풀과의 정렬과 원시 근거에서 다시 계산한 값과의 일치만 본다.
+# ---------------------------------------------------------------------------
+
+COMMITTED_PLAN = Path("artifacts/full-refit-plan.yaml")
+
+# 이슈 #327의 원시 근거 복원과 #367의 네 셀 확정으로 교정된 여섯 구성원.
+# 이 값들이 이번 교정의 고정 시험이다.
+CORRECTED_BUDGETS = {
+    "exp059_lookup_transformer": {42: 15, 43: 15, 44: 18},
+    "exp111_xgb_depth8_no_te": {42: 1803, 43: 1644, 44: 1566},
+    "exp071_cat_exact_no_te": {42: 5265, 43: 5878, 44: 5526},
+    "exp127_lookup_muon": {42: 13, 43: 15, 44: 15},
+    "exp135_xgb_hpo_trial30": {42: 9759, 43: 10394, 44: 10369},
+    "exp131_lookup_bivariate_plr5": {42: 15, 43: 15, 44: 15},
+}
+
+
+@pytest.fixture(scope="module")
+def committed_plan() -> RefitPlan:
+    return RefitPlan.load(COMMITTED_PLAN)
+
+
+def recorded_budgets(member) -> dict[int, int | None]:
+    return {seed.seed: seed.budget for seed in member.budget_derivation.seeds}
+
+
+def test_committed_plan_matches_the_candidate_pool(committed_plan: RefitPlan):
+    from pipeline import data
+    from pipeline.ledger import POOL_PATH, Pool
+
+    pool = Pool.load()
+
+    assert committed_plan.schema_version == 2
+    assert committed_plan.source_pool_sha256 == data.file_sha256(POOL_PATH)
+    assert [
+        (member.config, member.lineage.source_run_id)
+        for member in committed_plan.members
+    ] == [(member.config, member.run_id) for member in pool.members]
+    assert len(committed_plan.members) == 32
+    assert (
+        sum(len(member.budget_derivation.seeds) for member in committed_plan.members)
+        == 94
+    )
+    assert committed_plan.protocol.combiner == COMBINER
+    assert committed_plan.protocol.cv_model_weight == 5
+    assert committed_plan.protocol.full_model_weight == 1
+    assert committed_plan.protocol.iteration_multiplier == 1.25
+
+
+def test_committed_plan_has_no_unresolved_evidence(committed_plan: RefitPlan):
+    from pipeline.refit_plan import (
+        MODEL_FAMILY_CONVERTERS,
+        STATUS_CONFIRMED,
+        STATUS_NOT_APPLICABLE,
+    )
+
+    iterative = [
+        member
+        for member in committed_plan.members
+        if member.evidence.status == STATUS_CONFIRMED
+    ]
+    empty = [
+        member
+        for member in committed_plan.members
+        if member.evidence.status == STATUS_NOT_APPLICABLE
+    ]
+
+    assert len(iterative) == 30
+    assert [member.config for member in empty] == [
+        "exp058_logreg_onehot",
+        "exp067_tabpfn3",
+    ]
+    for member in iterative:
+        converter = MODEL_FAMILY_CONVERTERS[member.evidence.model_family]
+        assert member.evidence.converter == converter
+        assert all(
+            observation.raw_meaning == converter
+            for observation in member.evidence.observations
+        )
+
+
+def test_committed_plan_coordinates_are_complete(committed_plan: RefitPlan):
+    from pipeline.refit_plan import OUTER_FOLD_COUNT, STATUS_CONFIRMED
+
+    for member in committed_plan.members:
+        if member.evidence.status != STATUS_CONFIRMED:
+            continue
+        coordinates = [
+            observation.coordinate for observation in member.evidence.observations
+        ]
+        seeds = tuple(seed.seed for seed in member.budget_derivation.seeds)
+        inner = sorted({inner for _, _, inner in coordinates}, key=lambda x: -1 if x is None else x)
+        expected = {
+            (seed, fold, member_index)
+            for seed in seeds
+            for fold in range(OUTER_FOLD_COUNT)
+            for member_index in inner
+        }
+        assert len(coordinates) == len(set(coordinates)), member.config
+        assert set(coordinates) == expected, member.config
+
+
+def test_committed_plan_observed_lengths_come_from_the_raw_values(
+    committed_plan: RefitPlan,
+):
+    from pipeline.training_length import observed_length_from_raw
+
+    for member in committed_plan.members:
+        for observation in member.evidence.observations:
+            assert observation.observed_training_length == observed_length_from_raw(
+                observation.raw_value, observation.raw_meaning
+            ), (member.config, observation.coordinate)
+
+
+def test_committed_plan_budgets_recompute_from_the_raw_evidence(
+    committed_plan: RefitPlan,
+):
+    """전수 재계산. 교정한 여섯 구성원만이 아니라 32개 전부를 다시 센다."""
+    from pipeline.refit_plan import STATUS_CONFIRMED
+
+    for member in committed_plan.members:
+        recorded = recorded_budgets(member)
+        if member.evidence.status != STATUS_CONFIRMED:
+            assert set(recorded.values()) == {None}, member.config
+            continue
+        derivation = derive_refit_budgets(
+            [
+                observe_training_length(
+                    seed=observation.seed,
+                    outer_fold=observation.outer_fold,
+                    raw_field=observation.raw_field,
+                    raw_value=observation.raw_value,
+                    raw_meaning=observation.raw_meaning,
+                    inner_member=observation.inner_member,
+                )
+                for observation in member.evidence.observations
+            ]
+        )
+        assert derivation.budgets() == recorded, member.config
+        for seed in derivation.seeds:
+            recorded_seed = next(
+                item
+                for item in member.budget_derivation.seeds
+                if item.seed == seed.seed
+            )
+            assert recorded_seed.observed_lengths == seed.observed_lengths
+            assert recorded_seed.median == seed.median
+            assert recorded_seed.scaled == seed.scaled
+
+
+@pytest.mark.parametrize("config", sorted(CORRECTED_BUDGETS))
+def test_committed_plan_carries_the_corrected_budgets(
+    committed_plan: RefitPlan, config: str
+):
+    (member,) = [item for item in committed_plan.members if item.config == config]
+
+    assert recorded_budgets(member) == CORRECTED_BUDGETS[config]
