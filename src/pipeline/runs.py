@@ -11,6 +11,9 @@ interface 규약:
 - artifact_bytes_of·artifact_sha256_of는 이름 있는 산출물 하나를 원본 바이트로 읽고
   그 내용 해시를 돌려준다. 계보 검증처럼 형식을 모르는 산출물을 다루는 소비자가
   MLflow 내부 경로를 직접 열지 않도록 이 계약 하나만 쓴다.
+- attach_artifact는 완료된 실행에 뒤늦게 산출물 하나를 붙인다. annotate가 태그·지표에
+  대해 하는 일을 산출물에 대해 한다. 당시 실행이 남기지 않은 근거를 원본 자료에서
+  복원해 그 실행에 붙일 때만 쓰며(이슈 #374), 이미 있는 이름을 덮어쓰지 않는다.
 - 실행 중 기록(생성·진행·종료)은 observe.RunObserver의 소관이고 이 module이 아니다.
 - 오류 모드: 없는 run은 RunNotFound, 있는 run의 없는 산출물은 ArtifactNotFound.
   둘 다 RunStoreError의 하위이므로 CLI는 RunStoreError 하나만 잡아 sys.exit로 번역한다.
@@ -84,6 +87,13 @@ class RunStore(Protocol):
         ...
 
     def submission_path_of(self, run_id: str) -> Path: ...
+
+    def attach_artifact(self, run_id: str, name: str, payload: bytes) -> str:
+        """완료된 실행에 산출물 하나를 붙이고 그 내용 SHA-256을 돌려준다.
+
+        같은 이름의 산출물이 이미 있으면 거부한다. 기록을 덮어쓰는 통로가 아니다.
+        """
+        ...
 
     def annotate(
         self,
@@ -163,6 +173,21 @@ class MlflowRunStore:
 
     def submission_path_of(self, run_id: str) -> Path:
         return self._artifact(run_id, "submission.csv")
+
+    def attach_artifact(self, run_id: str, name: str, payload: bytes) -> str:
+        import tempfile
+
+        self._run(run_id)
+        if "/" in name or "\\" in name:
+            raise RunStoreError(f"뒤늦게 붙이는 산출물 이름에 경로를 둘 수 없다: {name}")
+        existing = {item.path for item in self._client.list_artifacts(run_id)}
+        if name in existing:
+            raise RunStoreError(f"run {run_id}에 산출물 {name}이 이미 있다.")
+        with tempfile.TemporaryDirectory() as staging:
+            staged = Path(staging) / name
+            staged.write_bytes(payload)
+            self._client.log_artifact(run_id, str(staged))
+        return sha256_of(payload)
 
     def annotate(
         self,
@@ -264,6 +289,15 @@ class InMemoryRunStore:
 
     def submission_path_of(self, run_id: str) -> Path:
         return self._artifact(run_id, "submission.csv", self._run(run_id).submission_path)
+
+    def attach_artifact(self, run_id: str, name: str, payload: bytes) -> str:
+        run = self._run(run_id)
+        if "/" in name or "\\" in name:
+            raise RunStoreError(f"뒤늦게 붙이는 산출물 이름에 경로를 둘 수 없다: {name}")
+        if name in run.artifacts:
+            raise RunStoreError(f"run {run_id}에 산출물 {name}이 이미 있다.")
+        run.artifacts[name] = payload
+        return sha256_of(payload)
 
     def annotate(
         self,

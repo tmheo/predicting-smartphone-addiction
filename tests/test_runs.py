@@ -23,6 +23,7 @@ from pipeline.runs import (
     InMemoryRunStore,
     MlflowRunStore,
     RunNotFound,
+    RunStoreError,
     sha256_of,
 )
 
@@ -168,6 +169,33 @@ def test_artifact_sha256_of_hashes_stored_content(stores):
     )
 
 
+def test_attach_artifact_adds_a_readable_artifact_to_a_finished_run(stores):
+    store, full, _ = stores
+    payload = b'{"observations": []}\n'
+
+    digest = store.attach_artifact(full, "training_length_evidence.json", payload)
+
+    assert digest == sha256_of(payload)
+    assert store.artifact_bytes_of(full, "training_length_evidence.json") == payload
+    assert store.artifact_sha256_of(full, "training_length_evidence.json") == digest
+
+
+def test_attach_artifact_refuses_to_overwrite_a_recorded_artifact(stores):
+    store, full, _ = stores
+
+    with pytest.raises(RunStoreError):
+        store.attach_artifact(full, DIAGNOSTICS_NAME, b"other")
+
+    assert store.artifact_bytes_of(full, DIAGNOSTICS_NAME) == DIAGNOSTICS_BYTES
+
+
+def test_attach_artifact_refuses_a_name_that_carries_a_path(stores):
+    store, full, _ = stores
+
+    with pytest.raises(RunStoreError):
+        store.attach_artifact(full, "logs/run.log", b"x")
+
+
 def test_unknown_artifact_name_raises_artifact_not_found(stores):
     store, full, _ = stores
     for op in (store.artifact_bytes_of, store.artifact_sha256_of):
@@ -189,6 +217,8 @@ def test_unknown_run_raises_run_not_found(stores):
     for op in (store.artifact_bytes_of, store.artifact_sha256_of):
         with pytest.raises(RunNotFound):
             op("no_such_run", DIAGNOSTICS_NAME)
+    with pytest.raises(RunNotFound):
+        store.attach_artifact("no_such_run", "late.json", b"x")
     with pytest.raises(RunNotFound):
         store.annotate("no_such_run", tags={"x": "1"})
 

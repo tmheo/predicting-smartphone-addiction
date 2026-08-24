@@ -843,3 +843,55 @@ def _duplicates(values) -> list:
 def _coordinate_key(coordinate: tuple[int, int, int | None]) -> tuple[int, int, int]:
     seed, fold, inner = coordinate
     return (seed, fold, -1 if inner is None else inner)
+
+
+def _describe(plan: ExecutableRefitPlan) -> str:
+    lines = [
+        f"{plan.source_path}: 구성원 {len(plan.members)}개, "
+        f"전체 자료 재학습 {sum(len(member.budgets) for member in plan.members)}회",
+        f"결합 방식 {plan.protocol.combiner}, 후보 풀 {plan.source_pool_sha256}",
+    ]
+    for member in plan.members:
+        budgets = ", ".join(
+            f"{seed}: {'해당 없음' if budget is None else budget}"
+            for seed, budget in member.budgets.items()
+        )
+        lines.append(f"  {member.config:48} {budgets}")
+    return "\n".join(lines)
+
+
+def main() -> None:
+    """장부를 관문에 통과시켜 본다. 학습하지 않고 아무것도 저장하지 않는다.
+
+    실행 저장소와 현재 후보 풀을 실제로 읽으므로, 이 명령이 통과하면 전체 자료 재학습이
+    읽을 숫자가 원시 근거에서 다시 계산한 값과 같다는 뜻이다.
+    """
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(description="재학습 계획 장부를 검증한다.")
+    parser.add_argument("path", type=Path, help="재학습 계획 장부 경로")
+    parser.add_argument(
+        "--validate-only",
+        action="store_true",
+        help="검증만 하고 아무것도 실행하지 않는다(이 명령의 유일한 동작이라 기본값과 같다)",
+    )
+    parser.add_argument(
+        "--syntax-only",
+        action="store_true",
+        help="실행 저장소를 읽지 않고 문법만 본다",
+    )
+    args = parser.parse_args()
+
+    try:
+        plan = RefitPlan.load(args.path)
+        if args.syntax_only:
+            print(f"{args.path}: 문법 판본 {plan.schema_version}, 구성원 {len(plan.members)}개")
+            return
+        print(_describe(plan.validate_for_refit()))
+    except (RefitPlanError, RunStoreError) as error:
+        sys.exit(str(error))
+
+
+if __name__ == "__main__":
+    main()
