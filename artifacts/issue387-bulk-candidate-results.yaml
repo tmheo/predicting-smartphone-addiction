@@ -1,0 +1,346 @@
+schema_version: 1
+issue: 387
+generated_at: '2026-08-24T08:19:04Z'
+source_plan:
+  path: artifacts/issue387-bulk-candidate-plan.yaml
+  sha256: ec86f947cef0a942d8bdf9f795af4113770e276cd5ad6ad6356cca5da35b77e7
+  candidate_count: 12
+  completed_fit_units: 180
+snapshot:
+  git_commit: 47442803117b3f9797e717b7399a10a821fdd4a1
+  pool:
+    path: artifacts/pool.yaml
+    sha256: 8221c5f334ff19482a6e86c205fe2272b3c3a4bf0c0393e4123899cf43776423
+    member_count: 32
+    rank_mean_oof_auc: 0.9692390830181234
+  champion:
+    run_id: 54acd002d3c04ec3a74c09871e83da50
+    oof_auc: 0.9693397329635609
+  entry_floor: 0.9593397329635609
+  duplicate_spearman: 0.998
+  inputs:
+    train_sha256: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test_sha256: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    folds_sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+qualification:
+  required_seeds: [42, 43, 44]
+  required_folds: 5
+  all_runs_finished: true
+  all_git_clean: true
+  all_folds_match: true
+  config_and_feature_plan_validation: passed
+  bundle_input_provenance_and_seed_rescore: passed
+  weighted_oof_local_rescore_match_tolerance: 1.0e-09
+  all_candidates_qualified: true
+execution:
+  jobs: 3
+  threads_per_job: 4
+  initial_sqlite_race:
+    affected_candidates:
+      - exp144_issue387_xgb_trial6
+      - exp146_issue387_xgb_trial17
+    model_fit_started: false
+    reason: 빈 MLflow SQLite 저장소의 병렬 스키마 초기화가 겹쳤다.
+    disposition: 두 후보를 복구 디렉터리와 같은 4개 작업 흐름 제한으로 다시 실행해 완주했다.
+  full_refit_training_proxy:
+    formula: confirmation_training_seconds / 4
+    rationale: 15개 CV 적합은 각각 자료의 80%를 쓰고 전체 자료 재학습은 시드별 3개 적합이므로 자료 행 수에 선형인 순수 적합 시간 근사는 3 / (15 * 0.8) = 1 / 4이다.
+    limitation: 피처 준비, 산출물 기록, 병렬 경합과 반복 길이 재계산 시간은 포함하지 않는다.
+verification:
+  targeted_tests: 21 passed
+  private_inputs: passed
+  remote_python_contract_tests: 4 passed
+  full_tests: 745 passed
+  fresh_sqlite_parallel_initialization:
+    processes: 3
+    experiment_ids: ['1', '1', '1']
+    created_experiment_count: 1
+    status: passed
+candidates:
+  - name: exp144_issue387_xgb_trial6
+    config: configs/exp144_issue387_xgb_trial6.yaml
+    family: xgboost
+    source_run_id: 480dc26c485c4fd39a18718f2c45dc59
+    central_run_id: 89e3913d74a1490792f19e283989116e
+    bundle_sha256: 48415cdaa5eb7aa8e9f177c179014f89c098e83735d78766940739801b4ec16c
+    auc_oof: 0.966584486190345
+    auc_oof_weighted: 0.9675319011727236
+    nearest_pool_config: exp135_xgb_hpo_trial30
+    nearest_pool_run_id: 119b9c4e44674d38a6f758b65a68593e
+    nearest_pool_auc: 0.9683307160272167
+    nearest_spearman: 0.9961551572341527
+    residual_pearson: 0.9884101169287742
+    floor_ok: true
+    duplicate: false
+    reference_rank_mean_contribution: -3.5911067323368684e-05
+    confirmation_elapsed_seconds: 4780.770597541996
+    confirmation_training_seconds: 1507.846924374986
+    full_refit_training_seconds_proxy: 376.9617310937465
+    training_lengths: {count: 15, minimum: 10000, median: 10000, maximum: 10000}
+    qualification_ok: true
+    direct_action: handoff_selection_procedure
+  - name: exp145_issue387_xgb_trial1
+    config: configs/exp145_issue387_xgb_trial1.yaml
+    family: xgboost
+    source_run_id: 9bc54bc6ad04417c90f6cfc40d27afc8
+    central_run_id: 219a53eecb794338ba3a715da0c09bc5
+    bundle_sha256: a7770743cf264bd24c0cc3b1bec4ed61061ce15dc440251f85e308c5ce9cef56
+    auc_oof: 0.9681809166399978
+    auc_oof_weighted: 0.9690920828916026
+    nearest_pool_config: exp135_xgb_hpo_trial30
+    nearest_pool_run_id: 119b9c4e44674d38a6f758b65a68593e
+    nearest_pool_auc: 0.9683307160272167
+    nearest_spearman: 0.9986295925576852
+    residual_pearson: 0.9983224291165141
+    floor_ok: true
+    duplicate: true
+    reference_rank_mean_contribution: null
+    confirmation_elapsed_seconds: 2532.7026495000464
+    confirmation_training_seconds: 912.4135622089962
+    full_refit_training_seconds_proxy: 228.10339055224904
+    training_lengths: {count: 15, minimum: 4218, median: 4711, maximum: 6095}
+    qualification_ok: true
+    direct_action: reject_duplicate
+  - name: exp146_issue387_xgb_trial17
+    config: configs/exp146_issue387_xgb_trial17.yaml
+    family: xgboost
+    source_run_id: 8c2c87179ddc43e086d792d992e33cba
+    central_run_id: 8b6c55a46e534bd99af5dd6a0e1f2a45
+    bundle_sha256: 18e224ca3697b4c884e0a39d2de5ae37f8734af35e4f6eb7fcd4ffe0988d5ef1
+    auc_oof: 0.9682545251418204
+    auc_oof_weighted: 0.9691642229240178
+    nearest_pool_config: exp135_xgb_hpo_trial30
+    nearest_pool_run_id: 119b9c4e44674d38a6f758b65a68593e
+    nearest_pool_auc: 0.9683307160272167
+    nearest_spearman: 0.9989885466376607
+    residual_pearson: 0.9986163979415559
+    floor_ok: true
+    duplicate: true
+    reference_rank_mean_contribution: null
+    confirmation_elapsed_seconds: 3072.9505813749856
+    confirmation_training_seconds: 1019.4353065000032
+    full_refit_training_seconds_proxy: 254.8588266250008
+    training_lengths: {count: 15, minimum: 5536, median: 6688, maximum: 8660}
+    qualification_ok: true
+    direct_action: reject_duplicate
+  - name: exp147_issue387_xgb_trial21
+    config: configs/exp147_issue387_xgb_trial21.yaml
+    family: xgboost
+    source_run_id: 997ed2c41a1741c49f9d40cad77c438b
+    central_run_id: a873c16c8729456db5f062cf2109751b
+    bundle_sha256: 876080d4503a431298889dad27ec99f5b1933b0606df5f31f159868a379446ab
+    auc_oof: 0.9682612509320907
+    auc_oof_weighted: 0.9691738721048759
+    nearest_pool_config: exp135_xgb_hpo_trial30
+    nearest_pool_run_id: 119b9c4e44674d38a6f758b65a68593e
+    nearest_pool_auc: 0.9683307160272167
+    nearest_spearman: 0.9991629878021691
+    residual_pearson: 0.9987314264403847
+    floor_ok: true
+    duplicate: true
+    reference_rank_mean_contribution: null
+    confirmation_elapsed_seconds: 4298.897395832988
+    confirmation_training_seconds: 1460.6173920000438
+    full_refit_training_seconds_proxy: 365.15434800001094
+    training_lengths: {count: 15, minimum: 8286, median: 9566, maximum: 10000}
+    qualification_ok: true
+    direct_action: reject_duplicate
+  - name: exp148_issue387_xgb_trial33
+    config: configs/exp148_issue387_xgb_trial33.yaml
+    family: xgboost
+    source_run_id: 529a726fc6f843a8b38f2b18a1ce6392
+    central_run_id: 2815bc3a3f9a4011a54fbc2dd74e0dbc
+    bundle_sha256: dae598092f1f960e734529105bc7f895aeabab28145473c4258d96a95a777cff
+    auc_oof: 0.9682991502973508
+    auc_oof_weighted: 0.9692065212552069
+    nearest_pool_config: exp135_xgb_hpo_trial30
+    nearest_pool_run_id: 119b9c4e44674d38a6f758b65a68593e
+    nearest_pool_auc: 0.9683307160272167
+    nearest_spearman: 0.9996023781611778
+    residual_pearson: 0.999039281484189
+    floor_ok: true
+    duplicate: true
+    reference_rank_mean_contribution: null
+    confirmation_elapsed_seconds: 4528.052272500005
+    confirmation_training_seconds: 1523.6949901659973
+    full_refit_training_seconds_proxy: 380.9237475414993
+    training_lengths: {count: 15, minimum: 9144, median: 9727, maximum: 9993}
+    qualification_ok: true
+    direct_action: reject_duplicate
+  - name: exp149_issue387_cat_trial20
+    config: configs/exp149_issue387_cat_trial20.yaml
+    family: catboost
+    source_run_id: 3703f4b11e81468bb3f095c3ca1b6af2
+    central_run_id: 6357cf0164824c5fb34680d1ffa27b28
+    bundle_sha256: 49fee80c3bf2e7835559119d3136db32ec9478591b3690b6681b3a43c5c3bc3f
+    auc_oof: 0.9684995193957061
+    auc_oof_weighted: 0.9693934905387832
+    nearest_pool_config: exp070_cat_exact_cats
+    nearest_pool_run_id: 6238d8c58beb42ee8102209ded92516e
+    nearest_pool_auc: 0.9685793468869544
+    nearest_spearman: 0.9961409102604716
+    residual_pearson: 0.9958318961615175
+    floor_ok: true
+    duplicate: false
+    reference_rank_mean_contribution: 4.4152373468442363e-07
+    confirmation_elapsed_seconds: 4888.3297792079975
+    confirmation_training_seconds: 1856.339584332949
+    full_refit_training_seconds_proxy: 464.08489608323725
+    training_lengths: {count: 15, minimum: 2667, median: 3646, maximum: 4408}
+    qualification_ok: true
+    direct_action: handoff_selection_procedure
+  - name: exp150_issue387_cat_trial11
+    config: configs/exp150_issue387_cat_trial11.yaml
+    family: catboost
+    source_run_id: 32171b96e5ac4e58b5933af3d9302302
+    central_run_id: 0a8125ef7e2443e7ae071425206b7387
+    bundle_sha256: 20e56299d45c1d9381037a4adfee932bf0b886b286a79fe94e0d326018ef9301
+    auc_oof: 0.9685239438533989
+    auc_oof_weighted: 0.9694225813411212
+    nearest_pool_config: exp070_cat_exact_cats
+    nearest_pool_run_id: 6238d8c58beb42ee8102209ded92516e
+    nearest_pool_auc: 0.9685793468869544
+    nearest_spearman: 0.9961837492827628
+    residual_pearson: 0.9961654258896216
+    floor_ok: true
+    duplicate: false
+    reference_rank_mean_contribution: 1.1176269341106604e-06
+    confirmation_elapsed_seconds: 7880.494052082999
+    confirmation_training_seconds: 2547.6385606669937
+    full_refit_training_seconds_proxy: 636.9096401667484
+    training_lengths: {count: 15, minimum: 4998, median: 5712, maximum: 6463}
+    qualification_ok: true
+    direct_action: handoff_selection_procedure
+  - name: exp151_issue387_cat_trial3
+    config: configs/exp151_issue387_cat_trial3.yaml
+    family: catboost
+    source_run_id: bad1f94558644dbf857232c33a359417
+    central_run_id: 71efde515e8b4756a4dd976335f17ae0
+    bundle_sha256: 93772324d64ba3c28df45c8d1a7882cad9e695c24c914229ae4cfc8315f45445
+    auc_oof: 0.9683813841868301
+    auc_oof_weighted: 0.9692827805889321
+    nearest_pool_config: exp070_cat_exact_cats
+    nearest_pool_run_id: 6238d8c58beb42ee8102209ded92516e
+    nearest_pool_auc: 0.9685793468869544
+    nearest_spearman: 0.996142204030053
+    residual_pearson: 0.9966825364689323
+    floor_ok: true
+    duplicate: false
+    reference_rank_mean_contribution: -4.158640052209783e-06
+    confirmation_elapsed_seconds: 14929.933690125006
+    confirmation_training_seconds: 4260.130888458982
+    full_refit_training_seconds_proxy: 1065.0327221147454
+    training_lengths: {count: 15, minimum: 3478, median: 9994, maximum: 10000}
+    qualification_ok: true
+    direct_action: handoff_selection_procedure
+  - name: exp152_issue387_cat_trial6
+    config: configs/exp152_issue387_cat_trial6.yaml
+    family: catboost
+    source_run_id: 4d95dd7bbc6b4dafa3d2d1db5c847ca5
+    central_run_id: 9bb21834623b4eff8fee0e06d879efe0
+    bundle_sha256: 1cc4f47b17e7c4b1afdb1b04f0a33cda2fe4ca777fdd4eb0305b96edbdf737f4
+    auc_oof: 0.968503251445989
+    auc_oof_weighted: 0.9694007546236129
+    nearest_pool_config: exp070_cat_exact_cats
+    nearest_pool_run_id: 6238d8c58beb42ee8102209ded92516e
+    nearest_pool_auc: 0.9685793468869544
+    nearest_spearman: 0.9958608663741311
+    residual_pearson: 0.9964345483984011
+    floor_ok: true
+    duplicate: false
+    reference_rank_mean_contribution: 2.1284579987401742e-07
+    confirmation_elapsed_seconds: 9612.27539866697
+    confirmation_training_seconds: 3046.6658204999985
+    full_refit_training_seconds_proxy: 761.6664551249996
+    training_lengths: {count: 15, minimum: 7500, median: 9934, maximum: 10000}
+    qualification_ok: true
+    direct_action: handoff_selection_procedure
+  - name: exp153_issue387_logreg_raw_l1
+    config: configs/exp153_issue387_logreg_raw_l1.yaml
+    family: logistic_onehot
+    source_run_id: c9c3febdc1f34f9f86f50cedd4f5dce2
+    central_run_id: 65c6d51fc35648bd9699a547ed54ef36
+    bundle_sha256: 8795c4ecffcdd066e1f55fa20989ba2ff3383e50b9e97d2f1d596d4649b26008
+    auc_oof: 0.9598110960942533
+    auc_oof_weighted: 0.9612291989048127
+    nearest_pool_config: exp058_logreg_onehot
+    nearest_pool_run_id: e2b76edd9d204290810e39a7457c4c48
+    nearest_pool_auc: 0.9596583963715687
+    nearest_spearman: 0.9931590806276099
+    residual_pearson: 0.9987386190765263
+    floor_ok: true
+    duplicate: false
+    reference_rank_mean_contribution: -1.976961214800177e-05
+    confirmation_elapsed_seconds: 611.6898407500121
+    confirmation_training_seconds: 222.43838141701417
+    full_refit_training_seconds_proxy: 55.60959535425354
+    training_lengths: {count: 0, minimum: null, median: null, maximum: null}
+    qualification_ok: true
+    direct_action: handoff_selection_procedure
+  - name: exp154_issue387_logreg_nn1_nn10_l1
+    config: configs/exp154_issue387_logreg_nn1_nn10_l1.yaml
+    family: logistic_onehot
+    source_run_id: 6865ad55bc204f518c069dfd2c9c8854
+    central_run_id: e139447d93ad4a169e68e28a6d9a2055
+    bundle_sha256: 2b567142ef6c8c9c3333d663065a158519ca710a72243fc52ab2b181acc518d9
+    auc_oof: 0.9602292102619278
+    auc_oof_weighted: 0.9615757114621718
+    nearest_pool_config: exp058_logreg_onehot
+    nearest_pool_run_id: e2b76edd9d204290810e39a7457c4c48
+    nearest_pool_auc: 0.9596583963715687
+    nearest_spearman: 0.9927321670885699
+    residual_pearson: 0.9957030038870857
+    floor_ok: true
+    duplicate: false
+    reference_rank_mean_contribution: -1.9657381594595513e-05
+    confirmation_elapsed_seconds: 706.2171075000078
+    confirmation_training_seconds: 194.81565779203083
+    full_refit_training_seconds_proxy: 48.70391444800771
+    training_lengths: {count: 0, minimum: null, median: null, maximum: null}
+    qualification_ok: true
+    direct_action: handoff_selection_procedure
+  - name: exp155_issue387_logreg_nn10_l1_card1000
+    config: configs/exp155_issue387_logreg_nn10_l1_card1000.yaml
+    family: logistic_onehot
+    source_run_id: 1bee9419ad0c4a7a89901f23139e3f83
+    central_run_id: b6776843fbd04e0aa04a588d9b720fb6
+    bundle_sha256: 23fbcfbdcb63ff4a9782a086c98fa87e350523c35f289532d55b18b772569967
+    auc_oof: 0.951796480911071
+    auc_oof_weighted: 0.9532043163292566
+    nearest_pool_config: exp058_logreg_onehot
+    nearest_pool_run_id: e2b76edd9d204290810e39a7457c4c48
+    nearest_pool_auc: 0.9596583963715687
+    nearest_spearman: 0.9553175895908484
+    residual_pearson: 0.9367028244130616
+    floor_ok: false
+    duplicate: false
+    reference_rank_mean_contribution: -6.510544277982255e-05
+    confirmation_elapsed_seconds: 650.8478598329821
+    confirmation_training_seconds: 118.22317175002536
+    full_refit_training_seconds_proxy: 29.55579293750634
+    training_lengths: {count: 0, minimum: null, median: null, maximum: null}
+    qualification_ok: true
+    direct_action: reject_floor
+handoff:
+  selection_procedure_required: true
+  candidate_count: 7
+  candidates:
+    - exp144_issue387_xgb_trial6
+    - exp149_issue387_cat_trial20
+    - exp150_issue387_cat_trial11
+    - exp151_issue387_cat_trial3
+    - exp152_issue387_cat_trial6
+    - exp153_issue387_logreg_raw_l1
+    - exp154_issue387_logreg_nn1_nn10_l1
+  full_refit_training_seconds_proxy_total: 3408.9689543857385
+  direct_registration_count: 0
+  pool_changed: false
+rejected:
+  candidate_count: 5
+  duplicate:
+    - exp145_issue387_xgb_trial1
+    - exp146_issue387_xgb_trial17
+    - exp147_issue387_xgb_trial21
+    - exp148_issue387_xgb_trial33
+  floor:
+    - exp155_issue387_logreg_nn10_l1_card1000

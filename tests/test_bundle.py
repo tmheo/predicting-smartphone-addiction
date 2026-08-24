@@ -23,6 +23,7 @@ from pipeline.bundle import BundleError, export_bundle, import_bundle
 from pipeline.data import file_sha256
 from pipeline.fold_observability import ARTIFACT_NAME, FoldExecutionRecorder
 from pipeline.fold_fit_reuse import EVIDENCE_NAME as FOLD_FIT_REUSE_EVIDENCE_NAME
+from pipeline.judgment import missingness_reweighting, weighted_oof_auc
 from pipeline.runs import MlflowRunStore
 
 SEEDS = [42, 43]
@@ -80,6 +81,17 @@ def env(tmp_path, monkeypatch):
         metrics[f"auc_fold_{fold}"] = float(roc_auc_score(y[mask], mean_pred[mask]))
     for seed, oof in seed_oofs.items():
         metrics[f"auc_oof_seed_{seed}"] = float(roc_auc_score(y, oof["pred"].to_numpy()))
+    index = pd.Index(train["id"], name="id")
+    metrics.update(
+        weighted_oof_auc(
+            pd.Series(mean_pred, index=index),
+            pd.Series(y, index=index),
+            missingness_reweighting(
+                tmp_path / "data" / "train.csv",
+                tmp_path / "data" / "test.csv",
+            ),
+        ).metrics()
+    )
 
     source_uri = f"sqlite:///{tmp_path / 'source.db'}"
     from mlflow.tracking import MlflowClient

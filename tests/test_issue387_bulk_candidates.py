@@ -11,6 +11,7 @@ from pipeline import features as features_module
 
 
 PLAN_PATH = Path("artifacts/issue387-bulk-candidate-plan.yaml")
+RESULTS_PATH = Path("artifacts/issue387-bulk-candidate-results.yaml")
 PROXY_COLUMNS = [
     "age",
     "daily_screen_time_hours",
@@ -41,6 +42,10 @@ def _locked_proxy_without_private_input(monkeypatch) -> None:
 
 def _plan() -> dict:
     return yaml.safe_load(PLAN_PATH.read_text())
+
+
+def _results() -> dict:
+    return yaml.safe_load(RESULTS_PATH.read_text())
 
 
 def test_issue387_plan_has_the_precommitted_twelve_candidates() -> None:
@@ -127,3 +132,31 @@ def test_issue387_tree_configs_match_their_search_trials() -> None:
             ]
         assert actual == expected
         assert candidate["screening_fold0_auc"] == source["fold0_auc"]
+
+
+def test_issue387_results_cover_every_precommitted_candidate() -> None:
+    plan_names = [candidate["name"] for candidate in _plan()["candidates"]]
+    results = _results()
+    result_names = [candidate["name"] for candidate in results["candidates"]]
+
+    assert results["source_plan"]["candidate_count"] == 12
+    assert results["source_plan"]["completed_fit_units"] == 180
+    assert result_names == plan_names
+    assert all(candidate["qualification_ok"] for candidate in results["candidates"])
+    assert all(candidate["central_run_id"] for candidate in results["candidates"])
+    assert all(candidate["bundle_sha256"] for candidate in results["candidates"])
+
+
+def test_issue387_results_separate_handoff_from_direct_rejections() -> None:
+    results = _results()
+    actions = Counter(candidate["direct_action"] for candidate in results["candidates"])
+
+    assert actions == {
+        "handoff_selection_procedure": 7,
+        "reject_duplicate": 4,
+        "reject_floor": 1,
+    }
+    assert results["handoff"]["candidate_count"] == 7
+    assert results["handoff"]["direct_registration_count"] == 0
+    assert results["handoff"]["pool_changed"] is False
+    assert results["rejected"]["candidate_count"] == 5
