@@ -207,7 +207,8 @@ def count_parameters(adapter) -> dict:
     두 축의 성격 차이를 점수와 나란히 읽으려면 이 구분이 필요하다. fold의 세
     구성원은 모양이 같으므로 첫 구성원 하나만 센다.
     """
-    members = getattr(adapter, "_members", None) or []
+    fold = getattr(adapter, "_impl", None) or adapter
+    members = getattr(fold, "_members", None) or []
     model = next((getattr(m, "_model", None) for m in members), None)
     if model is None:
         return {}
