@@ -1,5 +1,5 @@
 # exp144와 같은 XGBoost 설정에서 조기 종료 지점을 상한에 잘리지 않게 다시 측정한다.
-# 모델 파라미터는 유지하고 최대 반복 횟수만 10000에서 30000으로 높인다.
+# 모델 파라미터는 유지하고 최대 반복 횟수만 10000에서 100000으로 높인다.
 name: exp156_exp144_xgb_uncensored
 data:
   train: data/train.csv
@@ -46,7 +46,7 @@ model:
   params:
     tree_method: hist
     eval_metric: auc
-    n_estimators: 30000
+    n_estimators: 100000
     learning_rate: 0.005063981628665743
     max_depth: 9
     min_child_weight: 0.4117599592262879
