@@ -156,6 +156,7 @@ class TabMFold:
         self._val: tuple[pd.DataFrame, np.ndarray] | None = None
         self._val_auc: float | None = None
         self._training_diagnostics: dict[str, object] | None = None
+        self._raw_training_length_selections: tuple[int, ...] | None = None
 
     # ---- 전처리: 중앙값은 학습 fold 통계만 쓴다(outer fold 규율) ----
 
@@ -239,6 +240,9 @@ class TabMFold:
             "members": fit_parameters,
             "validation_auc": float(self._val_auc),
         }
+        self._raw_training_length_selections = tuple(
+            int(record["selected_epoch_count"]) for record in fit_parameters
+        )
         print(f"[tabm] fold seed-avg valAUC={self._val_auc:.5f}", flush=True)
         return val_pred
 
@@ -274,6 +278,8 @@ class TabMFold:
             "optimizer": self._optimizer_name,
             "members": [member.training_diagnostics() for member in self._models],
         }
+        # 전체 자료 재학습에는 검증 선택이 없다. 없는 관측을 지어내지 않는다. (#372)
+        self._raw_training_length_selections = None
 
     def _predict_transformed(self, X_t: pd.DataFrame) -> np.ndarray:
         pred = np.zeros(len(X_t), dtype="float64")
@@ -288,6 +294,14 @@ class TabMFold:
         if self._training_diagnostics is None:
             raise RuntimeError("training_diagnostics는 fit 뒤에 호출해야 한다.")
         return self._training_diagnostics
+
+    def raw_training_length_selections(self) -> tuple[int, ...]:
+        """내부 구성원 순서대로 1부터 센 선택 epoch 횟수를 전부 돌려준다. (#372)"""
+        if self._raw_training_length_selections is None:
+            raise RuntimeError(
+                "TabM 원시 epoch 횟수는 검증 분할로 학습한 뒤에만 읽을 수 있다."
+            )
+        return self._raw_training_length_selections
 
     # ---- 중요도: 검증 fold permutation(AUC 하락 폭)을 gain 축으로 (#97 규약) ----
     # 정밀도 파라미터(표본 크기·반복 수)는 계열 소유다. 시드 평균 예측 전체를 다시

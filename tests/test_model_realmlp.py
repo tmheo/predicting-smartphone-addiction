@@ -16,6 +16,10 @@ import pytest
 
 from pipeline import model as model_mod
 from pipeline.config import ModelConfig, load_config
+from pipeline.training_length import (
+    FIXED_COUNT,
+    observe_declaration,
+)
 
 
 REPO = Path(__file__).resolve().parents[1]
@@ -515,3 +519,31 @@ def test_realmlp_rejects_unknown_optimizer():
         _adapter(optimizer="sgd").fit(
             X.iloc[:60], y.iloc[:60], X.iloc[60:], y.iloc[60:]
         )
+
+
+def test_realmlp_declares_fixed_count_evidence():
+    """고정 일정도 숫자를 예산으로 바로 쓰지 않고 고정 횟수 근거로 남긴다. (#372)"""
+    X, y = _data(96)
+    adapter = _adapter(n_init_avg=1)
+    adapter.fit(X.iloc[:72], y.iloc[:72], X.iloc[72:], y.iloc[72:])
+
+    declaration = adapter.training_length_evidence()
+    fixed_epochs = adapter.training_diagnostics()["fixed_epochs"]
+    assert declaration.model_family == "realmlp"
+    assert declaration.raw_field == "fixed_epochs"
+    assert declaration.raw_meaning == FIXED_COUNT
+    assert [item.raw_value for item in declaration.selections] == [fixed_epochs]
+    assert [item.inner_member for item in declaration.selections] == [None]
+
+    evidence = observe_declaration(declaration, seed=SEED, outer_fold=0)
+    assert [item.value for item in evidence.observations] == [fixed_epochs]
+
+
+def test_realmlp_full_fit_declares_no_training_length_evidence():
+    X, y = _data(96)
+    adapter = _adapter(n_init_avg=1)
+
+    model_mod.fit_full(adapter, X, y, 1)
+
+    with pytest.raises(RuntimeError, match="검증 분할"):
+        adapter.training_length_evidence()

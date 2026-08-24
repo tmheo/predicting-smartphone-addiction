@@ -269,6 +269,7 @@ class ScalarTokenTransformerFold:
         self._validation_auc: float | None = None
         self._trainable_parameters: int | None = None
         self._best_epoch: int | None = None
+        self._raw_training_length_selection: int | None = None
 
     def _validate_params(self) -> None:
         if self._mixing not in _MIXING_MODES:
@@ -531,6 +532,7 @@ class ScalarTokenTransformerFold:
         validation_logit = self._predict_tensor(ema_model, x_va)
         self._validation_auc = float(roc_auc_score(y_va_array, validation_logit))
         self._validation = (X_va.copy(), y_va_array)
+        self._raw_training_length_selection = self._best_epoch
         return _sigmoid(validation_logit)
 
     def fit_full(self, X: pd.DataFrame, y: pd.Series, epochs: int) -> None:
@@ -636,6 +638,8 @@ class ScalarTokenTransformerFold:
         self._best_epoch = epochs
         self._validation = None
         self._validation_auc = None
+        # 전체 자료 재학습에는 검증 선택이 없다. 없는 관측을 지어내지 않는다. (#372)
+        self._raw_training_length_selection = None
 
     def _predict_tensor(self, model: nn.Module, values: torch.Tensor) -> np.ndarray:
         model.eval()
@@ -678,6 +682,15 @@ class ScalarTokenTransformerFold:
                 )
             gains.append(float(np.mean(drops)))
         return pd.DataFrame({"feature": self._columns, "gain": gains})
+
+    def raw_training_length_selections(self) -> tuple[int, ...]:
+        """검증이 고른 1부터 세는 epoch 횟수 하나. (#372)"""
+        if self._raw_training_length_selection is None:
+            raise RuntimeError(
+                "Scalar Token Transformer 원시 epoch 횟수는 "
+                "검증 분할로 학습한 뒤에만 읽을 수 있다."
+            )
+        return (self._raw_training_length_selection,)
 
     def entry_diagnostics(self) -> AdapterDiagnostics:
         if self._trainable_parameters is None or self._best_epoch is None:

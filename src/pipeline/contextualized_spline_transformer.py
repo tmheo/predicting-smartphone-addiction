@@ -656,6 +656,7 @@ class ContextualizedSplineTransformerFold:
         self._additive_auc: float | None = None
         self._trainable_parameters: int | None = None
         self._training_diagnostics: dict[str, object] | None = None
+        self._raw_training_length_selection: int | None = None
         self._multilevel_diagnostics: dict[str, object] = {}
 
     def _seed_everything(self) -> None:
@@ -963,6 +964,7 @@ class ContextualizedSplineTransformerFold:
             "full_fit": False,
             **self._multilevel_diagnostics,
         }
+        self._raw_training_length_selection = best_epoch
         return _sigmoid(validation_logit)
 
     def fit_full(self, X: pd.DataFrame, y: pd.Series, epochs: int) -> None:
@@ -995,6 +997,8 @@ class ContextualizedSplineTransformerFold:
             "best_validation_auc": None,
             "full_fit": True,
         }
+        # 전체 자료 재학습에는 검증 선택이 없다. 없는 관측을 지어내지 않는다. (#372)
+        self._raw_training_length_selection = None
 
     def _measure_multilevel_heads(
         self,
@@ -1087,6 +1091,15 @@ class ContextualizedSplineTransformerFold:
         if self._training_diagnostics is None:
             raise RuntimeError("training_diagnostics는 fit 뒤에 호출해야 한다.")
         return self._training_diagnostics
+
+    def raw_training_length_selections(self) -> tuple[int, ...]:
+        """검증이 고른 1부터 세는 epoch 횟수 하나. (#372)"""
+        if self._raw_training_length_selection is None:
+            raise RuntimeError(
+                "Contextualized Spline Transformer 원시 epoch 횟수는 "
+                "검증 분할로 학습한 뒤에만 읽을 수 있다."
+            )
+        return (self._raw_training_length_selection,)
 
     def entry_diagnostics(self) -> AdapterDiagnostics:
         if self._trainable_parameters is None:

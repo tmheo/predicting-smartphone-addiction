@@ -10,6 +10,10 @@ from sklearn.metrics import roc_auc_score
 from pipeline import model as model_mod
 from pipeline.config import ModelConfig, load_config
 from pipeline.plan import FeaturePlan
+from pipeline.training_length import (
+    ONE_BASED_COUNT,
+    observe_declaration,
+)
 
 
 def _params(**overrides) -> dict:
@@ -352,3 +356,30 @@ def test_rejects_unknown_fit_settings_and_initial_score():
             pd.Series(np.zeros(60)),
             pd.Series(np.zeros(20)),
         )
+
+
+def test_declares_one_based_epoch_count_evidence():
+    """1부터 센 epoch 횟수는 변환 없이 그대로 관측 학습 길이가 된다. (#372)"""
+    X, y = _data()
+    adapter = _adapter()
+    adapter.fit(X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:])
+
+    declaration = adapter.training_length_evidence()
+    best_epoch = adapter.training_diagnostics()["best_epoch"]
+    assert declaration.model_family == "tab_cnn"
+    assert declaration.raw_field == "best_epoch"
+    assert declaration.raw_meaning == ONE_BASED_COUNT
+    assert [item.raw_value for item in declaration.selections] == [best_epoch]
+
+    evidence = observe_declaration(declaration, seed=7, outer_fold=2)
+    assert [item.value for item in evidence.observations] == [best_epoch]
+
+
+def test_full_fit_declares_no_training_length_evidence():
+    X, y = _data(160)
+    adapter = _adapter(epochs=1)
+
+    model_mod.fit_full(adapter, X, y, training_budget=3)
+
+    with pytest.raises(RuntimeError, match="검증 분할"):
+        adapter.training_length_evidence()

@@ -20,6 +20,10 @@ from pipeline import model as model_mod
 from pipeline.config import ModelConfig, load_config
 from pipeline.features import ConstrainedImputeAux
 from pipeline.plan import FeaturePlan
+from pipeline.training_length import (
+    ONE_BASED_COUNT,
+    observe_declaration,
+)
 
 SEED = 7
 REPO = Path(__file__).resolve().parents[1]
@@ -280,3 +284,37 @@ def test_tabm_orig_cdf_diff_config_is_exp137_five_columns_only_delta(monkeypatch
         "notifications_per_day_orig_cdf_diff",
         "app_opens_per_day_orig_cdf_diff",
     ]
+
+
+def test_tabm_declares_one_based_epoch_count_evidence_per_member():
+    """저장소가 이미 센 epoch 횟수라 내부 구성원마다 그대로 쓴다. (#372)"""
+    X, y = _data()
+    adapter = _adapter()
+    adapter.fit(X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:])
+
+    declaration = adapter.training_length_evidence()
+    members = adapter.training_diagnostics()["members"]
+    assert declaration.model_family == "tabm"
+    assert declaration.raw_field == "selected_epoch_count"
+    assert declaration.raw_meaning == ONE_BASED_COUNT
+    assert [item.inner_member for item in declaration.selections] == list(
+        range(len(members))
+    )
+    assert [item.raw_value for item in declaration.selections] == [
+        member["selected_epoch_count"] for member in members
+    ]
+
+    evidence = observe_declaration(declaration, seed=SEED, outer_fold=4)
+    assert [item.value for item in evidence.observations] == [
+        member["selected_epoch_count"] for member in members
+    ]
+
+
+def test_tabm_full_fit_declares_no_training_length_evidence():
+    X, y = _data(96)
+    adapter = _adapter()
+
+    model_mod.fit_full(adapter, X, y, 1)
+
+    with pytest.raises(RuntimeError, match="검증 분할"):
+        adapter.training_length_evidence()

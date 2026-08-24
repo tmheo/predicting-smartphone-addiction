@@ -980,6 +980,7 @@ class RealMLPFold:
         self.importance_base_auc: float | None = None
         self._importance: pd.DataFrame | None = None
         self._diagnostics: dict[str, object] | None = None
+        self._raw_training_length_selection: int | None = None
         self._fit_seconds: float | None = None
         self._importance_seconds: float | None = None
         self._prediction_calls = 0
@@ -1240,6 +1241,7 @@ class RealMLPFold:
             "cuda_max_reserved_bytes": cuda_reserved,
             "cublas_workspace_config": os.environ["CUBLAS_WORKSPACE_CONFIG"],
         }
+        self._raw_training_length_selection = int(self.config["fixed_epochs"])
         return validation_prediction
 
     def fit_full(
@@ -1255,6 +1257,8 @@ class RealMLPFold:
                 "RealMLP 전체 자료 고정 epoch는 1 이상 schedule 지평 이하여야 한다."
             )
         self.config["fixed_epochs"] = training_budget
+        # 전체 자료 재학습의 epoch 수는 관측이 아니라 이미 정해진 예산이다. (#372)
+        self._raw_training_length_selection = None
         prepared = self._prepare(X, y, None)
         fold_seed = self._fold_seed(X.index)
         self.models = []
@@ -1406,6 +1410,14 @@ class RealMLPFold:
             assertions=assertions,
             observations=dict(self._diagnostics),
         )
+
+    def raw_training_length_selections(self) -> tuple[int, ...]:
+        """설정이 고정한 실제 epoch 횟수 하나. 검증이 고른 위치가 아니다. (#372)"""
+        if self._raw_training_length_selection is None:
+            raise RuntimeError(
+                "RealMLP 고정 epoch 횟수는 검증 분할로 학습한 뒤에만 읽을 수 있다."
+            )
+        return (self._raw_training_length_selection,)
 
     def training_diagnostics(self) -> dict[str, object]:
         if self._diagnostics is None:

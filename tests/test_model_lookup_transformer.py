@@ -19,6 +19,10 @@ from sklearn.metrics import roc_auc_score
 
 from pipeline import model as model_mod
 from pipeline.config import ModelConfig, load_config
+from pipeline.training_length import (
+    ZERO_BASED_POSITION,
+    observe_declaration,
+)
 
 SEED = 7
 REPO = Path(__file__).resolve().parents[1]
@@ -769,3 +773,37 @@ def test_lookup_orig_cdf_diff_config_is_exp131_feature_only_delta():
         f"{column}_orig_cdf_diff" not in challenger.model.params["lookup_cols"]
         for column in proxy_columns
     )
+
+
+def test_lookup_transformer_declares_zero_based_epoch_evidence_per_member():
+    """구성원마다 0부터 세는 위치를 선언하고 관측 학습 길이는 하나 크다. (#372)"""
+    X, y = _data()
+    adapter = _adapter()
+    adapter.fit(X.iloc[:240], y.iloc[:240], X.iloc[240:], y.iloc[240:])
+
+    declaration = adapter.training_length_evidence()
+    members = adapter.training_diagnostics()["fold_initialization_members"]
+    assert declaration.model_family == "lookup_transformer"
+    assert declaration.raw_field == "best_epoch"
+    assert declaration.raw_meaning == ZERO_BASED_POSITION
+    assert [item.inner_member for item in declaration.selections] == list(
+        range(len(members))
+    )
+    assert [item.raw_value for item in declaration.selections] == [
+        member["best_epoch"] for member in members
+    ]
+
+    evidence = observe_declaration(declaration, seed=SEED, outer_fold=1)
+    assert [item.value for item in evidence.observations] == [
+        member["best_epoch"] + 1 for member in members
+    ]
+
+
+def test_lookup_transformer_full_fit_declares_no_training_length_evidence():
+    X, y = _data(96)
+    adapter = _adapter()
+
+    model_mod.fit_full(adapter, X, y, 2)
+
+    with pytest.raises(RuntimeError, match="검증 분할"):
+        adapter.training_length_evidence()

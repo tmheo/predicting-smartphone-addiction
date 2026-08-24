@@ -9,6 +9,8 @@
 from __future__ import annotations
 
 import inspect
+import json
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -21,6 +23,15 @@ from pipeline import model as model_mod
 from pipeline.config import DataConfig, ExperimentConfig, FeatureConfig, ModelConfig
 from pipeline.features import PLACEBO
 from pipeline.plan import FeaturePlan
+from pipeline.training_length import (
+    FIXED_COUNT,
+    ONE_BASED_COUNT,
+    ZERO_BASED_POSITION,
+    RawTrainingLengthSelection,
+    TrainingLengthContract,
+    TrainingLengthError,
+    observe_declaration,
+)
 
 SEED = 7
 N_FOLDS = 3
@@ -627,3 +638,298 @@ def test_lightgbm_adapter_adds_initial_score_back_to_predictions():
     with pytest.raises(ValueError, match="예측에도 같은 출처의 초기 점수"):
         adapter.predict(X.iloc[:10])
     assert adapter.predict(X.iloc[:10], margin.iloc[:10]).shape == (10,)
+
+
+# ---- 반복형 계열이 관측 학습 길이 근거를 남기는 계약 (#372) ----
+
+
+# 이슈 372가 확정한 아홉 반복형 계열의 표. 코드가 이 표에서 벗어나면 여기서 걸린다.
+TRAINING_LENGTH_TABLE = {
+    "lightgbm": ("best_iteration_", ONE_BASED_COUNT),
+    "xgboost": ("best_iteration", ZERO_BASED_POSITION),
+    "catboost": ("get_best_iteration()", ZERO_BASED_POSITION),
+    "lookup_transformer": ("best_epoch", ZERO_BASED_POSITION),
+    "contextualized_spline_transformer": ("best_epoch", ONE_BASED_COUNT),
+    "scalar_token_transformer": ("best_epoch", ONE_BASED_COUNT),
+    "tab_cnn": ("best_epoch", ONE_BASED_COUNT),
+    "tabm": ("selected_epoch_count", ONE_BASED_COUNT),
+    "realmlp": ("fixed_epochs", FIXED_COUNT),
+}
+
+# 반복 수가 없는 계열. 이 계열들은 관측을 지어내지 않는다.
+NON_ITERATIVE_KINDS = ("logistic_onehot", "tabpfn3")
+
+
+class StubTrainingLengthImpl:
+    """fold 학습이 남긴 원시 선택값만 흉내 내는 구현. 무거운 학습을 하지 않는다."""
+
+    def __init__(self, *selections: int) -> None:
+        self._selections = tuple(selections)
+
+    def raw_training_length_selections(self) -> tuple[int, ...]:
+        return self._selections
+
+
+def declaration_from_stub(adapter, *selections: int):
+    """구현 자리에 stub을 끼워 연결부 선언만 꺼낸다."""
+    adapter._impl = StubTrainingLengthImpl(*selections)
+    return adapter.training_length_evidence()
+
+
+def test_training_length_contracts_match_the_confirmed_table():
+    assert set(model_mod.TRAINING_LENGTH_CONTRACTS) == set(TRAINING_LENGTH_TABLE)
+    for kind, (raw_field, raw_meaning) in TRAINING_LENGTH_TABLE.items():
+        contract = model_mod.TRAINING_LENGTH_CONTRACTS[kind]
+        assert contract.model_family == kind
+        assert contract.raw_field == raw_field
+        assert contract.raw_meaning == raw_meaning
+        # 변환기 식별자는 원시 의미와 같은 눈금이다. 장부도 이 눈금으로 대조한다.
+        assert contract.converter == raw_meaning
+
+
+def test_connector_declaration_agrees_with_the_refit_ledger_table():
+    """연결부 선언과 장부 관문이 같은 계열 표를 두고 서로 대조할 수 있어야 한다.
+
+    두 표는 일부러 따로 적는다. 장부는 실행 코드에 기대지 않고 근거를 다시 맞춰 봐야
+    하기 때문이다. 대신 한쪽에만 계열이 늘거나 원시 의미가 갈리면 여기서 걸린다.
+    """
+    from pipeline.refit_plan import MODEL_FAMILY_CONVERTERS
+
+    assert MODEL_FAMILY_CONVERTERS == {
+        kind: contract.converter
+        for kind, contract in model_mod.TRAINING_LENGTH_CONTRACTS.items()
+    }
+
+
+def test_every_contracted_kind_is_a_registered_model_that_declares_evidence():
+    for kind in TRAINING_LENGTH_TABLE:
+        adapter_factory = model_mod.MODEL_REGISTRY[kind]
+        assert hasattr(adapter_factory, "training_length_evidence"), kind
+
+
+@pytest.mark.parametrize("kind", NON_ITERATIVE_KINDS)
+def test_families_without_iterations_declare_nothing(kind):
+    """반복 수가 없는 계열은 계약을 구현하지 않고 근거도 만들지 않는다."""
+    assert kind not in model_mod.TRAINING_LENGTH_CONTRACTS
+    adapter = model_mod.MODEL_REGISTRY[kind]
+    assert not hasattr(adapter, "training_length_evidence")
+    assert model_mod.collect_training_length_declaration(object(), kind) is None
+
+
+@pytest.mark.parametrize(
+    ("kind", "selections", "expected"),
+    [
+        ("contextualized_spline_transformer", (14,), [(None, 14, 14)]),
+        ("scalar_token_transformer", (14,), [(None, 14, 14)]),
+        ("tab_cnn", (9,), [(None, 9, 9)]),
+        ("realmlp", (4,), [(None, 4, 4)]),
+        ("lookup_transformer", (12, 14), [(0, 12, 13), (1, 14, 15)]),
+        ("tabm", (12, 14), [(0, 12, 12), (1, 14, 14)]),
+    ],
+)
+def test_each_family_converts_its_own_raw_selection(kind, selections, expected):
+    """계열마다 원시 값이 관측 학습 길이로 바뀌는 규칙을 무거운 학습 없이 고정한다."""
+    adapter = model_mod.create(ModelConfig(kind=kind, params={}, fit={}), seed=SEED)
+    declaration = declaration_from_stub(adapter, *selections)
+
+    checked = model_mod.collect_training_length_declaration(adapter, kind)
+    assert checked == declaration
+
+    evidence = observe_declaration(declaration, seed=SEED, outer_fold=2)
+    raw_field, raw_meaning = TRAINING_LENGTH_TABLE[kind]
+    assert evidence.model_family == kind
+    assert evidence.raw_field == raw_field
+    assert evidence.raw_meaning == raw_meaning
+    assert evidence.converter == raw_meaning
+    assert [
+        (item.inner_member, item.raw_value, item.value) for item in evidence.observations
+    ] == expected
+    assert {item.seed for item in evidence.observations} == {SEED}
+    assert {item.outer_fold for item in evidence.observations} == {2}
+    assert all(item.raw_path for item in evidence.observations)
+
+
+def test_inner_member_families_name_the_member_in_the_raw_path():
+    adapter = model_mod.create(
+        ModelConfig(kind="lookup_transformer", params={}, fit={}), seed=SEED
+    )
+    declaration = declaration_from_stub(adapter, 12, 14)
+
+    assert [selection.raw_path for selection in declaration.selections] == [
+        "training_diagnostics.fold_initialization_members[0].best_epoch",
+        "training_diagnostics.fold_initialization_members[1].best_epoch",
+    ]
+
+
+def test_single_member_family_rejects_more_than_one_raw_selection():
+    adapter = model_mod.create(ModelConfig(kind="tab_cnn", params={}, fit={}), seed=SEED)
+    with pytest.raises(ValueError):
+        declaration_from_stub(adapter, 9, 10)
+
+
+def test_declaring_evidence_before_fitting_is_refused():
+    adapter = model_mod.create(ModelConfig(kind="tabm", params={}, fit={}), seed=SEED)
+    with pytest.raises(TrainingLengthError, match="fold 학습을 마친 뒤에만"):
+        adapter.training_length_evidence()
+
+
+def test_collector_rejects_a_declaration_that_leaves_the_registered_contract():
+    class DriftedAdapter:
+        def training_length_evidence(self):
+            return TrainingLengthContract(
+                "lightgbm", "best_iteration_", ZERO_BASED_POSITION
+            ).declare([RawTrainingLengthSelection(raw_path="x", raw_value=3)])
+
+    with pytest.raises(TrainingLengthError, match="raw_meaning"):
+        model_mod.collect_training_length_declaration(DriftedAdapter(), "lightgbm")
+
+
+def test_collector_rejects_evidence_from_an_unregistered_family():
+    class UnregisteredAdapter:
+        def training_length_evidence(self):
+            raise AssertionError("계약이 없는 계열은 선언을 읽기 전에 막아야 한다.")
+
+    with pytest.raises(TrainingLengthError, match="등록되지 않은 계열"):
+        model_mod.collect_training_length_declaration(UnregisteredAdapter(), "tabr")
+
+
+def test_collector_rejects_a_non_declaration_return_value():
+    class WrongTypeAdapter:
+        def training_length_evidence(self):
+            return {"model_family": "lightgbm"}
+
+    with pytest.raises(TypeError, match="TrainingLengthDeclaration"):
+        model_mod.collect_training_length_declaration(WrongTypeAdapter(), "lightgbm")
+
+
+def test_run_cv_records_evidence_with_seed_and_outer_fold_coordinates(monkeypatch):
+    """fold 실행부가 좌표를 채워 구조화 학습 진단에 같은 형식으로 남긴다."""
+
+    class EvidenceAdapter(FakeAdapter):
+        def training_length_evidence(self):
+            return model_mod.TRAINING_LENGTH_CONTRACTS["fake_iterative"].declare(
+                [
+                    RawTrainingLengthSelection(
+                        raw_path="fake.best_round",
+                        raw_value=round(self.fold_value * 10),
+                    )
+                ]
+            )
+
+    made: list[EvidenceAdapter] = []
+
+    def factory(params: dict, fit: dict, seed: int) -> EvidenceAdapter:
+        adapter = EvidenceAdapter(params, fit, seed, fold_value=0.1 * (len(made) + 1))
+        made.append(adapter)
+        return adapter
+
+    monkeypatch.setitem(model_mod.MODEL_REGISTRY, "fake_iterative", factory)
+    monkeypatch.setitem(
+        model_mod.TRAINING_LENGTH_CONTRACTS,
+        "fake_iterative",
+        TrainingLengthContract("fake_iterative", "best_round", ZERO_BASED_POSITION),
+    )
+    cfg = fake_experiment_config()
+    cfg = replace(cfg, model=ModelConfig(kind="fake_iterative", params={}, fit={}))
+    plan = FeaturePlan.from_config(cfg.features)
+    train, test = toy_train_test()
+    train, test = plan.apply_dataset_wide(train, test)
+    train["fold"] = np.arange(len(train)) % N_FOLDS
+
+    result = cv.run_cv(cfg, plan, train, test, seed=SEED)
+
+    assert [item["fold"] for item in result.model_training_diagnostics] == list(
+        range(N_FOLDS)
+    )
+    for fold, item in enumerate(result.model_training_diagnostics):
+        # 기존 모델별 진단은 그대로 두고 표준 근거를 나란히 남긴다.
+        assert item["model_kind"] == "fake_iterative"
+        assert item["details"] is None
+        evidence = item["training_length_evidence"]
+        assert evidence["model_family"] == "fake_iterative"
+        assert evidence["converter"] == "zero_based_position"
+        assert evidence["observations"] == [
+            {
+                "seed": SEED,
+                "outer_fold": fold,
+                "inner_member": None,
+                "raw_field": "best_round",
+                "raw_path": "fake.best_round",
+                "raw_value": fold + 1,
+                "raw_meaning": ZERO_BASED_POSITION,
+                "observed_training_length": fold + 2,
+            }
+        ]
+        # 기록 전에 JSON 직렬화 가능성이 이미 확인된 값이다.
+        json.dumps(evidence, allow_nan=False)
+
+
+TREE_SMOKE_CONFIGS = {
+    "lightgbm": ModelConfig(
+        kind="lightgbm",
+        params={
+            "objective": "binary",
+            "n_estimators": 30,
+            "num_leaves": 7,
+            "learning_rate": 0.1,
+            "verbosity": -1,
+        },
+        fit={"early_stopping_rounds": 5},
+    ),
+    "xgboost": ModelConfig(
+        kind="xgboost",
+        params={
+            "n_estimators": 30,
+            "max_depth": 3,
+            "learning_rate": 0.1,
+            "tree_method": "hist",
+            "eval_metric": "auc",
+        },
+        fit={"early_stopping_rounds": 5},
+    ),
+    "catboost": ModelConfig(
+        kind="catboost",
+        params={"iterations": 30, "depth": 3, "learning_rate": 0.1},
+        fit={"early_stopping_rounds": 5},
+    ),
+}
+
+
+@pytest.mark.parametrize("kind", sorted(TREE_SMOKE_CONFIGS))
+def test_tree_families_declare_evidence_from_their_own_raw_field(kind):
+    """트리 계열도 원시 선택값을 표준 근거로 남긴다. LightGBM만 `+1`하지 않는다."""
+    X, y = _smoke_data()
+    adapter = model_mod.create(TREE_SMOKE_CONFIGS[kind], seed=SEED)
+    adapter.fit(X.iloc[:180], y.iloc[:180], X.iloc[180:], y.iloc[180:])
+
+    declaration = model_mod.collect_training_length_declaration(adapter, kind)
+    raw_field, raw_meaning = TRAINING_LENGTH_TABLE[kind]
+    assert declaration.raw_field == raw_field
+    assert declaration.raw_meaning == raw_meaning
+    (selection,) = declaration.selections
+    assert selection.inner_member is None
+
+    raw_value = {
+        "lightgbm": lambda model: model.best_iteration_,
+        "xgboost": lambda model: model.best_iteration,
+        "catboost": lambda model: model.get_best_iteration(),
+    }[kind](adapter._model)
+    assert selection.raw_value == raw_value
+
+    (observation,) = observe_declaration(
+        declaration, seed=SEED, outer_fold=0
+    ).observations
+    increment = 1 if raw_meaning == ZERO_BASED_POSITION else 0
+    assert observation.value == raw_value + increment
+    assert observation.value >= 1
+
+
+@pytest.mark.parametrize("kind", sorted(TREE_SMOKE_CONFIGS))
+def test_tree_families_refuse_evidence_after_a_full_data_refit(kind):
+    """전체 자료 재학습에는 조기 종료가 없으므로 관측을 지어내지 않는다."""
+    X, y = _smoke_data()
+    adapter = model_mod.create(TREE_SMOKE_CONFIGS[kind], seed=SEED)
+    model_mod.fit_full(adapter, X, y, training_budget=5)
+
+    with pytest.raises(TrainingLengthError, match="검증 분할로 학습한 뒤에만"):
+        adapter.training_length_evidence()
