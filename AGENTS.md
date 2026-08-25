@@ -1,5 +1,12 @@
 # AGENTS.md
 
+## Experiment iteration
+
+Fast experiment iteration is the default for this competition.
+Use lightweight, directly relevant integrity checks for routine changes, such as parsing changed configuration files, checking hashes, and running `git diff --check`.
+Treat automated tests as diagnostic tools: run them only after an actual problem or failure is observed and needs reproduction or diagnosis, or when the user explicitly requests tests.
+Routine issue completion, commits, merges, and pushes to the main branch proceed without running test suites or waiting for CI results.
+
 ## Agent skills
 
 ### Issue tracker
