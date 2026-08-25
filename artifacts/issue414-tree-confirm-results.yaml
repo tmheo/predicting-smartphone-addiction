@@ -1,0 +1,264 @@
+schema_version: 1
+issue: 414
+generated_at: '2026-08-25T16:52:38Z'
+source_commit: a899c3d33cf1dd92262b23d89dae10cd0f7890b2
+stage: confirm
+seeds: [42, 43, 44]
+folds: 5
+
+inputs:
+  train_sha256: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+  test_sha256: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+  folds_sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+
+qualification:
+  expected_runs: 18
+  imported_runs: 18
+  kaggle_runs: 5
+  vast_runs: 13
+  fixed_count_diagnostics: 270
+  all_runs_finished: true
+  all_git_clean: true
+  all_source_commits_match: true
+  all_input_hashes_match: true
+  all_bundle_hashes_match: true
+  all_provider_tags_match: true
+  all_rescores_passed: true
+  all_diagnostics_are_fixed_count: true
+  all_checks_passed: true
+
+execution:
+  kaggle:
+    measured_cpu_concurrency: 5
+    sixth_push_rejected_by_batch_cpu_limit: true
+    kernels:
+      - tmheo74/issue414-exp162-cpu-confirm
+      - tmheo74/issue414-exp163-cpu-confirm
+      - tmheo74/issue414-exp164-cpu-confirm
+      - tmheo74/issue414-exp168-cpu-confirm
+      - tmheo74/issue414-exp171-cpu-confirm
+  vast:
+    charged_instances: 6
+    no_charge_loading_instance: 48665602
+    total_cost_usd: 1.801
+    final_issue_instances: 0
+    final_issue_volumes: 0
+    instances:
+      - id: 48655392
+        effective_cpu: 48
+        hourly_total_usd: 0.14259259259259258
+        charged_usd: 0.568
+        experiments: [exp159, exp169, exp172, exp174]
+      - id: 48659713
+        effective_cpu: 64
+        hourly_total_usd: 0.20055555555555557
+        charged_usd: 0.366
+        experiments: [exp167]
+      - id: 48661238
+        effective_cpu: 64
+        hourly_total_usd: 0.2378888888888889
+        charged_usd: 0.249
+        experiments: [exp165, exp166]
+      - id: 48665679
+        effective_cpu: 64
+        hourly_total_usd: 0.2378888888888889
+        charged_usd: 0.236
+        experiments: [exp160, exp161]
+      - id: 48665708
+        effective_cpu: 32
+        hourly_total_usd: 0.13922222222222225
+        charged_usd: 0.152
+        experiments: [exp170, exp173]
+      - id: 48665730
+        effective_cpu: 32
+        hourly_total_usd: 0.20055555555555557
+        charged_usd: 0.230
+        experiments: [exp175, exp176]
+    control_recovery:
+      duplicate_run_id_parser_affected_runs: 7
+      duplicate_overflow_processes_terminated: 6
+      all_final_bundles_recovered: true
+      main_result_archive_retained: false
+      main_result_archive_reason: 실행 중인 제어 셸이 분산 실행용으로 바뀐 같은 로컬 스크립트의 뒷부분을 다시 읽어 공식 압축 회수 직전에 종료됐다.
+
+results:
+  - experiment: exp159_issue413_xgb_hpo_fixed20
+    provider: vast
+    remote_job_id: issue414-exp159-vast
+    source_run_id: e762da48cce1457eb1f312aaf460f935
+    imported_run_id: a01905e243204cdd806a02179475a5b3
+    bundle_sha256: fc2d8a6b7df08442994f809b27a08cfaf54fcd46de0fe4251b0d50f049fc7024
+    auc_oof: 0.9667820558881682
+    auc_oof_weighted: 0.9677232531112981
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp160_issue413_xgb_hpo_fixed40
+    provider: vast
+    remote_job_id: issue414-exp160-vast
+    source_run_id: 41eeccf96d8d4c249c73f93664ccd755
+    imported_run_id: ed074fb45be049cb8ec1373a71331302
+    bundle_sha256: af30530e5b8c0ce2ff7fe0c08753d3454655e7e1042e8ac997e2d8e3d200d8dc
+    auc_oof: 0.967759654739453
+    auc_oof_weighted: 0.9686799212330252
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp161_issue413_xgb_hpo_fixed60
+    provider: vast
+    remote_job_id: issue414-exp161-vast
+    source_run_id: 1d4a103763f4422ab485d68e5cf7d5a4
+    imported_run_id: 50ff57cc09404127a3e5872d7ec76bce
+    bundle_sha256: af63a5a1891b318d146e8a57aa38a0cc19ee865304eb174990f4b9ba6842f269
+    auc_oof: 0.9681107439144118
+    auc_oof_weighted: 0.969021526395102
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp162_issue413_xgb_no_te_fixed20
+    provider: kaggle
+    remote_job_id: issue414-exp162-kaggle
+    source_run_id: 5479564229c44f71b0073b604ea7c3d2
+    imported_run_id: 13d27b18d88145719a591a7dd25a877c
+    bundle_sha256: 3c0b4dae6edeb9ce2c66e2a116dfeaaf2a2c5b3996365e86f169aeeced8c7aba
+    auc_oof: 0.9594285785534958
+    auc_oof_weighted: 0.9605499699007408
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp163_issue413_xgb_no_te_fixed40
+    provider: kaggle
+    remote_job_id: issue414-exp163-kaggle
+    source_run_id: f88b4158e8b34fc3aa86ba3c743e0990
+    imported_run_id: 9ed6d12159d8405eb7c6958536045cde
+    bundle_sha256: 0dc2184fdeefd3f95a198b4b3471a1dd12106ecbdf901b7dc53c25e4c9a21ec8
+    auc_oof: 0.9632902695571495
+    auc_oof_weighted: 0.9643162050643952
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp164_issue413_xgb_no_te_fixed60
+    provider: kaggle
+    remote_job_id: issue414-exp164-kaggle
+    source_run_id: cb6b5c3a5954456d88507a3dbbace877
+    imported_run_id: f70fd3aae7894b86afa8f56f0dc90bcc
+    bundle_sha256: 2c4eee97934baed969a4a3d203a28f1a3f512447bbbca975376bdaa8f3d5287b
+    auc_oof: 0.9642769346144836
+    auc_oof_weighted: 0.9652730289282383
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp165_issue413_lgb_ag25_fixed20
+    provider: vast
+    remote_job_id: issue414-exp165-vast
+    source_run_id: 9cec516b2e194196b9021162f7a8bae1
+    imported_run_id: 9aedd32898924e1baa6a1fc70c6fa6a7
+    bundle_sha256: bb2fc00a40ac38194f1ab61125c46b399f5b69ad45b0c366744ca6342d2d3d0c
+    auc_oof: 0.967905193689037
+    auc_oof_weighted: 0.9688171407049839
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp166_issue413_lgb_ag25_fixed40
+    provider: vast
+    remote_job_id: issue414-exp166-vast
+    source_run_id: 192b86a5d70449989bb93c04ad76f228
+    imported_run_id: 5629d4379fe1453bb99a0598a6e0c039
+    bundle_sha256: 8eec2fdfad4146a3f8c35a15c64189148e160b04349ce6bac3255c56b5547736
+    auc_oof: 0.9683737604861663
+    auc_oof_weighted: 0.9692763929385456
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp167_issue413_lgb_ag25_fixed60
+    provider: vast
+    remote_job_id: issue414-exp167-vast
+    source_run_id: 1bc9731fff904e46ae7db0566a8966b9
+    imported_run_id: 5ee21e842e1b456db2ecb1fff0985dc5
+    bundle_sha256: 9e592005a8881534042764d6df705f246eb4dc74245ad163057561a05422555f
+    auc_oof: 0.9685589394072274
+    auc_oof_weighted: 0.9694577310768804
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp168_issue413_lgb_no_te_fixed20
+    provider: kaggle
+    remote_job_id: issue414-exp168-kaggle
+    source_run_id: af07abf46cb44795a89543866171c6df
+    imported_run_id: 2142b26c2d304307bb0c2717b803d643
+    bundle_sha256: a28b7561f617490504933928b4845c9dab7eab8b8824b3f20d7bb5c6c74b9136
+    auc_oof: 0.9650884319322799
+    auc_oof_weighted: 0.9660749386282201
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp169_issue413_lgb_no_te_fixed40
+    provider: vast
+    remote_job_id: issue414-exp169-vast
+    source_run_id: 0cef92b9d1e4406eb012df7aa850e31b
+    imported_run_id: 44b9cb2c51434e2d996db5c27cb2cbb4
+    bundle_sha256: 95a29adf81cfd3090f498fff3ade41798251658752c95ef558a595909ecb371b
+    auc_oof: 0.9664745493632554
+    auc_oof_weighted: 0.9674318995243519
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp170_issue413_lgb_no_te_fixed60
+    provider: vast
+    remote_job_id: issue414-exp170-vast
+    source_run_id: 3530d79cf1594aa8845dc44b2da561cd
+    imported_run_id: 94e435fd115c41a2b0c482f492b0be89
+    bundle_sha256: 7665302687337cd13d7b08b3043ee0d2cb0de7791f16c12ed5a1267612227129
+    auc_oof: 0.9669722716253248
+    auc_oof_weighted: 0.9679219055315142
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp171_issue413_cat_no_te_fixed20
+    provider: kaggle
+    remote_job_id: issue414-exp171-kaggle
+    source_run_id: 6abc1172876b47d7872090cc73a503c5
+    imported_run_id: 3611b6ee75774a6c91679b31f0f18197
+    bundle_sha256: cc8a8f180fe1d50e45d10c49a99d1faa08fe004cb2d19d6ee949de6acc18cd55
+    auc_oof: 0.9670873773349015
+    auc_oof_weighted: 0.9680102239492249
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp172_issue413_cat_no_te_fixed40
+    provider: vast
+    remote_job_id: issue414-exp172-vast
+    source_run_id: 3635407f14ea4fd69577156fd3d5e6fc
+    imported_run_id: 0be775440d534cebb1dfb65adb3180ab
+    bundle_sha256: 1e4136025071c3df92cad60cc82f7ea633d142d49e27cba947802996b1791cb2
+    auc_oof: 0.9676951905793246
+    auc_oof_weighted: 0.9686073946618052
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp173_issue413_cat_no_te_fixed60
+    provider: vast
+    remote_job_id: issue414-exp173-vast
+    source_run_id: 412f2edb634f4f0484d3fc4247346a1f
+    imported_run_id: d732f9f0ce83449699df70875e361f2f
+    bundle_sha256: 8f226dc52da2db3407f66b18a184fca087ef852ea131234816fbe13b9debf59d
+    auc_oof: 0.9679412408518272
+    auc_oof_weighted: 0.9688468279053473
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp174_issue413_cat_exact_fixed20
+    provider: vast
+    remote_job_id: issue414-exp174-vast
+    source_run_id: 0b56876668724cd0a724b1547d47db58
+    imported_run_id: 1837035b5bf54dadb980b6407a645209
+    bundle_sha256: 5602f667d9d1189595db0f5641b8be30350a1cab6231a9404d393c319d24f007
+    auc_oof: 0.9676611131979778
+    auc_oof_weighted: 0.9685797310459601
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp175_issue413_cat_exact_fixed40
+    provider: vast
+    remote_job_id: issue414-exp175-vast
+    source_run_id: 13bde23e282b432d93b0842f56da6df9
+    imported_run_id: 1ccc455a260a4c0aa04cd025e32da68f
+    bundle_sha256: 625003e2eb29e84c4c9975641ba6c16cf2e80c0f0073487cb69a383adc8d68ef
+    auc_oof: 0.9681902785365375
+    auc_oof_weighted: 0.9690991851221068
+    fixed_count_diagnostics: 15
+    qualification_ok: true
+  - experiment: exp176_issue413_cat_exact_fixed60
+    provider: vast
+    remote_job_id: issue414-exp176-vast
+    source_run_id: 06fa6020ecd841c59ce31271bf64c0cb
+    imported_run_id: 319b4a77ffef4f419c73863b4ffc623d
+    bundle_sha256: 91c2ce984004829f0bb6d5f3d7c5e1055e59185ebcc8be0409a227eb3032ae1c
+    auc_oof: 0.9684024069175249
+    auc_oof_weighted: 0.9693084766659752
+    fixed_count_diagnostics: 15
+    qualification_ok: true
