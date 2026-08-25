@@ -201,8 +201,9 @@ class TrainingLengthAdapter(Protocol):
     def training_length_evidence(self) -> TrainingLengthDeclaration: ...
 
 
-# 계열 -> 원시 선택값 계약. 이 표가 어떤 계열이 `+1`을 받는지 정하는 유일한 자리다.
-# 원시 의미는 #326이 계열별로 확정한 것이고, 연결부는 여기 등록한 계약으로만 선언한다.
+# 계열 -> 조기 종료 또는 기존 원시 선택값 계약.
+# 아래 고정 반복 트리 대체 계약과 함께 어떤 실행이 `+1`을 받는지 정하는 유일한 자리다.
+# 원시 의미는 #326과 #413이 계열별 일정에 따라 확정했고, 연결부는 등록 계약으로만 선언한다.
 TRAINING_LENGTH_CONTRACTS: dict[str, TrainingLengthContract] = {
     "lightgbm": TrainingLengthContract("lightgbm", "best_iteration_", ONE_BASED_COUNT),
     "xgboost": TrainingLengthContract("xgboost", "best_iteration", ZERO_BASED_POSITION),
@@ -223,6 +224,23 @@ TRAINING_LENGTH_CONTRACTS: dict[str, TrainingLengthContract] = {
     "realmlp": TrainingLengthContract("realmlp", "fixed_epochs", FIXED_COUNT),
 }
 
+# 조기 종료를 쓰지 않는 트리 변형은 검증이 고른 위치가 아니라 설정이 고정한
+# 실제 부스팅 횟수를 근거로 낸다. 기존 계열 계약은 그대로 두고 이 대체 계약만
+# 조건부로 허용해, 조기 종료 설정의 원시 의미가 조용히 바뀌지 않게 한다. (#413)
+FIXED_COUNT_TREE_CONTRACTS: dict[str, TrainingLengthContract] = {
+    "lightgbm": TrainingLengthContract("lightgbm", "n_estimators", FIXED_COUNT),
+    "xgboost": TrainingLengthContract("xgboost", "n_estimators", FIXED_COUNT),
+    "catboost": TrainingLengthContract("catboost", "iterations", FIXED_COUNT),
+}
+
+
+def _training_length_contract_variants(kind: str) -> tuple[TrainingLengthContract, ...]:
+    primary = TRAINING_LENGTH_CONTRACTS.get(kind)
+    if primary is None:
+        return ()
+    fixed = FIXED_COUNT_TREE_CONTRACTS.get(kind)
+    return (primary,) if fixed is None else (primary, fixed)
+
 
 def collect_training_length_declaration(
     adapter: ModelAdapter, kind: str
@@ -236,28 +254,52 @@ def collect_training_length_declaration(
     provider = getattr(adapter, "training_length_evidence", None)
     if provider is None:
         return None
-    contract = TRAINING_LENGTH_CONTRACTS.get(kind)
-    if contract is None:
+    contracts = _training_length_contract_variants(kind)
+    if not contracts:
         raise TrainingLengthError(
             f"{kind}는 관측 학습 길이 계약이 등록되지 않은 계열인데 근거를 선언했다."
         )
     declaration = provider()
     if not isinstance(declaration, TrainingLengthDeclaration):
         raise TypeError("training_length_evidence()는 TrainingLengthDeclaration을 돌려줘야 한다.")
-    mismatch = {
-        name: (declared, expected)
-        for name, declared, expected in (
-            ("model_family", declaration.model_family, contract.model_family),
-            ("raw_field", declaration.raw_field, contract.raw_field),
-            ("raw_meaning", declaration.raw_meaning, contract.raw_meaning),
-        )
-        if declared != expected
+    declared_contract = (
+        declaration.model_family,
+        declaration.raw_field,
+        declaration.raw_meaning,
+    )
+    expected_contracts = {
+        (contract.model_family, contract.raw_field, contract.raw_meaning)
+        for contract in contracts
     }
-    if mismatch:
+    if declared_contract not in expected_contracts:
         raise TrainingLengthError(
-            f"{kind} 연결부 선언이 등록된 계약과 다르다: {mismatch}"
+            f"{kind} 연결부 선언의 model_family/raw_field/raw_meaning이 등록된 계약과 "
+            f"다르다: {declared_contract!r} (허용: {sorted(expected_contracts)!r})"
         )
     return declaration
+
+
+def _early_stopping_rounds(fit: dict, kind: str) -> int | None:
+    """조기 종료 설정을 검증한다. 키가 없으면 고정 반복 일정이다."""
+    if "early_stopping_rounds" not in fit:
+        return None
+    value = fit["early_stopping_rounds"]
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise ValueError(
+            f"{kind} fit.early_stopping_rounds는 1 이상의 정수여야 한다: {value!r}"
+        )
+    return value
+
+
+def _fixed_iteration_count(params: dict, raw_field: str, kind: str) -> int:
+    """고정 일정이 근거로 남길 설정 반복 수를 검증한다."""
+    value = params.get(raw_field)
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise ValueError(
+            f"조기 종료를 쓰지 않는 {kind}는 model.params.{raw_field}에 "
+            f"1 이상의 정수를 명시해야 한다: {value!r}"
+        )
+    return value
 
 
 def _declare_training_length(
@@ -300,6 +342,12 @@ class LightGBMAdapter:
         self._params = params
         self._fit = fit
         self._seed = seed
+        self._early_stopping_rounds = _early_stopping_rounds(fit, "lightgbm")
+        self._fixed_iteration_count = (
+            None
+            if self._early_stopping_rounds is not None
+            else _fixed_iteration_count(params, "n_estimators", "lightgbm")
+        )
         self._model = None
         self._uses_initial_score = False
         self._validated_fit = False
@@ -327,14 +375,17 @@ class LightGBMAdapter:
                 "init_score": initial_score_tr,
                 "eval_init_score": [initial_score_va],
             }
-        self._model.fit(
-            X_tr,
-            y_tr,
-            eval_X=X_va,
-            eval_y=y_va,
-            callbacks=[lgb.early_stopping(self._fit["early_stopping_rounds"])],
-            **kwargs,
-        )
+        if self._early_stopping_rounds is None:
+            self._model.fit(X_tr, y_tr, **kwargs)
+        else:
+            self._model.fit(
+                X_tr,
+                y_tr,
+                eval_X=X_va,
+                eval_y=y_va,
+                callbacks=[lgb.early_stopping(self._early_stopping_rounds)],
+                **kwargs,
+            )
         self._validated_fit = True
         return self._predict(X_va, initial_score_va)
 
@@ -393,13 +444,22 @@ class LightGBMAdapter:
         )
 
     def training_length_evidence(self) -> TrainingLengthDeclaration:
-        """조기 종료가 고른 부스팅 횟수를 원시 근거로 선언한다. (#372)
+        """조기 종료 선택값 또는 설정의 고정 부스팅 횟수를 선언한다. (#372, #413)
 
         LightGBM의 `best_iteration_`은 학습 엔진이 이미 센 실제 횟수라 그대로 쓴다.
         """
         if self._model is None or not self._validated_fit:
             raise TrainingLengthError(
                 "lightgbm 관측 학습 길이는 검증 분할로 학습한 뒤에만 읽을 수 있다."
+            )
+        if self._early_stopping_rounds is None:
+            return FIXED_COUNT_TREE_CONTRACTS["lightgbm"].declare(
+                [
+                    RawTrainingLengthSelection(
+                        raw_path="model.params.n_estimators",
+                        raw_value=self._fixed_iteration_count,
+                    )
+                ]
             )
         return TRAINING_LENGTH_CONTRACTS["lightgbm"].declare(
             [
@@ -461,6 +521,12 @@ class XGBoostAdapter:
         self._params = params
         self._fit = fit
         self._seed = seed
+        self._early_stopping_rounds = _early_stopping_rounds(fit, "xgboost")
+        self._fixed_iteration_count = (
+            None
+            if self._early_stopping_rounds is not None
+            else _fixed_iteration_count(params, "n_estimators", "xgboost")
+        )
         self._model = None
         self._validated_fit = False
 
@@ -476,20 +542,31 @@ class XGBoostAdapter:
         import xgboost as xgb
 
         _reject_initial_score("xgboost", initial_score_tr, initial_score_va)
+        early_stopping = (
+            {}
+            if self._early_stopping_rounds is None
+            else {"early_stopping_rounds": self._early_stopping_rounds}
+        )
         self._model = xgb.XGBClassifier(
             **self._params,
             random_state=self._seed,
             enable_categorical=True,
-            early_stopping_rounds=self._fit["early_stopping_rounds"],
+            **early_stopping,
         )
-        # LightGBM처럼 학습 과정이 실행 로그에 남게 200라운드마다 검증 지표를 찍고,
-        # fold의 종착점(best iteration)을 한 줄로 요약한다.
-        self._model.fit(X_tr, y_tr, eval_set=[(X_va, y_va)], verbose=200)
+        # 조기 종료 설정만 검증 지표를 학습기에 넘겨 선택하게 한다. 고정 일정은
+        # 바깥쪽 검증 자료를 선택에 쓰지 않고 설정 횟수 전부를 돈다.
+        if self._early_stopping_rounds is None:
+            self._model.fit(X_tr, y_tr, verbose=200)
+        else:
+            self._model.fit(X_tr, y_tr, eval_set=[(X_va, y_va)], verbose=200)
         self._validated_fit = True
-        print(
-            f"[xgboost] early stopping: best_iteration={self._model.best_iteration} "
-            f"best_score={self._model.best_score:.6f}"
-        )
+        if self._early_stopping_rounds is None:
+            print(f"[xgboost] fixed count: n_estimators={self._fixed_iteration_count}")
+        else:
+            print(
+                f"[xgboost] early stopping: best_iteration={self._model.best_iteration} "
+                f"best_score={self._model.best_score:.6f}"
+            )
         return self._model.predict_proba(X_va)[:, 1]
 
     def fit_full(
@@ -531,22 +608,36 @@ class XGBoostAdapter:
         )
 
     def training_diagnostics(self) -> dict[str, object]:
-        """조기 종료로 선택된 반복 수와 검증 AUC를 기록한다."""
+        """조기 종료 선택값 또는 설정이 고정한 반복 수를 기록한다."""
         if self._model is None:
             raise ValueError("xgboost 학습 관측은 fit 뒤에만 읽을 수 있다.")
+        if self._early_stopping_rounds is None:
+            return {
+                "training_schedule": FIXED_COUNT,
+                "n_estimators": self._fixed_iteration_count,
+            }
         return {
             "best_iteration": int(self._model.best_iteration),
             "best_score": float(self._model.best_score),
         }
 
     def training_length_evidence(self) -> TrainingLengthDeclaration:
-        """조기 종료가 고른 반복 위치를 원시 근거로 선언한다. (#372)
+        """조기 종료 위치 또는 설정의 고정 부스팅 횟수를 선언한다. (#372, #413)
 
         XGBoost의 `best_iteration`은 0부터 세는 위치라 실제 횟수보다 하나 작다.
         """
         if self._model is None or not self._validated_fit:
             raise TrainingLengthError(
                 "xgboost 관측 학습 길이는 검증 분할로 학습한 뒤에만 읽을 수 있다."
+            )
+        if self._early_stopping_rounds is None:
+            return FIXED_COUNT_TREE_CONTRACTS["xgboost"].declare(
+                [
+                    RawTrainingLengthSelection(
+                        raw_path="model.params.n_estimators",
+                        raw_value=self._fixed_iteration_count,
+                    )
+                ]
             )
         return TRAINING_LENGTH_CONTRACTS["xgboost"].declare(
             [
@@ -572,6 +663,12 @@ class CatBoostAdapter:
         self._params = params
         self._fit = fit
         self._seed = seed
+        self._early_stopping_rounds = _early_stopping_rounds(fit, "catboost")
+        self._fixed_iteration_count = (
+            None
+            if self._early_stopping_rounds is not None
+            else _fixed_iteration_count(params, "iterations", "catboost")
+        )
         self._model = None
         self._validated_fit = False
 
@@ -607,22 +704,26 @@ class CatBoostAdapter:
             cat_features=cat_cols,
             allow_writing_files=False,
         )
-        # LightGBM처럼 학습 과정이 실행 로그에 남게 200라운드마다 검증 지표를 찍고,
-        # fold의 종착점(best iteration)을 한 줄로 요약한다.
-        self._model.fit(
-            X_tr,
-            y_tr,
-            eval_set=(X_va, y_va),
-            early_stopping_rounds=self._fit["early_stopping_rounds"],
-            use_best_model=True,
-            verbose=200,
-        )
+        if self._early_stopping_rounds is None:
+            self._model.fit(X_tr, y_tr, verbose=200)
+        else:
+            self._model.fit(
+                X_tr,
+                y_tr,
+                eval_set=(X_va, y_va),
+                early_stopping_rounds=self._early_stopping_rounds,
+                use_best_model=True,
+                verbose=200,
+            )
         self._validated_fit = True
-        best_score = self._model.get_best_score().get("validation", {})
-        print(
-            f"[catboost] early stopping: best_iteration={self._model.get_best_iteration()} "
-            f"best_score={best_score}"
-        )
+        if self._early_stopping_rounds is None:
+            print(f"[catboost] fixed count: iterations={self._fixed_iteration_count}")
+        else:
+            best_score = self._model.get_best_score().get("validation", {})
+            print(
+                f"[catboost] early stopping: best_iteration={self._model.get_best_iteration()} "
+                f"best_score={best_score}"
+            )
         return self._model.predict_proba(X_va)[:, 1]
 
     def fit_full(
@@ -666,13 +767,22 @@ class CatBoostAdapter:
         )
 
     def training_length_evidence(self) -> TrainingLengthDeclaration:
-        """조기 종료가 고른 반복 위치를 원시 근거로 선언한다. (#372)
+        """조기 종료 위치 또는 설정의 고정 부스팅 횟수를 선언한다. (#372, #413)
 
         CatBoost의 `get_best_iteration()`은 0부터 세는 위치라 실제 횟수보다 하나 작다.
         """
         if self._model is None or not self._validated_fit:
             raise TrainingLengthError(
                 "catboost 관측 학습 길이는 검증 분할로 학습한 뒤에만 읽을 수 있다."
+            )
+        if self._early_stopping_rounds is None:
+            return FIXED_COUNT_TREE_CONTRACTS["catboost"].declare(
+                [
+                    RawTrainingLengthSelection(
+                        raw_path="model.params.iterations",
+                        raw_value=self._fixed_iteration_count,
+                    )
+                ]
             )
         return TRAINING_LENGTH_CONTRACTS["catboost"].declare(
             [

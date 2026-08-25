@@ -50,6 +50,8 @@ LOOKUP_RAW = {
 }
 # 고정 일정 계열. 설정이 고정한 4 epoch도 근거로 적어 같은 계산을 거친다.
 REALMLP_RAW = {seed: [[4]] * 5 for seed in SEEDS}
+# 조기 종료를 쓰지 않는 XGBoost는 설정의 반복 수를 15개 좌표에 그대로 기록한다.
+XGB_FIXED_RAW = {seed: [[789]] * 5 for seed in SEEDS}
 
 
 def flatten(raw_table: dict[int, list[list[int]]]):
@@ -215,6 +217,15 @@ SPECS = (
         raw_field="fixed_epochs",
         raw_table=REALMLP_RAW,
     ),
+    MemberSpec(
+        config="exp413_xgb_fixed_count",
+        run_id="run-xgb-fixed",
+        seeds=SEEDS,
+        model_family="xgboost",
+        converter=FIXED_COUNT,
+        raw_field="n_estimators",
+        raw_table=XGB_FIXED_RAW,
+    ),
     # 반복 수가 없는 구성원. lbfgs라 시드 하나만 재학습한다. (ADR 0002)
     MemberSpec(config="exp058_logreg_onehot", run_id="run-logreg", seeds=(42,)),
 )
@@ -331,6 +342,17 @@ def test_validated_plan_derives_confirmed_budgets(ledger: Ledger):
     }
     assert plan.member("exp127_lookup_muon").budgets == {42: 13, 43: 15, 44: 15}
     assert plan.member("exp140_realmlp_orig_cdf_diff").budgets == {42: 5, 43: 5, 44: 5}
+    fixed = plan.member("exp413_xgb_fixed_count")
+    assert fixed.budgets == {42: 986, 43: 986, 44: 986}
+    evidence = ledger.member(ledger.document, "exp413_xgb_fixed_count")[
+        "training_length_evidence"
+    ]
+    assert evidence["converter"] == FIXED_COUNT
+    assert len(evidence["observations"]) == 15
+    assert {
+        (item["raw_field"], item["raw_meaning"], item["raw_value"])
+        for item in evidence["observations"]
+    } == {("n_estimators", FIXED_COUNT, 789)}
     assert plan.member("exp058_logreg_onehot").budgets == {42: None}
 
 
@@ -513,7 +535,7 @@ def test_observation_raw_meaning_must_match_declared_converter(ledger: Ledger):
     ]
     evidence["observations"][0]["raw_meaning"] = ONE_BASED_COUNT
 
-    with pytest.raises(RefitPlanError, match="계열이 선언한 변환기와 다르다"):
+    with pytest.raises(RefitPlanError, match="구성원이 선언한 변환기와 다르다"):
         ledger.validate(document)
 
 
@@ -854,10 +876,10 @@ def test_committed_plan_has_no_unresolved_evidence(committed_plan: RefitPlan):
         "exp067_tabpfn3",
     ]
     for member in iterative:
-        converter = MODEL_FAMILY_CONVERTERS[member.evidence.model_family]
-        assert member.evidence.converter == converter
+        converters = MODEL_FAMILY_CONVERTERS[member.evidence.model_family]
+        assert member.evidence.converter in converters
         assert all(
-            observation.raw_meaning == converter
+            observation.raw_meaning == member.evidence.converter
             for observation in member.evidence.observations
         )
 

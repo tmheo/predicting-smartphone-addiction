@@ -656,6 +656,12 @@ TRAINING_LENGTH_TABLE = {
     "realmlp": ("fixed_epochs", FIXED_COUNT),
 }
 
+FIXED_TREE_TRAINING_LENGTH_TABLE = {
+    "lightgbm": ("n_estimators", FIXED_COUNT),
+    "xgboost": ("n_estimators", FIXED_COUNT),
+    "catboost": ("iterations", FIXED_COUNT),
+}
+
 # 반복 수가 없는 계열. 이 계열들은 관측을 지어내지 않는다.
 NON_ITERATIVE_KINDS = ("logistic_onehot", "tabpfn3")
 
@@ -685,6 +691,14 @@ def test_training_length_contracts_match_the_confirmed_table():
         assert contract.raw_meaning == raw_meaning
         # 변환기 식별자는 원시 의미와 같은 눈금이다. 장부도 이 눈금으로 대조한다.
         assert contract.converter == raw_meaning
+    assert set(model_mod.FIXED_COUNT_TREE_CONTRACTS) == set(
+        FIXED_TREE_TRAINING_LENGTH_TABLE
+    )
+    for kind, (raw_field, raw_meaning) in FIXED_TREE_TRAINING_LENGTH_TABLE.items():
+        contract = model_mod.FIXED_COUNT_TREE_CONTRACTS[kind]
+        assert contract.model_family == kind
+        assert contract.raw_field == raw_field
+        assert contract.raw_meaning == raw_meaning
 
 
 def test_connector_declaration_agrees_with_the_refit_ledger_table():
@@ -695,10 +709,14 @@ def test_connector_declaration_agrees_with_the_refit_ledger_table():
     """
     from pipeline.refit_plan import MODEL_FAMILY_CONVERTERS
 
-    assert MODEL_FAMILY_CONVERTERS == {
-        kind: contract.converter
-        for kind, contract in model_mod.TRAINING_LENGTH_CONTRACTS.items()
+    expected = {
+        kind: tuple(
+            contract.converter
+            for contract in model_mod._training_length_contract_variants(kind)
+        )
+        for kind in model_mod.TRAINING_LENGTH_CONTRACTS
     }
+    assert MODEL_FAMILY_CONVERTERS == expected
 
 
 def test_every_contracted_kind_is_a_registered_model_that_declares_evidence():
@@ -894,6 +912,36 @@ TREE_SMOKE_CONFIGS = {
     ),
 }
 
+TREE_FIXED_SMOKE_CONFIGS = {
+    "lightgbm": ModelConfig(
+        kind="lightgbm",
+        params={
+            "objective": "binary",
+            "n_estimators": 8,
+            "num_leaves": 7,
+            "learning_rate": 0.1,
+            "verbosity": -1,
+        },
+        fit={},
+    ),
+    "xgboost": ModelConfig(
+        kind="xgboost",
+        params={
+            "n_estimators": 8,
+            "max_depth": 3,
+            "learning_rate": 0.1,
+            "tree_method": "hist",
+            "eval_metric": "auc",
+        },
+        fit={},
+    ),
+    "catboost": ModelConfig(
+        kind="catboost",
+        params={"iterations": 8, "depth": 3, "learning_rate": 0.1},
+        fit={},
+    ),
+}
+
 
 @pytest.mark.parametrize("kind", sorted(TREE_SMOKE_CONFIGS))
 def test_tree_families_declare_evidence_from_their_own_raw_field(kind):
@@ -922,6 +970,39 @@ def test_tree_families_declare_evidence_from_their_own_raw_field(kind):
     increment = 1 if raw_meaning == ZERO_BASED_POSITION else 0
     assert observation.value == raw_value + increment
     assert observation.value >= 1
+
+
+@pytest.mark.parametrize("kind", sorted(TREE_FIXED_SMOKE_CONFIGS))
+def test_tree_families_without_early_stopping_declare_the_configured_fixed_count(kind):
+    """고정 일정 트리는 설정 반복 수를 그대로 근거로 남기고 검증 선택값을 만들지 않는다."""
+    X, y = _smoke_data()
+    cfg = TREE_FIXED_SMOKE_CONFIGS[kind]
+    adapter = model_mod.create(cfg, seed=SEED)
+    adapter.fit(X.iloc[:180], y.iloc[:180], X.iloc[180:], y.iloc[180:])
+
+    declaration = model_mod.collect_training_length_declaration(adapter, kind)
+    raw_field, raw_meaning = FIXED_TREE_TRAINING_LENGTH_TABLE[kind]
+    assert declaration.raw_field == raw_field
+    assert declaration.raw_meaning == raw_meaning == FIXED_COUNT
+    (selection,) = declaration.selections
+    assert selection.raw_path == f"model.params.{raw_field}"
+    assert selection.raw_value == cfg.params[raw_field]
+
+    (observation,) = observe_declaration(
+        declaration, seed=SEED, outer_fold=0
+    ).observations
+    assert observation.raw_value == observation.value == cfg.params[raw_field]
+
+
+@pytest.mark.parametrize("kind", sorted(TREE_FIXED_SMOKE_CONFIGS))
+def test_fixed_count_tree_requires_an_explicit_positive_iteration_count(kind):
+    cfg = TREE_FIXED_SMOKE_CONFIGS[kind]
+    raw_field, _ = FIXED_TREE_TRAINING_LENGTH_TABLE[kind]
+    params = dict(cfg.params)
+    params.pop(raw_field)
+
+    with pytest.raises(ValueError, match=f"model.params.{raw_field}"):
+        model_mod.create(replace(cfg, params=params), seed=SEED)
 
 
 @pytest.mark.parametrize("kind", sorted(TREE_SMOKE_CONFIGS))

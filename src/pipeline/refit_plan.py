@@ -63,19 +63,20 @@ STATUS_UNRESOLVED = "unresolved"
 STATUS_NOT_APPLICABLE = "not_applicable"
 STATUSES = (STATUS_CONFIRMED, STATUS_UNRESOLVED, STATUS_NOT_APPLICABLE)
 
-# 모델 계열이 자기 원시 선택값에 대해 선언하는 변환기. ADR 0002의 표와 같다.
+# 모델 계열이 자기 원시 선택값에 대해 선언할 수 있는 변환기. ADR 0002의 표와 같다.
 # 연결부(#372)가 같은 식별자를 스스로 선언하고, 장부는 여기서 그 선언을 다시 맞춰 본다.
+# 트리 세 계열은 조기 종료 선택값과 설정 고정 횟수를 모두 낼 수 있다(#413).
 # 표에 없는 계열은 거부한다. 새 계열이 재학습에 들어오려면 자기 변환기를 먼저 등록해야 한다.
 MODEL_FAMILY_CONVERTERS = {
-    "lightgbm": ONE_BASED_COUNT,
-    "xgboost": ZERO_BASED_POSITION,
-    "catboost": ZERO_BASED_POSITION,
-    "lookup_transformer": ZERO_BASED_POSITION,
-    "contextualized_spline_transformer": ONE_BASED_COUNT,
-    "scalar_token_transformer": ONE_BASED_COUNT,
-    "tab_cnn": ONE_BASED_COUNT,
-    "tabm": ONE_BASED_COUNT,
-    "realmlp": FIXED_COUNT,
+    "lightgbm": (ONE_BASED_COUNT, FIXED_COUNT),
+    "xgboost": (ZERO_BASED_POSITION, FIXED_COUNT),
+    "catboost": (ZERO_BASED_POSITION, FIXED_COUNT),
+    "lookup_transformer": (ZERO_BASED_POSITION,),
+    "contextualized_spline_transformer": (ONE_BASED_COUNT,),
+    "scalar_token_transformer": (ONE_BASED_COUNT,),
+    "tab_cnn": (ONE_BASED_COUNT,),
+    "tabm": (ONE_BASED_COUNT,),
+    "realmlp": (FIXED_COUNT,),
 }
 
 # 바깥쪽 분할 수. 근거가 한 분할치 통째로 비어도 좌표 곱만으로는 드러나지 않으므로
@@ -488,25 +489,26 @@ def _validate_observations(
 ) -> list[ObservedTrainingLength]:
     """근거의 계열·변환기·좌표를 맞춰 보고 원시 값을 다시 변환한다."""
     evidence = member.evidence
-    converter = MODEL_FAMILY_CONVERTERS.get(evidence.model_family)
-    if converter is None:
+    converters = MODEL_FAMILY_CONVERTERS.get(evidence.model_family)
+    if converters is None:
         raise RefitPlanError(
             f"{member.config}: 변환기를 등록하지 않은 모델 계열이다: "
             f"{evidence.model_family!r} (등록: {', '.join(sorted(MODEL_FAMILY_CONVERTERS))})"
         )
-    if evidence.converter != converter:
+    if evidence.converter not in converters:
         raise RefitPlanError(
             f"{member.config}: 모델 계열 {evidence.model_family!r}의 변환기는 "
-            f"{converter!r}여야 한다: {evidence.converter!r}"
+            f"{list(converters)!r} 중 하나여야 한다: {evidence.converter!r}"
         )
     if not evidence.observations:
         raise RefitPlanError(f"{member.config}: 확정 근거에 원시 관측이 없다.")
 
     for observation in evidence.observations:
-        if observation.raw_meaning != converter:
+        if observation.raw_meaning != evidence.converter:
             raise RefitPlanError(
                 f"{member.config}: 좌표 {observation.coordinate}의 원시 의미가 "
-                f"계열이 선언한 변환기와 다르다: {observation.raw_meaning!r} != {converter!r}"
+                "구성원이 선언한 변환기와 다르다: "
+                f"{observation.raw_meaning!r} != {evidence.converter!r}"
             )
 
     _validate_coordinates(member, allowed_seeds)

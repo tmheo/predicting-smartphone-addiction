@@ -78,7 +78,8 @@ exp132의 시드별 바깥쪽 분할 최적 학습 회차 중앙값 `42`, `57`, 
 - `one_based_count`는 학습 엔진이 이미 센 실제 횟수이므로 값이 바뀌지 않는다.
 - `fixed_count`는 검증으로 고른 값이 아니라 설정이 고정한 실제 횟수이므로 값이 바뀌지 않는다.
 
-현재 `zero_based_position`을 선언하는 계열은 XGBoost, CatBoost, Lookup-Transformer 셋이다.
+조기 종료 일정에서 `zero_based_position`을 선언하는 계열은 XGBoost, CatBoost, Lookup-Transformer 셋이다.
+조기 종료를 쓰지 않는 XGBoost, LightGBM, CatBoost는 설정이 고정한 반복 수를 `fixed_count`로 선언한다.
 불리언, 정수가 아닌 값, 음수 위치, 0 이하 횟수, 알 수 없는 원시 의미와 이미 바꾼 값의 중복 변환은 모두 거부한다.
 
 ### 재학습 예산 계산
@@ -103,21 +104,25 @@ exp132의 시드별 바깥쪽 분할 최적 학습 회차 중앙값 `42`, `57`, 
 
 이슈 #372에서 아홉 반복형 계열의 연결부가 아래 선언으로만 원시 근거를 낸다.
 
-| 모델 계열 | 원시 필드 | 원시 의미 |
-| --- | --- | --- |
-| `lightgbm` | `best_iteration_` | `one_based_count` |
-| `xgboost` | `best_iteration` | `zero_based_position` |
-| `catboost` | `get_best_iteration()` | `zero_based_position` |
-| `lookup_transformer` | `best_epoch` | `zero_based_position` |
-| `contextualized_spline_transformer` | `best_epoch` | `one_based_count` |
-| `scalar_token_transformer` | `best_epoch` | `one_based_count` |
-| `tab_cnn` | `best_epoch` | `one_based_count` |
-| `tabm` | `selected_epoch_count` | `one_based_count` |
-| `realmlp` | `fixed_epochs` | `fixed_count` |
+| 모델 계열 | 학습 일정 | 원시 필드 | 원시 의미 |
+| --- | --- | --- | --- |
+| `lightgbm` | 조기 종료 | `best_iteration_` | `one_based_count` |
+| `lightgbm` | 고정 반복 | `n_estimators` | `fixed_count` |
+| `xgboost` | 조기 종료 | `best_iteration` | `zero_based_position` |
+| `xgboost` | 고정 반복 | `n_estimators` | `fixed_count` |
+| `catboost` | 조기 종료 | `get_best_iteration()` | `zero_based_position` |
+| `catboost` | 고정 반복 | `iterations` | `fixed_count` |
+| `lookup_transformer` | 조기 종료 또는 마지막 epoch 선택 | `best_epoch` | `zero_based_position` |
+| `contextualized_spline_transformer` | 조기 종료 | `best_epoch` | `one_based_count` |
+| `scalar_token_transformer` | 조기 종료 | `best_epoch` | `one_based_count` |
+| `tab_cnn` | 조기 종료 | `best_epoch` | `one_based_count` |
+| `tabm` | 조기 종료 | `selected_epoch_count` | `one_based_count` |
+| `realmlp` | 고정 반복 | `fixed_epochs` | `fixed_count` |
 
 변환기 식별자는 원시 의미 문자열 그대로다.
 원시 의미 하나에 변환기 하나가 대응하므로 눈금을 둘로 나누지 않는다.
-장부의 `refit_plan.MODEL_FAMILY_CONVERTERS`가 같은 눈금으로 이 선언을 다시 맞춰 본다.
+장부의 `refit_plan.MODEL_FAMILY_CONVERTERS`는 계열별 허용 눈금 집합으로 이 선언을 다시 맞춰 본다.
+한 실행의 근거는 허용 눈금 가운데 하나만 선언해야 하며 모든 좌표의 `raw_meaning`이 그 선언과 같아야 한다.
 
 연결부는 원시 값과 내부 구성원 좌표까지만 알고, 시드와 바깥쪽 분할 좌표는 fold 실행부가 채운다.
 확정한 근거는 `model_training_diagnostics.json`의 fold 항목과 같은 fold의 복구 지점에 `training_length_evidence`로 남는다.
@@ -169,7 +174,7 @@ exp132의 시드별 바깥쪽 분할 최적 학습 회차 중앙값 `42`, `57`, 
 
 고정 일정으로 도는 `exp106_lookup_fixed24_train_test_preprocessing`은 계열 계약이 선언한 `best_epoch`와 `zero_based_position`으로 원시 값 `23`을 기록한다.
 `validation_selection=final`이라 이 위치는 검증이 고른 값이 아니라 고정한 마지막 epoch의 위치이며, 변환 결과인 관측 학습 길이 `24`가 설정이 고정한 횟수와 같다.
-계열 하나에 변환기 하나라는 규약을 지키려고 계열 계약을 그대로 썼고, 계산 결과는 같은 `30`이다.
+Lookup-Transformer의 기존 위치 계약을 그대로 썼고, 계산 결과는 같은 `30`이다.
 
 ### 교정한 재학습 예산
 
