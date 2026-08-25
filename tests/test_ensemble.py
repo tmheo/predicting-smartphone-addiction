@@ -18,6 +18,8 @@ from sklearn.metrics import roc_auc_score
 
 from pipeline.data import ID, TARGET
 from pipeline.ensemble import (
+    CANDIDATE_POOL_CORE_COMBINER_NAMES,
+    CANDIDATE_POOL_OPTIONAL_COMBINER_NAMES,
     COMBINER_REGISTRY,
     DEFAULT_COMBINER_NAMES,
     PRECISION_COMBINER_NAMES,
@@ -123,6 +125,20 @@ def test_default_selection_excludes_precision_strategies_without_removing_them()
         explicit, explicit_excluded = select_combiners([name])
         assert [combiner.name for combiner in explicit] == [name]
         assert explicit_excluded == ()
+
+
+def test_candidate_pool_core_keeps_only_historical_winning_strategies():
+    assert CANDIDATE_POOL_CORE_COMBINER_NAMES == (
+        "missing_segmented_rank_logit",
+        "missing_interaction_rank_logit",
+        "shrunk_rank_logit_logistic",
+    )
+    assert CANDIDATE_POOL_OPTIONAL_COMBINER_NAMES == tuple(
+        name
+        for name in DEFAULT_COMBINER_NAMES
+        if name not in CANDIDATE_POOL_CORE_COMBINER_NAMES
+    )
+    assert len(CANDIDATE_POOL_OPTIONAL_COMBINER_NAMES) == 16
 
 
 def test_contextual_combiner_factory_binds_fold_and_missingness_inputs():

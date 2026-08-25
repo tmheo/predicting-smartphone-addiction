@@ -2,4 +2,4 @@ $ python -m pipeline.pool e2b76edd9d204290810e39a7457c4c48 --admit --reason 골�
 exit: 1
 --- stdout ---
 --- stderr ---
---admit에는 --judgment <candidate-pool-v1 판정 기록>이 필요하다.
+--admit에는 --judgment <candidate-pool 판정 기록>이 필요하다.

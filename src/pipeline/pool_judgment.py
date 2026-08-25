@@ -1,4 +1,4 @@
-"""후보 평가 사본에서 candidate-pool-v1 판정 기록을 만드는 실행 경로.
+"""후보 평가 사본에서 candidate-pool-v2 판정 기록을 만드는 실행 경로.
 
 사용법:
     uv run python -m pipeline.pool_judgment \
@@ -11,6 +11,8 @@
 결합 전략을 다시 고르는 선택 절차 대조를 수행한다.
 ``--action replacement --replaces-run-id <run_id>``는 현재 풀과 신규 후보로 기존
 구성원 하나를 바꾼 풀을 같은 조건에서 비교한다.
+기본 판정은 핵심 결합 방식 3개만 평가한다.
+``--full-combiners``를 주면 선택적 결합 방식까지 포함한 19개 전체를 평가한다.
 
 이 명령은 후보 풀을 변경하지 않는다.
 완료된 판정 기록만 ``pipeline.pool --admit --judgment``가 별도 변환 없이 소비한다.
@@ -41,6 +43,7 @@ from .data import ID, TARGET, file_sha256
 from .judgment import (
     POOL_EQUIVALENCE_BAND_UPPER,
     POOL_JUDGMENT_CONTRACT_VERSION,
+    POOL_JUDGMENT_SUPPORTED_CONTRACT_VERSIONS,
     canonical_name_list_sha256,
     check_adoption_eligibility,
     check_canaries,
@@ -156,6 +159,7 @@ class GenerationRequest:
     selection_description: str
     output_path: Path
     evidence_path: Path
+    combiner_scope: str = "core"
     replaces_run_id: str | None = None
     restores_judgment_path: Path | None = None
     jobs: int = max(1, min(8, os.cpu_count() or 1))
@@ -180,6 +184,7 @@ class _FrozenInput:
     folds_relative: Path
     folds_absolute: Path
     folds_sha256: str
+    combiner_scope: str
     combiner_names: tuple[str, ...]
     combiner_names_sha256: str
 
@@ -199,6 +204,7 @@ class _FrozenInput:
                 "sha256": self.folds_sha256,
             },
             "registered_combiners": {
+                "scope": self.combiner_scope,
                 "names": list(self.combiner_names),
                 "names_sha256": self.combiner_names_sha256,
             },
@@ -260,7 +266,7 @@ class _Evaluator(Protocol):
 
 
 class _DefaultEvaluator:
-    """재심사와 같은 19개 결합 전략 평가기를 후보 판정에 맞춘 adapter."""
+    """요청 범위의 결합 전략 평가기를 후보 판정에 맞춘 adapter."""
 
     def __init__(self, context: InputContext, jobs: int) -> None:
         self.context = context
@@ -306,6 +312,14 @@ class _DefaultEvaluator:
         return prediction
 
 
+def _combiner_names_for_scope(scope: str) -> tuple[str, ...]:
+    if scope == "core":
+        return ensemble_module.CANDIDATE_POOL_CORE_COMBINER_NAMES
+    if scope == "full":
+        return ensemble_module.DEFAULT_COMBINER_NAMES
+    raise PoolJudgmentError(f"지원하지 않는 결합 방식 평가 범위다: {scope}")
+
+
 def _validate_request(request: GenerationRequest) -> None:
     _require(
         bool(_SAFE_ID.fullmatch(request.judgment_id)),
@@ -322,6 +336,10 @@ def _validate_request(request: GenerationRequest) -> None:
     )
     _require(bool(request.model_lineage_group.strip()), "모델 계보 묶음이 필요하다.")
     _require(bool(request.selection_description.strip()), "후보 선택 경위가 필요하다.")
+    _require(
+        request.combiner_scope in {"core", "full"},
+        "combiner_scope는 core 또는 full이어야 한다.",
+    )
     _require(request.jobs >= 1, "작업자 수는 1 이상이어야 한다.")
     if request.action == "replacement":
         _require(
@@ -353,6 +371,7 @@ def _freeze(
     repo_root: Path,
     pool_path: Path,
     folds_path: Path,
+    combiner_scope: str,
     registered_combiner_names_provider: Callable[[], tuple[str, ...]],
 ) -> tuple[_FrozenInput, Pool]:
     pool_relative, pool_absolute = _path_pair(repo_root, pool_path, "후보 풀 경로")
@@ -360,7 +379,11 @@ def _freeze(
     _require(pool_absolute.is_file(), f"현재 후보 풀 파일이 없다: {pool_relative}")
     _require(folds_absolute.is_file(), f"현재 fold 파일이 없다: {folds_relative}")
     names = tuple(registered_combiner_names_provider())
-    _require(len(names) == 19, f"기본 결합 전략은 19개여야 한다: {len(names)}개")
+    expected_names = _combiner_names_for_scope(combiner_scope)
+    _require(
+        names == expected_names,
+        f"{combiner_scope} 평가 범위의 결합 방식 목록이 현재 등록부와 다르다.",
+    )
     _require(len(set(names)) == len(names), "기본 결합 전략 이름이 중복됐다.")
     pool = Pool.load(pool_absolute)
     _require(bool(pool.members), "후보 풀이 비어 있다.")
@@ -380,6 +403,7 @@ def _freeze(
             folds_relative=folds_relative,
             folds_absolute=folds_absolute,
             folds_sha256=file_sha256(folds_absolute),
+            combiner_scope=combiner_scope,
             combiner_names=names,
             combiner_names_sha256=canonical_name_list_sha256(names),
         ),
@@ -566,8 +590,9 @@ def _validate_restoration(
         raise PoolJudgmentError(f"원래 제거 기록을 읽을 수 없다: {relative}") from exc
     _require(isinstance(original, dict), "원래 제거 기록은 키-값 구조여야 한다.")
     _require(
-        original.get("contract_version") == POOL_JUDGMENT_CONTRACT_VERSION,
-        "원래 제거 기록의 후보 풀 판정 계약 판본이 다르다.",
+        original.get("contract_version")
+        in POOL_JUDGMENT_SUPPORTED_CONTRACT_VERSIONS,
+        "원래 제거 기록의 후보 풀 판정 계약 판본을 지원하지 않는다.",
     )
     original_result = original.get("result")
     _require(
@@ -960,11 +985,14 @@ def _selection_payload(
     candidates: Sequence[_CandidateRun] | None,
 ) -> dict[str, Any]:
     nested = len(request.candidate_run_ids) > 1
+    combiner_count = len(_combiner_names_for_scope(request.combiner_scope))
     return {
         "kind": "nested_selection" if nested else "precommitted_single",
+        "combiner_scope": request.combiner_scope,
         "description": request.selection_description,
         "rule": (
-            "각 평가 범위에서 후보 포함 풀의 기본 결합 전략 19개 중 최고 nested OOF AUC가 가장 높은 후보를 고른다."
+            "각 평가 범위에서 후보 포함 풀의 결합 전략 "
+            f"{combiner_count}개 중 최고 nested OOF AUC가 가장 높은 후보를 고른다."
             if nested
             else "사전 고정한 후보의 포함 전후를 직접 비교한다."
         ),
@@ -1172,12 +1200,13 @@ def generate_pool_judgment(
     train_path: Path = TRAIN_PATH,
     test_path: Path = TEST_PATH,
     evaluator_factory: Callable[[InputContext, int], _Evaluator] = _DefaultEvaluator,
-    registered_combiner_names_provider: Callable[[], tuple[str, ...]] = (
-        lambda: ensemble_module.DEFAULT_COMBINER_NAMES
-    ),
+    registered_combiner_names_provider: Callable[[], tuple[str, ...]] | None = None,
 ) -> GenerationResult:
     """한 후보 판정을 실행하고 변경 불가 evidence와 YAML 기록을 함께 만든다."""
     _validate_request(request)
+    if registered_combiner_names_provider is None:
+        selected_combiner_names = _combiner_names_for_scope(request.combiner_scope)
+        registered_combiner_names_provider = lambda: selected_combiner_names
     repo_root = repo_root.resolve()
     output_relative, output_absolute = _path_pair(
         repo_root, request.output_path, "판정 기록 경로"
@@ -1191,7 +1220,11 @@ def generate_pool_judgment(
         _require(not path.exists(), f"변경 불가 출력이 이미 있다: {path}")
 
     frozen, pool = _freeze(
-        repo_root, pool_path, folds_path, registered_combiner_names_provider
+        repo_root,
+        pool_path,
+        folds_path,
+        request.combiner_scope,
+        registered_combiner_names_provider,
     )
     store = store or MlflowRunStore()
     with tempfile.TemporaryDirectory(prefix=".pool-judgment-", dir=repo_root) as temporary:
@@ -1320,6 +1353,11 @@ def main() -> None:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--evidence", type=Path)
     parser.add_argument(
+        "--full-combiners",
+        action="store_true",
+        help="선택적 결합 방식까지 포함한 19개 전체를 평가한다",
+    )
+    parser.add_argument(
         "--jobs", type=int, default=max(1, min(8, os.cpu_count() or 1))
     )
     parser.add_argument("--tracking-uri", default=TRACKING_URI)
@@ -1334,6 +1372,7 @@ def main() -> None:
         selection_description=args.selection_description,
         output_path=output,
         evidence_path=evidence,
+        combiner_scope="full" if args.full_combiners else "core",
         replaces_run_id=args.replaces_run_id,
         restores_judgment_path=args.restores_judgment,
         jobs=args.jobs,

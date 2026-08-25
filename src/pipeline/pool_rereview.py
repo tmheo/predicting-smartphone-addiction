@@ -567,8 +567,8 @@ class StrategyEvaluator:
             ),
         )
         _require(
-            all(len(current) == 19 for current in arm_outcomes),
-            "필수 등록 전략 19개가 모든 팔에서 실행되지 않았다.",
+            all(len(current) == len(self.names) for current in arm_outcomes),
+            "요청한 등록 전략이 모든 팔에서 실행되지 않았다.",
         )
         best_outcomes = [
             max(

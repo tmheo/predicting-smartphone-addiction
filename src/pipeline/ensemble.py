@@ -1142,6 +1142,21 @@ PRECISION_COMBINER_NAMES = (
 DEFAULT_COMBINER_NAMES = tuple(
     name for name in COMBINER_REGISTRY if name not in PRECISION_COMBINER_NAMES
 )
+CANDIDATE_POOL_CORE_COMBINER_NAMES = tuple(
+    name
+    for name in DEFAULT_COMBINER_NAMES
+    if name
+    in {
+        "missing_segmented_rank_logit",
+        "missing_interaction_rank_logit",
+        "shrunk_rank_logit_logistic",
+    }
+)
+CANDIDATE_POOL_OPTIONAL_COMBINER_NAMES = tuple(
+    name
+    for name in DEFAULT_COMBINER_NAMES
+    if name not in CANDIDATE_POOL_CORE_COMBINER_NAMES
+)
 DEFAULT_EVALUATION_OUTPUT = Path("run-logs/ensemble-evaluation.json")
 DEFAULT_STRATEGY_OOF_OUTPUT = Path("run-logs/strategy-oof.parquet")
 EVALUATION_ARTIFACT_NAME = "ensemble_evaluation.json"

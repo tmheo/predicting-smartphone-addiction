@@ -13,7 +13,7 @@
   통과한 3시드 평균본만 가능하다. 후보 풀에는 시드 평균본만 올린다.
 - 진입 하한과 중복 검사는 임시 평가 진단이다.
   지속 등록과 원자 교체는 현재 후보 풀, folds, 등록 결합 방식 집합을 동결한
-  `candidate-pool-v1` nested OOF 판정 기록이 양수 차이를 증명할 때만 장부를 쓴다.
+  지원하는 `candidate-pool` nested OOF 판정 기록이 양수 차이를 증명할 때만 장부를 쓴다.
 - 탈락(중복 교체 포함)은 장부에서 지우고 MLflow 태그(pool.dropped_*)와 티켓
   코멘트로도 남긴다.
 
@@ -117,7 +117,7 @@ def validate_duplicate_change_route(
     """중복 후보는 원자 교체로만 허용하되 교체 대상은 동결 판정을 따른다.
 
     `judge_entry`의 최근접 중복은 예전 휴리스틱 진단이다.
-    `candidate-pool-v1`은 결과를 보기 전에 지정한 같은 계보 이전판을 교체할 수
+    후보 풀 판정 계약은 결과를 보기 전에 지정한 같은 계보 이전판을 교체할 수
     있으므로, 최근접 구성원과 다르다는 이유로 유효한 nested OOF 판정을 뒤집지
     않는다.
     """
@@ -149,14 +149,14 @@ def main() -> None:
     parser.add_argument(
         "--judgment",
         type=Path,
-        help="--admit을 허용한 candidate-pool-v1 판정 기록",
+        help="--admit을 허용한 candidate-pool 판정 기록",
     )
     args = parser.parse_args()
 
     if args.admit and not args.reason:
         sys.exit("--admit에는 --reason \"한 줄 사유\"가 필요하다.")
     if args.admit and args.judgment is None:
-        sys.exit("--admit에는 --judgment <candidate-pool-v1 판정 기록>이 필요하다.")
+        sys.exit("--admit에는 --judgment <candidate-pool 판정 기록>이 필요하다.")
     if not args.admit and args.judgment is not None:
         sys.exit("--judgment는 --admit과 함께 사용해야 한다.")
     if not CHAMPION_PATH.exists():

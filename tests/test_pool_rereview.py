@@ -116,6 +116,35 @@ def test_fold_parallel_strategy_evaluation_matches_nested_contract():
     np.testing.assert_array_equal(actual.prediction, expected.prediction.to_numpy())
 
 
+def test_strategy_evaluator_accepts_candidate_pool_core_subset():
+    rows = 120
+    index = pd.Index(np.arange(rows), name="id")
+    rng = np.random.default_rng(388)
+    predictions = pd.DataFrame(
+        {"a": rng.random(rows), "b": rng.random(rows)}, index=index
+    )
+    labels = pd.Series(np.tile([0, 1], rows // 2), index=index)
+    folds = pd.Series(np.arange(rows) % 5, index=index)
+    names = ensemble_module.CANDIDATE_POOL_CORE_COMBINER_NAMES
+    context = InputContext(
+        predictions=predictions,
+        labels=labels,
+        folds=folds,
+        missingness_bands=pd.Series(np.arange(rows) % 3, index=index),
+        ledger={"strategies": {"included": list(names)}},
+        baseline={},
+        source_hashes={},
+        prediction_file_sha256="0" * 64,
+        member_prediction_sha256={"a": "0" * 64, "b": "0" * 64},
+    )
+
+    with StrategyEvaluator(context, jobs=2) as evaluator:
+        score = evaluator.evaluate(("a", "b"), excluded_fold=None)
+
+    assert tuple(score.strategy_auc) == names
+    assert score.best_strategy in names
+
+
 def test_fold_parallel_mapper_schedules_every_request_and_fold_once():
     evaluator = object.__new__(StrategyEvaluator)
     evaluator.context = type(
@@ -164,9 +193,12 @@ def test_fold_parallel_mapper_schedules_every_request_and_fold_once():
     assert outcomes[1]["prediction"] is None
 
 
-def test_independent_arms_share_one_fold_task_queue_and_replay_queue():
+@pytest.mark.parametrize("strategy_count", [3, 19])
+def test_independent_arms_share_one_fold_task_queue_and_replay_queue(strategy_count):
     evaluator = object.__new__(StrategyEvaluator)
-    evaluator.names = ("rank_mean",) * 19
+    evaluator.names = tuple(
+        f"strategy-{index}" for index in range(strategy_count)
+    )
     evaluator.fits = 0
     evaluator.arm_evaluations = 0
     calls = []
@@ -193,14 +225,14 @@ def test_independent_arms_share_one_fold_task_queue_and_replay_queue():
     )
 
     assert len(calls) == 2
-    assert len(calls[0]) == 3 * 19
-    assert [request[3] for request in calls[0][::19]] == [None, "a", "b"]
+    assert len(calls[0]) == 3 * strategy_count
+    assert [request[3] for request in calls[0][::strategy_count]] == [None, "a", "b"]
     assert len(calls[1]) == 3
     assert [request[3] for request in calls[1]] == [None, "a", "b"]
     assert len(scores) == 3
     assert all(score.prediction is not None for score in scores)
     assert evaluator.arm_evaluations == 3
-    assert evaluator.fits == (3 * 19 + 3) * 2
+    assert evaluator.fits == (3 * strategy_count + 3) * 2
 
 
 def test_final_candidate_scans_all_accepted_states_not_only_terminal():

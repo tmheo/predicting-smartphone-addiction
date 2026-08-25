@@ -85,7 +85,12 @@ import yaml
 from sklearn.metrics import roc_auc_score
 
 from .data import ID, TARGET, TRAIN_PATH
-from .ensemble import DEFAULT_COMBINER_NAMES, MISSINGNESS_TEST_PATH, rank_mean
+from .ensemble import (
+    CANDIDATE_POOL_CORE_COMBINER_NAMES,
+    DEFAULT_COMBINER_NAMES,
+    MISSINGNESS_TEST_PATH,
+    rank_mean,
+)
 from .features import PLACEBO
 from .ledger import POOL_PATH, Champion, Pool
 from .runs import RunStore
@@ -99,7 +104,12 @@ FOLD_WIN_MIN = 3  # 경계 구간에서 5개 fold 중 필요한 최소 승리 �
 ENTRY_FLOOR_MARGIN = 0.01  # champion − 0.01이 풀 진입 하한. (ADR 0001)
 DUPLICATE_SPEARMAN = 0.998  # 이 이상이면 중복으로 본다. (ADR 0001)
 FOLDS_PATH = Path("artifacts/folds.parquet")
-POOL_JUDGMENT_CONTRACT_VERSION = "candidate-pool-v1"
+POOL_JUDGMENT_CONTRACT_VERSION = "candidate-pool-v2"
+POOL_JUDGMENT_LEGACY_CONTRACT_VERSIONS = ("candidate-pool-v1",)
+POOL_JUDGMENT_SUPPORTED_CONTRACT_VERSIONS = (
+    *POOL_JUDGMENT_LEGACY_CONTRACT_VERSIONS,
+    POOL_JUDGMENT_CONTRACT_VERSION,
+)
 POOL_EQUIVALENCE_BAND_UPPER = 0.000027669802
 
 
@@ -666,9 +676,9 @@ def load_pool_admission_authorization(
     candidate_config: str,
     pool_path: Path = POOL_PATH,
     folds_path: Path = FOLDS_PATH,
-    registered_combiner_names: tuple[str, ...] = DEFAULT_COMBINER_NAMES,
+    registered_combiner_names: tuple[str, ...] | None = None,
 ) -> PoolAdmissionAuthorization:
-    """`candidate-pool-v1` 기록을 검증해 장부 변경 권한으로 좁힌다.
+    """지원하는 후보 풀 판정 기록을 검증해 장부 변경 권한으로 좁힌다.
 
     판정 기록 생성은 별도 절차의 소관이다.
     이 함수는 현재 장부와 판정 입력이 그대로일 때만 이미 끝난 nested OOF 판정을
@@ -685,9 +695,11 @@ def load_pool_admission_authorization(
         raise JudgmentError(f"후보 풀 판정 기록을 읽을 수 없다: {exc}") from exc
     _require_pool_record(isinstance(raw, dict), "최상위 값은 사전이어야 한다.")
     _require_pool_record(raw.get("schema_version") == 1, "schema_version은 1이어야 한다.")
+    contract_version = raw.get("contract_version")
     _require_pool_record(
-        raw.get("contract_version") == POOL_JUDGMENT_CONTRACT_VERSION,
-        f"계약 판본은 {POOL_JUDGMENT_CONTRACT_VERSION}이어야 한다.",
+        contract_version in POOL_JUDGMENT_SUPPORTED_CONTRACT_VERSIONS,
+        "지원하는 계약 판본이 아니다: "
+        f"{', '.join(POOL_JUDGMENT_SUPPORTED_CONTRACT_VERSIONS)}",
     )
     judgment_id = raw.get("judgment_id")
     _require_pool_record(isinstance(judgment_id, str) and judgment_id, "judgment_id가 없다.")
@@ -737,6 +749,20 @@ def load_pool_admission_authorization(
         and bool(selection["description"].strip()),
         "후보 선택 경위가 없다.",
     )
+    if contract_version == POOL_JUDGMENT_CONTRACT_VERSION:
+        combiner_scope = selection.get("combiner_scope")
+        _require_pool_record(
+            combiner_scope in {"core", "full"},
+            "candidate-pool-v2 selection.combiner_scope가 올바르지 않다.",
+        )
+        contract_combiner_names = (
+            CANDIDATE_POOL_CORE_COMBINER_NAMES
+            if combiner_scope == "core"
+            else DEFAULT_COMBINER_NAMES
+        )
+    else:
+        combiner_scope = "full"
+        contract_combiner_names = DEFAULT_COMBINER_NAMES
 
     frozen = raw.get("frozen_input")
     _require_pool_record(isinstance(frozen, dict), "frozen_input이 없다.")
@@ -756,8 +782,22 @@ def load_pool_admission_authorization(
     )
     combiners = frozen.get("registered_combiners")
     _require_pool_record(isinstance(combiners, dict), "동결 등록 결합 방식 집합이 없다.")
-    current_names = list(registered_combiner_names)
-    current_names_sha256 = canonical_name_list_sha256(registered_combiner_names)
+    if contract_version == POOL_JUDGMENT_CONTRACT_VERSION:
+        _require_pool_record(
+            combiners.get("scope") == combiner_scope,
+            "동결 등록 결합 방식의 평가 범위가 selection과 다르다.",
+        )
+    current_combiner_names = (
+        contract_combiner_names
+        if registered_combiner_names is None
+        else registered_combiner_names
+    )
+    _require_pool_record(
+        current_combiner_names == contract_combiner_names,
+        "계약 판본과 평가 범위에 맞는 등록 결합 방식 집합이 아니다.",
+    )
+    current_names = list(current_combiner_names)
+    current_names_sha256 = canonical_name_list_sha256(current_combiner_names)
     _require_pool_record(
         combiners.get("names") == current_names,
         "등록 결합 방식의 이름이나 순서가 현재 등록부와 다르다.",
@@ -859,7 +899,7 @@ def load_pool_admission_authorization(
 
     return PoolAdmissionAuthorization(
         judgment_id=judgment_id,
-        contract_version=POOL_JUDGMENT_CONTRACT_VERSION,
+        contract_version=contract_version,
         action=action,
         candidate_run_id=candidate_run_id,
         candidate_config=candidate_config,

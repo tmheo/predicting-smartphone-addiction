@@ -1,4 +1,4 @@
-"""candidate-pool-v1 판정 기록 생성 경로의 사용자 계약."""
+"""candidate-pool-v2 판정 기록 생성 경로의 사용자 계약."""
 
 from __future__ import annotations
 
@@ -13,7 +13,10 @@ import pytest
 import yaml
 from sklearn.metrics import roc_auc_score
 
-from pipeline.ensemble import DEFAULT_COMBINER_NAMES
+from pipeline.ensemble import (
+    CANDIDATE_POOL_CORE_COMBINER_NAMES,
+    DEFAULT_COMBINER_NAMES,
+)
 from pipeline.judgment import JudgmentError, load_pool_admission_authorization
 from pipeline.ledger import EntryEvidence, Pool, PoolMember
 from pipeline.pool_judgment import (
@@ -54,6 +57,7 @@ class _DeterministicEvaluator:
 
     def evaluate_many(self, arms, *, excluded_fold, capture_prediction=False):
         normalized = tuple(tuple(members) for members, _clone in arms)
+        names = tuple(self.context.ledger["strategies"]["included"])
         self.seen_arms.append(normalized)
         if self.mutation is not None and not self._mutated:
             self.mutation()
@@ -71,7 +75,7 @@ class _DeterministicEvaluator:
             }
             strategy_auc = {
                 name: best_auc - index * 1e-7
-                for index, name in enumerate(DEFAULT_COMBINER_NAMES)
+                for index, name in enumerate(names)
             }
             prediction = None
             if capture_prediction:
@@ -91,16 +95,16 @@ class _DeterministicEvaluator:
                 }
                 strategy_auc = {
                     name: best_auc - index * 1e-7
-                    for index, name in enumerate(DEFAULT_COMBINER_NAMES)
+                    for index, name in enumerate(names)
                 }
             scores.append(
                 PoolScore(
                     members=members,
                     strategy_auc=strategy_auc,
                     strategy_fold_auc={
-                        name: fold_auc for name in DEFAULT_COMBINER_NAMES
+                        name: fold_auc for name in names
                     },
-                    best_strategy=DEFAULT_COMBINER_NAMES[0],
+                    best_strategy=names[0],
                     best_auc=best_auc,
                     best_fold_auc=fold_auc,
                     prediction=prediction,
@@ -240,9 +244,7 @@ def _generate(
                 )
             )
         ),
-        registered_combiner_names_provider=(
-            names_provider or (lambda: DEFAULT_COMBINER_NAMES)
-        ),
+        registered_combiner_names_provider=names_provider,
     )
 
 
@@ -261,13 +263,40 @@ def test_single_candidate_record_is_consumed_without_conversion(monkeypatch, tmp
         folds_path=Path("artifacts/folds.parquet"),
     )
     assert authorization.action == "admission"
+    assert authorization.contract_version == "candidate-pool-v2"
     assert authorization.nested_oof_delta > 0.0
     record = yaml.safe_load(result.record_path.read_text())
+    assert record["contract_version"] == "candidate-pool-v2"
     assert record["selection"]["kind"] == "precommitted_single"
+    assert record["selection"]["combiner_scope"] == "core"
+    assert record["frozen_input"]["registered_combiners"]["scope"] == "core"
+    assert record["frozen_input"]["registered_combiners"]["names"] == list(
+        CANDIDATE_POOL_CORE_COMBINER_NAMES
+    )
+    assert result.input_snapshot_path.is_file()
+
+
+def test_full_combiner_scope_keeps_all_optional_strategies(monkeypatch, tmp_path):
+    store = _write_fixture(tmp_path, candidates=("cand-a",))
+    request = replace(_request(), combiner_scope="full")
+
+    result = _generate(tmp_path, request, store)
+
+    record = yaml.safe_load(result.record_path.read_text())
+    assert record["selection"]["combiner_scope"] == "full"
+    assert record["frozen_input"]["registered_combiners"]["scope"] == "full"
     assert record["frozen_input"]["registered_combiners"]["names"] == list(
         DEFAULT_COMBINER_NAMES
     )
-    assert result.input_snapshot_path.is_file()
+    monkeypatch.chdir(tmp_path)
+    authorization = load_pool_admission_authorization(
+        Path("artifacts/judgments/test-pool-judgment.yaml"),
+        candidate_run_id="cand-a",
+        candidate_config="cand-a",
+        pool_path=Path("artifacts/pool.yaml"),
+        folds_path=Path("artifacts/folds.parquet"),
+    )
+    assert authorization.contract_version == "candidate-pool-v2"
 
 
 def test_multiple_variants_repeat_selection_inside_each_outer_fold(tmp_path):
@@ -294,7 +323,7 @@ def test_multiple_variants_repeat_selection_inside_each_outer_fold(tmp_path):
         "cand-a",
         "cand-b",
     }
-    assert all(choice["strategy_count"] == 19 for choice in choices.values())
+    assert all(choice["strategy_count"] == 3 for choice in choices.values())
 
 
 def test_replacement_compares_current_pool_with_atomic_replacement(tmp_path):
@@ -318,7 +347,7 @@ def test_restoration_requires_a_changed_pool_or_combiner_baseline(monkeypatch, t
     original_path.write_text(
         yaml.safe_dump(
             {
-                "contract_version": "candidate-pool-v1",
+                "contract_version": "candidate-pool-v2",
                 "status": "adopted",
                 "frozen_input": {
                     "candidate_pool": {
@@ -328,7 +357,7 @@ def test_restoration_requires_a_changed_pool_or_combiner_baseline(monkeypatch, t
                         "names_sha256": hashlib.sha256(
                             (
                                 json.dumps(
-                                    list(DEFAULT_COMBINER_NAMES),
+                                    list(CANDIDATE_POOL_CORE_COMBINER_NAMES),
                                     ensure_ascii=False,
                                     separators=(",", ":"),
                                 )
@@ -407,7 +436,7 @@ def test_nonpositive_delta_never_creates_adopted_result(monkeypatch, tmp_path):
 @pytest.mark.parametrize("changed", ["pool", "folds", "combiners"])
 def test_frozen_input_change_refuses_every_output(tmp_path, changed):
     store = _write_fixture(tmp_path, candidates=("cand-a",))
-    names = [DEFAULT_COMBINER_NAMES]
+    names = [CANDIDATE_POOL_CORE_COMBINER_NAMES]
 
     def mutate():
         if changed == "pool":
@@ -415,7 +444,7 @@ def test_frozen_input_change_refuses_every_output(tmp_path, changed):
         elif changed == "folds":
             (tmp_path / "artifacts/folds.parquet").write_bytes(b"changed")
         else:
-            names[0] = DEFAULT_COMBINER_NAMES[:-1]
+            names[0] = CANDIDATE_POOL_CORE_COMBINER_NAMES[:-1]
 
     with pytest.raises(PoolJudgmentError, match="동결 입력"):
         _generate(
