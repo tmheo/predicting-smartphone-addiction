@@ -189,3 +189,29 @@ training_length_correction:
     path: artifacts/full-refit-plan.yaml
     sha256: >-
       f554327283e03d1be67fa954ebac556eef17722fd2a64ade1d86ab3abc1d1ffe
+pool_removal:
+  recorded_at: '2026-08-25'
+  authorization: explicit_user_directive
+  member:
+    config: exp144_issue387_xgb_trial6
+    run_id: 89e3913d74a1490792f19e283989116e
+  reason: >-
+    선택 예측은 10000회 상한에 검열된 모델에서 나왔지만 검열을 해소해 측정한
+    학습 길이로는 같은 예측기를 재현할 수 없어, 전체 자료 재학습이 가능한 풀과
+    계획의 일관성을 우선했다.
+  nested_oof_impact:
+    with_member_auc: 0.9697707136636492
+    without_member_auc: 0.9697449974559854
+    delta_after_minus_before: -0.0000257162076638
+  judgment:
+    path: artifacts/judgments/issue388-exp144-refitability-removal.yaml
+    sha256: 83eaaaaa8643e2606cd9082bcc38d43baf3485bee6ccbc28870b03d88afa5d5a
+  final_pool:
+    path: artifacts/pool.yaml
+    member_count: 32
+    sha256: c273ad60a4747740340cc9353312896c5cfb7f42b94f3cf9e2b51bd0b58ead8b
+  full_refit_plan:
+    path: artifacts/full-refit-plan.yaml
+    member_count: 32
+    refit_count: 94
+    sha256: 31982216b16460e4e5e77789b322b112afec349bf3a9c1f795f54ba56347dbac

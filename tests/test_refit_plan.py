@@ -819,10 +819,10 @@ def test_committed_plan_matches_the_candidate_pool(committed_plan: RefitPlan):
         (member.config, member.lineage.source_run_id)
         for member in committed_plan.members
     ] == [(member.config, member.run_id) for member in pool.members]
-    assert len(committed_plan.members) == 33
+    assert len(committed_plan.members) == 32
     assert (
         sum(len(member.budget_derivation.seeds) for member in committed_plan.members)
-        == 97
+        == 94
     )
     assert committed_plan.protocol.combiner == COMBINER
     assert committed_plan.protocol.cv_model_weight == 5
@@ -848,7 +848,7 @@ def test_committed_plan_has_no_unresolved_evidence(committed_plan: RefitPlan):
         if member.evidence.status == STATUS_NOT_APPLICABLE
     ]
 
-    assert len(iterative) == 31
+    assert len(iterative) == 30
     assert [member.config for member in empty] == [
         "exp058_logreg_onehot",
         "exp067_tabpfn3",

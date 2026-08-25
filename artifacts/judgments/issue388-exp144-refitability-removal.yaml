@@ -1,0 +1,46 @@
+schema_version: 1
+judgment_id: issue388-exp144-refitability-removal
+recorded_at: '2026-08-25'
+decision_type: explicit_pool_removal
+authorization: explicit_user_directive
+member:
+  config: exp144_issue387_xgb_trial6
+  run_id: 89e3913d74a1490792f19e283989116e
+reason:
+  summary: >-
+    선택 당시 예측은 10000회 상한에 검열된 모델에서 나왔지만, 검열을 해소해
+    측정한 학습 길이로는 같은 예측기를 재현할 수 없으므로 전체 자료 재학습이
+    가능한 풀과 계획의 일관성을 우선해 제거한다.
+  original_training_limit: 10000
+  censored_observation_count: 15
+  uncensored_measurement:
+    config: exp156_exp144_xgb_uncensored
+    run_id: 49e1433f3696419b9a5f4b7fbae7efc6
+    oof_auc: 0.9682136358220771
+    stopped_before_limit_count: 15
+    refit_budget_by_seed:
+      42: 65238
+      43: 63411
+      44: 63504
+nested_oof_impact:
+  combiner: shrunk_rank_logit_logistic
+  with_member_auc: 0.9697707136636492
+  without_member_auc: 0.9697449974559854
+  delta_after_minus_before: -0.0000257162076638
+  interpretation: >-
+    제거만 놓고 보면 중첩 OOF AUC가 낮아지므로 성능 개선 판정이 아니다.
+    재현 가능한 전체 자료 재학습 계획을 만들기 위한 명시적 예외다.
+result:
+  state: removed
+  pool:
+    path: artifacts/pool.yaml
+    member_count_before: 33
+    member_count_after: 32
+    sha256_before: 20e4a3e332e16e886a8b744ad8a7bc5389caa4dcf218845d9281c81dea90faf9
+    sha256_after: c273ad60a4747740340cc9353312896c5cfb7f42b94f3cf9e2b51bd0b58ead8b
+  full_refit_plan:
+    path: artifacts/full-refit-plan.yaml
+    member_count_after: 32
+    refit_count_before: 97
+    refit_count_after: 94
+    sha256_after: 31982216b16460e4e5e77789b322b112afec349bf3a9c1f795f54ba56347dbac

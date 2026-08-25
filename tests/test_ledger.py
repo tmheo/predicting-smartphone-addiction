@@ -62,12 +62,6 @@ def test_pool_applies_decided_removals_and_later_replacements():
     )
     expected.append(
         (
-            "exp144_issue387_xgb_trial6",
-            "89e3913d74a1490792f19e283989116e",
-        )
-    )
-    expected.append(
-        (
             "exp157_lookup_muon_initavg8",
             "bb7be9baf1b64888818600d7e0b5927b",
         )
@@ -77,7 +71,7 @@ def test_pool_applies_decided_removals_and_later_replacements():
         for member in Pool.load(REPO / "artifacts" / "pool.yaml").members
     ]
 
-    assert len(actual) == 33
+    assert len(actual) == 32
     assert actual == expected
 
 
