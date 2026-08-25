@@ -53,5 +53,4 @@ If the user does not name a provider, start with Vast.ai and follow `docs/agents
 Use Runpod only when the switch conditions in that document are met.
 Do not select Kaggle or Colab for an improvement-judgment run.
 Kaggle and Colab are limited to human-observed compatibility checks and diagnostics, and an agent must not choose them merely because a model needs a GPU.
-Issue 414 is a narrow exception for its 18 committed GPU-free tree confirmations: use Kaggle CPU first, send only capacity or 12-hour overflow to Vast.ai CPU, import only bundles that pass every verification gate, and record `remote.provider` on each run.
 This policy comes from GitHub issues 123 and 126 and supersedes older Kaggle and Runpod execution precedents.
