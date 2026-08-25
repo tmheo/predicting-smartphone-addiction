@@ -115,6 +115,8 @@ def env(tmp_path, monkeypatch):
     tags = {
         "git_commit": "cafe" * 10,
         "git_dirty": "False",
+        "remote.provider": "vast",
+        "remote.job_id": "issue414-exp-test",
         "sha256.train": file_sha256(tmp_path / "data" / "train.csv"),
         "sha256.test": file_sha256(tmp_path / "data" / "test.csv"),
         "sha256.folds": file_sha256(tmp_path / "artifacts" / "folds.parquet"),
@@ -252,6 +254,8 @@ def test_roundtrip_reproduces_run(env):
     assert meta.tags["git_dirty"] == "False"
     assert meta.tags["source.kind"] == "bundle"
     assert meta.tags["source.run_id"] == env["run_id"]
+    assert meta.tags["remote.provider"] == "vast"
+    assert meta.tags["remote.job_id"] == "issue414-exp-test"
     # 산출물 전체가 재생되어 실행 저장소 소비자가 그대로 동작한다.
     assert len(store.oof_of(new_run_id)) == N
     assert not store.importance_of(new_run_id).empty

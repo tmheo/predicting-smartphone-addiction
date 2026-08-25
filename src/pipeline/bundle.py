@@ -369,6 +369,9 @@ def import_bundle(zip_path: Path, tracking_uri: str = TRACKING_URI) -> str:
                 )
         for key in ("git_commit", "git_dirty"):
             client.set_tag(run_id, key, manifest["tags"][key])
+        for key in ("remote.provider", "remote.job_id"):
+            if key in manifest["tags"]:
+                client.set_tag(run_id, key, manifest["tags"][key])
         for key, value in manifest["tags"].items():
             if key.startswith("sha256."):
                 client.set_tag(run_id, key, value)

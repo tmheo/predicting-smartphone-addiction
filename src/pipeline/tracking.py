@@ -19,12 +19,14 @@ artifact는 로컬 mlartifacts/ 아래 파일로 남으므로 소비 방식은 �
   model_training_diagnostics.json(모델별 구조화 학습 관측과 반복형 계열의
   training_length_evidence 관측 학습 길이 근거). (#19, #141, #160, #372)
   test_pred는 라벨이 없어 재채점 가치가 없으므로 시드 평균본만 남긴다. (#98)
-- tags: git_commit, git_dirty, 입력 파일 sha256. dirty 실행은 앙상블 후보에서 제외하는 관행. (#14)
+- tags: git_commit, git_dirty, 입력 파일 sha256, 원격 실행 환경과 작업 식별자.
+  dirty 실행은 앙상블 후보에서 제외하는 관행. (#14, #414)
 """
 
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import tempfile
 from collections.abc import Iterator
@@ -140,6 +142,13 @@ def log_start_records(client, run_id: str, cfg: ExperimentConfig) -> None:
             client.log_param(run_id, f"initial_score.{key}", value)
     for key, value in git_state().items():
         client.set_tag(run_id, key, value)
+    for key, environment_name in (
+        ("remote.provider", "REMOTE_RUN_PROVIDER"),
+        ("remote.job_id", "REMOTE_RUN_JOB_ID"),
+    ):
+        value = os.environ.get(environment_name)
+        if value:
+            client.set_tag(run_id, key, value)
     client.log_artifact(run_id, str(cfg.source_path))
 
 
