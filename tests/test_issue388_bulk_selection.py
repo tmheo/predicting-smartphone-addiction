@@ -101,8 +101,25 @@ def test_issue388_pool_and_refit_plan_are_aligned() -> None:
         for member in plan.members
         if member.config == "exp144_issue387_xgb_trial6"
     ]
+    assert (
+        exp144.lineage.evidence_artifact_path
+        == "training_length_remeasurement.json"
+    )
     assert {seed.seed: seed.budget for seed in exp144.budget_derivation.seeds} == {
-        42: 12500,
-        43: 12500,
-        44: 12500,
+        42: 65238,
+        43: 63411,
+        44: 63504,
     }
+    correction = results["training_length_correction"]
+    assert correction["pool_member"]["membership_changed"] is False
+    assert correction["remeasurement"]["run_id"] == (
+        "49e1433f3696419b9a5f4b7fbae7efc6"
+    )
+    assert correction["corrected_refit_budget_by_seed"] == {
+        42: 65238,
+        43: 63411,
+        44: 63504,
+    }
+    assert file_sha256(Path("artifacts/full-refit-plan.yaml")) == correction[
+        "current_full_refit_plan"
+    ]["sha256"]

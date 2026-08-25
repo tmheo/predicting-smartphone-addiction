@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -112,4 +113,57 @@ def test_every_pool_member_has_a_recovery_declaration(module):
 
     assert sorted(module.RECOVERY) == sorted(
         member.config for member in Pool.load().members
+    )
+
+
+def test_exp144_remeasurement_keeps_the_measurement_run_provenance(module):
+    measurement_run_id = "measurement-run"
+    entries = [
+        {
+            "seed": 42,
+            "fold": fold,
+            "details": {"best_iteration": 100 + fold},
+        }
+        for fold in range(5)
+    ]
+
+    class Store:
+        def artifact_bytes_of(self, run_id, artifact_name):
+            assert (run_id, artifact_name) == (
+                measurement_run_id,
+                module.STRUCTURED_ARTIFACT,
+            )
+            return json.dumps(entries).encode()
+
+        def artifact_sha256_of(self, run_id, artifact_name):
+            assert (run_id, artifact_name) == (
+                measurement_run_id,
+                module.STRUCTURED_ARTIFACT,
+            )
+            return "diagnostics-sha256"
+
+    recovery = module.MemberRecovery(
+        "xgboost",
+        "structured_remeasurement",
+        "single",
+        measurement_run_id=measurement_run_id,
+    )
+    evidence = module._recover_from_structured_remeasurement(
+        Store(), recovery, (42,)
+    )
+
+    assert evidence.artifact_name == module.REMEASUREMENT_ARTIFACT
+    assert evidence.sources == [
+        {
+            "kind": "structured_remeasurement",
+            "run_id": measurement_run_id,
+            "artifact": module.STRUCTURED_ARTIFACT,
+            "sha256": "diagnostics-sha256",
+        }
+    ]
+    assert [cell.raw_value for cell in evidence.cells] == [100, 101, 102, 103, 104]
+    assert all(cell.source == "structured_remeasurement" for cell in evidence.cells)
+    assert all(
+        cell.raw_path.startswith(f"runs:/{measurement_run_id}/")
+        for cell in evidence.cells
     )

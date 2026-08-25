@@ -33,7 +33,7 @@ import argparse
 import json
 import re
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 import yaml
@@ -56,6 +56,7 @@ PLAN_PATH = Path("artifacts/full-refit-plan.yaml")
 RUN_LOG_ARTIFACT = "logs/run.log"
 STRUCTURED_ARTIFACT = "model_training_diagnostics.json"
 RECOVERED_ARTIFACT = "training_length_evidence.json"
+REMEASUREMENT_ARTIFACT = "training_length_remeasurement.json"
 EVIDENCE_SCHEMA_VERSION = 1
 MULTIPLIER = 1.25
 
@@ -108,9 +109,10 @@ class MemberRecovery:
     """구성원 하나의 복원 방법 선언."""
 
     model_family: str | None
-    source: str  # "structured" | "run_log" | "none"
+    source: str  # "structured" | "structured_remeasurement" | "run_log" | "none"
     reader: str | None = None
     confirmed: tuple[ConfirmedCell, ...] = ()
+    measurement_run_id: str | None = None
 
 
 def _cells(bundle_key: str, results: str, coordinates) -> tuple[ConfirmedCell, ...]:
@@ -181,7 +183,12 @@ RECOVERY: dict[str, MemberRecovery] = {
         "realmlp", "structured", "single"
     ),
     "exp140_realmlp_orig_cdf_diff": MemberRecovery("realmlp", "structured", "single"),
-    "exp144_issue387_xgb_trial6": MemberRecovery("xgboost", "structured", "single"),
+    "exp144_issue387_xgb_trial6": MemberRecovery(
+        "xgboost",
+        "structured_remeasurement",
+        "single",
+        measurement_run_id="49e1433f3696419b9a5f4b7fbae7efc6",
+    ),
 }
 
 # 문법 판본 1이 쓰던 재학습 설정 경로. 원 실행 설정과 다른 구성원이 있어 그대로 옮긴다.
@@ -479,6 +486,41 @@ def _recover_from_structured(
     )
 
 
+def _recover_from_structured_remeasurement(
+    store: RunStore, member: MemberRecovery, seeds: tuple[int, ...]
+) -> RecoveredEvidence:
+    """별도 재측정 실행의 구조화 진단을 풀 구성원 실행에 붙일 근거로 바꾼다."""
+    measurement_run_id = member.measurement_run_id
+    if not measurement_run_id:
+        raise RecoveryError("구조화 재측정 복원에는 measurement_run_id가 필요하다.")
+    recovered = _recover_from_structured(store, measurement_run_id, member, seeds)
+    source_sha256 = store.artifact_sha256_of(measurement_run_id, STRUCTURED_ARTIFACT)
+    cells = [
+        replace(
+            cell,
+            raw_path=(
+                f"runs:/{measurement_run_id}/{STRUCTURED_ARTIFACT}"
+                f"#details.{recovered.raw_field.removesuffix('()')}"
+            ),
+            source="structured_remeasurement",
+        )
+        for cell in recovered.cells
+    ]
+    return replace(
+        recovered,
+        cells=cells,
+        artifact_name=REMEASUREMENT_ARTIFACT,
+        sources=[
+            {
+                "kind": "structured_remeasurement",
+                "run_id": measurement_run_id,
+                "artifact": STRUCTURED_ARTIFACT,
+                "sha256": source_sha256,
+            }
+        ],
+    )
+
+
 def _evidence_payload(run_id: str, evidence: RecoveredEvidence) -> bytes:
     """실행에 붙일 근거 산출물. 좌표마다 어느 자료에서 왔는지까지 남긴다."""
     from pipeline.training_length import observed_length_from_raw
@@ -568,7 +610,29 @@ def _member_document(
             },
         }
 
-    if recovery.source == "structured":
+    if recovery.source == "structured_remeasurement":
+        evidence = _recover_from_structured_remeasurement(store, recovery, seeds)
+        payload = _evidence_payload(run_id, evidence)
+        try:
+            existing = store.artifact_bytes_of(run_id, evidence.artifact_name)
+        except RunStoreError:
+            existing = None
+        if existing is None:
+            if attach:
+                evidence_sha256 = store.attach_artifact(
+                    run_id, evidence.artifact_name, payload
+                )
+            else:
+                PENDING.append(name)
+                evidence_sha256 = sha256_of(payload)
+        else:
+            if existing != payload:
+                raise RecoveryError(
+                    f"{name}: 실행에 붙어 있는 {evidence.artifact_name}이 "
+                    "재측정 복원 결과와 다르다."
+                )
+            evidence_sha256 = sha256_of(existing)
+    elif recovery.source == "structured":
         evidence = _recover_from_structured(store, run_id, recovery, seeds)
         evidence_sha256 = store.artifact_sha256_of(run_id, evidence.artifact_name)
     else:
@@ -684,16 +748,43 @@ def main() -> None:
     parser.add_argument("--attach", action="store_true", help="복원한 근거 산출물을 실행에 붙인다")
     parser.add_argument("--write", action="store_true", help="재학습 계획 장부를 다시 쓴다")
     parser.add_argument("--check", action="store_true", help="현재 장부와 견줘 보여 준다")
+    parser.add_argument(
+        "--member",
+        help="지정한 구성원만 복원해 현재 장부의 같은 위치를 갱신한다",
+    )
     args = parser.parse_args()
 
     store = MlflowRunStore()
     pool = Pool.load()
-    plan = build_plan(store, pool, attach=args.attach)
+    current = yaml.safe_load(PLAN_PATH.read_text())
+    current_budgets = _current_budgets(current)
+    if args.member:
+        try:
+            pool_member = next(
+                member for member in pool.members if member.config == args.member
+            )
+        except StopIteration as error:
+            raise SystemExit(f"후보 풀에 없는 구성원이다: {args.member}") from error
+        refreshed = _member_document(store, pool_member, attach=args.attach)
+        plan = current
+        plan["source_pool_sha256"] = data.file_sha256(POOL_PATH)
+        matches = [
+            index
+            for index, member in enumerate(plan["members"])
+            if member["config"] == args.member
+        ]
+        if len(matches) != 1:
+            raise SystemExit(
+                f"현재 장부에서 구성원 위치를 하나로 찾지 못했다: {args.member}"
+            )
+        plan["members"][matches[0]] = refreshed
+        checked_members = [refreshed]
+    else:
+        plan = build_plan(store, pool, attach=args.attach)
+        checked_members = plan["members"]
 
     if args.check or not args.write:
-        current = yaml.safe_load(PLAN_PATH.read_text())
-        current_budgets = _current_budgets(current)
-        for member in plan["members"]:
+        for member in checked_members:
             name = member["config"]
             budgets = {
                 seed["seed"]: seed["budget"]

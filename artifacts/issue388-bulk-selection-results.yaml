@@ -163,3 +163,29 @@ final:
       42: 12500
       43: 12500
       44: 12500
+training_length_correction:
+  recorded_at: '2026-08-25'
+  reason: 원 실행의 15개 관측이 모두 10000회 설정 상한에 닿아 조기 종료 지점을 검열했다.
+  pool_member:
+    config: exp144_issue387_xgb_trial6
+    run_id: 89e3913d74a1490792f19e283989116e
+    membership_changed: false
+  remeasurement:
+    config: exp156_exp144_xgb_uncensored
+    run_id: 49e1433f3696419b9a5f4b7fbae7efc6
+    auc_oof: 0.9682136358220771
+    model_training_diagnostics_sha256: >-
+      9f2e6fbcfb1299ab2c18c263c0876946e4d0e28d1f21dd5df60a04569c5a3107
+    all_folds_stopped_before_limit: true
+  corrected_refit_budget_by_seed:
+    42: 65238
+    43: 63411
+    44: 63504
+  evidence:
+    artifact_path: training_length_remeasurement.json
+    artifact_sha256: >-
+      edb7ec9705a8546b5f66c4254114bd8bc78ab96a1c5380d8d28c451f911016f7
+  current_full_refit_plan:
+    path: artifacts/full-refit-plan.yaml
+    sha256: >-
+      f554327283e03d1be67fa954ebac556eef17722fd2a64ade1d86ab3abc1d1ffe
