@@ -1,0 +1,62 @@
+{
+ "auc": 0.969610665800472,
+ "cache_hits_last_run": 24,
+ "computed_last_run": 568,
+ "done": true,
+ "evaluations_total": 563,
+ "final_pool_names": [
+  "exp156_lookup_bivariate_plr5_initavg8",
+  "exp006_te_drop_gaming",
+  "exp025_constrained_impute",
+  "exp035_lattice_te",
+  "exp070_cat_exact_cats",
+  "exp081_lookup_fold_initialization_avg3",
+  "exp110_lgb_kitopl_no_te",
+  "exp106_lookup_fixed24_train_test_preprocessing",
+  "exp085_contextual_spline_m0",
+  "exp131_tab_cnn_oof_target_mean",
+  "exp132_tab_cnn_epochs100",
+  "exp139_realmlp_reference_qnormal_train_test",
+  "exp157_lookup_muon_initavg8"
+ ],
+ "identity": "4bdee56d5b2379d115328f86419b8556962639a34d77346f9d4fe93464c988f3",
+ "initial": {
+  "auc": 0.9692533763256747,
+  "fold_auc": {
+   "0": 0.9688237395162128,
+   "1": 0.9694761951785209,
+   "2": 0.9695373273919766,
+   "4": 0.9691762424296705
+  },
+  "seconds": 4.193772077560425
+ },
+ "max_spearman_final": 0.9954268650512125,
+ "maxrss_mb": {
+  "children_max": 0.0,
+  "driver": 209.484375
+ },
+ "pair_adopted": [
+  5,
+  28
+ ],
+ "pool": [
+  0,
+  1,
+  5,
+  7,
+  10,
+  12,
+  13,
+  16,
+  19,
+  28,
+  29,
+  30,
+  32
+ ],
+ "resumed": 0,
+ "scope": 3,
+ "stage": "done",
+ "steps": 16,
+ "wall_seconds": 791.1653907299042
+}

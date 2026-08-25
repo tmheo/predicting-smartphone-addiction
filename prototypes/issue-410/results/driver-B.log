@@ -1,0 +1,50 @@
+[scope-2] step 0 forward1 k=1 moves=32 chosen=[30] delta=0.00021862350680967868 auc=0.9695640089 pool=2 24s cache_hits=0 computed=33
+[scope-2] step 1 forward1 k=2 moves=31 chosen=[10] delta=6.85585624299323e-05 auc=0.9696325674 pool=3 28s cache_hits=0 computed=64
+[scope-2] step 2 forward1 k=3 moves=30 chosen=[16] delta=2.9426013446243182e-05 auc=0.9696619935 pool=4 31s cache_hits=0 computed=94
+[scope-2] step 3 forward1 k=4 moves=29 chosen=[19] delta=1.896909237264488e-05 auc=0.9696809625 pool=5 32s cache_hits=0 computed=123
+[scope-2] step 4 forward1 k=5 moves=28 chosen=[15] delta=1.091544111653242e-06 auc=0.9696820541 pool=6 29s cache_hits=0 computed=151
+/Users/taemyungheo/.local/share/uv/python/cpython-3.13.13-macos-aarch64-none/lib/python3.13/multiprocessing/resource_tracker.py:400: UserWarning: resource_tracker: There appear to be 5 leaked semaphore objects to clean up at shutdown: {'/loky-37276-xp6t2zuw', '/loky-37276-dtiiqyqp', '/loky-37276-891uny3o', '/loky-37276-lnogg88y', '/loky-37276-01g60df5'}
+  warnings.warn(
+ache_hits=14 computed=64
+[scope-2] step 8 forward1 k=9 moves=24 chosen=[24] delta=7.634188269878273e-06 auc=0.9697123315 pool=10 37s cache_hits=14 computed=88
+[scope-2] step 9 forward1 k=10 moves=23 chosen=None delta=None auc=0.9697123315 pool=10 39s cache_hits=15 computed=110
+[scope-2] step 10 backward1 k=10 moves=9 chosen=None delta=None auc=0.9697123315 pool=10 20s cache_hits=15 computed=119
+[scope-2] step 11 forward2 k=10 moves=23 chosen=None delta=None auc=0.9697123315 pool=10 0s cache_hits=38 computed=119
+[scope-2] step 12 pair k=10 moves=231 chosen=[5, 17] delta=7.01504745681536e-06 auc=0.9697193465 pool=12 333s cache_hits=38 computed=350
+[scope-2] step 13 forward3 k=12 moves=21 chosen=[14] delta=1.7499719182634266e-06 auc=0.9697210965 pool=13 36s cache_hits=38 computed=371
+[scope-2] step 14 forward3 k=13 moves=20 chosen=None delta=None auc=0.9697210965 pool=13 39s cache_hits=38 computed=391
+[scope-2] step 15 backward2 k=13 moves=12 chosen=None delta=None auc=0.9697210965 pool=13 33s cache_hits=38 computed=403
+{"auc": 0.9697210965195961, "done": true, "identity": "4bdee56d5b2379d115328f86419b8556962639a34d77346f9d4fe93464c988f3", "pair_adopted": [5, 17], "pool": [0, 1, 5, 7, 10, 12, 14, 15, 16, 17, 19, 24, 30], "resumed": 1, "scope": 2, "stage": "done", "steps": 16, "wall_seconds": 766.6851363182068, "final_pool_names": ["exp156_lookup_bivariate_plr5_initavg8", "exp006_te_drop_gaming", "exp025_constrained_impute", "exp035_lattice_te", "exp070_cat_exact_cats", "exp081_lookup_fold_initialization_avg3", "exp111_xgb_depth8_no_te", "exp071_cat_exact_no_te", "exp106_lookup_fixed24_train_test_preprocessing", "exp117_ag25_gbm_r21", "exp085_contextual_spline_m0", "exp131_lookup_bivariate_plr5", "exp139_realmlp_reference_qnormal_train_test"], "max_spearman_final": 0.9976819270128093, "cache_hits_last_run": 38, "computed_last_run": 403, "evaluations_total": 563, "maxrss_mb": {"driver": 209.484375, "children_max": 0.0}}
+[scope-3] step 0 forward1 k=1 moves=32 chosen=[30] delta=0.0002120737426272168 auc=0.9694654501 pool=2 24s cache_hits=0 computed=33
+[scope-3] step 1 forward1 k=2 moves=31 chosen=[10] delta=6.387245269046105e-05 auc=0.9695293225 pool=3 27s cache_hits=0 computed=64
+[scope-3] step 2 forward1 k=3 moves=30 chosen=[16] delta=2.491828489203929e-05 auc=0.9695542408 pool=4 31s cache_hits=0 computed=94
+[scope-3] step 3 forward1 k=4 moves=29 chosen=[19] delta=1.902260355657326e-05 auc=0.9695732634 pool=5 34s cache_hits=0 computed=123
+[scope-3] step 4 forward1 k=5 moves=28 chosen=[12] delta=4.7266891204378325e-06 auc=0.9695779901 pool=6 32s cache_hits=0 computed=151
+[scope-3] step 5 forward1 k=6 moves=27 chosen=[7] delta=1.0372995175589317e-05 auc=0.9695883631 pool=7 31s cache_hits=0 computed=178
+[scope-3] step 6 forward1 k=7 moves=26 chosen=[29] delta=3.8009828997598305e-06 auc=0.9695921641 pool=8 34s cache_hits=0 computed=204
+[scope-3] step 7 forward1 k=8 moves=25 chosen=[32] delta=2.354079807309617e-06 auc=0.9695945182 pool=9 39s cache_hits=0 computed=229
+[scope-3] step 8 forward1 k=9 moves=24 chosen=[1] delta=9.110840060500003e-06 auc=0.9696036290 pool=10 39s cache_hits=1 computed=252
+[scope-3] step 9 forward1 k=10 moves=23 chosen=None delta=None auc=0.9696036290 pool=10 40s cache_hits=1 computed=275
+[scope-3] step 10 backward1 k=10 moves=9 chosen=None delta=None auc=0.9696036290 pool=10 18s cache_hits=1 computed=284
+[scope-3] step 11 forward2 k=10 moves=23 chosen=None delta=None auc=0.9696036290 pool=10 0s cache_hits=24 computed=284
+[scope-3] step 12 pair k=10 moves=231 chosen=[5, 28] delta=3.973132081891428e-06 auc=0.9696076021 pool=12 355s cache_hits=24 computed=515
+[scope-3] step 13 forward3 k=12 moves=21 chosen=[13] delta=3.0636718855170386e-06 auc=0.9696106658 pool=13 33s cache_hits=24 computed=536
+[scope-3] step 14 forward3 k=13 moves=20 chosen=None delta=None auc=0.9696106658 pool=13 37s cache_hits=24 computed=556
+[scope-3] step 15 backward2 k=13 moves=12 chosen=None delta=None auc=0.9696106658 pool=13 17s cache_hits=24 computed=568
+{"identity": "4bdee56d5b2379d115328f86419b8556962639a34d77346f9d4fe93464c988f3", "scope": 3, "stage": "done", "pool": [0, 1, 5, 7, 10, 12, 13, 16, 19, 28, 29, 30, 32], "auc": 0.969610665800472, "steps": 16, "pair_adopted": [5, 28], "done": true, "resumed": 0, "wall_seconds": 791.1653907299042, "final_pool_names": ["exp156_lookup_bivariate_plr5_initavg8", "exp006_te_drop_gaming", "exp025_constrained_impute", "exp035_lattice_te", "exp070_cat_exact_cats", "exp081_lookup_fold_initialization_avg3", "exp110_lgb_kitopl_no_te", "exp106_lookup_fixed24_train_test_preprocessing", "exp085_contextual_spline_m0", "exp131_tab_cnn_oof_target_mean", "exp132_tab_cnn_epochs100", "exp139_realmlp_reference_qnormal_train_test", "exp157_lookup_muon_initavg8"], "max_spearman_final": 0.9954268650512125, "cache_hits_last_run": 24, "computed_last_run": 568, "evaluations_total": 563, "maxrss_mb": {"driver": 209.484375, "children_max": 0.0}}
+[scope-4] step 0 forward1 k=1 moves=32 chosen=[30] delta=0.00021912769305054702 auc=0.9696547839 pool=2 18s cache_hits=0 computed=33
+[scope-4] step 1 forward1 k=2 moves=31 chosen=[10] delta=6.29098601357958e-05 auc=0.9697176937 pool=3 23s cache_hits=0 computed=64
+[scope-4] step 2 forward1 k=3 moves=30 chosen=[16] delta=3.4412257885807485e-05 auc=0.9697521060 pool=4 24s cache_hits=0 computed=94
+[scope-4] step 3 forward1 k=4 moves=29 chosen=[19] delta=1.8636227353652224e-05 auc=0.9697707422 pool=5 27s cache_hits=0 computed=123
+[scope-4] step 4 forward1 k=5 moves=28 chosen=[24] delta=4.0137646635241e-06 auc=0.9697747560 pool=6 26s cache_hits=0 computed=151
+[scope-4] step 5 forward1 k=6 moves=27 chosen=[12] delta=7.590640045962438e-06 auc=0.9697823466 pool=7 25s cache_hits=1 computed=177
+[scope-4] step 6 forward1 k=7 moves=26 chosen=[7] delta=1.0632373236618697e-05 auc=0.9697929790 pool=8 28s cache_hits=1 computed=203
+[scope-4] step 7 forward1 k=8 moves=25 chosen=[1] delta=6.711771235901054e-06 auc=0.9697996908 pool=9 33s cache_hits=1 computed=228
+[scope-4] step 8 forward1 k=9 moves=24 chosen=[15] delta=4.004519755684832e-06 auc=0.9698036953 pool=10 31s cache_hits=1 computed=252
+[scope-4] step 9 forward1 k=10 moves=23 chosen=None delta=None auc=0.9698036953 pool=10 34s cache_hits=1 computed=275
+[scope-4] step 10 backward1 k=10 moves=9 chosen=None delta=None auc=0.9698036953 pool=10 17s cache_hits=1 computed=284
+[scope-4] step 11 forward2 k=10 moves=23 chosen=None delta=None auc=0.9698036953 pool=10 0s cache_hits=24 computed=284
+[scope-4] step 12 pair k=10 moves=231 chosen=[5, 17] delta=3.9599285375224724e-06 auc=0.9698076552 pool=12 316s cache_hits=24 computed=515
+[scope-4] step 13 forward3 k=12 moves=21 chosen=None delta=None auc=0.9698076552 pool=12 33s cache_hits=24 computed=536
+[scope-4] step 14 backward2 k=12 moves=11 chosen=None delta=None auc=0.9698076552 pool=12 21s cache_hits=24 computed=547
+{"identity": "4bdee56d5b2379d115328f86419b8556962639a34d77346f9d4fe93464c988f3", "scope": 4, "stage": "done", "pool": [0, 1, 5, 7, 10, 12, 15, 16, 17, 19, 24, 30], "auc": 0.9698076552151078, "steps": 15, "pair_adopted": [5, 17], "done": true, "resumed": 0, "wall_seconds": 655.6731741428375, "final_pool_names": ["exp156_lookup_bivariate_plr5_initavg8", "exp006_te_drop_gaming", "exp025_constrained_impute", "exp035_lattice_te", "exp070_cat_exact_cats", "exp081_lookup_fold_initialization_avg3", "exp071_cat_exact_no_te", "exp106_lookup_fixed24_train_test_preprocessing", "exp117_ag25_gbm_r21", "exp085_contextual_spline_m0", "exp131_lookup_bivariate_plr5", "exp139_realmlp_reference_qnormal_train_test"], "max_spearman_final": 0.9976819270128093, "cache_hits_last_run": 24, "computed_last_run": 547, "evaluations_total": 543, "maxrss_mb": {"driver": 209.484375, "children_max": 0.0}}

@@ -1,0 +1,66 @@
+{
+ "auc": 0.9697346081372014,
+ "cache_hits_last_run": 43,
+ "computed_last_run": 548,
+ "done": true,
+ "evaluations_total": 565,
+ "final_pool_names": [
+  "exp156_lookup_bivariate_plr5_initavg8",
+  "exp006_te_drop_gaming",
+  "exp025_constrained_impute",
+  "exp035_lattice_te",
+  "exp070_cat_exact_cats",
+  "exp081_lookup_fold_initialization_avg3",
+  "exp111_xgb_depth8_no_te",
+  "exp071_cat_exact_no_te",
+  "exp106_lookup_fixed24_train_test_preprocessing",
+  "exp117_ag25_gbm_r21",
+  "exp085_contextual_spline_m0",
+  "exp048_lgb_orig_cdf_diff",
+  "exp131_lookup_bivariate_plr5",
+  "exp131_tab_cnn_oof_target_mean",
+  "exp139_realmlp_reference_qnormal_train_test"
+ ],
+ "identity": "4bdee56d5b2379d115328f86419b8556962639a34d77346f9d4fe93464c988f3",
+ "initial": {
+  "auc": 0.9693606684620131,
+  "fold_auc": {
+   "0": 0.9688237395162128,
+   "2": 0.9695373273919766,
+   "3": 0.9699053626301164,
+   "4": 0.9691762424296704
+  },
+  "seconds": 2.0596489906311035
+ },
+ "max_spearman_final": 0.9976819270128093,
+ "maxrss_mb": {
+  "children_max": 0.0,
+  "driver": 213.5625
+ },
+ "pair_adopted": [
+  17,
+  28
+ ],
+ "pool": [
+  0,
+  1,
+  5,
+  7,
+  10,
+  12,
+  14,
+  15,
+  16,
+  17,
+  19,
+  21,
+  24,
+  28,
+  30
+ ],
+ "resumed": 1,
+ "scope": 1,
+ "stage": "done",
+ "steps": 18,
+ "wall_seconds": 499.8108925819397
+}

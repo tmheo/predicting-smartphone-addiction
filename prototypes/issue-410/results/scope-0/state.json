@@ -1,0 +1,57 @@
+{
+ "auc": 0.9699001022374647,
+ "cache_hits_last_run": 0,
+ "computed_last_run": 0,
+ "done": true,
+ "evaluations_total": 517,
+ "final_pool_names": [
+  "exp156_lookup_bivariate_plr5_initavg8",
+  "exp006_te_drop_gaming",
+  "exp025_constrained_impute",
+  "exp035_lattice_te",
+  "exp070_cat_exact_cats",
+  "exp081_lookup_fold_initialization_avg3",
+  "exp111_xgb_depth8_no_te",
+  "exp106_lookup_fixed24_train_test_preprocessing",
+  "exp117_ag25_gbm_r21",
+  "exp085_contextual_spline_m0",
+  "exp139_realmlp_reference_qnormal_train_test",
+  "exp157_lookup_muon_initavg8"
+ ],
+ "identity": "4bdee56d5b2379d115328f86419b8556962639a34d77346f9d4fe93464c988f3",
+ "initial": {
+  "auc": 0.969523782793295,
+  "fold_auc": {
+   "1": 0.9694761951785207,
+   "2": 0.9695373273919766,
+   "3": 0.9699053626301164,
+   "4": 0.9691762424296705
+  },
+  "seconds": 3.046431303024292
+ },
+ "max_spearman_final": 0.9955834452647393,
+ "maxrss_mb": {
+  "children_max": 0.0,
+  "driver": 214.3125
+ },
+ "pair_adopted": false,
+ "pool": [
+  0,
+  1,
+  5,
+  7,
+  10,
+  12,
+  14,
+  16,
+  17,
+  19,
+  30,
+  32
+ ],
+ "resumed": 1,
+ "scope": 0,
+ "stage": "done",
+ "steps": 15,
+ "wall_seconds": 675.2482936382294
+}

@@ -1,0 +1,35 @@
+[scope-full] step 0 forward1 k=1 moves=32 chosen=[30] delta=0.0002201997910824538 auc=0.9696039736 pool=2 41s cache_hits=0 computed=33
+[scope-full] step 1 forward1 k=2 moves=31 chosen=[10] delta=6.35693045246688e-05 auc=0.9696675429 pool=3 51s cache_hits=0 computed=64
+[scope-full] step 2 forward1 k=3 moves=30 chosen=[16] delta=2.9992655037447413e-05 auc=0.9696975356 pool=4 53s cache_hits=0 computed=94
+[scope-full] step 3 forward1 k=4 moves=29 chosen=[19] delta=1.785269075227358e-05 auc=0.9697153883 pool=5 60s cache_hits=0 computed=123
+[scope-full] step 4 forward1 k=5 moves=28 chosen=[12] delta=5.235763108069058e-06 auc=0.9697206241 pool=6 57s cache_hits=0 computed=151
+[scope-full] step 5 forward1 k=6 moves=27 chosen=[14] delta=9.752371788240843e-06 auc=0.9697303764 pool=7 62s cache_hits=0 computed=178
+[scope-full] step 6 forward1 k=7 moves=26 chosen=[7] delta=4.8762975309868395e-06 auc=0.9697352527 pool=8 63s cache_hits=0 computed=204
+[scope-full] step 7 forward1 k=8 moves=25 chosen=[3] delta=4.109910567873243e-06 auc=0.9697393626 pool=9 76s cache_hits=0 computed=229
+[scope-full] step 8 forward1 k=9 moves=24 chosen=None delta=None auc=0.9697393626 pool=9 75s cache_hits=0 computed=253
+[scope-full] step 9 backward1 k=9 moves=8 chosen=None delta=None auc=0.9697393626 pool=9 31s cache_hits=0 computed=261
+[scope-full] step 10 forward2 k=9 moves=24 chosen=None delta=None auc=0.9697393626 pool=9 0s cache_hits=24 computed=261
+[scope-full] step 11 pair k=9 moves=275 chosen=[5, 17] delta=7.129433592600876e-06 auc=0.9697464921 pool=11 758s cache_hits=24 computed=536
+[scope-full] step 12 forward3 k=11 moves=22 chosen=[22] delta=3.1469412637985528e-06 auc=0.9697496390 pool=12 63s cache_hits=24 computed=558
+[scope-full] step 13 forward3 k=12 moves=21 chosen=[11] delta=1.3036646673292296e-06 auc=0.9697509427 pool=13 76s cache_hits=24 computed=579
+[scope-full] step 14 forward3 k=13 moves=20 chosen=None delta=None auc=0.9697509427 pool=13 70s cache_hits=24 computed=599
+[scope-full] step 15 backward2 k=13 moves=12 chosen=None delta=None auc=0.9697509427 pool=13 44s cache_hits=24 computed=611
+{"identity": "4bdee56d5b2379d115328f86419b8556962639a34d77346f9d4fe93464c988f3", "scope": null, "stage": "done", "pool": [0, 3, 5, 7, 10, 11, 12, 14, 16, 17, 19, 22, 30], "auc": 0.9697509426763384, "steps": 16, "pair_adopted": [5, 17], "done": true, "resumed": 0, "wall_seconds": 1579.427396774292, "final_pool_names": ["exp156_lookup_bivariate_plr5_initavg8", "exp022_orig_knn", "exp025_constrained_impute", "exp035_lattice_te", "exp070_cat_exact_cats", "exp067_tabpfn3", "exp081_lookup_fold_initialization_avg3", "exp111_xgb_depth8_no_te", "exp106_lookup_fixed24_train_test_preprocessing", "exp117_ag25_gbm_r21", "exp085_contextual_spline_m0", "exp134_realmlp_muon", "exp139_realmlp_reference_qnormal_train_test"], "max_spearman_final": 0.9968980409790132, "cache_hits_last_run": 24, "computed_last_run": 611, "evaluations_total": 607, "maxrss_mb": {"driver": 212.53125, "children_max": 0.0}}
+[scope-0] step 0 forward1 k=1 moves=32 chosen=[30] delta=0.00022591159688711837 auc=0.9697496944 pool=2 18s cache_hits=0 computed=33
+[scope-0] step 1 forward1 k=2 moves=31 chosen=[10] delta=6.97382584673445e-05 auc=0.9698194326 pool=3 23s cache_hits=0 computed=64
+[scope-0] step 2 forward1 k=3 moves=30 chosen=[16] delta=2.1973790160112472e-05 auc=0.9698414064 pool=4 26s cache_hits=0 computed=94
+[scope-0] step 3 forward1 k=4 moves=29 chosen=[19] delta=1.8125980018601773e-05 auc=0.9698595324 pool=5 28s cache_hits=0 computed=123
+[scope-0] step 4 forward1 k=5 moves=28 chosen=[12] delta=7.29047663383664e-06 auc=0.9698668229 pool=6 27s cache_hits=0 computed=151
+[scope-0] step 5 forward1 k=6 moves=27 chosen=[7] delta=1.3218317008956149e-05 auc=0.9698800412 pool=7 29s cache_hits=0 computed=178
+[scope-0] step 6 forward1 k=7 moves=26 chosen=[32] delta=3.7050766494850507e-06 auc=0.9698837463 pool=8 29s cache_hits=0 computed=204
+[scope-0] step 7 forward1 k=8 moves=25 chosen=[5] delta=4.27924555035375e-06 auc=0.9698880255 pool=9 32s cache_hits=1 computed=228
+[scope-0] step 8 forward1 k=9 moves=24 chosen=[17] delta=1.8177786521578199e-06 auc=0.9698898433 pool=10 31s cache_hits=1 computed=252
+[scope-0] step 9 forward1 k=10 moves=23 chosen=[14] delta=5.490379110684174e-06 auc=0.9698953337 pool=11 34s cache_hits=1 computed=275
+[scope-0] step 10 forward1 k=11 moves=22 chosen=[1] delta=4.768545031064164e-06 auc=0.9699001022 pool=12 28s cache_hits=1 computed=297
+[scope-0] step 11 forward1 k=12 moves=21 chosen=None delta=None auc=0.9699001022 pool=12 33s cache_hits=1 computed=318
+[scope-0] step 12 backward1 k=12 moves=11 chosen=None delta=None auc=0.9699001022 pool=12 21s cache_hits=1 computed=329
+[scope-0] step 13 forward2 k=12 moves=21 chosen=None delta=None auc=0.9699001022 pool=12 0s cache_hits=22 computed=329
+[scope-0] step 14 pair k=12 moves=190 chosen=None delta=None auc=0.9699001022 pool=12 319s cache_hits=22 computed=519
+/Users/taemyungheo/.local/share/uv/python/cpython-3.13.13-macos-aarch64-none/lib/python3.13/multiprocessing/resource_tracker.py:400: UserWarning: resource_tracker: There appear to be 5 leaked semaphore objects to clean up at shutdown: {'/loky-37183-mf0966tr', '/loky-37183-dvime844', '/loky-37183-o6dyx1at', '/loky-37183-b06x540f', '/loky-37183-6csyce6t'}
+  warnings.warn(
+{"auc": 0.9699001022374647, "cache_hits_last_run": 0, "computed_last_run": 0, "done": true, "evaluations_total": 517, "final_pool_names": ["exp156_lookup_bivariate_plr5_initavg8", "exp006_te_drop_gaming", "exp025_constrained_impute", "exp035_lattice_te", "exp070_cat_exact_cats", "exp081_lookup_fold_initialization_avg3", "exp111_xgb_depth8_no_te", "exp106_lookup_fixed24_train_test_preprocessing", "exp117_ag25_gbm_r21", "exp085_contextual_spline_m0", "exp139_realmlp_reference_qnormal_train_test", "exp157_lookup_muon_initavg8"], "identity": "4bdee56d5b2379d115328f86419b8556962639a34d77346f9d4fe93464c988f3", "max_spearman_final": 0.9955834452647393, "maxrss_mb": {"driver": 214.3125, "children_max": 0.0}, "pair_adopted": false, "pool": [0, 1, 5, 7, 10, 12, 14, 16, 17, 19, 30, 32], "resumed": 1, "scope": 0, "stage": "done", "steps": 15, "wall_seconds": 675.2482936382294}

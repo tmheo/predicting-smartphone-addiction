@@ -1,0 +1,19 @@
+[scope-1] step 0 forward1 k=1 moves=32 chosen=[30] delta=0.00022348842588737483 auc=0.9695841569 pool=2 6s cache_hits=21 computed=11
+[scope-1] step 1 forward1 k=2 moves=31 chosen=[10] delta=6.252450049126779e-05 auc=0.9696466814 pool=3 17s cache_hits=21 computed=42
+[scope-1] step 2 forward1 k=3 moves=30 chosen=[16] delta=2.709660793198676e-05 auc=0.9696737780 pool=4 19s cache_hits=21 computed=72
+[scope-1] step 3 forward1 k=4 moves=29 chosen=[19] delta=1.721609959792758e-05 auc=0.9696909941 pool=5 20s cache_hits=21 computed=101
+[scope-1] step 4 forward1 k=5 moves=28 chosen=[14] delta=5.840742974716484e-06 auc=0.9696968348 pool=6 19s cache_hits=21 computed=129
+[scope-1] step 5 forward1 k=6 moves=27 chosen=[12] delta=5.644197005660878e-06 auc=0.9697024790 pool=7 19s cache_hits=21 computed=156
+[scope-1] step 6 forward1 k=7 moves=26 chosen=[24] delta=1.0362505429628577e-05 auc=0.9697128415 pool=8 20s cache_hits=21 computed=182
+[scope-1] step 7 forward1 k=8 moves=25 chosen=[7] delta=3.953849343596438e-06 auc=0.9697167954 pool=9 22s cache_hits=22 computed=206
+[scope-1] step 8 forward1 k=9 moves=24 chosen=[1] delta=4.299226019188751e-06 auc=0.9697210946 pool=10 20s cache_hits=22 computed=230
+[scope-1] step 9 forward1 k=10 moves=23 chosen=[15] delta=1.9358219930376563e-06 auc=0.9697230304 pool=11 22s cache_hits=22 computed=253
+[scope-1] step 10 forward1 k=11 moves=22 chosen=[5] delta=6.44354261858382e-06 auc=0.9697294740 pool=12 21s cache_hits=22 computed=275
+[scope-1] step 11 forward1 k=12 moves=21 chosen=None delta=None auc=0.9697294740 pool=12 20s cache_hits=22 computed=296
+[scope-1] step 12 backward1 k=12 moves=11 chosen=None delta=None auc=0.9697294740 pool=12 13s cache_hits=22 computed=307
+[scope-1] step 13 forward2 k=12 moves=21 chosen=None delta=None auc=0.9697294740 pool=12 0s cache_hits=43 computed=307
+[scope-1] step 14 pair k=12 moves=190 chosen=[17, 28] delta=3.2528203234294395e-06 auc=0.9697327268 pool=14 201s cache_hits=43 computed=497
+[scope-1] step 15 forward3 k=14 moves=19 chosen=[21] delta=1.8813355718849678e-06 auc=0.9697346081 pool=15 24s cache_hits=43 computed=516
+[scope-1] step 16 forward3 k=15 moves=18 chosen=None delta=None auc=0.9697346081 pool=15 21s cache_hits=43 computed=534
+[scope-1] step 17 backward2 k=15 moves=14 chosen=None delta=None auc=0.9697346081 pool=15 17s cache_hits=43 computed=548
+{"auc": 0.9697346081372014, "done": true, "identity": "4bdee56d5b2379d115328f86419b8556962639a34d77346f9d4fe93464c988f3", "pair_adopted": [17, 28], "pool": [0, 1, 5, 7, 10, 12, 14, 15, 16, 17, 19, 21, 24, 28, 30], "resumed": 1, "scope": 1, "stage": "done", "steps": 18, "wall_seconds": 499.8108925819397, "final_pool_names": ["exp156_lookup_bivariate_plr5_initavg8", "exp006_te_drop_gaming", "exp025_constrained_impute", "exp035_lattice_te", "exp070_cat_exact_cats", "exp081_lookup_fold_initialization_avg3", "exp111_xgb_depth8_no_te", "exp071_cat_exact_no_te", "exp106_lookup_fixed24_train_test_preprocessing", "exp117_ag25_gbm_r21", "exp085_contextual_spline_m0", "exp048_lgb_orig_cdf_diff", "exp131_lookup_bivariate_plr5", "exp131_tab_cnn_oof_target_mean", "exp139_realmlp_reference_qnormal_train_test"], "max_spearman_final": 0.9976819270128093, "cache_hits_last_run": 43, "computed_last_run": 548, "evaluations_total": 565, "maxrss_mb": {"driver": 213.5625, "children_max": 0.0}}
