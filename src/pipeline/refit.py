@@ -14,6 +14,10 @@
 모든 반복형 구성원의 근거·예산을 먼저 검증하며, 그 검증은 자료 적재보다,
 피처 계획 생성보다, 모델 연결부 생성보다, 출력 폴더 생성보다 먼저 끝난다.
 
+끝난 산출물의 정체성은 구성원 단위다(#69). 시드별 기록과 manifest는 규약 블록과 그
+구성원 장부 항목의 내용 해시를 남기고, 재개와 조립은 그 값을 맞춰 본다. 장부 전체 해시는
+맥락으로만 남기므로 다른 구성원이 장부에 더해져도 이미 끝난 재학습은 유효하다.
+
 사용법:
     uv run python -m pipeline.refit artifacts/full-refit-plan.yaml --member exp006_te_drop_gaming
     uv run python -m pipeline.refit artifacts/full-refit-plan.yaml --all
@@ -25,10 +29,12 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
 import numpy as np
+import yaml
 import pandas as pd
 
 from . import data, initial_score, model, tracking
@@ -48,13 +54,18 @@ from .refit_plan import (
     ExecutableRefitPlan,
     RefitPlan,
     RefitPlanError,
+    member_entry_sha256_from_document,
 )
-from .runs import MlflowRunStore, RunStore, RunStoreError
+from .runs import MlflowRunStore, RunStore, RunStoreError, sha256_of
 
 DEFAULT_OUTPUT = Path("artifacts/full-refit")
 
-# 시드별 기록과 구성원 manifest의 문법 판본. 문법 판본 2 장부의 계보와 파생 규약을 남긴다.
-RECORD_SCHEMA_VERSION = 2
+# 시드별 기록과 구성원 manifest의 문법 판본.
+# 판본 3은 구성원 항목 해시(`member_entry_sha256`)를 남기고, 재개와 조립은 그 값을 맞춰 본다(#69).
+# 판본 2 기록은 장부 전체 해시(`plan_sha256`)만 남겼으므로, 기록의 git 커밋에 있던 장부에서
+# 같은 항목 해시를 다시 계산해 받아들인다.
+RECORD_SCHEMA_VERSION = 3
+LEGACY_RECORD_SCHEMA_VERSION = 2
 
 
 def load_executable_plan(
@@ -116,7 +127,7 @@ def run_member(
     y = train[TARGET]
     input_hashes = _input_hashes(cfg)
     config_sha256 = data.file_sha256(member.config_path)
-    provenance = _member_provenance(plan, member)
+    provenance = {**_ledger_context(plan), **_member_provenance(member)}
 
     seed_predictions: list[np.ndarray] = []
     seed_records = []
@@ -143,7 +154,7 @@ def run_member(
                 **seed_identity,
                 "prediction_sha256": prediction_array_sha256(prediction),
             }
-            if record != expected_record:
+            if not _matches_specification(record, expected_record, plan, member):
                 raise ValueError(f"{prediction_path}: 현재 재학습 명세와 계보가 다르다.")
         else:
             if record_path.exists():
@@ -214,20 +225,29 @@ def run_member(
     return averaged_path
 
 
-def _member_provenance(
-    plan: ExecutableRefitPlan, member: ExecutableRefitMember
-) -> dict:
-    """시드별 기록과 manifest가 함께 남기는 계보·규약 묶음.
+def _ledger_context(plan: ExecutableRefitPlan) -> dict:
+    """산출물이 어느 장부에서 나왔는지 적는 맥락. 기록만 하고 맞춰 보지는 않는다.
+
+    장부 전체 해시는 다른 구성원이 더해지기만 해도 바뀌므로, 이 값을 관문에 쓰면
+    이미 끝난 재학습이 그 구성원과 무관한 변경으로 무효가 된다(#69에서 걷어낸 규칙).
+    """
+    return {
+        "source_pool_sha256": plan.source_pool_sha256,
+        "plan_sha256": plan.content_sha256,
+    }
+
+
+def _member_provenance(member: ExecutableRefitMember) -> dict:
+    """시드별 기록과 manifest가 함께 남기고, 재개와 조립이 다시 맞춰 보는 계보·규약 묶음.
 
     원시 근거가 어느 실행의 어느 산출물에서 왔는지, 그 원시 값을 어떤 규약으로 예산에
-    옮겼는지, 그리고 그 계산이 어느 장부 내용에서 나왔는지를 한자리에 적는다.
-    재개 검증은 이 묶음을 통째로 다시 맞춰 보므로, 장부의 어느 칸이 바뀌어도 걸린다.
+    옮겼는지, 그리고 그 계산이 나온 장부 항목(규약 블록 + 이 구성원 항목)의 내용 해시를
+    한자리에 적는다. 이 구성원의 어느 칸이 바뀌어도 걸리지만 다른 구성원의 변경에는 걸리지 않는다.
     """
     lineage = member.lineage
     derivation = member.derivation
     return {
-        "source_pool_sha256": plan.source_pool_sha256,
-        "plan_sha256": plan.content_sha256,
+        "member_entry_sha256": member.entry_sha256,
         "evidence_lineage": {
             "source_run_id": lineage.source_run_id,
             "source_git_commit": lineage.source_git_commit,
@@ -342,27 +362,114 @@ def _input_hashes(cfg) -> dict[str, str]:
     return {name: data.file_sha256(path) for name, path in paths.items()}
 
 
+def _resolve_member_entry_sha256(
+    record: dict, plan: ExecutableRefitPlan, member: ExecutableRefitMember
+) -> str | None:
+    """기록이 가리키는 구성원 항목 해시. 없으면 `None`.
+
+    문법 판본 3 기록은 값을 직접 갖는다. 문법 판본 2 기록은 장부 전체 해시와 git 커밋만
+    남겼으므로, 그 커밋의 장부를 git 이력에서 읽어 전체 해시가 기록과 같은지 확인한 뒤
+    그 장부의 이 구성원 항목에서 같은 계산을 한다. 그 장부를 찾지 못하거나 해시가 다르면
+    기록이 가리키는 항목을 알 수 없으므로 `None`이다.
+    """
+    if isinstance(record.get("member_entry_sha256"), str):
+        return record["member_entry_sha256"]
+    if record.get("schema_version") != LEGACY_RECORD_SCHEMA_VERSION:
+        return None
+    commit, plan_sha256 = record.get("git_commit"), record.get("plan_sha256")
+    if not isinstance(commit, str) or not isinstance(plan_sha256, str):
+        return None
+    payload = _plan_bytes_at_commit(commit, plan.source_path)
+    if payload is None or sha256_of(payload) != plan_sha256:
+        return None
+    try:
+        return member_entry_sha256_from_document(
+            yaml.safe_load(payload.decode()), member.config
+        )
+    except (RefitPlanError, UnicodeDecodeError, yaml.YAMLError):
+        return None
+
+
+def _plan_bytes_at_commit(commit: str, source_path: Path) -> bytes | None:
+    """git 이력의 `commit`에 있던 장부 파일 바이트. 없으면 `None`."""
+    toplevel = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if toplevel.returncode != 0:
+        return None
+    root = Path(toplevel.stdout.strip()).resolve()
+    try:
+        relative = source_path.resolve().relative_to(root)
+    except ValueError:
+        return None
+    shown = subprocess.run(
+        ["git", "show", f"{commit}:{relative.as_posix()}"],
+        capture_output=True,
+        check=False,
+    )
+    return shown.stdout if shown.returncode == 0 else None
+
+
+def _matches_specification(
+    record: dict,
+    expected: dict,
+    plan: ExecutableRefitPlan,
+    member: ExecutableRefitMember,
+) -> bool:
+    """저장된 기록이 지금의 구성원 명세와 같은 산출물을 가리키는지 본다.
+
+    `expected`는 지금 실행이 남길 기록이다. 장부 맥락(`plan_sha256`, `source_pool_sha256`),
+    산출물을 만든 git 커밋과 문법 판본은 정보로만 남기고 맞춰 보지 않는다. 나머지
+    (설정 내용, 입력 자료, 계보, 파생 규약, 시드, 예산, 예측 해시)는 전부 같아야 하고,
+    구성원 항목 해시는 기록이 가리키는 값을 풀어서 맞춘다.
+    """
+    informational = {"schema_version", "git_commit", "git_dirty", *_ledger_context(plan)}
+    for key, value in expected.items():
+        if key in informational or key == "member_entry_sha256":
+            continue
+        if record.get(key) != value:
+            return False
+    return _resolve_member_entry_sha256(record, plan, member) == member.entry_sha256
+
+
 def _load_member_full_prediction(
     plan: ExecutableRefitPlan,
     member: ExecutableRefitMember,
     output: Path,
     expected_ids: pd.Series,
 ) -> np.ndarray:
-    """저장해 둔 구성원 평균 예측을 읽고, 그 manifest가 지금 계획과 같은지 본다."""
+    """저장해 둔 구성원 평균 예측을 읽고, 그 manifest가 지금의 구성원 명세와 같은지 본다.
+
+    설정 파일 내용, 입력 자료 해시, 계보, 파생 규약, 구성원 항목 해시, 예산, 예측 해시를
+    맞춰 본다. 장부 전체 해시는 보지 않으므로 다른 구성원이 장부에 더해져도 이 manifest는
+    유효하다(#69).
+    """
     member_dir = output / member.config
     prediction = _load_prediction(member_dir / "test_pred_full.parquet", expected_ids)
     manifest_path = member_dir / "manifest.json"
     if not manifest_path.exists():
         raise ValueError(f"{member.config}: 구성원 manifest가 없다.")
     manifest = json.loads(manifest_path.read_text())
+    cfg = load_config(member.config_path, "confirm")
     expected = {
         "config": member.config,
-        **_member_provenance(plan, member),
+        "config_sha256": data.file_sha256(member.config_path),
+        "input_sha256": _input_hashes(cfg),
+        **_member_provenance(member),
         "prediction_sha256": prediction_array_sha256(prediction),
     }
     for key, value in expected.items():
+        if key == "member_entry_sha256":
+            continue
         if manifest.get(key) != value:
             raise ValueError(f"{member.config}: manifest의 {key} 계보가 다르다.")
+    if _resolve_member_entry_sha256(manifest, plan, member) != member.entry_sha256:
+        raise ValueError(
+            f"{member.config}: manifest의 member_entry_sha256 계보가 다르다."
+        )
     recorded_budgets = {
         record.get("seed"): record.get("training_budget")
         for record in manifest.get("seeds", [])

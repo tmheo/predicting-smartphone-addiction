@@ -1,0 +1,87 @@
+judgment_id: issue69-final-candidates
+decision_issue: 69
+rule_issue: 225
+git_commit: 54e166ae69bc992b5c8fed2d4e654ffd87e08777
+git_dirty: 'False'
+plan_sha256: 2c56c63f7c09f1a2c887a7c2b958090fd329db80916677f800fa8ee9bb996a36
+source_pool_sha256: caa1b90769720a4accbe07074dbc7efe0335ab6657fea80c6839b60121dc39d3
+combiner: shrunk_rank_logit_logistic
+mix_weights:
+  cv: 5
+  full: 1
+nested_source:
+  path: run-logs/issue337/ensemble-evaluation.json
+  sha256: 5faa7fc6b76aee969a6fbc4347dd784efed82e6b8d2c6ded5d45e7ce6fe79190
+  member_count: 35
+first_candidate:
+  axis: shrunk_rank_logit_logistic_cv_full_mix
+  nested_oof_auc: 0.9698105828357245
+  file: artifacts/submissions/issue69-candidate-1.csv
+  file_sha256: 7c57a11a2bb48624fe6ea6e3429acbad2d50f3248a140799ef4a133f9e378d4e
+  prediction_sha256: 54acda23a2298bd50c74b9508c0aa92ba016e178f483cc8014cf762a778920e4
+tolerance_delta: -0.0005
+axes:
+- axis: shrunk_rank_logit_logistic_cv_only
+  nested_oof_auc: 0.9698105828357245
+  delta_vs_first: 0.0
+  eligible: true
+  spearman_vs_first: 0.9998699957239512
+  prediction_sha256: 02a3183b2758792d601e80e5056cb56e8fc68a70975149c4f4b160f415def36d
+- axis: rank_mean_cv_full_mix
+  nested_oof_auc: 0.9691305960390797
+  delta_vs_first: -0.000679986796644827
+  eligible: false
+  spearman_vs_first: 0.997828531543977
+  prediction_sha256: 63014630819a80052470fa1c5d21bbe04241fd42678a6f3fa824fcb20164b37e
+second_candidate:
+  axis: shrunk_rank_logit_logistic_cv_only
+  nested_oof_auc: 0.9698105828357245
+  delta_vs_first: 0.0
+  eligible: true
+  spearman_vs_first: 0.9998699957239512
+  prediction_sha256: 02a3183b2758792d601e80e5056cb56e8fc68a70975149c4f4b160f415def36d
+  file: artifacts/submissions/issue69-candidate-2.csv
+  file_sha256: fae78bda8c1160bfbca6e14b1813c8e2ff61fae4eb94d313e439ae2dacd59b52
+mix_exception:
+  triggered: false
+  evidence: '#226 짝 계측: CV 전용 0.97082 vs 5:1 혼합 0.97087 (+0.00005, 악화 아님)'
+member_spearman_cv_vs_full:
+  exp006_te_drop_gaming: 0.9981552718286102
+  exp011_resid_pair: 0.9979922542177437
+  exp022_orig_knn: 0.9981572296478001
+  exp023_orig_proxy_residual: 0.9980298551046881
+  exp025_constrained_impute: 0.998319127970253
+  exp032_recon_orig_mean_top3: 0.9981767655205878
+  exp035_lattice_te: 0.9957734091815311
+  exp058_logreg_onehot: 0.999847714510668
+  exp059_lookup_transformer: 0.9903436409091185
+  exp070_cat_exact_cats: 0.999488647371436
+  exp067_tabpfn3: 0.9996652316502675
+  exp081_lookup_fold_initialization_avg3: 0.9950170226421163
+  exp110_lgb_kitopl_no_te: 0.9995398020823322
+  exp111_xgb_depth8_no_te: 0.9985779700572902
+  exp071_cat_exact_no_te: 0.9994789876594247
+  exp106_lookup_fixed24_train_test_preprocessing: 0.9896016998902666
+  exp117_ag25_gbm_r21: 0.999692284909106
+  exp113_tab_cnn_m0: 0.983327085211057
+  exp085_contextual_spline_m0: 0.9889740805479591
+  exp027_recon_ce: 0.9982598581451078
+  exp048_lgb_orig_cdf_diff: 0.9982180650574856
+  exp134_realmlp_muon: 0.9956210543352607
+  exp135_xgb_hpo_trial30: 0.9993709965839473
+  exp131_lookup_bivariate_plr5: 0.9843594679990068
+  exp136_realmlp_muon_recon_widths: 0.9956480707506516
+  exp137_tabm_recon_widths: 0.9989940570802309
+  exp133_scalar_token_transformer_oof_te: 0.9941658244441566
+  exp131_tab_cnn_oof_target_mean: 0.9847330553871959
+  exp132_tab_cnn_epochs100: 0.9841187146432875
+  exp139_realmlp_reference_qnormal_train_test: 0.995692451365478
+  exp140_realmlp_orig_cdf_diff: 0.9981638238856695
+  exp157_lookup_muon_initavg8: 0.9855357227037711
+  exp168_issue413_lgb_no_te_fixed20: 0.9997212032564744
+  exp197_issue419_lgb_recon_ce_fixed20: 0.9966004925030001
+  exp183_issue419_cat_exact_fixed10: 0.9996763743596264
+assembly_prediction_sha256:
+  cv: f4c00fc5b6975210fc1e191bfe704b69ba54d7625472a8c76207748e3d5c6cb7
+  full: c207a4a414ec59ed4d5ff0ac1607ce2fa5e5c6691969299ff26a743d6f088357
+  cv_full: ebbaeb9b4f2bacd120eb774a52eebf4c0c83d09107ac0abbd89362500733c16d

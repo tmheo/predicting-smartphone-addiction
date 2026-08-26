@@ -6,7 +6,9 @@
 - 잘못된 장부로는 자료 적재도, 피처 계획도, 모델 연결부 생성도, 학습도 일어나지 않는다.
 - 정상 장부에서는 원시 근거에서 다시 계산한 예산이 그대로 모델 연결부에 닿는다.
 - 시드별 기록과 구성원 manifest에 원시 근거 계보와 파생 규약이 남고,
-  재개는 그 묶음과 계획 내용 해시까지 다시 맞춰 본다.
+  재개와 조립은 그 묶음과 구성원 항목 해시를 다시 맞춰 본다(#69).
+  장부 전체 해시는 맥락으로만 남으므로 다른 구성원의 변경은 이미 끝난 재학습을 무효로 만들지 않는다.
+- 항목 해시가 없는 문법 판본 2 기록은 그 기록의 git 커밋에 있던 장부에서 같은 계산을 해 받아들인다.
 
 커밋된 `artifacts/full-refit-plan.yaml`의 근거와 계산은 그대로 두고 계보만 메모리
 실행 저장소로 옮겨 시험한다. 그래서 여기서 확인하는 숫자는 실제 재학습이 읽을 숫자와
@@ -17,6 +19,7 @@ from __future__ import annotations
 
 import copy
 import json
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -381,8 +384,9 @@ def test_run_member_records_evidence_lineage_and_resumes(
     assert fits == [(42, 14), (43, 15), (44, 15)]
 
     record = json.loads((first.parent / "test_pred_seed_42.json").read_text())
-    assert record["schema_version"] == 2
+    assert record["schema_version"] == 3
     assert record["training_budget"] == 14
+    assert record["member_entry_sha256"] == member.entry_sha256
     assert record["plan_sha256"] == plan.content_sha256
     assert record["source_pool_sha256"] == plan.source_pool_sha256
     assert record["evidence_lineage"] == {
@@ -401,6 +405,7 @@ def test_run_member_records_evidence_lineage_and_resumes(
     }
 
     manifest = json.loads((first.parent / "manifest.json").read_text())
+    assert manifest["member_entry_sha256"] == member.entry_sha256
     assert manifest["plan_sha256"] == plan.content_sha256
     assert manifest["evidence_lineage"] == record["evidence_lineage"]
     assert manifest["refit_budget_derivation"] == record["refit_budget_derivation"]
@@ -408,11 +413,11 @@ def test_run_member_records_evidence_lineage_and_resumes(
     assert "budget_source" not in manifest
 
 
-def test_resume_rejects_a_different_plan_content(
+def test_resume_survives_a_change_to_another_member(
     ledger: MemoryLedger, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):
-    """예산이 같아도 장부 내용이 달라지면 이어서 쓰지 않는다."""
-    stub_training(monkeypatch)
+    """장부 전체 해시가 바뀌어도 이 구성원의 항목이 그대로면 저장된 시드 예측을 이어 쓴다(#69)."""
+    fits = stub_training(monkeypatch)
     output = tmp_path / "out"
     plan = ledger.executable()
     refit.run_member(plan, plan.member("exp157_lookup_muon_initavg8"), output)
@@ -423,15 +428,37 @@ def test_resume_rejects_a_different_plan_content(
     ]["observations"]
     observations[0]["raw_field"] = "best_iteration_renamed"
     other = ledger.executable(document)
+    member = other.member("exp157_lookup_muon_initavg8")
 
-    assert other.member("exp157_lookup_muon_initavg8").budgets == {
-        42: 14,
-        43: 15,
-        44: 15,
-    }
     assert other.content_sha256 != plan.content_sha256
+    assert member.entry_sha256 == plan.member("exp157_lookup_muon_initavg8").entry_sha256
+    refit.run_member(other, member, output)
+    assert fits == [(42, 14), (43, 15), (44, 15)]
+    manifest = json.loads((output / member.config / "manifest.json").read_text())
+    assert manifest["plan_sha256"] == other.content_sha256
+
+
+def test_resume_rejects_a_change_to_this_members_entry(
+    ledger: MemoryLedger, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    """예산이 같아도 이 구성원의 장부 항목이 달라지면 이어서 쓰지 않는다."""
+    stub_training(monkeypatch)
+    output = tmp_path / "out"
+    plan = ledger.executable()
+    refit.run_member(plan, plan.member("exp157_lookup_muon_initavg8"), output)
+
+    document = ledger.edited()
+    observations = ledger.member(document, "exp157_lookup_muon_initavg8")[
+        "training_length_evidence"
+    ]["observations"]
+    observations[0]["raw_field"] = "best_epoch_renamed"
+    other = ledger.executable(document)
+    member = other.member("exp157_lookup_muon_initavg8")
+
+    assert member.budgets == {42: 14, 43: 15, 44: 15}
+    assert member.entry_sha256 != plan.member("exp157_lookup_muon_initavg8").entry_sha256
     with pytest.raises(ValueError, match="현재 재학습 명세와 계보가 다르다"):
-        refit.run_member(other, other.member("exp157_lookup_muon_initavg8"), output)
+        refit.run_member(other, member, output)
 
 
 def test_resume_rejects_a_different_refit_budget(
@@ -500,6 +527,7 @@ def executable_plan_of_one(tmp_path: Path, combiner: str) -> ExecutableRefitPlan
         status="not_applicable",
         budgets={42: None},
         derivation=None,
+        entry_sha256="entry-sha256",
     )
     return ExecutableRefitPlan(
         source_path=tmp_path / "plan.yaml",
@@ -594,6 +622,130 @@ def test_assemble_reads_a_manifest_written_by_the_validated_run(
 
     with pytest.raises(ValueError, match="재학습 예산이 검증된 예산과 다르다"):
         refit._load_member_full_prediction(plan, member, output, TOY_TEST["id"])
+
+
+def git(repo: Path, *arguments: str) -> str:
+    return subprocess.run(
+        ["git", "-c", "user.name=t", "-c", "user.email=t@example.com", *arguments],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+
+def legacy_manifest(manifest: dict, *, git_commit: str, plan_sha256: str) -> dict:
+    """문법 판본 2 manifest 모양: 항목 해시 없이 장부 전체 해시와 git 커밋만 남긴다."""
+    legacy = {key: value for key, value in manifest.items() if key != "member_entry_sha256"}
+    legacy.update(schema_version=2, git_commit=git_commit, plan_sha256=plan_sha256)
+    return legacy
+
+
+def test_assemble_gate_accepts_a_legacy_manifest_from_the_ledger_at_its_commit(
+    ledger: MemoryLedger, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    """항목 해시가 없는 판본 2 manifest는 그 git 커밋의 장부에서 항목 해시를 다시 계산해 받는다.
+
+    그 뒤 다른 구성원이 바뀌어 장부 전체 해시가 달라져도 계속 받고, manifest가 적은
+    장부 전체 해시가 그 커밋의 장부와 다르면 거부한다.
+    """
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q")
+    (repo / "configs").symlink_to(Path.cwd() / "configs")
+    repo_ledger = MemoryLedger(
+        path=repo / "artifacts" / "full-refit-plan.yaml",
+        document=ledger.document,
+        store=ledger.store,
+        pool=ledger.pool,
+        pool_sha256=ledger.pool_sha256,
+    )
+    repo_ledger.path.parent.mkdir()
+    plan = repo_ledger.executable()
+    git(repo, "add", "artifacts/full-refit-plan.yaml")
+    git(repo, "commit", "-q", "-m", "plan")
+    commit = git(repo, "rev-parse", "HEAD")
+    monkeypatch.chdir(repo)
+
+    member = plan.member("exp157_lookup_muon_initavg8")
+    stub_training(monkeypatch)
+    output = repo / "out"
+    refit.run_member(plan, member, output)
+    manifest_path = output / member.config / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest_path.write_text(
+        json.dumps(
+            legacy_manifest(manifest, git_commit=commit, plan_sha256=plan.content_sha256),
+            ensure_ascii=False,
+        )
+    )
+    assert refit._load_member_full_prediction(plan, member, output, TOY_TEST["id"]).shape == (2,)
+
+    document = repo_ledger.edited()
+    ledger.member(document, "exp135_xgb_hpo_trial30")["training_length_evidence"][
+        "observations"
+    ][0]["raw_field"] = "best_iteration_renamed"
+    other = repo_ledger.executable(document)
+    assert other.content_sha256 != plan.content_sha256
+    assert refit._load_member_full_prediction(
+        other, other.member(member.config), output, TOY_TEST["id"]
+    ).shape == (2,)
+
+    manifest_path.write_text(
+        json.dumps(
+            legacy_manifest(manifest, git_commit=commit, plan_sha256=other.content_sha256),
+            ensure_ascii=False,
+        )
+    )
+    with pytest.raises(ValueError, match="member_entry_sha256 계보가 다르다"):
+        refit._load_member_full_prediction(
+            other, other.member(member.config), output, TOY_TEST["id"]
+        )
+
+
+def test_assemble_gate_rejects_a_legacy_manifest_whose_member_entry_changed(
+    ledger: MemoryLedger, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    """판본 2 manifest라도 그 커밋의 항목과 지금 항목이 다르면 거부한다."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q")
+    (repo / "configs").symlink_to(Path.cwd() / "configs")
+    repo_ledger = MemoryLedger(
+        path=repo / "full-refit-plan.yaml",
+        document=ledger.document,
+        store=ledger.store,
+        pool=ledger.pool,
+        pool_sha256=ledger.pool_sha256,
+    )
+    plan = repo_ledger.executable()
+    git(repo, "add", "full-refit-plan.yaml")
+    git(repo, "commit", "-q", "-m", "plan")
+    commit = git(repo, "rev-parse", "HEAD")
+    monkeypatch.chdir(repo)
+
+    member = plan.member("exp157_lookup_muon_initavg8")
+    stub_training(monkeypatch)
+    output = repo / "out"
+    refit.run_member(plan, member, output)
+    manifest_path = output / member.config / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest_path.write_text(
+        json.dumps(
+            legacy_manifest(manifest, git_commit=commit, plan_sha256=plan.content_sha256),
+            ensure_ascii=False,
+        )
+    )
+
+    document = repo_ledger.edited()
+    ledger.member(document, member.config)["training_length_evidence"]["observations"][
+        0
+    ]["raw_field"] = "best_epoch_renamed"
+    other = repo_ledger.executable(document)
+    with pytest.raises(ValueError, match="member_entry_sha256 계보가 다르다"):
+        refit._load_member_full_prediction(
+            other, other.member(member.config), output, TOY_TEST["id"]
+        )
 
 
 def test_mix_member_predictions_uses_model_count_weights():
