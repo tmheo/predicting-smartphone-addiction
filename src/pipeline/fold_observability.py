@@ -66,6 +66,7 @@ OPERATIONS = frozenset(
         "fold_finalize.importance_score",
         "fold_finalize.training_diagnostics",
         "fold_finalize.fold_score",
+        "training_state.trajectory_fit",
         "recovery.read_validate",
         "recovery.write_commit",
     }

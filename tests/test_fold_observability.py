@@ -18,7 +18,7 @@ from pipeline import cv
 from pipeline import fold_observability as observability_mod
 from pipeline import model as model_mod
 from pipeline import plan as plan_mod
-from pipeline.config import FeatureConfig, ModelConfig
+from pipeline.config import FeatureConfig, ModelConfig, TrainingStateConfig
 from pipeline.fold_observability import (
     ARTIFACT_NAME,
     FoldExecutionRecorder,
@@ -29,6 +29,12 @@ from pipeline.fold_observability import (
 from pipeline.fold_fit_reuse import FoldFitReuseStore
 from pipeline.plan import FeaturePlan, ProviderKind
 from pipeline.observe import RunObserver
+from pipeline.training_length import (
+    FIXED_COUNT,
+    RawTrainingLengthSelection,
+    TrainingLengthContract,
+)
+from pipeline.training_state_cv import run_training_state_seed
 
 SEED = 7
 N_FOLDS = 3
@@ -473,6 +479,118 @@ def test_versioned_artifact_aggregates_union_unclassified_and_resources(tmp_path
     assert "time.fold_finalize_seconds" in metric_names
     assert "time.model_fit_seconds" in metric_names
     assert "resource.gpu_idle_fraction" in metric_names
+
+
+def test_training_state_seed_records_each_trajectory_fit(monkeypatch, tmp_path):
+    cfg = replace(
+        fake_experiment_config(),
+        model=ModelConfig(
+            kind="realmlp",
+            params={"fixed_epochs": 2, "schedule_epochs": 4},
+            fit={},
+        ),
+        training_state=TrainingStateConfig(
+            trajectory="test_trajectory",
+            candidates=(1, 2),
+            selected=1,
+            schedule_horizon_epochs=4,
+            trajectory_end_epochs=2,
+            state_kind="ema",
+            selection_rule="precommitted",
+        ),
+    )
+    plan, train, test = _prepared_inputs(cfg)
+
+    monkeypatch.setattr(model_mod, "create", lambda model, seed: object())
+    monkeypatch.setattr(
+        model_mod,
+        "set_dataset_reference",
+        lambda adapter, X_train, X_test: None,
+    )
+
+    def fake_training_states(adapter, kind, X_tr, y_tr, X_va, y_va, X_test, state):
+        points = []
+        for completed_epochs in state.candidates:
+            declaration = TrainingLengthContract(
+                "realmlp", "fixed_epochs", FIXED_COUNT
+            ).declare(
+                (
+                    RawTrainingLengthSelection(
+                        raw_path="test.fixed_epochs",
+                        raw_value=completed_epochs,
+                    ),
+                )
+            )
+            points.append(
+                model_mod.FoldTrainingStatePoint(
+                    completed_epochs=completed_epochs,
+                    validation_prediction=0.1 + 0.8 * y_va.to_numpy(),
+                    test_prediction=np.full(len(X_test), 0.5),
+                    importance=pd.DataFrame(
+                        {"feature": list(X_tr.columns), "gain": 1.0}
+                    ),
+                    training_diagnostics={},
+                    training_length_declaration=declaration,
+                )
+            )
+        return model_mod.FoldTrainingStateTrajectory(
+            schedule_horizon_epochs=state.schedule_horizon_epochs,
+            trajectory_end_epochs=state.trajectory_end_epochs,
+            points=tuple(points),
+        )
+
+    monkeypatch.setattr(
+        model_mod,
+        "fit_predict_training_states",
+        fake_training_states,
+    )
+
+    sink = FoldExecutionRecorder(
+        tmp_path / "observability",
+        {"seeds": [SEED], "source": "remote_measured"},
+        resource_probe=FakeProbe(),
+        start_sampler=False,
+    )
+    sink.start()
+    sink.configure_run_shape(seed_total=1, fold_total=N_FOLDS, provider_total=0)
+
+    class Recorder(TimingRecorder):
+        def record_timing(self, event: dict[str, object]) -> None:
+            sink.record_timing(event)
+
+    try:
+        results = run_training_state_seed(
+            cfg,
+            plan,
+            train,
+            test,
+            SEED,
+            recorder=Recorder(),
+        )
+
+        assert tuple(results) == (1, 2)
+        finalized = sink.finalize()
+        records = read_fold_observability(finalized.path)
+        events = [
+            record
+            for record in records
+            if record["record_type"] == "timing"
+            and record["operation"] == "training_state.trajectory_fit"
+        ]
+        assert [event["fold"] for event in events] == [0, 1, 2]
+        assert all(
+            event["actor_kind"] == "model"
+            and event["actor_name"] == "realmlp"
+            and event["outcome"] == "success"
+            for event in events
+        )
+        summary = records[-1]
+        operation = summary["timing"]["operations"]["training_state.trajectory_fit"]
+        assert operation["event_count"] == N_FOLDS
+        assert operation["completed_count"] == N_FOLDS
+        assert operation["cumulative_seconds"] >= 0.0
+    finally:
+        sink.abandon()
 
 
 def test_resource_sampling_failure_is_nonfatal_and_counted_as_missing(tmp_path):
