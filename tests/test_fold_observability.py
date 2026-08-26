@@ -593,6 +593,40 @@ def test_training_state_seed_records_each_trajectory_fit(monkeypatch, tmp_path):
         sink.abandon()
 
 
+def test_training_state_trajectory_fit_is_a_versioned_model_fit_operation(tmp_path):
+    recorder = FoldExecutionRecorder(
+        tmp_path / "observability",
+        {"seeds": [SEED], "source": "remote_measured"},
+        resource_probe=FakeProbe(),
+        start_sampler=False,
+    )
+    recorder.start()
+    recorder.configure_run_shape(seed_total=1, fold_total=1, provider_total=0)
+    recorder.record_timing(
+        _event(
+            started_ns=time.monotonic_ns(),
+            duration_ns=20_000_000,
+            operation="training_state.trajectory_fit",
+        )
+    )
+
+    finalized = recorder.finalize()
+    records = read_fold_observability(finalized.path)
+    summary = records[-1]
+    assert summary["timing"]["operations"]["training_state.trajectory_fit"] == {
+        "event_count": 1,
+        "completed_count": 1,
+        "cumulative_seconds": pytest.approx(0.02),
+        "union_seconds": pytest.approx(0.02),
+    }
+    model_fit_metrics = [
+        (value, step)
+        for name, value, step in finalized.metrics
+        if name == "time.model_fit_seconds"
+    ]
+    assert model_fit_metrics == [(pytest.approx(0.02), 0)]
+
+
 def test_resource_sampling_failure_is_nonfatal_and_counted_as_missing(tmp_path):
     recorder = FoldExecutionRecorder(
         tmp_path / "observability",

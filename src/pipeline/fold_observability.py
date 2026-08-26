@@ -944,7 +944,12 @@ class FoldExecutionRecorder:
                         "time.recovery_seconds": seconds_of(
                             {"recovery.read_validate", "recovery.write_commit"}
                         ),
-                        "time.model_fit_seconds": seconds_of({"fold_finalize.model_fit"}),
+                        "time.model_fit_seconds": seconds_of(
+                            {
+                                "fold_finalize.model_fit",
+                                "training_state.trajectory_fit",
+                            }
+                        ),
                         "time.test_prediction_seconds": seconds_of(
                             {"fold_finalize.test_prediction"}
                         ),
