@@ -1,0 +1,48 @@
+# 이슈 #430: exp106의 동일 24회 학습 궤적에서 12회 EMA 상태를 사전 고정한다.
+name: exp106_lookup_fixed24_train_test_preprocessing_epoch12
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [screen_slack, sgw_sum, slack_frac, wk_minus_sgw, wk_other, sgw_frac]
+
+model:
+  kind: lookup_transformer
+  params:
+    lookup_cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+    preprocessing_scope: train_test
+    validation_selection: final
+    epochs: 24
+    ema_decay: 0.999
+  fit: {}
+
+training_state:
+  trajectory: exp106_lookup_fixed24_train_test_preprocessing_24epoch
+  candidates: [6, 8, 12]
+  selected: 12
+  schedule_horizon_epochs: 24
+  trajectory_end_epochs: 24
+  state_kind: ema
+  selection_rule: precommitted
