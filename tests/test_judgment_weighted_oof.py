@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -108,6 +110,36 @@ def test_reweighting_rejects_mismatched_feature_columns(tmp_path):
 
     with pytest.raises(JudgmentError, match="결측 패턴 대상 열"):
         missingness_reweighting(train_path, test_path)
+
+
+def test_reweighting_cache_distinguishes_relative_paths_across_workspaces(
+    tmp_path,
+    monkeypatch,
+):
+    indexes = ([1, 2], [101, 102])
+    roots = [tmp_path / "first", tmp_path / "second"]
+    for root, ids in zip(roots, indexes, strict=True):
+        root.mkdir()
+        pd.DataFrame(
+            {
+                ID: ids,
+                "x": [1.0, np.nan],
+                TARGET: [0, 1],
+            }
+        ).to_csv(root / "train.csv", index=False)
+        pd.DataFrame({ID: [ids[-1] + 1], "x": [1.0]}).to_csv(
+            root / "test.csv",
+            index=False,
+        )
+
+    observed = []
+    for root in roots:
+        monkeypatch.chdir(root)
+        observed.append(
+            list(missingness_reweighting(Path("train.csv"), Path("test.csv")).weight.index)
+        )
+
+    assert observed == [list(indexes[0]), list(indexes[1])]
 
 
 def uniform_reweighting(index: pd.Index) -> MissingnessReweighting:

@@ -142,6 +142,7 @@ def main() -> None:
                 candidate.completed_epochs,
                 seed_results,
                 train,
+                expected_feature_names=plan.all_columns(),
             )
             for candidate in contract.candidates
         }
@@ -232,6 +233,8 @@ def _aggregate_candidate(
     completed_epochs: int,
     seed_results: list[dict[int, cv.CVResult]],
     train: pd.DataFrame,
+    *,
+    expected_feature_names: list[str],
 ) -> tuple[cv.CVResult, dict[int, pd.DataFrame]]:
     results = [result[completed_epochs] for result in seed_results]
     seed_aucs = {
@@ -242,7 +245,7 @@ def _aggregate_candidate(
         seed: result.oof.copy() for seed, result in zip(cfg.seeds, results)
     }
     final = results[0]
-    if final.feature_names != FeaturePlan.from_config(cfg.features).all_columns():
+    if any(result.feature_names != expected_feature_names for result in results):
         raise AssertionError("학습 시점 후보의 실제 특성 목록이 설정 선언과 다르다.")
     if len(results) > 1:
         final.oof["pred"] = np.mean(
