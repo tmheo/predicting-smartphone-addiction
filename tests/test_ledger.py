@@ -66,12 +66,20 @@ def test_pool_applies_decided_removals_and_later_replacements():
             "bb7be9baf1b64888818600d7e0b5927b",
         )
     )
+    # #415·#419의 고정 반복 수 트리 변형 진입.
+    expected.extend(
+        [
+            ("exp168_issue413_lgb_no_te_fixed20", "2142b26c2d304307bb0c2717b803d643"),
+            ("exp197_issue419_lgb_recon_ce_fixed20", "a7a59a1829da4e4e93c3f581ed58597e"),
+            ("exp183_issue419_cat_exact_fixed10", "eded39146a164b6ca421a20d22b10f52"),
+        ]
+    )
     actual = [
         (member.config, member.run_id)
         for member in Pool.load(REPO / "artifacts" / "pool.yaml").members
     ]
 
-    assert len(actual) == 32
+    assert len(actual) == 35
     assert actual == expected
 
 

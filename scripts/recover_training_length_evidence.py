@@ -109,7 +109,7 @@ class MemberRecovery:
     """구성원 하나의 복원 방법 선언."""
 
     model_family: str | None
-    source: str  # "structured" | "structured_remeasurement" | "run_log" | "none"
+    source: str  # "structured" | "declared" | "structured_remeasurement" | "run_log" | "none"
     reader: str | None = None
     confirmed: tuple[ConfirmedCell, ...] = ()
     measurement_run_id: str | None = None
@@ -183,6 +183,11 @@ RECOVERY: dict[str, MemberRecovery] = {
         "realmlp", "structured", "single"
     ),
     "exp140_realmlp_orig_cdf_diff": MemberRecovery("realmlp", "structured", "single"),
+    # 고정 반복 수 트리 변형(#413·#415·#419)은 실행이 진단 산출물에 관측 학습 길이를
+    # 선언 형태로 직접 남기므로 그 관측을 그대로 읽는다.
+    "exp168_issue413_lgb_no_te_fixed20": MemberRecovery("lightgbm", "declared"),
+    "exp197_issue419_lgb_recon_ce_fixed20": MemberRecovery("lightgbm", "declared"),
+    "exp183_issue419_cat_exact_fixed10": MemberRecovery("catboost", "declared"),
 }
 
 # 문법 판본 1이 쓰던 재학습 설정 경로. 원 실행 설정과 다른 구성원이 있어 그대로 옮긴다.
@@ -480,6 +485,51 @@ def _recover_from_structured(
     )
 
 
+def _recover_from_declared(
+    store: RunStore, run_id: str, member: MemberRecovery, seeds: tuple[int, ...]
+) -> RecoveredEvidence:
+    """실행이 진단 산출물에 선언한 관측 학습 길이를 그대로 읽는다. (#413)
+
+    조기 종료를 쓰지 않는 트리 변형은 `details` 대신 `training_length_evidence`에
+    설정이 고정한 반복 수를 관측으로 남긴다.
+    """
+    entries = json.loads(store.artifact_bytes_of(run_id, STRUCTURED_ARTIFACT))
+    cells: list[Cell] = []
+    fields: set[tuple[str, str, str]] = set()
+    for entry in entries:
+        evidence = entry["training_length_evidence"]
+        fields.add(
+            (evidence["model_family"], evidence["raw_field"], evidence["raw_meaning"])
+        )
+        for observation in evidence["observations"]:
+            cells.append(
+                Cell(
+                    seed=int(observation["seed"]),
+                    outer_fold=int(observation["outer_fold"]),
+                    inner_member=observation["inner_member"],
+                    raw_value=int(observation["raw_value"]),
+                    raw_path=f"{STRUCTURED_ARTIFACT}#training_length_evidence.observations",
+                    source="structured_diagnostics",
+                )
+            )
+    if len(fields) != 1:
+        raise RecoveryError("선언된 관측의 계열·원시 필드·원시 의미가 하나로 모이지 않는다.")
+    model_family, raw_field, raw_meaning = next(iter(fields))
+    if model_family != member.model_family:
+        raise RecoveryError(f"선언된 계열 {model_family}이 선언 {member.model_family}과 다르다.")
+    expected = set(_fold_coordinates(seeds, 5))
+    if {(cell.seed, cell.outer_fold) for cell in cells} != expected:
+        raise RecoveryError("선언된 관측의 좌표가 설정 시드·분할과 다르다.")
+    return RecoveredEvidence(
+        model_family=model_family,
+        raw_field=raw_field,
+        raw_meaning=raw_meaning,
+        cells=cells,
+        artifact_name=STRUCTURED_ARTIFACT,
+        sources=[{"kind": "structured_diagnostics", "artifact": STRUCTURED_ARTIFACT}],
+    )
+
+
 def _recover_from_structured_remeasurement(
     store: RunStore, member: MemberRecovery, seeds: tuple[int, ...]
 ) -> RecoveredEvidence:
@@ -628,6 +678,9 @@ def _member_document(
             evidence_sha256 = sha256_of(existing)
     elif recovery.source == "structured":
         evidence = _recover_from_structured(store, run_id, recovery, seeds)
+        evidence_sha256 = store.artifact_sha256_of(run_id, evidence.artifact_name)
+    elif recovery.source == "declared":
+        evidence = _recover_from_declared(store, run_id, recovery, seeds)
         evidence_sha256 = store.artifact_sha256_of(run_id, evidence.artifact_name)
     else:
         evidence = _recover_from_log(store, run_id, recovery, seeds)

@@ -81,7 +81,8 @@ def test_issue388_pool_and_refit_plan_are_aligned() -> None:
     pool = Pool.load()
     plan = RefitPlan.load(Path("artifacts/full-refit-plan.yaml"))
 
-    assert len(pool.members) == 32
+    # #415·#419가 뒤에 세 구성원을 더해 현재 풀은 35개, 재학습 103회다.
+    assert len(pool.members) == 35
     assert results["final"]["final_pool"]["sha256"] == (
         "e430d32dc6d80b7feb34151ed93d431adc42dc9b61ca344368218768c30fc349"
     )
@@ -96,8 +97,8 @@ def test_issue388_pool_and_refit_plan_are_aligned() -> None:
     assert [(member.config, member.lineage.source_run_id) for member in plan.members] == [
         (member.config, member.run_id) for member in pool.members
     ]
-    assert len(plan.members) == 32
-    assert sum(len(member.budget_derivation.seeds) for member in plan.members) == 94
+    assert len(plan.members) == 35
+    assert sum(len(member.budget_derivation.seeds) for member in plan.members) == 103
     correction = results["training_length_correction"]
     assert correction["pool_member"]["membership_changed"] is False
     assert correction["remeasurement"]["run_id"] == (
@@ -120,13 +121,14 @@ def test_issue388_pool_and_refit_plan_are_aligned() -> None:
     assert removal["nested_oof_impact"]["delta_after_minus_before"] == pytest.approx(
         -0.0000257162076638
     )
+    # 제거 직후의 장부 해시는 결과 파일에 기록된 값이며, 이후 진입으로 현재 파일과는 다르다.
     assert removal["final_pool"]["member_count"] == 32
-    assert removal["final_pool"]["sha256"] == file_sha256(
-        Path("artifacts/pool.yaml")
+    assert removal["final_pool"]["sha256"] == (
+        "c273ad60a4747740340cc9353312896c5cfb7f42b94f3cf9e2b51bd0b58ead8b"
     )
     assert removal["full_refit_plan"]["refit_count"] == 94
-    assert removal["full_refit_plan"]["sha256"] == file_sha256(
-        Path("artifacts/full-refit-plan.yaml")
+    assert removal["full_refit_plan"]["sha256"] == (
+        "31982216b16460e4e5e77789b322b112afec349bf3a9c1f795f54ba56347dbac"
     )
     assert removal["judgment"]["sha256"] == file_sha256(
         Path(removal["judgment"]["path"])
