@@ -376,6 +376,18 @@ def _training_length_contract_variants(kind: str) -> tuple[TrainingLengthContrac
     return (primary,) if fixed is None else (primary, fixed)
 
 
+def _registered_training_length_contracts(
+    kind: str,
+) -> tuple[TrainingLengthContract, ...]:
+    """등록된 계열의 학습 길이 계약을 돌려주고, 미등록 계열은 거부한다."""
+    contracts = _training_length_contract_variants(kind)
+    if not contracts:
+        raise TrainingLengthError(
+            f"{kind}는 관측 학습 길이 계약이 등록되지 않은 계열인데 근거를 선언했다."
+        )
+    return contracts
+
+
 def collect_training_length_declaration(
     adapter: ModelAdapter, kind: str
 ) -> TrainingLengthDeclaration | None:
@@ -388,6 +400,7 @@ def collect_training_length_declaration(
     provider = getattr(adapter, "training_length_evidence", None)
     if provider is None:
         return None
+    _registered_training_length_contracts(kind)
     declaration = provider()
     if not isinstance(declaration, TrainingLengthDeclaration):
         raise TypeError("training_length_evidence()는 TrainingLengthDeclaration을 돌려줘야 한다.")
@@ -401,11 +414,7 @@ def _validate_training_length_declaration(
     """한 선언이 등록된 모델 계열의 원시 학습 길이 계약과 같은지 확인한다."""
     if not isinstance(declaration, TrainingLengthDeclaration):
         raise TypeError("학습 길이 선언은 TrainingLengthDeclaration이어야 한다.")
-    contracts = _training_length_contract_variants(kind)
-    if not contracts:
-        raise TrainingLengthError(
-            f"{kind}는 관측 학습 길이 계약이 등록되지 않은 계열인데 근거를 선언했다."
-        )
+    contracts = _registered_training_length_contracts(kind)
     declared_contract = (
         declaration.model_family,
         declaration.raw_field,
