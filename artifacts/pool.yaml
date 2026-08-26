@@ -506,3 +506,23 @@ members:
     contract_version: candidate-pool-v1
     path: artifacts/judgments/issue389-exp157-lookup-muon-initavg8-replacement.yaml
     sha256: 8f708e0f700abedb2ac4a8c09ea0f53774bb26a27a50fe2197707686807ea681
+- run_id: 2142b26c2d304307bb0c2717b803d643
+  config: exp168_issue413_lgb_no_te_fixed20
+  oof_auc: 0.9650884319322799
+  seeds: 42,43,44
+  entered_at: '2026-08-26'
+  reason: 이슈 415의 고정 반복 수 변형 완전 중첩 선택에서 바깥 분할 3/5 선택, 전체 OOF 차이 +0.000021582650
+  evidence:
+    champion_run_id: 6911a461866b43dc9556553eba6783b7
+    champion_oof_auc: 0.9693676105620948
+    floor_margin: 0.005720821370185147
+    nearest_run_id: ae829ae3d886402ab100a8e966c3131a
+    nearest_spearman: 0.9967195846925974
+    ensemble_auc_with: 0.9692050297452612
+    ensemble_auc_without: 0.9692389667432716
+    contribution: -3.3936998010353214e-05
+  judgment:
+    judgment_id: issue415-bulk-selection-3
+    contract_version: candidate-pool-v2
+    path: artifacts/judgments/issue415-bulk-selection-3.yaml
+    sha256: 318097a9fa4933e47b28415807456cca894ba591256599548b78da6c02d9cc12

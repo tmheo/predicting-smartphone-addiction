@@ -1,0 +1,190 @@
+schema_version: 1
+judgment_id: issue415-bulk-selection-4
+contract_version: candidate-pool-v2
+created_at: '2026-08-26'
+change:
+  action: admission
+  candidate:
+    run_id: a01905e243204cdd806a02179475a5b3
+    config: exp159_issue413_xgb_hpo_fixed20
+    model_lineage_group: issue413-fixed-count-tree-variants
+  replaces_run_id: null
+selection:
+  kind: nested_selection
+  combiner_scope: core
+  description: 이슈 415의 첫 완전 중첩 선택에서 exp168을 등록한 뒤 남은 고정 반복 수 트리 변형 17개 전체
+  rule: 각 평가 범위에서 후보 포함 풀의 결합 전략 3개 중 최고 nested OOF AUC가 가장 높은 후보를 고른다.
+  tie_break: 후보 run_id 입력 순서가 먼저이고 결합 전략 등록 순서가 그다음이다.
+  candidates:
+  - run_id: a01905e243204cdd806a02179475a5b3
+    config: exp159_issue413_xgb_hpo_fixed20
+    oof_sha256: c43a711d3afd3608d11dea16c776377bcafeacd396997219b3e722feb5e20213
+  - run_id: ed074fb45be049cb8ec1373a71331302
+    config: exp160_issue413_xgb_hpo_fixed40
+    oof_sha256: baea54f5e4180dff7639b116ac722de4d11796b615f64a82587f3a58256ee6dd
+  - run_id: 50ff57cc09404127a3e5872d7ec76bce
+    config: exp161_issue413_xgb_hpo_fixed60
+    oof_sha256: 1245ac037fed5f738c9853b95e1f7c3341cdc22c5d7055648a9b0fc2b6de176a
+  - run_id: 13d27b18d88145719a591a7dd25a877c
+    config: exp162_issue413_xgb_no_te_fixed20
+    oof_sha256: ad4e5e9886a1531b50ebb774bc153c5d2906587b472c2b05b25ae383f6dfe725
+  - run_id: 9ed6d12159d8405eb7c6958536045cde
+    config: exp163_issue413_xgb_no_te_fixed40
+    oof_sha256: 1181d3f411ead744dba45eb64a1e1fccdf1a588e00a404a54c582260143e9e8d
+  - run_id: f70fd3aae7894b86afa8f56f0dc90bcc
+    config: exp164_issue413_xgb_no_te_fixed60
+    oof_sha256: fd5eb545f6cbf705f6341510b087960c7eb1f61e96dca06f1d39e13edbe895b8
+  - run_id: 9aedd32898924e1baa6a1fc70c6fa6a7
+    config: exp165_issue413_lgb_ag25_fixed20
+    oof_sha256: 42c28739e81d2b7b0ae8741c92901ef99a0978c55ca62f3448c2be152124e083
+  - run_id: 5629d4379fe1453bb99a0598a6e0c039
+    config: exp166_issue413_lgb_ag25_fixed40
+    oof_sha256: 148f4195aac0cd176a7ea8a2da4c7d0c953ee8a099dd28920d8ba23cf0e1ff42
+  - run_id: 5ee21e842e1b456db2ecb1fff0985dc5
+    config: exp167_issue413_lgb_ag25_fixed60
+    oof_sha256: 6a000bd916ace7de465fe48a22713b1fa9b835da9668c26b00c1418c4af6cd10
+  - run_id: 44b9cb2c51434e2d996db5c27cb2cbb4
+    config: exp169_issue413_lgb_no_te_fixed40
+    oof_sha256: 243365b2e07b17c9c1c5cefad3150f0bc7e9a2a990d0c03bc6da728175591e14
+  - run_id: 94e435fd115c41a2b0c482f492b0be89
+    config: exp170_issue413_lgb_no_te_fixed60
+    oof_sha256: e1a18eb3d5145d6df29e9d828607cd163c7728e195de0d27738564ed616a7f19
+  - run_id: 3611b6ee75774a6c91679b31f0f18197
+    config: exp171_issue413_cat_no_te_fixed20
+    oof_sha256: b0a436288e7bdc8692ba39542c8b8313dedc1122c1987d6ec064e4183d8433f9
+  - run_id: 0be775440d534cebb1dfb65adb3180ab
+    config: exp172_issue413_cat_no_te_fixed40
+    oof_sha256: a0e732100e358c6e1e7683f1d5f1b16651bc8af9b726b4e6bb2720f23d0ec2b7
+  - run_id: d732f9f0ce83449699df70875e361f2f
+    config: exp173_issue413_cat_no_te_fixed60
+    oof_sha256: c895d330b597ba89fc6c87e70b7cfc075df77abb9853786c1a4a456419d8d1b2
+  - run_id: 1837035b5bf54dadb980b6407a645209
+    config: exp174_issue413_cat_exact_fixed20
+    oof_sha256: f3a1928765b82002ccb059fc04bae979323ba9018a95a5c6a467ccd125d9b7eb
+  - run_id: 1ccc455a260a4c0aa04cd025e32da68f
+    config: exp175_issue413_cat_exact_fixed40
+    oof_sha256: f34eace5ff4c259b80d45ed5b669ddf8a7a30283c5d8e8bed52bf531bd339ffd
+  - run_id: 319b4a77ffef4f419c73863b4ffc623d
+    config: exp176_issue413_cat_exact_fixed60
+    oof_sha256: 20a2aabb96299f3c2de1625d9335e2f768ac4abcaaaaf4e59c1d5ef0cd78145a
+frozen_input:
+  candidate_pool:
+    path: artifacts/pool.yaml
+    sha256: 5b25d6ce8f2f75a24bc32cdfc1d6f0f29621b47275e40171c14b3b23232a0b04
+    member_count: 33
+    members:
+    - config: exp006_te_drop_gaming
+      run_id: 4aaddd505ade428588cf83659f205cf6
+    - config: exp011_resid_pair
+      run_id: e21d19af37bb461db5dc1a59b66411a6
+    - config: exp022_orig_knn
+      run_id: 52e9c12bcfb94ee9912e4bb7f43e3f09
+    - config: exp023_orig_proxy_residual
+      run_id: 202b7d47c3bd4b8e8904fa5c005c7423
+    - config: exp025_constrained_impute
+      run_id: 9804689a5e3642e586abb972b522f3d4
+    - config: exp032_recon_orig_mean_top3
+      run_id: b1bd4b08386946c9a4e05b755dbd5f26
+    - config: exp035_lattice_te
+      run_id: c62a9ad334bf486cb46d738474ccd767
+    - config: exp058_logreg_onehot
+      run_id: e2b76edd9d204290810e39a7457c4c48
+    - config: exp059_lookup_transformer
+      run_id: b951fac51b6b44298f7fdb0b543caba6
+    - config: exp070_cat_exact_cats
+      run_id: 6238d8c58beb42ee8102209ded92516e
+    - config: exp067_tabpfn3
+      run_id: 85b09132aae543aab16e69dea5906a30
+    - config: exp081_lookup_fold_initialization_avg3
+      run_id: d55d1cd49c194eb8bf7b5128e548df81
+    - config: exp110_lgb_kitopl_no_te
+      run_id: ae829ae3d886402ab100a8e966c3131a
+    - config: exp111_xgb_depth8_no_te
+      run_id: 3cbc2ccce9eb46458d884006a33e516e
+    - config: exp071_cat_exact_no_te
+      run_id: 521b4924b2ef4ba1830724333b83deb2
+    - config: exp106_lookup_fixed24_train_test_preprocessing
+      run_id: 547e7bc90b9f4c448307d406f053629a
+    - config: exp117_ag25_gbm_r21
+      run_id: d107ea874ebe4dbe8094694141a162b6
+    - config: exp113_tab_cnn_m0
+      run_id: b47a4184249746cdb1d062aa98364437
+    - config: exp085_contextual_spline_m0
+      run_id: e84d97e875754af1b073b399db2a0616
+    - config: exp027_recon_ce
+      run_id: e4e81bdce7df4a72bf250ef842fd8781
+    - config: exp048_lgb_orig_cdf_diff
+      run_id: 2b5fda6d3ea94ff886c5fe616376f0f0
+    - config: exp134_realmlp_muon
+      run_id: f72eeee10b1b4947af79228f888e7a81
+    - config: exp135_xgb_hpo_trial30
+      run_id: 119b9c4e44674d38a6f758b65a68593e
+    - config: exp131_lookup_bivariate_plr5
+      run_id: 54acd002d3c04ec3a74c09871e83da50
+    - config: exp136_realmlp_muon_recon_widths
+      run_id: bd2bd1154e6343f68b364714e2fedcc4
+    - config: exp137_tabm_recon_widths
+      run_id: e7682b186be14dea822d41d7d411bb98
+    - config: exp133_scalar_token_transformer_oof_te
+      run_id: f16dbc88860a41f39194da2f581f057d
+    - config: exp131_tab_cnn_oof_target_mean
+      run_id: ea78fe0dbe2442788580dec56cf7f3ad
+    - config: exp132_tab_cnn_epochs100
+      run_id: 09d17ca4091e45118d201ba7a321f956
+    - config: exp139_realmlp_reference_qnormal_train_test
+      run_id: 1af9442e67c14a96a5256251f23a1b9d
+    - config: exp140_realmlp_orig_cdf_diff
+      run_id: 984b0fd5277243ab95acff71688644a9
+    - config: exp157_lookup_muon_initavg8
+      run_id: bb7be9baf1b64888818600d7e0b5927b
+    - config: exp168_issue413_lgb_no_te_fixed20
+      run_id: 2142b26c2d304307bb0c2717b803d643
+  folds:
+    path: artifacts/folds.parquet
+    sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+  registered_combiners:
+    scope: core
+    names:
+    - missing_segmented_rank_logit
+    - missing_interaction_rank_logit
+    - shrunk_rank_logit_logistic
+    names_sha256: 1bbe727284d0732ad64cac515ef4a62ebf38d6b4337864f4d36c09b4b4f2ca4f
+nested_oof_comparison:
+  before:
+    strategy: shrunk_rank_logit_logistic
+    auc: 0.96978293952234
+    strategy_role: full_oof_final_selection_reference
+    outer_fold_strategy:
+      '0': shrunk_rank_logit_logistic
+      '1': shrunk_rank_logit_logistic
+      '2': shrunk_rank_logit_logistic
+      '3': shrunk_rank_logit_logistic
+      '4': shrunk_rank_logit_logistic
+    scale_normalized: false
+  after:
+    strategy: shrunk_rank_logit_logistic
+    auc: 0.9697933384947535
+    strategy_role: full_oof_final_selection_reference
+    outer_fold_strategy:
+      '0': shrunk_rank_logit_logistic
+      '1': shrunk_rank_logit_logistic
+      '2': shrunk_rank_logit_logistic
+      '3': shrunk_rank_logit_logistic
+      '4': shrunk_rank_logit_logistic
+    scale_normalized: false
+  delta: 1.0398972413505625e-05
+  outer_fold_delta:
+    '0': 1.981017205010538e-05
+    '1': 2.4841685285714732e-05
+    '2': -2.189194130519656e-05
+    '3': 1.7666495215618028e-06
+    '4': 2.7468470524483202e-05
+  outer_fold_wins: 4
+  boundary_contribution: true
+evidence:
+  path: run-logs/pool-judgments/issue415-bulk-selection-4/evidence.json
+  sha256: d33b443d5333d9bf82908a9d614b3a966f1d42f78951f02ef9c5c289578e5427
+result:
+  state: adopted
+  decision: admit
+  reason: 전체 nested OOF AUC 차이가 엄격히 양수다.
