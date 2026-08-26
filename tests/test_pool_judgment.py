@@ -122,6 +122,66 @@ class _DeterministicEvaluator:
         return np.full(len(labels), 0.5, dtype=np.float64)
 
 
+class _MixedScaleEvaluator:
+    """분할별 순서는 같지만 결합 전략에 따라 예측 눈금만 다르게 만든다."""
+
+    def __init__(self, context) -> None:
+        self.context = context
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return None
+
+    def evaluate_many(self, arms, *, excluded_fold, capture_prediction=False):
+        del capture_prediction
+        names = tuple(self.context.ledger["strategies"]["included"])
+        mask = np.ones(len(self.context.folds), dtype=bool)
+        if excluded_fold is not None:
+            mask = self.context.folds.to_numpy() != excluded_fold
+        folds = self.context.folds.to_numpy()[mask]
+        fold_auc = {str(fold): 1.0 for fold in sorted(np.unique(folds).astype(int))}
+        scores = []
+        for members, _clone in arms:
+            has_candidate = any(name.startswith("candidate:") for name in members)
+            best_strategy = (
+                names[1]
+                if not has_candidate and excluded_fold == 3
+                else names[0]
+            )
+            best_auc = 0.9 if has_candidate else 0.8
+            strategy_auc = {
+                name: best_auc if name == best_strategy else best_auc - 0.1
+                for name in names
+            }
+            scores.append(
+                PoolScore(
+                    members=tuple(members),
+                    strategy_auc=strategy_auc,
+                    strategy_fold_auc={name: fold_auc for name in names},
+                    best_strategy=best_strategy,
+                    best_auc=best_auc,
+                    best_fold_auc=fold_auc,
+                    prediction=None,
+                )
+            )
+        return scores
+
+    def predict_outer(self, strategy, members, held_out_fold):
+        del members
+        mask = self.context.folds.to_numpy() == held_out_fold
+        labels = self.context.labels.to_numpy()[mask]
+        if strategy == tuple(self.context.ledger["strategies"]["included"])[1]:
+            return labels.astype(np.float64) * 0.001 + 0.001
+        return labels.astype(np.float64) * 0.5 + 0.25
+
+
+class _ReplayOnlyMixedScaleEvaluator(_MixedScaleEvaluator):
+    def evaluate_many(self, *_args, **_kwargs):
+        raise AssertionError("재생 경로가 전체 후보 평가를 다시 실행했다")
+
+
 class _FailingEvaluator:
     def __enter__(self):
         return self
@@ -324,6 +384,71 @@ def test_multiple_variants_repeat_selection_inside_each_outer_fold(tmp_path):
         "cand-b",
     }
     assert all(choice["strategy_count"] == 3 for choice in choices.values())
+
+
+def test_multiple_variants_normalize_mixed_outer_strategy_scales(tmp_path):
+    store = _write_fixture(tmp_path)
+
+    result = _generate(
+        tmp_path,
+        _request(candidates=("cand-a", "cand-b")),
+        store,
+        evaluator_factory=lambda context, _jobs: _MixedScaleEvaluator(context),
+    )
+
+    record = yaml.safe_load(result.record_path.read_text())
+    evidence = yaml.safe_load(result.evidence_path.read_text())
+    comparison = record["nested_oof_comparison"]
+    assert result.state == "rejected"
+    assert comparison["delta"] == 0.0
+    assert comparison["outer_fold_delta"] == {str(fold): 0.0 for fold in range(5)}
+    assert comparison["before"]["scale_normalized"] is True
+    assert comparison["after"]["scale_normalized"] is False
+    assert evidence["evaluation"]["scale_normalization"] == {
+        "method": "within_outer_fold_percentile_rank",
+        "before": True,
+        "after": False,
+    }
+
+
+def test_selection_replay_verifies_source_and_only_recomputes_outer_predictions(
+    tmp_path,
+):
+    store = _write_fixture(tmp_path)
+    source = _generate(
+        tmp_path,
+        _request(candidates=("cand-a", "cand-b")),
+        store,
+        evaluator_factory=lambda context, _jobs: _MixedScaleEvaluator(context),
+    )
+    replay_request = replace(
+        _request(candidates=("cand-a", "cand-b")),
+        judgment_id="test-pool-judgment-replay",
+        output_path=Path("artifacts/judgments/test-pool-judgment-replay.yaml"),
+        evidence_path=Path("run-logs/test-pool-judgment-replay/evidence.json"),
+        replay_selection_path=source.record_path.relative_to(tmp_path),
+    )
+
+    replay = _generate(
+        tmp_path,
+        replay_request,
+        store,
+        evaluator_factory=lambda context, _jobs: _ReplayOnlyMixedScaleEvaluator(
+            context
+        ),
+    )
+
+    source_record = yaml.safe_load(source.record_path.read_text())
+    replay_record = yaml.safe_load(replay.record_path.read_text())
+    replay_evidence = yaml.safe_load(replay.evidence_path.read_text())
+    assert replay.state == source.state == "rejected"
+    assert replay_record["nested_oof_comparison"] == source_record[
+        "nested_oof_comparison"
+    ]
+    assert replay_evidence["evaluation"]["mode"] == "nested_selection_replay"
+    assert replay_evidence["evaluation"]["replay_source"]["record"]["path"] == str(
+        source.record_path.relative_to(tmp_path)
+    )
 
 
 def test_replacement_compares_current_pool_with_atomic_replacement(tmp_path):

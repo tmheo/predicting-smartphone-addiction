@@ -162,6 +162,7 @@ class GenerationRequest:
     combiner_scope: str = "core"
     replaces_run_id: str | None = None
     restores_judgment_path: Path | None = None
+    replay_selection_path: Path | None = None
     jobs: int = max(1, min(8, os.cpu_count() or 1))
 
 
@@ -364,6 +365,11 @@ def _validate_request(request: GenerationRequest) -> None:
         _require(
             request.restores_judgment_path is None,
             f"{request.action}에는 원래 제거 기록을 쓸 수 없다.",
+        )
+    if request.replay_selection_path is not None:
+        _require(
+            len(request.candidate_run_ids) > 1,
+            "후보 선택 재생은 후보가 둘 이상인 선택 절차에만 쓸 수 있다.",
         )
 
 
@@ -822,6 +828,35 @@ def _fold_deltas(before: dict[str, float], after: dict[str, float]) -> dict[str,
     return {key: float(after[key] - before[key]) for key in sorted(before, key=int)}
 
 
+def _normalize_mixed_outer_scales(
+    prediction: np.ndarray,
+    folds: np.ndarray,
+    outer_strategy: dict[str, str],
+) -> tuple[np.ndarray, bool]:
+    """서로 다른 결합 전략의 바깥쪽 예측을 분할 안 백분위 순위로 맞춘다."""
+    expected_folds = {str(fold) for fold in range(5)}
+    _require(
+        set(outer_strategy) == expected_folds,
+        "바깥쪽 분할별 결합 전략이 0부터 4까지 완전하지 않다.",
+    )
+    if len(set(outer_strategy.values())) == 1:
+        return prediction, False
+    normalized = np.full(prediction.shape, np.nan, dtype=np.float64)
+    for fold in range(5):
+        mask = folds == fold
+        _require(bool(mask.any()), f"바깥쪽 검증 분할 {fold}가 비어 있다.")
+        normalized[mask] = (
+            pd.Series(prediction[mask])
+            .rank(method="average", pct=True)
+            .to_numpy(dtype=np.float64)
+        )
+    _require(
+        np.isfinite(normalized).all(),
+        "혼합 결합 전략의 분할 안 백분위 순위가 유한하지 않다.",
+    )
+    return normalized, True
+
+
 def _evaluate_single(prepared: _PreparedInput, evaluator: _Evaluator) -> _Comparison:
     scores = evaluator.evaluate_many(
         [
@@ -944,6 +979,23 @@ def _evaluate_selection(prepared: _PreparedInput, evaluator: _Evaluator) -> _Com
         np.isfinite(nested_before).all() and np.isfinite(nested_after).all(),
         "선택 절차 대조 예측이 전 행을 덮지 않는다.",
     )
+    raw_prediction_sha256 = {
+        "before": prediction_array_sha256(nested_before),
+        "after": prediction_array_sha256(nested_after),
+    }
+    outer_before_strategy = {
+        fold: choice["before_strategy"] for fold, choice in outer_choices.items()
+    }
+    outer_after_strategy = {
+        fold: choice["after_strategy"] for fold, choice in outer_choices.items()
+    }
+    folds = prepared.context.folds.to_numpy()
+    nested_before, before_scale_normalized = _normalize_mixed_outer_scales(
+        nested_before, folds, outer_before_strategy
+    )
+    nested_after, after_scale_normalized = _normalize_mixed_outer_scales(
+        nested_after, folds, outer_after_strategy
+    )
     labels = prepared.context.labels.to_numpy()
     before_auc = float(roc_auc_score(labels, nested_before))
     after_auc = float(roc_auc_score(labels, nested_after))
@@ -972,9 +1024,257 @@ def _evaluate_selection(prepared: _PreparedInput, evaluator: _Evaluator) -> _Com
                 )
             ],
             "outer_fold_choices": outer_choices,
+            "scale_normalization": {
+                "method": "within_outer_fold_percentile_rank",
+                "before": before_scale_normalized,
+                "after": after_scale_normalized,
+            },
+            "raw_nested_prediction_sha256": raw_prediction_sha256,
             "nested_prediction_sha256": {
                 "before": prediction_array_sha256(nested_before),
                 "after": prediction_array_sha256(nested_after),
+            },
+        },
+    )
+
+
+def _evaluate_selection_replay(
+    request: GenerationRequest,
+    prepared: _PreparedInput,
+    evaluator: _Evaluator,
+    *,
+    repo_root: Path,
+    frozen: _FrozenInput,
+) -> _Comparison:
+    """검증된 후보 선택을 재사용하고 선택된 바깥쪽 예측만 다시 계산한다."""
+    _require(request.replay_selection_path is not None, "재생할 후보 선택 기록이 없다.")
+    source_relative, source_absolute = _path_pair(
+        repo_root, request.replay_selection_path, "후보 선택 재생 원본 경로"
+    )
+    _require(source_absolute.is_file(), f"후보 선택 재생 원본이 없다: {source_relative}")
+    try:
+        source_record = yaml.safe_load(source_absolute.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        raise PoolJudgmentError("후보 선택 재생 원본을 읽을 수 없다.") from exc
+    _require(isinstance(source_record, dict), "후보 선택 재생 원본 형식이 올바르지 않다.")
+    _require(
+        source_record.get("contract_version") == POOL_JUDGMENT_CONTRACT_VERSION,
+        "후보 선택 재생 원본의 계약 버전이 현재와 다르다.",
+    )
+    _require(
+        source_record.get("selection")
+        == _selection_payload(request, prepared.candidates),
+        "후보 선택 재생 원본의 후보나 선택 규칙이 현재 요청과 다르다.",
+    )
+    _require(
+        source_record.get("frozen_input") == frozen.payload(prepared.pool),
+        "후보 선택 재생 원본의 동결 입력이 현재 입력과 다르다.",
+    )
+    source_change = source_record.get("change", {})
+    _require(
+        source_change.get("action") == request.action
+        and source_change.get("replaces_run_id") == request.replaces_run_id
+        and source_change.get("candidate", {}).get("model_lineage_group")
+        == request.model_lineage_group,
+        "후보 선택 재생 원본의 변경 범위가 현재 요청과 다르다.",
+    )
+
+    source_evidence_record = source_record.get("evidence", {})
+    source_evidence_relative, source_evidence_absolute = _path_pair(
+        repo_root,
+        Path(str(source_evidence_record.get("path", ""))),
+        "후보 선택 재생 근거 경로",
+    )
+    _require(
+        source_evidence_absolute.is_file(),
+        f"후보 선택 재생 근거가 없다: {source_evidence_relative}",
+    )
+    source_evidence_sha256 = file_sha256(source_evidence_absolute)
+    _require(
+        source_evidence_sha256 == source_evidence_record.get("sha256"),
+        "후보 선택 재생 근거 해시가 원본 기록과 다르다.",
+    )
+    try:
+        source_evidence = json.loads(
+            source_evidence_absolute.read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError) as exc:
+        raise PoolJudgmentError("후보 선택 재생 근거를 읽을 수 없다.") from exc
+    _require(isinstance(source_evidence, dict), "후보 선택 재생 근거 형식이 올바르지 않다.")
+    source_inputs = source_evidence.get("input_artifacts", {})
+    source_snapshot = source_inputs.get("evaluation_snapshot", {})
+    source_snapshot_relative, source_snapshot_absolute = _path_pair(
+        repo_root,
+        Path(str(source_snapshot.get("path", ""))),
+        "후보 선택 재생 입력 사본 경로",
+    )
+    _require(
+        source_snapshot_absolute.is_file(),
+        f"후보 선택 재생 입력 사본이 없다: {source_snapshot_relative}",
+    )
+    _require(
+        file_sha256(source_snapshot_absolute) == source_snapshot.get("sha256"),
+        "후보 선택 재생 입력 사본 해시가 원본 근거와 다르다.",
+    )
+    current_inputs = prepared.input_artifacts
+    _require(
+        {key: value for key, value in source_inputs.items() if key != "evaluation_snapshot"}
+        == {
+            key: value
+            for key, value in current_inputs.items()
+            if key != "evaluation_snapshot"
+        },
+        "후보 선택 재생 원본의 실행 입력이 현재 입력과 다르다.",
+    )
+    current_snapshot = current_inputs.get("evaluation_snapshot", {})
+    _require(
+        source_snapshot.get("sha256") == current_snapshot.get("sha256")
+        and source_snapshot.get("rows") == current_snapshot.get("rows")
+        and source_snapshot.get("columns") == current_snapshot.get("columns"),
+        "후보 선택 재생 원본의 평가 사본이 현재 평가 사본과 다르다.",
+    )
+
+    source_evaluation = source_evidence.get("evaluation", {})
+    _require(
+        source_evaluation.get("mode") in {"nested_selection", "nested_selection_replay"},
+        "후보 선택 재생 원본이 다중 후보 선택 결과가 아니다.",
+    )
+    outer_choices = source_evaluation.get("outer_fold_choices", {})
+    _require(
+        set(outer_choices) == {str(fold) for fold in range(5)},
+        "후보 선택 재생 원본의 바깥쪽 분할 선택이 불완전하다.",
+    )
+    candidates_by_run_id = {candidate.run_id: candidate for candidate in prepared.candidates}
+    selected_run_id = source_change.get("candidate", {}).get("run_id")
+    _require(
+        selected_run_id in candidates_by_run_id,
+        "후보 선택 재생 원본의 전체 OOF 선택 후보가 현재 후보에 없다.",
+    )
+    selected_candidate = candidates_by_run_id[selected_run_id]
+    names = tuple(prepared.context.ledger["strategies"]["included"])
+    folds = prepared.context.folds.to_numpy()
+    labels = prepared.context.labels.to_numpy()
+    nested_before = np.full(len(labels), np.nan, dtype=np.float64)
+    nested_after = np.full(len(labels), np.nan, dtype=np.float64)
+    fold_delta: dict[str, float] = {}
+    for fold in range(5):
+        choice = outer_choices[str(fold)]
+        candidate_run_id = choice.get("candidate_run_id")
+        _require(
+            candidate_run_id in candidates_by_run_id,
+            f"후보 선택 재생 원본의 바깥쪽 분할 {fold} 후보가 현재 후보에 없다.",
+        )
+        candidate = candidates_by_run_id[candidate_run_id]
+        _require(
+            choice.get("candidate_config") == candidate.config,
+            f"후보 선택 재생 원본의 바깥쪽 분할 {fold} 후보 구성이 다르다.",
+        )
+        before_strategy = choice.get("before_strategy")
+        after_strategy = choice.get("after_strategy")
+        _require(
+            before_strategy in names and after_strategy in names,
+            f"후보 선택 재생 원본의 바깥쪽 분할 {fold} 결합 전략이 현재 범위에 없다.",
+        )
+        before_prediction = evaluator.predict_outer(
+            before_strategy, prepared.before_members, fold
+        )
+        candidate_index = prepared.candidates.index(candidate)
+        after_prediction = evaluator.predict_outer(
+            after_strategy, prepared.candidate_arms[candidate_index], fold
+        )
+        mask = folds == fold
+        _require(
+            before_prediction.shape == after_prediction.shape == (int(mask.sum()),),
+            f"후보 선택 재생의 바깥쪽 검증 분할 {fold} 예측 행 수가 다르다.",
+        )
+        _require(
+            np.isfinite(before_prediction).all()
+            and np.isfinite(after_prediction).all(),
+            f"후보 선택 재생의 바깥쪽 검증 분할 {fold} 예측이 유한하지 않다.",
+        )
+        nested_before[mask] = before_prediction
+        nested_after[mask] = after_prediction
+        fold_labels = labels[mask]
+        fold_delta[str(fold)] = float(
+            roc_auc_score(fold_labels, after_prediction)
+            - roc_auc_score(fold_labels, before_prediction)
+        )
+    raw_prediction_sha256 = {
+        "before": prediction_array_sha256(nested_before),
+        "after": prediction_array_sha256(nested_after),
+    }
+    source_raw_sha256 = source_evaluation.get(
+        "raw_nested_prediction_sha256",
+        source_evaluation.get("nested_prediction_sha256"),
+    )
+    _require(
+        raw_prediction_sha256 == source_raw_sha256,
+        "후보 선택 재생 예측이 원본 선택 경로의 예측과 다르다.",
+    )
+    source_comparison = source_evaluation.get("nested_oof_comparison", {})
+    source_fold_delta = source_comparison.get("outer_fold_delta", {})
+    _require(
+        set(source_fold_delta) == set(fold_delta)
+        and all(
+            math.isclose(
+                fold_delta[key], float(source_fold_delta[key]), rel_tol=0.0, abs_tol=1e-15
+            )
+            for key in fold_delta
+        ),
+        "후보 선택 재생의 분할별 차이가 원본 선택 결과와 다르다.",
+    )
+    outer_before_strategy = {
+        fold: choice["before_strategy"] for fold, choice in outer_choices.items()
+    }
+    outer_after_strategy = {
+        fold: choice["after_strategy"] for fold, choice in outer_choices.items()
+    }
+    nested_before, before_scale_normalized = _normalize_mixed_outer_scales(
+        nested_before, folds, outer_before_strategy
+    )
+    nested_after, after_scale_normalized = _normalize_mixed_outer_scales(
+        nested_after, folds, outer_after_strategy
+    )
+    before_auc = float(roc_auc_score(labels, nested_before))
+    after_auc = float(roc_auc_score(labels, nested_after))
+    return _Comparison(
+        selected_candidate=selected_candidate,
+        before_auc=before_auc,
+        after_auc=after_auc,
+        delta=after_auc - before_auc,
+        before_strategy=source_evaluation["before"]["best_strategy"],
+        after_strategy=source_evaluation["after"]["best_strategy"],
+        outer_fold_delta=fold_delta,
+        outer_fold_wins=sum(value > 0.0 for value in fold_delta.values()),
+        evidence={
+            "mode": "nested_selection_replay",
+            "before": source_evaluation["before"],
+            "after": source_evaluation["after"],
+            "full_candidate_selection": source_evaluation["full_candidate_selection"],
+            "outer_fold_choices": outer_choices,
+            "scale_normalization": {
+                "method": "within_outer_fold_percentile_rank",
+                "before": before_scale_normalized,
+                "after": after_scale_normalized,
+            },
+            "raw_nested_prediction_sha256": raw_prediction_sha256,
+            "nested_prediction_sha256": {
+                "before": prediction_array_sha256(nested_before),
+                "after": prediction_array_sha256(nested_after),
+            },
+            "replay_source": {
+                "record": {
+                    "path": str(source_relative),
+                    "sha256": file_sha256(source_absolute),
+                },
+                "evidence": {
+                    "path": str(source_evidence_relative),
+                    "sha256": source_evidence_sha256,
+                },
+                "input_snapshot": {
+                    "path": str(source_snapshot_relative),
+                    "sha256": source_snapshot["sha256"],
+                },
             },
         },
     )
@@ -1099,12 +1399,15 @@ def _record_payload(
     }
     if nested_selection:
         choices = comparison.evidence["outer_fold_choices"]
+        normalization = comparison.evidence["scale_normalization"]
         before["outer_fold_strategy"] = {
             fold: choice["before_strategy"] for fold, choice in choices.items()
         }
+        before["scale_normalized"] = normalization["before"]
         after["outer_fold_strategy"] = {
             fold: choice["after_strategy"] for fold, choice in choices.items()
         }
+        after["scale_normalized"] = normalization["after"]
     return {
         "schema_version": 1,
         "judgment_id": request.judgment_id,
@@ -1250,9 +1553,19 @@ def generate_pool_judgment(
             }
             with evaluator_factory(prepared.context, request.jobs) as evaluator:
                 comparison = (
-                    _evaluate_single(prepared, evaluator)
-                    if len(prepared.candidates) == 1
-                    else _evaluate_selection(prepared, evaluator)
+                    _evaluate_selection_replay(
+                        request,
+                        prepared,
+                        evaluator,
+                        repo_root=repo_root,
+                        frozen=frozen,
+                    )
+                    if request.replay_selection_path is not None
+                    else (
+                        _evaluate_single(prepared, evaluator)
+                        if len(prepared.candidates) == 1
+                        else _evaluate_selection(prepared, evaluator)
+                    )
                 )
             state, decision, _reason = _result_for(request, comparison.delta)
             evidence = {
@@ -1350,6 +1663,11 @@ def main() -> None:
     )
     parser.add_argument("--replaces-run-id")
     parser.add_argument("--restores-judgment", type=Path)
+    parser.add_argument(
+        "--replay-selection",
+        type=Path,
+        help="검증된 다중 후보 선택 기록을 재사용하고 바깥쪽 예측만 다시 계산한다",
+    )
     parser.add_argument("--output", type=Path)
     parser.add_argument("--evidence", type=Path)
     parser.add_argument(
@@ -1375,6 +1693,7 @@ def main() -> None:
         combiner_scope="full" if args.full_combiners else "core",
         replaces_run_id=args.replaces_run_id,
         restores_judgment_path=args.restores_judgment,
+        replay_selection_path=args.replay_selection,
         jobs=args.jobs,
     )
     try:
