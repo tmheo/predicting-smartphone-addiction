@@ -1,0 +1,111 @@
+schema_version: 1
+issue: 430
+generated_at: '2026-08-26T17:02:49Z'
+source_commit: 17dc5d28467a8284e20272ad61de0e52e646bdf9
+provider: vast
+remote_job_id: issue430-exp106-training-states-v2
+stage: confirm
+model: lookup_transformer
+seeds: [42, 43, 44]
+folds: 5
+
+contract:
+  trajectory_end_epochs: 24
+  schedule_horizon_epochs: 24
+  state_kind: ema
+  precommitted_candidates: [6, 8, 12]
+  selection_rule: precommitted
+  validation_target_used_for_selection: false
+  trajectory_identity_sha256: 5d8805f2ddc8d7b1c8232990d6263d5d5ac968fc13fb165a0699b7f934e30010
+  candidate_set_sha256: fb03f9960c5d248b61e318d13d3f268476fa9a4bc0ffc71944e364413db2efe1
+
+inputs:
+  train_sha256: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+  test_sha256: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+  sample_submission_sha256: 206763fe5786fb9c80d4e9289a3b812030d3dbb36450c6eb63348098154ce63e
+  folds_sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+  epoch6_config_sha256: e05b5cc88ecfa8a13580de9682255ac9d42a30ca718978c674ab81eba3019617
+  epoch8_config_sha256: f30c852b9fc8e95951ce2277c02329e8a415018b78192480483a2ba9d58dacc0
+  epoch12_config_sha256: acbbfeab943439a393c3775f5a1b608f49610bc0f082eb9538bd9b5340801a7c
+
+qualification:
+  expected_candidates: 3
+  imported_candidates: 3
+  entry_threshold: 0.9593676105620949
+  champion_auc: 0.9693676105620948
+  all_runs_finished: true
+  all_bundles_imported_before_audit: true
+  all_entry_pass: true
+  all_input_hashes_match: true
+  all_source_commits_match: true
+  all_lineage_checks_passed: true
+  all_oof_rescores_passed: true
+  all_seed_means_match: true
+  all_submission_checks_passed: true
+  distinct_candidate_predictions: true
+  pool_mutated: false
+  all_checks_passed: true
+
+lineage:
+  source_trajectory_run_id: 4618d03cafac42aca65d0c7c392da17a
+  source_trajectory_status: FINISHED
+
+execution:
+  image: nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631
+  successful_instance_id: 48790654
+  gpu: NVIDIA A100-SXM4-80GB
+  completed_trajectories: 15
+  training_seconds: 3383.165606680326
+  result_archive_sha256: b406b8ed2eeeef93e82749ee570a4dd894e205b99f6f6e1d9e254ce1a888f826
+  attempts:
+    - instance_id: 48782862
+      gpu: NVIDIA RTX A4000
+      outcome: failed_before_candidate_publication
+      charged_usd: 0.041
+    - instance_id: 48790654
+      gpu: NVIDIA A100-SXM4-80GB
+      outcome: finished_and_imported
+      charged_usd: 1.491
+  total_cost_usd: 1.532
+  runpod_used: false
+  final_issue_instances: 0
+  final_issue_volumes: 0
+  final_issue_termination_schedules: 0
+
+pool:
+  action: none
+  sha256_before: caa1b90769720a4accbe07074dbc7efe0335ab6657fea80c6839b60121dc39d3
+  sha256_after: caa1b90769720a4accbe07074dbc7efe0335ab6657fea80c6839b60121dc39d3
+  downstream_issue: 425
+
+results:
+  - experiment: exp106_lookup_fixed24_train_test_preprocessing_epoch6
+    completed_epochs: 6
+    source_run_id: 879dd82969714e2ba2cb23b5932da0c7
+    imported_run_id: 19c87be034414b5bb7e6d562aadb73da
+    bundle_sha256: 21a81c1974ff9ce47d5002ddf720fdeb92536ee666151c25902388293d91cf56
+    auc_oof: 0.9651969072604965
+    entry_margin: 0.005829296698401598
+    entry_pass: true
+    oof_content_sha256: 4d078017b165e73ec606b3d9be36c4118046291fec63da33941358dd3d6a4fe8
+    test_content_sha256: 113fc2130823f3ced22883a1cdcc1bc17cf8c31f08c3378f35604fb0bbc18206
+  - experiment: exp106_lookup_fixed24_train_test_preprocessing_epoch8
+    completed_epochs: 8
+    source_run_id: 51e761bae9b741e484971d6e84c38139
+    imported_run_id: f1ff7d61ea3f4b36a7f172181afeaeb7
+    bundle_sha256: 004719f922d8071bc5ea64cc3995424101dff94b08f9390f29b016579553c12c
+    auc_oof: 0.9678534166761308
+    entry_margin: 0.008485806114035932
+    entry_pass: true
+    oof_content_sha256: 17b8c89a03b3670255db4397e3d46d44e8281342dad57d160d8eee6d1334d19b
+    test_content_sha256: fc5ec811220e4e6a377270a9e78810a30ca6750d26780c96e3fae5a795bd9e75
+  - experiment: exp106_lookup_fixed24_train_test_preprocessing_epoch12
+    completed_epochs: 12
+    source_run_id: 0fa8fea8677e49dbb09da51ee66d87ab
+    imported_run_id: e80283046f9e4143b7031d45b800ade7
+    bundle_sha256: 4db0cb65a5f4ab0b835099907cef40a3fba7c78c1ef028e70a6f42615935298d
+    auc_oof: 0.9689316286326932
+    entry_margin: 0.009564018070598368
+    entry_pass: true
+    oof_content_sha256: e6e0e235634db862b8581dd0a2b6199416f3381d6c2d49fe2d32c4500b6dbfaf
+    test_content_sha256: 08d30d9d543ffcd84e91c02bd7641d0210de2c7707ce1b6d1c399c48cfbb39aa
