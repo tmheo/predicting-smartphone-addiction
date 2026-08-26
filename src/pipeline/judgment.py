@@ -1018,7 +1018,6 @@ def _missingness_pattern(frame: pd.DataFrame, columns: list[str]) -> pd.Series:
     )
 
 
-@lru_cache(maxsize=4)
 def missingness_reweighting(
     train_path: Path = TRAIN_PATH,
     test_path: Path = MISSINGNESS_TEST_PATH,
@@ -1027,6 +1026,17 @@ def missingness_reweighting(
 
     구성비는 자료에서 읽기만 하고 목표값을 보지 않으므로 fold 안팎을 나눌 필요가 없다.
     """
+    return _missingness_reweighting_cached(
+        Path(train_path).resolve(),
+        Path(test_path).resolve(),
+    )
+
+
+@lru_cache(maxsize=4)
+def _missingness_reweighting_cached(
+    train_path: Path,
+    test_path: Path,
+) -> MissingnessReweighting:
     train = pd.read_csv(train_path)
     test = pd.read_csv(test_path)
     columns = [column for column in train.columns if column not in {ID, TARGET}]
