@@ -125,7 +125,14 @@ def git_state() -> dict[str, str]:
     return {"git_commit": commit, "git_dirty": str(dirty)}
 
 
-def log_start_records(client, run_id: str, cfg: ExperimentConfig) -> None:
+def log_start_records(
+    client,
+    run_id: str,
+    cfg: ExperimentConfig,
+    *,
+    fixed_git_state: dict[str, str] | None = None,
+    fixed_config_artifact: tuple[str, bytes] | None = None,
+) -> None:
     """실행 생성 직후 기록: params(실험, 시드, 모델), git 태그, 설정 원본. (#43 기록 시점 분배)
 
     feature 목록 param은 fold-fit 컬럼이 CV에서 확정되므로 log_final_records가 남긴다.
@@ -140,7 +147,7 @@ def log_start_records(client, run_id: str, cfg: ExperimentConfig) -> None:
         client.log_param(run_id, "initial_score.kind", cfg.initial_score.kind)
         for key, value in cfg.initial_score.params.items():
             client.log_param(run_id, f"initial_score.{key}", value)
-    for key, value in git_state().items():
+    for key, value in (fixed_git_state or git_state()).items():
         client.set_tag(run_id, key, value)
     for key, environment_name in (
         ("remote.provider", "REMOTE_RUN_PROVIDER"),
@@ -149,7 +156,16 @@ def log_start_records(client, run_id: str, cfg: ExperimentConfig) -> None:
         value = os.environ.get(environment_name)
         if value:
             client.set_tag(run_id, key, value)
-    client.log_artifact(run_id, str(cfg.source_path))
+    if fixed_config_artifact is None:
+        client.log_artifact(run_id, str(cfg.source_path))
+    else:
+        name, payload = fixed_config_artifact
+        if Path(name).name != name or Path(name).suffix not in {".yaml", ".yml"}:
+            raise ValueError(f"고정 config 산출물 이름이 안전한 YAML 파일 이름이 아니다: {name}")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / name
+            path.write_bytes(payload)
+            client.log_artifact(run_id, str(path))
 
 
 def log_input_hashes(client, run_id: str, input_hashes: dict[str, str]) -> None:
@@ -198,9 +214,23 @@ def log_final_records(
         result.test_pred.to_parquet(tmp_dir / "test_pred.parquet", index=False)
         result.importance.to_parquet(tmp_dir / "feature_importance.parquet", index=False)
         submission.to_csv(tmp_dir / "submission.csv", index=False)
-        (tmp_dir / EVIDENCE_NAME).write_text(
+        evidence_name = result.recovery_evidence_name
+        if evidence_name == EVIDENCE_NAME:
+            evidence_payload = recovery_evidence(result.recovery_evidence)
+        else:
+            from .training_state_recovery import (
+                EVIDENCE_NAME as TRAINING_STATE_EVIDENCE_NAME,
+            )
+            from .training_state_recovery import training_state_recovery_evidence
+
+            if evidence_name != TRAINING_STATE_EVIDENCE_NAME:
+                raise ValueError(f"알 수 없는 복구 근거 산출물 이름이다: {evidence_name}")
+            evidence_payload = training_state_recovery_evidence(
+                result.recovery_evidence
+            )
+        (tmp_dir / evidence_name).write_text(
             json.dumps(
-                recovery_evidence(result.recovery_evidence),
+                evidence_payload,
                 ensure_ascii=False,
                 allow_nan=False,
                 indent=2,
@@ -208,7 +238,13 @@ def log_final_records(
             )
             + "\n"
         )
-        names.append(EVIDENCE_NAME)
+        if evidence_name == "training_state_recovery.json":
+            client.set_tag(
+                run_id,
+                "sha256.training_state_recovery",
+                file_sha256(tmp_dir / evidence_name),
+            )
+        names.append(evidence_name)
         reuse_evidence_path = tmp_dir / FOLD_FIT_REUSE_EVIDENCE_NAME
         reuse_evidence_path.write_bytes(
             canonical_json_bytes(
@@ -235,6 +271,11 @@ def log_final_records(
                 sort_keys=True,
             )
             + "\n"
+        )
+        client.set_tag(
+            run_id,
+            "sha256.model_training_diagnostics",
+            file_sha256(tmp_dir / diagnostics_name),
         )
         names.append(diagnostics_name)
         for seed, oof in seed_oofs.items():

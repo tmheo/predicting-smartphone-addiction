@@ -61,6 +61,7 @@ class RunMeta:
     params: dict[str, str]
     metrics: dict[str, float]
     tags: dict[str, str]
+    status: str = "FINISHED"
 
 
 class RunStore(Protocol):
@@ -139,6 +140,7 @@ class MlflowRunStore:
             params=dict(run.data.params),
             metrics=dict(run.data.metrics),
             tags=dict(run.data.tags),
+            status=run.info.status,
         )
 
     def oof_of(self, run_id: str) -> pd.Series:
@@ -214,6 +216,7 @@ class _StoredRun:
     config: dict | None
     submission_path: Path | None
     artifacts: dict[str, bytes]
+    status: str
 
 
 @dataclass
@@ -235,6 +238,7 @@ class InMemoryRunStore:
         config: dict | None = None,
         submission_path: Path | None = None,
         artifacts: dict[str, bytes] | None = None,
+        status: str = "FINISHED",
     ) -> str:
         self._runs[run_id] = _StoredRun(
             run_name=run_name,
@@ -246,6 +250,7 @@ class InMemoryRunStore:
             config=config,
             submission_path=submission_path,
             artifacts=dict(artifacts or {}),
+            status=status,
         )
         return run_id
 
@@ -267,6 +272,7 @@ class InMemoryRunStore:
             params=dict(run.params),
             metrics=dict(run.metrics),
             tags=dict(run.tags),
+            status=run.status,
         )
 
     def oof_of(self, run_id: str) -> pd.Series:

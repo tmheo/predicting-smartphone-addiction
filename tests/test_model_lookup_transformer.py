@@ -775,7 +775,7 @@ def test_lookup_transformer_records_no_muon_operating_point_without_muon():
     assert member["muon_max_learning_rate"] is None
 
 
-def test_lookup_orig_cdf_diff_config_is_exp131_feature_only_delta():
+def test_lookup_orig_cdf_diff_config_is_exp131_feature_only_delta(monkeypatch):
     proxy_columns = [
         "daily_screen_time_hours",
         "weekend_screen_time",
@@ -783,6 +783,16 @@ def test_lookup_orig_cdf_diff_config_is_exp131_feature_only_delta():
         "notifications_per_day",
         "app_opens_per_day",
     ]
+    proxy = pd.DataFrame(
+        {
+            **{column: [0.0, 1.0] for column in proxy_columns},
+            "addicted_label": [0, 1],
+        }
+    )
+    monkeypatch.setattr(
+        "pipeline.features._load_locked_proxy",
+        lambda path, sha256, cols: proxy,
+    )
     baseline = load_config(
         REPO / "configs" / "exp131_lookup_bivariate_plr5.yaml", "screen"
     )

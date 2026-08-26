@@ -60,6 +60,11 @@ def main() -> None:
 
     # 검증된 설정 파일 = ExperimentConfig 생성 성공. 피처 계획의 누출 규율 검증 포함. (#43, #71)
     cfg = load_config(args.config, args.stage)
+    if cfg.training_state is not None:
+        raise SystemExit(
+            "training_state 설정은 일반 단일 실행 경로로 실행할 수 없다. "
+            "사전 고정 후보 설정 전체를 pipeline.training_state_run에 함께 전달할 것."
+        )
     plan = FeaturePlan.from_config(cfg.features)
 
     if args.plan:

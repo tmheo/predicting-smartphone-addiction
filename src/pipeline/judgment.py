@@ -93,7 +93,14 @@ from .ensemble import (
 )
 from .features import PLACEBO
 from .ledger import POOL_PATH, Champion, Pool
-from .runs import RunStore
+from .runs import RunStore, RunStoreError
+from .training_state_manifest import (
+    MANIFEST_NAME as TRAINING_STATE_MANIFEST_NAME,
+    RUN_KIND as TRAINING_STATE_RUN_KIND,
+    TrainingStateManifestError,
+    validate_candidate_parent_lineage,
+    validate_candidate_manifest,
+)
 
 AUC_THRESHOLD = 0.00002  # 계열 1·3 공통 채택 문턱. (#15, #64, ADR 0001)
 BOUNDARY_UPPER = 0.0002  # 이 미만의 개선 폭은 경계 구간으로 fold 승리 게이트를 추가한다.
@@ -162,8 +169,11 @@ class RunFacts:
 
 _RESULT_HASH_TAGS = {
     "sha256.fold_feature_reuse",
+    "sha256.model_training_diagnostics",
     "sha256.oof_prediction",
     "sha256.submission",
+    "sha256.training_state_manifest",
+    "sha256.training_state_recovery",
 }
 _RESULT_HASH_PREFIXES = ("sha256.observability.",)
 
@@ -181,6 +191,7 @@ def _input_hashes_of(tags: dict[str, str]) -> dict[str, str]:
 
 def load_run_facts(run_id: str, store: RunStore) -> RunFacts:
     meta = store.facts_of(run_id)
+    _require_publishable_run(meta, store)
     config = store.config_of(run_id)
     model_params = {"model.kind": str(config["model"]["kind"])}
     model_params.update(
@@ -499,6 +510,7 @@ class PoolCandidate:
 
 def load_candidate(run_id: str, store: RunStore) -> PoolCandidate:
     meta = store.facts_of(run_id)
+    _require_publishable_run(meta, store)
     return PoolCandidate(
         run_id=run_id,
         experiment=meta.params["experiment"],
@@ -508,6 +520,48 @@ def load_candidate(run_id: str, store: RunStore) -> PoolCandidate:
         folds_sha256=meta.tags["sha256.folds"],
         oof=store.oof_of(run_id),
     )
+
+
+def _require_publishable_run(meta, store: RunStore) -> None:
+    if meta.status != "FINISHED":
+        raise ValueError(f"run {meta.run_id}이 완료 상태가 아니다: {meta.status}")
+    try:
+        config = store.config_of(meta.run_id)
+    except RunStoreError:
+        config = None
+    if (
+        isinstance(config, dict)
+        and config.get("training_state") is not None
+        and meta.tags.get("run.kind") != TRAINING_STATE_RUN_KIND
+    ):
+        raise ValueError(
+            f"run {meta.run_id}은 training_state config지만 snapshot 실행 정체성이 없다."
+        )
+    if meta.tags.get("run.kind") == TRAINING_STATE_RUN_KIND:
+        try:
+            training_state_document = validate_candidate_manifest(
+                manifest_bytes=store.artifact_bytes_of(
+                    meta.run_id, TRAINING_STATE_MANIFEST_NAME
+                ),
+                tags=meta.tags,
+                params=meta.params,
+                artifact_bytes_of=lambda name: store.artifact_bytes_of(
+                    meta.run_id, name
+                ),
+            )
+            validate_candidate_parent_lineage(
+                child_run_id=meta.run_id,
+                child_document=training_state_document,
+                child_tags=meta.tags,
+                facts_of=store.facts_of,
+                artifact_bytes_of=store.artifact_bytes_of,
+            )
+        except TrainingStateManifestError as exc:
+            raise ValueError(
+                f"run {meta.run_id}의 학습 시점 게시 계약이 불완전하다: {exc}"
+            ) from exc
+    if meta.tags.get("judgment.eligible") == "false":
+        raise ValueError(f"run {meta.run_id}은 판정 불가 부모 실행이다.")
 
 
 def spearman(a: pd.Series, b: pd.Series) -> float:

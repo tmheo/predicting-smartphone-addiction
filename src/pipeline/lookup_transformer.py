@@ -59,10 +59,52 @@ _LR_SCHEDULES = {
     "warmup_constant",
     "warmup_plateau",
 }
+_TARGET_INDEPENDENT_LR_SCHEDULES = _LR_SCHEDULES - {"warmup_plateau"}
 _WARMUP_FRACTION = 0.15
 _START_DIVISOR = 25.0
 _FINAL_DIVISOR = 250_000.0
 _GRADIENT_CLIP_NORM = 1.0
+
+
+def _positive_epoch(value: object, name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise ValueError(f"{name}은 1 이상의 정수여야 한다: {value!r}")
+    return value
+
+
+def _validate_epoch_window(
+    trajectory_end_epochs: object,
+    schedule_horizon_epochs: object,
+) -> tuple[int, int]:
+    end = _positive_epoch(trajectory_end_epochs, "trajectory_end_epochs")
+    horizon = _positive_epoch(schedule_horizon_epochs, "schedule_horizon_epochs")
+    if end > horizon:
+        raise ValueError(
+            "trajectory_end_epochs는 schedule_horizon_epochs보다 클 수 없다: "
+            f"{end} > {horizon}"
+        )
+    return end, horizon
+
+
+def _validate_completed_epochs(
+    completed_epochs: object,
+    *,
+    trajectory_end_epochs: int,
+    schedule_horizon_epochs: int,
+) -> tuple[int, ...]:
+    if not isinstance(completed_epochs, (list, tuple)) or not completed_epochs:
+        raise ValueError("completed_epochs는 비어 있지 않은 양의 정수 목록이어야 한다.")
+    points = tuple(
+        _positive_epoch(value, "completed_epochs 항목") for value in completed_epochs
+    )
+    if points != tuple(sorted(set(points))):
+        raise ValueError("completed_epochs는 중복 없는 오름차순이어야 한다.")
+    if points[-1] > trajectory_end_epochs or points[-1] > schedule_horizon_epochs:
+        raise ValueError(
+            "completed_epochs는 trajectory 종료와 schedule 지평 이하여야 한다: "
+            f"{points[-1]} > {trajectory_end_epochs}/{schedule_horizon_epochs}"
+        )
+    return points
 
 
 def _sigmoid(logit: np.ndarray) -> np.ndarray:
@@ -414,6 +456,12 @@ class _LookupTransformerMember:
         self._val_auc: float | None = None
         self._training_diagnostics: dict[str, object] | None = None
         self._raw_training_length_selection: int | None = None
+        self._training_point_states: dict[int, tuple[torch.Tensor, ...]] = {}
+        self._training_point_diagnostics: dict[str, object] | None = None
+        self._captured_completed_epochs: tuple[int, ...] = ()
+        self._trajectory_end_epochs: int | None = None
+        self._schedule_horizon_epochs: int | None = None
+        self._trajectory_steps_per_epoch: int | None = None
         self._dataset_reference: tuple[pd.DataFrame, pd.DataFrame] | None = None
 
     def set_dataset_reference(
@@ -547,6 +595,153 @@ class _LookupTransformerMember:
             raise ValueError("Lookup-Transformer 전체 자료 재학습 epoch 수는 양의 정수여야 한다.")
         self._fit(X, y, None, None, epochs=epochs)
 
+    def _validate_training_point_path(self) -> None:
+        if self._validation_selection != "final":
+            raise ValueError(
+                "여러 학습 시점 포착은 validation_selection='final'에서만 지원한다."
+            )
+        if self._lr_schedule not in _TARGET_INDEPENDENT_LR_SCHEDULES:
+            raise ValueError(
+                "여러 학습 시점 포착의 학습률 일정은 검증 목표값을 참조할 수 없다: "
+                f"{self._lr_schedule!r}"
+            )
+
+    def _validate_training_trajectory(
+        self,
+        completed_epochs: object,
+        trajectory_end_epochs: object,
+        schedule_horizon_epochs: object,
+    ) -> tuple[tuple[int, ...], int, int]:
+        self._validate_training_point_path()
+        trajectory_end, schedule_horizon = _validate_epoch_window(
+            trajectory_end_epochs, schedule_horizon_epochs
+        )
+        points = _validate_completed_epochs(
+            completed_epochs,
+            trajectory_end_epochs=trajectory_end,
+            schedule_horizon_epochs=schedule_horizon,
+        )
+        return points, trajectory_end, schedule_horizon
+
+    def _fit_training_trajectory(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        *,
+        completed_epochs: tuple[int, ...],
+        trajectory_end_epochs: int,
+        schedule_horizon_epochs: int,
+    ) -> None:
+        self._fit(
+            X_tr,
+            y_tr,
+            X_va,
+            y_va,
+            epochs=trajectory_end_epochs,
+            schedule_horizon_epochs=schedule_horizon_epochs,
+            capture_completed_epochs=completed_epochs,
+        )
+        if tuple(self._training_point_states) != completed_epochs:
+            raise RuntimeError(
+                "요청한 Lookup-Transformer 학습 시점을 모두 포착하지 못했다: "
+                f"{tuple(self._training_point_states)} != {completed_epochs}"
+            )
+
+    def _fit_full_training_point(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        *,
+        trajectory_end_epochs: int,
+        schedule_horizon_epochs: int,
+    ) -> None:
+        self._fit(
+            X,
+            y,
+            None,
+            None,
+            epochs=trajectory_end_epochs,
+            schedule_horizon_epochs=schedule_horizon_epochs,
+        )
+
+    def _select_training_point(self, completed_epoch: object) -> np.ndarray:
+        point = _positive_epoch(completed_epoch, "completed_epoch")
+        if point not in self._training_point_states:
+            raise ValueError(
+                f"포착하지 않은 completed_epoch이다: {point}; "
+                f"포착값={self._captured_completed_epochs}"
+            )
+        if self._model is None or self._val is None:
+            raise RuntimeError("select_training_point는 검증 궤적 학습 뒤에 호출해야 한다.")
+        state = self._training_point_states[point]
+        params_list = list(self._model.parameters())
+        if len(params_list) != len(state):
+            raise RuntimeError("포착한 EMA 상태와 현재 모델의 매개변수 수가 다르다.")
+        with torch.no_grad():
+            for parameter, weight in zip(params_list, state):
+                if parameter.shape != weight.shape:
+                    raise RuntimeError("포착한 EMA 상태와 현재 모델의 매개변수 모양이 다르다.")
+                parameter.copy_(weight.to(device=parameter.device, dtype=parameter.dtype))
+
+        ids_va, num_va, mask_va, y_va = self._val
+        val_logit = self._predict_tensors(ids_va, num_va, mask_va)
+        selected_auc = roc_auc_score(y_va, val_logit)
+        self._val_auc = selected_auc
+        # raw_field는 0부터 세는 종료 위치다. completed_epoch와 정확히 한 칸 차이다.
+        self._raw_training_length_selection = point - 1
+        self._training_diagnostics = self._diagnostics_for_training_point(
+            point, selected_auc
+        )
+        return _sigmoid(val_logit)
+
+    def _diagnostics_for_training_point(
+        self, completed_epoch: int, validation_auc: float
+    ) -> dict[str, object]:
+        if (
+            self._training_point_diagnostics is None
+            or self._trajectory_steps_per_epoch is None
+            or self._trajectory_end_epochs is None
+            or self._schedule_horizon_epochs is None
+        ):
+            raise RuntimeError("학습 시점 진단을 만들 궤적 정보가 없다.")
+        diagnostics = dict(self._training_point_diagnostics)
+        all_evaluations = diagnostics["evaluations"]
+        assert isinstance(all_evaluations, list)
+        evaluations = [
+            dict(observation)
+            for observation in all_evaluations
+            if int(observation["epoch"]) < completed_epoch
+        ]
+        if evaluations:
+            observed_best = max(
+                evaluations, key=lambda observation: float(observation["validation_auc"])
+            )
+            observed_best_epoch: int | None = int(observed_best["epoch"])
+            best_validation_auc = float(observed_best["validation_auc"])
+        else:
+            observed_best_epoch = None
+            best_validation_auc = 0.0
+        diagnostics.update(
+            {
+                "evaluations": evaluations,
+                "best_epoch": completed_epoch - 1,
+                "observed_best_epoch": observed_best_epoch,
+                "best_validation_auc": best_validation_auc,
+                "end_epoch": completed_epoch - 1,
+                "completed_steps": self._trajectory_steps_per_epoch
+                * completed_epoch,
+                "trajectory_end_epochs": self._trajectory_end_epochs,
+                "schedule_horizon_epochs": self._schedule_horizon_epochs,
+                "captured_completed_epochs": list(self._captured_completed_epochs),
+                "selected_completed_epoch": completed_epoch,
+                "selected_validation_auc": float(validation_auc),
+                "state_kind": "ema",
+            }
+        )
+        return diagnostics
+
     def _fit(
         self,
         X_tr: pd.DataFrame,
@@ -555,7 +750,24 @@ class _LookupTransformerMember:
         y_va: pd.Series | None,
         *,
         epochs: int,
+        schedule_horizon_epochs: int | None = None,
+        capture_completed_epochs: tuple[int, ...] = (),
     ) -> np.ndarray | None:
+        schedule_horizon = (
+            epochs if schedule_horizon_epochs is None else schedule_horizon_epochs
+        )
+        if schedule_horizon < epochs:
+            raise ValueError(
+                "schedule_horizon_epochs는 실제 학습 epoch 수 이상이어야 한다: "
+                f"{schedule_horizon} < {epochs}"
+            )
+        training_point_path = schedule_horizon_epochs is not None
+        self._training_point_states = {}
+        self._training_point_diagnostics = None
+        self._captured_completed_epochs = capture_completed_epochs
+        self._trajectory_end_epochs = epochs if training_point_path else None
+        self._schedule_horizon_epochs = schedule_horizon if training_point_path else None
+        self._trajectory_steps_per_epoch = None
         torch.backends.cuda.matmul.allow_tf32 = True
         self._fit_specs(X_tr)
         dev = self._device
@@ -657,7 +869,10 @@ class _LookupTransformerMember:
             group_lr_scales = [1.0, 1.0]
         opt = _create_optimizer(self._optimizer_name, parameter_groups, self._lr)
         n_tr = len(X_tr)
-        steps = math.ceil(n_tr / self._batch_size) * epochs + 10
+        steps_per_epoch = math.ceil(n_tr / self._batch_size)
+        steps = steps_per_epoch * schedule_horizon + 10
+        if training_point_path:
+            self._trajectory_steps_per_epoch = steps_per_epoch
         schedule = _LearningRateController(
             opt,
             name=self._lr_schedule,
@@ -789,6 +1004,11 @@ class _LookupTransformerMember:
                         p.copy_(b)
                 if self._validation_selection == "best" and bad >= self._patience:
                     break
+            completed_epoch = ep + 1
+            if completed_epoch in capture_completed_epochs:
+                self._training_point_states[completed_epoch] = tuple(
+                    weight.detach().cpu().clone() for weight in ema
+                )
         observed_best_epoch = best_epoch
         if self._validation_selection == "final":
             selected_weights = ema
@@ -838,6 +1058,17 @@ class _LookupTransformerMember:
             "planned_total_steps": steps,
             "full_fit": not validation,
         }
+        if training_point_path:
+            self._training_diagnostics.update(
+                {
+                    "trajectory_end_epochs": epochs,
+                    "schedule_horizon_epochs": schedule_horizon,
+                    "captured_completed_epochs": list(capture_completed_epochs),
+                    "selected_completed_epoch": epochs,
+                    "state_kind": "ema",
+                }
+            )
+            self._training_point_diagnostics = dict(self._training_diagnostics)
         # 전체 자료 재학습에는 검증 선택이 없다. 없는 관측을 지어내지 않는다. (#372)
         self._raw_training_length_selection = selected_epoch if validation else None
         if not validation:
@@ -939,6 +1170,8 @@ class LookupTransformerFold:
         self._columns: list[str] | None = None
         self._val: tuple[pd.DataFrame, np.ndarray] | None = None
         self._val_auc: float | None = None
+        self._captured_completed_epochs: tuple[int, ...] = ()
+        self._selected_completed_epoch: int | None = None
 
     def set_dataset_reference(
         self, X_train: pd.DataFrame, X_test: pd.DataFrame
@@ -972,6 +1205,8 @@ class LookupTransformerFold:
     def fit(
         self, X_tr: pd.DataFrame, y_tr: pd.Series, X_va: pd.DataFrame, y_va: pd.Series
     ) -> np.ndarray:
+        self._captured_completed_epochs = ()
+        self._selected_completed_epoch = None
         self._columns = list(X_va.columns)
         y_va_np = y_va.to_numpy(dtype="float64")
         val_pred = np.zeros(len(X_va), dtype="float64")
@@ -1005,8 +1240,114 @@ class LookupTransformerFold:
             )
         return val_pred
 
+    def fit_training_trajectory(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        completed_epochs: object,
+        trajectory_end_epochs: object,
+        schedule_horizon_epochs: object,
+    ) -> None:
+        """한 학습 궤적에서 사전 고정한 완료 epoch의 EMA 상태를 포착한다."""
+        validated = [
+            member._validate_training_trajectory(
+                completed_epochs,
+                trajectory_end_epochs,
+                schedule_horizon_epochs,
+            )
+            for member in self._members
+        ]
+        points, trajectory_end, schedule_horizon = validated[0]
+        if any(result != validated[0] for result in validated[1:]):
+            raise RuntimeError("초기화 구성원의 학습 시점 계약이 서로 다르다.")
+
+        self._columns = list(X_va.columns)
+        y_va_np = y_va.to_numpy(dtype="float64")
+        self._val = (X_va.copy(), y_va_np)
+        self._val_auc = None
+        self._captured_completed_epochs = points
+        self._selected_completed_epoch = None
+        for index, member in enumerate(self._members, start=1):
+            print(
+                f"[lookup_transformer] trajectory member {index}/{len(self._members)} "
+                f"seed={member._seed} device={member._device} "
+                f"end={trajectory_end} horizon={schedule_horizon} "
+                f"points={list(points)}",
+                flush=True,
+            )
+        if self._parallel:
+            with ThreadPoolExecutor(max_workers=len(self._members)) as executor:
+                list(
+                    executor.map(
+                        lambda member: member._fit_training_trajectory(
+                            X_tr,
+                            y_tr,
+                            X_va,
+                            y_va,
+                            completed_epochs=points,
+                            trajectory_end_epochs=trajectory_end,
+                            schedule_horizon_epochs=schedule_horizon,
+                        ),
+                        self._members,
+                    )
+                )
+        else:
+            for member in self._members:
+                member._fit_training_trajectory(
+                    X_tr,
+                    y_tr,
+                    X_va,
+                    y_va,
+                    completed_epochs=points,
+                    trajectory_end_epochs=trajectory_end,
+                    schedule_horizon_epochs=schedule_horizon,
+                )
+
+        # 학습 직후에도 fold 상태가 포착된 후보 하나를 가리키도록 마지막 후보를 고른다.
+        self.select_training_point(points[-1])
+
+    def select_training_point(self, completed_epoch: object) -> np.ndarray:
+        """포착한 EMA 상태를 복원하고 그 상태의 검증 확률 예측을 돌려준다."""
+        point = _positive_epoch(completed_epoch, "completed_epoch")
+        if point not in self._captured_completed_epochs:
+            raise ValueError(
+                f"포착하지 않은 completed_epoch이다: {point}; "
+                f"포착값={self._captured_completed_epochs}"
+            )
+        if self._val is None:
+            raise RuntimeError("select_training_point는 검증 궤적 학습 뒤에 호출해야 한다.")
+        if self._parallel:
+            with ThreadPoolExecutor(max_workers=len(self._members)) as executor:
+                member_predictions = list(
+                    executor.map(
+                        lambda member: member._select_training_point(point),
+                        self._members,
+                    )
+                )
+        else:
+            member_predictions = [
+                member._select_training_point(point) for member in self._members
+            ]
+
+        validation_prediction = np.zeros(len(self._val[1]), dtype="float64")
+        for member_prediction in member_predictions:
+            validation_prediction += member_prediction / len(self._members)
+        self._val_auc = roc_auc_score(self._val[1], validation_prediction)
+        self._selected_completed_epoch = point
+        if len(self._members) > 1:
+            print(
+                f"[lookup_transformer] fold initialization-avg "
+                f"completed_epoch={point} valAUC={self._val_auc:.5f}",
+                flush=True,
+            )
+        return validation_prediction
+
     def fit_full(self, X: pd.DataFrame, y: pd.Series, epochs: int) -> None:
         """초기화 구성원 모두를 전체 자료에서 같은 고정 epoch 수로 학습한다."""
+        self._captured_completed_epochs = ()
+        self._selected_completed_epoch = None
         self._columns = list(X.columns)
         for index, member in enumerate(self._members, start=1):
             print(
@@ -1024,6 +1365,53 @@ class LookupTransformerFold:
         else:
             for member in self._members:
                 member.fit_full(X, y, epochs)
+
+    def fit_full_training_point(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        trajectory_end_epochs: object,
+        schedule_horizon_epochs: object,
+    ) -> None:
+        """선택한 완료 시점에서 끝내되 원래 학습률 일정 지평을 보존한다."""
+        trajectory_end, schedule_horizon = _validate_epoch_window(
+            trajectory_end_epochs, schedule_horizon_epochs
+        )
+        for member in self._members:
+            member._validate_training_point_path()
+
+        self._captured_completed_epochs = ()
+        self._selected_completed_epoch = trajectory_end
+        self._columns = list(X.columns)
+        for index, member in enumerate(self._members, start=1):
+            print(
+                f"[lookup_transformer] full training-point member "
+                f"{index}/{len(self._members)} seed={member._seed} "
+                f"device={member._device} end={trajectory_end} "
+                f"horizon={schedule_horizon}",
+                flush=True,
+            )
+        if self._parallel:
+            with ThreadPoolExecutor(max_workers=len(self._members)) as executor:
+                list(
+                    executor.map(
+                        lambda member: member._fit_full_training_point(
+                            X,
+                            y,
+                            trajectory_end_epochs=trajectory_end,
+                            schedule_horizon_epochs=schedule_horizon,
+                        ),
+                        self._members,
+                    )
+                )
+        else:
+            for member in self._members:
+                member._fit_full_training_point(
+                    X,
+                    y,
+                    trajectory_end_epochs=trajectory_end,
+                    schedule_horizon_epochs=schedule_horizon,
+                )
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         if self._parallel:

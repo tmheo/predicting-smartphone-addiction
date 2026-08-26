@@ -54,6 +54,7 @@ from .refit_plan import (
     ExecutableRefitPlan,
     RefitPlan,
     RefitPlanError,
+    TrajectoryStateBudgetDerivation,
     member_entry_sha256_from_document,
 )
 from .runs import MlflowRunStore, RunStore, RunStoreError, sha256_of
@@ -144,6 +145,7 @@ def run_member(
             "input_sha256": input_hashes,
             "seed": seed,
             "training_budget": budget,
+            **_training_state_seed_identity(member),
         }
         if prediction_path.exists():
             if not record_path.exists():
@@ -168,13 +170,39 @@ def run_member(
             )
             adapter = model.create(cfg.model, seed)
             model.set_dataset_reference(adapter, X_train, X_test)
-            model.fit_full(
-                adapter,
-                X_train,
-                y,
-                budget,
-                scores.train if scores is not None else None,
-            )
+            if isinstance(member.derivation, TrajectoryStateBudgetDerivation):
+                if cfg.training_state is None:
+                    raise ValueError(
+                        f"{member.config}: 정확 시점 재학습 계획인데 설정에 training_state가 없다."
+                    )
+                actual_training_state = model.fit_full_training_state(
+                    adapter,
+                    X_train,
+                    y,
+                    cfg.training_state,
+                    scores.train if scores is not None else None,
+                )
+                actual_training_state = {
+                    key: actual_training_state[key]
+                    for key in (
+                        "completed_epochs",
+                        "schedule_horizon_epochs",
+                        "state_kind",
+                    )
+                }
+                if actual_training_state != seed_identity["training_state_actual"]:
+                    raise ValueError(
+                        f"{member.config}: 모델이 보고한 정확 시점 재학습 계약이 계획과 다르다."
+                    )
+            else:
+                model.fit_full(
+                    adapter,
+                    X_train,
+                    y,
+                    budget,
+                    scores.train if scores is not None else None,
+                )
+                actual_training_state = None
             prediction = np.asarray(
                 adapter.predict(X_test, scores.test if scores is not None else None),
                 dtype=np.float64,
@@ -196,6 +224,7 @@ def run_member(
             {
                 "seed": seed,
                 "training_budget": budget,
+                **_training_state_seed_identity(member),
                 "prediction_sha256": prediction_array_sha256(prediction),
             }
         )
@@ -246,6 +275,22 @@ def _member_provenance(member: ExecutableRefitMember) -> dict:
     """
     lineage = member.lineage
     derivation = member.derivation
+    if isinstance(derivation, TrajectoryStateBudgetDerivation):
+        budget_derivation = {
+            "status": member.status,
+            "method": member.refit_method,
+            "completed_epochs": derivation.completed_epochs,
+            "schedule_horizon_epochs": derivation.schedule_horizon_epochs,
+            "state_kind": derivation.state_kind,
+            "trajectory_identity_sha256": derivation.trajectory_identity_sha256,
+        }
+    else:
+        budget_derivation = {
+            "status": member.status,
+            "statistic": None if derivation is None else derivation.policy.statistic,
+            "multiplier": None if derivation is None else derivation.policy.multiplier,
+            "rounding": None if derivation is None else derivation.policy.rounding,
+        }
     return {
         "member_entry_sha256": member.entry_sha256,
         "evidence_lineage": {
@@ -256,11 +301,30 @@ def _member_provenance(member: ExecutableRefitMember) -> dict:
             "evidence_artifact_path": lineage.evidence_artifact_path,
             "evidence_artifact_sha256": lineage.evidence_artifact_sha256,
         },
-        "refit_budget_derivation": {
-            "status": member.status,
-            "statistic": None if derivation is None else derivation.policy.statistic,
-            "multiplier": None if derivation is None else derivation.policy.multiplier,
-            "rounding": None if derivation is None else derivation.policy.rounding,
+        "refit_budget_derivation": budget_derivation,
+    }
+
+
+def _training_state_seed_identity(member: ExecutableRefitMember) -> dict[str, object]:
+    derivation = member.derivation
+    if not isinstance(derivation, TrajectoryStateBudgetDerivation):
+        return {}
+    contract = {
+        "completed_epochs": derivation.completed_epochs,
+        "schedule_horizon_epochs": derivation.schedule_horizon_epochs,
+        "state_kind": derivation.state_kind,
+        "trajectory_identity_sha256": derivation.trajectory_identity_sha256,
+    }
+    return {
+        "refit_method": member.refit_method,
+        "training_state_contract": contract,
+        "training_state_actual": {
+            key: contract[key]
+            for key in (
+                "completed_epochs",
+                "schedule_horizon_epochs",
+                "state_kind",
+            )
         },
     }
 
@@ -470,6 +534,15 @@ def _load_member_full_prediction(
         raise ValueError(
             f"{member.config}: manifest의 member_entry_sha256 계보가 다르다."
         )
+    if isinstance(member.derivation, TrajectoryStateBudgetDerivation):
+        _validate_training_state_manifest_seeds(
+            member,
+            manifest,
+            member_dir,
+            expected_ids,
+            prediction,
+        )
+        return prediction
     recorded_budgets = {
         record.get("seed"): record.get("training_budget")
         for record in manifest.get("seeds", [])
@@ -477,6 +550,56 @@ def _load_member_full_prediction(
     if recorded_budgets != member.budgets:
         raise ValueError(f"{member.config}: manifest의 재학습 예산이 검증된 예산과 다르다.")
     return prediction
+
+
+def _validate_training_state_manifest_seeds(
+    member: ExecutableRefitMember,
+    manifest: dict,
+    member_dir: Path,
+    expected_ids: pd.Series,
+    averaged_prediction: np.ndarray,
+) -> None:
+    """정확 시점 구성원의 시드별 실제 계약과 평균 예측을 모두 다시 맞춘다."""
+    records = manifest.get("seeds")
+    if not isinstance(records, list) or len(records) != len(member.budgets):
+        raise ValueError(f"{member.config}: manifest의 정확 시점 시드 기록 수가 다르다.")
+    expected_identity = _training_state_seed_identity(member)
+    expected_fields = {
+        "seed",
+        "training_budget",
+        "refit_method",
+        "training_state_contract",
+        "training_state_actual",
+        "prediction_sha256",
+    }
+    seed_predictions = []
+    for (seed, budget), record in zip(member.budgets.items(), records, strict=True):
+        if not isinstance(record, dict) or set(record) != expected_fields:
+            raise ValueError(
+                f"{member.config}: manifest의 시드 {seed} 정확 시점 필드가 다르다."
+            )
+        expected_record = {
+            "seed": seed,
+            "training_budget": budget,
+            **expected_identity,
+        }
+        if any(record.get(key) != value for key, value in expected_record.items()):
+            raise ValueError(
+                f"{member.config}: manifest의 시드 {seed} 정확 시점 계약이 다르다."
+            )
+        seed_prediction = _load_prediction(
+            member_dir / f"test_pred_seed_{seed}.parquet", expected_ids
+        )
+        if record["prediction_sha256"] != prediction_array_sha256(seed_prediction):
+            raise ValueError(
+                f"{member.config}: manifest의 시드 {seed} 예측 해시가 다르다."
+            )
+        seed_predictions.append(seed_prediction)
+    recomputed = np.mean(seed_predictions, axis=0, dtype=np.float64)
+    if not np.array_equal(recomputed, averaged_prediction):
+        raise ValueError(
+            f"{member.config}: 정확 시점 시드 예측 평균이 구성원 전체 예측과 다르다."
+        )
 
 
 def _validate_prediction(prediction: np.ndarray, size: int, name: str) -> None:
