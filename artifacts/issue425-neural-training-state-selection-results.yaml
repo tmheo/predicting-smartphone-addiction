@@ -101,3 +101,5 @@ result:
   final_pool_sha256: caa1b90769720a4accbe07074dbc7efe0335ab6657fea80c6839b60121dc39d3
   full_data_refit_required: false
   final_submission_regeneration_required: false
+  safety_artifact_revalidation_required: true
+  downstream_issue: 429
