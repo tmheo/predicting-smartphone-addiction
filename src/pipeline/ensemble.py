@@ -1502,6 +1502,10 @@ def record_nested_evaluation(
     artifacts에 oof.parquet(id, prediction), member_weights.csv와 전략별 비교 JSON,
     tags에 source.kind=derived_ensemble와 입력 sha256·산출물 sha256을 남긴다.
 
+    git 상태는 params뿐 아니라 학습 실행과 같은 이름의 tags(git_commit·git_dirty)로도
+    남긴다. pipeline.submit·bundle 등 실행 출처를 읽는 도구는 태그 규약만 보므로,
+    태그가 없으면 파생 앙상블 실행을 제출할 수 없다. (#416)
+
     가중 OOF를 잰 실행은 전략별 nested OOF 예측(strategy_oof.parquet)과 결측 패턴별
     가중치 원본(missingness_weights.csv)을 함께 남긴다. (#383)
     """
@@ -1520,6 +1524,7 @@ def record_nested_evaluation(
     client, experiment_id = mlflow_client(tracking_uri)
     run_id = client.create_run(experiment_id, run_name=run_name).info.run_id
 
+    git = git_state()
     params: dict[str, str] = {
         "experiment": run_name,
         "stage": "confirm",
@@ -1528,7 +1533,7 @@ def record_nested_evaluation(
         "ensemble.member_count": str(len(members)),
         "ensemble.member_configs": configs,
         "ensemble.member_run_ids": run_ids,
-        **git_state(),
+        **git,
     }
     if baseline is not None:
         params["ensemble.baseline_run_id"] = baseline.run_id
@@ -1602,6 +1607,7 @@ def record_nested_evaluation(
         oof_sha256 = hashlib.sha256(oof_path.read_bytes()).hexdigest()
 
     tags = {
+        **git,
         "source.issue": str(issue),
         "source.kind": "derived_ensemble",
         "ensemble.strategy": evaluation.name,

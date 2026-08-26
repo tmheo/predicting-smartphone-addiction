@@ -857,6 +857,9 @@ def test_record_nested_evaluation_writes_derived_ensemble_run(tmp_path, monkeypa
     assert run.data.params["ensemble.baseline_run_id"] == "run-baseline"
     assert run.data.params["ensemble.new_member_configs"] == "exp_2"
     assert run.data.params["git_dirty"] == "False"
+    # pipeline.submit 등은 학습 실행의 태그 규약만 읽는다. (#416)
+    assert run.data.tags["git_commit"] == "a" * 40
+    assert run.data.tags["git_dirty"] == "False"
     assert run.data.metrics["auc_oof"] == pytest.approx(evaluation.nested_auc)
     assert run.data.metrics["auc_fold_0"] == pytest.approx(evaluation.folds[0].auc)
     assert run.data.metrics["auc_pool2_previous_best"] == pytest.approx(0.9)
