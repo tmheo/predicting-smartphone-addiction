@@ -1,0 +1,103 @@
+schema_version: 1
+issue: 425
+generated_at: '2026-08-26T23:38:54Z'
+source_commit: b4c873ecbe2d33ed4e4c79a8af3e7f9ddbbb7c19
+
+contract:
+  initial_pool_size: 35
+  initial_pool_sha256: caa1b90769720a4accbe07074dbc7efe0335ab6657fea80c6839b60121dc39d3
+  combiner_scope: core
+  combiners:
+    - missing_segmented_rank_logit
+    - missing_interaction_rank_logit
+    - shrunk_rank_logit_logistic
+  combiner_names_sha256: 1bbe727284d0732ad64cac515ef4a62ebf38d6b4337864f4d36c09b4b4f2ca4f
+  candidate_order:
+    - 19c87be034414b5bb7e6d562aadb73da
+    - f1ff7d61ea3f4b36a7f172181afeaeb7
+    - e80283046f9e4143b7031d45b800ade7
+    - 3a33260f82114838bf712f9dd0d032c9
+    - d762079159044452afec992a48c6bcf6
+    - 7f7a9b88c7ab48fc920411d470992e6b
+  minimum_nested_oof_delta: 0.00002
+  minimum_outer_fold_wins: 4
+  maximum_admissions: 2
+  serial_registration: true
+
+qualification:
+  entry_floor_passed: 6
+  duplicate_invariant_passed: 6
+  candidate_count: 6
+  duplicate_spearman_threshold: 0.998
+  candidates:
+    - config: exp106_lookup_fixed24_train_test_preprocessing_epoch6
+      run_id: 19c87be034414b5bb7e6d562aadb73da
+      auc_oof: 0.9651969072604965
+      nearest_run_id: 2142b26c2d304307bb0c2717b803d643
+      nearest_spearman: 0.9902435144325905
+    - config: exp106_lookup_fixed24_train_test_preprocessing_epoch8
+      run_id: f1ff7d61ea3f4b36a7f172181afeaeb7
+      auc_oof: 0.9678534166761308
+      nearest_run_id: d55d1cd49c194eb8bf7b5128e548df81
+      nearest_spearman: 0.9921785809128932
+    - config: exp106_lookup_fixed24_train_test_preprocessing_epoch12
+      run_id: e80283046f9e4143b7031d45b800ade7
+      auc_oof: 0.9689316286326932
+      nearest_run_id: d55d1cd49c194eb8bf7b5128e548df81
+      nearest_spearman: 0.9934445804644556
+    - config: exp203_issue428_realmlp_muon_epoch1
+      run_id: 3a33260f82114838bf712f9dd0d032c9
+      auc_oof: 0.9663926684441182
+      nearest_run_id: 984b0fd5277243ab95acff71688644a9
+      nearest_spearman: 0.9845825878510778
+    - config: exp204_issue428_realmlp_muon_epoch2
+      run_id: d762079159044452afec992a48c6bcf6
+      auc_oof: 0.967865808401806
+      nearest_run_id: f72eeee10b1b4947af79228f888e7a81
+      nearest_spearman: 0.9926121930085454
+    - config: exp205_issue428_realmlp_muon_epoch3
+      run_id: 7f7a9b88c7ab48fc920411d470992e6b
+      auc_oof: 0.9683137729027594
+      nearest_run_id: f72eeee10b1b4947af79228f888e7a81
+      nearest_spearman: 0.9965495142056613
+
+judgments:
+  - judgment_id: issue425-bulk-selection-1
+    record_sha256: e3a2b0e807bd23234f2980515dc7a3e0d103b1157a27c11db361ac9934207fe2
+    evidence_sha256: e67a16ff15f30c23a2cd64128d5c882f2b933209a59fb72cd24e81d019a41694
+    state: indeterminate
+    reason: symbolic data path resolved outside the worktree
+    pool_mutated: false
+  - judgment_id: issue425-bulk-selection-2
+    record_sha256: 9e8f4efc6221e22037e196d411f831cdd870ecb0348c80f75d119f6e7d5c7d63
+    evidence_sha256: f700d87f81b444c24723e00cc81e38f132354f13b03915894482b35b0b217154
+    input_snapshot_sha256: bcab2b7c1e92d93cfb4919300522aaa4bd0658e34328b4e8cd8f183cb188e6ac
+    state: rejected
+    pool_size: 35
+    before_auc: 0.9698105828357245
+    after_auc: 0.9698098853083991
+    delta: -6.975273254550274e-07
+    outer_fold_wins: 3
+    outer_fold_delta:
+      '0': 8.66706127644612e-07
+      '1': -9.49824665885668e-06
+      '2': 1.0021923896319507e-06
+      '3': 7.259932415237813e-06
+      '4': -3.1182455778600016e-06
+    full_oof_candidate: exp204_issue428_realmlp_muon_epoch2
+    outer_fold_choices:
+      exp106_lookup_fixed24_train_test_preprocessing_epoch8: 2
+      exp106_lookup_fixed24_train_test_preprocessing_epoch12: 2
+      exp204_issue428_realmlp_muon_epoch2: 1
+    threshold_pass: false
+    stability_pass: false
+    outcome: no admission and stop
+
+result:
+  admitted: []
+  admission_count: 0
+  second_round_performed: false
+  final_pool_size: 35
+  final_pool_sha256: caa1b90769720a4accbe07074dbc7efe0335ab6657fea80c6839b60121dc39d3
+  full_data_refit_required: false
+  final_submission_regeneration_required: false
