@@ -29,6 +29,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -194,13 +195,17 @@ class RefitBudgetRecord:
 
 @dataclass(frozen=True)
 class RefitPlanMember:
-    """검증 전 장부 구성원. 실행 예산을 노출하지 않는다."""
+    """검증 전 장부 구성원. 실행 예산을 노출하지 않는다.
+
+    `entry_sha256`은 이 구성원의 장부 항목과 규약 블록만 덮는 내용 해시다(#69).
+    """
 
     config: str
     config_path: Path
     lineage: MemberLineage
     evidence: TrainingLengthEvidence
     budget_derivation: RefitBudgetRecord
+    entry_sha256: str
 
 
 @dataclass(frozen=True)
@@ -230,6 +235,7 @@ class ExecutableRefitMember:
     status: str
     budgets: dict[int, int | None]
     derivation: RefitBudgetDerivation | None
+    entry_sha256: str
 
     @property
     def run_id(self) -> str:
@@ -277,8 +283,12 @@ class RefitPlan:
         """장부를 엄격한 문법으로 읽는다. 파일 밖의 무엇도 읽지 않는다.
 
         읽은 바이트의 SHA-256을 계획 내용 해시로 함께 들고 나온다. 실행 경로는 이 해시를
-        시드별 기록에 남겨, 재개할 때 그때와 같은 장부인지 한 값으로 확인한다.
-        내용 해시는 근거·계보·예산 전부를 덮으므로 어느 칸이 바뀌어도 재개가 막힌다.
+        시드별 기록과 manifest에 장부 맥락으로 남긴다.
+
+        재개와 조립이 맞춰 보는 값은 구성원마다 따로 계산한 항목 해시다(`member_entry_sha256`).
+        그 해시는 규약 블록과 그 구성원의 장부 항목(계보·원시 관측·예산 계산)만 덮으므로,
+        그 구성원의 어느 칸이 바뀌어도 재개와 조립이 막히지만 다른 구성원이 장부에
+        더해지거나 빠지는 것만으로는 이미 끝난 재학습이 무효가 되지 않는다(#69).
         """
         payload = path.read_bytes()
         raw = yaml.safe_load(payload.decode())
@@ -290,8 +300,9 @@ class RefitPlan:
             raise RefitPlanError(
                 f"장부 문법 판본은 {SCHEMA_VERSION}이어야 한다: {version}"
             )
+        protocol_document = _mapping(document["protocol"], "protocol")
         members = tuple(
-            _load_member(item, index)
+            _load_member(item, index, protocol_document)
             for index, item in enumerate(_sequence(document["members"], "members"))
         )
         if not members:
@@ -400,6 +411,7 @@ def _validate_member(
             status=evidence.status,
             budgets={seed: None for seed in allowed_seeds},
             derivation=None,
+            entry_sha256=member.entry_sha256,
         )
 
     observations = _validate_observations(member, allowed_seeds)
@@ -411,6 +423,7 @@ def _validate_member(
         status=evidence.status,
         budgets=dict(derivation.budgets()),
         derivation=derivation,
+        entry_sha256=member.entry_sha256,
     )
 
 
@@ -672,7 +685,7 @@ def _load_protocol(value: object) -> RefitProtocol:
     )
 
 
-def _load_member(value: object, index: int) -> RefitPlanMember:
+def _load_member(value: object, index: int, protocol: dict) -> RefitPlanMember:
     member = _mapping(value, f"members[{index}]")
     label = member.get("config") if isinstance(member.get("config"), str) else index
     where = f"구성원 {label}"
@@ -683,7 +696,42 @@ def _load_member(value: object, index: int) -> RefitPlanMember:
         lineage=_load_lineage(member["lineage"], where),
         evidence=_load_evidence(member["training_length_evidence"], where),
         budget_derivation=_load_derivation(member["refit_budget_derivation"], where),
+        entry_sha256=member_entry_sha256(protocol, member),
     )
+
+
+def member_entry_sha256(protocol: object, member: object) -> str:
+    """규약 블록과 구성원 장부 항목 하나를 정규 JSON으로 직렬화한 SHA-256.
+
+    키 순서와 공백을 정규화하므로 YAML의 표기 차이에는 흔들리지 않고, 값이 하나라도
+    바뀌면 달라진다. 실행 경로와 조립 관문이 구성원 산출물의 정체성을 이 값으로 맞춘다.
+    """
+    payload = json.dumps(
+        {"protocol": protocol, "member": member},
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        default=str,
+    )
+    return sha256_of(payload.encode())
+
+
+def member_entry_sha256_from_document(document: object, config: str) -> str:
+    """장부 문서(파싱한 YAML)에서 이름이 `config`인 구성원의 항목 해시를 계산한다.
+
+    문법 판본 2 기록처럼 항목 해시가 아직 없는 산출물을 검증할 때, 그 기록이 가리키는
+    장부 내용에서 같은 계산을 다시 하는 데 쓴다. 장부 문법 전체를 다시 검사하지는 않는다.
+    """
+    mapping = _mapping(document, "장부")
+    protocol = _mapping(mapping.get("protocol"), "protocol")
+    matches = [
+        item
+        for item in _sequence(mapping.get("members"), "members")
+        if isinstance(item, dict) and item.get("config") == config
+    ]
+    if len(matches) != 1:
+        raise RefitPlanError(f"장부에 구성원 {config!r}이 정확히 하나 있지 않다.")
+    return member_entry_sha256(protocol, matches[0])
 
 
 def _load_lineage(value: object, where: str) -> MemberLineage:
