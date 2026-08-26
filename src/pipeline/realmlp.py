@@ -24,6 +24,7 @@ import math
 import os
 import random
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import numpy as np
@@ -116,6 +117,35 @@ _DEFAULTS = {
 
 def _parameter_count(module: nn.Module) -> int:
     return sum(parameter.numel() for parameter in module.parameters())
+
+
+def _validated_completed_epochs(
+    completed_epochs: Sequence[int],
+    *,
+    fixed_epochs: int,
+    schedule_epochs: int,
+    allow_empty: bool = False,
+) -> tuple[int, ...]:
+    if isinstance(completed_epochs, (str, bytes)) or not isinstance(
+        completed_epochs, Sequence
+    ):
+        raise ValueError("completed_epochs는 양의 정수 목록이어야 한다.")
+    epochs = tuple(completed_epochs)
+    if not epochs and not allow_empty:
+        raise ValueError("completed_epochs는 비어 있지 않은 양의 정수 목록이어야 한다.")
+    if any(
+        isinstance(epoch, bool) or not isinstance(epoch, int) or epoch < 1
+        for epoch in epochs
+    ):
+        raise ValueError("completed_epochs는 양의 정수 목록이어야 한다.")
+    if epochs != tuple(sorted(set(epochs))):
+        raise ValueError("completed_epochs는 중복 없는 오름차순이어야 한다.")
+    if epochs and epochs[-1] > min(fixed_epochs, schedule_epochs):
+        raise ValueError(
+            "completed_epochs는 fixed_epochs와 schedule_epochs 이하여야 한다: "
+            f"{epochs[-1]} > {fixed_epochs}/{schedule_epochs}"
+        )
+    return epochs
 
 
 class _FoldFeatureEngineer:
@@ -736,6 +766,8 @@ class _FixedEpochClassifier:
         self.device = device
         self.model: _RealMLP | None = None
         self.training_history: list[dict[str, float | int]] = []
+        self._captured_ema_states: dict[int, dict[str, torch.Tensor]] = {}
+        self.selected_epoch: int | None = None
 
     @staticmethod
     def _seed_everything(seed: int) -> None:
@@ -756,7 +788,19 @@ class _FixedEpochClassifier:
         target: pd.Series,
         categorical_columns: list[str],
         category_dimensions: list[int],
+        *,
+        capture_epochs: Sequence[int] = (),
     ) -> None:
+        epochs = int(self.config["fixed_epochs"])
+        capture_epochs = _validated_completed_epochs(
+            capture_epochs,
+            fixed_epochs=epochs,
+            schedule_epochs=int(self.config["schedule_epochs"]),
+            allow_empty=True,
+        )
+        capture_epoch_set = set(capture_epochs)
+        self._captured_ema_states = {}
+        self.selected_epoch = None
         self._seed_everything(self.seed)
         self.categorical_columns = list(categorical_columns)
         self.numerical_columns = [
@@ -818,7 +862,6 @@ class _FixedEpochClassifier:
         )
         n_ens = int(self.config["n_ens"])
         batch_size = int(self.config["batch_size"])
-        epochs = int(self.config["fixed_epochs"])
         total_schedule_steps = int(self.config["schedule_epochs"]) * len(frame)
         train_order = np.arange(len(frame))
         rng = np.random.RandomState(self.seed)
@@ -886,8 +929,14 @@ class _FixedEpochClassifier:
                             ema_state[key].copy_(value)
             rng.shuffle(train_order)
             self.model.load_state_dict(ema_state, strict=True)
+            completed_epoch = epoch + 1
+            if completed_epoch in capture_epoch_set:
+                self._captured_ema_states[completed_epoch] = {
+                    key: value.detach().cpu().clone()
+                    for key, value in ema_state.items()
+                }
             record = {
-                "epoch": epoch + 1,
+                "epoch": completed_epoch,
                 "loss": weighted_loss / len(frame),
                 "seconds": time.monotonic() - started,
                 "smoothing": float(smoothing),
@@ -900,6 +949,29 @@ class _FixedEpochClassifier:
                     f"loss={record['loss']:.6f} seconds={record['seconds']:.1f}",
                     flush=True,
                 )
+        self.selected_epoch = epochs
+
+    @property
+    def captured_epochs(self) -> tuple[int, ...]:
+        return tuple(sorted(self._captured_ema_states))
+
+    def select_epoch(self, completed_epoch: int) -> None:
+        if self.model is None:
+            raise RuntimeError("RealMLP를 먼저 학습해야 한다.")
+        if (
+            isinstance(completed_epoch, bool)
+            or not isinstance(completed_epoch, int)
+            or completed_epoch < 1
+        ):
+            raise ValueError("선택할 completed epoch는 양의 정수여야 한다.")
+        state = self._captured_ema_states.get(completed_epoch)
+        if state is None:
+            raise ValueError(
+                "포착하지 않은 completed epoch를 선택할 수 없다: "
+                f"{completed_epoch} (포착: {list(self.captured_epochs)})"
+            )
+        self.model.load_state_dict(state, strict=True)
+        self.selected_epoch = completed_epoch
 
     def predict_proba(self, frame: pd.DataFrame) -> np.ndarray:
         if self.model is None:
@@ -989,6 +1061,12 @@ class RealMLPFold:
         self._dataset_reference_target_free = True
         self._dataset_reference_train_rows: int | None = None
         self._dataset_reference_test_rows: int | None = None
+        self._trajectory_candidate_epochs: tuple[int, ...] = ()
+        self._trajectory_validation_predictions: dict[int, np.ndarray] = {}
+        self._trajectory_validation_aucs: dict[int, float] = {}
+        self._trajectory_member_validation_aucs: dict[int, list[float]] = {}
+        self._trajectory_member_records: list[dict[str, object]] = []
+        self._trajectory_base_diagnostics: dict[str, object] | None = None
 
     def _validate_config(self) -> None:
         positive_ints = [
@@ -1127,6 +1205,66 @@ class RealMLPFold:
         X_validation: pd.DataFrame,
         y_validation: pd.Series,
     ) -> np.ndarray:
+        return self._fit_validation(
+            X_train,
+            y_train,
+            X_validation,
+            y_validation,
+            completed_epochs=(),
+        )
+
+    def fit_training_trajectory(
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_validation: pd.DataFrame,
+        y_validation: pd.Series,
+        completed_epochs: Sequence[int],
+    ) -> dict[int, np.ndarray]:
+        """한 고정 궤적에서 미리 선언한 epoch 종료 EMA 예측을 포착한다."""
+        validated_epochs = _validated_completed_epochs(
+            completed_epochs,
+            fixed_epochs=int(self.config["fixed_epochs"]),
+            schedule_epochs=int(self.config["schedule_epochs"]),
+        )
+        self._fit_validation(
+            X_train,
+            y_train,
+            X_validation,
+            y_validation,
+            completed_epochs=validated_epochs,
+        )
+        # 학습 직후에도 공개 예측 상태가 포착된 후보 하나를 가리키게 한다.
+        self.select_training_point(validated_epochs[-1])
+        return {
+            epoch: prediction.copy()
+            for epoch, prediction in self._trajectory_validation_predictions.items()
+        }
+
+    def _fit_validation(
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_validation: pd.DataFrame,
+        y_validation: pd.Series,
+        *,
+        completed_epochs: tuple[int, ...],
+    ) -> np.ndarray:
+        trajectory_end_epoch = int(self.config["fixed_epochs"])
+        trajectory_mode = bool(completed_epochs)
+        captured_epochs = (
+            tuple(sorted(set(completed_epochs + (trajectory_end_epoch,))))
+            if trajectory_mode
+            else ()
+        )
+        self._trajectory_candidate_epochs = completed_epochs
+        self._trajectory_validation_predictions = {}
+        self._trajectory_validation_aucs = {}
+        self._trajectory_member_validation_aucs = {
+            epoch: [] for epoch in completed_epochs
+        }
+        self._trajectory_member_records = []
+        self._trajectory_base_diagnostics = None
         started = time.monotonic()
         if self.device.startswith("cuda"):
             torch.cuda.empty_cache()
@@ -1135,6 +1273,10 @@ class RealMLPFold:
         assert prepared.validation is not None
         fold_seed = self._fold_seed(X_train.index)
         validation_prediction = np.zeros(len(X_validation), dtype="float64")
+        trajectory_predictions = {
+            epoch: np.zeros(len(X_validation), dtype="float64")
+            for epoch in completed_epochs
+        }
         member_records = []
         self.models = []
         for member_index in range(int(self.config["n_init_avg"])):
@@ -1149,6 +1291,7 @@ class RealMLPFold:
                 y_train,
                 self.engineer.output_cat_cols,
                 self.engineer.cat_dims,
+                capture_epochs=captured_epochs,
             )
             member_prediction = model.predict_proba(prepared.validation)[:, 1].astype(
                 "float64"
@@ -1166,6 +1309,22 @@ class RealMLPFold:
                     "parameter_count": _parameter_count(model.model),
                 }
             )
+            if trajectory_mode:
+                for completed_epoch in completed_epochs:
+                    if completed_epoch == trajectory_end_epoch:
+                        point_prediction = member_prediction
+                    else:
+                        model.select_epoch(completed_epoch)
+                        point_prediction = model.predict_proba(prepared.validation)[
+                            :, 1
+                        ].astype("float64")
+                    trajectory_predictions[completed_epoch] += (
+                        point_prediction / int(self.config["n_init_avg"])
+                    )
+                    self._trajectory_member_validation_aucs[
+                        completed_epoch
+                    ].append(float(roc_auc_score(y_validation, point_prediction)))
+                model.select_epoch(trajectory_end_epoch)
             model.to("cpu")
             self.models.append(model)
             if self.device.startswith("cuda"):
@@ -1242,7 +1401,82 @@ class RealMLPFold:
             "cublas_workspace_config": os.environ["CUBLAS_WORKSPACE_CONFIG"],
         }
         self._raw_training_length_selection = int(self.config["fixed_epochs"])
+        if trajectory_mode:
+            self._trajectory_validation_predictions = trajectory_predictions
+            self._trajectory_validation_aucs = {
+                epoch: float(roc_auc_score(y_validation, prediction))
+                for epoch, prediction in trajectory_predictions.items()
+            }
+            self._trajectory_member_records = [dict(record) for record in member_records]
+            self._diagnostics.update(
+                {
+                    "training_trajectory": True,
+                    "captured_completed_epochs": list(completed_epochs),
+                    "trajectory_end_epochs": trajectory_end_epoch,
+                    "completed_epochs": trajectory_end_epoch,
+                    "selected_completed_epoch": trajectory_end_epoch,
+                    "state_kind": "ema",
+                    "selection_rule": "precommitted",
+                }
+            )
+            self._trajectory_base_diagnostics = dict(self._diagnostics)
         return validation_prediction
+
+    def select_training_point(self, completed_epoch: int) -> np.ndarray:
+        """포착한 시점의 두 초기화 EMA를 함께 복원하고 검증 예측을 돌려준다."""
+        if self._trajectory_base_diagnostics is None:
+            raise RuntimeError("fit_training_trajectory를 먼저 호출해야 한다.")
+        if (
+            isinstance(completed_epoch, bool)
+            or not isinstance(completed_epoch, int)
+            or completed_epoch < 1
+        ):
+            raise ValueError("선택할 completed epoch는 양의 정수여야 한다.")
+        if completed_epoch not in self._trajectory_candidate_epochs:
+            raise ValueError(
+                "미리 선언하지 않은 completed epoch를 선택할 수 없다: "
+                f"{completed_epoch} (후보: {list(self._trajectory_candidate_epochs)})"
+            )
+        for model in self.models:
+            model.select_epoch(completed_epoch)
+        self._raw_training_length_selection = completed_epoch
+        self._importance = None
+        self._importance_seconds = None
+        if self.importance_frame is None or self.importance_target is None:
+            raise RuntimeError("학습 궤적의 검증 중요도 표본이 없다.")
+        self.importance_base_auc = float(
+            roc_auc_score(self.importance_target, self.predict(self.importance_frame))
+        )
+
+        member_records = []
+        member_aucs = self._trajectory_member_validation_aucs[completed_epoch]
+        for member_index, base_record in enumerate(self._trajectory_member_records):
+            full_history = list(base_record["training_history"])
+            record = dict(base_record)
+            record.update(
+                {
+                    "validation_auc": member_aucs[member_index],
+                    "training_history": full_history[:completed_epoch],
+                    "trajectory_training_history": full_history,
+                    "selected_epoch": completed_epoch,
+                }
+            )
+            member_records.append(record)
+
+        prediction = self._trajectory_validation_predictions[completed_epoch]
+        diagnostics = dict(self._trajectory_base_diagnostics)
+        diagnostics.update(
+            {
+                "fold_initialization_members": member_records,
+                "fixed_epochs": completed_epoch,
+                "completed_epochs": completed_epoch,
+                "selected_completed_epoch": completed_epoch,
+                "validation_selection": "precommitted_completed_epoch",
+                "validation_auc": self._trajectory_validation_aucs[completed_epoch],
+            }
+        )
+        self._diagnostics = diagnostics
+        return prediction.copy()
 
     def fit_full(
         self, X: pd.DataFrame, y: pd.Series, training_budget: int
@@ -1256,6 +1490,12 @@ class RealMLPFold:
             raise ValueError(
                 "RealMLP 전체 자료 고정 epoch는 1 이상 schedule 지평 이하여야 한다."
             )
+        self._trajectory_candidate_epochs = ()
+        self._trajectory_validation_predictions = {}
+        self._trajectory_validation_aucs = {}
+        self._trajectory_member_validation_aucs = {}
+        self._trajectory_member_records = []
+        self._trajectory_base_diagnostics = None
         self.config["fixed_epochs"] = training_budget
         # 전체 자료 재학습의 epoch 수는 관측이 아니라 이미 정해진 예산이다. (#372)
         self._raw_training_length_selection = None
@@ -1398,7 +1638,7 @@ class RealMLPFold:
             "validation_labels_excluded_from_training": True,
             "validation_checkpoint_selection_absent": True,
             "fixed_epoch_state_used": self._diagnostics["validation_selection"]
-            == "final_fixed_epoch",
+            in {"final_fixed_epoch", "precommitted_completed_epoch"},
             "placebo_feature_present": "placebo_noise"
             in self._diagnostics["raw_input_columns"],
             "two_initialization_average": self._diagnostics[
@@ -1412,7 +1652,7 @@ class RealMLPFold:
         )
 
     def raw_training_length_selections(self) -> tuple[int, ...]:
-        """설정이 고정한 실제 epoch 횟수 하나. 검증이 고른 위치가 아니다. (#372)"""
+        """설정이 고정한 단일 시점 또는 미리 선언해 선택한 실제 epoch 횟수."""
         if self._raw_training_length_selection is None:
             raise RuntimeError(
                 "RealMLP 고정 epoch 횟수는 검증 분할로 학습한 뒤에만 읽을 수 있다."

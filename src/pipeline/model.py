@@ -17,7 +17,7 @@ from typing import Protocol
 import numpy as np
 import pandas as pd
 
-from .config import ModelConfig
+from .config import ModelConfig, TrainingStateConfig
 from .data import TARGET
 from .training_length import (
     FIXED_COUNT,
@@ -64,6 +64,27 @@ class FullFitModelAdapter(Protocol):
         training_budget: int | None,
         initial_score: pd.Series | None = None,
     ) -> None: ...
+
+
+@dataclass(frozen=True)
+class FoldTrainingStatePoint:
+    """한 물리 학습 궤적에서 포착한 후보 시점 하나의 fold 결과."""
+
+    completed_epochs: int
+    validation_prediction: np.ndarray
+    test_prediction: np.ndarray
+    importance: pd.DataFrame
+    training_diagnostics: dict[str, object] | None
+    training_length_declaration: TrainingLengthDeclaration
+
+
+@dataclass(frozen=True)
+class FoldTrainingStateTrajectory:
+    """같은 입력, 난수, 순서와 일정 지평을 공유하는 후보 시점 묶음."""
+
+    schedule_horizon_epochs: int
+    trajectory_end_epochs: int
+    points: tuple[FoldTrainingStatePoint, ...]
 
 
 class DatasetReferenceAdapter(Protocol):
@@ -177,6 +198,119 @@ def fit_full(
     provider(X, y, training_budget, initial_score)
 
 
+def fit_predict_training_states(
+    adapter: ModelAdapter,
+    kind: str,
+    X_tr: pd.DataFrame,
+    y_tr: pd.Series,
+    X_va: pd.DataFrame,
+    y_va: pd.Series,
+    X_test: pd.DataFrame,
+    state: TrainingStateConfig,
+) -> FoldTrainingStateTrajectory:
+    """여러 고정 시점 선택 계약을 호출하고 완전한 fold 묶음을 검증한다."""
+    provider = getattr(adapter, "fit_predict_training_states", None)
+    if provider is None:
+        raise ValueError(f"{kind} model adapter는 여러 학습 시점 실행을 지원하지 않는다.")
+    trajectory = provider(X_tr, y_tr, X_va, y_va, X_test, state)
+    if not isinstance(trajectory, FoldTrainingStateTrajectory):
+        raise TypeError(
+            "fit_predict_training_states()는 FoldTrainingStateTrajectory를 돌려줘야 한다."
+        )
+    if trajectory.schedule_horizon_epochs != state.schedule_horizon_epochs:
+        raise ValueError("모델이 보고한 학습률 일정 지평이 설정 계약과 다르다.")
+    if trajectory.trajectory_end_epochs != state.trajectory_end_epochs:
+        raise ValueError("모델이 보고한 궤적 종료 시점이 설정 계약과 다르다.")
+    completed = tuple(point.completed_epochs for point in trajectory.points)
+    if completed != state.candidates:
+        raise ValueError(
+            f"모델이 포착한 학습 시점이 설정 계약과 다르다: {completed} != {state.candidates}"
+        )
+    for point in trajectory.points:
+        _validate_training_state_point(point, kind, len(X_va), len(X_test))
+    return trajectory
+
+
+def _validate_training_state_point(
+    point: FoldTrainingStatePoint,
+    kind: str,
+    validation_rows: int,
+    test_rows: int,
+) -> None:
+    if not isinstance(point, FoldTrainingStatePoint):
+        raise TypeError("학습 시점 결과 형식이 FoldTrainingStatePoint가 아니다.")
+    for label, values, expected_rows in (
+        ("검증", point.validation_prediction, validation_rows),
+        ("시험", point.test_prediction, test_rows),
+    ):
+        if not isinstance(values, np.ndarray) or values.shape != (expected_rows,):
+            raise ValueError(
+                f"학습 시점 {point.completed_epochs}의 {label} 예측 모양이 다르다: "
+                f"{getattr(values, 'shape', None)} != {(expected_rows,)}"
+            )
+        if not np.issubdtype(values.dtype, np.floating) or not np.isfinite(values).all():
+            raise ValueError(
+                f"학습 시점 {point.completed_epochs}의 {label} 예측은 유한한 부동소수점이어야 한다."
+            )
+    if list(point.importance.columns) != ["feature", "gain"]:
+        raise ValueError(
+            f"학습 시점 {point.completed_epochs}의 중요도 열이 다르다: "
+            f"{list(point.importance.columns)}"
+        )
+    if point.importance["feature"].duplicated().any():
+        raise ValueError(f"학습 시점 {point.completed_epochs}의 중요도 특성이 중복됐다.")
+    gain = point.importance["gain"].to_numpy()
+    if not np.issubdtype(gain.dtype, np.floating) or not np.isfinite(gain).all():
+        raise ValueError(f"학습 시점 {point.completed_epochs}의 중요도는 유한해야 한다.")
+    if point.training_diagnostics is not None:
+        try:
+            json.dumps(point.training_diagnostics, allow_nan=False)
+        except (TypeError, ValueError) as exc:
+            raise TypeError("학습 시점 관측은 유한한 JSON 객체여야 한다.") from exc
+    _validate_training_length_declaration(point.training_length_declaration, kind)
+    observed = {
+        (
+            selection.raw_value + 1
+            if point.training_length_declaration.raw_meaning == ZERO_BASED_POSITION
+            else selection.raw_value
+        )
+        for selection in point.training_length_declaration.selections
+    }
+    if observed != {point.completed_epochs}:
+        raise TrainingLengthError(
+            f"학습 시점 근거가 실제 종료 {point.completed_epochs}와 다르다: {sorted(observed)}"
+        )
+
+
+def fit_full_training_state(
+    adapter: ModelAdapter,
+    X: pd.DataFrame,
+    y: pd.Series,
+    state: TrainingStateConfig,
+    initial_score: pd.Series | None = None,
+) -> dict[str, object]:
+    """선택된 시점에서 끝내되 원래 일정 지평을 보존해 전체 자료를 학습한다."""
+    provider = getattr(adapter, "fit_full_training_state", None)
+    if provider is None:
+        raise ValueError("이 model adapter는 학습 시점 후보 전체 자료 재학습을 지원하지 않는다.")
+    diagnostics = provider(X, y, state, initial_score)
+    if not isinstance(diagnostics, dict):
+        raise TypeError("fit_full_training_state()는 실제 학습 계약 진단을 돌려줘야 한다.")
+    expected = {
+        "completed_epochs": state.selected,
+        "schedule_horizon_epochs": state.schedule_horizon_epochs,
+        "state_kind": state.state_kind,
+    }
+    actual = {key: diagnostics.get(key) for key in expected}
+    if actual != expected:
+        raise ValueError(f"전체 자료 학습의 실제 시점 계약이 요청과 다르다: {actual} != {expected}")
+    try:
+        json.dumps(diagnostics, allow_nan=False)
+    except (TypeError, ValueError) as exc:
+        raise TypeError("전체 자료 학습 시점 진단은 유한한 JSON 객체여야 한다.") from exc
+    return diagnostics
+
+
 def set_dataset_reference(
     adapter: ModelAdapter,
     X_train: pd.DataFrame,
@@ -254,14 +388,24 @@ def collect_training_length_declaration(
     provider = getattr(adapter, "training_length_evidence", None)
     if provider is None:
         return None
+    declaration = provider()
+    if not isinstance(declaration, TrainingLengthDeclaration):
+        raise TypeError("training_length_evidence()는 TrainingLengthDeclaration을 돌려줘야 한다.")
+    _validate_training_length_declaration(declaration, kind)
+    return declaration
+
+
+def _validate_training_length_declaration(
+    declaration: TrainingLengthDeclaration, kind: str
+) -> None:
+    """한 선언이 등록된 모델 계열의 원시 학습 길이 계약과 같은지 확인한다."""
+    if not isinstance(declaration, TrainingLengthDeclaration):
+        raise TypeError("학습 길이 선언은 TrainingLengthDeclaration이어야 한다.")
     contracts = _training_length_contract_variants(kind)
     if not contracts:
         raise TrainingLengthError(
             f"{kind}는 관측 학습 길이 계약이 등록되지 않은 계열인데 근거를 선언했다."
         )
-    declaration = provider()
-    if not isinstance(declaration, TrainingLengthDeclaration):
-        raise TypeError("training_length_evidence()는 TrainingLengthDeclaration을 돌려줘야 한다.")
     declared_contract = (
         declaration.model_family,
         declaration.raw_field,
@@ -276,7 +420,6 @@ def collect_training_length_declaration(
             f"{kind} 연결부 선언의 model_family/raw_field/raw_meaning이 등록된 계약과 "
             f"다르다: {declared_contract!r} (허용: {sorted(expected_contracts)!r})"
         )
-    return declaration
 
 
 def _early_stopping_rounds(fit: dict, kind: str) -> int | None:
@@ -1130,6 +1273,93 @@ class LookupTransformerAdapter:
         self._impl = self._new_impl()
         self._impl.fit_full(X, y, training_budget)
 
+    def fit_predict_training_states(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        X_test: pd.DataFrame,
+        state: TrainingStateConfig,
+    ) -> FoldTrainingStateTrajectory:
+        """한 Lookup 궤적에서 미리 고정한 EMA 시점들을 물질화한다."""
+        if self._fit:
+            raise ValueError(f"lookup_transformer가 모르는 fit 설정: {sorted(self._fit)}")
+        self._impl = self._new_impl()
+        self._impl.fit_training_trajectory(
+            X_tr,
+            y_tr,
+            X_va,
+            y_va,
+            completed_epochs=state.candidates,
+            trajectory_end_epochs=state.trajectory_end_epochs,
+            schedule_horizon_epochs=state.schedule_horizon_epochs,
+        )
+        points = []
+        for completed_epochs in state.candidates:
+            validation_prediction = np.asarray(
+                self._impl.select_training_point(completed_epochs), dtype="float64"
+            )
+            test_prediction = np.asarray(self._impl.predict(X_test), dtype="float64")
+            importance = self._impl.importance().copy()
+            diagnostics = json.loads(
+                json.dumps(self._impl.training_diagnostics(), allow_nan=False)
+            )
+            declaration = self.training_length_evidence()
+            points.append(
+                FoldTrainingStatePoint(
+                    completed_epochs=completed_epochs,
+                    validation_prediction=validation_prediction,
+                    test_prediction=test_prediction,
+                    importance=importance,
+                    training_diagnostics=diagnostics,
+                    training_length_declaration=declaration,
+                )
+            )
+        return FoldTrainingStateTrajectory(
+            schedule_horizon_epochs=state.schedule_horizon_epochs,
+            trajectory_end_epochs=state.trajectory_end_epochs,
+            points=tuple(points),
+        )
+
+    def fit_full_training_state(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        state: TrainingStateConfig,
+        initial_score: pd.Series | None = None,
+    ) -> dict[str, object]:
+        _reject_initial_score("lookup_transformer", initial_score, None)
+        self._impl = self._new_impl()
+        self._impl.fit_full_training_point(
+            X,
+            y,
+            trajectory_end_epochs=state.selected,
+            schedule_horizon_epochs=state.schedule_horizon_epochs,
+        )
+        details = self._impl.training_diagnostics()
+        members = details.get("fold_initialization_members")
+        if not isinstance(members, list) or not members:
+            raise ValueError("Lookup-Transformer 전체 자료 학습 진단에 초기화 구성원이 없다.")
+        if any(
+            not isinstance(member, dict)
+            or member.get("end_epoch") != state.selected - 1
+            for member in members
+        ):
+            raise ValueError("Lookup-Transformer 전체 자료 학습이 선택 시점에서 끝나지 않았다.")
+        if any(
+            member.get("schedule_horizon_epochs")
+            != state.schedule_horizon_epochs
+            for member in members
+        ):
+            raise ValueError("Lookup-Transformer 전체 자료 학습률 일정 지평이 요청과 다르다.")
+        return {
+            "completed_epochs": state.selected,
+            "schedule_horizon_epochs": state.schedule_horizon_epochs,
+            "state_kind": state.state_kind,
+            "model_diagnostics": details,
+        }
+
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
     ) -> np.ndarray:
@@ -1476,6 +1706,75 @@ class RealMLPAdapter:
             raise ValueError("realmlp 전체 자료 재학습에는 고정 epoch 수가 필요하다.")
         self._impl = self._new_impl()
         self._impl.fit_full(X, y, training_budget)
+
+    def fit_predict_training_states(
+        self,
+        X_tr: pd.DataFrame,
+        y_tr: pd.Series,
+        X_va: pd.DataFrame,
+        y_va: pd.Series,
+        X_test: pd.DataFrame,
+        state: TrainingStateConfig,
+    ) -> FoldTrainingStateTrajectory:
+        """한 RealMLP 궤적에서 미리 고정한 EMA 시점들을 물질화한다."""
+        if self._fit:
+            raise ValueError(f"realmlp가 모르는 fit 설정: {sorted(self._fit)}")
+        self._impl = self._new_impl()
+        self._impl.fit_training_trajectory(
+            X_tr,
+            y_tr,
+            X_va,
+            y_va,
+            completed_epochs=state.candidates,
+        )
+        points = []
+        for completed_epochs in state.candidates:
+            validation_prediction = np.asarray(
+                self._impl.select_training_point(completed_epochs), dtype="float64"
+            )
+            test_prediction = np.asarray(self._impl.predict(X_test), dtype="float64")
+            importance = self._impl.importance().copy()
+            diagnostics = json.loads(
+                json.dumps(self._impl.training_diagnostics(), allow_nan=False)
+            )
+            declaration = self.training_length_evidence()
+            points.append(
+                FoldTrainingStatePoint(
+                    completed_epochs=completed_epochs,
+                    validation_prediction=validation_prediction,
+                    test_prediction=test_prediction,
+                    importance=importance,
+                    training_diagnostics=diagnostics,
+                    training_length_declaration=declaration,
+                )
+            )
+        return FoldTrainingStateTrajectory(
+            schedule_horizon_epochs=state.schedule_horizon_epochs,
+            trajectory_end_epochs=state.trajectory_end_epochs,
+            points=tuple(points),
+        )
+
+    def fit_full_training_state(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        state: TrainingStateConfig,
+        initial_score: pd.Series | None = None,
+    ) -> dict[str, object]:
+        _reject_initial_score("realmlp", initial_score, None)
+        self._impl = self._new_impl()
+        self._impl.fit_full(X, y, state.selected)
+        details = self._impl.training_diagnostics()
+        if details.get("full_training_budget") != state.selected:
+            raise ValueError("RealMLP 전체 자료 학습이 선택 시점에서 끝나지 않았다.")
+        if details.get("schedule_horizon_epochs") != state.schedule_horizon_epochs:
+            raise ValueError("RealMLP 전체 자료 학습률 일정 지평이 요청과 다르다.")
+        return {
+            "completed_epochs": state.selected,
+            "schedule_horizon_epochs": state.schedule_horizon_epochs,
+            "state_kind": state.state_kind,
+            "model_diagnostics": details,
+        }
 
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None

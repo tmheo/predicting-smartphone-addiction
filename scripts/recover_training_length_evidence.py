@@ -1,7 +1,7 @@
 """후보 풀 구성원의 원시 학습 길이 근거를 복원해 재학습 계획 장부를 다시 쓴다. (#374)
 
 이 프로그램은 학습하지 않는다. 이미 끝난 실행이 남긴 자료에서 좌표별 **원시 선택값**만
-다시 읽어, 재학습 계획 장부(`pipeline.refit_plan`의 문법 판본 2)를 통째로 생성한다.
+다시 읽어, 재학습 계획 장부(`pipeline.refit_plan`의 문법 판본 3)를 통째로 생성한다.
 
 원시 값의 출처는 세 가지이며 구성원마다 하나로 고정한다.
 
@@ -24,7 +24,7 @@
 `--check`는 아무것도 바꾸지 않고 복원한 원시 값과 현재 장부를 견줘 보여 준다.
 `--attach`는 실행 로그에서 복원한 구성원의 근거 산출물을 실행 저장소에 붙인다.
 이미 붙어 있으면 그대로 두고 그 산출물의 해시를 쓴다.
-`--write`는 `artifacts/full-refit-plan.yaml`을 문법 판본 2로 다시 쓴다.
+`--write`는 `artifacts/full-refit-plan.yaml`을 문법 판본 3으로 다시 쓴다.
 """
 
 from __future__ import annotations
@@ -43,8 +43,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from pipeline import data  # noqa: E402
 from pipeline.ledger import POOL_PATH, Pool  # noqa: E402
 from pipeline.model import TRAINING_LENGTH_CONTRACTS  # noqa: E402
-from pipeline.refit_plan import SCHEMA_VERSION, STATUS_CONFIRMED, STATUS_NOT_APPLICABLE  # noqa: E402
+from pipeline.refit_plan import (  # noqa: E402
+    SCHEMA_VERSION,
+    STATUS_CONFIRMED,
+    STATUS_NOT_APPLICABLE,
+    TRAJECTORY_STATE_METHOD,
+)
 from pipeline.runs import MlflowRunStore, RunStore, RunStoreError, sha256_of  # noqa: E402
+from pipeline.training_state_contract import (  # noqa: E402
+    MANIFEST_NAME as TRAINING_STATE_MANIFEST,
+    content_sha256,
+)
 from pipeline.training_length import (  # noqa: E402
     HALF_UP_ROUNDING,
     MEDIAN_STATISTIC,
@@ -608,12 +617,10 @@ def _member_document(
     from pipeline.training_length import observed_length_from_raw
 
     name = pool_member.config
-    recovery = RECOVERY.get(name)
-    if recovery is None:
-        raise RecoveryError(f"{name}: 복원 선언이 없다.")
     run_id = pool_member.run_id
     seeds = tuple(pool_member.seeds)
     facts = store.facts_of(run_id)
+    stored_config = store.config_of(run_id)
     source_config_name = f"{name}.yaml"
     lineage = {
         "source_run_id": run_id,
@@ -621,6 +628,18 @@ def _member_document(
         "source_config_path": f"configs/{source_config_name}",
         "source_config_sha256": store.artifact_sha256_of(run_id, source_config_name),
     }
+    if isinstance(stored_config, dict) and stored_config.get("training_state") is not None:
+        return _training_state_member_document(
+            store,
+            pool_member,
+            facts=facts,
+            stored_config=stored_config,
+            lineage=lineage,
+        )
+
+    recovery = RECOVERY.get(name)
+    if recovery is None:
+        raise RecoveryError(f"{name}: 복원 선언이 없다.")
 
     if recovery.source == "none":
         lineage["evidence_artifact_path"] = RUN_LOG_ARTIFACT
@@ -761,6 +780,166 @@ def _member_document(
     }
 
 
+def _training_state_member_document(
+    store: RunStore,
+    pool_member,
+    *,
+    facts,
+    stored_config: dict,
+    lineage: dict[str, str],
+) -> dict:
+    """완료된 후보 시점 실행에서 정확 종료 재학습 항목을 만든다."""
+    from pipeline.training_length import observed_length_from_raw
+
+    name = pool_member.config
+    run_id = pool_member.run_id
+    seeds = tuple(pool_member.seeds)
+    state = stored_config.get("training_state")
+    model_config = stored_config.get("model")
+    if not isinstance(state, dict) or not isinstance(model_config, dict):
+        raise RecoveryError(f"{name}: 학습 시점 설정 형식이 잘못됐다.")
+    model_family = model_config.get("kind")
+    if not isinstance(model_family, str):
+        raise RecoveryError(f"{name}: 학습 시점 후보의 모델 계열이 없다.")
+    expected_tags = {
+        "run.kind": "training_state_snapshot",
+        "training_state.ready": "true",
+        "training_state.completed_epochs": str(state.get("selected")),
+        "training_state.schedule_horizon_epochs": str(
+            state.get("schedule_horizon_epochs")
+        ),
+        "training_state.state_kind": state.get("state_kind"),
+        "training_state.selection_rule": "precommitted",
+    }
+    if facts.status != "FINISHED":
+        raise RecoveryError(f"{name}: 학습 시점 후보 실행이 완료 상태가 아니다.")
+    for key, expected in expected_tags.items():
+        if facts.tags.get(key) != expected:
+            raise RecoveryError(
+                f"{name}: 학습 시점 후보 태그 {key}가 설정과 다르다."
+            )
+
+    try:
+        manifest_payload = store.artifact_bytes_of(run_id, TRAINING_STATE_MANIFEST)
+        manifest = json.loads(manifest_payload)
+    except (RunStoreError, json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise RecoveryError(
+            f"{name}: 학습 시점 후보 manifest를 읽지 못했다: {error}"
+        ) from error
+    if not isinstance(manifest, dict):
+        raise RecoveryError(f"{name}: 학습 시점 후보 manifest가 객체가 아니다.")
+    claimed_content_sha = manifest.get("manifest_content_sha256")
+    unhashed_manifest = {
+        key: value
+        for key, value in manifest.items()
+        if key != "manifest_content_sha256"
+    }
+    if claimed_content_sha != content_sha256(unhashed_manifest):
+        raise RecoveryError(f"{name}: 학습 시점 후보 manifest 내용 해시가 다르다.")
+    if facts.tags.get("sha256.training_state_manifest") != sha256_of(
+        manifest_payload
+    ):
+        raise RecoveryError(f"{name}: 학습 시점 후보 manifest 파일 해시가 다르다.")
+
+    trajectory_identity = facts.tags.get(
+        "training_state.trajectory_identity_sha256"
+    )
+    candidate = manifest.get("candidate")
+    expected_manifest = {
+        "run_kind": "training_state_snapshot",
+        "trajectory_identity_sha256": trajectory_identity,
+        "completed_epochs": state.get("selected"),
+        "schedule_horizon_epochs": state.get("schedule_horizon_epochs"),
+        "trajectory_end_epochs": state.get("trajectory_end_epochs"),
+        "state_kind": state.get("state_kind"),
+        "selection_rule": "precommitted",
+        "validation_target_used_for_selection": False,
+        "precommitted_candidates": state.get("candidates"),
+        "git_commit": lineage["source_git_commit"],
+        "seeds": list(seeds),
+    }
+    for key, expected in expected_manifest.items():
+        if manifest.get(key) != expected:
+            raise RecoveryError(
+                f"{name}: 학습 시점 후보 manifest의 {key}가 설정 또는 후보 풀과 다르다."
+            )
+    expected_candidate = {
+        "config_name": name,
+        "config_sha256": lineage["source_config_sha256"],
+        "completed_epochs": state.get("selected"),
+        "snapshot_identity_sha256": facts.tags.get(
+            "training_state.snapshot_identity_sha256"
+        ),
+    }
+    if not isinstance(candidate, dict) or any(
+        candidate.get(key) != expected for key, expected in expected_candidate.items()
+    ):
+        raise RecoveryError(f"{name}: 학습 시점 후보 manifest의 후보 정체성이 다르다.")
+    if manifest.get("candidate_set_sha256") != facts.tags.get(
+        "training_state.candidate_set_sha256"
+    ):
+        raise RecoveryError(f"{name}: 학습 시점 후보 집합 정체성이 다르다.")
+    if not isinstance(trajectory_identity, str) or len(trajectory_identity) != 64:
+        raise RecoveryError(f"{name}: 학습 궤적 정체성 SHA-256 형식이 잘못됐다.")
+
+    recovery = MemberRecovery(model_family, "declared")
+    evidence = _recover_from_declared(store, run_id, recovery, seeds)
+    evidence_sha256 = store.artifact_sha256_of(run_id, evidence.artifact_name)
+    lineage["evidence_artifact_path"] = evidence.artifact_name
+    lineage["evidence_artifact_sha256"] = evidence_sha256
+    observations = [
+        {
+            "seed": cell.seed,
+            "outer_fold": cell.outer_fold,
+            "inner_member": cell.inner_member,
+            "raw_field": evidence.raw_field,
+            "raw_value": cell.raw_value,
+            "raw_meaning": evidence.raw_meaning,
+            "observed_training_length": observed_length_from_raw(
+                cell.raw_value, evidence.raw_meaning
+            ),
+        }
+        for cell in evidence.cells
+    ]
+    completed_epochs = state.get("selected")
+    grouped = {seed: [] for seed in seeds}
+    for observation in observations:
+        grouped[observation["seed"]].append(observation["observed_training_length"])
+    if any(
+        not lengths or set(lengths) != {completed_epochs}
+        for lengths in grouped.values()
+    ):
+        raise RecoveryError(
+            f"{name}: 모든 시드와 분할의 관측 학습 길이가 선택 시점과 같지 않다."
+        )
+    return {
+        "config": name,
+        "config_path": REFIT_CONFIG_PATHS.get(name, f"configs/{name}.yaml"),
+        "lineage": lineage,
+        "training_length_evidence": {
+            "status": STATUS_CONFIRMED,
+            "model_family": evidence.model_family,
+            "converter": evidence.raw_meaning,
+            "observations": observations,
+        },
+        "refit_budget_derivation": {
+            "method": TRAJECTORY_STATE_METHOD,
+            "completed_epochs": completed_epochs,
+            "schedule_horizon_epochs": state.get("schedule_horizon_epochs"),
+            "state_kind": state.get("state_kind"),
+            "trajectory_identity_sha256": trajectory_identity,
+            "seeds": [
+                {
+                    "seed": seed,
+                    "observed_lengths": grouped[seed],
+                    "budget": completed_epochs,
+                }
+                for seed in seeds
+            ],
+        },
+    }
+
+
 def _not_applicable_family(store: RunStore, run_id: str) -> str:
     """반복 수가 없는 구성원의 계열 이름. 실행이 남긴 설정에서 그대로 읽는다."""
     return store.config_of(run_id)["model"]["kind"]
@@ -814,6 +993,7 @@ def main() -> None:
             raise SystemExit(f"후보 풀에 없는 구성원이다: {args.member}") from error
         refreshed = _member_document(store, pool_member, attach=args.attach)
         plan = current
+        plan["schema_version"] = SCHEMA_VERSION
         plan["source_pool_sha256"] = data.file_sha256(POOL_PATH)
         matches = [
             index

@@ -58,8 +58,17 @@ from .judgment import (
     weighted_oof_auc,
 )
 from .runs import TRACKING_URI, MlflowRunStore, RunStoreError
+from .training_state_manifest import (
+    MANIFEST_NAME as TRAINING_STATE_MANIFEST_NAME,
+    RUN_KIND as TRAINING_STATE_RUN_KIND,
+    TRAINING_STATE_BUNDLE_SCHEMA_VERSION,
+    TrainingStateManifestError,
+    validate_candidate_parent_lineage,
+    validate_candidate_manifest,
+)
 
-SCHEMA_VERSION = 1
+LEGACY_SCHEMA_VERSION = 1
+SCHEMA_VERSION = LEGACY_SCHEMA_VERSION
 MANIFEST_NAME = "manifest.json"
 ARTIFACTS_DIR = "artifacts"
 # roc_auc_score는 같은 float64 예측에 결정적이므로 재채점은 사실상 정확히 일치해야 한다.
@@ -101,6 +110,17 @@ def export_bundle(
     """완료된 실행 하나를 실행 기록 묶음 zip으로 사영한다."""
     store = MlflowRunStore(tracking_uri)
     meta = store.facts_of(run_id)
+    if meta.status != "FINISHED":
+        raise BundleError(
+            f"미완료 run {run_id}은 export할 수 없다: {meta.status}"
+        )
+    if (
+        meta.tags.get("run.kind") == "training_state_snapshot"
+        and meta.tags.get("training_state.ready") != "true"
+    ):
+        raise BundleError(
+            f"run {run_id}는 학습 시점 후보 집합 게시가 끝나지 않아 export할 수 없다."
+        )
     if "auc_oof" not in meta.metrics or "features" not in meta.params:
         raise BundleError(
             f"run {run_id}는 최종 기록(auc_oof, features)이 없는 미완료 실행이라 export할 수 없다."
@@ -114,6 +134,21 @@ def export_bundle(
         config_names = [p.name for p in art_dir.iterdir() if p.suffix in (".yaml", ".yml")]
         if len(config_names) != 1:
             raise BundleError(f"run {run_id}의 루트에서 설정 YAML 하나를 찾지 못했다: {config_names}")
+        try:
+            config_document = yaml.safe_load((art_dir / config_names[0]).read_bytes())
+        except yaml.YAMLError as exc:
+            raise BundleError(f"run {run_id}의 config YAML을 읽을 수 없다.") from exc
+        config_has_training_state = (
+            isinstance(config_document, dict)
+            and config_document.get("training_state") is not None
+        )
+        is_training_state_snapshot = (
+            meta.tags.get("run.kind") == TRAINING_STATE_RUN_KIND
+        )
+        if config_has_training_state and not is_training_state_snapshot:
+            raise BundleError(
+                f"run {run_id}는 training_state config지만 snapshot 실행 정체성이 없다."
+            )
         missing = [
             tracking.oof_seed_artifact(s)
             for s in _seeds_of(meta.params)
@@ -124,9 +159,35 @@ def export_bundle(
                 f"run {run_id}에 시드별 OOF 산출물({', '.join(missing)})이 없다. "
                 "기록 규약 확장(#98) 이전 실행은 export할 수 없다. 재실행할 것."
             )
+        training_state_document = _verify_training_state_manifest(
+            meta.tags, meta.params, art_dir
+        )
+        if training_state_document is not None:
+            try:
+                validate_candidate_parent_lineage(
+                    child_run_id=run_id,
+                    child_document=training_state_document,
+                    child_tags=meta.tags,
+                    facts_of=store.facts_of,
+                    artifact_bytes_of=store.artifact_bytes_of,
+                )
+            except TrainingStateManifestError as exc:
+                raise BundleError(
+                    f"학습 시점 후보 부모 계보가 불완전해 export할 수 없다: {exc}"
+                ) from exc
+        schema_version = (
+            TRAINING_STATE_BUNDLE_SCHEMA_VERSION
+            if is_training_state_snapshot
+            else LEGACY_SCHEMA_VERSION
+        )
+        config_path = (
+            training_state_document["candidate"]["config_path"]
+            if training_state_document is not None
+            else f"configs/{config_names[0]}"
+        )
 
         manifest = {
-            "schema_version": SCHEMA_VERSION,
+            "schema_version": schema_version,
             "source_run_id": run_id,
             "run_name": meta.run_name,
             "params": meta.params,
@@ -134,7 +195,7 @@ def export_bundle(
             "tags": meta.tags,
             "observability_metric_history": _observability_metric_history(client, run_id),
             "config_artifact": config_names[0],
-            "config_path": f"configs/{config_names[0]}",
+            "config_path": config_path,
             "config_sha256": file_sha256(art_dir / config_names[0]),
             "exported_at": datetime.now(UTC).isoformat(timespec="seconds"),
             "environment": {
@@ -231,6 +292,71 @@ def _verify_observability(manifest: dict, bundle_dir: Path) -> None:
         read_fold_observability(artifact)
     except ObservabilitySchemaError as exc:
         raise BundleError(f"반입 거부: fold 관측 원본 형식이 잘못됐다: {exc}") from exc
+
+
+def _verify_training_state_manifest(
+    tags: dict[str, str],
+    params: dict[str, str],
+    artifacts: Path,
+) -> dict[str, object] | None:
+    """snapshot이면 게시자·판정기와 같은 엄격한 child 계약을 검증한다."""
+    if tags.get("run.kind") != TRAINING_STATE_RUN_KIND:
+        return None
+    path = artifacts / TRAINING_STATE_MANIFEST_NAME
+    try:
+        manifest_bytes = path.read_bytes()
+    except OSError as exc:
+        raise BundleError("학습 시점 후보 manifest를 읽을 수 없다.") from exc
+    try:
+        return validate_candidate_manifest(
+            manifest_bytes=manifest_bytes,
+            tags=tags,
+            params=params,
+            artifact_bytes_of=lambda name: (artifacts / name).read_bytes(),
+        )
+    except TrainingStateManifestError as exc:
+        raise BundleError(f"학습 시점 후보 게시 계약이 불완전하다: {exc}") from exc
+
+
+def _bundle_config_has_training_state(manifest: dict, bundle_dir: Path) -> bool:
+    name = manifest.get("config_artifact")
+    if not isinstance(name, str) or Path(name).name != name:
+        raise BundleError("묶음의 config_artifact 이름이 안전한 루트 파일 이름이 아니다.")
+    path = bundle_dir / ARTIFACTS_DIR / name
+    try:
+        document = yaml.safe_load(path.read_bytes())
+    except (OSError, yaml.YAMLError) as exc:
+        raise BundleError("묶음의 config YAML을 읽을 수 없다.") from exc
+    return isinstance(document, dict) and document.get("training_state") is not None
+
+
+def _verify_bundle_schema(manifest: dict, bundle_dir: Path) -> None:
+    """일반 실행 v1과 training-state snapshot v2를 서로 오인하지 않는다."""
+    version = manifest.get("schema_version")
+    tags = manifest.get("tags")
+    if not isinstance(tags, dict):
+        raise BundleError("묶음 manifest의 tags가 객체가 아니다.")
+    artifacts = bundle_dir / ARTIFACTS_DIR
+    snapshot_evidence = (
+        tags.get("run.kind") == TRAINING_STATE_RUN_KIND
+        or any(str(key).startswith("training_state.") for key in tags)
+        or (artifacts / TRAINING_STATE_MANIFEST_NAME).is_file()
+        or _bundle_config_has_training_state(manifest, bundle_dir)
+    )
+    if version == LEGACY_SCHEMA_VERSION:
+        if snapshot_evidence:
+            raise BundleError(
+                "legacy 묶음 schema v1은 학습 시점 snapshot을 반입할 수 없다. v2로 다시 export할 것."
+            )
+        return
+    if version == TRAINING_STATE_BUNDLE_SCHEMA_VERSION:
+        if tags.get("run.kind") != TRAINING_STATE_RUN_KIND or not snapshot_evidence:
+            raise BundleError("학습 시점 묶음 schema v2에 snapshot 실행 정체성이 없다.")
+        return
+    raise BundleError(
+        f"지원하지 않는 묶음 스키마 버전이다: {version} "
+        f"(일반 실행: {LEGACY_SCHEMA_VERSION}, 학습 시점: {TRAINING_STATE_BUNDLE_SCHEMA_VERSION})"
+    )
 
 
 def _validated_observability_metric_history(
@@ -331,15 +457,16 @@ def import_bundle(zip_path: Path, tracking_uri: str = TRACKING_URI) -> str:
         if not manifest_path.exists():
             raise BundleError(f"{zip_path}에 {MANIFEST_NAME}이 없다. 실행 기록 묶음이 아니다.")
         manifest = json.loads(manifest_path.read_text())
-        if manifest.get("schema_version") != SCHEMA_VERSION:
-            raise BundleError(
-                f"지원하지 않는 묶음 스키마 버전이다: {manifest.get('schema_version')} "
-                f"(지원: {SCHEMA_VERSION})"
-            )
+        if not isinstance(manifest, dict):
+            raise BundleError("묶음 manifest의 루트가 객체가 아니다.")
+        _verify_bundle_schema(manifest, bundle_dir)
 
         inputs = _verify_input_hashes(manifest, bundle_dir)
         _verify_provenance(manifest, bundle_dir)
         _verify_observability(manifest, bundle_dir)
+        _verify_training_state_manifest(
+            manifest["tags"], manifest["params"], bundle_dir / ARTIFACTS_DIR
+        )
         observability_metrics = _validated_observability_metric_history(manifest)
         metrics = _rescore(manifest, bundle_dir, inputs)
 
@@ -350,6 +477,15 @@ def import_bundle(zip_path: Path, tracking_uri: str = TRACKING_URI) -> str:
         if already:
             raise BundleError(
                 f"반입 거부: 같은 묶음이 이미 run {already[0].info.run_id}로 반입돼 있다."
+            )
+        same_source = client.search_runs(
+            [experiment_id],
+            filter_string=f"tags.`source.run_id` = '{manifest['source_run_id']}'",
+        )
+        if same_source:
+            raise BundleError(
+                "반입 거부: 같은 출처 run이 이미 "
+                f"run {same_source[0].info.run_id}로 반입돼 있다."
             )
 
         run = client.create_run(experiment_id, run_name=manifest["run_name"])
@@ -373,8 +509,15 @@ def import_bundle(zip_path: Path, tracking_uri: str = TRACKING_URI) -> str:
             if key in manifest["tags"]:
                 client.set_tag(run_id, key, manifest["tags"][key])
         for key, value in manifest["tags"].items():
-            if key.startswith("sha256."):
+            if key.startswith(("sha256.", "training_state.")) or key in {
+                "run.kind",
+                "judgment.eligible",
+                "observability.source_run_id",
+            }:
                 client.set_tag(run_id, key, value)
+        trajectory_run_id = manifest["tags"].get("training_state.trajectory_run_id")
+        if trajectory_run_id:
+            client.set_tag(run_id, "source.trajectory_run_id", trajectory_run_id)
         client.set_tag(run_id, "source.kind", "bundle")
         client.set_tag(run_id, "source.run_id", manifest["source_run_id"])
         client.set_tag(run_id, "source.exported_at", manifest["exported_at"])

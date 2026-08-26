@@ -399,6 +399,7 @@ def test_export_refuses_run_without_seed_oofs(env, tmp_path):
     config_path = tmp_path / "exp_old.yaml"
     config_path.write_text("name: exp_old\n")
     client.log_artifact(old.info.run_id, str(config_path))
+    client.set_terminated(old.info.run_id, status="FINISHED")
     assert src.facts_of(old.info.run_id).metrics["auc_oof"] == 0.9
     with pytest.raises(BundleError, match="시드별 OOF"):
         export_bundle(old.info.run_id, tracking_uri=env["source_uri"])

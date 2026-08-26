@@ -44,6 +44,19 @@ class InitialScoreConfig:
 
 
 @dataclass(frozen=True)
+class TrainingStateConfig:
+    """결과 확인 전에 고정한 한 학습 궤적의 후보 시점 계약."""
+
+    trajectory: str
+    candidates: tuple[int, ...]
+    selected: int
+    schedule_horizon_epochs: int
+    trajectory_end_epochs: int
+    state_kind: str
+    selection_rule: str
+
+
+@dataclass(frozen=True)
 class ExperimentConfig:
     name: str
     data: DataConfig
@@ -53,6 +66,8 @@ class ExperimentConfig:
     seeds: list[int]  # 출처는 stage → judgment 시드 상수 매핑이다. config 파일에는 없다. (#103)
     stage: str  # 실행 단계(screen|confirm). 관찰용 param 기록에 쓴다. (#103)
     source_path: Path  # 설정 원본 경로. run artifact로 그대로 복사해 남긴다.
+    # 여러 학습 시점 후보만 쓰는 선택 계약이다. None이면 기존 단일 시점 실행이다.
+    training_state: TrainingStateConfig | None = None
 
 
 # #71 이전 features 스키마의 키. 종결 실험 config 16개는 역사 기록으로 보존하되
@@ -61,6 +76,24 @@ _LEGACY_FEATURE_KEYS = {"include", "placebo", "categorical_copies", "derived", "
 
 # --stage 인자의 유효값. 시드 매핑의 유일 출처는 judgment의 시드 상수다(ADR 0001, #103).
 STAGES = ("screen", "confirm")
+
+_TRAINING_STATE_FIELDS = {
+    "trajectory",
+    "candidates",
+    "selected",
+    "schedule_horizon_epochs",
+    "trajectory_end_epochs",
+    "state_kind",
+    "selection_rule",
+}
+_TRAINING_STATE_MODELS = {"lookup_transformer", "realmlp"}
+_TARGET_FREE_LOOKUP_SCHEDULES = {
+    "one_cycle",
+    "one_cycle_fixed_momentum",
+    "warmup_cosine",
+    "warmup_linear",
+    "warmup_constant",
+}
 
 
 def stage_seeds(stage: str) -> list[int]:
@@ -94,15 +127,17 @@ def load_config(path: str | Path, stage: str) -> ExperimentConfig:
     from .plan import FeaturePlan
 
     FeaturePlan.from_config(features)
+    model = ModelConfig(
+        kind=raw["model"]["kind"],
+        params=raw["model"]["params"],
+        fit=raw["model"]["fit"],
+    )
+    training_state = _load_training_state(raw.get("training_state"), model, path)
     return ExperimentConfig(
         name=raw["name"],
         data=DataConfig(**{k: Path(v) for k, v in raw["data"].items()}),
         features=features,
-        model=ModelConfig(
-            kind=raw["model"]["kind"],
-            params=raw["model"]["params"],
-            fit=raw["model"]["fit"],
-        ),
+        model=model,
         initial_score=(
             InitialScoreConfig(**raw["initial_score"])
             if raw.get("initial_score") is not None
@@ -111,4 +146,108 @@ def load_config(path: str | Path, stage: str) -> ExperimentConfig:
         seeds=seeds,
         stage=stage,
         source_path=path,
+        training_state=training_state,
+    )
+
+
+def _positive_integer(value: object, where: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise ValueError(f"{where}는 1 이상의 정수여야 한다: {value!r}")
+    return value
+
+
+def _load_training_state(
+    raw: object, model: ModelConfig, path: Path
+) -> TrainingStateConfig | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError(f"{path}: training_state는 객체여야 한다.")
+    unknown = sorted(set(raw) - _TRAINING_STATE_FIELDS)
+    missing = sorted(_TRAINING_STATE_FIELDS - set(raw))
+    if unknown or missing:
+        raise ValueError(
+            f"{path}: training_state 필드가 정확하지 않다. "
+            f"누락={missing}, 알 수 없음={unknown}"
+        )
+    trajectory = raw["trajectory"]
+    if not isinstance(trajectory, str) or not trajectory.strip():
+        raise ValueError(f"{path}: training_state.trajectory는 비어 있지 않은 문자열이어야 한다.")
+    candidates_raw = raw["candidates"]
+    if not isinstance(candidates_raw, list) or not candidates_raw:
+        raise ValueError(f"{path}: training_state.candidates는 비어 있지 않은 목록이어야 한다.")
+    candidates = tuple(
+        _positive_integer(value, f"{path}: training_state.candidates[{index}]")
+        for index, value in enumerate(candidates_raw)
+    )
+    if tuple(sorted(set(candidates))) != candidates:
+        raise ValueError(
+            f"{path}: training_state.candidates는 중복 없는 오름차순이어야 한다: "
+            f"{list(candidates)}"
+        )
+    selected = _positive_integer(raw["selected"], f"{path}: training_state.selected")
+    if selected not in candidates:
+        raise ValueError(
+            f"{path}: training_state.selected {selected}가 candidates에 없다."
+        )
+    horizon = _positive_integer(
+        raw["schedule_horizon_epochs"],
+        f"{path}: training_state.schedule_horizon_epochs",
+    )
+    trajectory_end = _positive_integer(
+        raw["trajectory_end_epochs"],
+        f"{path}: training_state.trajectory_end_epochs",
+    )
+    if max(candidates) > trajectory_end or trajectory_end > horizon:
+        raise ValueError(
+            f"{path}: 후보 시점 <= 궤적 종료 <= 일정 지평이어야 한다: "
+            f"{max(candidates)} <= {trajectory_end} <= {horizon}"
+        )
+    if raw["state_kind"] != "ema":
+        raise ValueError(f"{path}: training_state.state_kind는 'ema'만 지원한다.")
+    if raw["selection_rule"] != "precommitted":
+        raise ValueError(
+            f"{path}: training_state.selection_rule은 'precommitted'여야 한다."
+        )
+    if model.kind not in _TRAINING_STATE_MODELS:
+        raise ValueError(
+            f"{path}: training_state는 {sorted(_TRAINING_STATE_MODELS)}만 지원한다: "
+            f"{model.kind!r}"
+        )
+    if model.kind == "lookup_transformer":
+        if model.params.get("epochs") != trajectory_end:
+            raise ValueError(
+                f"{path}: Lookup-Transformer model.params.epochs는 "
+                "training_state.trajectory_end_epochs와 같아야 한다."
+            )
+        if model.params.get("validation_selection", "best") != "final":
+            raise ValueError(
+                f"{path}: 여러 학습 시점 Lookup-Transformer는 "
+                "validation_selection='final'이어야 한다."
+            )
+        schedule = str(model.params.get("lr_schedule", "one_cycle")).lower()
+        if schedule not in _TARGET_FREE_LOOKUP_SCHEDULES:
+            raise ValueError(
+                f"{path}: 여러 학습 시점 Lookup-Transformer 일정은 검증 목표값을 "
+                f"참조할 수 없다: {schedule!r}"
+            )
+    else:
+        if model.params.get("fixed_epochs") != trajectory_end:
+            raise ValueError(
+                f"{path}: RealMLP model.params.fixed_epochs는 "
+                "training_state.trajectory_end_epochs와 같아야 한다."
+            )
+        if model.params.get("schedule_epochs") != horizon:
+            raise ValueError(
+                f"{path}: RealMLP model.params.schedule_epochs는 "
+                "training_state.schedule_horizon_epochs와 같아야 한다."
+            )
+    return TrainingStateConfig(
+        trajectory=trajectory.strip(),
+        candidates=candidates,
+        selected=selected,
+        schedule_horizon_epochs=horizon,
+        trajectory_end_epochs=trajectory_end,
+        state_kind="ema",
+        selection_rule="precommitted",
     )

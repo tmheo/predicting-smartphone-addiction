@@ -54,8 +54,15 @@ from .training_length import (
     observe_training_length,
     observed_length_from_raw,
 )
+from .training_state_manifest import (
+    MANIFEST_NAME as TRAINING_STATE_MANIFEST,
+    TrainingStateManifestError,
+    validate_candidate_manifest,
+    validate_candidate_parent_lineage,
+)
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
+SUPPORTED_SCHEMA_VERSIONS = (2, SCHEMA_VERSION)
 
 # 근거 상태. `unresolved`는 아직 원시 값을 확정하지 못한 칸이고,
 # `not_applicable`은 반복 수라는 개념 자체가 없는 구성원이다.
@@ -120,6 +127,16 @@ OBSERVATION_FIELDS = (
 )
 DERIVATION_FIELDS = ("statistic", "multiplier", "rounding", "seeds")
 SEED_BUDGET_FIELDS = ("seed", "observed_lengths", "median", "scaled", "budget")
+TRAJECTORY_STATE_METHOD = "trajectory_state"
+TRAJECTORY_DERIVATION_FIELDS = (
+    "method",
+    "completed_epochs",
+    "schedule_horizon_epochs",
+    "state_kind",
+    "trajectory_identity_sha256",
+    "seeds",
+)
+TRAJECTORY_SEED_BUDGET_FIELDS = ("seed", "observed_lengths", "budget")
 
 # 손으로 예산을 덮어쓰는 통로. 문법에 두지 않으므로 알 수 없는 필드로 걸리지만,
 # 왜 막혔는지 바로 알 수 있게 별도 문구로 거부한다.
@@ -194,6 +211,32 @@ class RefitBudgetRecord:
 
 
 @dataclass(frozen=True)
+class TrajectoryStateBudgetRecord:
+    """장부가 주장하는 동일 궤적 시점의 정확 종료 재학습 계약."""
+
+    method: str
+    completed_epochs: int
+    schedule_horizon_epochs: int
+    state_kind: str
+    trajectory_identity_sha256: str
+    seeds: tuple[SeedBudgetRecord, ...]
+
+
+@dataclass(frozen=True)
+class TrajectoryStateBudgetDerivation:
+    """원시 근거와 후보 실행 계보에서 다시 확인한 정확 시점 예산."""
+
+    completed_epochs: int
+    schedule_horizon_epochs: int
+    state_kind: str
+    trajectory_identity_sha256: str
+    seeds: tuple[SeedBudgetRecord, ...]
+
+    def budgets(self) -> dict[int, int]:
+        return {seed.seed: int(seed.budget) for seed in self.seeds}
+
+
+@dataclass(frozen=True)
 class RefitPlanMember:
     """검증 전 장부 구성원. 실행 예산을 노출하지 않는다.
 
@@ -204,7 +247,7 @@ class RefitPlanMember:
     config_path: Path
     lineage: MemberLineage
     evidence: TrainingLengthEvidence
-    budget_derivation: RefitBudgetRecord
+    budget_derivation: RefitBudgetRecord | TrajectoryStateBudgetRecord
     entry_sha256: str
 
 
@@ -234,12 +277,20 @@ class ExecutableRefitMember:
     lineage: MemberLineage
     status: str
     budgets: dict[int, int | None]
-    derivation: RefitBudgetDerivation | None
+    derivation: RefitBudgetDerivation | TrajectoryStateBudgetDerivation | None
     entry_sha256: str
 
     @property
     def run_id(self) -> str:
         return self.lineage.source_run_id
+
+    @property
+    def refit_method(self) -> str:
+        if isinstance(self.derivation, TrajectoryStateBudgetDerivation):
+            return TRAJECTORY_STATE_METHOD
+        if self.derivation is None:
+            return STATUS_NOT_APPLICABLE
+        return "fold_scaled_median"
 
 
 @dataclass(frozen=True)
@@ -296,13 +347,14 @@ class RefitPlan:
         _exact_fields(document, PLAN_FIELDS, "장부")
 
         version = _integer(document["schema_version"], "schema_version")
-        if version != SCHEMA_VERSION:
+        if version not in SUPPORTED_SCHEMA_VERSIONS:
             raise RefitPlanError(
-                f"장부 문법 판본은 {SCHEMA_VERSION}이어야 한다: {version}"
+                f"장부 문법 판본은 {list(SUPPORTED_SCHEMA_VERSIONS)} 중 하나여야 한다: "
+                f"{version}"
             )
         protocol_document = _mapping(document["protocol"], "protocol")
         members = tuple(
-            _load_member(item, index, protocol_document)
+            _load_member(item, index, protocol_document, version)
             for index, item in enumerate(_sequence(document["members"], "members"))
         )
         if not members:
@@ -341,7 +393,13 @@ class RefitPlan:
         self._validate_protocol()
         pool_members = self._validate_pool(pool, pool_sha256)
         members = tuple(
-            _validate_member(member, pool_member, self.protocol, store)
+            _validate_member(
+                member,
+                pool_member,
+                self.protocol,
+                store,
+                schema_version=self.schema_version,
+            )
             for member, pool_member in zip(self.members, pool_members, strict=True)
         )
         return ExecutableRefitPlan(
@@ -393,9 +451,12 @@ def _validate_member(
     pool_member,
     protocol: RefitProtocol,
     store: RunStore,
+    *,
+    schema_version: int,
 ) -> ExecutableRefitMember:
     if not member.config_path.is_file():
         raise RefitPlanError(f"{member.config}: 설정 파일이 없다: {member.config_path}")
+    _validate_training_state_derivation_kind(member, schema_version)
     _validate_lineage(member, store)
 
     evidence = member.evidence
@@ -415,7 +476,12 @@ def _validate_member(
         )
 
     observations = _validate_observations(member, allowed_seeds)
-    derivation = _rederive_budgets(member, observations, protocol)
+    if isinstance(member.budget_derivation, TrajectoryStateBudgetRecord):
+        derivation = _validate_trajectory_state_derivation(
+            member, observations, allowed_seeds
+        )
+    else:
+        derivation = _rederive_budgets(member, observations, protocol)
     return ExecutableRefitMember(
         config=member.config,
         config_path=member.config_path,
@@ -425,6 +491,32 @@ def _validate_member(
         derivation=derivation,
         entry_sha256=member.entry_sha256,
     )
+
+
+def _validate_training_state_derivation_kind(
+    member: RefitPlanMember, schema_version: int
+) -> None:
+    """판본 3 설정과 정확 시점 파생 방식이 반드시 함께 나타나는지 확인한다."""
+    try:
+        config = yaml.safe_load(member.config_path.read_text())
+    except (OSError, yaml.YAMLError) as error:
+        raise RefitPlanError(f"{member.config}: 설정 파일을 읽지 못했다.") from error
+    state = config.get("training_state") if isinstance(config, dict) else None
+    has_training_state = isinstance(state, dict)
+    if schema_version < 3:
+        if has_training_state:
+            raise RefitPlanError(
+                f"{member.config}: training_state 설정은 장부 문법 판본 3이 필요하다."
+            )
+        return
+    has_trajectory_derivation = isinstance(
+        member.budget_derivation, TrajectoryStateBudgetRecord
+    )
+    if has_training_state != has_trajectory_derivation:
+        raise RefitPlanError(
+            f"{member.config}: 문법 판본 3에서는 training_state 설정과 "
+            "trajectory_state 재학습 방식이 함께 있어야 한다."
+        )
 
 
 def _validate_lineage(member: RefitPlanMember, store: RunStore) -> None:
@@ -455,6 +547,65 @@ def _validate_lineage(member: RefitPlanMember, store: RunStore) -> None:
         raise RefitPlanError(
             f"{member.config}: 원시 근거 산출물 해시가 실행 기록과 다르다."
         )
+    if isinstance(member.budget_derivation, TrajectoryStateBudgetRecord):
+        _validate_training_state_run(member, facts, store)
+
+
+def _validate_training_state_run(member: RefitPlanMember, facts, store: RunStore) -> None:
+    """정확 시점 재학습의 출처 실행과 후보 manifest가 같은 궤적을 가리키는지 본다."""
+    record = member.budget_derivation
+    assert isinstance(record, TrajectoryStateBudgetRecord)
+    if facts.status != "FINISHED":
+        raise RefitPlanError(f"{member.config}: 학습 시점 후보 실행이 완료 상태가 아니다.")
+    run_id = member.lineage.source_run_id
+    try:
+        payload = store.artifact_bytes_of(run_id, TRAINING_STATE_MANIFEST)
+        manifest = validate_candidate_manifest(
+            manifest_bytes=payload,
+            tags=facts.tags,
+            params=facts.params,
+            artifact_bytes_of=lambda name: store.artifact_bytes_of(run_id, name),
+        )
+        validate_candidate_parent_lineage(
+            child_run_id=run_id,
+            child_document=manifest,
+            child_tags=facts.tags,
+            facts_of=store.facts_of,
+            artifact_bytes_of=store.artifact_bytes_of,
+        )
+    except (RunStoreError, TrainingStateManifestError) as error:
+        raise RefitPlanError(
+            f"{member.config}: 학습 시점 후보 manifest를 확인하지 못했다: {error}"
+        ) from error
+    expected_manifest = {
+        "trajectory_identity_sha256": record.trajectory_identity_sha256,
+        "completed_epochs": record.completed_epochs,
+        "schedule_horizon_epochs": record.schedule_horizon_epochs,
+        "state_kind": record.state_kind,
+        "selection_rule": "precommitted",
+        "validation_target_used_for_selection": False,
+        "seeds": [seed.seed for seed in record.seeds],
+    }
+    for key, expected in expected_manifest.items():
+        if manifest.get(key) != expected:
+            raise RefitPlanError(
+                f"{member.config}: 학습 시점 후보 manifest의 {key}가 재학습 계약과 다르다."
+            )
+    try:
+        config = yaml.safe_load(member.config_path.read_text())
+        paths = config["data"]
+        current_input_sha256 = {
+            name: data.file_sha256(Path(paths[name]))
+            for name in ("train", "test", "folds")
+        }
+    except (OSError, KeyError, TypeError, yaml.YAMLError) as error:
+        raise RefitPlanError(
+            f"{member.config}: 정확 시점 후보의 현재 입력 자료 해시를 계산하지 못했다."
+        ) from error
+    if manifest.get("input_sha256") != current_input_sha256:
+        raise RefitPlanError(
+            f"{member.config}: 현재 입력 자료가 채택된 학습 궤적의 입력과 다르다."
+        )
 
 
 def _allowed_seeds(member: RefitPlanMember, pool_member) -> tuple[int, ...]:
@@ -464,6 +615,13 @@ def _allowed_seeds(member: RefitPlanMember, pool_member) -> tuple[int, ...]:
     """
     pool_seeds = tuple(pool_member.seeds)
     recorded = tuple(record.seed for record in member.budget_derivation.seeds)
+    if isinstance(member.budget_derivation, TrajectoryStateBudgetRecord):
+        if recorded != pool_seeds:
+            raise RefitPlanError(
+                f"{member.config}: 정확 시점 재학습은 후보 풀의 모든 시드를 써야 한다: "
+                f"{list(recorded)} != {list(pool_seeds)}"
+            )
+        return recorded
     if recorded in (pool_seeds, pool_seeds[:1]):
         return recorded
     raise RefitPlanError(
@@ -641,6 +799,85 @@ def _rederive_budgets(
     return derivation
 
 
+def _validate_trajectory_state_derivation(
+    member: RefitPlanMember,
+    observations: list[ObservedTrainingLength],
+    allowed_seeds: tuple[int, ...],
+) -> TrajectoryStateBudgetDerivation:
+    """동일 궤적 후보는 배수를 쓰지 않고 선택 시점과 정확히 같은 예산만 허용한다."""
+    record = member.budget_derivation
+    assert isinstance(record, TrajectoryStateBudgetRecord)
+    if record.method != TRAJECTORY_STATE_METHOD:
+        raise RefitPlanError(
+            f"{member.config}: 알 수 없는 정확 시점 재학습 방식이다: {record.method!r}"
+        )
+    if record.state_kind != "ema":
+        raise RefitPlanError(
+            f"{member.config}: 정확 시점 재학습 상태 종류는 'ema'여야 한다."
+        )
+    if not 1 <= record.completed_epochs <= record.schedule_horizon_epochs:
+        raise RefitPlanError(
+            f"{member.config}: 완료 시점은 1 이상 일정 지평 이하여야 한다."
+        )
+    try:
+        config = yaml.safe_load(member.config_path.read_text())
+    except (OSError, yaml.YAMLError) as error:
+        raise RefitPlanError(
+            f"{member.config}: 정확 시점 후보 설정을 읽지 못했다."
+        ) from error
+    if data.file_sha256(member.config_path) != member.lineage.source_config_sha256:
+        raise RefitPlanError(
+            f"{member.config}: 정확 시점 재학습 설정이 채택된 후보 실행의 설정과 다르다."
+        )
+    state = config.get("training_state") if isinstance(config, dict) else None
+    expected_config = {
+        "selected": record.completed_epochs,
+        "schedule_horizon_epochs": record.schedule_horizon_epochs,
+        "state_kind": record.state_kind,
+        "selection_rule": "precommitted",
+    }
+    if not isinstance(state, dict) or any(
+        state.get(key) != value for key, value in expected_config.items()
+    ):
+        raise RefitPlanError(
+            f"{member.config}: 설정의 training_state가 정확 시점 재학습 기록과 다르다."
+        )
+
+    grouped: dict[int, list[int]] = {seed: [] for seed in allowed_seeds}
+    for observation in observations:
+        grouped[observation.seed].append(observation.value)
+    recorded = {seed.seed: seed for seed in record.seeds}
+    if tuple(recorded) != allowed_seeds:
+        raise RefitPlanError(
+            f"{member.config}: 정확 시점 기록 시드가 계획 시드와 다르다."
+        )
+    validated_seeds: list[SeedBudgetRecord] = []
+    for seed in allowed_seeds:
+        lengths = tuple(grouped[seed])
+        if not lengths or set(lengths) != {record.completed_epochs}:
+            raise RefitPlanError(
+                f"{member.config}: 시드 {seed}의 모든 관측 학습 길이는 "
+                f"정확히 {record.completed_epochs}여야 한다: {lengths}"
+            )
+        saved = recorded[seed]
+        if saved.observed_lengths != lengths or saved.budget != record.completed_epochs:
+            raise RefitPlanError(
+                f"{member.config}: 시드 {seed}의 정확 시점 예산 기록이 원시 근거와 다르다."
+            )
+        if saved.median is not None or saved.scaled is not None:
+            raise RefitPlanError(
+                f"{member.config}: 정확 시점 예산에는 중앙값이나 배수 적용값을 기록할 수 없다."
+            )
+        validated_seeds.append(saved)
+    return TrajectoryStateBudgetDerivation(
+        completed_epochs=record.completed_epochs,
+        schedule_horizon_epochs=record.schedule_horizon_epochs,
+        state_kind=record.state_kind,
+        trajectory_identity_sha256=record.trajectory_identity_sha256,
+        seeds=tuple(validated_seeds),
+    )
+
+
 def _compare_seed_budget(config: str, derived, recorded: SeedBudgetRecord) -> None:
     """중간값까지 정확히 같아야 한다.
 
@@ -685,7 +922,9 @@ def _load_protocol(value: object) -> RefitProtocol:
     )
 
 
-def _load_member(value: object, index: int, protocol: dict) -> RefitPlanMember:
+def _load_member(
+    value: object, index: int, protocol: dict, schema_version: int
+) -> RefitPlanMember:
     member = _mapping(value, f"members[{index}]")
     label = member.get("config") if isinstance(member.get("config"), str) else index
     where = f"구성원 {label}"
@@ -695,7 +934,9 @@ def _load_member(value: object, index: int, protocol: dict) -> RefitPlanMember:
         config_path=Path(_text(member["config_path"], f"{where}.config_path")),
         lineage=_load_lineage(member["lineage"], where),
         evidence=_load_evidence(member["training_length_evidence"], where),
-        budget_derivation=_load_derivation(member["refit_budget_derivation"], where),
+        budget_derivation=_load_derivation(
+            member["refit_budget_derivation"], where, schema_version
+        ),
         entry_sha256=member_entry_sha256(protocol, member),
     )
 
@@ -797,8 +1038,59 @@ def _load_observation(value: object, where: str) -> RawObservation:
     )
 
 
-def _load_derivation(value: object, where: str) -> RefitBudgetRecord:
+def _load_derivation(
+    value: object, where: str, schema_version: int
+) -> RefitBudgetRecord | TrajectoryStateBudgetRecord:
     derivation = _mapping(value, f"{where}.refit_budget_derivation")
+    if "method" in derivation:
+        if schema_version < 3:
+            raise RefitPlanError(
+                f"{where}: trajectory_state 재학습 계약은 장부 문법 판본 3부터 지원한다."
+            )
+        _exact_fields(
+            derivation,
+            TRAJECTORY_DERIVATION_FIELDS,
+            f"{where}.refit_budget_derivation",
+        )
+        method = _text(derivation["method"], f"{where}.method")
+        if method != TRAJECTORY_STATE_METHOD:
+            raise RefitPlanError(
+                f"{where}: 알 수 없는 재학습 예산 방식이다: {method!r}"
+            )
+        seeds = tuple(
+            _load_trajectory_seed_budget(
+                item, f"{where}.refit_budget_derivation.seeds[{index}]"
+            )
+            for index, item in enumerate(
+                _sequence(
+                    derivation["seeds"], f"{where}.refit_budget_derivation.seeds"
+                )
+            )
+        )
+        _validate_seed_records(seeds, where)
+        completed_epochs = _integer(
+            derivation["completed_epochs"], f"{where}.completed_epochs"
+        )
+        schedule_horizon_epochs = _integer(
+            derivation["schedule_horizon_epochs"],
+            f"{where}.schedule_horizon_epochs",
+        )
+        trajectory_sha = _text(
+            derivation["trajectory_identity_sha256"],
+            f"{where}.trajectory_identity_sha256",
+        )
+        if len(trajectory_sha) != 64 or any(
+            character not in "0123456789abcdef" for character in trajectory_sha.lower()
+        ):
+            raise RefitPlanError(f"{where}: 학습 궤적 정체성 SHA-256 형식이 잘못됐다.")
+        return TrajectoryStateBudgetRecord(
+            method=method,
+            completed_epochs=completed_epochs,
+            schedule_horizon_epochs=schedule_horizon_epochs,
+            state_kind=_text(derivation["state_kind"], f"{where}.state_kind"),
+            trajectory_identity_sha256=trajectory_sha,
+            seeds=seeds,
+        )
     _exact_fields(derivation, DERIVATION_FIELDS, f"{where}.refit_budget_derivation")
     seeds = tuple(
         _load_seed_budget(item, f"{where}.refit_budget_derivation.seeds[{index}]")
@@ -806,16 +1098,38 @@ def _load_derivation(value: object, where: str) -> RefitBudgetRecord:
             _sequence(derivation["seeds"], f"{where}.refit_budget_derivation.seeds")
         )
     )
-    if not seeds:
-        raise RefitPlanError(f"{where}: 재학습 예산 계산 결과에 시드가 없다.")
-    duplicates = _duplicates([seed.seed for seed in seeds])
-    if duplicates:
-        raise RefitPlanError(f"{where}: 같은 시드가 두 번 있다: {duplicates}")
+    _validate_seed_records(seeds, where)
     return RefitBudgetRecord(
         statistic=_text(derivation["statistic"], f"{where}.statistic"),
         multiplier=_number(derivation["multiplier"], f"{where}.multiplier"),
         rounding=_text(derivation["rounding"], f"{where}.rounding"),
         seeds=seeds,
+    )
+
+
+def _validate_seed_records(seeds: tuple[SeedBudgetRecord, ...], where: str) -> None:
+    if not seeds:
+        raise RefitPlanError(f"{where}: 재학습 예산 계산 결과에 시드가 없다.")
+    duplicates = _duplicates([seed.seed for seed in seeds])
+    if duplicates:
+        raise RefitPlanError(f"{where}: 같은 시드가 두 번 있다: {duplicates}")
+
+
+def _load_trajectory_seed_budget(value: object, where: str) -> SeedBudgetRecord:
+    seed_budget = _mapping(value, where)
+    _exact_fields(seed_budget, TRAJECTORY_SEED_BUDGET_FIELDS, where)
+    lengths = tuple(
+        _integer(item, f"{where}.observed_lengths[{index}]")
+        for index, item in enumerate(
+            _sequence(seed_budget["observed_lengths"], f"{where}.observed_lengths")
+        )
+    )
+    return SeedBudgetRecord(
+        seed=_integer(seed_budget["seed"], f"{where}.seed"),
+        observed_lengths=lengths,
+        median=None,
+        scaled=None,
+        budget=_integer(seed_budget["budget"], f"{where}.budget"),
     )
 
 

@@ -56,7 +56,14 @@ from .pool_rereview import (
     PoolScore,
     StrategyEvaluator,
 )
-from .runs import MlflowRunStore, RunStore, TRACKING_URI
+from .runs import MlflowRunStore, RunStore, RunStoreError, TRACKING_URI
+from .training_state_manifest import (
+    MANIFEST_NAME as TRAINING_STATE_MANIFEST_NAME,
+    RUN_KIND as TRAINING_STATE_RUN_KIND,
+    TrainingStateManifestError,
+    validate_candidate_parent_lineage,
+    validate_candidate_manifest,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -528,6 +535,45 @@ def _candidate_run(
     frozen: _FrozenInput,
 ) -> tuple[_CandidateRun, pd.Series]:
     meta = store.facts_of(run_id)
+    _require(meta.status == "FINISHED", f"후보 run {run_id}이 완료 상태가 아니다.")
+    try:
+        config_document = store.config_of(run_id)
+    except RunStoreError:
+        config_document = None
+    config_has_training_state = (
+        isinstance(config_document, dict)
+        and config_document.get("training_state") is not None
+    )
+    if config_has_training_state:
+        _require(
+            meta.tags.get("run.kind") == TRAINING_STATE_RUN_KIND,
+            f"후보 run {run_id}는 training_state config지만 snapshot 실행 정체성이 없다.",
+        )
+    if meta.tags.get("run.kind") == TRAINING_STATE_RUN_KIND:
+        try:
+            training_state_document = validate_candidate_manifest(
+                manifest_bytes=store.artifact_bytes_of(
+                    run_id, TRAINING_STATE_MANIFEST_NAME
+                ),
+                tags=meta.tags,
+                params=meta.params,
+                artifact_bytes_of=lambda name: store.artifact_bytes_of(run_id, name),
+            )
+            validate_candidate_parent_lineage(
+                child_run_id=run_id,
+                child_document=training_state_document,
+                child_tags=meta.tags,
+                facts_of=store.facts_of,
+                artifact_bytes_of=store.artifact_bytes_of,
+            )
+        except TrainingStateManifestError as exc:
+            raise PoolJudgmentError(
+                f"후보 run {run_id}의 학습 시점 게시 계약이 불완전하다: {exc}"
+            ) from exc
+    _require(
+        meta.tags.get("judgment.eligible") != "false",
+        f"후보 run {run_id}은 판정 불가 부모 실행이다.",
+    )
     try:
         config = meta.params["experiment"]
         seeds = tuple(int(value) for value in meta.params["seeds"].split(",") if value)
