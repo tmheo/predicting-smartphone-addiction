@@ -1,0 +1,109 @@
+schema_version: 1
+judgment_id: issue419-bulk-selection-1
+contract_version: candidate-pool-v2
+created_at: '2026-08-26'
+change:
+  action: admission
+  candidate:
+    run_id: acf4d1bc34f54fc8a0621af7081360cc
+    config: unknown
+    model_lineage_group: issue419-low-count-tree-variants
+  replaces_run_id: null
+selection:
+  kind: nested_selection
+  combiner_scope: core
+  description: 이슈 419에서 결과 확인 전에 고정한 26개 가운데 자격 필터를 통과한 후보 전체(진입 하한 미달 0개, exp180은
+    기존 구성원 exp168과 스피어만 0.99866이라 같은 계보 원자 교체 대조로 분리)
+  rule: 각 평가 범위에서 후보 포함 풀의 결합 전략 3개 중 최고 nested OOF AUC가 가장 높은 후보를 고른다.
+  tie_break: 후보 run_id 입력 순서가 먼저이고 결합 전략 등록 순서가 그다음이다.
+  candidates: []
+frozen_input:
+  candidate_pool:
+    path: artifacts/pool.yaml
+    sha256: 5b25d6ce8f2f75a24bc32cdfc1d6f0f29621b47275e40171c14b3b23232a0b04
+    member_count: 33
+    members:
+    - config: exp006_te_drop_gaming
+      run_id: 4aaddd505ade428588cf83659f205cf6
+    - config: exp011_resid_pair
+      run_id: e21d19af37bb461db5dc1a59b66411a6
+    - config: exp022_orig_knn
+      run_id: 52e9c12bcfb94ee9912e4bb7f43e3f09
+    - config: exp023_orig_proxy_residual
+      run_id: 202b7d47c3bd4b8e8904fa5c005c7423
+    - config: exp025_constrained_impute
+      run_id: 9804689a5e3642e586abb972b522f3d4
+    - config: exp032_recon_orig_mean_top3
+      run_id: b1bd4b08386946c9a4e05b755dbd5f26
+    - config: exp035_lattice_te
+      run_id: c62a9ad334bf486cb46d738474ccd767
+    - config: exp058_logreg_onehot
+      run_id: e2b76edd9d204290810e39a7457c4c48
+    - config: exp059_lookup_transformer
+      run_id: b951fac51b6b44298f7fdb0b543caba6
+    - config: exp070_cat_exact_cats
+      run_id: 6238d8c58beb42ee8102209ded92516e
+    - config: exp067_tabpfn3
+      run_id: 85b09132aae543aab16e69dea5906a30
+    - config: exp081_lookup_fold_initialization_avg3
+      run_id: d55d1cd49c194eb8bf7b5128e548df81
+    - config: exp110_lgb_kitopl_no_te
+      run_id: ae829ae3d886402ab100a8e966c3131a
+    - config: exp111_xgb_depth8_no_te
+      run_id: 3cbc2ccce9eb46458d884006a33e516e
+    - config: exp071_cat_exact_no_te
+      run_id: 521b4924b2ef4ba1830724333b83deb2
+    - config: exp106_lookup_fixed24_train_test_preprocessing
+      run_id: 547e7bc90b9f4c448307d406f053629a
+    - config: exp117_ag25_gbm_r21
+      run_id: d107ea874ebe4dbe8094694141a162b6
+    - config: exp113_tab_cnn_m0
+      run_id: b47a4184249746cdb1d062aa98364437
+    - config: exp085_contextual_spline_m0
+      run_id: e84d97e875754af1b073b399db2a0616
+    - config: exp027_recon_ce
+      run_id: e4e81bdce7df4a72bf250ef842fd8781
+    - config: exp048_lgb_orig_cdf_diff
+      run_id: 2b5fda6d3ea94ff886c5fe616376f0f0
+    - config: exp134_realmlp_muon
+      run_id: f72eeee10b1b4947af79228f888e7a81
+    - config: exp135_xgb_hpo_trial30
+      run_id: 119b9c4e44674d38a6f758b65a68593e
+    - config: exp131_lookup_bivariate_plr5
+      run_id: 54acd002d3c04ec3a74c09871e83da50
+    - config: exp136_realmlp_muon_recon_widths
+      run_id: bd2bd1154e6343f68b364714e2fedcc4
+    - config: exp137_tabm_recon_widths
+      run_id: e7682b186be14dea822d41d7d411bb98
+    - config: exp133_scalar_token_transformer_oof_te
+      run_id: f16dbc88860a41f39194da2f581f057d
+    - config: exp131_tab_cnn_oof_target_mean
+      run_id: ea78fe0dbe2442788580dec56cf7f3ad
+    - config: exp132_tab_cnn_epochs100
+      run_id: 09d17ca4091e45118d201ba7a321f956
+    - config: exp139_realmlp_reference_qnormal_train_test
+      run_id: 1af9442e67c14a96a5256251f23a1b9d
+    - config: exp140_realmlp_orig_cdf_diff
+      run_id: 984b0fd5277243ab95acff71688644a9
+    - config: exp157_lookup_muon_initavg8
+      run_id: bb7be9baf1b64888818600d7e0b5927b
+    - config: exp168_issue413_lgb_no_te_fixed20
+      run_id: 2142b26c2d304307bb0c2717b803d643
+  folds:
+    path: artifacts/folds.parquet
+    sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+  registered_combiners:
+    scope: core
+    names:
+    - missing_segmented_rank_logit
+    - missing_interaction_rank_logit
+    - shrunk_rank_logit_logistic
+    names_sha256: 1bbe727284d0732ad64cac515ef4a62ebf38d6b4337864f4d36c09b4b4f2ca4f
+evidence:
+  path: run-logs/pool-judgments/issue419-bulk-selection-1/evidence.json
+  sha256: 895f735ecd9716e737397b6b5a1d71bdb0bc35af6915f774c81fe77bf182c496
+result:
+  state: indeterminate
+  decision: no_change
+  reason: 'PoolJudgmentError: 후보 exp201_issue419_lgb_lattice_te_fixed20의 카나리아 유효성
+    판정이 실패했다.'

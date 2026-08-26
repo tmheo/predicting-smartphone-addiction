@@ -526,3 +526,45 @@ members:
     contract_version: candidate-pool-v2
     path: artifacts/judgments/issue415-bulk-selection-3.yaml
     sha256: 318097a9fa4933e47b28415807456cca894ba591256599548b78da6c02d9cc12
+- run_id: a7a59a1829da4e4e93c3f581ed58597e
+  config: exp197_issue419_lgb_recon_ce_fixed20
+  oof_auc: 0.9654566561049915
+  seeds: 42,43,44
+  entered_at: '2026-08-26'
+  reason: 이슈 419의 고정 반복 수 변형 완전 중첩 선택(issue419-bulk-selection-2)에서 바깥 분할 5/5 선택, 단독
+    진입 판정 전체 OOF 차이 +0.000022993334
+  evidence:
+    champion_run_id: 6911a461866b43dc9556553eba6783b7
+    champion_oof_auc: 0.9693676105620948
+    floor_margin: 0.006089045542896798
+    nearest_run_id: 2b5fda6d3ea94ff886c5fe616376f0f0
+    nearest_spearman: 0.9847369527180772
+    ensemble_auc_with: 0.9691549142032696
+    ensemble_auc_without: 0.9692050297452612
+    contribution: -5.011554199163548e-05
+  judgment:
+    judgment_id: issue419-exp197-admission
+    contract_version: candidate-pool-v2
+    path: artifacts/judgments/issue419-exp197-admission.yaml
+    sha256: 6479f319b17cd87fffd4c4e8d3037e097499c8ba6ff114c7849eaa3928b09ed3
+- run_id: eded39146a164b6ca421a20d22b10f52
+  config: exp183_issue419_cat_exact_fixed10
+  oof_auc: 0.9667978844962996
+  seeds: 42,43,44
+  entered_at: '2026-08-26'
+  reason: 이슈 419의 고정 반복 수 변형 완전 중첩 선택(issue419-bulk-selection-3)에서 바깥 분할 3/5 선택, 단독
+    진입 판정 전체 OOF 차이 +0.000004649979
+  evidence:
+    champion_run_id: 6911a461866b43dc9556553eba6783b7
+    champion_oof_auc: 0.9693676105620948
+    floor_margin: 0.007430273934204812
+    nearest_run_id: 6238d8c58beb42ee8102209ded92516e
+    nearest_spearman: 0.9949179708416803
+    ensemble_auc_with: 0.9691283068087954
+    ensemble_auc_without: 0.9691549142032696
+    contribution: -2.6607394474242874e-05
+  judgment:
+    judgment_id: issue419-exp183-admission
+    contract_version: candidate-pool-v2
+    path: artifacts/judgments/issue419-exp183-admission.yaml
+    sha256: bf2e78d784e579b8b623632301d6ce46637b7620f9dc712af6abc69da9e98bde

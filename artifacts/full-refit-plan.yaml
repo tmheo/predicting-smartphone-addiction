@@ -1,5 +1,5 @@
 schema_version: 2
-source_pool_sha256: 5b25d6ce8f2f75a24bc32cdfc1d6f0f29621b47275e40171c14b3b23232a0b04
+source_pool_sha256: caa1b90769720a4accbe07074dbc7efe0335ab6657fea80c6839b60121dc39d3
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -6400,3 +6400,311 @@ members:
       median: 913.0
       scaled: 1141.25
       budget: 1141
+- config: exp197_issue419_lgb_recon_ce_fixed20
+  config_path: configs/exp197_issue419_lgb_recon_ce_fixed20.yaml
+  lineage:
+    source_run_id: a7a59a1829da4e4e93c3f581ed58597e
+    source_git_commit: 446378d3f88ad0693cb7b5bba74209fcee5e2b93
+    source_config_path: configs/exp197_issue419_lgb_recon_ce_fixed20.yaml
+    source_config_sha256: bc3d003af0633290b94b56b749f19b9af4171663caf64e21172b93a7adf11a58
+    evidence_artifact_path: model_training_diagnostics.json
+    evidence_artifact_sha256: fad5e4c68a9ef7cd353cf80dbc2e03ca91f4af887323749d21cc3b6a765c296d
+  training_length_evidence:
+    status: confirmed
+    model_family: lightgbm
+    converter: fixed_count
+    observations:
+    - seed: 42
+      outer_fold: 0
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 42
+      outer_fold: 1
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 42
+      outer_fold: 2
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 42
+      outer_fold: 3
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 42
+      outer_fold: 4
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 43
+      outer_fold: 0
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 43
+      outer_fold: 1
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 43
+      outer_fold: 2
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 43
+      outer_fold: 3
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 43
+      outer_fold: 4
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 44
+      outer_fold: 0
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 44
+      outer_fold: 1
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 44
+      outer_fold: 2
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 44
+      outer_fold: 3
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+    - seed: 44
+      outer_fold: 4
+      inner_member: null
+      raw_field: n_estimators
+      raw_value: 76
+      raw_meaning: fixed_count
+      observed_training_length: 76
+  refit_budget_derivation:
+    statistic: median
+    multiplier: 1.25
+    rounding: half_up
+    seeds:
+    - seed: 42
+      observed_lengths:
+      - 76
+      - 76
+      - 76
+      - 76
+      - 76
+      median: 76.0
+      scaled: 95.0
+      budget: 95
+    - seed: 43
+      observed_lengths:
+      - 76
+      - 76
+      - 76
+      - 76
+      - 76
+      median: 76.0
+      scaled: 95.0
+      budget: 95
+    - seed: 44
+      observed_lengths:
+      - 76
+      - 76
+      - 76
+      - 76
+      - 76
+      median: 76.0
+      scaled: 95.0
+      budget: 95
+- config: exp183_issue419_cat_exact_fixed10
+  config_path: configs/exp183_issue419_cat_exact_fixed10.yaml
+  lineage:
+    source_run_id: eded39146a164b6ca421a20d22b10f52
+    source_git_commit: 446378d3f88ad0693cb7b5bba74209fcee5e2b93
+    source_config_path: configs/exp183_issue419_cat_exact_fixed10.yaml
+    source_config_sha256: 5dcf44e781423fa4719f4d07cf25c3baac7bf6d44119a1ff5077d7f165803f4e
+    evidence_artifact_path: model_training_diagnostics.json
+    evidence_artifact_sha256: 3fbb686294a6bcdd45bef1185aeeb0f029ba4c2a334599b0cb49c3928e551475
+  training_length_evidence:
+    status: confirmed
+    model_family: catboost
+    converter: fixed_count
+    observations:
+    - seed: 42
+      outer_fold: 0
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 42
+      outer_fold: 1
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 42
+      outer_fold: 2
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 42
+      outer_fold: 3
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 42
+      outer_fold: 4
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 43
+      outer_fold: 0
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 43
+      outer_fold: 1
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 43
+      outer_fold: 2
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 43
+      outer_fold: 3
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 43
+      outer_fold: 4
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 44
+      outer_fold: 0
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 44
+      outer_fold: 1
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 44
+      outer_fold: 2
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 44
+      outer_fold: 3
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+    - seed: 44
+      outer_fold: 4
+      inner_member: null
+      raw_field: iterations
+      raw_value: 410
+      raw_meaning: fixed_count
+      observed_training_length: 410
+  refit_budget_derivation:
+    statistic: median
+    multiplier: 1.25
+    rounding: half_up
+    seeds:
+    - seed: 42
+      observed_lengths:
+      - 410
+      - 410
+      - 410
+      - 410
+      - 410
+      median: 410.0
+      scaled: 512.5
+      budget: 513
+    - seed: 43
+      observed_lengths:
+      - 410
+      - 410
+      - 410
+      - 410
+      - 410
+      median: 410.0
+      scaled: 512.5
+      budget: 513
+    - seed: 44
+      observed_lengths:
+      - 410
+      - 410
+      - 410
+      - 410
+      - 410
+      median: 410.0
+      scaled: 512.5
+      budget: 513
