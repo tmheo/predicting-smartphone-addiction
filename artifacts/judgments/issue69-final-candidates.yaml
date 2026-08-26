@@ -19,6 +19,10 @@ first_candidate:
   file: artifacts/submissions/issue69-candidate-1.csv
   file_sha256: 7c57a11a2bb48624fe6ea6e3429acbad2d50f3248a140799ef4a133f9e378d4e
   prediction_sha256: 54acda23a2298bd50c74b9508c0aa92ba016e178f483cc8014cf762a778920e4
+  kaggle_submission_ref: 55795055
+  public_score: 0.97099
+  mlflow_run_id: e88f706ec41b4fd1af66bd64520a35ea
+  submitted_at_utc: '2026-08-26T12:46:51Z'
 tolerance_delta: -0.0005
 axes:
 - axis: shrunk_rank_logit_logistic_cv_only
@@ -42,6 +46,10 @@ second_candidate:
   prediction_sha256: 02a3183b2758792d601e80e5056cb56e8fc68a70975149c4f4b160f415def36d
   file: artifacts/submissions/issue69-candidate-2.csv
   file_sha256: fae78bda8c1160bfbca6e14b1813c8e2ff61fae4eb94d313e439ae2dacd59b52
+  kaggle_submission_ref: 55791893
+  public_score: 0.97096
+  mlflow_run_id: b24e5ba7b7eb4e3a9e10788005896328
+  submitted_at_utc: '2026-08-26T09:57:20Z'
 mix_exception:
   triggered: false
   evidence: '#226 짝 계측: CV 전용 0.97082 vs 5:1 혼합 0.97087 (+0.00005, 악화 아님)'
@@ -85,3 +93,5 @@ assembly_prediction_sha256:
   cv: f4c00fc5b6975210fc1e191bfe704b69ba54d7625472a8c76207748e3d5c6cb7
   full: c207a4a414ec59ed4d5ff0ac1607ce2fa5e5c6691969299ff26a743d6f088357
   cv_full: ebbaeb9b4f2bacd120eb774a52eebf4c0c83d09107ac0abbd89362500733c16d
+public_score_note: 사후 확인값이며 선택 근거로 쓰지 않는다(ADR 0002). 두 후보 모두 Kaggle에 올라가 있고 공개 점수
+  상위 2개라 기본 최종 선택에 포함된다.
