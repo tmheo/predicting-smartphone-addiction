@@ -1,0 +1,171 @@
+schema_version: 1
+issue: 428
+generated_at: '2026-08-26T19:09:37Z'
+source_commit: 2f5c4e832161844a9d206c53d051f07ee034b5dd
+aggregation_fix_commit: e334a4f465c408171cedc9a1e557428d7caf3d03
+postprocess_commit: a4055109114008f40dd4e27710da6fcc90fb070a
+provider: vast
+remote_job_id: issue428-realmlp-training-states-20260827-v2
+stage: confirm
+model: realmlp
+optimizer: muon
+seeds: [42, 43, 44]
+folds: 5
+
+contract:
+  baseline_experiment: exp134_realmlp_muon
+  trajectory: issue428_realmlp_muon_1_2_3_horizon8
+  trajectory_end_epochs: 4
+  schedule_horizon_epochs: 8
+  state_kind: ema
+  precommitted_candidates: [1, 2, 3]
+  selection_rule: precommitted
+  validation_target_used_for_selection: false
+  trajectory_identity_sha256: 36c9f12c7c6281a1fbc8b409e3c663240913be0f49744f5aef60d6176b5d7b9c
+  candidate_set_sha256: b257671049476bb6a1f9303c953ad0adc94b21c9b8a381a2e9b6ca21f14a623f
+
+inputs:
+  train_sha256: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+  test_sha256: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+  sample_submission_sha256: 206763fe5786fb9c80d4e9289a3b812030d3dbb36450c6eb63348098154ce63e
+  folds_sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+  model_dependencies_sha256: ad0331af8768e4375e47932a45d5c3e96ba61872cbd272732a51ab3c6c566f1b
+  epoch1_config_sha256: c1bd8fb69598d06de3762c3d1a09ac12cb190a78338b1109f2006ca79706e342
+  epoch2_config_sha256: a18a7dfbc7061eacdf4b94fa3b3a1ca0de45d713d41af589e0d91c0c5330667b
+  epoch3_config_sha256: a900d5390c81ad809dbeeb0f331fe3dc02490ba1edfd436422500b22c03fad8e
+
+qualification:
+  expected_candidates: 3
+  imported_candidates: 3
+  entry_threshold: 0.9593676105620949
+  champion_auc: 0.9693676105620948
+  all_imported_runs_finished: true
+  all_bundles_imported_before_audit: true
+  all_entry_pass: true
+  all_input_hashes_match: true
+  all_source_commits_match: true
+  all_lineage_checks_passed: true
+  all_resume_lineage_checks_passed: true
+  all_recovery_coordinates_reused: true
+  source_archive_and_database_match: true
+  new_model_fit_count_zero: true
+  all_oof_rescores_passed: true
+  all_seed_means_match: true
+  all_submission_checks_passed: true
+  all_importances_finite: true
+  distinct_candidate_predictions: true
+  pool_mutated: false
+  all_checks_passed: true
+
+lineage:
+  remote_trajectory_run_id: 411f7488554541f3a8d82201647432c7
+  original_remote_parent_status: FAILED
+  isolated_recovery_parent_status: FINISHED
+  source_result_archive_sha256: 105de4ddc4c45af0cb1786c92e9ec928da0fdf1e282d37a33db4e29e5871d3df
+  source_database_sha256: 39abbed023029a8d78136e45ca4bf0908f0067e2a6b8fb6e40d38402b5cf35f2
+  recovery_method: recovery_only_local_aggregation_and_publication
+  reused_seed_fold_coordinates: 15
+  recovery_manifests: 15
+  recovery_snapshots: 45
+  result_manifest_entries: 211
+  new_model_fit_count: 0
+  new_gpu_resource_count: 0
+
+observability:
+  operation: training_state.trajectory_fit
+  successful_events: 15
+  cumulative_seconds: 11573.785683307
+  resource_samples: 5695
+  observation_missing_fraction: 0.0
+  source: remote_measured
+
+execution:
+  image: nvcr.io/nvidia/pytorch@sha256:38ed2ecb2c16d10677006d73fb0a150855d6ec81db8fc66e800b5ae92741007e
+  input_archive_sha256: 1785a35ba2bd63bc1571fa783b7ed65daba8c5b07e7712b954c4e7d66b364fe1
+  input_manifest_entries: 7
+  training_instance_id: 48787201
+  gpu: NVIDIA RTX A4000
+  completed_trajectories: 15
+  remote_elapsed_seconds: 11613.307970888913
+  remote_exit_code: 1
+  attempts:
+    - instance_id: 48783810
+      remote_job_id: issue428-realmlp-training-states-20260826
+      outcome: failed_after_first_trajectory_observability
+      gpu_cost_usd: 0.014
+      disk_cost_usd: 0.004
+      download_cost_usd: 0.010
+      upload_cost_usd: 0.000
+      charged_usd: 0.028
+    - instance_id: 48787201
+      remote_job_id: issue428-realmlp-training-states-20260827-v2
+      outcome: completed_all_trajectories_then_aggregation_failed_and_recovered
+      gpu_cost_usd: 0.297
+      disk_cost_usd: 0.036
+      download_cost_usd: 0.016
+      upload_cost_usd: 0.000
+      charged_usd: 0.349
+  total_cost_usd: 0.377
+  runpod_used: false
+  final_issue_instances: 0
+  final_issue_volumes: 0
+  final_issue_termination_schedules: 0
+
+pool:
+  action: none
+  sha256_before: caa1b90769720a4accbe07074dbc7efe0335ab6657fea80c6839b60121dc39d3
+  sha256_after: caa1b90769720a4accbe07074dbc7efe0335ab6657fea80c6839b60121dc39d3
+  entry_readout_only: true
+  nested_judgment_performed: false
+  downstream_issue: 425
+
+retained_baseline:
+  experiment: exp134_realmlp_muon
+  completed_epochs: 4
+  imported_run_id: f72eeee10b1b4947af79228f888e7a81
+  auc_oof: 0.9684260631310234
+  retained: true
+
+results:
+  - experiment: exp203_issue428_realmlp_muon_epoch1
+    completed_epochs: 1
+    source_run_id: d844d3b42a964b8581bf5234a0703342
+    imported_run_id: 3a33260f82114838bf712f9dd0d032c9
+    bundle_sha256: 25aacbe8e4e4ee325783029d2c44a82743f68f2fc81ea42926eafa2ea8a56723
+    auc_oof: 0.9663926684441182
+    entry_margin: 0.0070250578820233445
+    entry_pass: true
+    oof_content_sha256: 9b17d5d04888461e8fc2f5ab119df7a4594357d5c7176da8457dcd1171d42bd0
+    test_content_sha256: 5e2c9e88df8c03183ffeb4e7b9ec82d571c6cd7782d2e753280cf25d91338ba9
+    nearest_run_id: 984b0fd5277243ab95acff71688644a9
+    nearest_spearman: 0.9845825878510778
+    duplicate: false
+    pool_registered: false
+  - experiment: exp204_issue428_realmlp_muon_epoch2
+    completed_epochs: 2
+    source_run_id: 561dfc67fb0f40f0963d71a77dd6b353
+    imported_run_id: d762079159044452afec992a48c6bcf6
+    bundle_sha256: 7876777d568183ad440901f628432fbed5c683c06e8492c9fdaef677bf08622a
+    auc_oof: 0.967865808401806
+    entry_margin: 0.008498197839711175
+    entry_pass: true
+    oof_content_sha256: 0e94d27939d1b95bb81db75392db049d79ff45c205756c41b99f0d2a87bca241
+    test_content_sha256: 102295d1ec67b3ba8267bfec47d9be97c72899fc21438536648a4ff7f390c10b
+    nearest_run_id: f72eeee10b1b4947af79228f888e7a81
+    nearest_spearman: 0.9926121930085454
+    duplicate: false
+    pool_registered: false
+  - experiment: exp205_issue428_realmlp_muon_epoch3
+    completed_epochs: 3
+    source_run_id: a409b3fbbe8d4aa9a247a5a213c2bd76
+    imported_run_id: 7f7a9b88c7ab48fc920411d470992e6b
+    bundle_sha256: deeb3f2f811caf7a25a1c92ad8c21748e3c5b28180d6f08078ec61e23fa52ba2
+    auc_oof: 0.9683137729027594
+    entry_margin: 0.008946162340664587
+    entry_pass: true
+    oof_content_sha256: 94dfffc416f578ddf9fcaef5221d85e389a703f4b8a1dddf342e9b61b78f0213
+    test_content_sha256: de70fdbc2d8a841dbe0c1464160cfa95d69c42b87a5b097133211ceceba83a16
+    nearest_run_id: f72eeee10b1b4947af79228f888e7a81
+    nearest_spearman: 0.9965495142056613
+    duplicate: false
+    pool_registered: false
