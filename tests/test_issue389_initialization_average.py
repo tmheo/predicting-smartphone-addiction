@@ -91,7 +91,7 @@ def test_issue389_refit_plan_tracks_the_adopted_pool_replacement() -> None:
     assert sum(
         len(member["refit_budget_derivation"]["seeds"])
         for member in plan["members"]
-    ) == 94
+    ) == 103
 
     members = {member["config"]: member for member in plan["members"]}
     assert "exp127_lookup_muon" not in members

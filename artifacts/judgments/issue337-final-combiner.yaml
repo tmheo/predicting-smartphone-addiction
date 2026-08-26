@@ -1,0 +1,4406 @@
+schema_version: 1
+judgment_id: issue337-final-combiner
+contract_version: candidate-pool-v1
+created_at: '2026-08-26'
+decision_issue: 337
+action: final_combiner_selection
+status: adopted
+question: 동결 후보 풀에서 등록된 22개 결합 전략 중 어느 것이 최고 가중 OOF를 내며, nested OOF 눈금과 순위가 갈리는가? 값 좌표 관점 두 구현은 함께 있는
+  조건에서도 각각 또는 묶음으로 양의 기여를 유지하는가?
+execution_note: 티켓의 달력 시작 조건(2026-08-28T00:00:00Z)보다 앞서 사용자 지시로 실행했다. 실행 시점에 후보 풀을 바꿀 수 있는 열린 실험 티켓이 없어
+  풀을 동결 상태로 본다. 2026-08-28 전에 후보 풀이나 등록 전략이 바뀌면 이 판정은 오래된 판정이 된다.
+frozen_input:
+  recorded_at_utc: '2026-08-26T08:33:35Z'
+  git_commit: 42be08012b9df09104404b45db4fa84f3e1a0315
+  git_dirty: false
+  candidate_pool:
+    path: artifacts/pool.yaml
+    sha256: caa1b90769720a4accbe07074dbc7efe0335ab6657fea80c6839b60121dc39d3
+    member_count: 35
+    members:
+    - exp006_te_drop_gaming
+    - exp011_resid_pair
+    - exp022_orig_knn
+    - exp023_orig_proxy_residual
+    - exp025_constrained_impute
+    - exp032_recon_orig_mean_top3
+    - exp035_lattice_te
+    - exp058_logreg_onehot
+    - exp059_lookup_transformer
+    - exp070_cat_exact_cats
+    - exp067_tabpfn3
+    - exp081_lookup_fold_initialization_avg3
+    - exp110_lgb_kitopl_no_te
+    - exp111_xgb_depth8_no_te
+    - exp071_cat_exact_no_te
+    - exp106_lookup_fixed24_train_test_preprocessing
+    - exp117_ag25_gbm_r21
+    - exp113_tab_cnn_m0
+    - exp085_contextual_spline_m0
+    - exp027_recon_ce
+    - exp048_lgb_orig_cdf_diff
+    - exp134_realmlp_muon
+    - exp135_xgb_hpo_trial30
+    - exp131_lookup_bivariate_plr5
+    - exp136_realmlp_muon_recon_widths
+    - exp137_tabm_recon_widths
+    - exp133_scalar_token_transformer_oof_te
+    - exp131_tab_cnn_oof_target_mean
+    - exp132_tab_cnn_epochs100
+    - exp139_realmlp_reference_qnormal_train_test
+    - exp140_realmlp_orig_cdf_diff
+    - exp157_lookup_muon_initavg8
+    - exp168_issue413_lgb_no_te_fixed20
+    - exp197_issue419_lgb_recon_ce_fixed20
+    - exp183_issue419_cat_exact_fixed10
+    member_run_ids:
+      exp006_te_drop_gaming: 4aaddd505ade428588cf83659f205cf6
+      exp011_resid_pair: e21d19af37bb461db5dc1a59b66411a6
+      exp022_orig_knn: 52e9c12bcfb94ee9912e4bb7f43e3f09
+      exp023_orig_proxy_residual: 202b7d47c3bd4b8e8904fa5c005c7423
+      exp025_constrained_impute: 9804689a5e3642e586abb972b522f3d4
+      exp032_recon_orig_mean_top3: b1bd4b08386946c9a4e05b755dbd5f26
+      exp035_lattice_te: c62a9ad334bf486cb46d738474ccd767
+      exp058_logreg_onehot: e2b76edd9d204290810e39a7457c4c48
+      exp059_lookup_transformer: b951fac51b6b44298f7fdb0b543caba6
+      exp070_cat_exact_cats: 6238d8c58beb42ee8102209ded92516e
+      exp067_tabpfn3: 85b09132aae543aab16e69dea5906a30
+      exp081_lookup_fold_initialization_avg3: d55d1cd49c194eb8bf7b5128e548df81
+      exp110_lgb_kitopl_no_te: ae829ae3d886402ab100a8e966c3131a
+      exp111_xgb_depth8_no_te: 3cbc2ccce9eb46458d884006a33e516e
+      exp071_cat_exact_no_te: 521b4924b2ef4ba1830724333b83deb2
+      exp106_lookup_fixed24_train_test_preprocessing: 547e7bc90b9f4c448307d406f053629a
+      exp117_ag25_gbm_r21: d107ea874ebe4dbe8094694141a162b6
+      exp113_tab_cnn_m0: b47a4184249746cdb1d062aa98364437
+      exp085_contextual_spline_m0: e84d97e875754af1b073b399db2a0616
+      exp027_recon_ce: e4e81bdce7df4a72bf250ef842fd8781
+      exp048_lgb_orig_cdf_diff: 2b5fda6d3ea94ff886c5fe616376f0f0
+      exp134_realmlp_muon: f72eeee10b1b4947af79228f888e7a81
+      exp135_xgb_hpo_trial30: 119b9c4e44674d38a6f758b65a68593e
+      exp131_lookup_bivariate_plr5: 54acd002d3c04ec3a74c09871e83da50
+      exp136_realmlp_muon_recon_widths: bd2bd1154e6343f68b364714e2fedcc4
+      exp137_tabm_recon_widths: e7682b186be14dea822d41d7d411bb98
+      exp133_scalar_token_transformer_oof_te: f16dbc88860a41f39194da2f581f057d
+      exp131_tab_cnn_oof_target_mean: ea78fe0dbe2442788580dec56cf7f3ad
+      exp132_tab_cnn_epochs100: 09d17ca4091e45118d201ba7a321f956
+      exp139_realmlp_reference_qnormal_train_test: 1af9442e67c14a96a5256251f23a1b9d
+      exp140_realmlp_orig_cdf_diff: 984b0fd5277243ab95acff71688644a9
+      exp157_lookup_muon_initavg8: bb7be9baf1b64888818600d7e0b5927b
+      exp168_issue413_lgb_no_te_fixed20: 2142b26c2d304307bb0c2717b803d643
+      exp197_issue419_lgb_recon_ce_fixed20: a7a59a1829da4e4e93c3f581ed58597e
+      exp183_issue419_cat_exact_fixed10: eded39146a164b6ca421a20d22b10f52
+  champion:
+    path: artifacts/champion.yaml
+    sha256: aa012114107c06532cf51c0fa9c741f5949146428cf266cf4bedded783d20e09
+  folds:
+    path: artifacts/folds.parquet
+    sha256: 5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4
+  full_refit_plan_before:
+    path: artifacts/full-refit-plan.yaml
+    sha256: 2c56c63f7c09f1a2c887a7c2b958090fd329db80916677f800fa8ee9bb996a36
+  data:
+    train: f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c
+    test: 8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e
+    sample_submission: 206763fe5786fb9c80d4e9289a3b812030d3dbb36450c6eb63348098154ce63e
+  registered_combiners:
+    scope: all_registered
+    count: 22
+    names:
+    - rank_mean
+    - performance_weighted_rank_mean
+    - logit_logistic
+    - rank_logistic
+    - ridge_logit_alpha_0p01
+    - ridge_logit_alpha_0p1
+    - ridge_logit
+    - ridge_logit_alpha_10
+    - ridge_logit_alpha_100
+    - rank_gauss_logistic
+    - rank_logit_logistic
+    - greedy_rank_mean
+    - bagged_greedy_rank_mean
+    - optuna_subset_rank_mean
+    - optuna_subset_ridge_logit
+    - xgb_rank_logit
+    - missing_segmented_rank_logit
+    - missing_interaction_rank_logit
+    - missing_4plus_rank_logit
+    - nnls_logit
+    - nnls_rank
+    - shrunk_rank_logit_logistic
+    names_sha256: 1f19194215171c47aa12c88f07d736cdd3166c5e7e3dd7f6a02afe2a8b84af4c
+  evaluation_artifacts:
+    ensemble_evaluation_json_sha256: 5faa7fc6b76aee969a6fbc4347dd784efed82e6b8d2c6ded5d45e7ce6fe79190
+    strategy_oof_parquet_sha256: 21a4d4eb854b9439d7cd4649a4b2dc78b7bf0793199fa7036710f4865ac2ea10
+    weighted_oof_sample:
+      effective_sample_size: 636744.7955901573
+      effective_sample_fraction: 0.9209912443140454
+      zero_weight_rows: 1311
+      test_only_pattern_count: 276
+procedure:
+  kind: compare_all_registered_combiners_once
+  outer_folds: 5
+  selection_scale: weighted_oof_auc
+  secondary_scale: nested_oof_auc
+  equivalence_band_lower: -2.7669802e-05
+  strategies_added_or_reconfigured_after_results: false
+  strategies_excluded_after_results: false
+  coefficient_precision_note: member_selection의 mean_weight는 비교 실행 stdout의 소수 5자리 값이다. 선택 전략의 전체 정밀도 계수는
+    파생 앙상블 실행의 member_weights.csv에 있다.
+result:
+  selected_strategy: shrunk_rank_logit_logistic
+  selected_weighted_oof_auc: 0.9706942945866971
+  selected_nested_oof_auc: 0.9698105828357245
+  selected_outer_fold_auc:
+    '0': 0.9692441356277819
+    '1': 0.9699197226516036
+    '2': 0.969911464078873
+    '3': 0.9703908761287783
+    '4': 0.9695867134094166
+  nested_best_strategy: shrunk_rank_logit_logistic
+  nested_best_nested_oof_auc: 0.9698105828357245
+  nested_best_weighted_oof_auc: 0.9706942945866971
+  scales_agree: true
+  nested_gap_selected_minus_nested_best: 0.0
+  weighted_gap_selected_minus_nested_best: 0.0
+  top5_by_weighted:
+  - shrunk_rank_logit_logistic
+  - missing_segmented_rank_logit
+  - missing_interaction_rank_logit
+  - missing_4plus_rank_logit
+  - rank_logistic
+  top5_by_nested:
+  - shrunk_rank_logit_logistic
+  - missing_segmented_rank_logit
+  - missing_interaction_rank_logit
+  - missing_4plus_rank_logit
+  - rank_logit_logistic
+  top5_weighted_spread: 1.5313308733944098e-05
+  top5_nested_spread: 1.573545733024595e-05
+  completed_strategy_count: 22
+  failed_strategy_count: 0
+  total_elapsed_seconds: 1744.8824609123403
+  derived_ensemble_runs:
+    selected_strategy_run_id: b24e5ba7b7eb4e3a9e10788005896328
+    nested_best_run_id: b24e5ba7b7eb4e3a9e10788005896328
+    recorded_in_log:
+    - b24e5ba7b7eb4e3a9e10788005896328
+    baseline_run_id: 575940e9bf854c27b263aa1c9be8e8c4
+outer_fold_winners:
+  '0': missing_segmented_rank_logit
+  '1': missing_interaction_rank_logit
+  '2': rank_logistic
+  '3': missing_segmented_rank_logit
+  '4': missing_interaction_rank_logit
+selected_vs_top5_outer_fold_wins:
+  missing_segmented_rank_logit: 1
+  missing_interaction_rank_logit: 1
+  missing_4plus_rank_logit: 1
+  rank_logistic: 3
+fold_rank_normalized_diagnostic:
+  purpose: 선택 전략은 바깥 분할 블록마다 백분위 순위를 내므로 nested 연결에서 분할 간 눈금 차이가 사라진다. 모든 전략의 OOF 예측을 같은 바깥 분할 백분위 순위로
+    바꿔 다시 채점해 같은 발판에서 비교한 보조 진단이며, 결과 확인 뒤 만든 눈금이라 선택 기준으로 쓰지 않는다.
+  selected_lambda_by_outer_fold: 5개 분할 모두 1.0 (분할 안 스피어만 1.0으로 rank_logit_logistic과 순위 동일)
+  ranking:
+  - name: missing_segmented_rank_logit
+    weighted_oof_auc_fold_rank: 0.9706993213127215
+    nested_oof_auc_fold_rank: 0.9698196825074564
+  - name: missing_interaction_rank_logit
+    weighted_oof_auc_fold_rank: 0.9706982598174259
+    nested_oof_auc_fold_rank: 0.9698192376853603
+  - name: missing_4plus_rank_logit
+    weighted_oof_auc_fold_rank: 0.9706964040801606
+    nested_oof_auc_fold_rank: 0.969814714769198
+  - name: rank_logit_logistic
+    weighted_oof_auc_fold_rank: 0.9706942945866971
+    nested_oof_auc_fold_rank: 0.9698105828357245
+  - name: shrunk_rank_logit_logistic
+    weighted_oof_auc_fold_rank: 0.9706942945866971
+    nested_oof_auc_fold_rank: 0.9698105828357245
+  - name: rank_logistic
+    weighted_oof_auc_fold_rank: 0.9706924550364604
+    nested_oof_auc_fold_rank: 0.9698076403928692
+  - name: logit_logistic
+    weighted_oof_auc_fold_rank: 0.9706856613487536
+    nested_oof_auc_fold_rank: 0.9698025100707645
+  - name: rank_gauss_logistic
+    weighted_oof_auc_fold_rank: 0.9706816364110757
+    nested_oof_auc_fold_rank: 0.9697959690141059
+  - name: bagged_greedy_rank_mean
+    weighted_oof_auc_fold_rank: 0.970597318050119
+    nested_oof_auc_fold_rank: 0.9697109035574594
+  - name: greedy_rank_mean
+    weighted_oof_auc_fold_rank: 0.97058295102356
+    nested_oof_auc_fold_rank: 0.969697907445111
+  - name: optuna_subset_rank_mean
+    weighted_oof_auc_fold_rank: 0.97058295102356
+    nested_oof_auc_fold_rank: 0.969697907445111
+  - name: xgb_rank_logit
+    weighted_oof_auc_fold_rank: 0.9705436678519783
+    nested_oof_auc_fold_rank: 0.9696563488117185
+  - name: nnls_rank
+    weighted_oof_auc_fold_rank: 0.9701487389369319
+    nested_oof_auc_fold_rank: 0.969256855441982
+  - name: performance_weighted_rank_mean
+    weighted_oof_auc_fold_rank: 0.9700185999935369
+    nested_oof_auc_fold_rank: 0.9691320345864316
+  - name: rank_mean
+    weighted_oof_auc_fold_rank: 0.9700167570815922
+    nested_oof_auc_fold_rank: 0.969130140763715
+  - name: ridge_logit_alpha_100
+    weighted_oof_auc_fold_rank: 0.9681378889651671
+    nested_oof_auc_fold_rank: 0.9672287270001187
+  - name: ridge_logit_alpha_10
+    weighted_oof_auc_fold_rank: 0.9681322088264002
+    nested_oof_auc_fold_rank: 0.9672227562555227
+  - name: ridge_logit
+    weighted_oof_auc_fold_rank: 0.9681316139144113
+    nested_oof_auc_fold_rank: 0.9672221353516703
+  - name: ridge_logit_alpha_0p1
+    weighted_oof_auc_fold_rank: 0.9681315508558278
+    nested_oof_auc_fold_rank: 0.967222066897985
+  - name: ridge_logit_alpha_0p01
+    weighted_oof_auc_fold_rank: 0.9681315421695889
+    nested_oof_auc_fold_rank: 0.9672220590834055
+  - name: optuna_subset_ridge_logit
+    weighted_oof_auc_fold_rank: 0.9676166294255627
+    nested_oof_auc_fold_rank: 0.9667042526216242
+  - name: nnls_logit
+    weighted_oof_auc_fold_rank: 0.9673022288108727
+    nested_oof_auc_fold_rank: 0.9663671476161622
+strategies:
+- name: rank_mean
+  status: completed
+  elapsed_seconds: 3.21311016601976
+  nested_oof_auc: 0.9691305960390797
+  weighted_oof_auc: 0.9700173345763419
+  nested_rank: 15
+  weighted_rank: 15
+  nested_delta_vs_selected: -0.000679986796644827
+  weighted_delta_vs_selected: -0.0006769600103552209
+  outer_fold_auc:
+    '0': 0.9684899836978945
+    '1': 0.9691817194663293
+    '2': 0.9692701847646076
+    '3': 0.9697994883620098
+    '4': 0.9689093255557906
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+- name: performance_weighted_rank_mean
+  status: completed
+  elapsed_seconds: 17.202437875093892
+  nested_oof_auc: 0.9691324617902035
+  weighted_oof_auc: 0.9700191461693757
+  nested_rank: 14
+  weighted_rank: 14
+  nested_delta_vs_selected: -0.0006781210455210074
+  weighted_delta_vs_selected: -0.000675148417321414
+  outer_fold_auc:
+    '0': 0.9684917905619714
+    '1': 0.9691839076709532
+    '2': 0.9692721196302189
+    '3': 0.9698011833357465
+    '4': 0.9689111694817252
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02853
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02858
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02858
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02858
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02859
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0286
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02858
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02811
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02868
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02866
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02857
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02869
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02858
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02843
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02863
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02861
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02866
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02826
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02863
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0286
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0286
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02865
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02864
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0287
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02865
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02864
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02861
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02862
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0283
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02865
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02864
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0287
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02844
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02846
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02855
+- name: logit_logistic
+  status: completed
+  elapsed_seconds: 3.3134753750637174
+  nested_oof_auc: 0.9697891828130778
+  weighted_oof_auc: 0.9706724553169588
+  nested_rank: 7
+  weighted_rank: 7
+  nested_delta_vs_selected: -2.1400022646722583e-05
+  weighted_delta_vs_selected: -2.183926973831074e-05
+  outer_fold_auc:
+    '0': 0.9692344087797706
+    '1': 0.9699171674415892
+    '2': 0.9698879158560691
+    '3': 0.9703864271557266
+    '4': 0.9695866289199311
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.24693
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.04188
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.13583
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00045
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.07538
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.26363
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.75133
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.10663
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.12783
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.42723
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.30589
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.085
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.35295
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.43869
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.41126
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.55397
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.27045
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.07304
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.32328
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.30516
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02689
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.11168
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0443
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.76797
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.23439
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.21967
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01387
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.26178
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.22424
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.35918
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.07477
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.53576
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.78411
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.64683
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.3956
+- name: rank_logistic
+  status: completed
+  elapsed_seconds: 28.08263054199051
+  nested_oof_auc: 0.9697938043451724
+  weighted_oof_auc: 0.9706789812779631
+  nested_rank: 6
+  weighted_rank: 5
+  nested_delta_vs_selected: -1.6778490552149528e-05
+  weighted_delta_vs_selected: -1.5313308733944098e-05
+  outer_fold_auc:
+    '0': 0.9692391576493804
+    '1': 0.9699108021244565
+    '2': 0.9699119981586148
+    '3': 0.9703852280769334
+    '4': 0.9695910137466255
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.24141
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02294
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.06332
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.04326
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.11452
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.23444
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.71752
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.06609
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.11405
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.36333
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14385
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.11352
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.37135
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.4212
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.30865
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.55274
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.23164
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.06475
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.45676
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.22626
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00569
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.19729
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.13975
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.73607
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.29548
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.11025
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.18381
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.30306
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.23239
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.39574
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.03121
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.50667
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.76045
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.65534
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.49429
+- name: ridge_logit_alpha_0p01
+  status: completed
+  elapsed_seconds: 1.1983142080716789
+  nested_oof_auc: 0.9670735309861682
+  weighted_oof_auc: 0.9679971773183309
+  nested_rank: 20
+  weighted_rank: 20
+  nested_delta_vs_selected: -0.0027370518495563045
+  weighted_delta_vs_selected: -0.0026971172683661893
+  outer_fold_auc:
+    '0': 0.9665298289669506
+    '1': 0.9672190785370995
+    '2': 0.9671513501216823
+    '3': 0.9684731934232923
+    '4': 0.966736839421577
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.03133
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02769
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00873
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00753
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01686
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00486
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01563
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00784
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01122
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02953
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.03493
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01971
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0151
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0027
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00901
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00045
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0161
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: -6.0e-05
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.04836
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00476
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00449
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.06542
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01184
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02266
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02887
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00863
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.06154
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0042
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00493
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.09246
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.08791
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.04694
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0279
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.04226
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02616
+- name: ridge_logit_alpha_0p1
+  status: completed
+  elapsed_seconds: 1.170702000032179
+  nested_oof_auc: 0.9670735378975038
+  weighted_oof_auc: 0.967997184031561
+  nested_rank: 19
+  weighted_rank: 19
+  nested_delta_vs_selected: -0.0027370449382206896
+  weighted_delta_vs_selected: -0.0026971105551361063
+  outer_fold_auc:
+    '0': 0.9665298276983525
+    '1': 0.9672190889396031
+    '2': 0.9671513574795504
+    '3': 0.9684731977365255
+    '4': 0.966736857689574
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.03133
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02769
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00873
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00753
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01686
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00486
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01563
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00784
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01122
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02953
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.03493
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01971
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0151
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0027
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00901
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00045
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0161
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: -6.0e-05
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.04836
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00476
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00449
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.06541
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01184
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02266
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02887
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00863
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.06154
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0042
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00493
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.09245
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.08791
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.04694
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0279
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.04226
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02616
+- name: ridge_logit
+  status: completed
+  elapsed_seconds: 1.2065188330598176
+  nested_oof_auc: 0.9670736014797634
+  weighted_oof_auc: 0.9679972450266682
+  nested_rank: 18
+  weighted_rank: 18
+  nested_delta_vs_selected: -0.002736981355961121
+  weighted_delta_vs_selected: -0.002697049560028919
+  outer_fold_auc:
+    '0': 0.9665298426678084
+    '1': 0.9672191896662812
+    '2': 0.967151433595428
+    '3': 0.9684732515250789
+    '4': 0.966736954357724
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.03133
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02768
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00873
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00753
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01686
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00486
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01563
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00784
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01122
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02953
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.03493
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01971
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0151
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0027
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00901
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00045
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0161
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: -6.0e-05
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.04836
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00476
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00449
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.06539
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01184
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02266
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02884
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00863
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.06154
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0042
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00493
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0924
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.08789
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.04694
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0279
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.04226
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02616
+- name: ridge_logit_alpha_10
+  status: completed
+  elapsed_seconds: 1.2072415410075337
+  nested_oof_auc: 0.9670742953738168
+  weighted_oof_auc: 0.9679979113081422
+  nested_rank: 17
+  weighted_rank: 17
+  nested_delta_vs_selected: -0.0027362874619076827
+  weighted_delta_vs_selected: -0.0026963832785549258
+  outer_fold_auc:
+    '0': 0.966530012152496
+    '1': 0.9672201700387859
+    '2': 0.9671522389014142
+    '3': 0.9684736820872272
+    '4': 0.9667376731526567
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.03132
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02767
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00872
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00753
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01685
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00485
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01562
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00784
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01122
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02952
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.03494
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01967
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0151
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0027
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00901
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00045
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0161
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: -6.0e-05
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.04836
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00475
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00449
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.06512
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01184
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02268
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02851
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00863
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.06154
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00419
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00494
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.09192
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.08777
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.04689
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0279
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.04226
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02616
+- name: ridge_logit_alpha_100
+  status: completed
+  elapsed_seconds: 1.2204179579857737
+  nested_oof_auc: 0.9670809034937745
+  weighted_oof_auc: 0.968004173290541
+  nested_rank: 16
+  weighted_rank: 16
+  nested_delta_vs_selected: -0.0027296793419500087
+  weighted_delta_vs_selected: -0.0026901212961560894
+  outer_fold_auc:
+    '0': 0.966531787935923
+    '1': 0.9672299483918745
+    '2': 0.9671598197891136
+    '3': 0.9684774455099403
+    '4': 0.9667446284387449
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.03122
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02755
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0087
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00753
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01677
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00484
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01559
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00784
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01119
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02943
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.03498
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01933
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01509
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00272
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00903
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00046
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01608
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: -4.0e-05
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.04839
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0047
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00444
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.06257
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01185
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02279
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02548
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00866
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.06149
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0041
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00495
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.08741
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.08657
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.04639
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02787
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.04223
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02608
+- name: rank_gauss_logistic
+  status: completed
+  elapsed_seconds: 30.418998207896948
+  nested_oof_auc: 0.9697845845623403
+  weighted_oof_auc: 0.9706705200410344
+  nested_rank: 8
+  weighted_rank: 8
+  nested_delta_vs_selected: -2.599827338423122e-05
+  weighted_delta_vs_selected: -2.3774545662713642e-05
+  outer_fold_auc:
+    '0': 0.9692044921951991
+    '1': 0.9699035964880341
+    '2': 0.9699004980643726
+    '3': 0.9703939141671769
+    '4': 0.9695773419270192
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.20252
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.04577
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.09066
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.09029
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.15509
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.22196
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.74391
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14512
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.12419
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.42398
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.06848
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.08162
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.45861
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.48183
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.35759
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.64909
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.19037
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.03605
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.4676
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.21852
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.06059
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.21494
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.23577
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.84894
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.32241
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02999
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.33421
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.4116
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.3134
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.45186
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02001
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.57464
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.98382
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.46782
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.53723
+- name: rank_logit_logistic
+  status: completed
+  elapsed_seconds: 32.97243099997286
+  nested_oof_auc: 0.9697948473783943
+  weighted_oof_auc: 0.9706788148455117
+  nested_rank: 5
+  weighted_rank: 6
+  nested_delta_vs_selected: -1.573545733024595e-05
+  weighted_delta_vs_selected: -1.5479741185431273e-05
+  outer_fold_auc:
+    '0': 0.9692441356277819
+    '1': 0.9699197226516036
+    '2': 0.969911464078873
+    '3': 0.9703908761287783
+    '4': 0.9695867134094166
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.23953
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01866
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.1302
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01344
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.10636
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.32511
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.74588
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.12164
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.16076
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.39964
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.34829
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0489
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.42891
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.4351
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.33334
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.57158
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.2138
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.07592
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.34335
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.35631
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.03896
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.13457
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.2135
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.87695
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.26513
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.16256
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02325
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.22952
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.19887
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.39292
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.06454
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.58656
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.77763
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.64424
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.38477
+- name: greedy_rank_mean
+  status: completed
+  elapsed_seconds: 117.02266775001772
+  nested_oof_auc: 0.9696981231579481
+  weighted_oof_auc: 0.9705831551165648
+  nested_rank: 10
+  weighted_rank: 10
+  nested_delta_vs_selected: -0.00011245967777639976
+  weighted_delta_vs_selected: -0.0001111394701323043
+  outer_fold_auc:
+    '0': 0.9690990666301913
+    '1': 0.9698013344257636
+    '2': 0.9698432614615375
+    '3': 0.9702777938139132
+    '4': 0.9694680793885108
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp011_resid_pair:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp022_orig_knn:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp023_orig_proxy_residual:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp025_constrained_impute:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp032_recon_orig_mean_top3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp035_lattice_te:
+      selected: 1
+      fold_total: 5
+      mean_weight: 0.02857
+    exp058_logreg_onehot:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp059_lookup_transformer:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14286
+    exp067_tabpfn3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp081_lookup_fold_initialization_avg3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp110_lgb_kitopl_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp111_xgb_depth8_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp071_cat_exact_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14286
+    exp117_ag25_gbm_r21:
+      selected: 4
+      fold_total: 5
+      mean_weight: 0.11429
+    exp113_tab_cnn_m0:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14286
+    exp027_recon_ce:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp048_lgb_orig_cdf_diff:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp134_realmlp_muon:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp135_xgb_hpo_trial30:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14286
+    exp136_realmlp_muon_recon_widths:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp137_tabm_recon_widths:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp133_scalar_token_transformer_oof_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp131_tab_cnn_oof_target_mean:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp132_tab_cnn_epochs100:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14286
+    exp140_realmlp_orig_cdf_diff:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14286
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp183_issue419_cat_exact_fixed10:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+- name: bagged_greedy_rank_mean
+  status: completed
+  elapsed_seconds: 756.7005099159433
+  nested_oof_auc: 0.9697111350212408
+  weighted_oof_auc: 0.9705976490691587
+  nested_rank: 9
+  weighted_rank: 9
+  nested_delta_vs_selected: -9.944781448367745e-05
+  weighted_delta_vs_selected: -9.664551753840733e-05
+  outer_fold_auc:
+    '0': 0.9691336937727142
+    '1': 0.969809896827706
+    '2': 0.9698471920854621
+    '3': 0.9702859632042069
+    '4': 0.9694777695459647
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp011_resid_pair:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp022_orig_knn:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp023_orig_proxy_residual:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp025_constrained_impute:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp032_recon_orig_mean_top3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01829
+    exp058_logreg_onehot:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp059_lookup_transformer:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.12517
+    exp067_tabpfn3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp081_lookup_fold_initialization_avg3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp110_lgb_kitopl_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp111_xgb_depth8_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.03098
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14829
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.06945
+    exp113_tab_cnn_m0:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14336
+    exp027_recon_ce:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp048_lgb_orig_cdf_diff:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp134_realmlp_muon:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp135_xgb_hpo_trial30:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14929
+    exp136_realmlp_muon_recon_widths:
+      selected: 1
+      fold_total: 5
+      mean_weight: 0.0005
+    exp137_tabm_recon_widths:
+      selected: 1
+      fold_total: 5
+      mean_weight: 0.00124
+    exp133_scalar_token_transformer_oof_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01486
+    exp132_tab_cnn_epochs100:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14929
+    exp140_realmlp_orig_cdf_diff:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14929
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp183_issue419_cat_exact_fixed10:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+- name: optuna_subset_rank_mean
+  status: completed
+  elapsed_seconds: 180.58745574997738
+  nested_oof_auc: 0.9696981231579481
+  weighted_oof_auc: 0.9705831551165648
+  nested_rank: 11
+  weighted_rank: 11
+  nested_delta_vs_selected: -0.00011245967777639976
+  weighted_delta_vs_selected: -0.0001111394701323043
+  outer_fold_auc:
+    '0': 0.9690990666301913
+    '1': 0.9698013344257636
+    '2': 0.9698432614615375
+    '3': 0.9702777938139132
+    '4': 0.9694680793885108
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp011_resid_pair:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp022_orig_knn:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp023_orig_proxy_residual:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp025_constrained_impute:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp032_recon_orig_mean_top3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp035_lattice_te:
+      selected: 1
+      fold_total: 5
+      mean_weight: 0.02857
+    exp058_logreg_onehot:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp059_lookup_transformer:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14286
+    exp067_tabpfn3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp081_lookup_fold_initialization_avg3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp110_lgb_kitopl_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp111_xgb_depth8_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp071_cat_exact_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14286
+    exp117_ag25_gbm_r21:
+      selected: 4
+      fold_total: 5
+      mean_weight: 0.11429
+    exp113_tab_cnn_m0:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14286
+    exp027_recon_ce:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp048_lgb_orig_cdf_diff:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp134_realmlp_muon:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp135_xgb_hpo_trial30:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14286
+    exp136_realmlp_muon_recon_widths:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp137_tabm_recon_widths:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp133_scalar_token_transformer_oof_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp131_tab_cnn_oof_target_mean:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp132_tab_cnn_epochs100:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14286
+    exp140_realmlp_orig_cdf_diff:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.14286
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp183_issue419_cat_exact_fixed10:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+- name: optuna_subset_ridge_logit
+  status: completed
+  elapsed_seconds: 174.39307333307806
+  nested_oof_auc: 0.9665183020666679
+  weighted_oof_auc: 0.9674395246296998
+  nested_rank: 21
+  weighted_rank: 21
+  nested_delta_vs_selected: -0.0032922807690566325
+  weighted_delta_vs_selected: -0.00325476995699725
+  outer_fold_auc:
+    '0': 0.9653344780755388
+    '1': 0.9669116657897546
+    '2': 0.9670100539344297
+    '3': 0.9675069551295544
+    '4': 0.9667581107278836
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp011_resid_pair:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp022_orig_knn:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp023_orig_proxy_residual:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp025_constrained_impute:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp032_recon_orig_mean_top3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp035_lattice_te:
+      selected: 1
+      fold_total: 5
+      mean_weight: 0.00213
+    exp058_logreg_onehot:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp059_lookup_transformer:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01122
+    exp067_tabpfn3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp081_lookup_fold_initialization_avg3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp110_lgb_kitopl_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp111_xgb_depth8_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp071_cat_exact_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00225
+    exp117_ag25_gbm_r21:
+      selected: 4
+      fold_total: 5
+      mean_weight: 0.00273
+    exp113_tab_cnn_m0:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.08847
+    exp027_recon_ce:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp048_lgb_orig_cdf_diff:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp134_realmlp_muon:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp135_xgb_hpo_trial30:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.0407
+    exp136_realmlp_muon_recon_widths:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp137_tabm_recon_widths:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp133_scalar_token_transformer_oof_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp131_tab_cnn_oof_target_mean:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp132_tab_cnn_epochs100:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.1188
+    exp140_realmlp_orig_cdf_diff:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01598
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp183_issue419_cat_exact_fixed10:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+- name: xgb_rank_logit
+  status: completed
+  elapsed_seconds: 38.01878074998967
+  nested_oof_auc: 0.9696332940671117
+  weighted_oof_auc: 0.9705200697430356
+  nested_rank: 12
+  weighted_rank: 12
+  nested_delta_vs_selected: -0.0001772887686127822
+  weighted_delta_vs_selected: -0.00017422484366147462
+  outer_fold_auc:
+    '0': 0.9690709843114125
+    '1': 0.9697598077595067
+    '2': 0.969817016199467
+    '3': 0.970212831068912
+    '4': 0.9694194559432986
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp011_resid_pair:
+      selected: 1
+      fold_total: 5
+      mean_weight: 0.0
+    exp022_orig_knn:
+      selected: 1
+      fold_total: 5
+      mean_weight: 0.00057
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00368
+    exp025_constrained_impute:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp032_recon_orig_mean_top3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00427
+    exp058_logreg_onehot:
+      selected: 1
+      fold_total: 5
+      mean_weight: 0.00015
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.10057
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.17521
+    exp067_tabpfn3:
+      selected: 4
+      fold_total: 5
+      mean_weight: 0.0013
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00677
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01128
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00192
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.08128
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.05109
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.07439
+    exp113_tab_cnn_m0:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01067
+    exp027_recon_ce:
+      selected: 4
+      fold_total: 5
+      mean_weight: 0.00022
+    exp048_lgb_orig_cdf_diff:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.05188
+    exp135_xgb_hpo_trial30:
+      selected: 4
+      fold_total: 5
+      mean_weight: 0.02315
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.15443
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.06145
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01458
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00344
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00578
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00149
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.03323
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01045
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.11673
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 1
+      fold_total: 5
+      mean_weight: 1.0e-05
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp183_issue419_cat_exact_fixed10:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+- name: missing_segmented_rank_logit
+  status: completed
+  elapsed_seconds: 29.101679916027933
+  nested_oof_auc: 0.9698052341012006
+  weighted_oof_auc: 0.9706847707069047
+  nested_rank: 2
+  weighted_rank: 2
+  nested_delta_vs_selected: -5.348734523957788e-06
+  weighted_delta_vs_selected: -9.523879792361356e-06
+  outer_fold_auc:
+    '0': 0.9692621037955917
+    '1': 0.9699433548555925
+    '2': 0.9699048635636784
+    '3': 0.9703965551344136
+    '4': 0.9695915328622036
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.19446
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.04908
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.13894
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0004
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.13737
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.36523
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.7805
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.15268
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.22613
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.39827
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.32989
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.05687
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.48714
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.44717
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.3374
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.50359
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.20363
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.07005
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.37114
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.40833
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.03585
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0981
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.29782
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.99399
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.29862
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.13768
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.00753
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.20663
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.21025
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.45829
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.09233
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.61937
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.85817
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.63134
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.40721
+- name: missing_interaction_rank_logit
+  status: completed
+  elapsed_seconds: 40.99477916699834
+  nested_oof_auc: 0.9698029524469987
+  weighted_oof_auc: 0.9706819591645592
+  nested_rank: 3
+  weighted_rank: 3
+  nested_delta_vs_selected: -7.630388725865522e-06
+  weighted_delta_vs_selected: -1.2335422137854657e-05
+  outer_fold_auc:
+    '0': 0.9692541220309364
+    '1': 0.9699477386227089
+    '2': 0.9698903152822538
+    '3': 0.9703941912289717
+    '4': 0.9696098191270761
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.17563
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.04142
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.11085
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.06039
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.1676
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.36781
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.66691
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.16344
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.14413
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.41054
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.25155
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.05785
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.5317
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.45556
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.3369
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.54893
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.1968
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.08169
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.37131
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.40905
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.02025
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.10259
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.35282
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.96807
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.25768
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.15674
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.04403
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.26162
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.16696
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.44205
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.08405
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.60669
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.76208
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.66209
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.44993
+- name: missing_4plus_rank_logit
+  status: completed
+  elapsed_seconds: 32.882192124961875
+  nested_oof_auc: 0.9698002428075672
+  weighted_oof_auc: 0.9706819393210208
+  nested_rank: 4
+  weighted_rank: 4
+  nested_delta_vs_selected: -1.0340028157362902e-05
+  weighted_delta_vs_selected: -1.2355265676333715e-05
+  outer_fold_auc:
+    '0': 0.9692460704933933
+    '1': 0.969935551202091
+    '2': 0.9699008098857516
+    '3': 0.9703958305112579
+    '4': 0.9695953095168353
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.23147
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.00432
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.13347
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0147
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.09107
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.31424
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.70002
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.1246
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.12641
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.37734
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.37543
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.03664
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.41016
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.38937
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.33373
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.55049
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.21228
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.06088
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.3315
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.35592
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0494
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0415
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.20179
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.85482
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.29153
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.15806
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.03289
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.23219
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.18882
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.42993
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.03291
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.51896
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.73323
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.63901
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.33978
+- name: nnls_logit
+  status: completed
+  elapsed_seconds: 1.6731912500690669
+  nested_oof_auc: 0.9663651079348288
+  weighted_oof_auc: 0.9673001808560269
+  nested_rank: 22
+  weighted_rank: 22
+  nested_delta_vs_selected: -0.003445474900895751
+  weighted_delta_vs_selected: -0.003394113730670223
+  outer_fold_auc:
+    '0': 0.9655632853216829
+    '1': 0.9663509293794972
+    '2': 0.9667526226781769
+    '3': 0.9671200999869333
+    '4': 0.9660487963781897
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp011_resid_pair:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp022_orig_knn:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp023_orig_proxy_residual:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp025_constrained_impute:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp032_recon_orig_mean_top3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp035_lattice_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp058_logreg_onehot:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp059_lookup_transformer:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp070_cat_exact_cats:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp067_tabpfn3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp081_lookup_fold_initialization_avg3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp110_lgb_kitopl_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp111_xgb_depth8_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp071_cat_exact_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.06078
+    exp117_ag25_gbm_r21:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp113_tab_cnn_m0:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp085_contextual_spline_m0:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp027_recon_ce:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp048_lgb_orig_cdf_diff:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp134_realmlp_muon:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp135_xgb_hpo_trial30:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp131_lookup_bivariate_plr5:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp136_realmlp_muon_recon_widths:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp137_tabm_recon_widths:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp133_scalar_token_transformer_oof_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp131_tab_cnn_oof_target_mean:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp132_tab_cnn_epochs100:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp140_realmlp_orig_cdf_diff:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp157_lookup_muon_initavg8:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.93922
+    exp183_issue419_cat_exact_fixed10:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+- name: nnls_rank
+  status: completed
+  elapsed_seconds: 26.993737083044834
+  nested_oof_auc: 0.9692449345650118
+  weighted_oof_auc: 0.9701376976754327
+  nested_rank: 13
+  weighted_rank: 13
+  nested_delta_vs_selected: -0.0005656482707127042
+  weighted_delta_vs_selected: -0.0005565969112644176
+  outer_fold_auc:
+    '0': 0.9686516465911229
+    '1': 0.9692992120620081
+    '2': 0.9693913975238091
+    '3': 0.969878971733
+    '4': 0.9690630473242512
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp011_resid_pair:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp022_orig_knn:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp023_orig_proxy_residual:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp025_constrained_impute:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp032_recon_orig_mean_top3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp035_lattice_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.08975
+    exp059_lookup_transformer:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp070_cat_exact_cats:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp067_tabpfn3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp081_lookup_fold_initialization_avg3:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp110_lgb_kitopl_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp111_xgb_depth8_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp071_cat_exact_no_te:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.21668
+    exp117_ag25_gbm_r21:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.07945
+    exp085_contextual_spline_m0:
+      selected: 4
+      fold_total: 5
+      mean_weight: 0.02742
+    exp027_recon_ce:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp048_lgb_orig_cdf_diff:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp134_realmlp_muon:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp135_xgb_hpo_trial30:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp131_lookup_bivariate_plr5:
+      selected: 3
+      fold_total: 5
+      mean_weight: 0.00904
+    exp136_realmlp_muon_recon_widths:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp137_tabm_recon_widths:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.16516
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.16932
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.06053
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.09369
+    exp140_realmlp_orig_cdf_diff:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp157_lookup_muon_initavg8:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.08896
+    exp183_issue419_cat_exact_fixed10:
+      selected: 0
+      fold_total: 5
+      mean_weight: 0.0
+- name: shrunk_rank_logit_logistic
+  status: completed
+  elapsed_seconds: 225.3081161660375
+  nested_oof_auc: 0.9698105828357245
+  weighted_oof_auc: 0.9706942945866971
+  nested_rank: 1
+  weighted_rank: 1
+  nested_delta_vs_selected: 0.0
+  weighted_delta_vs_selected: 0.0
+  outer_fold_auc:
+    '0': 0.9692441356277819
+    '1': 0.9699197226516036
+    '2': 0.969911464078873
+    '3': 0.9703908761287783
+    '4': 0.9695867134094166
+  member_selection:
+    exp006_te_drop_gaming:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.23953
+    exp011_resid_pair:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.01866
+    exp022_orig_knn:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.1302
+    exp023_orig_proxy_residual:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.01344
+    exp025_constrained_impute:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.10636
+    exp032_recon_orig_mean_top3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.32511
+    exp035_lattice_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.74588
+    exp058_logreg_onehot:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.12164
+    exp059_lookup_transformer:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.16076
+    exp070_cat_exact_cats:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.39964
+    exp067_tabpfn3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.34829
+    exp081_lookup_fold_initialization_avg3:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.0489
+    exp110_lgb_kitopl_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.42891
+    exp111_xgb_depth8_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.4351
+    exp071_cat_exact_no_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.33334
+    exp106_lookup_fixed24_train_test_preprocessing:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.57158
+    exp117_ag25_gbm_r21:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.2138
+    exp113_tab_cnn_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.07592
+    exp085_contextual_spline_m0:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.34335
+    exp027_recon_ce:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.35631
+    exp048_lgb_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.03896
+    exp134_realmlp_muon:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.13457
+    exp135_xgb_hpo_trial30:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.2135
+    exp131_lookup_bivariate_plr5:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.87695
+    exp136_realmlp_muon_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.26513
+    exp137_tabm_recon_widths:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.16256
+    exp133_scalar_token_transformer_oof_te:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.02325
+    exp131_tab_cnn_oof_target_mean:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.22952
+    exp132_tab_cnn_epochs100:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.19887
+    exp139_realmlp_reference_qnormal_train_test:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.39292
+    exp140_realmlp_orig_cdf_diff:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.06454
+    exp157_lookup_muon_initavg8:
+      selected: 5
+      fold_total: 5
+      mean_weight: 0.58656
+    exp168_issue413_lgb_no_te_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.77763
+    exp197_issue419_lgb_recon_ce_fixed20:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.64424
+    exp183_issue419_cat_exact_fixed10:
+      selected: 5
+      fold_total: 5
+      mean_weight: -0.38477
+value_coordinate_ablation:
+  purpose: 값 좌표 관점 두 구현(exp106 Lookup-Transformer, exp139 RealMLP)의 조건부 기여 설명. 소급 제거 관문이 아니다.
+  fixed_strategy: shrunk_rank_logit_logistic
+  full_pool:
+    member_count: 35
+    nested_oof_auc: 0.9698105828357245
+    weighted_oof_auc: 0.9706942945866971
+    outer_fold_auc:
+      '0': 0.9692441356277819
+      '1': 0.9699197226516036
+      '2': 0.969911464078873
+      '3': 0.9703908761287783
+      '4': 0.9695867134094166
+    source: run-logs/issue337/ablation/full.json
+  contrasts:
+  - excluded:
+    - exp106_lookup_fixed24_train_test_preprocessing
+    member_count: 34
+    nested_oof_auc: 0.9697899526506343
+    nested_oof_delta_vs_full: -2.0630185090242392e-05
+    weighted_oof_auc: 0.9706751993290602
+    weighted_oof_delta_vs_full: -1.9095257636880802e-05
+    outer_fold_auc:
+      '0': 0.9692122232848972
+      '1': 0.9698904297097898
+      '2': 0.9698975467980746
+      '3': 0.9703792737855405
+      '4': 0.9695702874355591
+    outer_fold_delta_vs_full:
+      '0': -3.1912342884687916e-05
+      '1': -2.9292941813863216e-05
+      '2': -1.3917280798358966e-05
+      '3': -1.1602343237826496e-05
+      '4': -1.6425973857536746e-05
+    outer_fold_full_wins: 5
+    outer_fold_full_losses: 0
+    removed_members_in_full_pool:
+    - member: exp106_lookup_fixed24_train_test_preprocessing
+      selected_in_full_pool: 5
+      mean_weight_in_full_pool: 0.571576291969487
+    remaining_member_changes:
+    - member: exp059_lookup_transformer
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.16076188178595655
+      mean_weight_after: 0.16405322516558268
+      mean_weight_delta: 0.32481510695153926
+    - member: exp168_issue413_lgb_no_te_fixed20
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.7776349680019131
+      mean_weight_after: -0.930329600958569
+      mean_weight_delta: -0.15269463295665586
+    - member: exp131_lookup_bivariate_plr5
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.8769549882232258
+      mean_weight_after: 1.0084273270220225
+      mean_weight_delta: 0.13147233879879672
+    - member: exp157_lookup_muon_initavg8
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.5865569118291053
+      mean_weight_after: 0.6989526532309795
+      mean_weight_delta: 0.11239574140187425
+    - member: exp183_issue419_cat_exact_fixed10
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.3847718431380064
+      mean_weight_after: -0.45248860465268104
+      mean_weight_delta: -0.06771676151467465
+    - member: exp110_lgb_kitopl_no_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.4289099322094371
+      mean_weight_after: 0.49618686827204117
+      mean_weight_delta: 0.0672769360626041
+    - member: exp111_xgb_depth8_no_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.4350962783102986
+      mean_weight_after: 0.4984343340390967
+      mean_weight_delta: 0.06333805572879808
+    - member: exp139_realmlp_reference_qnormal_train_test
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.39291807015636415
+      mean_weight_after: 0.4396548833733648
+      mean_weight_delta: 0.04673681321700063
+    - member: exp058_logreg_onehot
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.12164159583165983
+      mean_weight_after: 0.16804257698508576
+      mean_weight_delta: 0.04640098115342593
+    - member: exp081_lookup_fold_initialization_avg3
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.0488998852759005
+      mean_weight_after: 0.08466497837303075
+      mean_weight_delta: 0.035765093097130246
+    - member: exp133_scalar_token_transformer_oof_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.023252782173991217
+      mean_weight_after: 0.006120680612179118
+      mean_weight_delta: 0.029373462786170333
+    - member: exp131_tab_cnn_oof_target_mean
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.22951562107762155
+      mean_weight_after: 0.2011524537320588
+      mean_weight_delta: -0.02836316734556274
+    - member: exp006_te_drop_gaming
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.23953049624795314
+      mean_weight_after: -0.2666463417855457
+      mean_weight_delta: -0.027115845537592553
+    - member: exp136_realmlp_muon_recon_widths
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.26512902549040995
+      mean_weight_after: 0.2919132993339551
+      mean_weight_delta: 0.026784273843545148
+    - member: exp035_lattice_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.7458768283228456
+      mean_weight_after: 0.7669296472027616
+      mean_weight_delta: 0.021052818879915947
+    - member: exp197_issue419_lgb_recon_ce_fixed20
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.6442361130723984
+      mean_weight_after: -0.6645582527618392
+      mean_weight_delta: -0.020322139689440855
+    - member: exp027_recon_ce
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.3563135643348182
+      mean_weight_after: 0.3762872424878894
+      mean_weight_delta: 0.019973678153071217
+    - member: exp134_realmlp_muon
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.1345652388659589
+      mean_weight_after: 0.15320496243176757
+      mean_weight_delta: 0.018639723565808675
+    - member: exp032_recon_orig_mean_top3
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.32510871338761205
+      mean_weight_after: 0.3417610273954763
+      mean_weight_delta: 0.016652314007864266
+    - member: exp022_orig_knn
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.13019881440640663
+      mean_weight_after: -0.14624816919773573
+      mean_weight_delta: -0.0160493547913291
+    - member: exp025_constrained_impute
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.1063622322569702
+      mean_weight_after: -0.09068205920482979
+      mean_weight_delta: 0.01568017305214041
+    - member: exp117_ag25_gbm_r21
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.21379791394494313
+      mean_weight_after: 0.19985247032866
+      mean_weight_delta: -0.013945443616283137
+    - member: exp011_resid_pair
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.018660134564332086
+      mean_weight_after: -0.03161105189629004
+      mean_weight_delta: -0.012950917331957957
+    - member: exp048_lgb_orig_cdf_diff
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.03896444370461384
+      mean_weight_after: 0.05110796769800634
+      mean_weight_delta: 0.012143523993392497
+    - member: exp085_contextual_spline_m0
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.3433502570995275
+      mean_weight_after: 0.33146451072979843
+      mean_weight_delta: -0.011885746369729056
+    - member: exp023_orig_proxy_residual
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.013440896837082045
+      mean_weight_after: 0.0029661252911257025
+      mean_weight_delta: -0.010474771545956343
+    - member: exp113_tab_cnn_m0
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.07591635052274943
+      mean_weight_after: -0.08623016318648008
+      mean_weight_delta: -0.010313812663730645
+    - member: exp071_cat_exact_no_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.33333916521734014
+      mean_weight_after: 0.3234301873082317
+      mean_weight_delta: -0.00990897790910844
+    - member: exp137_tabm_recon_widths
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.16255695865505365
+      mean_weight_after: 0.15300846813019575
+      mean_weight_delta: -0.0095484905248579
+    - member: exp070_cat_exact_cats
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.39964459149416964
+      mean_weight_after: 0.4074391258166087
+      mean_weight_delta: 0.0077945343224390395
+    - member: exp140_realmlp_orig_cdf_diff
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.0645416626507054
+      mean_weight_after: -0.0685216783333644
+      mean_weight_delta: -0.003980015682658988
+    - member: exp132_tab_cnn_epochs100
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.19886583275564584
+      mean_weight_after: 0.19582956421552
+      mean_weight_delta: -0.0030362685401258416
+    - member: exp067_tabpfn3
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.34829271407785733
+      mean_weight_after: 0.3511655609740295
+      mean_weight_delta: 0.0028728468961721765
+    - member: exp135_xgb_hpo_trial30
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.21349895260139706
+      mean_weight_after: -0.21497152788928192
+      mean_weight_delta: -0.0014725752878848586
+  - excluded:
+    - exp139_realmlp_reference_qnormal_train_test
+    member_count: 34
+    nested_oof_auc: 0.9698105078868042
+    nested_oof_delta_vs_full: -7.494892029225042e-08
+    weighted_oof_auc: 0.9706937175092252
+    weighted_oof_delta_vs_full: -5.770774719193739e-07
+    outer_fold_auc:
+      '0': 0.9692408393028383
+      '1': 0.969909478723063
+      '2': 0.9699133687518525
+      '3': 0.9704045183775387
+      '4': 0.9695843319730462
+    outer_fold_delta_vs_full:
+      '0': -3.2963249435580266e-06
+      '1': -1.0243928540654146e-05
+      '2': 1.9046729795579864e-06
+      '3': 1.364224876043707e-05
+      '4': -2.38143637043553e-06
+    outer_fold_full_wins: 3
+    outer_fold_full_losses: 2
+    removed_members_in_full_pool:
+    - member: exp139_realmlp_reference_qnormal_train_test
+      selected_in_full_pool: 5
+      mean_weight_in_full_pool: 0.39291807015636415
+    remaining_member_changes:
+    - member: exp136_realmlp_muon_recon_widths
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.26512902549040995
+      mean_weight_after: 0.47011240372585944
+      mean_weight_delta: 0.2049833782354495
+    - member: exp134_realmlp_muon
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.1345652388659589
+      mean_weight_after: 0.2876417500455969
+      mean_weight_delta: 0.153076511179638
+    - member: exp140_realmlp_orig_cdf_diff
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.0645416626507054
+      mean_weight_after: 0.012117117789789212
+      mean_weight_delta: 0.07665878044049462
+    - member: exp110_lgb_kitopl_no_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.4289099322094371
+      mean_weight_after: 0.4693379722232245
+      mean_weight_delta: 0.040428040013787414
+    - member: exp168_issue413_lgb_no_te_fixed20
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.7776349680019131
+      mean_weight_after: -0.8105533751950885
+      mean_weight_delta: -0.0329184071931754
+    - member: exp059_lookup_transformer
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.16076188178595655
+      mean_weight_after: -0.1918666942433467
+      mean_weight_delta: -0.031104812457390163
+    - member: exp081_lookup_fold_initialization_avg3
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.0488998852759005
+      mean_weight_after: 0.022991787804080017
+      mean_weight_delta: -0.025908097471820483
+    - member: exp183_issue419_cat_exact_fixed10
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.3847718431380064
+      mean_weight_after: -0.41007676352016
+      mean_weight_delta: -0.025304920382153595
+    - member: exp111_xgb_depth8_no_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.4350962783102986
+      mean_weight_after: 0.45758083770268987
+      mean_weight_delta: 0.022484559392391246
+    - member: exp035_lattice_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.7458768283228456
+      mean_weight_after: 0.7670165485672669
+      mean_weight_delta: 0.021139720244421234
+    - member: exp085_contextual_spline_m0
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.3433502570995275
+      mean_weight_after: 0.3230110920164912
+      mean_weight_delta: -0.020339165083036292
+    - member: exp027_recon_ce
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.3563135643348182
+      mean_weight_after: 0.37501999907563927
+      mean_weight_delta: 0.018706434740821065
+    - member: exp032_recon_orig_mean_top3
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.32510871338761205
+      mean_weight_after: 0.3434518251398616
+      mean_weight_delta: 0.018343111752249563
+    - member: exp197_issue419_lgb_recon_ce_fixed20
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.6442361130723984
+      mean_weight_after: -0.6589634466640121
+      mean_weight_delta: -0.014727333591613712
+    - member: exp006_te_drop_gaming
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.23953049624795314
+      mean_weight_after: -0.2264800197148654
+      mean_weight_delta: 0.013050476533087746
+    - member: exp133_scalar_token_transformer_oof_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.023252782173991217
+      mean_weight_after: -0.033347264556543764
+      mean_weight_delta: -0.010094482382552547
+    - member: exp135_xgb_hpo_trial30
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.21349895260139706
+      mean_weight_after: -0.22132539401838836
+      mean_weight_delta: -0.007826441416991292
+    - member: exp131_tab_cnn_oof_target_mean
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.22951562107762155
+      mean_weight_after: 0.22279105085433412
+      mean_weight_delta: -0.006724570223287429
+    - member: exp113_tab_cnn_m0
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.07591635052274943
+      mean_weight_after: -0.0824373470017024
+      mean_weight_delta: -0.006520996478952962
+    - member: exp131_lookup_bivariate_plr5
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.8769549882232258
+      mean_weight_after: 0.8832906917560329
+      mean_weight_delta: 0.006335703532807102
+    - member: exp058_logreg_onehot
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.12164159583165983
+      mean_weight_after: 0.11545878628785
+      mean_weight_delta: -0.006182809543809828
+    - member: exp070_cat_exact_cats
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.39964459149416964
+      mean_weight_after: 0.40525612378371595
+      mean_weight_delta: 0.005611532289546306
+    - member: exp071_cat_exact_no_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.33333916521734014
+      mean_weight_after: 0.33869808907810095
+      mean_weight_delta: 0.005358923860760811
+    - member: exp048_lgb_orig_cdf_diff
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.03896444370461384
+      mean_weight_after: 0.03361872322737164
+      mean_weight_delta: -0.005345720477242202
+    - member: exp137_tabm_recon_widths
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.16255695865505365
+      mean_weight_after: 0.1578219851968188
+      mean_weight_delta: -0.004734973458234842
+    - member: exp022_orig_knn
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.13019881440640663
+      mean_weight_after: -0.13455758718954847
+      mean_weight_delta: -0.00435877278314184
+    - member: exp067_tabpfn3
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.34829271407785733
+      mean_weight_after: 0.35264400709473404
+      mean_weight_delta: 0.0043512930168767006
+    - member: exp157_lookup_muon_initavg8
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.5865569118291053
+      mean_weight_after: 0.5900624068857871
+      mean_weight_delta: 0.003505495056681851
+    - member: exp117_ag25_gbm_r21
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.21379791394494313
+      mean_weight_after: 0.2171150957778986
+      mean_weight_delta: 0.003317181832955457
+    - member: exp132_tab_cnn_epochs100
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.19886583275564584
+      mean_weight_after: 0.20153722110679667
+      mean_weight_delta: 0.0026713883511508274
+    - member: exp023_orig_proxy_residual
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.013440896837082045
+      mean_weight_after: 0.011296454679031957
+      mean_weight_delta: -0.0021444421580500885
+    - member: exp011_resid_pair
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.018660134564332086
+      mean_weight_after: -0.020598797586466648
+      mean_weight_delta: -0.0019386630221345617
+    - member: exp106_lookup_fixed24_train_test_preprocessing
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.571576291969487
+      mean_weight_after: 0.5700259463317809
+      mean_weight_delta: -0.0015503456377060632
+    - member: exp025_constrained_impute
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.1063622322569702
+      mean_weight_after: -0.10645490755915885
+      mean_weight_delta: -9.26753021886495e-05
+  - excluded:
+    - exp106_lookup_fixed24_train_test_preprocessing
+    - exp139_realmlp_reference_qnormal_train_test
+    member_count: 33
+    nested_oof_auc: 0.9697815319339158
+    nested_oof_delta_vs_full: -2.9050901808713725e-05
+    weighted_oof_auc: 0.9706658000782957
+    weighted_oof_delta_vs_full: -2.849450840136658e-05
+    outer_fold_auc:
+      '0': 0.9692056775731345
+      '1': 0.9698890801752782
+      '2': 0.9698952379497844
+      '3': 0.9703587143795341
+      '4': 0.9695589473227761
+    outer_fold_delta_vs_full:
+      '0': -3.8458054647416695e-05
+      '1': -3.06424763254487e-05
+      '2': -1.622612908858123e-05
+      '3': -3.2161749244141724e-05
+      '4': -2.776608664045721e-05
+    outer_fold_full_wins: 5
+    outer_fold_full_losses: 0
+    removed_members_in_full_pool:
+    - member: exp106_lookup_fixed24_train_test_preprocessing
+      selected_in_full_pool: 5
+      mean_weight_in_full_pool: 0.571576291969487
+    - member: exp139_realmlp_reference_qnormal_train_test
+      selected_in_full_pool: 5
+      mean_weight_in_full_pool: 0.39291807015636415
+    remaining_member_changes:
+    - member: exp059_lookup_transformer
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.16076188178595655
+      mean_weight_after: 0.1920012768357407
+      mean_weight_delta: 0.35276315862169727
+    - member: exp136_realmlp_muon_recon_widths
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.26512902549040995
+      mean_weight_after: 0.4831744611128254
+      mean_weight_delta: 0.21804543562241546
+    - member: exp134_realmlp_muon
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.1345652388659589
+      mean_weight_after: 0.3045031837919734
+      mean_weight_delta: 0.1699379449260145
+    - member: exp168_issue413_lgb_no_te_fixed20
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.7776349680019131
+      mean_weight_after: -0.9176187154895382
+      mean_weight_delta: -0.1399837474876251
+    - member: exp157_lookup_muon_initavg8
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.5865569118291053
+      mean_weight_after: 0.68747867279801
+      mean_weight_delta: 0.1009217609689047
+    - member: exp131_lookup_bivariate_plr5
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.8769549882232258
+      mean_weight_after: 0.9716461880341145
+      mean_weight_delta: 0.0946911998108887
+    - member: exp140_realmlp_orig_cdf_diff
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.0645416626507054
+      mean_weight_after: 0.023758185178214857
+      mean_weight_delta: 0.08829984782892027
+    - member: exp085_contextual_spline_m0
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.3433502570995275
+      mean_weight_after: 0.26000310477678595
+      mean_weight_delta: -0.08334715232274154
+    - member: exp197_issue419_lgb_recon_ce_fixed20
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.6442361130723984
+      mean_weight_after: -0.7238877100206592
+      mean_weight_delta: -0.07965159694826085
+    - member: exp183_issue419_cat_exact_fixed10
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.3847718431380064
+      mean_weight_after: -0.4630143341026861
+      mean_weight_delta: -0.07824249096467972
+    - member: exp135_xgb_hpo_trial30
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.21349895260139706
+      mean_weight_after: -0.1380886051883507
+      mean_weight_delta: 0.07541034741304636
+    - member: exp081_lookup_fold_initialization_avg3
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.0488998852759005
+      mean_weight_after: 0.11957971773189131
+      mean_weight_delta: 0.07067983245599081
+    - member: exp111_xgb_depth8_no_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.4350962783102986
+      mean_weight_after: 0.49122955398119883
+      mean_weight_delta: 0.05613327567090021
+    - member: exp110_lgb_kitopl_no_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.4289099322094371
+      mean_weight_after: 0.4820620653178146
+      mean_weight_delta: 0.05315213310837752
+    - member: exp025_constrained_impute
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.1063622322569702
+      mean_weight_after: -0.06836804041365854
+      mean_weight_delta: 0.03799419184331165
+    - member: exp131_tab_cnn_oof_target_mean
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.22951562107762155
+      mean_weight_after: 0.19856478255185744
+      mean_weight_delta: -0.030950838525764107
+    - member: exp070_cat_exact_cats
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.39964459149416964
+      mean_weight_after: 0.4282660384103961
+      mean_weight_delta: 0.02862144691622648
+    - member: exp133_scalar_token_transformer_oof_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.023252782173991217
+      mean_weight_after: 0.0005474790323960761
+      mean_weight_delta: 0.023800261206387292
+    - member: exp067_tabpfn3
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.34829271407785733
+      mean_weight_after: 0.3257870364565244
+      mean_weight_delta: -0.02250567762133293
+    - member: exp137_tabm_recon_widths
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.16255695865505365
+      mean_weight_after: 0.14146718250830012
+      mean_weight_delta: -0.02108977614675353
+    - member: exp071_cat_exact_no_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.33333916521734014
+      mean_weight_after: 0.3515255299863916
+      mean_weight_delta: 0.018186364769051444
+    - member: exp113_tab_cnn_m0
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.07591635052274943
+      mean_weight_after: -0.09248020884021725
+      mean_weight_delta: -0.016563858317467817
+    - member: exp027_recon_ce
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.3563135643348182
+      mean_weight_after: 0.34059373424900796
+      mean_weight_delta: -0.015719830085810238
+    - member: exp048_lgb_orig_cdf_diff
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.03896444370461384
+      mean_weight_after: 0.05352152898444642
+      mean_weight_delta: 0.014557085279832578
+    - member: exp006_te_drop_gaming
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.23953049624795314
+      mean_weight_after: -0.2260480175272741
+      mean_weight_delta: 0.013482478720679036
+    - member: exp032_recon_orig_mean_top3
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.32510871338761205
+      mean_weight_after: 0.3132551125775508
+      mean_weight_delta: -0.01185360081006126
+    - member: exp117_ag25_gbm_r21
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.21379791394494313
+      mean_weight_after: 0.22410542656883617
+      mean_weight_delta: 0.01030751262389304
+    - member: exp022_orig_knn
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.13019881440640663
+      mean_weight_after: -0.12188353071239
+      mean_weight_delta: 0.008315283694016629
+    - member: exp058_logreg_onehot
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.12164159583165983
+      mean_weight_after: 0.12947177558898326
+      mean_weight_delta: 0.007830179757323433
+    - member: exp132_tab_cnn_epochs100
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.19886583275564584
+      mean_weight_after: 0.1940650355771698
+      mean_weight_delta: -0.004800797178476035
+    - member: exp023_orig_proxy_residual
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.013440896837082045
+      mean_weight_after: 0.016160792232828312
+      mean_weight_delta: 0.0027198953957462673
+    - member: exp035_lattice_te
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: 0.7458768283228456
+      mean_weight_after: 0.7439149726388671
+      mean_weight_delta: -0.001961855683978553
+    - member: exp011_resid_pair
+      selected_before: 5
+      selected_after: 5
+      mean_weight_before: -0.018660134564332086
+      mean_weight_after: -0.01974032730432786
+      mean_weight_delta: -0.0010801927399957736

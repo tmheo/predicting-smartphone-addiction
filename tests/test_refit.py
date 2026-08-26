@@ -252,11 +252,11 @@ def test_validated_budgets_reach_the_model(
     assert member.budgets == CRITERION_BUDGETS[config]
 
 
-def test_the_whole_ledger_recomputes_to_ninety_four_refits(ledger: MemoryLedger):
+def test_the_whole_ledger_recomputes_to_the_committed_refit_count(ledger: MemoryLedger):
     plan = ledger.executable()
 
-    assert len(plan.members) == 32
-    assert sum(len(member.budgets) for member in plan.members) == 94
+    assert len(plan.members) == 35
+    assert sum(len(member.budgets) for member in plan.members) == 103
     assert plan.content_sha256 == sha256_of(ledger.path.read_bytes())
 
 
