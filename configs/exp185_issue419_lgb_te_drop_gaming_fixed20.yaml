@@ -1,0 +1,40 @@
+# 이슈 #419: configs/refit/exp006_te_drop_gaming.yaml의 관측 학습 길이 15개 중앙값 396 중
+# 약 20%인 79회로 고정한다. 기준과의 변경은 조기 종료 해제와 반복 수뿐이다.
+# exp006의 #71 이전 설정을 전체 자료 재학습 인터페이스로 옮긴 동등 설정이다.
+# 역사 기록인 configs/exp006_te_drop_gaming.yaml은 수정하지 않는다.
+name: exp185_issue419_lgb_te_drop_gaming_fixed20
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.05
+    num_leaves: 255
+    n_estimators: 79
+  fit: {}
