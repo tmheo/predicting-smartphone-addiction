@@ -1,0 +1,65 @@
+# 이슈 #419: configs/exp022_orig_knn.yaml의 관측 학습 길이 15개 중앙값 377 중
+# 약 10%인 38회로 고정한다. 기준과의 변경은 조기 종료 해제와 반복 수뿐이다.
+# 이슈 #54: 원본 프록시(jayjoshi37 판본 1, 해시는 코드가 검증) 최근접 행 라벨 계열.
+# 진단(#50, docs/research/original-overlap-diagnosis.md)이 좁혀 연 잔여 범위:
+# k=1 최근접 라벨(단독 AUC 0.7764)과 k-이웃 라벨 평균만. 거리·존재 플래그는 닫힘.
+# champion exp011 구성 + 수치 9열 NaN 인지 표준화 거리의 orig_nn1_mean, orig_nn10_mean.
+# 프록시 표만 쓰고 합성 train 라벨은 쓰지 않는다(row-wise, uses_target=False).
+# 스크리닝(seed 42, run aa9010fe)은 champion 대비 -0.00046으로 미달(champion 교체 닫힘).
+# 다만 champion과 스피어만 0.99626(중복 아님), 표준 평가 앙상블 기여 +0.00012로
+# 다양성 계열 세 게이트를 통과해, 후보 풀 진입 확정을 위한 3시드 평균본 단계다.
+
+name: exp190_issue419_lgb_orig_knn_fixed10
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [other_screen, screen_slack]
+    - kind: original_knn
+      path: data/external/Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+      ks: [1, 10]
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.05
+    num_leaves: 255
+    n_estimators: 38
+    force_row_wise: true
+  fit: {}

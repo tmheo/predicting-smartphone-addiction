@@ -1,0 +1,72 @@
+# 이슈 #419: configs/exp025_constrained_impute.yaml의 관측 학습 길이 15개 중앙값 330 중
+# 약 20%인 66회로 고정한다. 기준과의 변경은 조기 종료 해제와 반복 수뿐이다.
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #74: 생성 규칙 daily >= social + gaming + work를 산술 경계로 쓰는 제약 결측 재구성.
+# 학습 fold로 fit한 IterativeImputer 추정치를 실현 가능 구간으로 잘라 화면 블록 4열의
+# _recon 병행 열을 만들고, 성분 3열에는 구간 폭(_recon_width)을 병행한다.
+# 이슈 #49가 기각한 것은 무제약 중앙값 대체 보조 열이고, 이 변형(제약 클리핑 + 폭 열)은
+# szymonkapiski 측정 +0.00041(이득이 결측 층에 집중)에 근거한 미검증 항목이다.
+# champion exp011_resid_pair 구성 위에 얹은 실험.
+# seed 42 스크리닝(run c62dbb02)은 짝지은 기준선(ADR 0001 #74 개정) +0.00016 통과이고
+# 이득이 결측 있는 층에 집중돼 기제가 작동한다. 다만 폭 열 3개(*_recon_width)는 gain
+# importance 플라시보 미달이라 확정 재검증의 새 피처 게이트를 통과할 수 없어, champion
+# 교체 트랙은 폭 열을 뺀 exp026_constrained_impute_nowidth가 이어 champion 채택됐다.
+# 3시드 평균본(run 3f7d735f)은 AUC 게이트 전부 통과(+0.00017)에도 폭 열 게이트 미달로
+# 교체 불가였고, 풀 진입도 exp026 채택 후 스피어만 0.99793·기여 +0.00006의 한계 가치에
+# git_dirty 실행(동시 세션 작업 중 시작)이라 계약상 등록하지 않고 종료했다.
+# 이슈 261의 깨끗한 같은 커밋 재실행(run aa32cdf9)은 exp026 대비 3시드
+# +0.00002705, 시드 2/3, fold 4/5를 재현해 폭 3열을 실신호로 확정했다.
+# 이슈 281은 검증된 묶음 반입 run 9804689a를 후보 풀의 exp026 자리로 교체 등록했다.
+
+name: exp193_issue419_lgb_constrained_impute_fixed20
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [other_screen, screen_slack]
+    - kind: target_encoding
+      inner_folds: 10
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+          placebo_noise,
+        ]
+    - kind: constrained_impute_aux
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.05
+    num_leaves: 255
+    n_estimators: 66
+    force_row_wise: true
+  fit: {}
