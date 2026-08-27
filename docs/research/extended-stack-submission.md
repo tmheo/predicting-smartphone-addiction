@@ -111,6 +111,7 @@ nested 0.9702876과의 오프셋은 +0.00105로, 지도 #441이 hboyang·szymonk
 MLflow 기록은 `pipeline.submit --record-existing 55810100`으로 남겼다.
 파생 실행 `4f2466f84f8d462fb8231bd3a4274dd1`(실행 이름 `ensemble_shrunk_rank_logit_logistic_issue444_extended_stack_own35_ext207`, `source.kind=derived_submission`, `source.run_id=b24e5ba7`, `git_commit=33e080f`, `git_dirty=False`)에 제출 CSV·조립 manifest·#442 장부를 첨부했고, param에 구성원 수(242 = 자체 35 + 외부 207)·λ = 1.0·5:1 혼합 계획·nested 0.9702876, tag에 라이선스 집계(CC0 196, CC BY 4.0 6, Apache 2.0 5)와 제외한 TE 누출 구성원 2개를 적었다.
 metric `public_auc = 0.97134`는 기록 도구가 Kaggle에서 회수했다.
+`--record-existing`은 원본 실행의 `auc_oof`를 `source_auc_oof`(35개 풀 0.9698106)로만 복사하므로, 확장 스택 자체의 판정값은 manifest에서 따로 올렸다: `auc_oof = 0.9702876`(nested), `auc_fold_0..4`, `delta_vs_pool35_source = +0.000477`, `auc_oof_insample = 0.9704159`(참고치).
 
 최종 두 장은 사용자가 확정했다.
 
