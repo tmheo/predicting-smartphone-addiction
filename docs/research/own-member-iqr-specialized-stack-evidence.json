@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "issue": 467,
+  "result": {
+    "passed": false,
+    "verdict": "reject_candidate_keep_current_242",
+    "passes_overall_delta": false,
+    "passes_all_folds": false
+  },
+  "contract": {
+    "baseline_run_id": "4f2466f84f8d462fb8231bd3a4274dd1",
+    "member_count": 242,
+    "own_member_count": 35,
+    "external_member_count": 207,
+    "condition": {
+      "metric": "iqr_own_members",
+      "lower_inclusive": 0.02338352353539591,
+      "upper_exclusive": 0.03623481878974599,
+      "rank_method": "average_ties_(rank_minus_0.5)_over_block_rows",
+      "quantile_method": "linear"
+    },
+    "global_combiner": "shrunk_rank_logit_logistic",
+    "specialized_combiner": {
+      "representation": "rank_logit",
+      "standard_scaler": true,
+      "logistic_regression": {
+        "C": 1.0,
+        "solver": "lbfgs",
+        "max_iter": 1000,
+        "random_state": 0,
+        "logit_clip": 1e-06
+      }
+    },
+    "minimum_nested_delta": 2e-05,
+    "required_positive_outer_folds": 5,
+    "baseline_tolerance": 1e-10
+  },
+  "inputs": {
+    "root": "/Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction",
+    "sha256": {
+      "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+      "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+      "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+      "pool": "caa1b90769720a4accbe07074dbc7efe0335ab6657fea80c6839b60121dc39d3",
+      "champion": "aa012114107c06532cf51c0fa9c741f5949146428cf266cf4bedded783d20e09",
+      "extended_evidence": "9893c49fa3e39306713ff6fa99e69af78dd0cb1c557cbf03ead16cb239c3b0b3",
+      "assembly_manifest": "cb442519ea3120385f71c201b8fc2b313abcdb6994f2476f06d589b478aea480",
+      "pool_oof_ledger": "4e2ec4a8a030a448962dbdc4a889ffc32853c6b836828c5b569e0b9e70dc308e",
+      "external_cache": "f5ded7caa700804031a2cfc2901aa7be53a61b1f30d549cb792737a140862d47",
+      "uv_lock": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+      "external_ledger": "5dca2d01acc320299ae41d396a1cc6a2e5777614ec665c4b039eed4efd036d3c",
+      "submission_record": "2de63c967efdbbb794e6858161caf582ad750971882ef9809d7c8e865a9b18ac"
+    },
+    "member_order_sha256": "1b3cea9fba6a076d7b0674a3a396e0430a34401ff4cf2b2c755842edab5e795b"
+  },
+  "baseline": {
+    "nested_auc": 0.9702876097776773,
+    "expected_nested_auc": 0.9702876097776773,
+    "absolute_delta": 0.0,
+    "prediction_sha256": "006ca009b1b8f115939747ca55c908755f3d999426f35cf90b8d00b66d7367cc",
+    "fold_aucs": {
+      "0": 0.9697332661529522,
+      "1": 0.9704381694607899,
+      "2": 0.970363780652354,
+      "3": 0.9708882903449186,
+      "4": 0.970014539493639
+    },
+    "reproduced": true
+  },
+  "candidate": {
+    "name": "own_member_iqr_specialized_rank_logit",
+    "nested_auc": 0.9702403498605942,
+    "delta": -4.7259917083097847e-05,
+    "prediction_sha256": "4c2eea06e89a945193da05fe86497f70b14ec26349a19101c213170efb521394",
+    "folds": [
+      {
+        "fold": 0,
+        "inner_rows": 553095,
+        "outer_rows": 138274,
+        "inner_condition_counts": {
+          "total": 138380,
+          "target_0": 50849,
+          "target_1": 87531
+        },
+        "outer_condition_counts": {
+          "total": 35368,
+          "target_0": 12493,
+          "target_1": 22875
+        },
+        "global_shrinkage_lambda": 1.0,
+        "baseline_auc": 0.9697332661529522,
+        "candidate_auc": 0.969690239750185,
+        "delta": -4.302640276721004e-05
+      },
+      {
+        "fold": 1,
+        "inner_rows": 553095,
+        "outer_rows": 138274,
+        "inner_condition_counts": {
+          "total": 138093,
+          "target_0": 50849,
+          "target_1": 87244
+        },
+        "outer_condition_counts": {
+          "total": 35197,
+          "target_0": 12452,
+          "target_1": 22745
+        },
+        "global_shrinkage_lambda": 1.0,
+        "baseline_auc": 0.9704381694607899,
+        "candidate_auc": 0.970405278140858,
+        "delta": -3.289131993189365e-05
+      },
+      {
+        "fold": 2,
+        "inner_rows": 553095,
+        "outer_rows": 138274,
+        "inner_condition_counts": {
+          "total": 138729,
+          "target_0": 50589,
+          "target_1": 88140
+        },
+        "outer_condition_counts": {
+          "total": 35244,
+          "target_0": 12539,
+          "target_1": 22705
+        },
+        "global_shrinkage_lambda": 1.0,
+        "baseline_auc": 0.970363780652354,
+        "candidate_auc": 0.9702991705775861,
+        "delta": -6.461007476787906e-05
+      },
+      {
+        "fold": 3,
+        "inner_rows": 553095,
+        "outer_rows": 138274,
+        "inner_condition_counts": {
+          "total": 138171,
+          "target_0": 50615,
+          "target_1": 87556
+        },
+        "outer_condition_counts": {
+          "total": 36158,
+          "target_0": 12671,
+          "target_1": 23487
+        },
+        "global_shrinkage_lambda": 1.0,
+        "baseline_auc": 0.9708882903449186,
+        "candidate_auc": 0.9708295863548213,
+        "delta": -5.870399009733074e-05
+      },
+      {
+        "fold": 4,
+        "inner_rows": 553096,
+        "outer_rows": 138273,
+        "inner_condition_counts": {
+          "total": 138077,
+          "target_0": 50680,
+          "target_1": 87397
+        },
+        "outer_condition_counts": {
+          "total": 35509,
+          "target_0": 12668,
+          "target_1": 22841
+        },
+        "global_shrinkage_lambda": 1.0,
+        "baseline_auc": 0.970014539493639,
+        "candidate_auc": 0.9699770632054926,
+        "delta": -3.747628814643189e-05
+      }
+    ],
+    "elapsed_seconds": 1702.8368768750006
+  },
+  "explanatory_metrics": {
+    "condition_counts": {
+      "total": 177476,
+      "target_0": 62823,
+      "target_1": 114653
+    },
+    "weighted_oof_auc": {
+      "baseline": 0.9711558537184679,
+      "candidate": 0.9711111651534262
+    },
+    "condition_burden": {
+      "standard": {
+        "all_targets": {
+          "rows": 177476,
+          "baseline_mean_burden": 0.04436631397072807,
+          "candidate_mean_burden": 0.04452859003847688,
+          "burden_reduction": -0.00016227606774880943
+        },
+        "target_0": {
+          "rows": 62823,
+          "baseline_mean_burden": 0.03699784471910147,
+          "candidate_mean_burden": 0.03703322873876712,
+          "burden_reduction": -3.538401966565047e-05
+        },
+        "target_1": {
+          "rows": 114653,
+          "baseline_mean_burden": 0.04840379527339733,
+          "candidate_mean_burden": 0.04863560060890824,
+          "burden_reduction": -0.00023180533551090537
+        }
+      },
+      "missingness_reweighted": {
+        "all_targets": {
+          "rows": 177476,
+          "baseline_mean_burden": 0.04321888422810146,
+          "candidate_mean_burden": 0.04336150872181131,
+          "burden_reduction": -0.0001426244937098517
+        },
+        "target_0": {
+          "rows": 62823,
+          "baseline_mean_burden": 0.035959436711818095,
+          "candidate_mean_burden": 0.03601426630015221,
+          "burden_reduction": -5.482958833411683e-05
+        },
+        "target_1": {
+          "rows": 114653,
+          "baseline_mean_burden": 0.04719662812765462,
+          "candidate_mean_burden": 0.047387358988754964,
+          "burden_reduction": -0.00019073086110034387
+        }
+      }
+    },
+    "burden_integrity": {
+      "baseline": {
+        "auc": 0.9702876097776773,
+        "weighted_auc": 0.9711558537184679,
+        "standard_identity_delta_y0": 9.71445146547012e-17,
+        "weighted_identity_delta_y0": 2.3456930842158386e-13,
+        "standard_identity_delta_y1": 9.367506770274758e-17,
+        "weighted_identity_delta_y1": 2.1259730087486162e-13
+      },
+      "candidate": {
+        "auc": 0.9702403498605942,
+        "weighted_auc": 0.9711111651534262,
+        "standard_identity_delta_y0": 3.469446951953614e-17,
+        "weighted_identity_delta_y0": 2.3453114450511237e-13,
+        "standard_identity_delta_y1": 3.8163916471489756e-17,
+        "weighted_identity_delta_y1": 2.1252791193582254e-13
+      }
+    }
+  },
+  "full_fit_test": {
+    "train_condition_counts": {
+      "total": 172729,
+      "target_0": 63412,
+      "target_1": 109317
+    },
+    "test_condition_rows": 71868,
+    "test_rows": 296302,
+    "global_shrinkage_lambda": 1.0,
+    "candidate_prediction_sha256": "d5a5af82e14200af267be9aaf9464bcd700c855a68295b4e28fb6ba369debae7",
+    "elapsed_seconds": 503.0706232500015
+  },
+  "software": {
+    "python": "3.13.13",
+    "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+    "numpy": "2.5.2",
+    "pandas": "3.0.5",
+    "pyarrow": "25.0.0",
+    "scikit_learn": "1.9.0"
+  },
+  "script_sha256": "ed9e494cc6850f01e7829f70d832685672732b0550f0f2c03936d7a9ea50d6d4",
+  "execution": {
+    "total_seconds_before_writes": 2216.8962859999992
+  },
+  "contract_violations": [],
+  "artifacts": [
+    {
+      "path": "run-logs/issue467/candidate-oof.parquet",
+      "sha256": "b96790fb7e7aa2d3adc8c3041d68124eb6c46a5a4d403506489611c5ea350c27"
+    },
+    {
+      "path": "run-logs/issue467/candidate-test-prediction.parquet",
+      "sha256": "e948c01ea31f08089ec64f4657a5fce5a6249d96312c1da0c578012752b81521"
+    },
+    {
+      "path": "run-logs/issue467/manifest.json",
+      "sha256": "e6872bb0e1fa7683eb808dfeb2c49ec81082125614b33e7a257de30ed24a1f1c"
+    },
+    {
+      "path": "docs/research/own-member-iqr-specialized-stack.md",
+      "sha256": "9efabddadf823c5687c22061ec797c88349e9bfe32ccc123a2254a7316ddab7d"
+    }
+  ]
+}
