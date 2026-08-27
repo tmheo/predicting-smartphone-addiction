@@ -95,3 +95,4 @@ szymonkapiski 라이브러리의 `pub_*` 구성원은 다른 저자 노트북의
   Public 점수는 기록만 하고 판정에 쓰지 않는다.
 - 재현: `uv run python scripts/judge_extended_stack.py --prepare`(캐시가 없을 때) 뒤 `uv run python scripts/assemble_extended_stack.py`.
   같은 입력이면 제출 CSV SHA-256이 같아야 한다.
+  실제로 스크립트 커밋 전(작업 폴더 변경 있음)과 커밋 `33e080f`(깨끗한 작업 폴더)에서 두 번 돌려 CSV SHA-256이 바이트 단위로 같았다.
