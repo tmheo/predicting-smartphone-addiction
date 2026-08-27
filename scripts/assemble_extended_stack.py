@@ -1,30 +1,32 @@
-"""통과한 확장 스택 구성으로 두 번째 최종 제출물을 조립한다. (#444)
+"""교체 문턱을 넘은 넓힌 확장 스택 구성으로 두 번째 최종 제출물을 조립한다. (#457)
 
-#443이 판정한 own35 + ext209(`shrunk_rank_logit_logistic`, nested 0.9703167)를 바탕으로,
-#444에서 사용자와 정한 조립 규칙을 기계 적용한다.
+#455가 판정한 사다리 근거(`docs/research/extended-stack-ladder-2.json`)의 `selected_config`를
+그대로 조립한다. #444에서 사용자와 정한 조립 규칙을 이어 쓴다.
 
-- 구성: 자체 35(`artifacts/pool.yaml`) + #442 장부 통과 209 가운데 전체 자료 TE 누출이
-  코드 수준에서 확인된 2개(szymon74 pub_rmlp, pub_tabm)를 뺀 242구성원.
-  OOF 행렬은 #443 절제 구성 `ablate_te_leak`과 열 순서까지 같다(nested 0.9702876).
+- 구성: 사다리 근거가 고른 구성. 자체 35(`artifacts/pool.yaml`) + 판본 2 장부 통과 구성원
+  가운데 그 구성이 남긴 외부 구성원. TE 누출 2개(szymon74 pub_rmlp, pub_tabm)는 #444대로
+  모든 구성에서 빠져 있다.
 - 자체 35의 시험 예측은 #69 첫 후보와 같은 5:1 혼합판(`artifacts/full-refit/`)이고,
-  외부 207의 시험 예측은 장부 `test_path`의 CV 분할 평균이다.
-- 결합기는 기존 두 장(b24e5ba7, e88f706e)과 같은 계약으로 전체 OOF에 한 번 적합해
+  외부 구성원의 시험 예측은 장부 `test_path`의 CV 분할 평균이다.
+- 결합기는 기존 두 장(e88f706e, 4f2466f8)과 같은 계약으로 전체 OOF에 한 번 적합해
   시험 행렬에 적용한다. λ는 5분할 leave-one-fold-out으로 고른다.
 - 산출물은 제출 CSV(artifacts/submissions/, 커밋 제외)와 manifest JSON(docs/research/, 커밋)뿐이다.
-  MLflow 실행은 만들지 않으며, 기록은 #445가
-  업로드 뒤 `pipeline.submit --record-existing`으로 남긴다.
+  MLflow 실행은 만들지 않으며, 기록은 업로드 뒤 `pipeline.submit --record-existing`으로 남긴다.
 
 이 조립은 외부 예측을 `artifacts/pool.yaml`에 넣지 않고 champion 판정에도 쓰지 않는다.
 
 사용법:
     uv run python scripts/judge_extended_stack.py --prepare   # 캐시가 없을 때만
+    uv run python scripts/judge_extended_stack.py --report    # selected_config 확정
     uv run python scripts/assemble_extended_stack.py
+
+#444의 조립(자체 35 + 외부 207, run 4f2466f8)은 PR #448 시점의 이 파일과
+`docs/research/extended-stack-submission-manifest.json`에 있다.
 """
 
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import subprocess
 import sys
@@ -47,22 +49,27 @@ from pipeline.judgment import FOLDS_PATH
 from pipeline.ledger import Pool
 from pipeline.pool_audit import prediction_array_sha256
 
-ISSUE = 444
+ISSUE = 457
+JUDGED_ISSUE = judge.ISSUE
 STRATEGY = "shrunk_rank_logit_logistic"
-JUDGED_CONFIG = "own35_ext209"
-ASSEMBLED_CONFIG = "ablate_te_leak"
 TEST_PATH = Path("data/test.csv")
 FULL_REFIT_DIR = Path("artifacts/full-refit")
 OWN_TEST_PATH = FULL_REFIT_DIR / "member_test_cv_full.parquet"
 FULL_REFIT_MANIFEST_PATH = FULL_REFIT_DIR / "manifest.json"
 LADDER_EVIDENCE_PATH = judge.EVIDENCE_PATH
 OUT_DIR = Path("artifacts/submissions")
-SUBMISSION_PATH = OUT_DIR / "issue444-extended-stack.csv"
-MANIFEST_PATH = Path("docs/research/extended-stack-submission-manifest.json")
+SUBMISSION_PATH = OUT_DIR / "issue457-extended-stack-2.csv"
+MANIFEST_PATH = Path("docs/research/extended-stack-submission-2-manifest.json")
 REFERENCE_SUBMISSIONS = {
     "e88f706e_candidate_1_cv_full_mix": OUT_DIR / "issue69-candidate-1.csv",
     "b24e5ba7_candidate_2_cv_only": OUT_DIR / "issue69-candidate-2.csv",
+    "4f2466f8_extended_stack_own35_ext207": OUT_DIR / "issue444-extended-stack.csv",
 }
+TE_LEAK_REASON = (
+    "원 노트북이 전체 자료 TE를 쓴 판을 그대로 실행(#174, "
+    "docs/research/code-notebook-insights.md 22·24번). 분할 간 목표 누출이 코드 수준에서 "
+    "확인돼 #444부터 조립에서 뺀다."
+)
 N_TEST = 296302
 
 
@@ -80,6 +87,26 @@ def _git_head() -> dict[str, object]:
 
 def _part(config: str) -> dict:
     return json.loads(judge.part_path(config, STRATEGY).read_text())
+
+
+def selected_config() -> tuple[str, dict]:
+    """#455 사다리 근거가 고른 구성과 그 항목. 문턱 통과가 아니면 조립하지 않는다."""
+    evidence = json.loads(LADDER_EVIDENCE_PATH.read_text())
+    if evidence["issue"] != JUDGED_ISSUE:
+        raise ValueError(f"사다리 근거의 이슈가 {evidence['issue']}이다.")
+    if evidence["jobs_done"] != evidence["jobs_expected"]:
+        raise ValueError(
+            f"사다리 작업이 {evidence['jobs_done']}/{evidence['jobs_expected']}만 끝났다."
+        )
+    if not evidence["reproduction_passes"]:
+        raise ValueError("현재 판 재현이 잡음 바닥 안에서 맞지 않았다.")
+    name = evidence["selected_config"]
+    if name is None:
+        raise ValueError("교체 문턱을 넘은 구성이 없다. 현재 두 장을 유지한다.")
+    entry = evidence["configs"][name]
+    if not entry["passes_gate"]:
+        raise ValueError(f"{name}이 문턱을 넘지 못했다.")
+    return name, entry
 
 
 def build_test_matrix(
@@ -104,9 +131,14 @@ def build_test_matrix(
             }
         else:
             values = own[name].to_numpy(np.float64)
-            sources[name] = {"kind": "own_cv5_full1_mix", "test_path": str(OWN_TEST_PATH)}
+            sources[name] = {
+                "kind": "own_cv5_full1_mix",
+                "test_path": str(OWN_TEST_PATH),
+            }
         if values.shape != (N_TEST,) or not np.isfinite(values).all():
-            raise ValueError(f"{name}: 시험 예측 행 수가 {values.shape}이거나 유한하지 않다.")
+            raise ValueError(
+                f"{name}: 시험 예측 행 수가 {values.shape}이거나 유한하지 않다."
+            )
         columns[name] = values
         sources[name]["prediction_sha256"] = prediction_array_sha256(values)
     matrix = pd.DataFrame(columns, index=test_ids.to_numpy()).astype(np.float64)
@@ -115,16 +147,16 @@ def build_test_matrix(
     return matrix, sources
 
 
-def rank_space_checks(
-    prediction: np.ndarray, test_ids: pd.Series
-) -> dict[str, object]:
-    """제출 눈금 확인: 값 범위, 동률, 기존 두 장과의 순위 상관."""
+def rank_space_checks(prediction: np.ndarray, test_ids: pd.Series) -> dict[str, object]:
+    """제출 눈금 확인: 값 범위, 동률, 기존 장들과의 순위 상관."""
     checks: dict[str, object] = {
-        "rows": int(len(prediction)),
+        "rows": len(prediction),
         "finite": bool(np.isfinite(prediction).all()),
         "min": float(prediction.min()),
         "max": float(prediction.max()),
-        "within_unit_interval": bool(prediction.min() >= 0.0 and prediction.max() <= 1.0),
+        "within_unit_interval": bool(
+            prediction.min() >= 0.0 and prediction.max() <= 1.0
+        ),
         "distinct_values": int(np.unique(prediction).size),
         "spearman_vs": {},
     }
@@ -147,6 +179,7 @@ def rank_space_checks(
 def assemble() -> None:
     started = time.monotonic()
     git = _git_head()
+    config, judged = selected_config()
     train = pd.read_csv(TRAIN_PATH)
     fold_of = pd.read_parquet(FOLDS_PATH).set_index(ID)["fold"]
     y = labels(fold_of.index)
@@ -155,15 +188,34 @@ def assemble() -> None:
     if len(test_ids) != N_TEST or test_ids.duplicated().any():
         raise ValueError("test.csv의 행 수나 id가 기대와 다르다.")
 
-    judged = _part(JUDGED_CONFIG)
-    assembled = _part(ASSEMBLED_CONFIG)
-    oof = judge.build_matrix(ASSEMBLED_CONFIG, fold_of)
-    if list(oof.columns) != assembled["members"]:
-        raise ValueError("OOF 행렬의 열 순서가 #443 절제 구성 산출물과 다르다.")
-    excluded = sorted(set(judged["members"]) - set(assembled["members"]))
+    part = _part(config)
+    full = _part(judge.FULL)
+    oof = judge.build_matrix(config, fold_of)
+    if list(oof.columns) != part["members"]:
+        raise ValueError("OOF 행렬의 열 순서가 #455 판정 산출물과 다르다.")
+    _, accepted = judge.load_ledger()
+    ledger_rows = {f"ext_{row['member_id']}": row for row in accepted}
+    ablated = [name for name in full["members"] if name not in set(part["members"])]
+    excluded = [
+        {
+            "column": f"ext_{member_id}",
+            "reason": TE_LEAK_REASON,
+            "caveats": ledger_rows[f"ext_{member_id}"]["caveats"],
+        }
+        for member_id in judge.TE_LEAK_MEMBERS
+    ] + [
+        {
+            "column": name,
+            "reason": f"#455 사다리에서 {config}이 {judge.FULL} 대비 "
+            f"{judged['strategies'][STRATEGY]['delta_vs_full_same_strategy']:+.7f}로 "
+            "높아 절제로 뺀 구성원",
+            "caveats": ledger_rows[name]["caveats"],
+        }
+        for name in ablated
+    ]
     print(
-        f"OOF {oof.shape}, 판정 구성 {judged['member_count']} → 조립 구성 "
-        f"{assembled['member_count']} (제외 {excluded})",
+        f"OOF {oof.shape}, 조립 구성 {config} ({part['member_count']}구성원, "
+        f"신규 전체 대비 뺀 구성원 {len(ablated)}, TE 누출 {len(judge.TE_LEAK_MEMBERS)})",
         flush=True,
     )
 
@@ -190,8 +242,6 @@ def assemble() -> None:
     frame.to_csv(SUBMISSION_PATH, index=False)
     checks = rank_space_checks(prediction, test_ids)
 
-    _, accepted = judge.load_ledger()
-    ledger_rows = {f"ext_{row['member_id']}": row for row in accepted}
     pool = Pool.load()
     pool_run_ids = {member.config: member.run_id for member in pool.members}
     full_refit_manifest = json.loads(FULL_REFIT_MANIFEST_PATH.read_text())
@@ -211,6 +261,7 @@ def assemble() -> None:
                 source=row["source"],
                 dataset=row["dataset"],
                 license=row["license"],
+                added_in=row["added_in"],
                 oof_path=row["oof_path"],
                 ledger_sha256=row["sha256"],
                 fold_evidence=row["fold_evidence"],
@@ -221,6 +272,7 @@ def assemble() -> None:
         members.append(entry)
     licenses: dict[str, int] = {}
     datasets: dict[str, dict] = {}
+    caveat_classes: dict[str, int] = {}
     for entry in members:
         if entry["origin"] != "external":
             continue
@@ -229,35 +281,38 @@ def assemble() -> None:
             entry["dataset"], {"license": entry["license"], "member_count": 0}
         )
         bucket["member_count"] += 1
+        for caveat in entry["caveats"]:
+            key = caveat.split(":")[0].split()[0]
+            caveat_classes[key] = caveat_classes.get(key, 0) + 1
 
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "issue": ISSUE,
         "git": git,
         "strategy": STRATEGY,
         "judged": {
-            "issue": 443,
-            "config": JUDGED_CONFIG,
-            "member_count": judged["member_count"],
-            "nested_auc": judged["nested_auc"],
+            "issue": JUDGED_ISSUE,
+            "config": config,
+            "description": judged["description"],
+            "member_count": part["member_count"],
+            "nested_auc": part["nested_auc"],
+            "weighted_oof_auc": part["weighted_oof_auc"],
+            "fold_aucs": part["fold_aucs"],
+            "delta_vs_current_plate": judged["delta_vs_current_plate"],
+            "folds_positive": judged["folds_positive"],
             "evidence_path": str(LADDER_EVIDENCE_PATH),
             "evidence_sha256": file_sha256(LADDER_EVIDENCE_PATH),
         },
         "assembled": {
-            "config": ASSEMBLED_CONFIG,
-            "member_count": assembled["member_count"],
-            "nested_auc": assembled["nested_auc"],
-            "fold_aucs": assembled["fold_aucs"],
-            "excluded_members": [
-                {
-                    "column": name,
-                    "reason": "원 노트북이 전체 자료 TE를 쓴 판을 그대로 실행(#174, "
-                    "docs/research/code-notebook-insights.md 22·24번). 분할 간 목표 "
-                    "누출이 코드 수준에서 확인돼 조립에서 뺐다.",
-                    "caveats": ledger_rows[name]["caveats"],
-                }
-                for name in excluded
-            ],
+            "config": config,
+            "member_count": part["member_count"],
+            "own_member_count": sum(1 for e in members if e["origin"] == "own"),
+            "external_member_count": sum(
+                1 for e in members if e["origin"] == "external"
+            ),
+            "nested_auc": part["nested_auc"],
+            "fold_aucs": part["fold_aucs"],
+            "excluded_members": excluded,
         },
         "combiner": {
             "shrinkage_lambda": float(fitted.shrinkage_lambda),
@@ -287,6 +342,7 @@ def assemble() -> None:
         "external_summary": {
             "member_count": sum(1 for e in members if e["origin"] == "external"),
             "licenses": licenses,
+            "caveat_classes": caveat_classes,
             "datasets": datasets,
         },
         "submission": {
@@ -305,13 +361,18 @@ def assemble() -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="확장 스택 두 번째 최종 제출물 조립 (#444)")
+    parser = argparse.ArgumentParser(
+        description="넓힌 확장 스택 두 번째 최종 제출물 조립 (#457)"
+    )
     parser.parse_args()
-    if not (judge.CACHE_DIR / "ext209.parquet").is_file():
-        sys.exit("외부 행렬 캐시가 없다. 먼저 judge_extended_stack.py --prepare를 실행할 것.")
-    for config in (JUDGED_CONFIG, ASSEMBLED_CONFIG):
-        if not judge.part_path(config, STRATEGY).is_file():
-            sys.exit(f"#443 산출물이 없다: {judge.part_path(config, STRATEGY)}")
+    if not (judge.CACHE_DIR / "ext400.parquet").is_file():
+        sys.exit(
+            "외부 행렬 캐시가 없다. 먼저 judge_extended_stack.py --prepare를 실행할 것."
+        )
+    config, _ = selected_config()
+    for name in (config, judge.FULL):
+        if not judge.part_path(name, STRATEGY).is_file():
+            sys.exit(f"#455 산출물이 없다: {judge.part_path(name, STRATEGY)}")
     assemble()
 
 
