@@ -96,3 +96,29 @@ szymonkapiski 라이브러리의 `pub_*` 구성원은 다른 저자 노트북의
 - 재현: `uv run python scripts/judge_extended_stack.py --prepare`(캐시가 없을 때) 뒤 `uv run python scripts/assemble_extended_stack.py`.
   같은 입력이면 제출 CSV SHA-256이 같아야 한다.
   실제로 스크립트 커밋 전(작업 폴더 변경 있음)과 커밋 `33e080f`(깨끗한 작업 폴더)에서 두 번 돌려 CSV SHA-256이 바이트 단위로 같았다.
+
+## 업로드와 최종 선택 (이슈 #445)
+
+[확장 스택 제출물을 업로드하고 최종 두 장을 선택한다](https://github.com/tmheo/predicting-smartphone-addiction/issues/445)의 실행 기록이다.
+업로드 직전에 제출 파일을 다시 확인했다: 296,302행, `test.csv` id 순서 동일, 전부 유한, 서로 다른 값 296,302개, SHA-256 `c4262346a2abfb0578055e1753d07f76585012ec2d185ea5d9e6319ed8b248ca`(조립 시점과 동일).
+`api.kaggle.com` 인증서 발급자가 Google Trust Services라 사내망 가로채기 조치는 필요 없었고, 당일 제출 횟수는 0회였다.
+
+사용자 확인 뒤 2026-08-27T04:48:39Z에 올렸다(Kaggle ref 55810100, 파일 `issue444-extended-stack.csv`).
+Public 0.97134로 계정 최고이며 안전판 `e88f706e`(0.97099) 대비 +0.00035다.
+이 값은 사후 확인값이고 판정에는 쓰지 않는다(ADR 0002).
+nested 0.9702876과의 오프셋은 +0.00105로, 지도 #441이 hboyang·szymonkapiski 스택에서 관찰한 약 +0.0011과 같은 크기다.
+
+MLflow 기록은 `pipeline.submit --record-existing 55810100`으로 남겼다.
+파생 실행 `4f2466f84f8d462fb8231bd3a4274dd1`(실행 이름 `ensemble_shrunk_rank_logit_logistic_issue444_extended_stack_own35_ext207`, `source.kind=derived_submission`, `source.run_id=b24e5ba7`, `git_commit=33e080f`, `git_dirty=False`)에 제출 CSV·조립 manifest·#442 장부를 첨부했고, param에 구성원 수(242 = 자체 35 + 외부 207)·λ = 1.0·5:1 혼합 계획·nested 0.9702876, tag에 라이선스 집계(CC0 196, CC BY 4.0 6, Apache 2.0 5)와 제외한 TE 누출 구성원 2개를 적었다.
+metric `public_auc = 0.97134`는 기록 도구가 Kaggle에서 회수했다.
+
+최종 두 장은 사용자가 확정했다.
+
+| 장 | 실행 | Kaggle ref | Public | nested |
+| --- | --- | --- | --- | --- |
+| 1 (안전판) | `e88f706e` | 55795055 | 0.97099 | 0.9698106 |
+| 2 (확장 스택) | `4f2466f8` | 55810100 | 0.97134 | 0.9702876 |
+
+두 장이 계정의 Public 상위 2개이므로 Kaggle의 기본 자동 선택과 같고, 수동 조작은 하지 않았다.
+마감(2026-08-31 23:59 UTC) 전에 추가 제출을 올려 이 두 점수를 넘기지 않는 한 선택은 유지된다.
+#69의 둘째 후보였던 CV 전용판 `b24e5ba7`(0.97096)은 확장 스택이 문턱을 넘어 최종 선택에서 빠진다.

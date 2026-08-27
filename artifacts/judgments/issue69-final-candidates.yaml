@@ -95,3 +95,6 @@ assembly_prediction_sha256:
   cv_full: ebbaeb9b4f2bacd120eb774a52eebf4c0c83d09107ac0abbd89362500733c16d
 public_score_note: 사후 확인값이며 선택 근거로 쓰지 않는다(ADR 0002). 두 후보 모두 Kaggle에 올라가 있고 공개 점수
   상위 2개라 기본 최종 선택에 포함된다.
+final_selection_note: 2026-08-27 이슈 #445에서 두 번째 장이 확장 스택(Kaggle ref 55810100, MLflow 4f2466f8,
+  Public 0.97134)으로 바뀌었다. 후보 1(e88f706e)은 안전판으로 유지되고 후보 2(b24e5ba7)는 최종 선택에서 빠진다.
+  근거는 docs/research/extended-stack-submission.md.
