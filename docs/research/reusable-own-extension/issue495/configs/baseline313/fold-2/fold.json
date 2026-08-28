@@ -1,0 +1,51 @@
+{
+ "schema": "reusable-own-extension-judgment/1",
+ "issue": 495,
+ "precommit_sha256": "2969299d12a15b8b74ea9cefb030ca9a44015c08f89ceccc7dff12b5105ac415",
+ "config": "baseline313",
+ "member_count": 313,
+ "column_order_sha256": "5773aae0df16002e17507d7f08d5ba75d1db7066c2a0cbaf018defc8030fb960",
+ "sealed_fold": 2,
+ "rows": 138274,
+ "strategy": "shrunk_rank_logit_logistic",
+ "c": 1.0,
+ "lambda": 1.0,
+ "auc": 0.9703990946138134,
+ "prediction_sha256": "880905044d02094eb86376b24bb3b1692e837d837852eb5b220d2094fb1ae8c8",
+ "prediction_file_sha256": "eff63e4041acea7c3abb6db125d9a861956317fc0e4fe00627e67b12ed9e03b3",
+ "final_iterations": 160,
+ "final_coefficient_l2_norm": 2.558106342052074,
+ "elapsed_seconds": 484.4669196670002,
+ "peak_rss_bytes": 11468587008,
+ "environment": {
+  "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "cpu_count": 14,
+  "memory_total_bytes": 51539607552,
+  "memory_available_bytes": 24200495104,
+  "python": "3.13.13",
+  "numpy": "2.5.2",
+  "pandas": "3.0.5",
+  "scikit_learn": "1.9.0",
+  "scipy": "1.18.0",
+  "blas": {
+   "name": "accelerate",
+   "found": true,
+   "version": "unknown",
+   "detection method": "system",
+   "include directory": "unknown",
+   "lib directory": "unknown",
+   "openblas configuration": "unknown",
+   "pc file directory": "unknown"
+  },
+  "threads_requested": 4,
+  "thread_environment": {
+   "OMP_NUM_THREADS": "4",
+   "OPENBLAS_NUM_THREADS": "4",
+   "MKL_NUM_THREADS": "4",
+   "VECLIB_MAXIMUM_THREADS": "4",
+   "NUMEXPR_NUM_THREADS": "4"
+  }
+ },
+ "finished_at": "2026-08-28T17:00:26Z"
+}
