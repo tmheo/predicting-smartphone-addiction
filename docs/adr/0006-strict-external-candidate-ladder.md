@@ -11,6 +11,15 @@ supersedes: ADR-0005
 자체 35개에서 출발하는 절차 팔은 지도의 목적지인 "현재 두 번째 장을 넓힌 판"과도 어긋난다.
 2026-08-28 사용자 결정으로 정확 검색을 접고, 현재 313개 위에 동결 후보를 더한 구성을 [#455](https://github.com/tmheo/predicting-smartphone-addiction/issues/455)식 사전 고정 nested OOF 사다리로 재어 교체 문턱을 판정한다.
 
+## 개정 2026-08-28 (#498): 비교 팔의 결합기와 기준값
+
+같은 날 [#489](https://github.com/tmheo/predicting-smartphone-addiction/issues/489)에서 두 번째 최종 제출이 규제 강도 선택판 `30b6f97c`로 바뀌었다.
+구성원 313개와 순서는 그대로이고, 결합기가 C=1.0 고정 `shrunk_rank_logit_logistic`에서 규제 강도 C와 수축 계수 λ를 안쪽 leave-one-fold-out으로 함께 고르는 `CSelectedShrunkRankLogitCombiner`로 바뀌었다(전체 OOF 선택 C=0.03, λ=1.0, nested `0.9703609`).
+따라서 이 계약의 고정 결합기는 `CSelectedShrunkRankLogitCombiner`(C 격자 7개, λ 격자 4개, 동률이면 작은 C·작은 λ)이고, 비교 팔 자기 검사의 기준값은 #489 `comparison.json`의 후보 nested `0.9703609`와 분할별 AUC다.
+사다리 구성, 문턱, 선택 규칙은 바뀌지 않는다.
+분할 하나의 적합이 로지스틱 29회라 작업 시간은 C=1.0판의 약 1.6배(313열 분할당 약 14분)다.
+아래 본문의 `0.9703509`, `#455` 기준, `443b3a71`은 이 개정 전의 값이며 개정 뒤에는 위 값으로 읽는다.
+
 ## 결정
 
 ### 유지하는 것

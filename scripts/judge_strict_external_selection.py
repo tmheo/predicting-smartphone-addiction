@@ -31,9 +31,13 @@ nested 5분할) 작업을 하위 프로세스로 돌린다. 모두 300열대 shr
 코드 상태를 다시 계산해 정확히 같을 때만 진행한다(재개 규칙). 하나라도 어긋나면
 `판정 불가`로 두고 precommit부터 다시 한다.
 
-비교 팔과 사다리 구성은 모두 등록 결합기 `shrunk_rank_logit_logistic`을
-`pipeline.ensemble.evaluate_nested`와 같은 분할 순서·행 순서로 적합한다. 등록 결합기는
-학습 행 순서에 민감하므로(#486 예행, 행 순서만으로 7.96e-04 차이) 원래 행 순서를 지킨다.
+비교 팔과 사다리 구성은 모두 고정 결합기 `CSelectedShrunkRankLogitCombiner`(#489, 규제 강도
+C와 수축 계수 λ를 안쪽 leave-one-fold-out으로 함께 고르는 shrunk)를
+`pipeline.ensemble.evaluate_nested`와 같은 분할 순서·행 순서로 적합한다. 현재 두 번째 장
+`30b6f97c`(#489)가 이 결합기로 만든 313개 판이므로 자기 검사 기준값도 #489 `comparison.json`의
+후보 nested·분할별 AUC다(#498에서 #455 C=1.0 기준에서 바꿈). 결합기는 학습 행 순서에
+민감하므로(#486 예행, 행 순서만으로 7.96e-04 차이) 원래 행 순서를 지킨다. 분할 하나의
+적합은 로지스틱 29회라 C=1.0판보다 약 1.6배 걸린다(313열 분할당 약 14분).
 
 ADR-0005의 정확 검색(`adr0005-select`, `adr0005-compare`, `adr0005-full`)과 빠른 결합기
 `FastShrunk`, `Search`는 계약이 되살아날 때를 위해 보존하며 사다리 판정에서는 쓰지 않는다.
@@ -84,7 +88,11 @@ from pipeline.runs import MlflowRunStore
 ISSUE = 491
 SCHEMA = "strict-external-selection/2"
 CONTRACT_ADR_PATH = Path("docs/adr/0006-strict-external-candidate-ladder.md")
-STRATEGY = "shrunk_rank_logit_logistic"
+STRATEGY = "shrunk_rank_logit_logistic"  # ADR-0005 보존 경로와 #455 계보 확인에만 쓴다.
+LADDER_STRATEGY = ensemble.CSelectedShrunkRankLogitCombiner.name  # 비교 팔·사다리·조립의 고정 결합기(#489, #498)
+C_GRID = ensemble.C_SELECTION_GRID
+COMPARISON_REFERENCE_PATH = Path("docs/research/logistic-c-selection/issue489/comparison.json")
+COMPARISON_RUN_ID = "30b6f97c30904995a79e476f02decf8f"
 OUT_ROOT = Path("run-logs/strict-external-selection")
 COMPARISON_MANIFEST_PATH = Path("docs/research/extended-stack-submission-2-manifest.json")
 COMPARISON_EVIDENCE_PATH = Path("docs/research/extended-stack-ladder-2.json")
@@ -126,10 +134,10 @@ LADDER_RULES = {
     "empty": "정확 중복을 뺀 사다리 후보가 없으면 사다리를 실행하지 않고 현재 두 장 유지를 완결된 결론으로 기록한다.",
 }
 SELECTION_RULES = {
-    "self_check": f"시작 조건(비교 팔 자기 검사): 313의 봉인 분할 예측 5개를 이어붙인 AUC와 분할별 AUC가 #455 기준값과 잡음 바닥 {NOISE_FLOOR} 안에서 맞아야 하며, 실패하면 전체가 판정 불가다. 이 봉인 예측이 분할별 비교의 기준이다.",
+    "self_check": f"시작 조건(비교 팔 자기 검사): 313의 봉인 분할 예측 5개를 고정 결합기로 다시 만들어 이어붙인 AUC와 분할별 AUC가 #489 규제 강도 선택판(30b6f97c) 기준값과 잡음 바닥 {NOISE_FLOOR} 안에서 맞아야 하며, 실패하면 전체가 판정 불가다. 이 봉인 예측이 분할별 비교의 기준이다.",
     "gate": f"313 대비 이어붙인 nested AUC 차이 +{GATE_DELTA} 이상이고 바깥 분할 5곳의 차이가 모두 엄격히 양수인 구성만 통과.",
     "pick": f"통과 구성이 여럿이면 nested 최고. 최고와의 차이가 잡음 바닥 {NOISE_FLOOR} 안이면 그 가운데 구성원 수가 가장 적은 구성, 구성원 수까지 같으면 사다리 순서가 앞선 구성.",
-    "none": "통과 구성이 없으면 현재 두 장(e88f706e + 443b3a71) 유지가 완결된 결론.",
+    "none": "통과 구성이 없으면 현재 두 장(e88f706e + 30b6f97c) 유지가 완결된 결론.",
     "weighted": "가중 OOF AUC는 진단값이며 판정에 쓰지 않는다.",
     "fixed": "사다리 구성, 선택 규칙, 문턱은 결과 확인 전에 고정하고 결과를 본 뒤 더하거나 빼지 않는다.",
     "public_score": "공개 점수는 어느 단계에도 쓰지 않는다.",
@@ -412,6 +420,11 @@ def precommit(args: argparse.Namespace) -> None:
     reference = evidence["configs"][COMPARISON_CONFIG]["strategies"][STRATEGY]
     _require(evidence["selected_config"] == COMPARISON_CONFIG and reference["member_count"] == COMPARISON_MEMBER_COUNT, "#455 근거의 선택 구성이 313구성원이 아니다.")
     _require(set(reference["fold_aucs"]) == {str(k) for k in ALL_FOLDS}, "#455 근거에 분할별 AUC 5개가 없다.")
+    c1_reference = reference
+    current = read_json(COMPARISON_REFERENCE_PATH)
+    _require(current["issue"] == 489 and current["reproduction"]["passes"] and current["control"]["nested_auc"] == c1_reference["nested_auc"], "#489 근거가 #455 대조군 위의 판정이 아니다.")
+    _require(current["candidate"]["strategy"] == LADDER_STRATEGY and set(current["candidate"]["fold_aucs"]) == {str(k) for k in ALL_FOLDS}, "#489 근거에 규제 강도 선택판의 분할별 AUC 5개가 없다.")
+    reference = {key: current["candidate"][key] for key in ("nested_auc", "weighted_oof_auc", "fold_aucs", "fold_selected_c", "fold_selected_lambda", "prediction_sha256")}
 
     exact_duplicates, oof_only_matches = find_exact_duplicates(candidate_rows, comparison_rows)
     ladder_spec = build_ladder(candidate_rows, {row["member_id"] for row in exact_duplicates}, list(comparison.columns))
@@ -462,7 +475,7 @@ def precommit(args: argparse.Namespace) -> None:
             "members": comparison_rows,
             "composition_sha256": canonical_sha256([(r["column"], r["oof_sha256"]) for r in comparison_rows]),
             "pair_composition_sha256": canonical_sha256([(r["column"], r["pair_sha256"]) for r in comparison_rows]),
-            "reference": {"evidence_path": str(COMPARISON_EVIDENCE_PATH), "evidence_sha256": file_sha256(COMPARISON_EVIDENCE_PATH), "config": COMPARISON_CONFIG, "nested_auc": reference["nested_auc"], "weighted_oof_auc": reference["weighted_oof_auc"], "fold_aucs": reference["fold_aucs"]},
+            "reference": {"run_id": COMPARISON_RUN_ID, "issue": 489, "evidence_path": str(COMPARISON_REFERENCE_PATH), "evidence_sha256": file_sha256(COMPARISON_REFERENCE_PATH), "config": COMPARISON_CONFIG, "strategy": LADDER_STRATEGY, **reference, "c1_lineage": {"evidence_path": str(COMPARISON_EVIDENCE_PATH), "evidence_sha256": file_sha256(COMPARISON_EVIDENCE_PATH), "nested_auc": c1_reference["nested_auc"], "fold_aucs": c1_reference["fold_aucs"], "note": "#455 C=1.0판(443b3a71)의 값. #489에서 규제 강도 선택판으로 교체돼 자기 검사 기준이 아니다."}},
         },
         "candidate_arm": {
             "columns": list(own.columns) + list(candidates.columns),
@@ -474,11 +487,12 @@ def precommit(args: argparse.Namespace) -> None:
         "ladder": ladder_spec,
         "caches": caches,
         "combiner": {
-            "name": STRATEGY,
+            "name": LADDER_STRATEGY,
+            "c_grid": list(C_GRID),
             "lambda_grid": list(LAMBDA_GRID),
-            "meta": {"representation": "rank_logit", "C": 1.0, "solver": "lbfgs", "max_iter": META_MAX_ITER, "random_state": 0, "logit_eps": LOGIT_EPS},
-            "implementation": "pipeline.ensemble.COMBINER_REGISTRY 등록 결합기. 비교 팔과 사다리 구성 모두 evaluate_nested와 같은 분할 순서·행 순서로 분할마다 fit → predict.",
-            "nested": "바깥 분할 하나를 봉인하고 나머지 4분할 행으로 결합기를 맞춰 봉인 분할을 예측한 뒤 5개 예측을 원래 행 순서로 이어붙여 채점. λ는 학습 부분 안의 leave-one-fold-out.",
+            "meta": {"representation": "rank_logit", "penalty": "l2", "solver": "lbfgs", "max_iter": META_MAX_ITER, "random_state": 0, "logit_eps": LOGIT_EPS},
+            "implementation": "pipeline.ensemble.CSelectedShrunkRankLogitCombiner(#489). 비교 팔과 사다리 구성 모두 evaluate_nested와 같은 분할 순서·행 순서로 분할마다 fit → predict.",
+            "nested": "바깥 분할 하나를 봉인하고 나머지 4분할 행으로 결합기를 맞춰 봉인 분할을 예측한 뒤 5개 예측을 원래 행 순서로 이어붙여 채점. (C, λ)는 학습 부분 안의 leave-one-fold-out에서 함께 고르고 동률이면 작은 C, 같은 C 안에서 작은 λ.",
             "weighted_oof": {"test_path": str(MISSINGNESS_TEST_PATH), "note": "test 결측 패턴 구성비 재가중(#383). 진단값."},
         },
         "gate": {"delta_required": GATE_DELTA, "folds_required_positive": FOLDS_REQUIRED_POSITIVE, "comparison": "구성의 봉인 분할 예측 5개를 원래 행 순서로 이어붙인 AUC에서 비교 팔 313의 같은 값을 뺀 차이, 분할별 차이는 같은 봉인 분할 예측끼리", "public_score_used": False},
@@ -504,6 +518,7 @@ def precommit(args: argparse.Namespace) -> None:
         print(f"  구성 {config['index']} {config['name']:<44} {config['member_count']}구성원 (후보 {len(config['candidate_member_ids'])}, 뺌 {len(config['removed_member_ids'])})")
     for entry in ladder_spec["omitted"]:
         print(f"  생략 {entry['name']}: {entry['reason']}")
+    print(f"  비교 팔 기준(#489, {COMPARISON_RUN_ID[:8]}): nested {reference['nested_auc']:.7f}, 결합기 {LADDER_STRATEGY}, C 격자 {list(C_GRID)}")
     print(f"  precommit_sha256 {payload['precommit_sha256']}")
 
 
@@ -928,8 +943,13 @@ def named_stage(stage: dict, columns: list[str]) -> dict:
     }
 
 
+def ladder_combiner(fold_of: pd.Series) -> ensemble.CSelectedShrunkRankLogitCombiner:
+    """고정 결합기: #489 규제 강도 선택판과 같은 C·λ 안쪽 선택 shrunk."""
+    return ensemble.CSelectedShrunkRankLogitCombiner(fold_of=fold_of, c_grid=C_GRID, lambda_grid=LAMBDA_GRID, max_iter=META_MAX_ITER)
+
+
 def baseline_fold(args: argparse.Namespace) -> None:
-    """비교 팔 313의 봉인 분할 예측. 등록 결합기를 evaluate_nested의 분할 하나와 같게 쓴다."""
+    """비교 팔 313의 봉인 분할 예측. 고정 결합기를 evaluate_nested의 분할 하나와 같게 쓴다."""
     run_dir = Path(args.run_dir)
     payload = load_precommit(run_dir)
     sealed = int(args.fold)
@@ -946,9 +966,14 @@ def baseline_fold(args: argparse.Namespace) -> None:
     inner = (fold_of != sealed).to_numpy()
     outer = (fold_of == sealed).to_numpy()
     print(f"=== 비교 팔 {preds.shape[1]}구성원, 봉인 {sealed} ===", flush=True)
-    fitted = ensemble.COMBINER_REGISTRY[STRATEGY].fit(preds[inner], y[inner])
+    try:
+        fitted = ladder_combiner(fold_of).fit(preds[inner], y[inner])
+    except ensemble.CombinerConvergenceError as exc:
+        raise JudgmentError(f"비교 팔 분할 {sealed} 미수렴({exc}). 전체 판정은 판정 불가다.") from exc
     prediction = np.asarray(fitted.predict(preds[outer]), dtype=np.float64)
     _require(prediction.shape == (int(outer.sum()),) and bool(np.isfinite(prediction).all()), "비교 팔 예측이 유한하지 않다.")
+    reference_auc = payload["comparison_arm"]["reference"]["fold_aucs"][str(sealed)]
+    auc = float(roc_auc_score(y[outer].to_numpy(), prediction))
     pd.DataFrame({ID: fold_of.index.to_numpy()[outer], "prediction": prediction}).to_parquet(out_path, index=False)
     write_json(fold_dir / "baseline.json", {
         "schema": SCHEMA,
@@ -957,12 +982,17 @@ def baseline_fold(args: argparse.Namespace) -> None:
         "sealed_fold": sealed,
         "member_count": int(preds.shape[1]),
         "composition_sha256": payload["comparison_arm"]["composition_sha256"],
+        "strategy": LADDER_STRATEGY,
         "lambda": float(fitted.shrinkage_lambda),
+        "c": float(fitted.c),
+        "auc": auc,
+        "reference_auc": reference_auc,
+        "delta_vs_reference": auc - reference_auc,
         "prediction_sha256": prediction_array_sha256(prediction),
         "elapsed_seconds": time.monotonic() - started,
         "finished_at": now_iso(),
     })
-    print(f"  저장: {out_path} ({time.monotonic() - started:.0f}s, λ={fitted.shrinkage_lambda})", flush=True)
+    print(f"  저장: {out_path} ({time.monotonic() - started:.0f}s, C={fitted.c} λ={fitted.shrinkage_lambda}, AUC {auc:.7f}, #489 기준 차이 {auc - reference_auc:+.2e})", flush=True)
 
 
 # ---------------------------------------------------------------------------
@@ -1031,7 +1061,7 @@ def ladder_job(args: argparse.Namespace) -> None:
         diagnostics = near_duplicate_diagnostics(matrix, fold_of, payload["own_start"]["member_count"], payload["comparison_arm"]["member_count"])
         diagnostics["elapsed_seconds"] = time.monotonic() - diagnostics_started
         print(f"  근접 중복 진단: 분할별 쌍 수 {[v['pair_count'] for v in diagnostics['by_sealed_fold'].values()]} ({diagnostics['elapsed_seconds']:.0f}s)", flush=True)
-    combiner = ensemble.COMBINER_REGISTRY[STRATEGY]
+    combiner = ladder_combiner(fold_of)
     nested = np.full(len(matrix), np.nan)
     folds_out: dict[str, dict] = {}
     for fold in payload["outer_folds"]:
@@ -1048,8 +1078,8 @@ def ladder_job(args: argparse.Namespace) -> None:
         fold_dir = out_dir / f"fold-{fold}"
         fold_dir.mkdir(exist_ok=True)
         pd.DataFrame({ID: fold_of.index.to_numpy()[outer], "prediction": prediction}).to_parquet(fold_dir / "predictions.parquet", index=False)
-        folds_out[str(fold)] = {"rows": int(outer.sum()), "auc": float(roc_auc_score(y[outer].to_numpy(), prediction)), "lambda": float(fitted.shrinkage_lambda), "prediction_sha256": prediction_array_sha256(prediction), "elapsed_seconds": time.monotonic() - fold_started}
-        print(f"  분할 {fold}: AUC {folds_out[str(fold)]['auc']:.7f}, λ={fitted.shrinkage_lambda} ({folds_out[str(fold)]['elapsed_seconds']:.0f}s)", flush=True)
+        folds_out[str(fold)] = {"rows": int(outer.sum()), "auc": float(roc_auc_score(y[outer].to_numpy(), prediction)), "lambda": float(fitted.shrinkage_lambda), "c": float(fitted.c), "prediction_sha256": prediction_array_sha256(prediction), "elapsed_seconds": time.monotonic() - fold_started}
+        print(f"  분할 {fold}: AUC {folds_out[str(fold)]['auc']:.7f}, C={fitted.c} λ={fitted.shrinkage_lambda} ({folds_out[str(fold)]['elapsed_seconds']:.0f}s)", flush=True)
     complete = list(payload["outer_folds"]) == list(ALL_FOLDS)
     scored = ~np.isnan(nested)
     series = pd.Series(nested, index=matrix.index, name="prediction")
@@ -1060,7 +1090,7 @@ def ladder_job(args: argparse.Namespace) -> None:
         "candidate_set_id": payload["candidate_set_id"],
         "precommit_sha256": payload["precommit_sha256"],
         "config": {k: config[k] for k in ("index", "name", "kind", "description", "candidate_member_ids", "removed_member_ids", "member_count")},
-        "strategy": STRATEGY,
+        "strategy": LADDER_STRATEGY,
         "member_count": int(matrix.shape[1]),
         "columns": list(matrix.columns),
         "outer_folds": list(payload["outer_folds"]),
@@ -1350,7 +1380,7 @@ def _load_baseline(run_dir: Path, payload: dict, fold_of: pd.Series, y: pd.Serie
         _require(base.index.equals(pd.Index(ids)), f"분할 {fold}의 baseline 예측 id가 분할 배정과 다르다.")
         _require(prediction_array_sha256(base.to_numpy()) == record["prediction_sha256"], f"분할 {fold}의 baseline 예측 해시가 baseline.json과 다르다.")
         baseline.loc[ids] = base.to_numpy()
-        per_fold[str(fold)] = {"auc": float(roc_auc_score(y.loc[ids].to_numpy(), base.to_numpy())), "lambda": record["lambda"], "prediction_sha256": record["prediction_sha256"]}
+        per_fold[str(fold)] = {"auc": float(roc_auc_score(y.loc[ids].to_numpy(), base.to_numpy())), "lambda": record["lambda"], "c": record.get("c"), "prediction_sha256": record["prediction_sha256"]}
     return baseline, per_fold
 
 
@@ -1398,7 +1428,7 @@ def compare(args: argparse.Namespace) -> None:
         "ladder_candidate_count": payload["ladder"]["candidate_count"],
     }
     if not configs:
-        record.update(self_check=None, configs=[], passing_configs=[], selected_config=None, verdict="사다리 후보 없음: 현재 두 장(e88f706e + 443b3a71) 유지", compared_at=now_iso())
+        record.update(self_check=None, configs=[], passing_configs=[], selected_config=None, verdict="사다리 후보 없음: 현재 두 장(e88f706e + 30b6f97c) 유지", compared_at=now_iso())
         write_json(run_dir / "ladder-comparison.json", record)
         print(record["verdict"])
         return
@@ -1414,6 +1444,8 @@ def compare(args: argparse.Namespace) -> None:
         "delta": base_auc - reference["reference_nested_auc"],
         "baseline_fold_aucs": {k: v["auc"] for k, v in base_folds.items()},
         "baseline_fold_lambdas": {k: v["lambda"] for k, v in base_folds.items()},
+        "baseline_fold_cs": {k: v["c"] for k, v in base_folds.items()},
+        "reference_run_id": payload["comparison_arm"]["reference"].get("run_id"),
         "fold_deltas_vs_reference": fold_deltas_vs_reference,
         "tolerance": NOISE_FLOOR,
         "passes": bool(complete and abs(base_auc - reference["reference_nested_auc"]) <= NOISE_FLOOR and all(abs(v) <= NOISE_FLOOR for v in fold_deltas_vs_reference.values())),
@@ -1437,6 +1469,7 @@ def compare(args: argparse.Namespace) -> None:
             "weighted_oof_auc": nested_record["weighted_oof_auc"],
             "fold_aucs": nested_record["fold_aucs"],
             "fold_lambdas": {k: v["lambda"] for k, v in nested_record["folds"].items()},
+            "fold_cs": {k: v.get("c") for k, v in nested_record["folds"].items()},
             "delta_vs_313": delta,
             "delta_minus_gate": delta - GATE_DELTA,
             "delta_within_noise_floor": abs(delta) <= NOISE_FLOOR,
@@ -1462,10 +1495,10 @@ def compare(args: argparse.Namespace) -> None:
     elif selected is not None:
         verdict = "통과"
     else:
-        verdict = "미달: 현재 두 장(e88f706e + 443b3a71) 유지"
+        verdict = "미달: 현재 두 장(e88f706e + 30b6f97c) 유지"
     record.update(self_check=self_check, comparison_arm_auc=base_auc, configs=results, passing_configs=[r["name"] for r in passing], selection=selection_trace, selected_config=selected, verdict=verdict, rows_scored=int(mask.sum()), compared_at=now_iso())
     write_json(run_dir / "ladder-comparison.json", record)
-    print(f"자기 검사: 313 이어붙인 {base_auc:.7f} (#455 {reference['reference_nested_auc']:.7f}, 차이 {self_check['delta']:+.2e}, 분할 최대 {max(abs(v) for v in fold_deltas_vs_reference.values()):.2e}) → {'통과' if self_check['passes'] else '실패'}")
+    print(f"자기 검사: 313 이어붙인 {base_auc:.7f} (#489 {reference['reference_nested_auc']:.7f}, 차이 {self_check['delta']:+.2e}, 분할 최대 {max(abs(v) for v in fold_deltas_vs_reference.values()):.2e}) → {'통과' if self_check['passes'] else '실패'}")
     for r in results:
         print(f"  {r['name']:<44} {r['member_count']:>4} nested {r['nested_auc']:.7f} 가중 {r['weighted_oof_auc']:.7f} Δ {r['delta_vs_313']:+.7f} 분할 {r['folds_positive']}/5{' 통과' if r['passes_gate'] else ''}")
     print(f"판정: {verdict}" + (f", 선택 {selected}" if selected else ""))
@@ -1490,7 +1523,7 @@ def report(args: argparse.Namespace) -> None:
     lines += [f"- 동결 후보 {payload['freeze_spec']['candidate_count']}개 가운데 정확 중복 {len(payload['exact_duplicates'])}개를 뺀 사다리 후보 {payload['ladder']['candidate_count']}개, 구성 {payload['ladder']['config_count']}개."]
     self_check = comparison.get("self_check")
     if self_check is not None:
-        lines += [f"- 비교 팔 자기 검사: 313 이어붙인 AUC {self_check['baseline_concatenated_auc']:.7f}, #455 기준 {self_check['reference_nested_auc']:.7f}, 차이 `{self_check['delta']:+.2e}`, 분할 최대 차이 `{max(abs(v) for v in self_check['fold_deltas_vs_reference'].values()):.2e}`, 잡음 바닥 `{NOISE_FLOOR}` → **{'통과' if self_check['passes'] else '실패(판정 불가)'}**"]
+        lines += [f"- 비교 팔 자기 검사: 313 이어붙인 AUC {self_check['baseline_concatenated_auc']:.7f}, #489 규제 강도 선택판 기준 {self_check['reference_nested_auc']:.7f}, 차이 `{self_check['delta']:+.2e}`, 분할 최대 차이 `{max(abs(v) for v in self_check['fold_deltas_vs_reference'].values()):.2e}`, 잡음 바닥 `{NOISE_FLOOR}` → **{'통과' if self_check['passes'] else '실패(판정 불가)'}**"]
     if comparison.get("selection"):
         trace = comparison["selection"]
         lines += [f"- 선택 경로: nested 최고 `{trace['highest_nested']}`, 잡음 바닥 안 {', '.join(f'`{n}`' for n in trace['within_noise_floor_of_highest'])} → 구성원 적은 쪽·사다리 순서 `{trace['fewest_members_then_ladder_order']}`"]
@@ -1502,9 +1535,9 @@ def report(args: argparse.Namespace) -> None:
             lines.append(f"| {r['index']} | `{r['name']}` | {r['member_count']} | {r['nested_auc']:.7f} | {r['weighted_oof_auc']:.7f} | {r['delta_vs_313']:+.7f} | " + " | ".join(f"{r['fold_deltas_vs_313'][str(k)]:+.7f}" for k in folds) + f" | {r['folds_positive']}/5 | {'통과' if r['passes_gate'] else '-'} |")
         lines += ["", "구성별 후보:", ""]
         for r in comparison["configs"]:
-            lines.append(f"- `{r['name']}`: {r['description']}. 후보 {len(r['candidate_member_ids'])}개" + (f", 뺀 후보 {', '.join(f'`{m}`' for m in r['removed_member_ids'])}" if r["removed_member_ids"] else "") + f", λ {r['fold_lambdas']}")
+            lines.append(f"- `{r['name']}`: {r['description']}. 후보 {len(r['candidate_member_ids'])}개" + (f", 뺀 후보 {', '.join(f'`{m}`' for m in r['removed_member_ids'])}" if r["removed_member_ids"] else "") + f", C {r['fold_cs']}, λ {r['fold_lambdas']}")
         if self_check is not None:
-            lines += ["", "비교 팔 313 분할별 AUC(자기 검사 기준): " + ", ".join(f"분할 {k} {v:.7f}" for k, v in self_check["baseline_fold_aucs"].items()) + f", λ {self_check['baseline_fold_lambdas']}"]
+            lines += ["", "비교 팔 313 분할별 AUC(자기 검사 기준): " + ", ".join(f"분할 {k} {v:.7f}" for k, v in self_check["baseline_fold_aucs"].items()) + f", C {self_check['baseline_fold_cs']}, λ {self_check['baseline_fold_lambdas']}"]
     lines += ["", "## 정확 중복(자동 제외)", ""]
     if payload["exact_duplicates"]:
         lines += ["| 동결 순서 | 후보 | 313 구성원 |", "| ---: | --- | --- |"]
@@ -1598,7 +1631,7 @@ def assemble(args: argparse.Namespace) -> None:
         sources[column]["prediction_sha256"] = prediction_array_sha256(values)
     test = pd.DataFrame(columns, index=test_ids.to_numpy()).astype(np.float64)
     _require(list(test.columns) == list(oof.columns), "시험 행렬의 열 순서가 OOF와 다르다.")
-    combiner = ensemble.COMBINER_REGISTRY[STRATEGY]
+    combiner = ladder_combiner(fold_of)
     fitted = combiner.fit(oof, y)
     prediction = ensemble.full_fit_predictions(combiner, oof, y, test)
     in_sample_auc = float(roc_auc_score(y.to_numpy(), np.asarray(fitted.predict(oof), dtype=np.float64)))
@@ -1611,10 +1644,10 @@ def assemble(args: argparse.Namespace) -> None:
         "candidate_set_id": payload["candidate_set_id"],
         "precommit_sha256": payload["precommit_sha256"],
         "git": git_state(),
-        "strategy": STRATEGY,
+        "strategy": LADDER_STRATEGY,
         "judged": {"config": config["name"], "nested_auc": result["nested_auc"], "weighted_oof_auc": result["weighted_oof_auc"], "delta_vs_313": result["delta_vs_313"], "folds_positive": result["folds_positive"], "comparison_arm_auc": comparison["comparison_arm_auc"], "verdict": comparison["verdict"], "self_check_passes": comparison["self_check"]["passes"]},
         "assembled": {"member_count": config["member_count"], "own_member_count": payload["own_start"]["member_count"], "comparison_external_count": payload["comparison_arm"]["member_count"] - payload["own_start"]["member_count"], "candidate_count": len(config["candidate_member_ids"]), "candidate_member_ids": config["candidate_member_ids"]},
-        "combiner": {"shrinkage_lambda": float(fitted.shrinkage_lambda), "lambda_grid": list(combiner.lambda_grid), "fit_protocol": "전체 OOF 1회 적합(ensemble.full_fit_predictions), λ는 5분할 leave-one-fold-out", "in_sample_oof_auc": in_sample_auc},
+        "combiner": {"c": float(fitted.c), "shrinkage_lambda": float(fitted.shrinkage_lambda), "c_grid": list(combiner.c_grid), "lambda_grid": list(combiner.lambda_grid), "selection_aucs": [{"c": c, "lambda": lam, "auc": value} for (c, lam), value in fitted.selection_aucs.items()], "final_iterations": fitted.final_iterations, "final_coefficient_l2_norm": fitted.final_coefficient_l2_norm, "fit_protocol": "전체 OOF 1회 적합(ensemble.full_fit_predictions), (C, λ)는 5분할 leave-one-fold-out", "in_sample_oof_auc": in_sample_auc},
         "inputs": {"train_sha256": file_sha256(TRAIN_PATH), "test_sha256": file_sha256(TEST_PATH), "folds_sha256": file_sha256(FOLDS_PATH), "pool_sha256": file_sha256(POOL_PATH), "comparison_manifest_sha256": payload["comparison_arm"]["manifest_sha256"], "freeze_spec": payload["freeze_spec"], "own_test": {"kind": "cv5_full1_mix", "path": str(OWN_TEST_PATH), "full_refit_manifest_sha256": file_sha256(FULL_REFIT_MANIFEST_PATH)}},
         "members": [{"column": column, "weight": float(weight), "test": sources[column]} for column, weight in fitted.summary().items()],
         "submission": {"path": str(submission_path), "file_sha256": file_sha256(submission_path), "prediction_sha256": prediction_array_sha256(prediction), "checks": prior_assembly.rank_space_checks(prediction, test_ids)},
