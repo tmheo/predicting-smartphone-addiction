@@ -1,0 +1,98 @@
+{
+ "issue": 484,
+ "root": "data/external/ext484",
+ "kernel_ref": "beicicc/s6e8-fold-safe-tabnet",
+ "script_version_id": 339872430,
+ "files": [
+  {
+   "path": "beicicc_s6e8-fold-safe-tabnet/.download.log",
+   "role": "source_metadata",
+   "bytes": 2061,
+   "retrieved_at": "2026-08-28T03:01:15Z"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-tabnet/files.json",
+   "role": "source_metadata",
+   "bytes": 618,
+   "retrieved_at": "2026-08-28T03:01:15Z",
+   "sha256": "1eb3a96d2d4ad9e655176ae7471b8fab5e047cef9a2378f026a8ee3e0ead5b8d"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-tabnet/kernel-metadata.json",
+   "role": "source_metadata",
+   "bytes": 622,
+   "retrieved_at": "2026-08-28T03:01:19Z",
+   "sha256": "6ddca7199167cca1e6bf739331b320421a96c38d6eb89007f063e57aeb0cf921"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-tabnet/normalized/oof_tabnet.npy",
+   "role": "normalized",
+   "bytes": 5531080,
+   "retrieved_at": null,
+   "sha256": "6ff60f55ef09b6b47a9b5c71344a4cb25bbff76e58653c2e4e8ea64aa6ea82f4"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-tabnet/normalized/test_tabnet.npy",
+   "role": "normalized",
+   "bytes": 2370544,
+   "retrieved_at": null,
+   "sha256": "593f3066fc07265842a0ac10a02dc9dd8d53692b04da39fffc34560ff803705c"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-tabnet/page-version.json",
+   "role": "source_metadata",
+   "bytes": 177,
+   "retrieved_at": "2026-08-28T03:01:15Z",
+   "sha256": "a85fd7bafc1301043842b9fb0a808052aac0afaff0241277c2f8ddba73478929"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+   "role": "source_notebook",
+   "bytes": 31456,
+   "retrieved_at": "2026-08-28T03:01:19Z",
+   "sha256": "3f97a7351a649a6a583edf3492fe4db190d926ef94778c74db3bba41c8abfeb7"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.log",
+   "role": "source_output",
+   "bytes": 40750,
+   "retrieved_at": "2026-08-28T03:01:31Z",
+   "sha256": "993a7188917d555eb357155906bbac37354895e2edfbab5e2557e88b77b8ba6e"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-tabnet/submission.csv",
+   "role": "source_output",
+   "bytes": 7754617,
+   "retrieved_at": "2026-08-28T03:01:31Z",
+   "sha256": "b186deb543359ac667d1b466530c8986d5479dc81aba56b5c5a01b3751fcc1db"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-tabnet/tabnet_fold_safe_fold_scores.csv",
+   "role": "source_output",
+   "bytes": 1025,
+   "retrieved_at": "2026-08-28T03:01:31Z",
+   "sha256": "7207a73a9a929744eb0e2ade032037646038d2d04d8c1e9cc4bdfacdf228337a"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-tabnet/tabnet_fold_safe_manifest.json",
+   "role": "source_output",
+   "bytes": 3036,
+   "retrieved_at": "2026-08-28T03:01:31Z",
+   "sha256": "a6f40d956cabb91a70ce320c08457a551be174026514e08ac06033adf27c9ff3"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-tabnet/tabnet_fold_safe_oof.csv",
+   "role": "source_output",
+   "bytes": 13429855,
+   "retrieved_at": "2026-08-28T03:01:31Z",
+   "sha256": "e93038b7859d5da0f0410e62a177a6965c9c83933e840bf0b79ce3d5b12d7451"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-tabnet/tabnet_fold_safe_test.csv",
+   "role": "source_output",
+   "bytes": 5208251,
+   "retrieved_at": "2026-08-28T03:01:31Z",
+   "sha256": "84254c4ea4e0bf27a05b3fcabc4bec906c8be5fd71e6d8e751e458c5138b230d"
+  }
+ ]
+}

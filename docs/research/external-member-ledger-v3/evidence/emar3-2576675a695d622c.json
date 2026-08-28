@@ -1,0 +1,119 @@
+{
+ "issue": 484,
+ "root": "data/external/ext484",
+ "kernel_ref": "mohankrishnathalla/s6e8-realmlp-oof-saver",
+ "script_version_id": 342288210,
+ "files": [
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/.download.log",
+   "role": "source_metadata",
+   "bytes": 2585,
+   "retrieved_at": "2026-08-28T02:59:56Z"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/files.json",
+   "role": "source_metadata",
+   "bytes": 988,
+   "retrieved_at": "2026-08-28T02:59:56Z",
+   "sha256": "962c50bcd868484e14092a184eddfe284e1161fa9d86fb6a80ea039c4f1c9002"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/kernel-metadata.json",
+   "role": "source_metadata",
+   "bytes": 640,
+   "retrieved_at": "2026-08-28T02:59:59Z",
+   "sha256": "67a77dd16e23a8e0c940c2a2ae10fd63f41e2b3eef75f51b49d6399d25e3d5a9"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/normalized/oof_realmlp.npy",
+   "role": "normalized",
+   "bytes": 5531080,
+   "retrieved_at": null,
+   "sha256": "d680494d813119cf52a36550f33d26321143a29ded3630d47773196c33899acd"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/normalized/test_realmlp.npy",
+   "role": "normalized",
+   "bytes": 2370544,
+   "retrieved_at": null,
+   "sha256": "cb1168e04c06a7aa821ed787ec078ae9446ff90a456bfff2d01bac51139805a9"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/oof_realmlp.npy",
+   "role": "source_output",
+   "bytes": 5531080,
+   "retrieved_at": "2026-08-28T03:00:21Z",
+   "sha256": "d680494d813119cf52a36550f33d26321143a29ded3630d47773196c33899acd"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/page-version.json",
+   "role": "source_metadata",
+   "bytes": 189,
+   "retrieved_at": "2026-08-28T02:59:56Z",
+   "sha256": "6a5ef408249d0efed346e98d92491f7f98724b78ae343f85d3fb0659f78b9db2"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/s6e8-realmlp-oof-saver.ipynb",
+   "role": "source_notebook",
+   "bytes": 14792,
+   "retrieved_at": "2026-08-28T02:59:59Z",
+   "sha256": "17e2015025d753537023f1f2f90f8ec13adacad7e36f4d7b2bf5a326d028558a"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/s6e8-realmlp-oof-saver.log",
+   "role": "source_output",
+   "bytes": 38144,
+   "retrieved_at": "2026-08-28T03:00:21Z",
+   "sha256": "f845625f8ef81024581c601a6ef6b27c6311df9e1ffffb33a5c4d7a7c7d54483"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/submission_realmlp.csv",
+   "role": "source_output",
+   "bytes": 7738434,
+   "retrieved_at": "2026-08-28T03:00:21Z",
+   "sha256": "3f467384cfe65a5bee0304e86b687bc2aa560e5ef2066d1599b45e10a159b780"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/submission_realmlp_fold1.csv",
+   "role": "source_output",
+   "bytes": 7743368,
+   "retrieved_at": "2026-08-28T03:00:21Z",
+   "sha256": "6823e9dcee75b11968c6b2f62af18e5d5b65499a2df9077d2c9cd0621dd1fd75"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/submission_realmlp_fold2.csv",
+   "role": "source_output",
+   "bytes": 7740588,
+   "retrieved_at": "2026-08-28T03:00:21Z",
+   "sha256": "38d79c06afa70630a74f41013248b65976e787733fb4daf76f79c487cf3b954e"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/submission_realmlp_fold3.csv",
+   "role": "source_output",
+   "bytes": 7739054,
+   "retrieved_at": "2026-08-28T03:00:21Z",
+   "sha256": "1af3f9a4389795655cf186398519693bdfee23a91c1b27ed4a2711b9362b653d"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/submission_realmlp_fold4.csv",
+   "role": "source_output",
+   "bytes": 7738469,
+   "retrieved_at": "2026-08-28T03:00:21Z",
+   "sha256": "3abdbfda03fee03364cbb28b6f29ac9fea561afd80f48d9384346247de5291e3"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/submission_realmlp_fold5.csv",
+   "role": "source_output",
+   "bytes": 7738434,
+   "retrieved_at": "2026-08-28T03:00:21Z",
+   "sha256": "3f467384cfe65a5bee0304e86b687bc2aa560e5ef2066d1599b45e10a159b780"
+  },
+  {
+   "path": "mohankrishnathalla_s6e8-realmlp-oof-saver/test_realmlp.npy",
+   "role": "source_output",
+   "bytes": 2370544,
+   "retrieved_at": "2026-08-28T03:00:21Z",
+   "sha256": "cb1168e04c06a7aa821ed787ec078ae9446ff90a456bfff2d01bac51139805a9"
+  }
+ ]
+}

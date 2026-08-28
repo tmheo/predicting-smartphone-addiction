@@ -1,0 +1,77 @@
+{
+ "issue": 484,
+ "root": "data/external/ext484",
+ "kernel_ref": "yekenot/ps-s6-e8-trompt-pytorch-frame",
+ "script_version_id": 344781653,
+ "files": [
+  {
+   "path": "yekenot_ps-s6-e8-trompt-pytorch-frame/.download.log",
+   "role": "source_metadata",
+   "bytes": 1700,
+   "retrieved_at": "2026-08-28T02:59:40Z"
+  },
+  {
+   "path": "yekenot_ps-s6-e8-trompt-pytorch-frame/files.json",
+   "role": "source_metadata",
+   "bytes": 230,
+   "retrieved_at": "2026-08-28T02:59:40Z",
+   "sha256": "c222ad7151970e0b4c326d52951d412ed1f608507c30c5ab937e7435d48f65b9"
+  },
+  {
+   "path": "yekenot_ps-s6-e8-trompt-pytorch-frame/kernel-metadata.json",
+   "role": "source_metadata",
+   "bytes": 654,
+   "retrieved_at": "2026-08-28T02:59:43Z",
+   "sha256": "8808a3c799f2e201bd40b02e9c01aa73cc771df987d3b744d24d5c5b09cabbe2"
+  },
+  {
+   "path": "yekenot_ps-s6-e8-trompt-pytorch-frame/normalized/oof_trompt.npy",
+   "role": "normalized",
+   "bytes": 5531080,
+   "retrieved_at": null,
+   "sha256": "ab59c08d421ca991fe71e73c1102c086f5f7a507ccaf313eb2234ab0bf96b982"
+  },
+  {
+   "path": "yekenot_ps-s6-e8-trompt-pytorch-frame/normalized/test_trompt.npy",
+   "role": "normalized",
+   "bytes": 2370544,
+   "retrieved_at": null,
+   "sha256": "37d7391c721e27fd768b6eaadc13e1ecb8be0e28a9d966e727c3e2444939d176"
+  },
+  {
+   "path": "yekenot_ps-s6-e8-trompt-pytorch-frame/oof_preds.csv",
+   "role": "source_output",
+   "bytes": 18008169,
+   "retrieved_at": "2026-08-28T02:59:53Z",
+   "sha256": "d71fb8ad39568df9713846e1934d8f90c3918f9da434a95a86e95f2160fbf812"
+  },
+  {
+   "path": "yekenot_ps-s6-e8-trompt-pytorch-frame/page-version.json",
+   "role": "source_metadata",
+   "bytes": 185,
+   "retrieved_at": "2026-08-28T02:59:40Z",
+   "sha256": "59fd978d74c0927e3ced6ffe25474b7c4b08a58cb10857b05a6fab8c9d476684"
+  },
+  {
+   "path": "yekenot_ps-s6-e8-trompt-pytorch-frame/ps-s6-e8-trompt-pytorch-frame.ipynb",
+   "role": "source_notebook",
+   "bytes": 14207,
+   "retrieved_at": "2026-08-28T02:59:43Z",
+   "sha256": "a743e3ad4ac8c9916e94364ce77c8a8933319b31d7b050b928d97f0467c4bc37"
+  },
+  {
+   "path": "yekenot_ps-s6-e8-trompt-pytorch-frame/ps-s6-e8-trompt-pytorch-frame.log",
+   "role": "source_output",
+   "bytes": 10847,
+   "retrieved_at": "2026-08-28T02:59:53Z",
+   "sha256": "8ca4f26751be8a12bb3213255970e322b5ecc6b7097f1ef216880dee8d79f9bf"
+  },
+  {
+   "path": "yekenot_ps-s6-e8-trompt-pytorch-frame/submission.csv",
+   "role": "source_output",
+   "bytes": 7765435,
+   "retrieved_at": "2026-08-28T02:59:53Z",
+   "sha256": "d5a854f4eee4c459dbe0299696caa77b9b71c413541cf92bac2a8d99ffb323af"
+  }
+ ]
+}

@@ -1,0 +1,84 @@
+{
+ "issue": 484,
+ "root": "data/external/ext484",
+ "kernel_ref": "redamountassir/s6e8-histgradientboosting-lb-0-96945",
+ "script_version_id": 340546105,
+ "files": [
+  {
+   "path": "redamountassir_s6e8-histgradientboosting-lb-0-96945/.download.log",
+   "role": "source_metadata",
+   "bytes": 1969,
+   "retrieved_at": "2026-08-28T02:59:22Z"
+  },
+  {
+   "path": "redamountassir_s6e8-histgradientboosting-lb-0-96945/files.json",
+   "role": "source_metadata",
+   "bytes": 358,
+   "retrieved_at": "2026-08-28T02:59:22Z",
+   "sha256": "5ed1a713cb073deb76d73c3b9b5d28b6451440b8232ccfacbceaacb9f1afcac8"
+  },
+  {
+   "path": "redamountassir_s6e8-histgradientboosting-lb-0-96945/kernel-metadata.json",
+   "role": "source_metadata",
+   "bytes": 728,
+   "retrieved_at": "2026-08-28T02:59:25Z",
+   "sha256": "63cae37b9b963cdcac659f6860a545858983f9d24610ad2724274b371a583273"
+  },
+  {
+   "path": "redamountassir_s6e8-histgradientboosting-lb-0-96945/normalized/oof_hgb.npy",
+   "role": "normalized",
+   "bytes": 5531080,
+   "retrieved_at": null,
+   "sha256": "4ae2c0ed812ad94489c49db1601933c0a81431efa9951ceacfe7f329cecfe14b"
+  },
+  {
+   "path": "redamountassir_s6e8-histgradientboosting-lb-0-96945/normalized/test_hgb.npy",
+   "role": "normalized",
+   "bytes": 2370544,
+   "retrieved_at": null,
+   "sha256": "90dd59cc5175dad9bd8f00ae989d170803ab798066d14605e90a6d67fd691a94"
+  },
+  {
+   "path": "redamountassir_s6e8-histgradientboosting-lb-0-96945/page-version.json",
+   "role": "source_metadata",
+   "bytes": 199,
+   "retrieved_at": "2026-08-28T02:59:22Z",
+   "sha256": "703778a5ab192cba8e93260b92b66dc93e6619843e92e3b7f3388ee3bb5ebc3c"
+  },
+  {
+   "path": "redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+   "role": "source_notebook",
+   "bytes": 10054,
+   "retrieved_at": "2026-08-28T02:59:25Z",
+   "sha256": "33a5fe33bbf21ea3afe9a1e8eea5d8a6cc02054c053e06958f9dcc1c5e1d6110"
+  },
+  {
+   "path": "redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.log",
+   "role": "source_output",
+   "bytes": 5276,
+   "retrieved_at": "2026-08-28T02:59:37Z",
+   "sha256": "59b1e2017af9a24ca302abcea2ddaa6795abc33a4da1e540ad2636ccae0e30a8"
+  },
+  {
+   "path": "redamountassir_s6e8-histgradientboosting-lb-0-96945/submission.csv",
+   "role": "source_output",
+   "bytes": 7765588,
+   "retrieved_at": "2026-08-28T02:59:37Z",
+   "sha256": "0cbf0db8d52ad3cf8f84d7e835a9f004b30579653575c80b60080f544f7d94d5"
+  },
+  {
+   "path": "redamountassir_s6e8-histgradientboosting-lb-0-96945/tehgbc_oof_preds.csv",
+   "role": "source_output",
+   "bytes": 18007294,
+   "retrieved_at": "2026-08-28T02:59:37Z",
+   "sha256": "888ba086c2a2fdeeca170fc1cb9a236bb1d54bec600c61773c130c6908d9ef2f"
+  },
+  {
+   "path": "redamountassir_s6e8-histgradientboosting-lb-0-96945/tehgbc_test_preds.csv",
+   "role": "source_output",
+   "bytes": 7765588,
+   "retrieved_at": "2026-08-28T02:59:37Z",
+   "sha256": "0cbf0db8d52ad3cf8f84d7e835a9f004b30579653575c80b60080f544f7d94d5"
+  }
+ ]
+}

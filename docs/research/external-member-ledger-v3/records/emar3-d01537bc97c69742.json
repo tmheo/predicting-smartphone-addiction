@@ -1,0 +1,414 @@
+{
+ "contract_version": "3.0",
+ "contract_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/482",
+ "ledger_version": 3,
+ "ledger_issue": 484,
+ "audit_record_id": "emar3-d01537bc97c69742",
+ "audit_revision": 1,
+ "supersedes_audit_record_id": null,
+ "identity": {
+  "member_id": "beicicc/s6e8-fold-safe-realmlp:realmlp",
+  "display_name": "beicicc Fold-Safe RealMLP",
+  "author": "Kun Zhang (beicicc)",
+  "source_kind": "notebook_output",
+  "source_key": "beicicc_realmlp",
+  "model_lineage_id": "beicicc/s6e8-fold-safe-realmlp@339864149:realmlp",
+  "input_population": "census",
+  "exact_duplicate_of": null
+ },
+ "fixed_source": {
+  "kernel_ref": "beicicc/s6e8-fold-safe-realmlp",
+  "title": "S6E8 Fold-Safe RealMLP",
+  "url": "https://www.kaggle.com/code/beicicc/s6e8-fold-safe-realmlp?scriptVersionId=339864149",
+  "script_version_id": 339864149,
+  "source_file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+  "source_sha256": "60a0bd05332e8932468d9cc796855013be3c3798344fd75c15c016764eba58ef",
+  "pinned_source_sha256": "60a0bd05332e8932468d9cc796855013be3c3798344fd75c15c016764eba58ef",
+  "pinned_version_confirmed": true,
+  "version_confirmation": {
+   "method": "kaggle kernels pull로 받은 현재 공개 소스의 SHA-256이 조사 보고서의 고정 판본 SHA-256과 같고, www.kaggle.com 페이지의 현재 scriptVersionId가 고정 판본 식별자와 같다",
+   "page": {
+    "url": "https://www.kaggle.com/code/beicicc/s6e8-fold-safe-realmlp",
+    "fetched_at": "2026-08-28T03:01:34Z",
+    "http_ok": true,
+    "script_version_ids": [
+     339864149
+    ]
+   },
+   "page_matches_pinned": true
+  },
+  "retrieved_at": {
+   "page": "2026-08-28T03:01:34Z",
+   "pull": "2026-08-28T03:01:37Z",
+   "files": "2026-08-28T03:01:40Z",
+   "output": "2026-08-28T03:01:49Z"
+  },
+  "provenance_role": "direct",
+  "dependency_refs": [],
+  "output_listing_file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/files.json"
+ },
+ "predictions": {
+  "oof": {
+   "file": "realmlp_fold_safe_oof.csv",
+   "raw_sha256": "ba5440a6ebe836d57a0720f9c92847ffe55cb4cb049163c356ab94aeb7a03933",
+   "format": "csv",
+   "column": "oof_pred",
+   "column_index": null,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    691369,
+    3
+   ],
+   "columns": [
+    "id",
+    "oof_pred",
+    "addicted_label"
+   ],
+   "row_alignment": {
+    "method": "id_column",
+    "detail": "id 열이 기준 순서와 정확히 일치",
+    "id_equal": true
+   },
+   "embedded_label_equals_ours": true,
+   "rows": 691369,
+   "finite": true,
+   "dtype_note": "float32 저장"
+  },
+  "test": {
+   "file": "realmlp_fold_safe_test.csv",
+   "raw_sha256": "2a8b8891a7a2fce02b96d72aad72f5a65fd9affaed7bcf369016e581dbc12076",
+   "format": "csv",
+   "column": "realmlp_fold_safe",
+   "column_index": null,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    296302,
+    2
+   ],
+   "columns": [
+    "id",
+    "realmlp_fold_safe"
+   ],
+   "row_alignment": {
+    "method": "id_column",
+    "detail": "id 열이 기준 순서와 정확히 일치",
+    "id_equal": true
+   },
+   "rows": 296302,
+   "finite": true,
+   "dtype_note": "float32 저장"
+  },
+  "load_error": null,
+  "semantics": "양성 확률(predict_proba[:, 1])",
+  "normalized": {
+   "oof_sha256": "52cdbe666954fb48ca966802742e103abbf3d9dbb13043cdfc4bc02ebf5b8d7b",
+   "test_sha256": "54c83127bdcd6ec74e7e6e0a5b4458304333c9892ada1df8faa5f4471fccc7e4",
+   "pair_sha256": "e21c22c3b2416598bd2bdc198cbbbbb2e8cdedd14f3434daa751282b97784665",
+   "oof_path": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/normalized/oof_realmlp.npy",
+   "test_path": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/normalized/test_realmlp.npy",
+   "dtype": "float64",
+   "layout": "C 연속 1차원, OOF 뒤에 시험 예측을 이어 붙여 쌍 해시 계산"
+  },
+  "rescored_auc": 0.968156386578921,
+  "declared_auc": 0.968156386578921,
+  "declared_auc_source": "realmlp_fold_safe_manifest.json",
+  "declared_auc_delta": 0.0,
+  "independent_auc": 0.968156387,
+  "independent_auc_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/bff57dc/docs/research/strict-external-member-census-2026-08-28.md",
+  "independent_auc_delta": -4.2107894948628655e-10,
+  "auc_tolerance": 1e-05,
+  "prior_pair_sha256": "e21c22c3b2416598bd2bdc198cbbbbb2e8cdedd14f3434daa751282b97784665",
+  "prior_pair_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/bff57dc/docs/research/strict-external-member-census-2026-08-28.md",
+  "prior_pair_match": true,
+  "v2_ledger_member": null
+ },
+ "fold_contract": {
+  "spec_id": "community-skf5-shuffle-seed42-train-csv-order",
+  "spec": "StratifiedKFold(n_splits=5, shuffle=True, random_state=42), train.csv 원본 행 순서",
+  "fold_vector_sha256": "9571f18b6ba175d426593d5576d4846d30f00e015cae09d657b3a53437bee824",
+  "row_order_condition": "train.csv 원본 행 순서(id 0..691368 오름차순)",
+  "exact_match": true,
+  "status": "확인됨",
+  "evidence_kind": "published_code",
+  "evidence": [
+   {
+    "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+    "cell": 3,
+    "line": 27,
+    "text": "SEED = 42"
+   },
+   {
+    "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+    "cell": 3,
+    "line": 28,
+    "text": "OUTER_SPLITS = 5"
+   },
+   {
+    "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+    "cell": 19,
+    "line": 6,
+    "text": "outer = StratifiedKFold(n_splits=OUTER_SPLITS, shuffle=True, random_state=SEED)"
+   }
+  ],
+  "note": "SEED=42, OUTER_SPLITS=5의 바깥 StratifiedKFold. 공개 실행 manifest도 같은 분할을 기록"
+ },
+ "training_contract": {
+  "claims": {
+   "direct_official_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+      "cell": 5,
+      "line": 20,
+      "text": "train = pd.read_csv(COMPETITION_DIR / \"train.csv\")"
+     },
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/kernel-metadata.json",
+      "line": 15,
+      "text": "\"dataset_sources\": [],"
+     }
+    ],
+    "note": "공식 대회 train.csv만 읽고 다른 자료 입력이 없다(kernel-metadata.json의 dataset_sources 비어 있음)",
+    "claim": "공식 훈련 자료에서 직접 학습했다"
+   },
+   "single_model_lineage": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+      "cell": 19,
+      "line": 34,
+      "text": "model = FoldSafeRealMLPClassifier(**CONFIG)"
+     }
+    ],
+    "note": "FoldSafeRealMLPClassifier 단일 모형",
+    "claim": "하나의 모델 계보이며 서로 다른 모델이나 설정의 결합이 아니다"
+   },
+   "allowed_aggregation_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+      "cell": 19,
+      "line": 46,
+      "text": "test_prediction += test_fold_probability / OUTER_SPLITS"
+     }
+    ],
+    "note": "시험 예측은 5분할 모형 평균",
+    "claim": "같은 고정 설정의 여러 시드나 분할 예측 평균만 사용했다"
+   },
+   "target_preprocessing_isolated": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+      "cell": 9,
+      "line": 13,
+      "text": "encoder = TargetEncoder("
+     },
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+      "cell": 9,
+      "line": 22,
+      "text": "valid_values = encoder.transform(outer_valid[target_columns])"
+     }
+    ],
+    "note": "sklearn TargetEncoder를 바깥 학습 부분 안에서 교차 적합하고 검증·시험은 transform. 구간화 전처리도 학습 부분에서 적합",
+    "claim": "목표값 기반 전처리를 각 바깥 학습 부분 안에 격리했다"
+   },
+   "outer_valid_scoring_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+      "cell": 19,
+      "line": 34,
+      "text": "model = FoldSafeRealMLPClassifier(**CONFIG)"
+     },
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+      "cell": 19,
+      "line": 42,
+      "text": "valid_probability = model.predict_proba(X_valid_fold)[:, 1].astype(np.float32)"
+     },
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+      "cell": 17,
+      "line": 93,
+      "text": "self.model_.load_state_dict(ema_state, strict=True)"
+     }
+    ],
+    "note": "fit은 학습 부분(X_train_fold, y[train_idx])만 받고 검증은 predict_proba 채점에만 쓴다. EMA 가중치는 학습 손실 경로의 지수 평균이며 검증을 보지 않는다",
+    "claim": "바깥 검증 자료와 목표값은 채점에만 사용했다"
+   },
+   "training_point_fixed": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+      "cell": 17,
+      "line": 46,
+      "text": "assert epochs == FIXED_EPOCHS"
+     },
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+      "cell": 17,
+      "line": 110,
+      "text": "assert self.trained_epochs_ == FIXED_EPOCHS"
+     }
+    ],
+    "note": "epochs=FIXED_EPOCHS(4) 고정, 학습 뒤 세대 수 단언",
+    "claim": "학습 횟수나 가중치를 바깥 검증 결과 전에 고정했다"
+   },
+   "public_config_selection_isolated": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+      "cell": 3,
+      "line": 30,
+      "text": "FIXED_EPOCHS = 4"
+     },
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+      "cell": 3,
+      "line": 37,
+      "text": "CONFIG = {"
+     },
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+      "cell": 7,
+      "line": 2,
+      "text": "BIN_CONFIG = {"
+     }
+    ],
+    "note": "CONFIG와 FIXED_EPOCHS가 정적으로 고정",
+    "claim": "공개 소스 안의 설정 선택에 바깥 검증 결과를 사용하지 않았다"
+   },
+   "no_external_prediction_retraining": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "외부 예측을 입력으로 다시 학습하지 않았다"
+   },
+   "no_pseudo_label_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "의사 목표값을 학습에 사용하지 않았다"
+   },
+   "no_blend_distillation": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "결합 예측을 교사로 삼아 증류하지 않았다"
+   }
+  },
+  "lineage_evidence": [],
+  "absence_scan": {
+   "patterns": {
+    "pseudo": "pseudo",
+    "external_input": "/kaggle/input/(datasets|notebooks)/",
+    "distill": "distill|teacher"
+   },
+   "hits": [],
+   "unexplained": 0
+  },
+  "prepublication_search_history": "알 수 없음"
+ },
+ "license": {
+  "source_code": {
+   "license": "Apache-2.0",
+   "status": "confirmed",
+   "evidence": "https://www.kaggle.com/datasets/kaggle/meta-kaggle-code",
+   "attribution_required": true,
+   "attribution": "Kun Zhang (beicicc), S6E8 Fold-Safe RealMLP, https://www.kaggle.com/code/beicicc/s6e8-fold-safe-realmlp?scriptVersionId=339864149"
+  },
+  "output_arrays": {
+   "license": "unknown",
+   "status": "unmarked",
+   "use_scope": "확장 스택 제출의 결합 입력으로만 사용",
+   "redistribution": false,
+   "repository_commit": false
+  }
+ },
+ "audit": {
+  "audit_state": "감사 완료",
+  "transition_log": [
+   {
+    "state": "발견됨",
+    "at": "2026-08-28T03:01:34Z",
+    "by": "fetch"
+   },
+   {
+    "state": "공개 판본 고정됨",
+    "at": "2026-08-28T03:01:37Z",
+    "by": "fetch"
+   },
+   {
+    "state": "감사 완료",
+    "at": "2026-08-28T03:03:42Z",
+    "by": "audit"
+   }
+  ],
+  "eligibility": "자격 있음",
+  "exclusion_reason_codes": [],
+  "insufficiency_reasons": [],
+  "caveat_codes": [
+   "license_unknown_use_limited",
+   "float32_storage",
+   "near_duplicate_cluster"
+  ],
+  "caveats": [
+   {
+    "code": "license_unknown_use_limited",
+    "detail": "노트북 출력물(소스는 Apache-2.0, 출력 배열은 사용 조건 표시 없음, 결합 입력 전용)"
+   },
+   {
+    "code": "float32_storage",
+    "detail": "출력 CSV가 float32 정밀도로 저장됨"
+   },
+   {
+    "code": "near_duplicate_cluster",
+    "detail": "판본 2 장부 realmlp_seed01_fixed4와 스피어만 0.999097(#479 측정), 자격에는 영향 없음"
+   }
+  ],
+  "near_duplicate": {
+   "spearman_max": 0.9990966401678569,
+   "closest": "v2:beicicc:s6e8-fixed4-realmlp-two-seed-artifacts:realmlp_seed01_fixed4",
+   "threshold": 0.998,
+   "population": "판본 2 통과 400개 + 판본 3 후보 19개"
+  },
+  "auditor": "tmheo (Claude Code 세션이 도구를 실행)",
+  "audited_at": "2026-08-28T03:03:42Z",
+  "audit_tool": {
+   "script": "scripts/build_external_member_ledger_v3.py",
+   "commit": "faed3a3877a73796b7047eda73b2c20ef7f7902a"
+  },
+  "evidence_manifest_sha256": "9a844002f790722ba623de04078903ad9fd84fba3d042c9d2b686b8c63179651",
+  "guarantees": [
+   "기록한 고정 공개 판본의 소스와 연결 산출물에서 확인할 수 있는 학습 계보",
+   "OOF 691,369행과 시험 예측 296,302행의 유한값, 원래 행 순서와 정규화 예측 쌍 해시",
+   "고정 5분할 명세와 소스 안의 분할 코드 위치"
+  ],
+  "non_guarantees": [
+   "공개 이전의 비공개 설정 탐색 이력",
+   "작성자가 공개하지 않은 코드와 숨은 외부 자료 사용",
+   "미래 공개 판본",
+   "출력 배열에 표시되지 않은 권리 범위(사용 한정을 넘는 사용)"
+  ],
+  "notes": []
+ },
+ "record_sha256": "324edb953de7b9707caa21638189d1fb2f3d00218ae8159b29accd1a91c5ddea"
+}
