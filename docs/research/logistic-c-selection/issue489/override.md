@@ -22,10 +22,12 @@ precommit 무결성, 입력 해시, 결합기 module 해시(판정 때와 같은
 **Public 0.97135**로 현재 두 번째 장 `443b3a71`(0.97135)과 같은 값이다.
 이 값은 사후 확인값이고 판정에 쓰지 않는다.
 nested 증분 `+0.0000099`는 Public 눈금(소수 5자리)의 해상도 아래다.
+다만 사용자가 확인한 Public 리더보드 순위는 2계단 올랐으므로 표시 자리수 아래에서는 높아진 것으로 본다.
 
 MLflow 기록은 `pipeline.submit --record-existing 55844886`으로 남겼다.
 파생 실행 `30b6f97c30904995a79e476f02decf8f`(실행 이름 `ensemble_c_selected_shrunk_rank_logit_logistic_issue489_extended_stack_own35_ext278`, `source.run_id=443b3a71`, `git_commit=706050e`)에 제출 CSV, 조립 manifest, 판정 comparison·precommit·report를 첨부했다.
 param에 구성원 수(313 = 자체 35 + 외부 278), `(C, λ)`, C 격자, 판정 수치(후보·대조군 nested, 차이, 분할 양수, 문턱, 판정)를, tag에 `user_override=true`를 적었다.
+metric에는 `auc_oof = 0.9703609`(nested), `weighted_oof_auc = 0.9712273`, `auc_fold_0..4`, `current_plate_auc_oof = 0.9703509`, `delta_vs_current_plate = +0.0000099`, `delta_fold_k_vs_current_plate`, `delta_vs_pool35_source = +0.000550`, `auc_oof_insample = 0.9705276`(참고치)를 comparison.json과 assembly-manifest.json에서 올렸다.
 
 ## 최종 두 장
 
