@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "issue": 483,
+  "baseline": {
+    "run_id": "89aabd7ff2f947c5b496222bd41f40d2",
+    "experiment": "exp070_cat_exact_cats",
+    "seeds": [
+      42
+    ],
+    "auc_oof": 0.9683661287273517,
+    "seed_aucs": {
+      "42": 0.9683661287273517
+    },
+    "git_commit": "5a54a1c44c0c360a0261417adee6cd6f26c0a741"
+  },
+  "candidate": {
+    "run_id": "4f449386e9c34e36834308482bd151f3",
+    "experiment": "exp206_issue483_cat_exact_cats_dae8",
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "auc_oof": 0.9684536270706092,
+    "seed_aucs": {
+      "42": 0.9682038355936018,
+      "43": 0.9682615714719285,
+      "44": 0.9682516462152573
+    },
+    "fold_aucs": {
+      "0": 0.9678581390735301,
+      "1": 0.9686680670694194,
+      "2": 0.9685024325765523,
+      "3": 0.9690428941273264,
+      "4": 0.9681960903104063
+    },
+    "git_commit": "5a54a1c44c0c360a0261417adee6cd6f26c0a741",
+    "git_dirty": false
+  },
+  "folds_sha256": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+  "stage2_path1_seed42_pairwise": {
+    "baseline_seed42_auc": 0.9683661287273517,
+    "baseline_seed42_source": "run 89aabd7ff2f947c5b496222bd41f40d2 (기록값 0.9684083도 함께 기록)",
+    "baseline_seed42_auc_recorded": 0.968408338568926,
+    "candidate_seed42_auc": 0.9682038355936018,
+    "delta": -0.0001622931337499356,
+    "candidate_seed42_fold_aucs": {
+      "0": 0.9675762515320525,
+      "1": 0.9683757498766598,
+      "2": 0.9682688491859421,
+      "3": 0.9688697934280159,
+      "4": 0.9679315679395889
+    },
+    "baseline_seed42_fold_aucs": {
+      "0": 0.9677140501947246,
+      "1": 0.9685089663634943,
+      "2": 0.9683882004044947,
+      "3": 0.9690462716425398,
+      "4": 0.9681723860621267
+    },
+    "fold_wins": 0,
+    "passed": false,
+    "delta_vs_recorded": -0.0002045029753242611,
+    "passed_vs_recorded": false
+  },
+  "stage2_path2_entry_and_duplicate": {
+    "champion_run_id": "6911a461866b43dc9556553eba6783b7",
+    "champion_auc": 0.9693676105620948,
+    "entry_floor": 0.9593676105620947,
+    "candidate_seed42_auc": 0.9682038355936018,
+    "candidate_seed_avg_auc": 0.9684536270706092,
+    "floor_ok_seed42": true,
+    "floor_ok_seed_avg": true,
+    "nearest_member_seed42": {
+      "config": "exp070_cat_exact_cats",
+      "run_id": "6238d8c58beb42ee8102209ded92516e",
+      "spearman_seed_avg": 0.9994779592249629,
+      "spearman_seed42": 0.9990017024659675
+    },
+    "nearest_member_seed_avg": {
+      "config": "exp070_cat_exact_cats",
+      "run_id": "6238d8c58beb42ee8102209ded92516e",
+      "spearman_seed_avg": 0.9994779592249629,
+      "spearman_seed42": 0.9990017024659675
+    },
+    "duplicate_threshold": 0.998,
+    "duplicate_seed42": true,
+    "duplicate_seed_avg": true,
+    "nested_contribution": "앞 두 조건 통과 시 pipeline.pool_judgment로 별도 계산",
+    "prerequisites_passed_seed42": false
+  },
+  "stage2_eligible_for_stage3": false,
+  "stage3_confirmation_vs_baseline": null,
+  "pool_size": 35
+}
