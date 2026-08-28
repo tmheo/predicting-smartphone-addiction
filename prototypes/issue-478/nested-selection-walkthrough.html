@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>이슈 478 중첩 선별 절차 시제품</title>
+  <style>
+    :root {
+      --ink: #1c241f;
+      --muted: #667068;
+      --paper: #f6f5ef;
+      --panel: #fffef9;
+      --line: #d9dbd3;
+      --accent: #176b50;
+      --accent-soft: #e4f1eb;
+      --warn: #8a5b12;
+      --warn-soft: #fff2d9;
+      --bad: #9b3c31;
+      --bad-soft: #fae7e3;
+      --code: #24372f;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      line-height: 1.5;
+    }
+
+    button, select { font: inherit; }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 9px 12px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    button:hover { border-color: var(--accent); }
+    button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+    button.soft { background: var(--accent-soft); border-color: #bad8c9; }
+    button.warn { background: var(--warn-soft); border-color: #e7cf9d; }
+    button.danger { background: var(--bad-soft); border-color: #e7b9b1; }
+    button[aria-pressed="true"] { outline: 3px solid #a8d3bf; border-color: var(--accent); }
+
+    .page {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 34px 28px 60px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: start;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 26px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(28px, 4vw, 46px); line-height: 1.08; letter-spacing: -0.035em; margin-bottom: 14px; }
+    h2 { font-size: 20px; margin-bottom: 14px; }
+    h3 { font-size: 15px; margin-bottom: 10px; }
+    p { color: var(--muted); }
+
+    .eyebrow {
+      color: var(--accent);
+      font-weight: 750;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .question {
+      max-width: 920px;
+      font-size: 17px;
+      color: var(--ink);
+      margin: 0;
+    }
+
+    .prototype-badge {
+      border: 1px solid #e7cf9d;
+      background: var(--warn-soft);
+      color: var(--warn);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .assumption {
+      margin-top: 22px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      background: var(--panel);
+      border-radius: 0 10px 10px 0;
+      color: var(--ink);
+    }
+
+    .assumption strong { color: var(--accent); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(340px, 0.7fr);
+      gap: 22px;
+      margin-top: 24px;
+      align-items: start;
+    }
+
+    .stack { display: grid; gap: 18px; }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 5px 18px rgba(35, 48, 40, 0.035);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 12px;
+      min-height: 88px;
+      background: #fbfbf6;
+    }
+
+    .metric .label { color: var(--muted); font-size: 12px; }
+    .metric .value { font-size: 20px; font-weight: 760; margin-top: 5px; line-height: 1.18; }
+    .metric .detail { color: var(--muted); font-size: 12px; margin-top: 5px; }
+
+    .scope-strip {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .scope-box {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 13px;
+      min-height: 94px;
+    }
+
+    .scope-box.open { background: var(--accent-soft); border-color: #bad8c9; }
+    .scope-box.sealed { background: #f1f0ea; color: var(--muted); }
+    .scope-box strong { display: block; margin-bottom: 5px; color: var(--ink); }
+    .arrow { color: var(--muted); font-size: 20px; }
+
+    .candidate-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .candidate-table th,
+    .candidate-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .candidate-table th { color: var(--muted); font-weight: 650; }
+    .candidate-table tr:last-child td { border-bottom: 0; }
+
+    .status {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status.pending { background: #efeee8; color: #65665f; }
+    .status.keep { background: var(--accent-soft); color: var(--accent); }
+    .status.drop { background: var(--bad-soft); color: var(--bad); }
+    .status.warn { background: var(--warn-soft); color: var(--warn); }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .actions button { min-height: 48px; }
+
+    .contract-list, .output-list, .log-list {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .contract-list li, .output-list li, .log-list li { margin: 8px 0; }
+    .contract-list code, .output-list code { color: var(--code); font-size: 12px; }
+
+    .decision-card {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .decision-card:last-child { margin-bottom: 0; }
+    .decision-card p { font-size: 13px; margin-bottom: 10px; }
+    .decision-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .tabs button { padding: 7px 10px; font-size: 13px; }
+
+    .walkthrough {
+      border-top: 1px solid var(--line);
+      padding-top: 15px;
+    }
+
+    .walkthrough-steps {
+      display: grid;
+      gap: 8px;
+    }
+
+    .walkthrough-steps button {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .step-no {
+      display: inline-grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .verdict {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 16px;
+      background: #fbfbf6;
+    }
+
+    .verdict.pass { background: var(--accent-soft); border-color: #bad8c9; }
+    .verdict.fail { background: var(--bad-soft); border-color: #e7b9b1; }
+    .verdict.invalid { background: var(--warn-soft); border-color: #e7cf9d; }
+    .verdict strong { display: block; font-size: 18px; margin-bottom: 5px; }
+    .verdict p { margin: 0; color: var(--ink); font-size: 13px; }
+
+    details {
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+      margin-top: 14px;
+    }
+
+    summary { cursor: pointer; font-weight: 700; }
+
+    .roster {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 18px;
+      margin-top: 14px;
+      font-size: 12px;
+    }
+
+    .roster-item {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 7px;
+      overflow-wrap: anywhere;
+    }
+
+    .roster-item span { color: var(--muted); }
+
+    .note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 12px;
+      margin-bottom: 0;
+    }
+
+    .last-change {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #f1f0ea;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 620px) {
+      .page { padding: 22px 14px 40px; }
+      header { grid-template-columns: 1fr; }
+      .summary-grid, .actions, .decision-buttons, .roster { grid-template-columns: 1fr; }
+      .scope-strip { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); text-align: center; }
+      .candidate-table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <div class="eyebrow">Issue 478 · Logic prototype</div>
+        <h1>엄격 외부 후보를 고르는 동안 채점 분할은 봉인된다</h1>
+        <p class="question">
+          동결한 후보의 중복성과 실제 결합 기여를 바깥쪽 학습 부분에서만 판단하고,
+          그 절차 자체가 현재 313개 구성보다 나은지를 어떤 순서와 산출물로 판정할지 눌러 보며 확인한다.
+        </p>
+        <div class="assumption">
+          <strong>이번 시제품의 경계 가정</strong><br>
+          현재 313개 구성은 그대로 비교 기준으로 둔다.
+          새 판정 쪽은 자체 후보 풀 35개를 필수 구성원으로 두고, 엄격 심사를 통과한 외부 후보 19개를 개별 OOF·시험 예측 쌍 단위로 선별한다.
+          이 경계가 맞지 않으면 다른 세부보다 먼저 고쳐야 한다.
+        </div>
+      </div>
+      <div class="prototype-badge">버리는 시제품 · 설명용 값</div>
+    </header>
+
+    <div class="layout">
+      <section class="stack">
+        <div class="panel">
+          <h2>현재 상태</h2>
+          <div id="summary" class="summary-grid"></div>
+          <div id="scope"></div>
+          <div id="verdict"></div>
+          <div id="lastChange" class="last-change"></div>
+        </div>
+
+        <div class="panel">
+          <h2>이번 바깥쪽 분할에서 본 후보</h2>
+          <p>아래 AUC와 상관은 실제 결과가 아니라 규칙의 모서리를 드러내기 위한 설명용 값이다.</p>
+          <div style="overflow-x:auto">
+            <table class="candidate-table">
+              <thead>
+                <tr>
+                  <th>후보</th>
+                  <th>학습 부분 단독 AUC</th>
+                  <th>검색 기여 Δ</th>
+                  <th>가장 가까운 상관</th>
+                  <th>판정</th>
+                </tr>
+              </thead>
+              <tbody id="candidateRows"></tbody>
+            </table>
+          </div>
+          <details>
+            <summary>동결 후보 19개 원장 보기</summary>
+            <div id="roster" class="roster"></div>
+          </details>
+        </div>
+
+        <div class="panel">
+          <h2>자유 조작</h2>
+          <p>버튼을 어떤 순서로 눌러도 된다. 허용되지 않은 이동은 상태를 바꾸지 않고 이유를 남긴다.</p>
+          <div class="actions">
+            <button data-action="RESET">처음으로</button>
+            <button data-action="FREEZE" class="primary">입력과 규칙 동결</button>
+            <button data-action="START_FOLD">바깥 분할 시작</button>
+            <button data-action="MEASURE">학습 부분만 측정</button>
+            <button data-action="BUILD_CONFLICTS">중복 관계 확정</button>
+            <button data-action="RUN_FORWARD">순방향 추가·교체</button>
+            <button data-action="RUN_BACKWARD">후방 제거</button>
+            <button data-action="RUN_FORWARD_AGAIN">순방향 재수렴</button>
+            <button data-action="RUN_PAIR">후보 쌍 한 번 탐색</button>
+            <button data-action="LOCK_SELECTION">분할별 선택 잠금</button>
+            <button data-action="SCORE_HELDOUT" class="warn">봉인한 분할 채점</button>
+            <button data-action="COMPLETE_FOLDS">5개 분할 이어붙이기</button>
+            <button data-action="DECIDE" class="primary">교체 문턱 판정</button>
+            <button data-action="FULL_SELECTION" class="soft">전체 OOF 최종 선별</button>
+            <button data-action="INJECT_FAILURE" class="danger">계산 실패 넣기</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>안내 시나리오</h2>
+          <div id="scenarioTabs" class="tabs"></div>
+          <div id="walkthrough" class="walkthrough"></div>
+        </div>
+      </section>
+
+      <aside class="stack">
+        <div class="panel">
+          <h2>확정한 결정</h2>
+          <div class="decision-card">
+            <h3>단독 성능 하한</h3>
+            <p>
+              단독 AUC는 진단값으로만 기록한다.
+              후보 자격이나 중복 후보의 대표를 정하는 하한으로 쓰지 않고, 고정 결합기에서의 실제 AUC 기여로만 이동을 승인한다.
+            </p>
+            <span class="status keep">하한 없음</span>
+          </div>
+          <div class="decision-card">
+            <h3>필수 구성원과의 중복</h3>
+            <p>
+              자체 35개를 판정 범위 밖의 필수 구성원으로 둔다.
+              후보가 이들과 0.998 이상이면 후보를 제외하고 자체 구성원을 교체하지 않는다.
+            </p>
+            <span class="status keep">자체 35개 고정</span>
+          </div>
+          <div class="decision-card">
+            <h3>후보 단위</h3>
+            <p>
+              한 공개 출처의 여러 모델도 각각 독립된 OOF·시험 예측 쌍이다.
+              출처 묶음이나 모델 계열 묶음은 선택 단위로 쓰지 않는다.
+            </p>
+            <span class="status keep">개별 구성원</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>확정한 정확한 연산</h2>
+          <ol class="contract-list">
+            <li>자체 35개, 엄격 후보 19개, 현재 313개 비교 기준, folds, 예측 내용과 순서를 해시로 동결한다.</li>
+            <li>바깥쪽 채점 분할 하나를 봉인하고 나머지 4개 분할만 연다.</li>
+            <li>후보의 단독 AUC와 스피어만 순위 상관을 열린 행에서 계산한다. 단독 AUC는 진단값일 뿐 선별 하한이나 대표 선택 기준이 아니다.</li>
+            <li>필수 자체 구성원과 상관이 0.998 이상인 외부 후보는 제외한다. 외부 후보끼리 0.998 이상이면 동시에 고를 수 없는 관계만 기록한다.</li>
+            <li>자체 35개를 고정하고 <code>shrunk_rank_logit_logistic</code>으로 열린 4개 분할 안에서 다시 한 분할씩 빼고 예측한 AUC를 만든다. 이 값으로 모든 허용 추가와 단일 원자 교체를 정확히 비교하며, 최대 양수 이동 하나씩을 더 이상 없을 때까지 반복한다.</li>
+            <li>선택한 외부 후보의 모든 제거를 정확히 비교해 최대 양수 이동을 반복하고, 순방향 추가·교체를 다시 수렴시킨다.</li>
+            <li>선택하지 않은 후보의 허용된 모든 쌍 추가를 한 번 전수 비교한다. 최대 기여가 양수면 그 쌍을 받고 순방향, 후방, 순방향 순서로 다시 수렴한 뒤 멈춘다.</li>
+            <li>동률 이동은 동결 원장 순서로, 후보 쌍 동률은 그 순서의 사전식 비교로 해소한다. 여러 선택 후보를 한꺼번에 빼야 하는 교체는 허용하지 않으며, 최종 명단의 모든 후보 쌍 상관은 0.998 미만이어야 한다.</li>
+            <li>잠근 명단을 열린 4개 분할 전체에 맞춘 뒤 봉인한 분할을 한 번 예측한다. 현재 313개 비교 팔도 같은 바깥 분할과 고정 결합기로 함께 예측한다.</li>
+            <li>5개 분할 예측을 이어붙여 동결 OOF 조건부 절차 점수를 만들고, 같은 방식으로 재현한 현재 313개 구성과 짝지어 비교한다.</li>
+            <li><code>+0.00002</code> 이상이며 분할 5곳 모두 양수일 때만 통과한다.</li>
+            <li>통과 뒤에만 같은 선별을 전체 OOF에서 한 번 실행해 실제 인수 명단을 정한다. 분할별 선택 횟수는 감시값일 뿐 투표에 쓰지 않는다.</li>
+          </ol>
+          <p class="note">각 단계에서는 허용된 이동을 모두 계산하고 최대 기여가 엄격히 양수일 때만 한 이동을 받는다. 오차 범위는 보고만 하며 승인 문턱으로 쓰지 않는다. 계산 하나라도 실패하거나 끝나지 않으면 전체 판정을 무효로 하고, 같은 해시와 코드 상태에서만 이어서 실행한다.</p>
+        </div>
+
+        <div class="panel">
+          <h2>필수 산출물</h2>
+          <ul class="output-list">
+            <li><code>precommit.json</code>: 신원, 순서, 모든 내용 해시, folds 해시, 두 시작 구성 해시, 고정 결합기, 검색 규칙, 코드 상태</li>
+            <li><code>fold-&lt;k&gt;/selection.json</code>: 열린 행 범위, 단독 AUC, 충돌 관계, 평가한 모든 이동, 승인한 이동, 최종 명단</li>
+            <li><code>fold-&lt;k&gt;/predictions.parquet</code>: 후보 절차 팔의 봉인 분할 예측</li>
+            <li><code>fold-&lt;k&gt;/baseline-predictions.parquet</code>: 현재 313개 비교 팔의 같은 분할 예측</li>
+            <li><code>nested-comparison.json</code>: 전체와 분할별 AUC 차이, 5/5 부호, 교체 문턱</li>
+            <li><code>selection-stability.json</code>: 분할별 선택 여부와 전체 OOF 최종 선택 대조</li>
+            <li><code>full-selection.json</code>: 통과 뒤 전체 OOF가 고른 인수 명단과 시험 예측 열 순서</li>
+            <li><code>manifest.sha256</code>와 사람용 <code>report.md</code></li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <h2>상태 기록</h2>
+          <ol id="eventLog" class="log-list"></ol>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const SelectionModel = (() => {
+      const THRESHOLD = 0.998;
+      const REPLACEMENT_DELTA = 0.00002;
+
+      const ROSTER = [
+        { id: "nb_zhukov:cat_base", auc: 0.967992, origin: "판본 2 재감사" },
+        { id: "nb_zhukov:lgb02", auc: 0.968355, origin: "판본 2 재감사" },
+        { id: "nb_zhukov:xgb_base", auc: 0.967859, origin: "판본 2 재감사" },
+        { id: "nb_reda_lgbm:lgbm", auc: 0.968259, origin: "판본 2 재감사" },
+        { id: "nb_reda_hgb:hgb", auc: 0.968026, origin: "판본 2 재감사" },
+        { id: "nb_yekenot:trompt", auc: 0.966671, origin: "판본 2 재감사" },
+        { id: "nb_mohan_realmlp:realmlp", auc: 0.958134, origin: "판본 2 재감사" },
+        { id: "nb_lopure:linear_svm", auc: 0.911345, origin: "판본 2 재감사" },
+        { id: "nb_lopure:poly_svm", auc: 0.928795, origin: "판본 2 재감사" },
+        { id: "nb_lopure:rbf_svm", auc: 0.922167, origin: "판본 2 재감사" },
+        { id: "nb_shaman_baseline:lr", auc: 0.936609, origin: "판본 2 재감사" },
+        { id: "beicicc/s6e8-fold-safe-tabnet:tabnet", auc: 0.965656810, origin: "신규 조사" },
+        { id: "beicicc/s6e8-fold-safe-realmlp:realmlp", auc: 0.968156387, origin: "신규 조사" },
+        { id: "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb", auc: 0.962557588, origin: "신규 조사" },
+        { id: "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb", auc: 0.962048339, origin: "신규 조사" },
+        { id: "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb", auc: 0.962314187, origin: "신규 조사" },
+        { id: "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C", auc: 0.964201482, origin: "신규 조사" },
+        { id: "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C", auc: 0.964173099, origin: "신규 조사" },
+        { id: "ravi20076/playgrounds6e8-public-baseline-v1:CB1C", auc: 0.963944102, origin: "신규 조사" }
+      ];
+
+      const SCENARIOS = {
+        normal: {
+          title: "기본 흐름",
+          description: "강한 후보와 약한 후보를 단독 AUC로 미리 자르지 않고, 봉인한 분할을 보지 않은 채 실제 결합 기여로만 고른다.",
+          candidates: [
+            { id: "nb_zhukov:lgb02", auc: 0.96840, contribution: 0.000012, nearest: 0.9967, nearestId: "자체 구성원" },
+            { id: "nb_reda_hgb:hgb", auc: 0.96801, contribution: 0.000003, nearest: 0.9983, nearestId: "자체 구성원" },
+            { id: "ravi20076:CB1C", auc: 0.96391, contribution: 0.000007, nearest: 0.9935, nearestId: "자체 구성원" },
+            { id: "nb_lopure:rbf_svm", auc: 0.92211, contribution: -0.000001, nearest: 0.9310, nearestId: "자체 구성원" }
+          ],
+          correlations: {},
+          foldDeltas: [0.000026, 0.000031, 0.000024, 0.000028, 0.000022],
+          overallDelta: 0.000027,
+          forwardSelection: ["nb_zhukov:lgb02", "ravi20076:CB1C"],
+          backwardSelection: ["nb_zhukov:lgb02", "ravi20076:CB1C"],
+          pairSelection: ["nb_zhukov:lgb02", "ravi20076:CB1C"],
+          fullSelection: ["nb_zhukov:lgb02", "ravi20076:CB1C", "nb_lopure:rbf_svm"]
+        },
+        duplicate: {
+          title: "근접 중복",
+          description: "후보 둘이 0.998 이상이어도 단독 AUC로 대표를 미리 정하지 않는다. 추가 또는 단일 원자 교체의 결합 기여가 대표를 정한다.",
+          candidates: [
+            { id: "beicicc:fold-safe-realmlp", auc: 0.96822, contribution: 0.000009, nearest: 0.99910, nearestId: "nb_mohan_realmlp" },
+            { id: "nb_mohan_realmlp:realmlp", auc: 0.96818, contribution: 0.000012, nearest: 0.99910, nearestId: "beicicc:fold-safe-realmlp" },
+            { id: "busyaprime:xgb", auc: 0.96235, contribution: 0.000004, nearest: 0.99720, nearestId: "자체 구성원" },
+            { id: "ravi20076:XGB1C", auc: 0.96424, contribution: 0.000006, nearest: 0.99280, nearestId: "자체 구성원" }
+          ],
+          correlations: {
+            "beicicc:fold-safe-realmlp|nb_mohan_realmlp:realmlp": 0.99910
+          },
+          foldDeltas: [0.000022, 0.000025, 0.000021, 0.000024, 0.000023],
+          overallDelta: 0.000024,
+          forwardSelection: ["nb_mohan_realmlp:realmlp", "busyaprime:xgb", "ravi20076:XGB1C"],
+          backwardSelection: ["nb_mohan_realmlp:realmlp", "ravi20076:XGB1C"],
+          pairSelection: ["nb_mohan_realmlp:realmlp", "ravi20076:XGB1C"],
+          fullSelection: ["nb_mohan_realmlp:realmlp", "ravi20076:XGB1C", "busyaprime:xgb"]
+        },
+        complement: {
+          title: "낮지만 보완적인 후보",
+          description: "단독 AUC가 낮은 후보도 고유한 보완 신호가 있으면 양수 기여 또는 후보 쌍 기여로 선택될 수 있다.",
+          candidates: [
+            { id: "nb_zhukov:xgb_base", auc: 0.96791, contribution: 0.000011, nearest: 0.9962, nearestId: "자체 구성원" },
+            { id: "nb_yekenot:trompt", auc: 0.96673, contribution: 0.000006, nearest: 0.9810, nearestId: "자체 구성원" },
+            { id: "nb_shaman_baseline:lr", auc: 0.93665, contribution: -0.000001, nearest: 0.9010, nearestId: "자체 구성원" },
+            { id: "nb_lopure:poly_svm", auc: 0.92882, contribution: 0.000008, contributionLabel: "+0.000008 (쌍)", nearest: 0.8820, nearestId: "자체 구성원" }
+          ],
+          correlations: {},
+          foldDeltas: [0.000027, 0.000029, 0.000023, 0.000026, 0.000025],
+          overallDelta: 0.000027,
+          forwardSelection: ["nb_zhukov:xgb_base", "nb_yekenot:trompt"],
+          backwardSelection: ["nb_zhukov:xgb_base", "nb_yekenot:trompt"],
+          pairSelection: ["nb_zhukov:xgb_base", "nb_yekenot:trompt", "nb_shaman_baseline:lr", "nb_lopure:poly_svm"],
+          fullSelection: ["nb_zhukov:xgb_base", "nb_yekenot:trompt", "nb_shaman_baseline:lr", "nb_lopure:poly_svm"]
+        },
+        tie: {
+          title: "완전 동률",
+          description: "허용 이동의 AUC 기여가 정확히 같을 때만 동결 원장 순서가 결과를 결정한다. 단독 AUC 동률은 선택 규칙이 아니다.",
+          candidates: [
+            { id: "nb_zhukov:cat_base", auc: 0.967992, contribution: 0.000009, nearest: 0.99840, nearestId: "nb_zhukov:xgb_base" },
+            { id: "nb_zhukov:xgb_base", auc: 0.966100, contribution: 0.000009, nearest: 0.99840, nearestId: "nb_zhukov:cat_base" },
+            { id: "ravi20076:LGBM1C", auc: 0.96419, contribution: 0.000005, nearest: 0.9922, nearestId: "자체 구성원" }
+          ],
+          correlations: {
+            "nb_zhukov:cat_base|nb_zhukov:xgb_base": 0.99840
+          },
+          foldDeltas: [0.000021, 0.000020, -0.000001, 0.000023, 0.000022],
+          overallDelta: 0.000019,
+          forwardSelection: ["nb_zhukov:cat_base", "ravi20076:LGBM1C"],
+          backwardSelection: ["nb_zhukov:cat_base", "ravi20076:LGBM1C"],
+          pairSelection: ["nb_zhukov:cat_base", "ravi20076:LGBM1C"],
+          fullSelection: ["nb_zhukov:cat_base", "ravi20076:LGBM1C"]
+        },
+        failure: {
+          title: "부분 계산 실패",
+          description: "분할 하나나 후보 하나의 계산이 실패하면 완료한 일부 결과로 교체를 승인하지 않는다.",
+          candidates: [
+            { id: "nb_reda_lgbm:lgbm", auc: 0.96831, contribution: 0.000010, nearest: 0.9970, nearestId: "자체 구성원" },
+            { id: "beicicc:fold-safe-tabnet", auc: 0.96570, contribution: 0.000007, nearest: 0.9815, nearestId: "자체 구성원" }
+          ],
+          correlations: {},
+          foldDeltas: [0.000025, 0.000024, 0.000026, 0.000023, 0.000022],
+          overallDelta: 0.000025,
+          forwardSelection: ["nb_reda_lgbm:lgbm", "beicicc:fold-safe-tabnet"],
+          backwardSelection: ["nb_reda_lgbm:lgbm", "beicicc:fold-safe-tabnet"],
+          pairSelection: ["nb_reda_lgbm:lgbm", "beicicc:fold-safe-tabnet"],
+          fullSelection: ["nb_reda_lgbm:lgbm", "beicicc:fold-safe-tabnet"]
+        }
+      };
+
+      function initialState(scenarioId = "normal") {
+        return {
+          scenarioId,
+          phase: "draft",
+          fold: null,
+          candidates: SCENARIOS[scenarioId].candidates.map(candidate => ({
+            ...candidate,
+            status: "pending",
+            reason: "아직 측정하지 않음"
+          })),
+          selected: [],
+          foldDeltas: null,
+          aggregateDelta: null,
+          passed: null,
+          invalid: false,
+          fullSelection: null,
+          lastChange: "입력과 규칙을 동결하기 전이다.",
+          events: []
+        };
+      }
+
+      function event(state, message, patch = {}) {
+        return {
+          ...state,
+          ...patch,
+          lastChange: message,
+          events: [...state.events, message]
+        };
+      }
+
+      function reject(state, message) {
+        return { ...state, lastChange: `허용되지 않음: ${message}` };
+      }
+
+      function pairKey(a, b) {
+        return [a, b].sort().join("|");
+      }
+
+      function buildConflicts(state) {
+        const scenario = SCENARIOS[state.scenarioId];
+        return state.candidates.map(candidate => {
+          if (candidate.nearest >= THRESHOLD && candidate.nearestId === "자체 구성원") {
+            return {
+              ...candidate,
+              status: "own-conflict",
+              reason: "필수 자체 구성원과 중복되어 검색 제외"
+            };
+          }
+          const conflicts = state.candidates.filter(other => {
+            if (other.id === candidate.id) return false;
+            return (scenario.correlations[pairKey(candidate.id, other.id)] || 0) >= THRESHOLD;
+          });
+          return {
+            ...candidate,
+            status: "available",
+            reason: conflicts.length
+              ? `${conflicts.map(item => item.id).join(", ")}와 동시 선택 금지`
+              : "결합 기여 검색 가능"
+          };
+        });
+      }
+
+      function markSelection(state, selectedIds, phaseReason) {
+        return state.candidates.map(candidate => {
+          if (candidate.status === "own-conflict") return candidate;
+          const selected = selectedIds.includes(candidate.id);
+          return {
+            ...candidate,
+            status: selected ? "selected" : "available",
+            reason: selected ? phaseReason : "이번 상태에서는 선택하지 않음"
+          };
+        });
+      }
+
+      function reduce(state, action) {
+        const scenario = SCENARIOS[state.scenarioId];
+        switch (action.type) {
+          case "RESET":
+            return initialState(state.scenarioId);
+          case "SET_SCENARIO":
+            return initialState(action.scenarioId);
+          case "FREEZE":
+            if (state.phase !== "draft") return reject(state, "이미 동결했거나 실행 중이다.");
+            return event(state, "후보 19개, 자체 35개, 현재 313개, folds, 규칙과 내용 해시를 동결했다.", { phase: "frozen" });
+          case "START_FOLD":
+            if (state.phase !== "frozen") return reject(state, "먼저 입력과 규칙을 동결해야 한다.");
+            return event(state, "바깥 분할 0을 봉인하고 분할 1, 2, 3, 4만 열었다.", { phase: "training", fold: 0 });
+          case "MEASURE":
+            if (state.phase !== "training") return reject(state, "먼저 바깥 분할을 시작해야 한다.");
+            return event(state, "열린 4개 분할에서만 후보의 단독 AUC와 스피어만 상관을 계산했다. 단독 AUC는 진단에만 쓴다.", {
+              phase: "measured",
+              candidates: state.candidates.map(candidate => ({
+                ...candidate,
+                status: "measured",
+                reason: "학습 부분 측정 완료"
+              }))
+            });
+          case "BUILD_CONFLICTS": {
+            if (state.phase !== "measured") return reject(state, "학습 부분 측정을 먼저 끝내야 한다.");
+            const candidates = buildConflicts(state);
+            const excluded = candidates.filter(candidate => candidate.status === "own-conflict").length;
+            return event(state, `자체 필수 구성원과 충돌한 ${excluded}개를 제외하고 후보끼리의 상호 배타 관계를 기록했다. 대표는 아직 정하지 않았다.`, {
+              phase: "conflicts",
+              candidates
+            });
+          }
+          case "RUN_FORWARD": {
+            if (state.phase !== "conflicts") return reject(state, "중복 관계를 먼저 확정해야 한다.");
+            const selected = scenario.forwardSelection;
+            return event(state, "허용된 모든 추가와 단일 원자 교체를 비교해 최대 양수 이동을 하나씩 받아 순방향 검색을 수렴시켰다.", {
+              phase: "forward",
+              selected,
+              candidates: markSelection(state, selected, "순방향 최대 양수 이동으로 선택")
+            });
+          }
+          case "RUN_BACKWARD": {
+            if (state.phase !== "forward") return reject(state, "순방향 검색을 먼저 수렴시켜야 한다.");
+            const selected = scenario.backwardSelection;
+            return event(state, "선택한 외부 후보의 모든 제거를 비교해 최대 양수 제거를 더 이상 없을 때까지 반복했다.", {
+              phase: "backward",
+              selected,
+              candidates: markSelection(state, selected, "후방 제거 뒤 유지")
+            });
+          }
+          case "RUN_FORWARD_AGAIN": {
+            if (state.phase !== "backward") return reject(state, "후방 제거를 먼저 수렴시켜야 한다.");
+            const selected = scenario.backwardSelection;
+            return event(state, "후방 제거 뒤 허용된 모든 추가와 단일 원자 교체를 다시 비교해 순방향 검색을 재수렴시켰다.", {
+              phase: "reconverged",
+              selected,
+              candidates: markSelection(state, selected, "순방향 재수렴 뒤 선택")
+            });
+          }
+          case "RUN_PAIR": {
+            if (state.phase !== "reconverged") return reject(state, "순방향 재수렴을 먼저 끝내야 한다.");
+            const selected = scenario.pairSelection;
+            const pairAdded = selected.length > state.selected.length;
+            return event(state, pairAdded
+              ? "허용된 모든 미선택 후보 쌍을 한 번 전수 비교해 최대 양수 쌍을 받고, 순방향·후방·순방향으로 다시 수렴했다."
+              : "허용된 모든 미선택 후보 쌍을 한 번 전수 비교했지만 양수 쌍이 없어 현재 명단에서 멈췄다.", {
+              phase: "paired",
+              selected,
+              candidates: markSelection(state, selected, pairAdded ? "양수 후보 쌍과 재수렴으로 선택" : "쌍 탐색 뒤 선택")
+            });
+          }
+          case "LOCK_SELECTION":
+            if (state.phase !== "paired") return reject(state, "후보 쌍 탐색과 재수렴까지 끝내야 한다.");
+            return event(state, "분할별 인수 명단과 결합 방식을 잠갔다. 봉인한 목표값은 아직 보지 않았다.", { phase: "locked" });
+          case "SCORE_HELDOUT":
+            if (state.phase !== "locked") return reject(state, "분할별 선택을 먼저 잠가야 한다.");
+            return event(state, "잠근 결합기로 봉인한 분할을 한 번 예측하고, 그 뒤에만 목표값을 열어 점수를 기록했다.", { phase: "scored" });
+          case "COMPLETE_FOLDS": {
+            if (state.phase !== "scored") return reject(state, "첫 분할의 채점을 끝내야 한다.");
+            const foldDeltas = scenario.foldDeltas;
+            return event(state, "같은 절차를 나머지 바깥 분할 4곳에 독립적으로 반복하고 후보 절차 팔과 현재 313개 비교 팔의 예측을 각각 원래 행 순서로 이어붙였다.", {
+              phase: "aggregated",
+              foldDeltas,
+              aggregateDelta: scenario.overallDelta
+            });
+          }
+          case "DECIDE": {
+            if (state.invalid) return reject(state, "계산 실패가 있어 판정할 수 없다.");
+            if (state.phase !== "aggregated") return reject(state, "5개 바깥 분할 예측을 먼저 완성해야 한다.");
+            const passed = state.aggregateDelta >= REPLACEMENT_DELTA && state.foldDeltas.every(value => value > 0);
+            return event(state, passed
+              ? "전체 차이가 +0.00002 이상이고 분할 5곳이 모두 양수여서 교체 절차가 통과했다."
+              : "전체 차이 또는 분할 5/5 조건이 모자라 현재 313개 구성을 유지한다.", {
+              phase: "decided",
+              passed
+            });
+          }
+          case "FULL_SELECTION": {
+            if (state.phase !== "decided" || state.passed !== true) return reject(state, "교체 문턱을 통과한 뒤에만 전체 OOF 최종 선별을 연다.");
+            return event(state, "동결한 같은 규칙을 전체 OOF에 한 번 적용해 실제 제안 명단을 만들었다. 이 결과는 교체 문턱을 다시 채점하지 않는다.", {
+              phase: "final",
+              fullSelection: scenario.fullSelection
+            });
+          }
+          case "INJECT_FAILURE":
+            if (state.phase === "draft") return reject(state, "동결 전 실패는 입력을 고친 뒤 새 판본을 동결하면 된다.");
+            return event(state, "후보 파일 또는 분할 계산 하나가 실패했다. 완료한 일부 결과를 버리고 전체 판정을 판정 불가로 막았다.", {
+              phase: "invalid",
+              invalid: true,
+              passed: null,
+              foldDeltas: null,
+              aggregateDelta: null
+            });
+          default:
+            return reject(state, `알 수 없는 행동 ${action.type}`);
+        }
+      }
+
+      return {
+        ROSTER,
+        SCENARIOS,
+        THRESHOLD,
+        REPLACEMENT_DELTA,
+        initialState,
+        reduce
+      };
+    })();
+
+    const PHASE_LABELS = {
+      draft: "동결 전",
+      frozen: "입력 동결",
+      training: "학습 부분 공개",
+      measured: "측정 완료",
+      conflicts: "중복 관계 확정",
+      forward: "순방향 수렴",
+      backward: "후방 수렴",
+      reconverged: "순방향 재수렴",
+      paired: "후보 쌍 탐색 완료",
+      locked: "선택 잠금",
+      scored: "분할 채점 완료",
+      aggregated: "5분할 결합 완료",
+      decided: "교체 판정 완료",
+      final: "전체 OOF 인수 명단 완료",
+      invalid: "판정 불가"
+    };
+
+    const WALKTHROUGHS = {
+      normal: ["FREEZE", "START_FOLD", "MEASURE", "BUILD_CONFLICTS", "RUN_FORWARD", "RUN_BACKWARD", "RUN_FORWARD_AGAIN", "RUN_PAIR", "LOCK_SELECTION", "SCORE_HELDOUT", "COMPLETE_FOLDS", "DECIDE", "FULL_SELECTION"],
+      duplicate: ["FREEZE", "START_FOLD", "MEASURE", "BUILD_CONFLICTS", "RUN_FORWARD", "RUN_BACKWARD", "RUN_FORWARD_AGAIN", "RUN_PAIR", "LOCK_SELECTION"],
+      complement: ["FREEZE", "START_FOLD", "MEASURE", "BUILD_CONFLICTS", "RUN_FORWARD", "RUN_BACKWARD", "RUN_FORWARD_AGAIN", "RUN_PAIR", "LOCK_SELECTION", "SCORE_HELDOUT", "COMPLETE_FOLDS", "DECIDE"],
+      tie: ["FREEZE", "START_FOLD", "MEASURE", "BUILD_CONFLICTS", "RUN_FORWARD"],
+      failure: ["FREEZE", "START_FOLD", "MEASURE", "INJECT_FAILURE", "DECIDE"]
+    };
+
+    const ACTION_LABELS = {
+      FREEZE: "입력과 규칙을 동결한다",
+      START_FOLD: "바깥 채점 분할 하나를 봉인한다",
+      MEASURE: "나머지 4개 분할에서만 단독 AUC와 상관을 잰다",
+      BUILD_CONFLICTS: "0.998 중복 관계를 확정하되 대표는 고르지 않는다",
+      RUN_FORWARD: "모든 추가와 단일 원자 교체를 정확히 비교해 수렴한다",
+      RUN_BACKWARD: "모든 외부 후보 제거를 정확히 비교해 수렴한다",
+      RUN_FORWARD_AGAIN: "순방향 추가와 교체를 다시 수렴한다",
+      RUN_PAIR: "허용된 후보 쌍을 한 번 전수 비교하고 필요하면 재수렴한다",
+      LOCK_SELECTION: "분할별 인수 명단을 잠근다",
+      SCORE_HELDOUT: "그제야 봉인한 분할을 채점한다",
+      COMPLETE_FOLDS: "다섯 바깥 예측을 이어붙인다",
+      DECIDE: "+0.00002와 5/5 양수 문턱을 판정한다",
+      FULL_SELECTION: "통과 뒤 전체 OOF에서 실제 인수 명단을 고른다",
+      INJECT_FAILURE: "실패 하나가 전체 판정을 막는지 확인한다"
+    };
+
+    let state = SelectionModel.initialState();
+
+    function dispatch(action) {
+      state = SelectionModel.reduce(state, action);
+      render();
+    }
+
+    function fmt(value, digits = 5) {
+      return value == null ? "봉인" : Number(value).toFixed(digits);
+    }
+
+    function signed(value, digits = 6) {
+      if (value == null) return "아직 없음";
+      return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}`;
+    }
+
+    function candidateStatus(candidate) {
+      const map = {
+        pending: ["pending", "대기"],
+        measured: ["warn", "측정됨"],
+        available: ["warn", "검색 가능"],
+        "own-conflict": ["drop", "자체와 중복"],
+        selected: ["keep", "선택"]
+      };
+      return map[candidate.status] || ["pending", candidate.status];
+    }
+
+    function renderSummary() {
+      const selectedCount = state.fullSelection ? state.fullSelection.length : state.selected.length;
+      const positiveFolds = state.foldDeltas ? state.foldDeltas.filter(value => value > 0).length : null;
+      const finalSelection = state.phase === "final";
+      const values = [
+        ["단계", PHASE_LABELS[state.phase], state.invalid ? "전체 결과 폐기" : "결정적 상태 전이"],
+        ["열린 목표값", finalSelection ? "5 / 5 분할" : (state.fold == null ? "0 / 5 분할" : "4 / 5 분할"), finalSelection ? "제안 명단 선별만" : (state.phase === "scored" || ["aggregated", "decided"].includes(state.phase) ? "선택 잠금 뒤 채점" : "채점 분할 봉인")],
+        [state.fullSelection ? "전체 OOF 인수" : "선택 후보", `${selectedCount} / 19`, state.fullSelection ? "분할별 투표 아님" : "자체 35개는 필수"],
+        ["교체 근거", state.foldDeltas ? `${positiveFolds}/5 양수` : "아직 없음", state.aggregateDelta == null ? "+0.00002 필요" : signed(state.aggregateDelta)]
+      ];
+      document.getElementById("summary").innerHTML = values.map(([label, value, detail]) => `
+        <div class="metric">
+          <div class="label">${label}</div>
+          <div class="value">${value}</div>
+          <div class="detail">${detail}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderScope() {
+      const finalSelection = state.phase === "final";
+      const openFolds = finalSelection ? "전체 5개 분할" : (state.fold == null ? "아직 없음" : "분할 1, 2, 3, 4");
+      const sealed = finalSelection ? "제안 명단 단계에는 없음" : (state.fold == null ? "아직 선택하지 않음" : "분할 0");
+      const scoreVisible = ["scored", "aggregated", "decided", "final"].includes(state.phase);
+      document.getElementById("scope").innerHTML = `
+        <div class="scope-strip">
+          <div class="scope-box open">
+            <strong>선택에 사용할 수 있음</strong>
+            ${openFolds}<br>
+            ${finalSelection ? "후보 사이 상관과 전체 5분할의 한 분할씩 뺀 결합 기여" : "후보 사이 상관과 내부 4분할 결합 기여"}
+          </div>
+          <div class="arrow">→</div>
+          <div class="scope-box sealed">
+            <strong>${finalSelection ? "교체 문턱 재판정 금지" : (scoreVisible ? "선택 잠금 뒤 공개" : "선택 중에는 봉인")}</strong>
+            ${sealed}<br>
+            ${finalSelection ? "전체 OOF 선별 점수는 제안 명단에만 사용" : (scoreVisible ? "봉인 분할 점수 기록 가능" : "목표값, 후보 점수, 순위 모두 볼 수 없음")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderVerdict() {
+      const target = document.getElementById("verdict");
+      if (state.invalid) {
+        target.innerHTML = `<div class="verdict invalid"><strong>판정 불가</strong><p>한 부분이라도 실패하면 완료한 분할이나 후보 결과로 교체하지 않는다.</p></div>`;
+        return;
+      }
+      if (state.passed === true) {
+        if (state.phase === "final") {
+          target.innerHTML = `<div class="verdict pass"><strong>절차 통과와 최종 선별 완료</strong><p>전체 OOF가 고른 설명용 인수 명단은 ${state.fullSelection.length}개다. 이 명단의 전체 OOF 점수로 교체 문턱을 다시 판정하지 않는다.</p></div>`;
+          return;
+        }
+        target.innerHTML = `<div class="verdict pass"><strong>절차 통과</strong><p>예시에서는 ${signed(state.aggregateDelta)}와 5/5 양수를 충족했다. 실제 인수 명단은 이 뒤 전체 OOF 실행이 정한다.</p></div>`;
+        return;
+      }
+      if (state.passed === false) {
+        target.innerHTML = `<div class="verdict fail"><strong>현재 313개 유지</strong><p>예시에서는 교체 문턱을 충족하지 못했다. 후보별 전체 OOF 결과를 보고 규칙을 바꾸지 않는다.</p></div>`;
+        return;
+      }
+      target.innerHTML = `<div class="verdict"><strong>아직 판정하지 않음</strong><p>분할별 선택을 먼저 잠근 뒤 다섯 바깥 예측을 이어붙여야 한다.</p></div>`;
+    }
+
+    function renderCandidates() {
+      document.getElementById("candidateRows").innerHTML = state.candidates.map(candidate => {
+        const [statusClass, statusText] = candidateStatus(candidate);
+        const measured = !["draft", "frozen", "training"].includes(state.phase);
+        return `
+          <tr>
+            <td><strong>${candidate.id}</strong><br><span style="color:var(--muted)">${candidate.reason}</span></td>
+            <td>${measured ? fmt(candidate.auc) : "봉인"}</td>
+            <td>${measured ? (candidate.contributionLabel || signed(candidate.contribution)) : "봉인"}</td>
+            <td>${measured ? `${candidate.nearest.toFixed(5)}<br><span style="color:var(--muted)">${candidate.nearestId}</span>` : "봉인"}</td>
+            <td><span class="status ${statusClass}">${statusText}</span></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderRoster() {
+      document.getElementById("roster").innerHTML = SelectionModel.ROSTER.map((candidate, index) => `
+        <div class="roster-item">
+          <strong>${String(index + 1).padStart(2, "0")}. ${candidate.id}</strong><br>
+          <span>${candidate.origin} · 조사 보고서 전체 OOF AUC ${candidate.auc.toFixed(6)}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderTabs() {
+      const tabs = Object.entries(SelectionModel.SCENARIOS).map(([id, scenario]) => `
+        <button data-scenario="${id}" aria-pressed="${state.scenarioId === id}">${scenario.title}</button>
+      `).join("");
+      document.getElementById("scenarioTabs").innerHTML = tabs;
+      document.querySelectorAll("[data-scenario]").forEach(button => {
+        button.addEventListener("click", () => dispatch({ type: "SET_SCENARIO", scenarioId: button.dataset.scenario }));
+      });
+    }
+
+    function renderWalkthrough() {
+      const scenario = SelectionModel.SCENARIOS[state.scenarioId];
+      const steps = WALKTHROUGHS[state.scenarioId];
+      document.getElementById("walkthrough").innerHTML = `
+        <h3>${scenario.title}</h3>
+        <p>${scenario.description}</p>
+        <div class="walkthrough-steps">
+          ${steps.map((action, index) => `
+            <button data-guide-action="${action}">
+              <span class="step-no">${index + 1}</span>
+              <span>${ACTION_LABELS[action]}</span>
+            </button>
+          `).join("")}
+        </div>
+      `;
+      document.querySelectorAll("[data-guide-action]").forEach(button => {
+        button.addEventListener("click", () => dispatch({ type: button.dataset.guideAction }));
+      });
+    }
+
+    function renderLog() {
+      const events = state.events.length ? state.events : ["아직 기록 없음"];
+      document.getElementById("eventLog").innerHTML = events.slice(-12).map(message => `<li>${message}</li>`).join("");
+      document.getElementById("lastChange").textContent = state.lastChange;
+    }
+
+    function render() {
+      renderSummary();
+      renderScope();
+      renderVerdict();
+      renderCandidates();
+      renderRoster();
+      renderTabs();
+      renderWalkthrough();
+      renderLog();
+    }
+
+    document.querySelectorAll("[data-action]").forEach(button => {
+      button.addEventListener("click", () => dispatch({ type: button.dataset.action }));
+    });
+
+    render();
+  </script>
+</body>
+</html>
