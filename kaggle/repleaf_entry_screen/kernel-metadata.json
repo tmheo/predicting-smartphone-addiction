@@ -1,0 +1,13 @@
+{
+  "id": "tmheo74/s6e8-repleafgbm-313-member-entry-screen",
+  "title": "S6E8 RepLeafGBM 313-member entry screen",
+  "code_file": "run.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": false,
+  "dataset_sources": ["tmheo74/s6e8-current-313-nested-oof"],
+  "kernel_sources": ["masayakawamata/s6e8-repleafgbm-cv-0-968187"],
+  "competition_sources": ["playground-series-s6e8"]
+}
