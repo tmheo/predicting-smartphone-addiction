@@ -1,0 +1,797 @@
+{
+  "comparison": {
+    "auc_oof": {
+      "missingness_augmented": 0.968736689494818,
+      "original": 0.9686391854351686,
+      "tripled": 0.9685956546759591
+    },
+    "delta_vs_original": {
+      "missingness_augmented": 9.750405964936704e-05,
+      "tripled": -4.35307592094869e-05
+    },
+    "fold_missingness_augmented_minus_tripled": [
+      0.00011171349766447847,
+      0.00010153832713344357,
+      0.00011030687624469238,
+      0.00022903648179595226,
+      0.00014977067983068526
+    ],
+    "missing_count_buckets": [
+      {
+        "auc": {
+          "missingness_augmented": 0.9760955781579946,
+          "original": 0.9761066064961386,
+          "tripled": 0.9760730741144178
+        },
+        "bucket": "0",
+        "missingness_augmented_minus_tripled": 2.2504043576843102e-05,
+        "row_count": 269185,
+        "share": 0.3893506940577318
+      },
+      {
+        "auc": {
+          "missingness_augmented": 0.9727747189302637,
+          "original": 0.9727175415316691,
+          "tripled": 0.9726655785303786
+        },
+        "bucket": "1",
+        "missingness_augmented_minus_tripled": 0.00010914039988507707,
+        "row_count": 180459,
+        "share": 0.2610169099279835
+      },
+      {
+        "auc": {
+          "missingness_augmented": 0.9653174644057616,
+          "original": 0.9650870686866905,
+          "tripled": 0.9650704813231546
+        },
+        "bucket": "2",
+        "missingness_augmented_minus_tripled": 0.00024698308260695523,
+        "row_count": 120697,
+        "share": 0.17457681787873047
+      },
+      {
+        "auc": {
+          "missingness_augmented": 0.954227261079722,
+          "original": 0.9538582320519395,
+          "tripled": 0.9537997824099032
+        },
+        "bucket": "3",
+        "missingness_augmented_minus_tripled": 0.0004274786698188482,
+        "row_count": 67328,
+        "share": 0.09738359689254218
+      },
+      {
+        "auc": {
+          "missingness_augmented": 0.9402435915077205,
+          "original": 0.9399090060471458,
+          "tripled": 0.9397939469513898
+        },
+        "bucket": "4",
+        "missingness_augmented_minus_tripled": 0.000449644556330675,
+        "row_count": 32557,
+        "share": 0.04709062743628945
+      },
+      {
+        "auc": {
+          "missingness_augmented": 0.9130206417108704,
+          "original": 0.912527457745753,
+          "tripled": 0.9124286899754674
+        },
+        "bucket": "5+",
+        "missingness_augmented_minus_tripled": 0.0005919517354029402,
+        "row_count": 21143,
+        "share": 0.030581353806722604
+      }
+    ],
+    "missingness_augmented_minus_tripled": 0.00014103481885885394
+  },
+  "decision": {
+    "all_folds_positive": true,
+    "direct_delta": 0.00014103481885885394,
+    "next_step": "run_seed_42_43_44_confirmation_under_existing_map_contract",
+    "rule": "missingness_augmented_auc_oof - tripled_auc_oof >= 0",
+    "status": "pass"
+  },
+  "freeze": {
+    "arms": {
+      "missingness_augmented": {
+        "features": {
+          "base": "raw",
+          "categorical": [
+            "gender",
+            "stress_level",
+            "academic_work_impact"
+          ],
+          "providers": [
+            {
+              "kind": "derived",
+              "names": [
+                "other_screen",
+                "screen_slack"
+              ]
+            },
+            {
+              "cols": [
+                "age",
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "work_study_hours",
+                "sleep_hours",
+                "notifications_per_day",
+                "app_opens_per_day",
+                "weekend_screen_time",
+                "placebo_noise"
+              ],
+              "inner_folds": 10,
+              "kind": "target_encoding"
+            },
+            {
+              "cols": [
+                "age",
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "gaming_hours",
+                "work_study_hours",
+                "sleep_hours",
+                "notifications_per_day",
+                "app_opens_per_day",
+                "weekend_screen_time"
+              ],
+              "kind": "constrained_impute_aux",
+              "widths": false
+            },
+            {
+              "cat_cols": [
+                "gender",
+                "stress_level",
+                "academic_work_impact"
+              ],
+              "cols": [
+                "age",
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "gaming_hours",
+                "work_study_hours",
+                "sleep_hours",
+                "notifications_per_day",
+                "app_opens_per_day",
+                "weekend_screen_time"
+              ],
+              "compositions": [
+                "social_frac",
+                "work_frac",
+                "leisure_frac",
+                "resid_frac",
+                "week_total"
+              ],
+              "emit": [
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "gaming_hours",
+                "work_study_hours",
+                "weekend_screen_time"
+              ],
+              "kind": "xgb_impute_aux"
+            }
+          ]
+        },
+        "model": {
+          "fit": {
+            "early_stopping_rounds": 200
+          },
+          "kind": "lightgbm",
+          "params": {
+            "bagging_fraction": 0.7218730663234,
+            "bagging_freq": 1,
+            "cat_l2": 0.0296205152578,
+            "cat_smooth": 0.0010255271303,
+            "extra_trees": false,
+            "feature_fraction": 0.4557131604374,
+            "lambda_l1": 0.5219704038237,
+            "lambda_l2": 0.1070959487853,
+            "learning_rate": 0.0055891584996,
+            "max_cat_to_onehot": 71,
+            "metric": "auc",
+            "min_data_in_leaf": 50,
+            "min_data_per_group": 10,
+            "n_estimators": 20000,
+            "num_leaves": 30,
+            "objective": "binary"
+          }
+        },
+        "training_rows": {
+          "arm": "missingness_augmented",
+          "observed_cell_mask_probability": 0.25,
+          "replica_count": 2
+        }
+      },
+      "original": {
+        "features": {
+          "base": "raw",
+          "categorical": [
+            "gender",
+            "stress_level",
+            "academic_work_impact"
+          ],
+          "providers": [
+            {
+              "kind": "derived",
+              "names": [
+                "other_screen",
+                "screen_slack"
+              ]
+            },
+            {
+              "cols": [
+                "age",
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "work_study_hours",
+                "sleep_hours",
+                "notifications_per_day",
+                "app_opens_per_day",
+                "weekend_screen_time",
+                "placebo_noise"
+              ],
+              "inner_folds": 10,
+              "kind": "target_encoding"
+            },
+            {
+              "cols": [
+                "age",
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "gaming_hours",
+                "work_study_hours",
+                "sleep_hours",
+                "notifications_per_day",
+                "app_opens_per_day",
+                "weekend_screen_time"
+              ],
+              "kind": "constrained_impute_aux",
+              "widths": false
+            },
+            {
+              "cat_cols": [
+                "gender",
+                "stress_level",
+                "academic_work_impact"
+              ],
+              "cols": [
+                "age",
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "gaming_hours",
+                "work_study_hours",
+                "sleep_hours",
+                "notifications_per_day",
+                "app_opens_per_day",
+                "weekend_screen_time"
+              ],
+              "compositions": [
+                "social_frac",
+                "work_frac",
+                "leisure_frac",
+                "resid_frac",
+                "week_total"
+              ],
+              "emit": [
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "gaming_hours",
+                "work_study_hours",
+                "weekend_screen_time"
+              ],
+              "kind": "xgb_impute_aux"
+            }
+          ]
+        },
+        "model": {
+          "fit": {
+            "early_stopping_rounds": 200
+          },
+          "kind": "lightgbm",
+          "params": {
+            "bagging_fraction": 0.7218730663234,
+            "bagging_freq": 1,
+            "cat_l2": 0.0296205152578,
+            "cat_smooth": 0.0010255271303,
+            "extra_trees": false,
+            "feature_fraction": 0.4557131604374,
+            "lambda_l1": 0.5219704038237,
+            "lambda_l2": 0.1070959487853,
+            "learning_rate": 0.0055891584996,
+            "max_cat_to_onehot": 71,
+            "metric": "auc",
+            "min_data_in_leaf": 50,
+            "min_data_per_group": 10,
+            "n_estimators": 20000,
+            "num_leaves": 30,
+            "objective": "binary"
+          }
+        },
+        "training_rows": {
+          "arm": "original",
+          "observed_cell_mask_probability": 0.0,
+          "replica_count": 0
+        }
+      },
+      "tripled": {
+        "features": {
+          "base": "raw",
+          "categorical": [
+            "gender",
+            "stress_level",
+            "academic_work_impact"
+          ],
+          "providers": [
+            {
+              "kind": "derived",
+              "names": [
+                "other_screen",
+                "screen_slack"
+              ]
+            },
+            {
+              "cols": [
+                "age",
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "work_study_hours",
+                "sleep_hours",
+                "notifications_per_day",
+                "app_opens_per_day",
+                "weekend_screen_time",
+                "placebo_noise"
+              ],
+              "inner_folds": 10,
+              "kind": "target_encoding"
+            },
+            {
+              "cols": [
+                "age",
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "gaming_hours",
+                "work_study_hours",
+                "sleep_hours",
+                "notifications_per_day",
+                "app_opens_per_day",
+                "weekend_screen_time"
+              ],
+              "kind": "constrained_impute_aux",
+              "widths": false
+            },
+            {
+              "cat_cols": [
+                "gender",
+                "stress_level",
+                "academic_work_impact"
+              ],
+              "cols": [
+                "age",
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "gaming_hours",
+                "work_study_hours",
+                "sleep_hours",
+                "notifications_per_day",
+                "app_opens_per_day",
+                "weekend_screen_time"
+              ],
+              "compositions": [
+                "social_frac",
+                "work_frac",
+                "leisure_frac",
+                "resid_frac",
+                "week_total"
+              ],
+              "emit": [
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "gaming_hours",
+                "work_study_hours",
+                "weekend_screen_time"
+              ],
+              "kind": "xgb_impute_aux"
+            }
+          ]
+        },
+        "model": {
+          "fit": {
+            "early_stopping_rounds": 200
+          },
+          "kind": "lightgbm",
+          "params": {
+            "bagging_fraction": 0.7218730663234,
+            "bagging_freq": 1,
+            "cat_l2": 0.0296205152578,
+            "cat_smooth": 0.0010255271303,
+            "extra_trees": false,
+            "feature_fraction": 0.4557131604374,
+            "lambda_l1": 0.5219704038237,
+            "lambda_l2": 0.1070959487853,
+            "learning_rate": 0.0055891584996,
+            "max_cat_to_onehot": 71,
+            "metric": "auc",
+            "min_data_in_leaf": 50,
+            "min_data_per_group": 10,
+            "n_estimators": 20000,
+            "num_leaves": 30,
+            "objective": "binary"
+          }
+        },
+        "training_rows": {
+          "arm": "tripled",
+          "observed_cell_mask_probability": 0.0,
+          "replica_count": 2
+        }
+      }
+    },
+    "common_config_sha256_excluding_name_and_training_rows": "2944f859fe7cee7d727672d0a5aef006e550dd5ed2e3ea85598206f1849e47f6",
+    "config_sha256": {
+      "missingness_augmented": "2a2273b745d9bc372ec943c0627614f5225d69caafcddfad94a228233e0bc508",
+      "original": "339e5a33d835a27dc3aac070bb437141d2fc30044f1419257a189e18fec9d470",
+      "tripled": "2caa6d26bd3522aca93d5bd36af5717f7b0d60a8d0354ef4e656dcf2cb033af4"
+    },
+    "execution_commit": "1aa1cafc4abab6dd61f89e983b7ed11c7248764e",
+    "execution_tree_clean": true,
+    "folds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "input_sha256": {
+      "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+      "issue500_diagnostic": "a543f0f20b1a2388f44b76796e28c53dc3dda6e1bb485c30bf3270677dc59154",
+      "sample_submission": "206763fe5786fb9c80d4e9289a3b812030d3dbb36450c6eb63348098154ce63e",
+      "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+      "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+    },
+    "raw_columns": [
+      "age",
+      "daily_screen_time_hours",
+      "social_media_hours",
+      "gaming_hours",
+      "work_study_hours",
+      "sleep_hours",
+      "notifications_per_day",
+      "app_opens_per_day",
+      "weekend_screen_time",
+      "gender",
+      "stress_level",
+      "academic_work_impact"
+    ],
+    "seed": 42,
+    "training_rows_contract_sha256": "72db28abebe6a6074378ffea2a295eb74d674dd35e0600db5c8b9a15c3ff884f",
+    "uv_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4"
+  },
+  "issue": 501,
+  "recorded_at": "2026-08-29",
+  "runs": {
+    "missingness_augmented": {
+      "artifact_sha256": {
+        "bundle/manifest.json": "e0acca571a049e76df2ed4051226862fd1a918c8f76a902f0d17a289e5b3b79b",
+        "exp208_issue500_ag25_missingness_augmented.yaml": "2a2273b745d9bc372ec943c0627614f5225d69caafcddfad94a228233e0bc508",
+        "feature_importance.parquet": "235b8a813d70e0f4243be4bc490d575509ec9fc5ed0a763c2a8805606d2dc39a",
+        "feature_importance_summary.csv": "c968f02a63ccdf72304045491364fd077a2d3fa4ebba1c990450a134bb197b8a",
+        "fold_feature_reuse.json": "aff12e7a6189a6a5bff51cf11248ed45d3a00fa5aebe6a6c1662f1a332228084",
+        "fold_recovery.json": "5f7097f51981e96f87989c5c2d0a84da4411459e7f02087111f3bee9255505cf",
+        "logs/run.log": "2e58f87a5d98d3eeab75f6a8a98040c66dff7d6a3a8e1886de8529fb9ba8a197",
+        "model_training_diagnostics.json": "2b5444ede52ae4baaf81ad81baee65b1cec3f854b51c049a323147c6a7628190",
+        "observability/fold_execution.jsonl.gz": "63f92001991f3cb0be1bba692564d7c8543bb7f4ee6430528e9bdc194cd82ed2",
+        "oof.parquet": "f9f372280641b370f93a502c0d222c2fc2aaa6be6f62bbd125ab7dc1527601d1",
+        "oof_seed_42.parquet": "f9f372280641b370f93a502c0d222c2fc2aaa6be6f62bbd125ab7dc1527601d1",
+        "stage_durations.csv": "c543dd34a53012c4996604aa5c55439600d425d05888e63b1f1cd334fa2d420e",
+        "submission.csv": "8c60d3719e7ac72a4f01fda5a5fee89e077d4ddbf3e57490c594348cfb2769a8",
+        "summary.html": "b0d99009959242d05ff9a8cb3c0a5014084305c4dc8ce954146c365b16413b6a",
+        "test_pred.parquet": "177f9af08e93416e1bf7f25d000e00278763f31c956dfae399eececc6cb58c53",
+        "top30_gain.png": "4a25882c580670cb746243f6d074a6e82cb78afd5bba818625e32a12ed499bc0",
+        "training_row_evidence.json": "846414fe6031c41ec911503dcc5a40072184e8b17e91f9d3ab424d28844b37be"
+      },
+      "auc_oof": 0.968736689494818,
+      "auc_oof_weighted": 0.9696248074801063,
+      "bundle_sha256": "6f2d1663512811eab89092e993fe37bc8fdb4e6a3dfb5abb99563842ea57337c",
+      "execution_environment": {
+        "cpu_count": 14,
+        "cpu_model": "arm",
+        "cuda_visible_devices": null,
+        "hostname": "taemyungheoui-MacBookPro.local",
+        "model_kind": "lightgbm",
+        "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+        "python": "3.13.13",
+        "remote_provider": null,
+        "source": "local_measured"
+      },
+      "experiment": "exp208_issue500_ag25_missingness_augmented",
+      "fold_auc": [
+        0.9680822087405865,
+        0.9688475579503827,
+        0.9688490313000555,
+        0.9693813240948347,
+        0.9685252078107318
+      ],
+      "git_commit": "1aa1cafc4abab6dd61f89e983b7ed11c7248764e",
+      "git_dirty": false,
+      "input_sha256": {
+        "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+        "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+        "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+      },
+      "run_id": "735d71c7ae504a188f7ce0098264c689",
+      "source_ended_at_utc": "2026-08-28T16:30:40.087+00:00",
+      "source_run_id": "0cdbeb99412b491cbc6ed438eef785e0",
+      "source_started_at_utc": "2026-08-28T15:45:46.108+00:00",
+      "source_wall_clock_seconds": 2693.979,
+      "status": "FINISHED",
+      "training_length": [
+        18635,
+        18550,
+        19951,
+        20000,
+        19947
+      ],
+      "training_seconds": 2690.818751791987
+    },
+    "original": {
+      "artifact_sha256": {
+        "bundle/manifest.json": "70be52b81b6d7fcb5b66cf1465fb84909579518a6c259b0fac7309c5c90db7bb",
+        "exp206_issue500_ag25_original.yaml": "339e5a33d835a27dc3aac070bb437141d2fc30044f1419257a189e18fec9d470",
+        "feature_importance.parquet": "91cc71cd254c15f6d62623696c7ddf5be2f854375dda0a3d6c5eb6bc7e984420",
+        "feature_importance_summary.csv": "87ce99b0ad39f9a7801abbc7c04b5deadf03c25c06d5112739ed4840a308842f",
+        "fold_feature_reuse.json": "ef66c38722581692e9d17f80453acc9469fb6d1c248d5fb070c015d9541c7272",
+        "fold_recovery.json": "1e803a3bfd2ef72c170037800c9605a85ee6c00562d9441591d260116965d06c",
+        "logs/run.log": "e629cad578bd4c984b1179f5e56603392f19b1a86aee223081d7778faf5af68c",
+        "model_training_diagnostics.json": "b9bd320f7f3812360db0759ee756b8b4f3f2486aea8edc4c4f190d77e87b38d3",
+        "observability/fold_execution.jsonl.gz": "2b3fb87a070dcf027686226adbf068acfa8f2056c418d9f2a06d6b8a8915d6b2",
+        "oof.parquet": "a1aaa2c94fafc4a486bf0fe19b0ae3f399a89834ce7e6339ab3e5bf6056f7a96",
+        "oof_seed_42.parquet": "a1aaa2c94fafc4a486bf0fe19b0ae3f399a89834ce7e6339ab3e5bf6056f7a96",
+        "stage_durations.csv": "db022cdd2bd2205a8144573fb2627984ba9120701b9beb8520fbd9a89b96442e",
+        "submission.csv": "b1e1e42a00dd83eaff04f163620eb6ba48ac94258c59d001c503c3bdcf0918cb",
+        "summary.html": "8b41809c5d636f9c75108f8eb6f584f91eb28f2ae370a0a8b2687078a7e0afb1",
+        "test_pred.parquet": "7d2ce8e5900cc9ae24c9755fa5abd44e863578c0daa741f9de5794686587df15",
+        "top30_gain.png": "347f28b8c202f71a657318b2f888275c8dd5df9f4d70aa9ba06248ce3faebd75",
+        "training_row_evidence.json": "61f38b3d37838fbb5a9357adaa5128ba0dbf326643e6e8db962b5507cf464fa2"
+      },
+      "auc_oof": 0.9686391854351686,
+      "auc_oof_weighted": 0.9695323063259803,
+      "bundle_sha256": "2309eaf844d5b1388afd0d3696ba6a8bc4d1399c7bb3d9bccd9118bdee6a6525",
+      "execution_environment": {
+        "cpu_count": 14,
+        "cpu_model": "arm",
+        "cuda_visible_devices": null,
+        "hostname": "taemyungheoui-MacBookPro.local",
+        "model_kind": "lightgbm",
+        "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+        "python": "3.13.13",
+        "remote_provider": null,
+        "source": "local_measured"
+      },
+      "experiment": "exp206_issue500_ag25_original",
+      "fold_auc": [
+        0.9680160650577426,
+        0.9687722232753064,
+        0.968725462754439,
+        0.9692610475609287,
+        0.9684197540227109
+      ],
+      "git_commit": "1aa1cafc4abab6dd61f89e983b7ed11c7248764e",
+      "git_dirty": false,
+      "input_sha256": {
+        "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+        "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+        "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+      },
+      "run_id": "17db85ebf5eb4c5fadf3b14a93d38f8b",
+      "source_ended_at_utc": "2026-08-28T15:00:48.910+00:00",
+      "source_run_id": "d98a63d365594a85972a6c86089163be",
+      "source_started_at_utc": "2026-08-28T14:31:49.072+00:00",
+      "source_wall_clock_seconds": 1739.838,
+      "status": "FINISHED",
+      "training_length": [
+        17897,
+        19969,
+        15213,
+        19608,
+        18102
+      ],
+      "training_seconds": 1735.1266046249948
+    },
+    "tripled": {
+      "artifact_sha256": {
+        "bundle/manifest.json": "1aa2ed751cb74709544750ffbc63c7c94aa0355738ea8d897af8be9ab1236bb8",
+        "exp207_issue500_ag25_tripled.yaml": "2caa6d26bd3522aca93d5bd36af5717f7b0d60a8d0354ef4e656dcf2cb033af4",
+        "feature_importance.parquet": "fd358916eb3e331dd4eb47485dc2ca00f9fa70447787b50d6dbf30b7fc1fddc3",
+        "feature_importance_summary.csv": "c74523e203667e976e3bd35611cbae49995dd984df6c7cb4bc994b6edb093c14",
+        "fold_feature_reuse.json": "ffd79a197753ecc76f05e546e333ded0348a081c5e4c21d685fbac01cc7c627f",
+        "fold_recovery.json": "0ebfc3b0aaa48d68cde8081e15ca9b17ee5506179fbfa1dc65d4940a1fa278cb",
+        "logs/run.log": "ad88e208099d7148e5e1e6caa3fc64e602156892bd83b3f24045d9b21ee0593b",
+        "model_training_diagnostics.json": "a81cf5b7d81c0e840c91b62b0d73466faead62f32c208497ce15469c62fe41d2",
+        "observability/fold_execution.jsonl.gz": "3e5b07912d091d16ce2c60759378fda5e683feb541027bc5f63581065ba7d0c8",
+        "oof.parquet": "93e221dd88cbd5686036167426d534c45a76c2445b8068fb9d4ee3391329e89b",
+        "oof_seed_42.parquet": "93e221dd88cbd5686036167426d534c45a76c2445b8068fb9d4ee3391329e89b",
+        "stage_durations.csv": "978a50a53943df9d06c6fce9f3d4365c2e16a658ed7b682a2930c87c7a402b31",
+        "submission.csv": "d0fb0864d07060ccb3e75701c66034f0b0a5b267329d7c993203d03559cc3009",
+        "summary.html": "61b07b10b1ceca9f9789d2647950b2a52ed4cbeb4dd7ca66b4c4fe077ca1edd1",
+        "test_pred.parquet": "71b84b43bc66624e86e937bd7b2c6396ef2b05fa9d89165e9bbc2ef0834ec3df",
+        "top30_gain.png": "93dbc27f901cc1ab3f30b983ab08f8e659df519153721ee653588d758ec5bda8",
+        "training_row_evidence.json": "fa0ad7d1d01c6e1ee621dd2b917853cf8fceb1df2dbedc8af6d212e6478c5fcc"
+      },
+      "auc_oof": 0.9685956546759591,
+      "auc_oof_weighted": 0.9694904892429878,
+      "bundle_sha256": "0f1f869946678246a8f9caeadef38f43d0d7d15ce192ff5d76f77db48cd2a4a0",
+      "execution_environment": {
+        "cpu_count": 14,
+        "cpu_model": "arm",
+        "cuda_visible_devices": null,
+        "hostname": "taemyungheoui-MacBookPro.local",
+        "model_kind": "lightgbm",
+        "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+        "python": "3.13.13",
+        "remote_provider": null,
+        "source": "local_measured"
+      },
+      "experiment": "exp207_issue500_ag25_tripled",
+      "fold_auc": [
+        0.967970495242922,
+        0.9687460196232492,
+        0.9687387244238108,
+        0.9691522876130387,
+        0.9683754371309011
+      ],
+      "git_commit": "1aa1cafc4abab6dd61f89e983b7ed11c7248764e",
+      "git_dirty": false,
+      "input_sha256": {
+        "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+        "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+        "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+      },
+      "run_id": "a54ae90743f740e79775b4bc10951353",
+      "source_ended_at_utc": "2026-08-28T15:45:37.489+00:00",
+      "source_run_id": "983c30db9e9d41fab0a7f4ee54b23e7f",
+      "source_started_at_utc": "2026-08-28T15:00:56.739+00:00",
+      "source_wall_clock_seconds": 2680.75,
+      "status": "FINISHED",
+      "training_length": [
+        19995,
+        19998,
+        19962,
+        15398,
+        19956
+      ],
+      "training_seconds": 2677.4653647499945
+    }
+  },
+  "schema_version": 1,
+  "training_limit_observation": {
+    "configured_n_estimators": 20000,
+    "missingness_augmented_training_lengths": [
+      18635,
+      18550,
+      19951,
+      20000,
+      19947
+    ],
+    "note": "현재 지도의 확인 실행은 기존 20000회 계약을 유지하며 50000회 비교는 별도 실험으로 수행한다.",
+    "tripled_training_lengths": [
+      19995,
+      19998,
+      19962,
+      15398,
+      19956
+    ],
+    "user_selected_out_of_scope_follow_up_n_estimators": 50000
+  },
+  "training_row_integrity": {
+    "all_assertions_passed": true,
+    "mask_records": [
+      {
+        "actual_added_missing_rate": 0.24989593945923527,
+        "added_missing_cells": 1484695,
+        "eligible_observed_cells": 5941253,
+        "fold": 0,
+        "mask_seed": 842571782273531586,
+        "mask_sha256": "424834549771df308a4d69191a0e2cf36d089357c76fda71f4b36f404df8bb0d",
+        "replica": 1
+      },
+      {
+        "actual_added_missing_rate": 0.2499787502737217,
+        "added_missing_cells": 1485187,
+        "eligible_observed_cells": 5941253,
+        "fold": 0,
+        "mask_seed": 11829278967467946528,
+        "mask_sha256": "e110e3b9c185fda76e95763ec337dfb7371099d515ed201029e9763c04e64bf8",
+        "replica": 2
+      },
+      {
+        "actual_added_missing_rate": 0.2500348442613017,
+        "added_missing_cells": 1485387,
+        "eligible_observed_cells": 5940720,
+        "fold": 1,
+        "mask_seed": 17671307864943227873,
+        "mask_sha256": "2beeab0371530c9be4ad8dc46ab7173e39af3586bf7e4fbbbf7c9af12684c63b",
+        "replica": 1
+      },
+      {
+        "actual_added_missing_rate": 0.2501292772593221,
+        "added_missing_cells": 1485948,
+        "eligible_observed_cells": 5940720,
+        "fold": 1,
+        "mask_seed": 17452137048310867777,
+        "mask_sha256": "1550235ee0fe92453b807837b167ecad93f5f9f0450c3cd01f180f2a4e0db85c",
+        "replica": 2
+      },
+      {
+        "actual_added_missing_rate": 0.25034068889179156,
+        "added_missing_cells": 1487250,
+        "eligible_observed_cells": 5940904,
+        "fold": 2,
+        "mask_seed": 2449163615730797630,
+        "mask_sha256": "447c5280c0b3ba3571dea2bbd89ed4057e3326e921743f3b53231da5c36d95ec",
+        "replica": 1
+      },
+      {
+        "actual_added_missing_rate": 0.2500028615173718,
+        "added_missing_cells": 1485243,
+        "eligible_observed_cells": 5940904,
+        "fold": 2,
+        "mask_seed": 14385690030169265160,
+        "mask_sha256": "bb4adf84eda15105566b4a11f66905db1e354c3dcc6ce20c8848ed2de57d8e30",
+        "replica": 2
+      },
+      {
+        "actual_added_missing_rate": 0.25002343851912323,
+        "added_missing_cells": 1485408,
+        "eligible_observed_cells": 5941075,
+        "fold": 3,
+        "mask_seed": 927259896705326731,
+        "mask_sha256": "b6b26b2a561b741ac8d8cd5dd96a61b40b53abfbc0f2fde2e5ffa52d2a62145b",
+        "replica": 1
+      },
+      {
+        "actual_added_missing_rate": 0.24976641432737343,
+        "added_missing_cells": 1483881,
+        "eligible_observed_cells": 5941075,
+        "fold": 3,
+        "mask_seed": 11754486576214378166,
+        "mask_sha256": "b91eb7b7ff0de6fb59d9f4a751a950044a9e660a5509d399af5b65001247c09e",
+        "replica": 2
+      },
+      {
+        "actual_added_missing_rate": 0.24999831658900531,
+        "added_missing_cells": 1485070,
+        "eligible_observed_cells": 5940320,
+        "fold": 4,
+        "mask_seed": 6109034784314264126,
+        "mask_sha256": "1aa66a5b55b8d8ecd18d9c3500f0631f52b3dc8e33f2fa8b80ac6acc24dd814a",
+        "replica": 1
+      },
+      {
+        "actual_added_missing_rate": 0.24967695343011825,
+        "added_missing_cells": 1483161,
+        "eligible_observed_cells": 5940320,
+        "fold": 4,
+        "mask_seed": 2894761905079273251,
+        "mask_sha256": "ac7d7df32209df4b255ebbef38c8d82a312ee167f0232d79d421924e3a936abb",
+        "replica": 2
+      }
+    ],
+    "missingness_augmented_added_missing_cells": 14851230,
+    "missingness_augmented_added_missing_rate": 0.24998474966833054,
+    "missingness_augmented_eligible_observed_cells": 59408544,
+    "pair_identity_matches": true,
+    "target_encoding_canary_basis": {
+      "missing_mask_rebuilt_from_augmented_raw_source": true,
+      "outer_fold_inherited_from_parent": true,
+      "parent_noise_shared_by_replica": true,
+      "replicas_excluded_from_state_fit": true,
+      "targets_inherited_from_parent": true
+    },
+    "target_encoding_canary_valid": true,
+    "tripled_added_missing_rate": 0.0,
+    "validation_and_test_not_augmented": true
+  }
+}
