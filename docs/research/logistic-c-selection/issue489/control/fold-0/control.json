@@ -1,0 +1,36 @@
+{
+ "schema": "logistic-c-selection/1",
+ "precommit_sha256": "2247af92e9af59c0f52c3196072cd8fcc5921504dc86cf9080c3570f9396022d",
+ "sealed_fold": 0,
+ "strategy": "shrunk_rank_logit_logistic",
+ "member_count": 313,
+ "rows": 138274,
+ "auc": 0.969754284537701,
+ "reference_auc": 0.969754284537701,
+ "delta_vs_reference": 0.0,
+ "reproduces": true,
+ "lambda": 1.0,
+ "c": 1.0,
+ "final_iterations": 211,
+ "final_coefficient_l2_norm": 2.912982995531192,
+ "prediction_sha256": "cc95366b510a85fbe4c412de83410cc3dd5a6834de24efcaf61dff3239fcb12a",
+ "elapsed_seconds": 531.8659207919991,
+ "peak_rss_bytes": 10527801344,
+ "environment": {
+  "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "cpu_count": 14,
+  "memory_total_bytes": 51539607552,
+  "python": "3.13.13",
+  "numpy": "2.5.2",
+  "pandas": "3.0.5",
+  "sklearn": "1.9.0",
+  "threads": {
+   "OMP_NUM_THREADS": "4",
+   "OPENBLAS_NUM_THREADS": "4",
+   "MKL_NUM_THREADS": "4",
+   "VECLIB_MAXIMUM_THREADS": "4"
+  }
+ },
+ "finished_at": "2026-08-28T08:43:52Z"
+}
