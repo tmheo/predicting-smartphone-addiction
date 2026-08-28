@@ -556,6 +556,25 @@ class FittedLogisticLinear:
         }
 
 
+def _fit_l2_logistic(
+    scaled: np.ndarray, y_values: np.ndarray, *, c: float, max_iter: int
+) -> LogisticRegression:
+    """표준화한 특성에 L2 로지스틱을 맞춘다. 반복 한도에 닿으면 수렴 실패로 본다."""
+    model = LogisticRegression(
+        C=c,
+        solver="lbfgs",
+        max_iter=max_iter,
+        random_state=0,
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", ConvergenceWarning)
+        model.fit(scaled, y_values)
+    iterations = int(np.max(model.n_iter_))
+    if iterations >= max_iter:
+        raise CombinerConvergenceError(f"max(n_iter_)={iterations}, max_iter={max_iter}")
+    return model
+
+
 class LogisticLinearCombiner:
     """outer 학습 부분에서만 표현 변환, 표준화와 로지스틱 계수를 학습한다."""
 
@@ -584,20 +603,7 @@ class LogisticLinearCombiner:
         )
         scaler = StandardScaler()
         scaled = scaler.fit_transform(features).astype(np.float64, copy=False)
-        model = LogisticRegression(
-            C=self.c,
-            solver="lbfgs",
-            max_iter=self.max_iter,
-            random_state=0,
-        )
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", ConvergenceWarning)
-            model.fit(scaled, y.to_numpy())
-        iterations = int(np.max(model.n_iter_))
-        if iterations >= self.max_iter:
-            raise CombinerConvergenceError(
-                f"max(n_iter_)={iterations}, max_iter={self.max_iter}"
-            )
+        model = _fit_l2_logistic(scaled, y.to_numpy(), c=self.c, max_iter=self.max_iter)
         return FittedLogisticLinear(
             model=model,
             scaler=scaler,
@@ -776,6 +782,149 @@ class ShrunkRankLogitCombiner:
             meta=self._meta().fit(inner_preds, y),
             members=list(inner_preds.columns),
             shrinkage_lambda=float(best_lambda),
+        )
+
+
+C_SELECTION_GRID = (0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0)
+
+
+@dataclass(frozen=True)
+class InnerLogisticFit:
+    """규제 강도 선택의 안쪽 적합 하나에 대한 설명 진단."""
+
+    held_fold: int
+    c: float
+    iterations: int
+    coefficient_l2_norm: float
+
+
+@dataclass(frozen=True)
+class FittedCSelectedShrunkRankLogit(FittedShrunkRankLogit):
+    """규제 강도까지 고른 수축 결합. 예측은 FittedShrunkRankLogit과 같다."""
+
+    c: float
+    selection_aucs: dict[tuple[float, float], float]
+    inner_fits: tuple[InnerLogisticFit, ...]
+    final_iterations: int
+    final_coefficient_l2_norm: float
+
+
+class CSelectedShrunkRankLogitCombiner:
+    """로지스틱 규제 강도 C와 수축 계수 λ를 함께 고르는 수축 결합. (#489)
+
+    ShrunkRankLogitCombiner와 같은 leave-one-fold-out을 outer 학습 fold 안에서 수행하되,
+    빠진 fold마다 표현 변환과 표준화를 한 번 만들고 C 격자마다 로지스틱을 맞춘다.
+    모든 (C, λ) 조합의 이어붙인 AUC에서 최대 하나를 고르고, 정확히 같으면 더 작은 C,
+    같은 C 안에서는 더 작은 λ를 고른다. 선택한 C로 outer 학습 fold 전체에 다시 맞춘다.
+    C 격자가 (1.0,)이면 등록 결합기 shrunk_rank_logit_logistic과 같은 계산이다.
+    등록하지 않으며 선택 절차 대조 판정에서만 쓴다.
+    """
+
+    name = "c_selected_shrunk_rank_logit_logistic"
+    LOGIT_EPS = LogisticLinearCombiner.LOGIT_EPS
+
+    def __init__(
+        self,
+        *,
+        fold_of: pd.Series | None = None,
+        c_grid: tuple[float, ...] = C_SELECTION_GRID,
+        lambda_grid: tuple[float, ...] = SHRINKAGE_LAMBDA_GRID,
+        max_iter: int = 1_000,
+    ) -> None:
+        if not c_grid or not all(value > 0.0 for value in c_grid):
+            raise ValueError("C 격자는 양수 1개 이상이어야 한다.")
+        if not lambda_grid or not all(0.0 <= value <= 1.0 for value in lambda_grid):
+            raise ValueError("λ 격자는 [0, 1] 안의 값 1개 이상이어야 한다.")
+        self.fold_of = fold_of
+        self.c_grid = tuple(sorted(c_grid))
+        self.lambda_grid = tuple(sorted(lambda_grid))
+        self.max_iter = max_iter
+
+    def fit(
+        self, inner_preds: pd.DataFrame, y: pd.Series
+    ) -> FittedCSelectedShrunkRankLogit:
+        fold_of = self.fold_of if self.fold_of is not None else outer_fold_assignment()
+        folds = _aligned_folds(fold_of, inner_preds.index)
+        unique_folds = sorted(folds.unique())
+        if len(unique_folds) < 2:
+            raise ValueError("선택의 leave-one-fold-out에는 fold 2개 이상이 필요하다.")
+
+        combined = {
+            (c, shrinkage_lambda): np.full(len(inner_preds), np.nan, dtype=np.float64)
+            for c in self.c_grid
+            for shrinkage_lambda in self.lambda_grid
+        }
+        inner_fits: list[InnerLogisticFit] = []
+        for fold in unique_folds:
+            train = (folds != fold).to_numpy()
+            validate = (folds == fold).to_numpy()
+            train_preds = inner_preds[train]
+            features, quantiles = _linear_features(
+                train_preds,
+                "rank_logit",
+                quantiles=None,
+                fit=True,
+                eps=self.LOGIT_EPS,
+            )
+            scaler = StandardScaler()
+            scaled = scaler.fit_transform(features).astype(np.float64, copy=False)
+            train_y = y[train].to_numpy()
+            block = inner_preds[validate]
+            block_rank_mean = rank_mean(block)
+            for c in self.c_grid:
+                model = _fit_l2_logistic(scaled, train_y, c=c, max_iter=self.max_iter)
+                meta = FittedLogisticLinear(
+                    model=model,
+                    scaler=scaler,
+                    members=list(train_preds.columns),
+                    representation="rank_logit",
+                    quantiles=quantiles,
+                    eps=self.LOGIT_EPS,
+                )
+                meta_ranks = (
+                    pd.Series(meta.predict(block), index=block.index)
+                    .rank(pct=True)
+                    .to_numpy(dtype=np.float64)
+                )
+                for shrinkage_lambda in self.lambda_grid:
+                    combined[(c, shrinkage_lambda)][validate] = (
+                        shrinkage_lambda * meta_ranks
+                        + (1.0 - shrinkage_lambda) * block_rank_mean
+                    )
+                inner_fits.append(
+                    InnerLogisticFit(
+                        held_fold=int(fold),
+                        c=float(c),
+                        iterations=int(np.max(model.n_iter_)),
+                        coefficient_l2_norm=float(np.linalg.norm(model.coef_[0])),
+                    )
+                )
+            del features, scaled
+        label_values = y.to_numpy()
+        selection_aucs = {
+            key: float(roc_auc_score(label_values, prediction))
+            for key, prediction in combined.items()
+        }
+        # 격자는 (C, λ) 사전식 오름차순이므로 첫 최대가 동률 규칙(작은 C, 작은 λ)이다.
+        best_key = None
+        best_auc = -np.inf
+        for key, auc in selection_aucs.items():
+            if auc > best_auc:
+                best_key, best_auc = key, auc
+        assert best_key is not None
+        best_c, best_lambda = best_key
+        meta = LogisticLinearCombiner(
+            "shrinkage_meta", "rank_logit", c=best_c, max_iter=self.max_iter
+        ).fit(inner_preds, y)
+        return FittedCSelectedShrunkRankLogit(
+            meta=meta,
+            members=list(inner_preds.columns),
+            shrinkage_lambda=float(best_lambda),
+            c=float(best_c),
+            selection_aucs=selection_aucs,
+            inner_fits=tuple(inner_fits),
+            final_iterations=int(np.max(meta.model.n_iter_)),
+            final_coefficient_l2_norm=float(np.linalg.norm(meta.model.coef_[0])),
         )
 
 
