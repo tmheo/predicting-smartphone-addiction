@@ -44,6 +44,7 @@ class CVResult:
     recovery_evidence: list[dict[str, object]] = field(default_factory=list)
     fold_feature_reuse_evidence: list[dict[str, object]] = field(default_factory=list)
     model_training_diagnostics: list[dict[str, object]] = field(default_factory=list)
+    training_row_evidence: list[dict[str, object]] = field(default_factory=list)
     # 기존 단일 시점은 fold_recovery.json, 여러 시점은 별도 원자 경계 이름을 쓴다.
     recovery_evidence_name: str = "fold_recovery.json"
 

@@ -100,6 +100,11 @@ def run_member(
     `member.budgets`는 원시 근거에서 다시 계산한 재학습 예산이다.
     """
     cfg = load_config(member.config_path, "confirm")
+    if cfg.training_rows is not None and cfg.training_rows.replica_count:
+        raise ValueError(
+            f"{member.config}: 바깥쪽 분할 좌표가 없는 전체 자료 재학습에는 "
+            "결측 증강 마스크 계약을 적용할 수 없다."
+        )
     if cfg.name != member.config:
         raise ValueError(f"계획 구성원과 설정 name이 다르다: {member.config} != {cfg.name}")
     if list(member.budgets) != cfg.seeds and list(member.budgets) != [cfg.seeds[0]]:

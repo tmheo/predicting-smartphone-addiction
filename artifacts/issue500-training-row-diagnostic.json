@@ -1,0 +1,64 @@
+{
+  "assertions": {
+    "existing_missing_cells_preserved": true,
+    "original_rows_first": true,
+    "outer_fold_inherited_from_parent": true,
+    "replica_blocks_follow_in_order": true,
+    "replica_identity_excluded_from_model_features": true,
+    "replicas_excluded_from_state_fit": true,
+    "targets_inherited_from_parent": true
+  },
+  "config": "configs/exp117_ag25_gbm_r21.yaml",
+  "config_sha256": "9bf41cafe8224d64c29528bc45f73b1a9e0e60f16e6a1d2717c82a92ef7e6b8f",
+  "diagnostic_overrides": {
+    "n_estimators": 64,
+    "row_limit_per_role": 2000,
+    "test_limit": 500
+  },
+  "fold": 0,
+  "improvement_judgment": false,
+  "mask_replay": {
+    "actual_added_missing_rate": 0.24767069948546794,
+    "evidence_sha256": "6bd60f45cfcb5b8c7be2071e4d107f4404ee7380ee44b596bf0c6217d48e75ce",
+    "first_mask_sha256": [
+      "d7ac9295be1dde236ecdae7545ca3e126d962fa960faf801ba71b80d29d4a323",
+      "2923b21810923bac5a5bd858e1569e26449eeeb701606d3dac542fcd3a6bd831"
+    ],
+    "passed": true,
+    "probability": 0.25,
+    "second_mask_sha256": [
+      "d7ac9295be1dde236ecdae7545ca3e126d962fa960faf801ba71b80d29d4a323",
+      "2923b21810923bac5a5bd858e1569e26449eeeb701606d3dac542fcd3a6bd831"
+    ]
+  },
+  "original_compatibility": {
+    "explicit_original_oof_sha256": "a74007aee391855079a43073d4dd62a4fb73aa7f0e0184ebdd1f4643a869b0d1",
+    "explicit_original_test_sha256": "506f3b7cde6d6c290226dd28eacb9fc2df13c7c98db35719083f3db1e8797e49",
+    "legacy_oof_sha256": "a74007aee391855079a43073d4dd62a4fb73aa7f0e0184ebdd1f4643a869b0d1",
+    "legacy_test_sha256": "506f3b7cde6d6c290226dd28eacb9fc2df13c7c98db35719083f3db1e8797e49",
+    "oof_max_abs_difference": 0.0,
+    "passed": true,
+    "test_max_abs_difference": 0.0,
+    "tolerance": 1e-12
+  },
+  "purpose": "execution-boundary-diagnostic-only",
+  "pzero_equivalence": {
+    "oof_max_abs_difference": 0.0,
+    "passed": true,
+    "pzero_oof_auc": 0.9393820000000002,
+    "pzero_oof_sha256": "07d8da550cc2c432859a7ea1a42d360a5d64c750e28c0fba9b5f78d30f107435",
+    "pzero_test_sha256": "989c60b75282fb8f8e18fb430f18a054c2e086a51e537a7b52a52a918d3b0e3c",
+    "test_max_abs_difference": 0.0,
+    "tolerance": 1e-12,
+    "tripled_oof_auc": 0.9393820000000002,
+    "tripled_oof_sha256": "07d8da550cc2c432859a7ea1a42d360a5d64c750e28c0fba9b5f78d30f107435",
+    "tripled_test_sha256": "989c60b75282fb8f8e18fb430f18a054c2e086a51e537a7b52a52a918d3b0e3c"
+  },
+  "rows": {
+    "fit_original": 2000,
+    "test": 500,
+    "validation": 2000
+  },
+  "schema_version": 1,
+  "seed": 42
+}

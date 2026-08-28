@@ -172,6 +172,7 @@ _RESULT_HASH_TAGS = {
     "sha256.model_training_diagnostics",
     "sha256.oof_prediction",
     "sha256.submission",
+    "sha256.training_row_evidence",
     "sha256.training_state_manifest",
     "sha256.training_state_recovery",
 }

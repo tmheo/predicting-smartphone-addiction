@@ -57,6 +57,15 @@ class TrainingStateConfig:
 
 
 @dataclass(frozen=True)
+class TrainingRowsConfig:
+    """바깥쪽 분할의 학습 행을 구성하는 사전 고정 계약."""
+
+    arm: str
+    replica_count: int
+    observed_cell_mask_probability: float
+
+
+@dataclass(frozen=True)
 class ExperimentConfig:
     name: str
     data: DataConfig
@@ -68,6 +77,8 @@ class ExperimentConfig:
     source_path: Path  # 설정 원본 경로. run artifact로 그대로 복사해 남긴다.
     # 여러 학습 시점 후보만 쓰는 선택 계약이다. None이면 기존 단일 시점 실행이다.
     training_state: TrainingStateConfig | None = None
+    # 명시한 실험만 바깥쪽 학습 행 구성을 바꾼다. None이면 기존 원본 행 경로다.
+    training_rows: TrainingRowsConfig | None = None
 
 
 # #71 이전 features 스키마의 키. 종결 실험 config 16개는 역사 기록으로 보존하되
@@ -93,6 +104,12 @@ _TARGET_FREE_LOOKUP_SCHEDULES = {
     "warmup_cosine",
     "warmup_linear",
     "warmup_constant",
+}
+
+_TRAINING_ROW_ARMS = {
+    "original": (0, 0.0),
+    "tripled": (2, 0.0),
+    "missingness_augmented": (2, None),
 }
 
 
@@ -133,20 +150,78 @@ def load_config(path: str | Path, stage: str) -> ExperimentConfig:
         fit=raw["model"]["fit"],
     )
     training_state = _load_training_state(raw.get("training_state"), model, path)
+    training_rows = _load_training_rows(raw.get("training_rows"), path)
+    if training_state is not None and training_rows is not None:
+        raise ValueError(f"{path}: training_state와 training_rows를 한 실행에서 함께 쓸 수 없다.")
+    initial_score = (
+        InitialScoreConfig(**raw["initial_score"])
+        if raw.get("initial_score") is not None
+        else None
+    )
+    if training_rows is not None and training_rows.replica_count and initial_score is not None:
+        raise ValueError(
+            f"{path}: 복제 학습 행과 initial_score의 부모 행 상속 계약은 정의되지 않았다."
+        )
     return ExperimentConfig(
         name=raw["name"],
         data=DataConfig(**{k: Path(v) for k, v in raw["data"].items()}),
         features=features,
         model=model,
-        initial_score=(
-            InitialScoreConfig(**raw["initial_score"])
-            if raw.get("initial_score") is not None
-            else None
-        ),
+        initial_score=initial_score,
         seeds=seeds,
         stage=stage,
         source_path=path,
         training_state=training_state,
+        training_rows=training_rows,
+    )
+
+
+def _load_training_rows(raw: object, path: Path) -> TrainingRowsConfig | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError(f"{path}: training_rows는 객체여야 한다.")
+    expected = {"arm", "replica_count", "observed_cell_mask_probability"}
+    unknown = sorted(set(raw) - expected)
+    missing = sorted(expected - set(raw))
+    if unknown or missing:
+        raise ValueError(
+            f"{path}: training_rows 필드가 정확하지 않다. "
+            f"누락={missing}, 알 수 없음={unknown}"
+        )
+    arm = raw["arm"]
+    if arm not in _TRAINING_ROW_ARMS:
+        raise ValueError(
+            f"{path}: training_rows.arm은 {sorted(_TRAINING_ROW_ARMS)} 중 하나여야 한다: "
+            f"{arm!r}"
+        )
+    replica_count = raw["replica_count"]
+    if isinstance(replica_count, bool) or not isinstance(replica_count, int):
+        raise ValueError(f"{path}: training_rows.replica_count는 정수여야 한다.")
+    probability = raw["observed_cell_mask_probability"]
+    if isinstance(probability, bool) or not isinstance(probability, (int, float)):
+        raise ValueError(
+            f"{path}: training_rows.observed_cell_mask_probability는 수여야 한다."
+        )
+    probability = float(probability)
+    if not 0.0 <= probability <= 1.0:
+        raise ValueError(
+            f"{path}: training_rows.observed_cell_mask_probability는 0 이상 1 이하여야 한다."
+        )
+    expected_replicas, expected_probability = _TRAINING_ROW_ARMS[arm]
+    if replica_count != expected_replicas:
+        raise ValueError(
+            f"{path}: {arm} 팔의 replica_count는 {expected_replicas}여야 한다."
+        )
+    if expected_probability is not None and probability != expected_probability:
+        raise ValueError(
+            f"{path}: {arm} 팔의 observed_cell_mask_probability는 "
+            f"{expected_probability}이어야 한다."
+        )
+    return TrainingRowsConfig(
+        arm=arm,
+        replica_count=replica_count,
+        observed_cell_mask_probability=probability,
     )
 
 

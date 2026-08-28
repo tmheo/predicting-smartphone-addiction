@@ -15,6 +15,7 @@ from sklearn.model_selection import StratifiedKFold
 
 from .cpu_budget import xgb_n_jobs_from_environment
 from .data import ID, TARGET, file_sha256, union_categorical
+from .training_rows import PARENT_ID
 
 PLACEBO = "placebo_noise"
 # 플라시보에 입힐 결측 패턴의 원본 열. 결측 없는 잡음은 후보 피처(원본 열의 결측을
@@ -538,6 +539,10 @@ class ExactValueTargetEncoder:
             "smoothing": self.smoothing,
         }
 
+    def training_row_context_columns(self) -> list[str]:
+        """복제본이 부모 원본의 내부 분할을 물려받는 데 필요한 비피처 문맥."""
+        return [PARENT_ID]
+
     def _table(self, y: pd.Series, keys: pd.Series) -> pd.Series:
         if self.smoothing == 0:
             return y.groupby(keys).mean()
@@ -553,18 +558,32 @@ class ExactValueTargetEncoder:
         self.tables_: dict[str, pd.Series] = {}
         skf = StratifiedKFold(n_splits=self.inner_folds, shuffle=True, random_state=seed)
         splits = list(skf.split(train_fold, y))
+        inner_fold = np.empty(len(train_fold), dtype=np.int64)
+        for fold_index, (_, va_i) in enumerate(splits):
+            inner_fold[va_i] = fold_index
+        self.inner_fold_by_id_ = pd.Series(
+            inner_fold, index=pd.Index(train_fold[ID], name=ID)
+        )
         oof: dict[str, np.ndarray] = {}
+        self.inner_tables_: dict[str, list[pd.Series]] = {}
+        self.inner_means_: dict[str, list[float]] = {}
         for spec in self.cols:
             name = _spec_name(spec)
             keys = _target_encoding_keys(train_fold, spec, self.key_digits)
             self.tables_[name] = self._table(y, keys)
             vals = np.empty(len(train_fold))
+            inner_tables: list[pd.Series] = []
+            inner_means: list[float] = []
             for tr_i, va_i in splits:
                 inner_y = y.iloc[tr_i]
                 inner_table = self._table(inner_y, keys.iloc[tr_i])
+                inner_tables.append(inner_table)
+                inner_means.append(float(inner_y.mean()))
                 mapped = keys.iloc[va_i].map(inner_table).fillna(inner_y.mean())
                 vals[va_i] = mapped.to_numpy()
             oof[name] = vals
+            self.inner_tables_[name] = inner_tables
+            self.inner_means_[name] = inner_means
         self.oof_ = pd.DataFrame(oof, index=pd.Index(train_fold[ID], name=ID))
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -573,9 +592,34 @@ class ExactValueTargetEncoder:
         out: dict[str, pd.Series] = {}
         for spec in self.cols:
             name = _spec_name(spec)
-            mapped = _target_encoding_keys(df, spec, self.key_digits).map(self.tables_[name])
+            keys = _target_encoding_keys(df, spec, self.key_digits)
+            mapped = keys.map(self.tables_[name])
             mapped = mapped.fillna(self.global_mean_)
-            if is_fit_row.any():
+            if PARENT_ID in df.columns:
+                parent_ids = df[PARENT_ID]
+                has_parent = parent_ids.notna().to_numpy()
+                if has_parent.any():
+                    unknown = ~parent_ids.iloc[has_parent].isin(self.inner_fold_by_id_.index)
+                    if unknown.any():
+                        raise ValueError("목표값 부호화 복제본의 부모 행을 내부 분할에서 찾지 못했다.")
+                    inherited_folds = parent_ids.iloc[has_parent].map(
+                        self.inner_fold_by_id_
+                    )
+                    inherited_positions = np.flatnonzero(has_parent)
+                    mapped = mapped.copy()
+                    for inner_fold in range(self.inner_folds):
+                        selected = inherited_folds.to_numpy() == inner_fold
+                        if not selected.any():
+                            continue
+                        positions = inherited_positions[selected]
+                        inherited = keys.iloc[positions].map(
+                            self.inner_tables_[name][inner_fold]
+                        )
+                        inherited = inherited.fillna(
+                            self.inner_means_[name][inner_fold]
+                        )
+                        mapped.iloc[positions] = inherited.to_numpy()
+            elif is_fit_row.any():
                 mapped = mapped.copy()
                 mapped.iloc[is_fit_row] = self.oof_[name].loc[df.loc[is_fit_row, ID]].to_numpy()
             out[f"{name}{self.suffix}"] = mapped

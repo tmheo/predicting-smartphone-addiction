@@ -41,6 +41,7 @@ from .fold_fit_reuse import (
     validate_runtime_identity,
 )
 from .fold_observability import recorded_operation, skipped_operation, timed_operation
+from .training_rows import PARENT_ID
 
 # 적용 단계. 원본 프록시 prior(#53)는 별도 단계 대신 row-wise로 들어갔다:
 # 통계표가 해시 고정된 외부 파일에서 학습 전에 확정되므로 행 단위 결정적 매핑이고,
@@ -155,6 +156,7 @@ class FeaturePlan:
         self._exclude = exclude  # base에서 뺄 raw 컬럼. 제공자 입력에는 남는다. (#79)
         self._fold_fit_specs = fold_fit_specs
         self._base_columns: list[str] | None = None
+        self._raw_columns: list[str] | None = None
         self._fold_fit_reuse_store: FoldFitReuseStore | None = None
         self._fold_fit_runtime_identity: dict[str, object] | None = None
         self._fold_fit_input_files: dict[str, str] | None = None
@@ -278,6 +280,7 @@ class FeaturePlan:
         assert not overlap, f"제공자 선언 컬럼이 raw 컬럼과 충돌: {sorted(overlap)}"
         # 제외는 학습 행렬(base)에서만 적용한다. 원본 frame에는 남아 제공자 입력이 된다.
         self._base_columns = [c for c in raw if c not in self._exclude]
+        self._raw_columns = list(raw)
         for kind, provider in self._stages[DATASET_WIDE]:
             new_train, new_test = provider.compute(train, test)
             for name, source, new in (("train", train, new_train), ("test", test, new_test)):
@@ -380,15 +383,32 @@ class FeaturePlan:
         """제공자 하나의 입력 제한, 재사용, 계산과 산출 선언 검증을 소유한다."""
         declared_inputs = transformer.reuse_input_columns()
         self._validate_fold_fit_reuse_declaration(kind, transformer)
-        required = [ID, *declared_inputs]
+        context_columns = list(
+            getattr(transformer, "training_row_context_columns", lambda: [])()
+        )
+        unknown_context = sorted(set(context_columns) - {PARENT_ID})
+        if unknown_context:
+            raise FeatureContractError(
+                f"{kind}가 알 수 없는 학습 행 변환 문맥을 선언했다: {unknown_context}"
+            )
+        active_context = [
+            column for column in context_columns if column in train_input.columns
+        ]
+        required = [ID, *declared_inputs, *active_context]
         missing_train = [column for column in required if column not in train_input.columns]
-        missing_test = [column for column in required if column not in test_input.columns]
+        missing_test = [
+            column
+            for column in [ID, *declared_inputs]
+            if column not in test_input.columns
+        ]
         if missing_train or missing_test:
             raise FeatureContractError(
                 f"{kind} 선언 입력이 없다: train={missing_train}, test={missing_test}"
             )
         provider_train = train_input[required].copy(deep=False)
-        provider_test = test_input[required].copy(deep=False)
+        provider_test = test_input[[ID, *declared_inputs]].copy(deep=False)
+        for column in active_context:
+            provider_test[column] = pd.NA
         fit_train = provider_train
         if transformer.uses_target:
             if TARGET not in train_input.columns:
@@ -654,6 +674,32 @@ class FeaturePlan:
         for _, provider in self._stages[FOLD_FIT]:
             cols += provider.columns()
         return cols
+
+    def raw_columns(self) -> list[str]:
+        """원자료에서 id, 목표값과 fold만 뺀 열을 원래 순서로 돌려준다."""
+        assert self._raw_columns is not None, "apply_dataset_wide 이전에는 raw 열이 미확정이다."
+        return list(self._raw_columns)
+
+    def validate_training_row_augmentation(self) -> None:
+        """복제 행을 쓸 때 현재 피처 계획이 부모 내부 분할 상속을 지킬 수 있는지 확인한다."""
+        dataset_wide = [kind for kind, _ in self._stages[DATASET_WIDE]]
+        if dataset_wide:
+            raise ValueError(
+                "복제 학습 행은 상태를 원본에만 맞출 수 없는 dataset-wide 제공자를 "
+                f"지원하지 않는다: {dataset_wide}"
+            )
+        unsupported = [
+            kind
+            for kind, provider in self._stages[FOLD_FIT]
+            if provider.uses_target
+            and PARENT_ID
+            not in getattr(provider, "training_row_context_columns", lambda: [])()
+        ]
+        if unsupported:
+            raise ValueError(
+                "복제 학습 행의 부모 내부 분할 상속을 지원하지 않는 타깃 참조 제공자가 있다: "
+                f"{unsupported}"
+            )
 
     def _declared_by_stage(self) -> dict[str, list[str]]:
         return {

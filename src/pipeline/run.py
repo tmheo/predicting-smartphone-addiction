@@ -74,6 +74,13 @@ def main() -> None:
         print(f"stage      : {cfg.stage}")
         print(f"seeds      : {cfg.seeds}")
         print(f"model      : {cfg.model.kind} {cfg.model.params}")
+        if cfg.training_rows is not None:
+            print(
+                "training rows: "
+                f"{cfg.training_rows.arm}, replicas={cfg.training_rows.replica_count}, "
+                "observed-cell-mask-p="
+                f"{cfg.training_rows.observed_cell_mask_probability}"
+            )
         if cfg.initial_score is not None:
             print(f"init score : {cfg.initial_score.kind} {cfg.initial_score.params}")
         for name, h in _input_hashes(cfg).items():
@@ -171,6 +178,9 @@ def main() -> None:
             item
             for result in results
             for item in result.fold_feature_reuse_evidence
+        ]
+        final.training_row_evidence = [
+            item for result in results for item in result.training_row_evidence
         ]
         # 확정 재검증의 시드별 비교를 위해 대표 metric과 함께 기록된다. (ADR 0001)
         for seed, auc in seed_aucs.items():

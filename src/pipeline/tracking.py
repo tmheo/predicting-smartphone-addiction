@@ -17,7 +17,8 @@ artifact는 로컬 mlartifacts/ 아래 파일로 남으므로 소비 방식은 �
   feature_importance.parquet(feature, fold, seed, gain 스키마의 fold별 gain importance),
   fold_recovery.json(완료 fold의 해시와 재사용 여부),
   model_training_diagnostics.json(모델별 구조화 학습 관측과 반복형 계열의
-  training_length_evidence 관측 학습 길이 근거). (#19, #141, #160, #372)
+  training_length_evidence 관측 학습 길이 근거), training_row_evidence.json(명시한
+  학습 행 구성의 부모 대응, 마스크와 누출 방지 불변식). (#19, #141, #160, #372, #500)
   test_pred는 라벨이 없어 재채점 가치가 없으므로 시드 평균본만 남긴다. (#98)
 - tags: git_commit, git_dirty, 입력 파일 sha256, 원격 실행 환경과 작업 식별자.
   dirty 실행은 앙상블 후보에서 제외하는 관행. (#14, #414)
@@ -45,6 +46,10 @@ from .fold_fit_reuse import SCHEMA_VERSION as FOLD_FIT_REUSE_SCHEMA_VERSION
 from .fold_fit_reuse import canonical_json_bytes
 from .judgment import mean_gain_of, placebo_gain_of
 from .recovery import EVIDENCE_NAME, recovery_evidence
+from .training_rows import (
+    EVIDENCE_NAME as TRAINING_ROW_EVIDENCE_NAME,
+    EVIDENCE_SCHEMA_VERSION as TRAINING_ROW_EVIDENCE_SCHEMA_VERSION,
+)
 
 # 실행이 어디 있는가는 실행 저장소(runs)의 지식이다. 기록기는 그 위치에 쓴다.
 from .runs import TRACKING_URI
@@ -147,6 +152,16 @@ def log_start_records(
         client.log_param(run_id, "initial_score.kind", cfg.initial_score.kind)
         for key, value in cfg.initial_score.params.items():
             client.log_param(run_id, f"initial_score.{key}", value)
+    if cfg.training_rows is not None:
+        client.log_param(run_id, "training_rows.arm", cfg.training_rows.arm)
+        client.log_param(
+            run_id, "training_rows.replica_count", cfg.training_rows.replica_count
+        )
+        client.log_param(
+            run_id,
+            "training_rows.observed_cell_mask_probability",
+            cfg.training_rows.observed_cell_mask_probability,
+        )
     for key, value in (fixed_git_state or git_state()).items():
         client.set_tag(run_id, key, value)
     for key, environment_name in (
@@ -278,6 +293,23 @@ def log_final_records(
             file_sha256(tmp_dir / diagnostics_name),
         )
         names.append(diagnostics_name)
+        if cfg.training_rows is not None:
+            training_row_evidence_path = tmp_dir / TRAINING_ROW_EVIDENCE_NAME
+            training_row_evidence_path.write_bytes(
+                canonical_json_bytes(
+                    {
+                        "schema_version": TRAINING_ROW_EVIDENCE_SCHEMA_VERSION,
+                        "entries": result.training_row_evidence,
+                    }
+                )
+                + b"\n"
+            )
+            client.set_tag(
+                run_id,
+                "sha256.training_row_evidence",
+                file_sha256(training_row_evidence_path),
+            )
+            names.append(TRAINING_ROW_EVIDENCE_NAME)
         for seed, oof in seed_oofs.items():
             names.append(oof_seed_artifact(seed))
             oof.to_parquet(tmp_dir / oof_seed_artifact(seed), index=False)

@@ -18,9 +18,12 @@ from . import model as model_mod
 from . import training_length as training_length_mod
 from .config import ExperimentConfig
 from .data import ID, TARGET
+from .features import PLACEBO, PLACEBO_MASK_SOURCE
+from .fold_fit_reuse import dataframe_value_sha256
 from .fold_observability import skipped_operation, timed_operation
 from .plan import FeaturePlan, prepare_fold_fit_input
 from .recovery import FoldRecovery
+from .training_rows import PARENT_ID, build_training_rows, validation_context
 
 if TYPE_CHECKING:
     from .cv import CVResult, RunRecorder
@@ -43,6 +46,15 @@ def execute_seed(
     y = train[TARGET]
     n_folds = int(train["fold"].max()) + 1
     feature_names = plan.all_columns()
+    uses_replicas = bool(
+        cfg.training_rows is not None and cfg.training_rows.replica_count
+    )
+    if uses_replicas:
+        plan.validate_training_row_augmentation()
+        if PLACEBO not in feature_names or PLACEBO_MASK_SOURCE not in plan.raw_columns():
+            raise ValueError("복제 학습 행의 플라시보 카나리아 계약을 확인할 수 없다.")
+        if PARENT_ID in feature_names:
+            raise AssertionError(f"내부 부모 행 문맥이 모형 피처에 노출됐다: {PARENT_ID}")
     checkpoints = []
     for fold in range(n_folds):
         va_idx = train.index[train["fold"] == fold]
@@ -95,7 +107,7 @@ def execute_seed(
         X = plan.build_matrix(train, seed)
         X_test = plan.build_matrix(test, seed)
         if provider_declarations:
-            train_ff = prepare_fold_fit_input(train, X)
+            train_ff = None if uses_replicas else prepare_fold_fit_input(train, X)
             test_ff = prepare_fold_fit_input(test, X_test)
         else:
             train_ff = None
@@ -113,6 +125,12 @@ def execute_seed(
     recovery_records: list[dict[str, object]] = []
     fold_feature_reuse_records: list[dict[str, object]] = []
     model_training_diagnostics: list[dict[str, object]] = []
+    training_row_evidence: list[dict[str, object]] = []
+    test_raw_sha256 = (
+        dataframe_value_sha256(test[plan.raw_columns()])
+        if cfg.training_rows is not None
+        else None
+    )
 
     # fold 안의 fold-fit 변환 fit도 training 단계에 포함한다. (#40)
     if recorder is not None:
@@ -120,6 +138,34 @@ def execute_seed(
     for fold, checkpoint in enumerate(checkpoints):
         va_idx = train.index[train["fold"] == fold]
         tr_idx = train.index[train["fold"] != fold]
+        row_batch = None
+        row_evidence = None
+        if cfg.training_rows is not None:
+            row_batch = build_training_rows(
+                train.loc[tr_idx],
+                plan.raw_columns(),
+                cfg.training_rows,
+                seed=seed,
+                outer_fold=fold,
+            )
+            row_evidence = dict(row_batch.evidence)
+            row_evidence.update(
+                {
+                    "validation_augmented": False,
+                    "test_augmented": False,
+                    "validation_raw_sha256": dataframe_value_sha256(
+                        train.loc[va_idx, plan.raw_columns()]
+                    ),
+                    "test_raw_sha256": test_raw_sha256,
+                    "placebo_canary": {
+                        "feature": PLACEBO,
+                        "mask_source": PLACEBO_MASK_SOURCE,
+                        "parent_noise_is_shared_by_replica": True,
+                        "missing_mask_rebuilt_from_augmented_raw_source": True,
+                    },
+                }
+            )
+            training_row_evidence.append(row_evidence)
         if checkpoint is not None:
             fold_feature_reuse_records.extend(
                 plan.unused_fold_fit_reuse_evidence(
@@ -205,7 +251,51 @@ def execute_seed(
 
         assert X is not None and X_test is not None
         providers = plan.new_fold_fit_providers()
-        X_fold, X_test_fold = X, X_test
+        if uses_replicas:
+            assert row_batch is not None and row_evidence is not None
+            X_training = plan.build_matrix(row_batch.frame, seed)
+            parent_placebo = X.loc[row_batch.parent_source_index, PLACEBO].to_numpy(
+                copy=True
+            )
+            augmented_source_missing = row_batch.frame[
+                PLACEBO_MASK_SOURCE
+            ].isna().to_numpy()
+            parent_placebo[augmented_source_missing] = np.nan
+            X_training[PLACEBO] = parent_placebo
+            placebo_mask_matches = np.array_equal(
+                X_training[PLACEBO].isna().to_numpy(), augmented_source_missing
+            )
+            if not placebo_mask_matches:
+                raise AssertionError("플라시보 결측 마스크가 증강 원자료와 다르다.")
+            row_evidence["placebo_canary"][
+                "actual_missing_mask_matches_source"
+            ] = True
+            validation_frame = validation_context(train.loc[va_idx])
+            fold_frame = pd.concat(
+                [row_batch.frame, validation_frame], ignore_index=True
+            )
+            X_fold = pd.concat(
+                [X_training, X.loc[va_idx].reset_index(drop=True)],
+                ignore_index=True,
+            )
+            fold_train_ff = (
+                prepare_fold_fit_input(fold_frame, X_fold) if providers else None
+            )
+            model_training_index = row_batch.training_index
+            state_fit_index = row_batch.state_fit_index
+            model_validation_index = pd.RangeIndex(len(row_batch.frame), len(fold_frame))
+            model_training_target = row_batch.frame[TARGET]
+            model_validation_target = y.loc[va_idx].reset_index(drop=True)
+            model_validation_target.index = model_validation_index
+        else:
+            X_fold = X
+            fold_train_ff = train_ff
+            model_training_index = tr_idx
+            state_fit_index = tr_idx
+            model_validation_index = va_idx
+            model_training_target = y.loc[tr_idx]
+            model_validation_target = y.loc[va_idx]
+        X_test_fold = X_test
         with timed_operation(
             recorder,
             seed=seed,
@@ -215,7 +305,7 @@ def execute_seed(
             actor_name="feature_plan",
         ):
             if providers:
-                assert train_ff is not None and test_ff is not None
+                assert fold_train_ff is not None and test_ff is not None
                 # fold-fit 단계: 학습 fold로만 fit하고, 같은 상태를 검증 fold와 test에 적용한다.
                 # 전체 train으로 fit하는 별도 경로는 없다. (#32 결정 4)
                 # transform은 학습 fold 행과 검증 fold 행이 섞인 train 전체를 받는다.
@@ -224,10 +314,10 @@ def execute_seed(
                         plan.materialize_fold_fit_provider(
                             kind=kind,
                             transformer=transformer,
-                            train_input=train_ff,
+                            train_input=fold_train_ff,
                             test_input=test_ff,
-                            training_index=tr_idx,
-                            validation_index=va_idx,
+                            training_index=state_fit_index,
+                            validation_index=model_validation_index,
                             seed=seed,
                             fold=fold,
                             recorder=recorder,
@@ -271,10 +361,10 @@ def execute_seed(
             ):
                 va_pred = np.asarray(
                     adapter.fit(
-                        X_fold.loc[tr_idx],
-                        y.loc[tr_idx],
-                        X_fold.loc[va_idx],
-                        y.loc[va_idx],
+                        X_fold.loc[model_training_index],
+                        model_training_target,
+                        X_fold.loc[model_validation_index],
+                        model_validation_target,
                         initial_scores.train.loc[tr_idx] if initial_scores is not None else None,
                         initial_scores.train.loc[va_idx] if initial_scores is not None else None,
                     ),
@@ -410,4 +500,5 @@ def execute_seed(
         recovery_evidence=recovery_records,
         fold_feature_reuse_evidence=fold_feature_reuse_records,
         model_training_diagnostics=model_training_diagnostics,
+        training_row_evidence=training_row_evidence,
     )
