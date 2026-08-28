@@ -217,6 +217,14 @@ def process_snapshot(repo_root: Path) -> list[dict[str, object]]:
         check=True,
     ).stdout
     rows = []
+    background_services = (
+        "mlflow ui",
+        "mlflow.server",
+        "uvicorn",
+        "huey_consumer",
+        "multiprocessing.resource_tracker",
+        "multiprocessing.spawn",
+    )
     for line in output.splitlines():
         parts = line.strip().split(None, 4)
         if len(parts) != 5:
@@ -225,6 +233,8 @@ def process_snapshot(repo_root: Path) -> list[dict[str, object]]:
         if int(pid) == os.getpid():
             continue
         if repo_root.name not in command or "python" not in command.lower():
+            continue
+        if any(marker in command for marker in background_services):
             continue
         rows.append(
             {
