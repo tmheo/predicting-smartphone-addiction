@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>외부 구성원 감사 기록 계약 프로토타입</title>
+  <style>
+    :root {
+      --ink: #172126;
+      --muted: #5d6b72;
+      --paper: #f5f7f4;
+      --panel: #ffffff;
+      --line: #d8e0dc;
+      --accent: #006d68;
+      --accent-soft: #e2f2ef;
+      --danger: #a33a2b;
+      --danger-soft: #f8e9e5;
+      --warn: #8a5c00;
+      --warn-soft: #fff3d9;
+      --ok: #21643c;
+      --ok-soft: #e6f3ea;
+      --shadow: 0 12px 34px rgba(23, 33, 38, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      line-height: 1.55;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 40px auto 80px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(28px, 4vw, 44px); letter-spacing: -0.04em; margin-bottom: 12px; }
+    h2 { font-size: 22px; letter-spacing: -0.02em; }
+    h3 { font-size: 16px; margin-bottom: 10px; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .intro {
+      max-width: 900px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .notice {
+      margin: 24px 0;
+      padding: 16px 18px;
+      border: 1px solid #d8c89f;
+      border-radius: 12px;
+      background: #fffaf0;
+      color: #684b12;
+    }
+
+    .principles {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 24px 0 32px;
+    }
+
+    .principle, .panel {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .principle { padding: 16px; }
+    .principle strong { display: block; margin-bottom: 6px; }
+    .principle span { color: var(--muted); font-size: 14px; }
+
+    .panel { padding: 20px; margin-bottom: 18px; }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .panel-head p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 750;
+      background: #edf0ee;
+      color: var(--muted);
+    }
+    .badge.ok { background: var(--ok-soft); color: var(--ok); }
+    .badge.warn { background: var(--warn-soft); color: var(--warn); }
+    .badge.danger { background: var(--danger-soft); color: var(--danger); }
+    .badge.accent { background: var(--accent-soft); color: var(--accent); }
+
+    .state-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .state-card {
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      padding: 14px;
+      min-width: 0;
+    }
+
+    .state-card.wide { grid-column: 1 / -1; }
+
+    dl {
+      display: grid;
+      grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1.7fr);
+      gap: 7px 12px;
+      margin: 0;
+      font-size: 13px;
+    }
+
+    dt { color: var(--muted); }
+    dd { margin: 0; overflow-wrap: anywhere; }
+
+    .claim-list, .reason-list, .log-list { list-style: none; padding: 0; margin: 0; }
+    .claim-list li, .reason-list li, .log-list li {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(120px, auto) minmax(180px, 1.4fr);
+      gap: 10px;
+      align-items: start;
+      padding: 9px 0;
+      border-top: 1px solid #edf0ee;
+      font-size: 13px;
+    }
+    .claim-list li:first-child, .reason-list li:first-child, .log-list li:first-child { border-top: 0; }
+    .claim-label { font-weight: 650; }
+    .claim-evidence { color: var(--muted); overflow-wrap: anywhere; }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 12px;
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--accent); color: var(--accent); }
+    button.primary { border-color: var(--accent); background: var(--accent); color: white; }
+    button.danger { border-color: #d9a69d; color: var(--danger); }
+    button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+    .message {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #edf0ee;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .message.ok { background: var(--ok-soft); color: var(--ok); }
+    .message.warn { background: var(--warn-soft); color: var(--warn); }
+    .message.danger { background: var(--danger-soft); color: var(--danger); }
+
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .tabs button.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+    .walkthrough-copy { color: var(--muted); margin-bottom: 14px; }
+    .walkthrough-steps { display: flex; flex-wrap: wrap; gap: 9px; }
+    .walkthrough-steps button.done { background: var(--ok-soft); color: var(--ok); border-color: #abd0b8; }
+    .walkthrough-steps button.next { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+    details { margin-top: 14px; }
+    summary { cursor: pointer; font-weight: 700; color: var(--accent); }
+    pre {
+      max-height: 480px;
+      overflow: auto;
+      padding: 14px;
+      border-radius: 10px;
+      background: #152026;
+      color: #e8f0ec;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .empty { color: var(--muted); font-style: italic; }
+
+    @media (max-width: 820px) {
+      .principles, .state-grid { grid-template-columns: 1fr; }
+      .state-card.wide { grid-column: auto; }
+      .panel-head { display: block; }
+      .badges { justify-content: flex-start; margin-top: 10px; }
+      .claim-list li, .reason-list li, .log-list li { grid-template-columns: 1fr; gap: 3px; }
+      dl { grid-template-columns: 1fr; gap: 2px; }
+      dd { margin-bottom: 8px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">버리는 프로토타입 · 이슈 482</div>
+  <h1>외부 구성원 감사 기록 계약</h1>
+  <p class="intro">
+    이 데모는 판본 3 후보의 감사 기록을 어떤 필드와 상태 전이로 남겨야 자격 판정을 기계적으로 다시 계산하고, 고정했던 후보 집합을 나중에도 그대로 재현할 수 있는지 검토하기 위한 것입니다.
+  </p>
+  <div class="notice">
+    이 파일은 결정 검토용이며 실제 판본 3 장부를 만들거나 외부 예측 배열을 반입하지 않습니다.
+  </div>
+
+  <section class="principles" aria-label="계약의 세 경계">
+    <div class="principle">
+      <strong>감사 진행 상태</strong>
+      <span><code>발견됨 → 공개 판본 고정됨 → 감사 완료</code>만 나타냅니다. 자격 결과와 섞지 않습니다.</span>
+    </div>
+    <div class="principle">
+      <strong>자격 판정</strong>
+      <span><code>자격 있음 / 자격 없음 / 근거 부족</code>을 근거 코드에서 계산합니다. 라이선스 미표시는 자동 탈락이 아닙니다.</span>
+    </div>
+    <div class="principle">
+      <strong>후보 집합 동결</strong>
+      <span>개별 기록을 다시 쓰지 않고 별도 동결 명세가 감사 기록 식별자와 내용 해시를 참조합니다.</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>현재 기록</h2>
+        <p>각 동작 뒤에 기계 기록 전체를 사람이 읽을 수 있는 말로 다시 그립니다.</p>
+      </div>
+      <div id="badges" class="badges"></div>
+    </div>
+    <div id="state" class="state-grid"></div>
+    <div id="message" class="message">아래 동작이나 안내 시나리오로 시작하세요.</div>
+    <details>
+      <summary>기계 판독 JSON 보기</summary>
+      <pre id="json"></pre>
+    </details>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>자유 조작</h2>
+        <p>순서를 일부러 어겨 보면서 계약이 위험한 전이를 막는지 확인합니다.</p>
+      </div>
+    </div>
+    <div id="controls" class="controls"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>안내 시나리오</h2>
+        <p>각 탭을 열면 같은 초기 상태에서 시작합니다. 강조된 단계를 차례대로 누르세요.</p>
+      </div>
+    </div>
+    <div id="tabs" class="tabs"></div>
+    <p id="walkthrough-copy" class="walkthrough-copy"></p>
+    <div id="walkthrough-steps" class="walkthrough-steps"></div>
+  </section>
+</main>
+
+<script>
+const Contract = (() => {
+  const CONTRACT_VERSION = "external-member-audit-v3-draft-1";
+  const EXPECTED_FOLD_SPEC = {
+    id: "s6e8-community-folds-v1",
+    description: "StratifiedKFold 5분할, shuffle=true, random_state=42, 공식 train.csv 원본 행 순서",
+    train_rows: 691369,
+    test_rows: 296302,
+    fold_vector_sha256: "artifacts/folds.parquet의 확정 해시"
+  };
+
+  const CLAIM_DEFINITIONS = {
+    official_train_only: "공식 훈련 자료에서 직접 학습",
+    single_model_lineage: "하나의 모델 계보",
+    exact_fold_spec: "저장소 고정 5분할과 정확히 일치",
+    target_preprocessing_isolated: "목표값 기반 전처리를 바깥 학습 부분에 격리",
+    outer_valid_scoring_only: "바깥 검증 자료는 채점에만 사용",
+    training_point_fixed: "학습 시점을 바깥 검증 결과 전에 고정",
+    public_config_selection_isolated: "공개 설정 선택에 바깥 검증 결과를 사용하지 않음",
+    no_external_prediction_training: "외부 예측을 입력으로 재학습하지 않음",
+    no_pseudo_label_training: "의사 목표값을 학습에 사용하지 않음",
+    no_ensemble_teacher_distillation: "결합 예측을 교사로 증류하지 않음"
+  };
+
+  const clone = value => JSON.parse(JSON.stringify(value));
+
+  function blankClaims() {
+    return Object.fromEntries(Object.keys(CLAIM_DEFINITIONS).map(key => [key, {
+      result: "미검토",
+      evidence_kind: null,
+      evidence_ref: null
+    }]));
+  }
+
+  function initialState() {
+    return {
+      contract_version: CONTRACT_VERSION,
+      current_record: null,
+      prior_records: [],
+      freeze_snapshot: null,
+      last_message: "아래 동작이나 안내 시나리오로 시작하세요.",
+      last_tone: "neutral",
+      transition_log: []
+    };
+  }
+
+  function recordTemplate(revision = 1, supersedes = null) {
+    return {
+      audit_record_id: `ext-v3:demo_member:r${revision}`,
+      audit_revision: revision,
+      supersedes_audit_record_id: supersedes,
+      audit_state: "발견됨",
+      candidate_identity: {
+        member_id: "demo_source:demo_member",
+        display_name: "demo_member",
+        model_lineage_id: "demo_author/demo_model/fixed_recipe",
+        source_owner: "demo_author",
+        source_kind: "kaggle_notebook_output"
+      },
+      fixed_source: {
+        ref: "demo_author/demo-notebook",
+        url: "https://www.kaggle.com/code/demo-author/demo-notebook",
+        script_version_id: null,
+        source_sha256: null,
+        retrieved_at: null,
+        dependency_refs: []
+      },
+      artifacts: {
+        prediction_semantics: "positive_class_probability",
+        oof: null,
+        test: null,
+        normalized_pair_sha256: null,
+        finite_values: null,
+        row_alignment: "미검토",
+        rescored_auc: null,
+        declared_auc: null,
+        integrity_only_metrics_do_not_decide_eligibility: true
+      },
+      relationships: {
+        exact_duplicate_of_audit_record_id: null,
+        near_duplicate_observations: [],
+        near_duplicate_observations_do_not_decide_eligibility: true
+      },
+      fold_contract: {
+        expected: clone(EXPECTED_FOLD_SPEC),
+        evidence_kind: null,
+        evidence_ref: null,
+        exact_match: null
+      },
+      training_contract: {
+        fixed_recipe_id: null,
+        allowed_aggregation: "같은 고정 설정의 시드 또는 분할 예측 평균만 허용",
+        claims: blankClaims(),
+        prepublication_search_history: "알 수 없음"
+      },
+      licensing: {
+        source_code_license: null,
+        output_license: null,
+        output_license_status: "미기록",
+        use_scope: null,
+        attribution_required: null,
+        provenance_ref: null
+      },
+      decision: {
+        eligibility: "미판정",
+        exclusion_reason_codes: [],
+        caveat_codes: [],
+        guarantee: null,
+        non_guarantees: ["공개 이전의 설정 탐색 이력"],
+        audit_evidence_digest: null
+      },
+      audit_execution: {
+        audited_at: null,
+        auditor: null,
+        audit_tool_ref: null,
+        evidence_manifest_sha256: null
+      }
+    };
+  }
+
+  function message(state, text, tone = "neutral") {
+    state.last_message = text;
+    state.last_tone = tone;
+    state.transition_log.unshift({
+      action: text,
+      record: state.current_record?.audit_record_id || null,
+      result: tone
+    });
+    state.transition_log = state.transition_log.slice(0, 10);
+  }
+
+  function requireRecord(next, actionName) {
+    if (!next.current_record) {
+      message(next, `${actionName} 전에 후보를 발견 기록으로 만들어야 합니다.`, "danger");
+      return false;
+    }
+    return true;
+  }
+
+  function requireMutable(next, actionName) {
+    if (!requireRecord(next, actionName)) return false;
+    if (next.current_record.audit_state === "감사 완료") {
+      message(next, `감사 완료 기록은 바꿀 수 없습니다. ${actionName} 변경은 새 감사 판본에서 수행하세요.`, "danger");
+      return false;
+    }
+    return true;
+  }
+
+  function setAllTrainingClaims(record, result, evidenceKind, evidenceRef) {
+    Object.keys(record.training_contract.claims).forEach(key => {
+      record.training_contract.claims[key] = {
+        result,
+        evidence_kind: evidenceKind,
+        evidence_ref: evidenceRef
+      };
+    });
+  }
+
+  function evaluate(record) {
+    const failures = [];
+    const missing = [];
+    const caveats = [];
+
+    if (!record.fixed_source.script_version_id || !record.fixed_source.source_sha256) {
+      missing.push("SOURCE_REVISION_NOT_FIXED");
+    }
+    if (!record.artifacts.oof || !record.artifacts.test) {
+      failures.push("OOF_TEST_PAIR_INCOMPLETE");
+    } else {
+      if (record.artifacts.oof.rows !== EXPECTED_FOLD_SPEC.train_rows || record.artifacts.test.rows !== EXPECTED_FOLD_SPEC.test_rows) {
+        failures.push("ROW_COUNT_MISMATCH");
+      }
+      if (record.artifacts.finite_values !== true) failures.push("NONFINITE_OR_UNVERIFIED_VALUES");
+      if (record.artifacts.row_alignment !== "확인됨") missing.push("ROW_ALIGNMENT_NOT_VERIFIED");
+      if (!record.artifacts.normalized_pair_sha256) missing.push("NORMALIZED_PAIR_HASH_MISSING");
+    }
+
+    if (record.fold_contract.exact_match === false) failures.push("FOLD_SPEC_MISMATCH");
+    if (record.fold_contract.exact_match !== true) missing.push("FOLD_SPEC_NOT_VERIFIED");
+    if (!["같은 공개 판본의 코드", "독립 재현 산출물"].includes(record.fold_contract.evidence_kind)) {
+      missing.push("DIRECT_FOLD_EVIDENCE_MISSING");
+    }
+
+    Object.entries(record.training_contract.claims).forEach(([key, claim]) => {
+      if (claim.result === "위반 확인") failures.push(`CLAIM_FAILED:${key}`);
+      if (["미검토", "알 수 없음"].includes(claim.result)) missing.push(`CLAIM_UNVERIFIED:${key}`);
+      if (!claim.evidence_ref && claim.result === "확인됨") missing.push(`EVIDENCE_REF_MISSING:${key}`);
+    });
+
+    if (record.training_contract.prepublication_search_history === "알 수 없음") {
+      caveats.push("PREPUBLICATION_SEARCH_HISTORY_UNKNOWN");
+    }
+
+    if (record.licensing.output_license_status === "미기록") {
+      missing.push("OUTPUT_LICENSE_NOT_RECORDED");
+    }
+    if (["unknown", "other"].includes(record.licensing.output_license_status)) {
+      caveats.push("LICENSE_UNKNOWN_USE_LIMITED");
+    }
+
+    const uniqueFailures = [...new Set(failures)];
+    const uniqueMissing = [...new Set(missing)];
+    let eligibility = "자격 있음";
+    if (uniqueFailures.length) eligibility = "자격 없음";
+    else if (uniqueMissing.length) eligibility = "근거 부족";
+
+    return {
+      eligibility,
+      exclusion_reason_codes: eligibility === "자격 있음" ? [] : [...uniqueFailures, ...uniqueMissing],
+      caveat_codes: caveats,
+      guarantee: eligibility === "자격 있음"
+        ? "고정 공개 판본에서 각 바깥 검증 행의 목표값이 전처리, 학습, 학습 시점과 공개 설정 선택에 닿지 않은 개별 OOF·시험 예측 쌍"
+        : "자격 보증 없음",
+      non_guarantees: ["공개 이전의 설정 탐색 이력"],
+      audit_evidence_digest: `sha256:${record.audit_record_id.replaceAll(":", "_")}_evidence_manifest`
+    };
+  }
+
+  function reducer(state, action) {
+    const next = clone(state);
+    const record = () => next.current_record;
+
+    switch (action.type) {
+      case "reset":
+        return initialState();
+
+      case "discover":
+        if (next.current_record) {
+          message(next, "현재 감사 기록이 있습니다. 전체 초기화 또는 새 감사 판본을 사용하세요.", "danger");
+          return next;
+        }
+        next.current_record = recordTemplate();
+        message(next, "후보 신원과 모델 계보를 발견 기록으로 만들었습니다.", "ok");
+        return next;
+
+      case "lock_source":
+        if (!requireMutable(next, "고정 판본 기록")) return next;
+        record().fixed_source.script_version_id = 339864149;
+        record().fixed_source.source_sha256 = "60a0bd05332e8932468d9cc796855013be3c3798344fd75c15c016764eba58ef";
+        record().fixed_source.retrieved_at = "2026-08-28T10:00:00+09:00";
+        record().fixed_source.url += "?scriptVersionId=339864149";
+        record().audit_state = "공개 판본 고정됨";
+        message(next, "공개 실행 판본과 소스 원문 해시를 고정했습니다.", "ok");
+        return next;
+
+      case "attach_pair":
+        if (!requireMutable(next, "OOF·시험 예측 연결")) return next;
+        record().artifacts.oof = {
+          ref: "data/external/v3/demo/oof.npy",
+          raw_sha256: "ba5440a6ebe836d57a0720f9c92847ffe55cb4cb049163c356ab94aeb7a03933",
+          normalized_sha256: "demo_oof_float64_sha256",
+          dtype: "float64",
+          rows: 691369
+        };
+        record().artifacts.test = {
+          ref: "data/external/v3/demo/test.npy",
+          raw_sha256: "2a8b8891a7a2fce02b96d72aad72f5a65fd9affaed7bcf369016764eba58ef",
+          normalized_sha256: "demo_test_float64_sha256",
+          dtype: "float64",
+          rows: 296302
+        };
+        record().artifacts.normalized_pair_sha256 = "e21c22c3b2416598bd2bdc198cbbbbb2e8cdedd14f3434daa751282b97784665";
+        record().artifacts.finite_values = true;
+        record().artifacts.row_alignment = "확인됨";
+        record().artifacts.rescored_auc = 0.968156387;
+        record().artifacts.declared_auc = 0.9681564;
+        message(next, "원본 파일과 정규화한 OOF·시험 예측 쌍을 각각의 해시로 연결했습니다.", "ok");
+        return next;
+
+      case "split_direct":
+        if (!requireMutable(next, "분할 근거 기록")) return next;
+        record().fold_contract.evidence_kind = "같은 공개 판본의 코드";
+        record().fold_contract.evidence_ref = "source.ipynb#community-fold-construction";
+        record().fold_contract.exact_match = true;
+        message(next, "같은 고정 공개 판본의 코드에서 고정 5분할 일치를 확인했습니다.", "ok");
+        return next;
+
+      case "split_weak":
+        if (!requireMutable(next, "약한 분할 근거 기록")) return next;
+        record().fold_contract.evidence_kind = "분할 벡터만 있음";
+        record().fold_contract.evidence_ref = "fold_id.npy#sha256-demo";
+        record().fold_contract.exact_match = true;
+        message(next, "분할 벡터 일치는 기록했지만 학습 계보를 직접 확인할 근거는 아닙니다.", "warn");
+        return next;
+
+      case "split_mismatch":
+        if (!requireMutable(next, "불일치 분할 기록")) return next;
+        record().fold_contract.evidence_kind = "같은 공개 판본의 코드";
+        record().fold_contract.evidence_ref = "source.ipynb#random_state-10301";
+        record().fold_contract.exact_match = false;
+        message(next, "공개 코드가 다른 분할 시드를 사용하므로 분할 불일치를 기록했습니다.", "danger");
+        return next;
+
+      case "training_safe":
+        if (!requireMutable(next, "학습 격리 근거 기록")) return next;
+        record().training_contract.fixed_recipe_id = "demo-fixed-4-epochs-seed-42";
+        setAllTrainingClaims(record(), "확인됨", "같은 공개 판본의 코드", "source.ipynb#training-loop-and-preprocessing");
+        message(next, "전처리, 학습, 학습 시점과 공개 설정 선택의 바깥 검증 격리를 직접 코드로 확인했습니다.", "ok");
+        return next;
+
+      case "training_early_stop":
+        if (!requireMutable(next, "검증 조기 종료 근거 기록")) return next;
+        record().training_contract.fixed_recipe_id = "outer-valid-early-stopping";
+        setAllTrainingClaims(record(), "확인됨", "같은 공개 판본의 코드", "source.ipynb#training-loop");
+        record().training_contract.claims.outer_valid_scoring_only = {
+          result: "위반 확인",
+          evidence_kind: "같은 공개 판본의 코드",
+          evidence_ref: "source.ipynb#fit-eval-set-outer-valid"
+        };
+        record().training_contract.claims.training_point_fixed = {
+          result: "위반 확인",
+          evidence_kind: "같은 공개 판본의 코드",
+          evidence_ref: "source.ipynb#best-iteration"
+        };
+        message(next, "바깥 검증 목표값이 조기 종료와 최적 학습 시점 선택에 쓰였음을 기록했습니다.", "danger");
+        return next;
+
+      case "training_unknown":
+        if (!requireMutable(next, "근거 부족 학습 기록")) return next;
+        setAllTrainingClaims(record(), "알 수 없음", "작성자 설명", "README#fixed-five-fold-claim");
+        message(next, "작성자 설명만으로는 전처리와 학습 시점의 격리를 보증할 수 없습니다.", "warn");
+        return next;
+
+      case "license_unknown":
+        if (!requireMutable(next, "사용 조건 기록")) return next;
+        record().licensing.source_code_license = "Apache-2.0";
+        record().licensing.output_license = null;
+        record().licensing.output_license_status = "unknown";
+        record().licensing.use_scope = "확장 스택 제출의 결합 입력으로만 사용";
+        record().licensing.attribution_required = false;
+        record().licensing.provenance_ref = "docs/agents/kaggle-public-notebook-licensing.md#공개-예측-배열의-사용-한정";
+        message(next, "출력 배열의 사용 조건 미표시를 기록하고 사용 범위를 결합 입력으로 제한했습니다.", "warn");
+        return next;
+
+      case "license_apache":
+        if (!requireMutable(next, "사용 조건 기록")) return next;
+        record().licensing.source_code_license = "Apache-2.0";
+        record().licensing.output_license = "Apache-2.0";
+        record().licensing.output_license_status = "Apache-2.0";
+        record().licensing.use_scope = "허용된 대회 목적 사용과 저작자 표시 유지";
+        record().licensing.attribution_required = true;
+        record().licensing.provenance_ref = "source-manifest.json#license";
+        message(next, "소스와 출력 배열의 사용 조건 및 저작자 표시 의무를 기록했습니다.", "ok");
+        return next;
+
+      case "audit":
+        if (!requireRecord(next, "감사 완료")) return next;
+        if (record().audit_state === "감사 완료") {
+          message(next, "이미 완료된 감사 기록입니다. 판정은 같은 근거에서 결정적으로 다시 계산됩니다.", "warn");
+          return next;
+        }
+        record().decision = evaluate(record());
+        record().audit_execution = {
+          audited_at: "2026-08-28T12:00:00+09:00",
+          auditor: "tmheo",
+          audit_tool_ref: "git:a8b6b895697f66076abf843db530bfdb6aaa40a6",
+          evidence_manifest_sha256: record().decision.audit_evidence_digest
+        };
+        record().audit_state = "감사 완료";
+        message(
+          next,
+          `감사를 완료했습니다. 자격 판정은 '${record().decision.eligibility}'입니다.`,
+          record().decision.eligibility === "자격 있음" ? "ok" : record().decision.eligibility === "자격 없음" ? "danger" : "warn"
+        );
+        return next;
+
+      case "freeze":
+        if (!requireRecord(next, "후보 집합 동결")) return next;
+        if (record().audit_state !== "감사 완료") {
+          message(next, "감사 완료 전에는 후보 집합에 넣을 수 없습니다.", "danger");
+          return next;
+        }
+        if (record().decision.eligibility !== "자격 있음") {
+          message(next, `자격 판정이 '${record().decision.eligibility}'이므로 판본 3 후보 집합에 넣을 수 없습니다.`, "danger");
+          return next;
+        }
+        next.freeze_snapshot = {
+          candidate_set_id: "external-member-v3-candidates-2026-08-30",
+          contract_version: CONTRACT_VERSION,
+          frozen_at: "2026-08-30T20:00:00+09:00",
+          ordered_audit_record_ids: [record().audit_record_id],
+          ordered_pair_sha256: [record().artifacts.normalized_pair_sha256],
+          selection_policy: "자격 감사만으로 동결하며 전체 OOF 성능과 근접 중복은 사전 제거에 사용하지 않음",
+          snapshot_sha256: "sha256:demo_frozen_candidate_set"
+        };
+        message(next, "개별 감사 기록을 고치지 않고 별도 후보 집합 명세가 기록 식별자와 예측 쌍 해시를 동결했습니다.", "ok");
+        return next;
+
+      case "mutate_fixed_source":
+        if (!requireRecord(next, "고정 판본 변경")) return next;
+        if (record().audit_state === "감사 완료") {
+          message(next, "완료한 기록의 고정 판본은 바꿀 수 없습니다. 새 공개 판본은 새 감사 판본으로 연결해야 합니다.", "danger");
+          return next;
+        }
+        record().fixed_source.script_version_id = 999999999;
+        record().fixed_source.source_sha256 = "changed_source_hash";
+        message(next, "감사 완료 전 고정 판본을 교체했습니다. 연결된 근거는 다시 검토해야 합니다.", "warn");
+        return next;
+
+      case "new_revision": {
+        if (!requireRecord(next, "새 감사 판본 생성")) return next;
+        const previous = clone(record());
+        next.prior_records.unshift(previous);
+        next.current_record = recordTemplate(previous.audit_revision + 1, previous.audit_record_id);
+        next.current_record.fixed_source.ref = previous.fixed_source.ref;
+        next.current_record.fixed_source.url = "https://www.kaggle.com/code/demo-author/demo-notebook";
+        message(next, "이전 기록과 후보 집합 동결을 보존한 채 새 감사 판본을 만들었습니다.", "ok");
+        return next;
+      }
+
+      default:
+        message(next, `알 수 없는 동작입니다: ${action.type}`, "danger");
+        return next;
+    }
+  }
+
+  return { initialState, reducer, claimDefinitions: CLAIM_DEFINITIONS };
+})();
+
+const ACTIONS = [
+  ["discover", "후보 발견"],
+  ["lock_source", "공개 판본 고정"],
+  ["attach_pair", "OOF·시험 쌍 연결"],
+  ["split_direct", "분할 직접 확인"],
+  ["split_weak", "분할 벡터만 기록"],
+  ["split_mismatch", "다른 분할 확인"],
+  ["training_safe", "학습 격리 확인"],
+  ["training_early_stop", "검증 조기 종료 확인"],
+  ["training_unknown", "학습 근거 부족"],
+  ["license_unknown", "출력 사용 조건 미표시"],
+  ["license_apache", "Apache 2.0 기록"],
+  ["audit", "감사 완료"],
+  ["freeze", "판본 3 후보 집합 동결"],
+  ["mutate_fixed_source", "고정 판본 바꾸기 시도"],
+  ["new_revision", "새 감사 판본 생성"],
+  ["reset", "전체 초기화"]
+];
+
+const WALKTHROUGHS = [
+  {
+    id: "eligible",
+    title: "자격 있음 + 사용 한정",
+    copy: "출력 배열의 사용 조건은 표시되지 않았지만, 같은 공개 판본의 코드로 분할과 학습 격리를 확인한 후보입니다. 사용 조건 미표시가 주의 사항으로 남되 자격을 막지 않는지 보세요.",
+    steps: ["discover", "lock_source", "attach_pair", "split_direct", "training_safe", "license_unknown", "audit", "freeze"]
+  },
+  {
+    id: "early-stop",
+    title: "검증 조기 종료",
+    copy: "행, 분할, 사용 조건이 모두 맞아도 바깥 검증 목표값으로 학습 시점을 고르면 자격이 없어야 합니다. 마지막 동결 시도도 거부되는지 확인하세요.",
+    steps: ["discover", "lock_source", "attach_pair", "split_direct", "training_early_stop", "license_apache", "audit", "freeze"]
+  },
+  {
+    id: "weak-evidence",
+    title: "근거 부족",
+    copy: "분할 벡터와 작성자 설명만 있는 후보입니다. 규칙 위반을 확인한 것은 아니지만 엄격 후보 자격도 보증할 수 없으므로 '자격 없음'과 다른 결과가 나와야 합니다.",
+    steps: ["discover", "lock_source", "attach_pair", "split_weak", "training_unknown", "license_unknown", "audit", "freeze"]
+  },
+  {
+    id: "new-revision",
+    title: "공개 판본 갱신",
+    copy: "감사 완료와 후보 동결 뒤 공개 노트북이 갱신된 경우입니다. 과거 기록을 수정하지 않고 새 감사 판본이 이전 기록을 가리키는지 확인하세요.",
+    steps: ["discover", "lock_source", "attach_pair", "split_direct", "training_safe", "license_unknown", "audit", "freeze", "mutate_fixed_source", "new_revision"]
+  }
+];
+
+let state = Contract.initialState();
+let activeWalkthrough = 0;
+let walkthroughStep = 0;
+
+const byId = id => document.getElementById(id);
+const esc = value => String(value ?? "미기록")
+  .replaceAll("&", "&amp;")
+  .replaceAll("<", "&lt;")
+  .replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;");
+
+function badge(text, tone = "") {
+  return `<span class="badge ${tone}">${esc(text)}</span>`;
+}
+
+function toneForEligibility(value) {
+  if (value === "자격 있음") return "ok";
+  if (value === "자격 없음") return "danger";
+  if (value === "근거 부족") return "warn";
+  return "";
+}
+
+function claimTone(value) {
+  if (value === "확인됨") return "ok";
+  if (value === "위반 확인") return "danger";
+  if (value === "알 수 없음") return "warn";
+  return "";
+}
+
+function renderDefinitionList(rows) {
+  return `<dl>${rows.map(([term, value]) => `<dt>${esc(term)}</dt><dd>${esc(value)}</dd>`).join("")}</dl>`;
+}
+
+function renderState() {
+  const record = state.current_record;
+  const badges = [];
+  badges.push(badge(record?.audit_state || "기록 없음", record ? "accent" : ""));
+  badges.push(badge(record?.decision.eligibility || "미판정", toneForEligibility(record?.decision.eligibility)));
+  badges.push(badge(state.freeze_snapshot ? "후보 집합 동결됨" : "후보 집합 열림", state.freeze_snapshot ? "ok" : ""));
+  byId("badges").innerHTML = badges.join("");
+
+  if (!record) {
+    byId("state").innerHTML = `<div class="state-card wide empty">아직 감사 기록이 없습니다.</div>`;
+    byId("json").textContent = JSON.stringify(state, null, 2);
+    return;
+  }
+
+  const claims = Object.entries(record.training_contract.claims).map(([key, claim]) => `
+    <li>
+      <span class="claim-label">${esc(Contract.claimDefinitions[key])}</span>
+      <span>${badge(claim.result, claimTone(claim.result))}</span>
+      <span class="claim-evidence">${esc(claim.evidence_kind)} · ${esc(claim.evidence_ref)}</span>
+    </li>`).join("");
+
+  const reasons = record.decision.exclusion_reason_codes.length
+    ? record.decision.exclusion_reason_codes.map(reason => `<li><code>${esc(reason)}</code></li>`).join("")
+    : `<li class="empty">없음</li>`;
+  const caveats = record.decision.caveat_codes.length
+    ? record.decision.caveat_codes.map(reason => `<li><code>${esc(reason)}</code></li>`).join("")
+    : `<li class="empty">없음</li>`;
+  const log = state.transition_log.length
+    ? state.transition_log.map(entry => `<li><span>${esc(entry.action)}</span><span>${esc(entry.record)}</span><span>${esc(entry.result)}</span></li>`).join("")
+    : `<li class="empty">없음</li>`;
+
+  byId("state").innerHTML = `
+    <article class="state-card">
+      <h3>기록 신원</h3>
+      ${renderDefinitionList([
+        ["감사 기록", record.audit_record_id],
+        ["계약 판본", record.contract_version || state.contract_version],
+        ["후보", record.candidate_identity.member_id],
+        ["모델 계보", record.candidate_identity.model_lineage_id],
+        ["이전 감사 기록", record.supersedes_audit_record_id],
+        ["감사 진행 상태", record.audit_state]
+      ])}
+    </article>
+    <article class="state-card">
+      <h3>고정 공개 판본</h3>
+      ${renderDefinitionList([
+        ["출처", record.fixed_source.ref],
+        ["고정 실행 판본", record.fixed_source.script_version_id],
+        ["소스 SHA-256", record.fixed_source.source_sha256],
+        ["확보 시각", record.fixed_source.retrieved_at],
+        ["의존 출처", record.fixed_source.dependency_refs.length ? record.fixed_source.dependency_refs.join(", ") : "없음"]
+      ])}
+    </article>
+    <article class="state-card">
+      <h3>OOF·시험 예측 연결</h3>
+      ${renderDefinitionList([
+        ["예측 뜻", record.artifacts.prediction_semantics],
+        ["OOF 파일", record.artifacts.oof?.ref],
+        ["OOF 행·형식", record.artifacts.oof ? `${record.artifacts.oof.rows} · ${record.artifacts.oof.dtype}` : null],
+        ["시험 파일", record.artifacts.test?.ref],
+        ["시험 행·형식", record.artifacts.test ? `${record.artifacts.test.rows} · ${record.artifacts.test.dtype}` : null],
+        ["정규화 쌍 SHA-256", record.artifacts.normalized_pair_sha256],
+        ["행 정렬", record.artifacts.row_alignment],
+        ["유한값", record.artifacts.finite_values],
+        ["재채점 AUC", record.artifacts.rescored_auc]
+      ])}
+    </article>
+    <article class="state-card">
+      <h3>분할 계약</h3>
+      ${renderDefinitionList([
+        ["기준", record.fold_contract.expected.id],
+        ["기준 설명", record.fold_contract.expected.description],
+        ["일치", record.fold_contract.exact_match],
+        ["근거 종류", record.fold_contract.evidence_kind],
+        ["근거 위치", record.fold_contract.evidence_ref]
+      ])}
+    </article>
+    <article class="state-card wide">
+      <h3>전처리·학습·선택 주장</h3>
+      <ul class="claim-list">${claims}</ul>
+      ${renderDefinitionList([
+        ["고정 학습 설정", record.training_contract.fixed_recipe_id],
+        ["허용 결합", record.training_contract.allowed_aggregation],
+        ["공개 이전 탐색", record.training_contract.prepublication_search_history]
+      ])}
+    </article>
+    <article class="state-card">
+      <h3>사용 조건과 출처</h3>
+      ${renderDefinitionList([
+        ["소스 코드", record.licensing.source_code_license],
+        ["출력 배열", record.licensing.output_license_status],
+        ["사용 범위", record.licensing.use_scope],
+        ["저작자 표시", record.licensing.attribution_required],
+        ["근거", record.licensing.provenance_ref]
+      ])}
+    </article>
+    <article class="state-card">
+      <h3>자격 판정</h3>
+      ${renderDefinitionList([
+        ["판정", record.decision.eligibility],
+        ["보증", record.decision.guarantee],
+        ["보증하지 않음", record.decision.non_guarantees.join(", ")],
+        ["근거 묶음", record.decision.audit_evidence_digest],
+        ["감사 시각", record.audit_execution.audited_at],
+        ["감사자", record.audit_execution.auditor],
+        ["감사 도구", record.audit_execution.audit_tool_ref]
+      ])}
+      <h3 style="margin-top: 16px">제외 사유 코드</h3>
+      <ul class="reason-list">${reasons}</ul>
+      <h3 style="margin-top: 16px">주의 사항 코드</h3>
+      <ul class="reason-list">${caveats}</ul>
+    </article>
+    <article class="state-card wide">
+      <h3>후보 집합 동결 명세</h3>
+      ${state.freeze_snapshot ? renderDefinitionList([
+        ["후보 집합", state.freeze_snapshot.candidate_set_id],
+        ["동결 시각", state.freeze_snapshot.frozen_at],
+        ["감사 기록", state.freeze_snapshot.ordered_audit_record_ids.join(", ")],
+        ["예측 쌍 해시", state.freeze_snapshot.ordered_pair_sha256.join(", ")],
+        ["선택 정책", state.freeze_snapshot.selection_policy],
+        ["명세 SHA-256", state.freeze_snapshot.snapshot_sha256]
+      ]) : `<p class="empty">아직 동결된 후보 집합이 없습니다.</p>`}
+    </article>
+    <article class="state-card wide">
+      <h3>최근 전이</h3>
+      <ul class="log-list">${log}</ul>
+    </article>`;
+
+  byId("json").textContent = JSON.stringify({
+    contract_version: state.contract_version,
+    current_record: state.current_record,
+    prior_records: state.prior_records,
+    freeze_snapshot: state.freeze_snapshot
+  }, null, 2);
+}
+
+function dispatch(type, fromWalkthrough = false) {
+  state = Contract.reducer(state, { type });
+  if (fromWalkthrough && WALKTHROUGHS[activeWalkthrough].steps[walkthroughStep] === type) {
+    walkthroughStep += 1;
+  }
+  render();
+}
+
+function renderControls() {
+  byId("controls").innerHTML = ACTIONS.map(([type, label]) => {
+    const classes = type === "audit" || type === "freeze" ? "primary" : type === "reset" ? "danger" : "";
+    return `<button type="button" class="${classes}" data-action="${type}">${esc(label)}</button>`;
+  }).join("");
+  byId("controls").querySelectorAll("button").forEach(button => {
+    button.addEventListener("click", () => dispatch(button.dataset.action));
+  });
+}
+
+function selectWalkthrough(index) {
+  activeWalkthrough = index;
+  walkthroughStep = 0;
+  state = Contract.initialState();
+  render();
+}
+
+function renderWalkthrough() {
+  byId("tabs").innerHTML = WALKTHROUGHS.map((item, index) => `
+    <button type="button" class="${index === activeWalkthrough ? "active" : ""}" data-tab="${index}">${esc(item.title)}</button>`).join("");
+  byId("tabs").querySelectorAll("button").forEach(button => {
+    button.addEventListener("click", () => selectWalkthrough(Number(button.dataset.tab)));
+  });
+
+  const item = WALKTHROUGHS[activeWalkthrough];
+  byId("walkthrough-copy").textContent = item.copy;
+  byId("walkthrough-steps").innerHTML = item.steps.map((type, index) => {
+    const label = ACTIONS.find(([action]) => action === type)?.[1] || type;
+    const status = index < walkthroughStep ? "done" : index === walkthroughStep ? "next" : "";
+    return `<button type="button" class="${status}" data-step="${index}" ${index > walkthroughStep ? "disabled" : ""}>${index + 1}. ${esc(label)}</button>`;
+  }).join("");
+  byId("walkthrough-steps").querySelectorAll("button").forEach(button => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.step);
+      if (index < walkthroughStep) return;
+      dispatch(item.steps[index], true);
+    });
+  });
+}
+
+function renderMessage() {
+  const element = byId("message");
+  element.textContent = state.last_message;
+  element.className = `message ${state.last_tone === "neutral" ? "" : state.last_tone}`;
+}
+
+function render() {
+  renderState();
+  renderMessage();
+  renderControls();
+  renderWalkthrough();
+}
+
+render();
+</script>
+</body>
+</html>
