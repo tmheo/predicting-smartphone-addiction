@@ -28,6 +28,7 @@ from typing import Any, Protocol
 import pandas as pd
 
 from . import features
+from .denoising_autoencoder import DenoisingAutoencoderLatent
 from .config import FeatureConfig
 from .data import ID, TARGET
 from .features import PLACEBO
@@ -135,6 +136,7 @@ REGISTRY: dict[str, ProviderKind] = {
     "median_impute_aux": ProviderKind(FOLD_FIT, features.MedianImputeAux),
     "constrained_impute_aux": ProviderKind(FOLD_FIT, features.ConstrainedImputeAux),
     "xgb_impute_aux": ProviderKind(FOLD_FIT, features.XgbImputeAux),
+    "dae_latent": ProviderKind(FOLD_FIT, DenoisingAutoencoderLatent),
 }
 
 
@@ -476,6 +478,7 @@ class FeaturePlan:
                     "reason": "disabled",
                     "key": None,
                     "manifest_sha256": None,
+                    "fit_evidence": _fit_evidence_of(transformer),
                 },
             )
 
@@ -582,6 +585,8 @@ class FeaturePlan:
                 "reason": None,
                 "key": result.key,
                 "manifest_sha256": result.manifest_sha256,
+                # 이 실행이 직접 계산했을 때만 제공자의 적합 계보(학습 횟수 등)를 남긴다.
+                "fit_evidence": _fit_evidence_of(transformer) if computed else None,
             },
         )
 
@@ -647,6 +652,10 @@ class FeaturePlan:
             train_ff = prepare_fold_fit_input(train, X_train)
             test_ff = prepare_fold_fit_input(test, X_test)
             for transformer in transformers:
+                enter_full_data = getattr(transformer, "enter_full_data_fit", None)
+                if enter_full_data is not None:
+                    # 내부 분할 대신 사전 규칙 학습 횟수를 쓰는 제공자에게 경로를 알린다. (#483)
+                    enter_full_data()
                 transformer.fit(train_ff, seed)
             X_train = self.add_fold_fit_columns(X_train, train_ff)
             X_test = self.add_fold_fit_columns(X_test, test_ff)
@@ -722,6 +731,14 @@ class FeaturePlan:
             for kind, provider in self._stages[stage]:
                 rows.append((stage, kind, provider.columns(), provider.uses_target))
         return rows
+
+
+def _fit_evidence_of(transformer: object) -> dict[str, object] | None:
+    """제공자가 적합 계보를 내면 그대로, 없으면 None을 돌려준다."""
+    evidence = getattr(transformer, "fit_evidence", None)
+    if evidence is None:
+        return None
+    return evidence()
 
 
 def prepare_fold_fit_input(df: pd.DataFrame, X: pd.DataFrame) -> pd.DataFrame:

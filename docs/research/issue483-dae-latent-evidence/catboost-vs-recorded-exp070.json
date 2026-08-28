@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "issue": 483,
+  "baseline": {
+    "run_id": "6238d8c58beb42ee8102209ded92516e",
+    "experiment": "exp070_cat_exact_cats",
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "auc_oof": 0.9685793468869544,
+    "seed_aucs": {
+      "42": 0.9684083385689265,
+      "43": 0.9683831414726068,
+      "44": 0.9683800907927527
+    },
+    "git_commit": "07616e55c9e7ab7a1e5860f0f1b28c150e42ac42"
+  },
+  "candidate": {
+    "run_id": "4f449386e9c34e36834308482bd151f3",
+    "experiment": "exp206_issue483_cat_exact_cats_dae8",
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "auc_oof": 0.9684536270706092,
+    "seed_aucs": {
+      "42": 0.9682038355936018,
+      "43": 0.9682615714719285,
+      "44": 0.9682516462152573
+    },
+    "fold_aucs": {
+      "0": 0.9678581390735301,
+      "1": 0.9686680670694194,
+      "2": 0.9685024325765523,
+      "3": 0.9690428941273264,
+      "4": 0.9681960903104063
+    },
+    "git_commit": "5a54a1c44c0c360a0261417adee6cd6f26c0a741",
+    "git_dirty": false
+  },
+  "folds_sha256": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+  "stage2_path1_seed42_pairwise": {
+    "baseline_seed42_auc": 0.9684083385689265,
+    "baseline_seed42_source": "run 6238d8c58beb42ee8102209ded92516e",
+    "baseline_seed42_auc_recorded": null,
+    "candidate_seed42_auc": 0.9682038355936018,
+    "delta": -0.00020450297532470518,
+    "candidate_seed42_fold_aucs": {
+      "0": 0.9675762515320525,
+      "1": 0.9683757498766598,
+      "2": 0.9682688491859421,
+      "3": 0.9688697934280159,
+      "4": 0.9679315679395889
+    },
+    "baseline_seed42_fold_aucs": {
+      "0": 0.967796533926754,
+      "1": 0.9685691661574483,
+      "2": 0.9684116872271574,
+      "3": 0.9691051170813098,
+      "4": 0.9681599668689171
+    },
+    "fold_wins": 0,
+    "passed": false
+  },
+  "stage2_path2_entry_and_duplicate": {
+    "champion_run_id": "6911a461866b43dc9556553eba6783b7",
+    "champion_auc": 0.9693676105620948,
+    "entry_floor": 0.9593676105620947,
+    "candidate_seed42_auc": 0.9682038355936018,
+    "candidate_seed_avg_auc": 0.9684536270706092,
+    "floor_ok_seed42": true,
+    "floor_ok_seed_avg": true,
+    "nearest_member_seed42": {
+      "config": "exp070_cat_exact_cats",
+      "run_id": "6238d8c58beb42ee8102209ded92516e",
+      "spearman_seed_avg": 0.9994779592249629,
+      "spearman_seed42": 0.9990017024659675
+    },
+    "nearest_member_seed_avg": {
+      "config": "exp070_cat_exact_cats",
+      "run_id": "6238d8c58beb42ee8102209ded92516e",
+      "spearman_seed_avg": 0.9994779592249629,
+      "spearman_seed42": 0.9990017024659675
+    },
+    "duplicate_threshold": 0.998,
+    "duplicate_seed42": true,
+    "duplicate_seed_avg": true,
+    "nested_contribution": "앞 두 조건 통과 시 pipeline.pool_judgment로 별도 계산",
+    "prerequisites_passed_seed42": false
+  },
+  "stage2_eligible_for_stage3": false,
+  "stage3_confirmation_vs_baseline": {
+    "baseline_auc": 0.9685793468869544,
+    "candidate_auc": 0.9684536270706092,
+    "delta": -0.00012571981634512674,
+    "threshold": 2e-05,
+    "auc_ok": false,
+    "seed_comparisons": [
+      {
+        "seed": 42,
+        "champion_auc": 0.9684083385689265,
+        "challenger_auc": 0.9682038355936018,
+        "delta": -0.00020450297532470518,
+        "win": false
+      },
+      {
+        "seed": 43,
+        "champion_auc": 0.9683831414726068,
+        "challenger_auc": 0.9682615714719285,
+        "delta": -0.00012157000067836154,
+        "win": false
+      },
+      {
+        "seed": 44,
+        "champion_auc": 0.9683800907927527,
+        "challenger_auc": 0.9682516462152573,
+        "delta": -0.00012844457749539018,
+        "win": false
+      }
+    ],
+    "seed_wins": 0,
+    "seed_ok": false,
+    "fold_wins": 0,
+    "fold_total": 5,
+    "boundary": false,
+    "fold_ok": true,
+    "canary_ok": true,
+    "new_features": [
+      {
+        "feature": "dae8_z0",
+        "gain": 0.3643358006601222,
+        "ok": true
+      },
+      {
+        "feature": "dae8_z1",
+        "gain": 0.3480809498806534,
+        "ok": false
+      },
+      {
+        "feature": "dae8_z2",
+        "gain": 0.3789895432285909,
+        "ok": true
+      },
+      {
+        "feature": "dae8_z3",
+        "gain": 0.3449215437650527,
+        "ok": false
+      },
+      {
+        "feature": "dae8_z4",
+        "gain": 0.3238134007966835,
+        "ok": false
+      },
+      {
+        "feature": "dae8_z5",
+        "gain": 0.3352676602947894,
+        "ok": false
+      },
+      {
+        "feature": "dae8_z6",
+        "gain": 0.3184380715640453,
+        "ok": false
+      },
+      {
+        "feature": "dae8_z7",
+        "gain": 0.32073731378047987,
+        "ok": false
+      }
+    ],
+    "new_features_ok": false,
+    "placebo_gain": 0.3510299910655579,
+    "passed": false
+  },
+  "pool_size": 35
+}

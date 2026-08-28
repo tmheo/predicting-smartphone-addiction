@@ -1,0 +1,29 @@
+{
+  "auc_oof": 0.969347269638227,
+  "auc_oof_seed": {
+    "42": 0.9692861015509687,
+    "43": 0.9692625075547153,
+    "44": 0.96923458638229
+  },
+  "auc_oof_weighted": 0.9702414200737713,
+  "bundle": "/Users/taemyungheo/workspace/github/kaggle/predicting-smartphone-addiction/run-logs/vast-issue483/results-v3-1/extracted/deliverable/results/exp207_issue483_lookup_bivariate_plr5_initavg8_dae8.bundle.zip",
+  "bundle_sha256": "82c078fadc0d586be7686d631dce799b8365f446c814d07ee9a26bbb1541e7b0",
+  "experiment": "exp207_issue483_lookup_bivariate_plr5_initavg8_dae8",
+  "fold_aucs": {
+    "auc_fold_0": 0.9688165962948103,
+    "auc_fold_1": 0.9694459457138439,
+    "auc_fold_2": 0.9695323090721598,
+    "auc_fold_3": 0.9698546009512778,
+    "auc_fold_4": 0.9691484129124853
+  },
+  "git_commit": "5a54a1c44c0c360a0261417adee6cd6f26c0a741",
+  "issue": 483,
+  "main_run_id": "e36c7ac655ec46e29c886ae37a707f5c",
+  "oof_content_sha256": "43614769e42dc61ce0355fdc9c5b0e131c4b3d760005ce52a87a1cb54e48d5eb",
+  "pool_sha256": "caa1b90769720a4accbe07074dbc7efe0335ab6657fea80c6839b60121dc39d3",
+  "prediction_integrity_pass": true,
+  "reused_existing_import": false,
+  "schema_version": 1,
+  "source_run_id": "db5d4d70827b446ba630b78e89fb5fae",
+  "test_content_sha256": "a84bccef6bd9793a64228df46a133344112641a408383252df70475f7a7cbfdf"
+}
