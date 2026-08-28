@@ -1,0 +1,380 @@
+{
+ "contract_version": "3.0",
+ "contract_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/482",
+ "ledger_version": 3,
+ "ledger_issue": 484,
+ "audit_record_id": "emar3-05b6a62866da19af",
+ "audit_revision": 1,
+ "supersedes_audit_record_id": null,
+ "identity": {
+  "member_id": "nb_reda_hgb:hgb",
+  "display_name": "redamountassir HistGradientBoosting",
+  "author": "redamountassir",
+  "source_kind": "notebook_output",
+  "source_key": "nb_reda_hgb",
+  "model_lineage_id": "redamountassir/s6e8-histgradientboosting-lb-0-96945@340546105:hgb",
+  "input_population": "v2_reaudit",
+  "exact_duplicate_of": null
+ },
+ "fixed_source": {
+  "kernel_ref": "redamountassir/s6e8-histgradientboosting-lb-0-96945",
+  "title": "S6E8 HistGradientBoosting LB 0.96945",
+  "url": "https://www.kaggle.com/code/redamountassir/s6e8-histgradientboosting-lb-0-96945?scriptVersionId=340546105",
+  "script_version_id": 340546105,
+  "source_file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+  "source_sha256": "33a5fe33bbf21ea3afe9a1e8eea5d8a6cc02054c053e06958f9dcc1c5e1d6110",
+  "pinned_source_sha256": "33a5fe33bbf21ea3afe9a1e8eea5d8a6cc02054c053e06958f9dcc1c5e1d6110",
+  "pinned_version_confirmed": true,
+  "version_confirmation": {
+   "method": "kaggle kernels pull로 받은 현재 공개 소스의 SHA-256이 조사 보고서의 고정 판본 SHA-256과 같고, www.kaggle.com 페이지의 현재 scriptVersionId가 고정 판본 식별자와 같다",
+   "page": {
+    "url": "https://www.kaggle.com/code/redamountassir/s6e8-histgradientboosting-lb-0-96945",
+    "fetched_at": "2026-08-28T02:59:22Z",
+    "http_ok": true,
+    "script_version_ids": [
+     340546105
+    ]
+   },
+   "page_matches_pinned": true
+  },
+  "retrieved_at": {
+   "page": "2026-08-28T02:59:22Z",
+   "pull": "2026-08-28T02:59:25Z",
+   "files": "2026-08-28T02:59:28Z",
+   "output": "2026-08-28T02:59:37Z"
+  },
+  "provenance_role": "direct",
+  "dependency_refs": [],
+  "output_listing_file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/files.json"
+ },
+ "predictions": {
+  "oof": {
+   "file": "tehgbc_oof_preds.csv",
+   "raw_sha256": "888ba086c2a2fdeeca170fc1cb9a236bb1d54bec600c61773c130c6908d9ef2f",
+   "format": "csv",
+   "column": "addicted_label",
+   "column_index": null,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    691369,
+    2
+   ],
+   "columns": [
+    "id",
+    "addicted_label"
+   ],
+   "row_alignment": {
+    "method": "id_column",
+    "detail": "id 열이 기준 순서와 정확히 일치",
+    "id_equal": true
+   },
+   "rows": 691369,
+   "finite": true,
+   "dtype_note": null
+  },
+  "test": {
+   "file": "tehgbc_test_preds.csv",
+   "raw_sha256": "0cbf0db8d52ad3cf8f84d7e835a9f004b30579653575c80b60080f544f7d94d5",
+   "format": "csv",
+   "column": "addicted_label",
+   "column_index": null,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    296302,
+    2
+   ],
+   "columns": [
+    "id",
+    "addicted_label"
+   ],
+   "row_alignment": {
+    "method": "id_column",
+    "detail": "id 열이 기준 순서와 정확히 일치",
+    "id_equal": true
+   },
+   "rows": 296302,
+   "finite": true,
+   "dtype_note": null
+  },
+  "load_error": null,
+  "semantics": "양성 확률(predict_proba[:, 1])",
+  "normalized": {
+   "oof_sha256": "aae047c93e3b3bd37b3dffa22387d40292da69021bdcd9b91af660bf5416d434",
+   "test_sha256": "044ea70171384cdfbc7505f3e67fc72ca076b372fec96cebbb7abfcd4327eaf9",
+   "pair_sha256": "a7a46658f0c4fe1e530881f872610ba2920fd07ac8feecade52df9a4a5fe1739",
+   "oof_path": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/normalized/oof_hgb.npy",
+   "test_path": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/normalized/test_hgb.npy",
+   "dtype": "float64",
+   "layout": "C 연속 1차원, OOF 뒤에 시험 예측을 이어 붙여 쌍 해시 계산"
+  },
+  "rescored_auc": 0.9680258266201603,
+  "declared_auc": null,
+  "declared_auc_source": null,
+  "declared_auc_delta": null,
+  "independent_auc": 0.9680258266201603,
+  "independent_auc_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/dc0cc95/docs/research/external-member-ledger-v2-strict-notebook-reaudit.md",
+  "independent_auc_delta": 0.0,
+  "auc_tolerance": 1e-05,
+  "prior_pair_sha256": "a7a46658f0c4fe1e530881f872610ba2920fd07ac8feecade52df9a4a5fe1739",
+  "prior_pair_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/96ec136/docs/research/external-member-ledger.json",
+  "prior_pair_match": true,
+  "v2_ledger_member": {
+   "sha256": "a7a46658f0c4fe1e530881f872610ba2920fd07ac8feecade52df9a4a5fe1739",
+   "auc": 0.9680258266201603,
+   "fold_evidence": "published_code",
+   "caveats": [
+    "license_unknown: 노트북 출력물(소스는 Apache-2.0, 출력물은 라이선스 표시 없음, 사용 한정)"
+   ]
+  }
+ },
+ "fold_contract": {
+  "spec_id": "community-skf5-shuffle-seed42-train-csv-order",
+  "spec": "StratifiedKFold(n_splits=5, shuffle=True, random_state=42), train.csv 원본 행 순서",
+  "fold_vector_sha256": "9571f18b6ba175d426593d5576d4846d30f00e015cae09d657b3a53437bee824",
+  "row_order_condition": "train.csv 원본 행 순서(id 0..691368 오름차순)",
+  "exact_match": true,
+  "status": "확인됨",
+  "evidence_kind": "published_code",
+  "evidence": [
+   {
+    "file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+    "cell": 8,
+    "line": 12,
+    "text": "FOLDS = 5"
+   },
+   {
+    "file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+    "cell": 8,
+    "line": 13,
+    "text": "SEED = 42"
+   },
+   {
+    "file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+    "cell": 10,
+    "line": 2,
+    "text": "skf = StratifiedKFold(n_splits=FOLDS, shuffle=True, random_state=SEED)"
+   }
+  ],
+  "note": "FOLDS=5, SEED=42의 StratifiedKFold(shuffle=True)를 train 원본 순서에 적용"
+ },
+ "training_contract": {
+  "claims": {
+   "direct_official_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+      "cell": 4,
+      "line": 13,
+      "text": "train = pd.read_csv(f'{DATA}/train.csv')"
+     }
+    ],
+    "note": "공식 대회 train.csv만 사용",
+    "claim": "공식 훈련 자료에서 직접 학습했다"
+   },
+   "single_model_lineage": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+      "cell": 8,
+      "line": 14,
+      "text": "MODEL_SEEDS = [0]"
+     }
+    ],
+    "note": "단일 모형, MODEL_SEEDS=[0] 하나",
+    "claim": "하나의 모델 계보이며 서로 다른 모델이나 설정의 결합이 아니다"
+   },
+   "allowed_aggregation_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+      "cell": 10,
+      "line": 26,
+      "text": "test_preds += model.predict_proba(A_te)[:, 1] / (FOLDS * len(MODEL_SEEDS))"
+     }
+    ],
+    "note": "시험 예측은 5분할 모형 평균",
+    "claim": "같은 고정 설정의 여러 시드나 분할 예측 평균만 사용했다"
+   },
+   "target_preprocessing_isolated": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+      "cell": 10,
+      "line": 10,
+      "text": "Z_tr = enc.fit_transform(Xs.iloc[tr], y[tr])"
+     },
+     {
+      "file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+      "cell": 10,
+      "line": 11,
+      "text": "Z_va = enc.transform(Xs.iloc[va])"
+     }
+    ],
+    "note": "sklearn TargetEncoder(cv=5)를 바깥 학습 부분(Xs.iloc[tr], y[tr])에서만 fit_transform하고 검증·시험은 transform",
+    "claim": "목표값 기반 전처리를 각 바깥 학습 부분 안에 격리했다"
+   },
+   "outer_valid_scoring_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+      "cell": 10,
+      "line": 24,
+      "text": "model.fit(A_tr, y[tr])"
+     }
+    ],
+    "note": "fit에 검증 자료를 넘기지 않고 검증은 AUC 출력에만 쓴다",
+    "claim": "바깥 검증 자료와 목표값은 채점에만 사용했다"
+   },
+   "training_point_fixed": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+      "cell": 8,
+      "line": 3,
+      "text": "max_iter=780,"
+     },
+     {
+      "file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+      "cell": 8,
+      "line": 9,
+      "text": "early_stopping=False,"
+     }
+    ],
+    "note": "max_iter=780, early_stopping=False 고정",
+    "claim": "학습 횟수나 가중치를 바깥 검증 결과 전에 고정했다"
+   },
+   "public_config_selection_isolated": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/s6e8-histgradientboosting-lb-0-96945.ipynb",
+      "cell": 8,
+      "line": 1,
+      "text": "CONFIG = dict("
+     }
+    ],
+    "note": "CONFIG 사전이 정적으로 고정돼 있고 검증 결과로 고르는 코드가 없다",
+    "claim": "공개 소스 안의 설정 선택에 바깥 검증 결과를 사용하지 않았다"
+   },
+   "no_external_prediction_retraining": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "외부 예측을 입력으로 다시 학습하지 않았다"
+   },
+   "no_pseudo_label_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "의사 목표값을 학습에 사용하지 않았다"
+   },
+   "no_blend_distillation": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "결합 예측을 교사로 삼아 증류하지 않았다"
+   }
+  },
+  "lineage_evidence": [],
+  "absence_scan": {
+   "patterns": {
+    "pseudo": "pseudo",
+    "external_input": "/kaggle/input/(datasets|notebooks)/",
+    "distill": "distill|teacher"
+   },
+   "hits": [],
+   "unexplained": 0
+  },
+  "prepublication_search_history": "알 수 없음"
+ },
+ "license": {
+  "source_code": {
+   "license": "Apache-2.0",
+   "status": "confirmed",
+   "evidence": "https://www.kaggle.com/datasets/kaggle/meta-kaggle-code",
+   "attribution_required": true,
+   "attribution": "redamountassir, S6E8 HistGradientBoosting LB 0.96945, https://www.kaggle.com/code/redamountassir/s6e8-histgradientboosting-lb-0-96945?scriptVersionId=340546105"
+  },
+  "output_arrays": {
+   "license": "unknown",
+   "status": "unmarked",
+   "use_scope": "확장 스택 제출의 결합 입력으로만 사용",
+   "redistribution": false,
+   "repository_commit": false
+  }
+ },
+ "audit": {
+  "audit_state": "감사 완료",
+  "transition_log": [
+   {
+    "state": "발견됨",
+    "at": "2026-08-28T02:59:22Z",
+    "by": "fetch"
+   },
+   {
+    "state": "공개 판본 고정됨",
+    "at": "2026-08-28T02:59:25Z",
+    "by": "fetch"
+   },
+   {
+    "state": "감사 완료",
+    "at": "2026-08-28T03:03:42Z",
+    "by": "audit"
+   }
+  ],
+  "eligibility": "자격 있음",
+  "exclusion_reason_codes": [],
+  "insufficiency_reasons": [],
+  "caveat_codes": [
+   "license_unknown_use_limited"
+  ],
+  "caveats": [
+   {
+    "code": "license_unknown_use_limited",
+    "detail": "노트북 출력물(소스는 Apache-2.0, 출력 배열은 사용 조건 표시 없음, 결합 입력 전용)"
+   }
+  ],
+  "near_duplicate": {
+   "spearman_max": 0.9971638356776416,
+   "closest": "nb_reda_lgbm:lgbm",
+   "threshold": 0.998,
+   "population": "판본 2 통과 400개 + 판본 3 후보 19개"
+  },
+  "auditor": "tmheo (Claude Code 세션이 도구를 실행)",
+  "audited_at": "2026-08-28T03:03:42Z",
+  "audit_tool": {
+   "script": "scripts/build_external_member_ledger_v3.py",
+   "commit": "faed3a3877a73796b7047eda73b2c20ef7f7902a"
+  },
+  "evidence_manifest_sha256": "806032e840cbec25bc91adbe5287513962b23db8ad0586418d2a6e0928af4789",
+  "guarantees": [
+   "기록한 고정 공개 판본의 소스와 연결 산출물에서 확인할 수 있는 학습 계보",
+   "OOF 691,369행과 시험 예측 296,302행의 유한값, 원래 행 순서와 정규화 예측 쌍 해시",
+   "고정 5분할 명세와 소스 안의 분할 코드 위치"
+  ],
+  "non_guarantees": [
+   "공개 이전의 비공개 설정 탐색 이력",
+   "작성자가 공개하지 않은 코드와 숨은 외부 자료 사용",
+   "미래 공개 판본",
+   "출력 배열에 표시되지 않은 권리 범위(사용 한정을 넘는 사용)"
+  ],
+  "notes": []
+ },
+ "record_sha256": "964320a691a1944a6da30479670f5c5f048ac18ff7715a0621fd51b0676ba44e"
+}

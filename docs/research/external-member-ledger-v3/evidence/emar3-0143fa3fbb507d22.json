@@ -1,0 +1,140 @@
+{
+ "issue": 484,
+ "root": "data/external/ext484",
+ "kernel_ref": "zhukovoleksiy/ps6e8-eda-feature-engineering-pipeline",
+ "script_version_id": 344661133,
+ "files": [
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/.download.log",
+   "role": "source_metadata",
+   "bytes": 3099,
+   "retrieved_at": "2026-08-28T02:58:33Z"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/artifacts/lat9_pairs3_sm30_cat_base-lgb02-xgb_base.npz",
+   "role": "source_output",
+   "bytes": 25865125,
+   "retrieved_at": "2026-08-28T02:59:00Z",
+   "sha256": "873c6efe571ab97db134b4046c4824f2280d970f21ab7053e8bfb7b14f1d2fb7"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/artifacts/lat9_pairs3_sm30_cat_base-lgb02-xgb_base_summary.csv",
+   "role": "source_output",
+   "bytes": 57,
+   "retrieved_at": "2026-08-28T02:59:00Z",
+   "sha256": "3d160086a1fdfef034f00eb610ff2665e3b98e013ecf6e0973d00eed7ef335d3"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/files.json",
+   "role": "source_metadata",
+   "bytes": 1358,
+   "retrieved_at": "2026-08-28T02:58:33Z",
+   "sha256": "dea7a58ab16cf62cc09cfd77ad51d645413283122b235f44b4f12fb7b6de5de4"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/kernel-metadata.json",
+   "role": "source_metadata",
+   "bytes": 680,
+   "retrieved_at": "2026-08-28T02:58:36Z",
+   "sha256": "2c913167c9eea083c630ac115b75c4605e3cc8cc7585cc494c65638f85d414d3"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/normalized/oof_cat_base.npy",
+   "role": "normalized",
+   "bytes": 5531080,
+   "retrieved_at": null,
+   "sha256": "bb5fd7c2ed8816296b269c8009acd015eb6bc321ddb2d6c5d502319a117ab27e"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/normalized/test_cat_base.npy",
+   "role": "normalized",
+   "bytes": 2370544,
+   "retrieved_at": null,
+   "sha256": "f859ee550e3a4fc7caae0444355a2b7f8a3439793012dc62532997e5975d12c2"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/oof/manifest.csv",
+   "role": "source_output",
+   "bytes": 431,
+   "retrieved_at": "2026-08-28T02:59:00Z",
+   "sha256": "0a93a0104495281c197c8038bdca3d35314eaf57fc17a76da7278a934b41373f"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/oof/oof_lexD_cat_base.npy",
+   "role": "source_output",
+   "bytes": 5531080,
+   "retrieved_at": "2026-08-28T02:59:00Z",
+   "sha256": "bb5fd7c2ed8816296b269c8009acd015eb6bc321ddb2d6c5d502319a117ab27e"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/oof/oof_lexD_lgb02.npy",
+   "role": "source_output",
+   "bytes": 5531080,
+   "retrieved_at": "2026-08-28T02:59:00Z",
+   "sha256": "137f9d932baa333e25a094b4f5be902639dc580b6818ca5a02c40d3804e3f93b"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/oof/oof_lexD_xgb_base.npy",
+   "role": "source_output",
+   "bytes": 5531080,
+   "retrieved_at": "2026-08-28T02:59:00Z",
+   "sha256": "340ea93444a56f2f7970a099a97cfbb4966ac9ee23bfbd6273b917431eb5f37b"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/oof/test_lexD_cat_base.npy",
+   "role": "source_output",
+   "bytes": 2370544,
+   "retrieved_at": "2026-08-28T02:59:00Z",
+   "sha256": "f859ee550e3a4fc7caae0444355a2b7f8a3439793012dc62532997e5975d12c2"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/oof/test_lexD_lgb02.npy",
+   "role": "source_output",
+   "bytes": 2370544,
+   "retrieved_at": "2026-08-28T02:59:00Z",
+   "sha256": "fbc4f5e840395990b9f3caa9746a053acb448f37b02c17749df370aedd174c89"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/oof/test_lexD_xgb_base.npy",
+   "role": "source_output",
+   "bytes": 2370544,
+   "retrieved_at": "2026-08-28T02:59:00Z",
+   "sha256": "6660350c1acb32c56dba1d66132d79f625b86652919fc77afc69b8726a324bb5"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/page-version.json",
+   "role": "source_metadata",
+   "bytes": 200,
+   "retrieved_at": "2026-08-28T02:58:33Z",
+   "sha256": "624ccb2d3839d2d058e784e1069c3371916100a8d9233d30aa0744c8bf249c17"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+   "role": "source_notebook",
+   "bytes": 75438,
+   "retrieved_at": "2026-08-28T02:58:36Z",
+   "sha256": "a1e1f488bb4d68de5c4533df8f3816517d5ca65ceb2bb904f9a389360970d9c5"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.log",
+   "role": "source_output",
+   "bytes": 15841,
+   "retrieved_at": "2026-08-28T02:59:00Z",
+   "sha256": "8fa8c1a989b417fcae2887635086a2c87bc022091f49b8364d83ea702516c7df"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/submission.csv",
+   "role": "source_output",
+   "bytes": 7783685,
+   "retrieved_at": "2026-08-28T02:59:00Z",
+   "sha256": "f75630d26de800f6e173189a1b03c2d93c2605a797f1f9a22d136bede6e37c31"
+  },
+  {
+   "path": "zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/submission_lgb02.csv",
+   "role": "source_output",
+   "bytes": 7769633,
+   "retrieved_at": "2026-08-28T02:59:00Z",
+   "sha256": "f8dce186568f6fe36f4d87ba55b353059c8033f57c795374efed32b6b3ac1754"
+  }
+ ]
+}

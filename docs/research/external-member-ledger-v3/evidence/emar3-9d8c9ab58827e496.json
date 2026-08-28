@@ -1,0 +1,84 @@
+{
+ "issue": 484,
+ "root": "data/external/ext484",
+ "kernel_ref": "redamountassir/s6e8-lgbm-lb-0-96965",
+ "script_version_id": 340546450,
+ "files": [
+  {
+   "path": "redamountassir_s6e8-lgbm-lb-0-96965/.download.log",
+   "role": "source_metadata",
+   "bytes": 1821,
+   "retrieved_at": "2026-08-28T02:59:03Z"
+  },
+  {
+   "path": "redamountassir_s6e8-lgbm-lb-0-96965/files.json",
+   "role": "source_metadata",
+   "bytes": 354,
+   "retrieved_at": "2026-08-28T02:59:03Z",
+   "sha256": "8be12d32aae75e5363c2ca4ddef19268972c31d4aeecc3ec0fc06c27b94efb2b"
+  },
+  {
+   "path": "redamountassir_s6e8-lgbm-lb-0-96965/kernel-metadata.json",
+   "role": "source_metadata",
+   "bytes": 602,
+   "retrieved_at": "2026-08-28T02:59:06Z",
+   "sha256": "6fbbd3b0ec5887fe7f6c58fb07fc0aa90795d93b62317b4e00df00003fc700d0"
+  },
+  {
+   "path": "redamountassir_s6e8-lgbm-lb-0-96965/lgbm_oof_preds.csv",
+   "role": "source_output",
+   "bytes": 18008642,
+   "retrieved_at": "2026-08-28T02:59:19Z",
+   "sha256": "1f9cf0d5f7eba3f7f678cad0535a8d76b318c672b51e3a6d957a9fafa3aed9e8"
+  },
+  {
+   "path": "redamountassir_s6e8-lgbm-lb-0-96965/lgbm_test_preds.csv",
+   "role": "source_output",
+   "bytes": 7766219,
+   "retrieved_at": "2026-08-28T02:59:19Z",
+   "sha256": "4fc616a2fe45adf27e8393d9f08312f6910ba9f86943c861777e82e5b379ad33"
+  },
+  {
+   "path": "redamountassir_s6e8-lgbm-lb-0-96965/normalized/oof_lgbm.npy",
+   "role": "normalized",
+   "bytes": 5531080,
+   "retrieved_at": null,
+   "sha256": "183fc49784420e19a9c5c1924416d3d86dc5edc20922ad1bdbadd7992ae4b31b"
+  },
+  {
+   "path": "redamountassir_s6e8-lgbm-lb-0-96965/normalized/test_lgbm.npy",
+   "role": "normalized",
+   "bytes": 2370544,
+   "retrieved_at": null,
+   "sha256": "f7f97ba9706d0fdfe3548fdd560be269a9afb539ffd3faa82d595405c9e99f59"
+  },
+  {
+   "path": "redamountassir_s6e8-lgbm-lb-0-96965/page-version.json",
+   "role": "source_metadata",
+   "bytes": 183,
+   "retrieved_at": "2026-08-28T02:59:03Z",
+   "sha256": "ec9324ad0dc036eaebe04885a10d65fda1af4fe20eb04d6114e40e424db62353"
+  },
+  {
+   "path": "redamountassir_s6e8-lgbm-lb-0-96965/s6e8-lgbm-lb-0-96965.ipynb",
+   "role": "source_notebook",
+   "bytes": 8720,
+   "retrieved_at": "2026-08-28T02:59:06Z",
+   "sha256": "c5d72447072a783ce85950c261d61273e1b918872c8f72565471a72431960cbb"
+  },
+  {
+   "path": "redamountassir_s6e8-lgbm-lb-0-96965/s6e8-lgbm-lb-0-96965.log",
+   "role": "source_output",
+   "bytes": 5283,
+   "retrieved_at": "2026-08-28T02:59:19Z",
+   "sha256": "feeefeb1291762c604f1019a8d41ba06c2f52b31eba8fcc6519ca57b9e66ed11"
+  },
+  {
+   "path": "redamountassir_s6e8-lgbm-lb-0-96965/submission.csv",
+   "role": "source_output",
+   "bytes": 7766219,
+   "retrieved_at": "2026-08-28T02:59:19Z",
+   "sha256": "4fc616a2fe45adf27e8393d9f08312f6910ba9f86943c861777e82e5b379ad33"
+  }
+ ]
+}

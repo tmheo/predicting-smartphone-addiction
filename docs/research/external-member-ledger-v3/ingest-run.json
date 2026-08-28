@@ -1,0 +1,38 @@
+{
+ "issue": 484,
+ "runs": [
+  {
+   "command": "fetch",
+   "argv": [
+    "fetch"
+   ],
+   "started_at": "2026-08-28T02:58:33Z",
+   "finished_at": "2026-08-28T03:02:49Z",
+   "tool_commit": "faed3a3877a73796b7047eda73b2c20ef7f7902a",
+   "kaggle_cli": "Kaggle CLI 2.2.4",
+   "python": "3.13.13"
+  },
+  {
+   "command": "audit",
+   "argv": [
+    "audit"
+   ],
+   "started_at": "2026-08-28T03:03:07Z",
+   "finished_at": "2026-08-28T03:03:45Z",
+   "tool_commit": "faed3a3877a73796b7047eda73b2c20ef7f7902a",
+   "kaggle_cli": "Kaggle CLI 2.2.4",
+   "python": "3.13.13"
+  },
+  {
+   "command": "audit",
+   "argv": [
+    "audit"
+   ],
+   "started_at": "2026-08-28T03:04:06Z",
+   "finished_at": "2026-08-28T03:04:45Z",
+   "tool_commit": "faed3a3877a73796b7047eda73b2c20ef7f7902a",
+   "kaggle_cli": "Kaggle CLI 2.2.4",
+   "python": "3.13.13"
+  }
+ ]
+}

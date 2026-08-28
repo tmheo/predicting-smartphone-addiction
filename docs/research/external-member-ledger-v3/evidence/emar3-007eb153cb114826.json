@@ -1,0 +1,112 @@
+{
+ "issue": 484,
+ "root": "data/external/ext484",
+ "kernel_ref": "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task",
+ "script_version_id": 339485089,
+ "files": [
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/.download.log",
+   "role": "source_metadata",
+   "bytes": 2528,
+   "retrieved_at": "2026-08-28T03:01:52Z"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/files.json",
+   "role": "source_metadata",
+   "bytes": 793,
+   "retrieved_at": "2026-08-28T03:01:52Z",
+   "sha256": "8f6cac89d32bbb3cc6925d9c3173c572649afb4ea861a1be0318fc3a1bb136d9"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/kernel-metadata.json",
+   "role": "source_metadata",
+   "bytes": 677,
+   "retrieved_at": "2026-08-28T03:01:55Z",
+   "sha256": "f7cfc4e2ced014899db6862e5cc7f2b6f6769d0bd535367c5e32feaec0c2ec82"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/normalized/oof_lgb.npy",
+   "role": "normalized",
+   "bytes": 5531080,
+   "retrieved_at": null,
+   "sha256": "c235b230b4b2f642a70478d97a6eccccf9569c539e79786dd6cb1fcb5d528932"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/normalized/test_lgb.npy",
+   "role": "normalized",
+   "bytes": 2370544,
+   "retrieved_at": null,
+   "sha256": "51584b45657bbc94d49b753c19c32c32fd464a009d0ddc9a07d53ba355072d29"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/oof_hgb.npy",
+   "role": "source_output",
+   "bytes": 11062032,
+   "retrieved_at": "2026-08-28T03:02:15Z",
+   "sha256": "fad2e34d2108497f5f4d91f0dc123a9d44e6e4e424fb29008f3045af8e0898fe"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/oof_lgb.npy",
+   "role": "source_output",
+   "bytes": 11062032,
+   "retrieved_at": "2026-08-28T03:02:15Z",
+   "sha256": "025869d2ea30905a2599a69fcae6b4c7d67bf5eb74d0c96926cbb803d6021bd4"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/oof_xgb.npy",
+   "role": "source_output",
+   "bytes": 11062032,
+   "retrieved_at": "2026-08-28T03:02:15Z",
+   "sha256": "8caca844702b44ea99fb29a447fa7a32c0f4ed3a4f436238b0a7c09b8d3638aa"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/page-version.json",
+   "role": "source_metadata",
+   "bytes": 206,
+   "retrieved_at": "2026-08-28T03:01:52Z",
+   "sha256": "d754f64fc050ece1ea7923450106bdb9d699c1d8006d1f3b2777f52aecdd6aef"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+   "role": "source_notebook",
+   "bytes": 18688,
+   "retrieved_at": "2026-08-28T03:01:55Z",
+   "sha256": "52c509d1b726d2ddeaddd0e07ada8c345a21483c09f0128e0070359552025235"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.log",
+   "role": "source_output",
+   "bytes": 4397,
+   "retrieved_at": "2026-08-28T03:02:15Z",
+   "sha256": "d4c624564675ab3f719470963ee64af9ba4ce728845a1b86b0a4014a53e2cd22"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/submission.csv",
+   "role": "source_output",
+   "bytes": 7752757,
+   "retrieved_at": "2026-08-28T03:02:15Z",
+   "sha256": "5708e94d965a9040d1bfe44ef68ed693eca85df9acd13fb0fb0e94582b3876b3"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/test_hgb.npy",
+   "role": "source_output",
+   "bytes": 4740960,
+   "retrieved_at": "2026-08-28T03:02:15Z",
+   "sha256": "8c16745ba49754a18683e55a3571f0c35fa0b995d4343dec6fa631b4af0129ae"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/test_lgb.npy",
+   "role": "source_output",
+   "bytes": 4740960,
+   "retrieved_at": "2026-08-28T03:02:15Z",
+   "sha256": "4fe3bccea74736787e9d53aa8b357a97718c6d5b411041abce6c056d6ad2eec2"
+  },
+  {
+   "path": "busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/test_xgb.npy",
+   "role": "source_output",
+   "bytes": 4740960,
+   "retrieved_at": "2026-08-28T03:02:15Z",
+   "sha256": "46268e9e123bbdf907f20e655691e85564d435e36a3a3ab5d16de61b4ad9a65d"
+  }
+ ]
+}

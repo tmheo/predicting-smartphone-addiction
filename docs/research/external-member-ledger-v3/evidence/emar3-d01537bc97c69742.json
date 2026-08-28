@@ -1,0 +1,98 @@
+{
+ "issue": 484,
+ "root": "data/external/ext484",
+ "kernel_ref": "beicicc/s6e8-fold-safe-realmlp",
+ "script_version_id": 339864149,
+ "files": [
+  {
+   "path": "beicicc_s6e8-fold-safe-realmlp/.download.log",
+   "role": "source_metadata",
+   "bytes": 2074,
+   "retrieved_at": "2026-08-28T03:01:34Z"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-realmlp/files.json",
+   "role": "source_metadata",
+   "bytes": 622,
+   "retrieved_at": "2026-08-28T03:01:34Z",
+   "sha256": "11458b3dd8f7a97fdcdcb6bc02a053726c474bcfcd8bf4494e735a3eb093cf3e"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-realmlp/kernel-metadata.json",
+   "role": "source_metadata",
+   "bytes": 626,
+   "retrieved_at": "2026-08-28T03:01:37Z",
+   "sha256": "3fc2968834bb1318f46985143e2de3395e52a82b9a7c2f9a5e5f8eefcf479321"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-realmlp/normalized/oof_realmlp.npy",
+   "role": "normalized",
+   "bytes": 5531080,
+   "retrieved_at": null,
+   "sha256": "98b73752e23ac565a10e70017faf3554921c853f4c51e05d9852c4e288b3f3b5"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-realmlp/normalized/test_realmlp.npy",
+   "role": "normalized",
+   "bytes": 2370544,
+   "retrieved_at": null,
+   "sha256": "2c696540f17cb186d3e19c87a1c61c209e936a099de6c7c3725db671d865513e"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-realmlp/page-version.json",
+   "role": "source_metadata",
+   "bytes": 178,
+   "retrieved_at": "2026-08-28T03:01:34Z",
+   "sha256": "a104b764438ab67ca397393fe7c48e4451271ae19afdeb8220230c381209c2e8"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-realmlp/realmlp_fold_safe_fold_scores.csv",
+   "role": "source_output",
+   "bytes": 1402,
+   "retrieved_at": "2026-08-28T03:01:49Z",
+   "sha256": "008a656a86e17773bb477dadc9eb5dda9b9dd59e584945cf350edbc17b51ac0d"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-realmlp/realmlp_fold_safe_manifest.json",
+   "role": "source_output",
+   "bytes": 2033,
+   "retrieved_at": "2026-08-28T03:01:49Z",
+   "sha256": "719795ebbb8b71ae89574820f34716839b1339372ff910dddb9b1c89c89bc28a"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-realmlp/realmlp_fold_safe_oof.csv",
+   "role": "source_output",
+   "bytes": 13481565,
+   "retrieved_at": "2026-08-28T03:01:49Z",
+   "sha256": "ba5440a6ebe836d57a0720f9c92847ffe55cb4cb049163c356ab94aeb7a03933"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-realmlp/realmlp_fold_safe_test.csv",
+   "role": "source_output",
+   "bytes": 5233148,
+   "retrieved_at": "2026-08-28T03:01:49Z",
+   "sha256": "2a8b8891a7a2fce02b96d72aad72f5a65fd9affaed7bcf369016e581dbc12076"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.ipynb",
+   "role": "source_notebook",
+   "bytes": 44736,
+   "retrieved_at": "2026-08-28T03:01:37Z",
+   "sha256": "60a0bd05332e8932468d9cc796855013be3c3798344fd75c15c016764eba58ef"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-realmlp/s6e8-fold-safe-realmlp.log",
+   "role": "source_output",
+   "bytes": 13749,
+   "retrieved_at": "2026-08-28T03:01:49Z",
+   "sha256": "4e209f897da34e892f6affc670b7259256a74c2bd60bc103008cab2c4151fe98"
+  },
+  {
+   "path": "beicicc_s6e8-fold-safe-realmlp/submission.csv",
+   "role": "source_output",
+   "bytes": 7784933,
+   "retrieved_at": "2026-08-28T03:01:49Z",
+   "sha256": "43150e08642dbe28abb96111663be8d19db4f53126541d85fc9171c7e98e884c"
+  }
+ ]
+}

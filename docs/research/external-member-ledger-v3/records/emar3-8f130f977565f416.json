@@ -1,0 +1,516 @@
+{
+ "contract_version": "3.0",
+ "contract_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/482",
+ "ledger_version": 3,
+ "ledger_issue": 484,
+ "audit_record_id": "emar3-8f130f977565f416",
+ "audit_revision": 1,
+ "supersedes_audit_record_id": null,
+ "identity": {
+  "member_id": "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+  "display_name": "ravi20076 baseline v1 XGB1C",
+  "author": "Ravi Ramakrishnan (ravi20076)",
+  "source_kind": "notebook_output",
+  "source_key": "ravi_v1",
+  "model_lineage_id": "ravi20076/playgrounds6e8-public-baseline-v1@339444387:XGB1C",
+  "input_population": "census",
+  "exact_duplicate_of": null
+ },
+ "fixed_source": {
+  "kernel_ref": "ravi20076/playgrounds6e8-public-baseline-v1",
+  "title": "PlaygroundS6E8 public baseline v1",
+  "url": "https://www.kaggle.com/code/ravi20076/playgrounds6e8-public-baseline-v1?scriptVersionId=339444387",
+  "script_version_id": 339444387,
+  "source_file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+  "source_sha256": "186d26a1aba7549fd182ed89322daff43f6083d8f9275175215c7c0207d31c30",
+  "pinned_source_sha256": "186d26a1aba7549fd182ed89322daff43f6083d8f9275175215c7c0207d31c30",
+  "pinned_version_confirmed": true,
+  "version_confirmation": {
+   "method": "kaggle kernels pull로 받은 현재 공개 소스의 SHA-256이 조사 보고서의 고정 판본 SHA-256과 같고, www.kaggle.com 페이지의 현재 scriptVersionId가 고정 판본 식별자와 같다",
+   "page": {
+    "url": "https://www.kaggle.com/code/ravi20076/playgrounds6e8-public-baseline-v1",
+    "fetched_at": "2026-08-28T03:02:18Z",
+    "http_ok": true,
+    "script_version_ids": [
+     339444387
+    ]
+   },
+   "page_matches_pinned": true
+  },
+  "retrieved_at": {
+   "page": "2026-08-28T03:02:18Z",
+   "pull": "2026-08-28T03:02:21Z",
+   "files": "2026-08-28T03:02:24Z",
+   "output": "2026-08-28T03:02:33Z"
+  },
+  "provenance_role": "direct",
+  "dependency_refs": [
+   {
+    "kernel_ref": "ravi20076/playgrounds6e8-public-imports-v1",
+    "url": "https://www.kaggle.com/code/ravi20076/playgrounds6e8-public-imports-v1?scriptVersionId=339439580",
+    "script_version_id": 339439580,
+    "role": "보조 코드(training.py의 ModelTrainer, myutils.py, mypp.py)",
+    "page_matches_pinned": true,
+    "retrieved_at": {
+     "page": "2026-08-28T03:02:36Z",
+     "pull": "2026-08-28T03:02:39Z",
+     "files": "2026-08-28T03:02:41Z",
+     "output": "2026-08-28T03:02:46Z"
+    },
+    "files": [
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-imports-v1/training.py",
+      "sha256": "26504708be69444a8df97ac7b0ecc95e788340b88b5cfaef823dfe2c9d8a1405",
+      "pinned_sha256": "26504708be69444a8df97ac7b0ecc95e788340b88b5cfaef823dfe2c9d8a1405",
+      "match": true
+     },
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-imports-v1/mypp.py",
+      "sha256": "f5ab8352cc2c8b3233f07a0c35a833009466a5eb53739ec440c477f47c3fa98b",
+      "pinned_sha256": "f5ab8352cc2c8b3233f07a0c35a833009466a5eb53739ec440c477f47c3fa98b",
+      "match": true
+     },
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-imports-v1/myutils.py",
+      "sha256": "2a98eef32eca0a035473609fe7f37531f6c463dfed411dd62351a7f5216150fa",
+      "pinned_sha256": "2a98eef32eca0a035473609fe7f37531f6c463dfed411dd62351a7f5216150fa",
+      "match": true
+     }
+    ]
+   }
+  ],
+  "output_listing_file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/files.json"
+ },
+ "predictions": {
+  "oof": {
+   "file": "OOF_Preds_MLV1_1.parquet",
+   "raw_sha256": "474c9ae81249bfaf026dd8e716ea79a4e4514f8f1e1d0cbd4fece758867879d9",
+   "format": "parquet",
+   "column": "XGB1C",
+   "column_index": null,
+   "raw_dtype": "float32",
+   "raw_shape": [
+    691369,
+    3
+   ],
+   "columns": [
+    "XGB1C",
+    "LGBM1C",
+    "CB1C"
+   ],
+   "row_alignment": {
+    "method": "positional",
+    "detail": "RangeIndex(0..691368) 순서, id 열 없음",
+    "range_index": true
+   },
+   "rows": 691369,
+   "finite": true,
+   "dtype_note": "float32 저장"
+  },
+  "test": {
+   "file": "Mdl_Preds_MLV1_1.parquet",
+   "raw_sha256": "3ded242bf1efefc5acbeeeb340a0fb62fe116633d36d1a5fb62b24c38befdd8c",
+   "format": "parquet",
+   "column": "XGB1C",
+   "column_index": null,
+   "raw_dtype": "float32",
+   "raw_shape": [
+    296302,
+    3
+   ],
+   "columns": [
+    "XGB1C",
+    "LGBM1C",
+    "CB1C"
+   ],
+   "row_alignment": {
+    "method": "positional",
+    "detail": "RangeIndex(0..296301) 순서, id 열 없음",
+    "range_index": true
+   },
+   "rows": 296302,
+   "finite": true,
+   "dtype_note": "float32 저장"
+  },
+  "load_error": null,
+  "semantics": "양성 확률(predict_proba[:, 1])",
+  "normalized": {
+   "oof_sha256": "bdf0a479cd53068f555e2c28c9ca5bbfb1cb9116a5e06807985d07f3dffde6f3",
+   "test_sha256": "56e609f55ff864c59c8b56f21f8d159ebe3653a9318f4a52c6eef50371537a82",
+   "pair_sha256": "d795573efce0daf7fa1f87e82bd0843f1e12960bc621e033e9d93c207be822ab",
+   "oof_path": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/normalized/oof_XGB1C.npy",
+   "test_path": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/normalized/test_XGB1C.npy",
+   "dtype": "float64",
+   "layout": "C 연속 1차원, OOF 뒤에 시험 예측을 이어 붙여 쌍 해시 계산"
+  },
+  "rescored_auc": 0.9642014816182081,
+  "declared_auc": null,
+  "declared_auc_source": null,
+  "declared_auc_delta": null,
+  "independent_auc": 0.964201482,
+  "independent_auc_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/bff57dc/docs/research/strict-external-member-census-2026-08-28.md",
+  "independent_auc_delta": -3.81791931403086e-10,
+  "auc_tolerance": 1e-05,
+  "prior_pair_sha256": "d795573efce0daf7fa1f87e82bd0843f1e12960bc621e033e9d93c207be822ab",
+  "prior_pair_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/bff57dc/docs/research/strict-external-member-census-2026-08-28.md",
+  "prior_pair_match": true,
+  "v2_ledger_member": null
+ },
+ "fold_contract": {
+  "spec_id": "community-skf5-shuffle-seed42-train-csv-order",
+  "spec": "StratifiedKFold(n_splits=5, shuffle=True, random_state=42), train.csv 원본 행 순서",
+  "fold_vector_sha256": "9571f18b6ba175d426593d5576d4846d30f00e015cae09d657b3a53437bee824",
+  "row_order_condition": "train.csv 원본 행 순서(id 0..691368 오름차순)",
+  "exact_match": true,
+  "status": "확인됨",
+  "evidence_kind": "published_code",
+  "evidence": [
+   {
+    "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+    "cell": 5,
+    "line": 16,
+    "text": "state              = 42"
+   },
+   {
+    "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+    "cell": 5,
+    "line": 38,
+    "text": "n_splits           = 5"
+   },
+   {
+    "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+    "cell": 5,
+    "line": 41,
+    "text": "mdlcv_mthd         = 'SKF'"
+   },
+   {
+    "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+    "cell": 5,
+    "line": 61,
+    "text": "\"SKF\"   : StratifiedKFold(n_splits = CFG.n_splits, shuffle = True, random_state= CFG.state),"
+   },
+   {
+    "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+    "cell": 13,
+    "line": 6,
+    "text": "ygrp[dev_idx] = fold_nb"
+   }
+  ],
+  "note": "CFG.state=42, n_splits=5, mdlcv_mthd='SKF'의 StratifiedKFold(shuffle=True)를 ygrp로 고정하고 PredefinedSplit으로 재사용"
+ },
+ "training_contract": {
+  "claims": {
+   "direct_official_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code+published_log",
+    "evidence": [
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+      "cell": 5,
+      "line": 29,
+      "text": "nb_orig            = 0"
+     },
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+      "cell": 5,
+      "line": 22,
+      "text": "ip_path            = f\"/kaggle/input/notebooks/ravi20076/playgrounds6e8-data-v1\""
+     },
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-imports-v1/mypp.py",
+      "line": 14,
+      "text": "self.train             = pd.read_csv(os.path.join(CFG.ip_path,\"train.csv\"), index_col = 'id')"
+     },
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.log",
+      "line": 116,
+      "text": ",{\"stream_name\":\"stdout\",\"time\":42.936114767,\"data\":\"---\\u003e Shapes = (691369, 14) (296302, 13)\\n\"}"
+     }
+    ],
+    "note": "nb_orig=0으로 원자료 추가를 끄고, mypp.py가 작성자 자료 노트북 경로의 train.csv·test.csv를 읽으며 공개 로그의 형태가 대회 자료와 같다(주의 사항 rehosted_training_data_private_notebook)",
+    "claim": "공식 훈련 자료에서 직접 학습했다"
+   },
+   "single_model_lineage": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+      "cell": 20,
+      "line": 5,
+      "text": "pd.DataFrame(OOF_Preds).to_parquet(f\"OOF_Preds_{CFG.model_label}{CFG.model_id}.parquet\")"
+     }
+    ],
+    "note": "Mdl_Master의 파이프라인 하나씩 별도 열로 저장. L2 스택 정의는 저장 열에 섞이지 않는다",
+    "claim": "하나의 모델 계보이며 서로 다른 모델이나 설정의 결합이 아니다"
+   },
+   "allowed_aggregation_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-imports-v1/training.py",
+      "line": 151,
+      "text": ").groupby(level = 0).mean().to_numpy()"
+     }
+    ],
+    "note": "시험 예측은 분할별 예측의 평균(groupby(level=0).mean())",
+    "claim": "같은 고정 설정의 여러 시드나 분할 예측 평균만 사용했다"
+   },
+   "target_preprocessing_isolated": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+      "cell": 15,
+      "line": 2,
+      "text": "[(\"TE\", TargetEncoder(random_state = CFG.state), cat_cols)],"
+     },
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+      "cell": 15,
+      "line": 12,
+      "text": "(\"PP\", ct),"
+     },
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+      "cell": 15,
+      "line": 44,
+      "text": "(\"PP\", ct),"
+     },
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+      "cell": 15,
+      "line": 70,
+      "text": "(\"PP\", ct),"
+     }
+    ],
+    "note": "TargetEncoder가 sklearn Pipeline 단계라 각 바깥 학습 부분에서만 적합(교차 적합)",
+    "claim": "목표값 기반 전처리를 각 바깥 학습 부분 안에 격리했다"
+   },
+   "outer_valid_scoring_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_inference",
+    "evidence": [
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-imports-v1/training.py",
+      "line": 115,
+      "text": "model.fit(Xtr, ytr, eval_set = [(Xdev, ydev)], **fit_params)"
+     },
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-imports-v1/training.py",
+      "line": 116,
+      "text": "except:"
+     },
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-imports-v1/training.py",
+      "line": 117,
+      "text": "model.fit(Xtr, ytr, **fit_params)"
+     }
+    ],
+    "note": "ModelTrainer가 Pipeline.fit에 최상위 eval_set을 넘기면 sklearn이 단계 접두사 없는 인자를 거부해 예외가 나고, except 경로에서 검증 자료 없이 model.fit(Xtr, ytr)를 다시 호출한다. 검증은 채점 전용",
+    "claim": "바깥 검증 자료와 목표값은 채점에만 사용했다"
+   },
+   "training_point_fixed": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+      "cell": 15,
+      "line": 16,
+      "text": "'n_estimators'          : 3000 if CFG.test_req == False else CFG.test_iter,"
+     }
+    ],
+    "note": "XGBoost 3,000그루 고정, early_stopping_rounds 없음",
+    "claim": "학습 횟수나 가중치를 바깥 검증 결과 전에 고정했다"
+   },
+   "public_config_selection_isolated": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+      "cell": 5,
+      "line": 3,
+      "text": "class CFG:"
+     }
+    ],
+    "note": "CFG와 Mdl_Master 설정이 정적으로 고정",
+    "claim": "공개 소스 안의 설정 선택에 바깥 검증 결과를 사용하지 않았다"
+   },
+   "no_external_prediction_retraining": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스에 외부 예측 입력이 없다. /kaggle/input/notebooks 경로는 보조 코드 exec 전용",
+    "claim": "외부 예측을 입력으로 다시 학습하지 않았다"
+   },
+   "no_pseudo_label_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "의사 목표값을 학습에 사용하지 않았다"
+   },
+   "no_blend_distillation": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "결합 예측을 교사로 삼아 증류하지 않았다"
+   }
+  },
+  "lineage_evidence": [],
+  "absence_scan": {
+   "patterns": {
+    "pseudo": "pseudo",
+    "external_input": "/kaggle/input/(datasets|notebooks)/",
+    "distill": "distill|teacher"
+   },
+   "hits": [
+    {
+     "pattern": "external_input",
+     "cell": 3,
+     "line": 4,
+     "text": "-r /kaggle/input/notebooks/ravi20076/playgrounds6e8-public-imports-v1/req_kaggle.txt",
+     "explanation": "보조 코드(pip 요구사항, myutils.py, training.py, mypp.py exec), 예측 입력 아님"
+    },
+    {
+     "pattern": "external_input",
+     "cell": 3,
+     "line": 9,
+     "text": "exec( open(f\"/kaggle/input/notebooks/ravi20076/playgrounds{season}e{episode}-public-imports-v1/myimports.py\", \"r\").read() )",
+     "explanation": "보조 코드(pip 요구사항, myutils.py, training.py, mypp.py exec), 예측 입력 아님"
+    },
+    {
+     "pattern": "external_input",
+     "cell": 3,
+     "line": 10,
+     "text": "exec( open(f\"/kaggle/input/notebooks/ravi20076/playgrounds{season}e{episode}-public-imports-v1/myutils.py\", \"r\").read() )",
+     "explanation": "보조 코드(pip 요구사항, myutils.py, training.py, mypp.py exec), 예측 입력 아님"
+    },
+    {
+     "pattern": "external_input",
+     "cell": 3,
+     "line": 11,
+     "text": "exec( open(f\"/kaggle/input/notebooks/ravi20076/playgrounds{season}e{episode}-public-imports-v1/training.py\", \"r\").read() )",
+     "explanation": "보조 코드(pip 요구사항, myutils.py, training.py, mypp.py exec), 예측 입력 아님"
+    },
+    {
+     "pattern": "external_input",
+     "cell": 3,
+     "line": 12,
+     "text": "exec( open(f\"/kaggle/input/notebooks/ravi20076/playgrounds{season}e{episode}-public-imports-v1/mypp.py\", \"r\").read() )",
+     "explanation": "보조 코드(pip 요구사항, myutils.py, training.py, mypp.py exec), 예측 입력 아님"
+    },
+    {
+     "pattern": "external_input",
+     "cell": 5,
+     "line": 22,
+     "text": "ip_path            = f\"/kaggle/input/notebooks/ravi20076/playgrounds6e8-data-v1\"",
+     "explanation": "작성자 자료 노트북의 train/test/sample_submission 경로, 예측 입력 아님(주의 사항 rehosted_training_data_private_notebook)"
+    },
+    {
+     "pattern": "external_input",
+     "cell": 5,
+     "line": 24,
+     "text": "orig_path          = f\"/kaggle/input/notebooks/ravi20076/playgrounds6e8-data-v1/original.csv\"",
+     "explanation": "작성자 자료 노트북의 train/test/sample_submission 경로, 예측 입력 아님(주의 사항 rehosted_training_data_private_notebook)"
+    }
+   ],
+   "unexplained": 0
+  },
+  "prepublication_search_history": "알 수 없음"
+ },
+ "license": {
+  "source_code": {
+   "license": "Apache-2.0",
+   "status": "confirmed",
+   "evidence": "https://www.kaggle.com/datasets/kaggle/meta-kaggle-code",
+   "attribution_required": true,
+   "attribution": "Ravi Ramakrishnan (ravi20076), PlaygroundS6E8 public baseline v1, https://www.kaggle.com/code/ravi20076/playgrounds6e8-public-baseline-v1?scriptVersionId=339444387"
+  },
+  "output_arrays": {
+   "license": "unknown",
+   "status": "unmarked",
+   "use_scope": "확장 스택 제출의 결합 입력으로만 사용",
+   "redistribution": false,
+   "repository_commit": false
+  }
+ },
+ "audit": {
+  "audit_state": "감사 완료",
+  "transition_log": [
+   {
+    "state": "발견됨",
+    "at": "2026-08-28T03:02:18Z",
+    "by": "fetch"
+   },
+   {
+    "state": "공개 판본 고정됨",
+    "at": "2026-08-28T03:02:21Z",
+    "by": "fetch"
+   },
+   {
+    "state": "감사 완료",
+    "at": "2026-08-28T03:03:42Z",
+    "by": "audit"
+   }
+  ],
+  "eligibility": "자격 있음",
+  "exclusion_reason_codes": [],
+  "insufficiency_reasons": [],
+  "caveat_codes": [
+   "license_unknown_use_limited",
+   "float32_storage",
+   "rehosted_training_data_private_notebook",
+   "near_duplicate_cluster"
+  ],
+  "caveats": [
+   {
+    "code": "license_unknown_use_limited",
+    "detail": "노트북 출력물(소스는 Apache-2.0, 출력 배열은 사용 조건 표시 없음, 결합 입력 전용)"
+   },
+   {
+    "code": "float32_storage",
+    "detail": "출력 parquet가 float32 정밀도로 저장됨"
+   },
+   {
+    "code": "rehosted_training_data_private_notebook",
+    "detail": "train.csv·test.csv·sample_submission.csv를 작성자의 비공개 자료 노트북 playgrounds6e8-data-v1에서 읽는다(mypp.py). 그 노트북은 공개되지 않아 바이트를 대조할 수 없고, 공개 실행 로그의 형태 (691369, 14)·(296302, 13)(Source 열 포함)와 OOF의 id 순서·재채점 AUC 일치로만 공식 자료임을 확인했다. 원자료 추가는 nb_orig=0으로 꺼져 있다."
+   },
+   {
+    "code": "near_duplicate_cluster",
+    "detail": "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C와 스피어만 0.998971(이번 측정), 자격에는 영향 없음"
+   }
+  ],
+  "near_duplicate": {
+   "spearman_max": 0.9989714224598409,
+   "closest": "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C",
+   "threshold": 0.998,
+   "population": "판본 2 통과 400개 + 판본 3 후보 19개"
+  },
+  "auditor": "tmheo (Claude Code 세션이 도구를 실행)",
+  "audited_at": "2026-08-28T03:03:42Z",
+  "audit_tool": {
+   "script": "scripts/build_external_member_ledger_v3.py",
+   "commit": "faed3a3877a73796b7047eda73b2c20ef7f7902a"
+  },
+  "evidence_manifest_sha256": "28286be88c01237d8c3b6e69aaa51db2eb22a291594cade922d5d04fd477b69a",
+  "guarantees": [
+   "기록한 고정 공개 판본의 소스와 연결 산출물에서 확인할 수 있는 학습 계보",
+   "OOF 691,369행과 시험 예측 296,302행의 유한값, 원래 행 순서와 정규화 예측 쌍 해시",
+   "고정 5분할 명세와 소스 안의 분할 코드 위치"
+  ],
+  "non_guarantees": [
+   "공개 이전의 비공개 설정 탐색 이력",
+   "작성자가 공개하지 않은 코드와 숨은 외부 자료 사용",
+   "미래 공개 판본",
+   "출력 배열에 표시되지 않은 권리 범위(사용 한정을 넘는 사용)"
+  ],
+  "notes": []
+ },
+ "record_sha256": "74491ebbcba2ccfa27dcc4f13a538721ed8e8f201fe68d93e3107af20730193d"
+}

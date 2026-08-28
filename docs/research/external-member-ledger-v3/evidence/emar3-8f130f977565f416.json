@@ -1,0 +1,202 @@
+{
+ "issue": 484,
+ "root": "data/external/ext484",
+ "kernel_ref": "ravi20076/playgrounds6e8-public-baseline-v1",
+ "script_version_id": 339444387,
+ "files": [
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/.download.log",
+   "role": "source_metadata",
+   "bytes": 2564,
+   "retrieved_at": "2026-08-28T03:02:18Z"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/Mdl_Preds_MLV1_1.parquet",
+   "role": "source_output",
+   "bytes": 4547175,
+   "retrieved_at": "2026-08-28T03:02:33Z",
+   "sha256": "3ded242bf1efefc5acbeeeb340a0fb62fe116633d36d1a5fb62b24c38befdd8c"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/OOF_Preds_MLV1_1.parquet",
+   "role": "source_output",
+   "bytes": 9539256,
+   "retrieved_at": "2026-08-28T03:02:33Z",
+   "sha256": "474c9ae81249bfaf026dd8e716ea79a4e4514f8f1e1d0cbd4fece758867879d9"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/catboost_info/catboost_training.json",
+   "role": "source_output",
+   "bytes": 58717,
+   "retrieved_at": "2026-08-28T03:02:33Z",
+   "sha256": "02f17f8e856227d99030cd33ba3fcce675ca96a677a640ea207836d266e93615"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/catboost_info/learn/events.out.tfevents",
+   "role": "source_output",
+   "bytes": 33027,
+   "retrieved_at": "2026-08-28T03:02:33Z",
+   "sha256": "4710d6357c816f439ee0773217c9da0cd948d3e40d6581c26c96564d0d7cf609"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/catboost_info/learn_error.tsv",
+   "role": "source_output",
+   "bytes": 10534,
+   "retrieved_at": "2026-08-28T03:02:33Z",
+   "sha256": "a9cb0868c0509c93597a9d183e1083f39bdcff69ce52087819ae774402c499a6"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/catboost_info/time_left.tsv",
+   "role": "source_output",
+   "bytes": 48163,
+   "retrieved_at": "2026-08-28T03:02:33Z",
+   "sha256": "3ff746cd1cf920d3b7335bce2685a442b8780ac9c048802148e7f300357ef83e"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/files.json",
+   "role": "source_metadata",
+   "bytes": 950,
+   "retrieved_at": "2026-08-28T03:02:18Z",
+   "sha256": "573dcb4cf4b409e57a8d0e9df4add4922ecb7592c16ea2e71400e9fedd71b488"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/kernel-metadata.json",
+   "role": "source_metadata",
+   "bytes": 720,
+   "retrieved_at": "2026-08-28T03:02:21Z",
+   "sha256": "f4c213c23676d7406276233185d9be84db0fb54482485883ebbf2a2ee077e556"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/normalized/oof_XGB1C.npy",
+   "role": "normalized",
+   "bytes": 5531080,
+   "retrieved_at": null,
+   "sha256": "1b6af488ade8689df875332d64452ae54bc287d783b0251180a0076ada15dc55"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/normalized/test_XGB1C.npy",
+   "role": "normalized",
+   "bytes": 2370544,
+   "retrieved_at": null,
+   "sha256": "3ae8a6fc23d6592258a861b4be8172a7385c5d43742db76b7ca7dd5f982b280f"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/page-version.json",
+   "role": "source_metadata",
+   "bytes": 191,
+   "retrieved_at": "2026-08-28T03:02:18Z",
+   "sha256": "b84f39079a444c1d14279fcda9bdac2beb36ee9f9f42414ca1bbea237426b29c"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.ipynb",
+   "role": "source_notebook",
+   "bytes": 25387,
+   "retrieved_at": "2026-08-28T03:02:21Z",
+   "sha256": "186d26a1aba7549fd182ed89322daff43f6083d8f9275175215c7c0207d31c30"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/playgrounds6e8-public-baseline-v1.log",
+   "role": "source_output",
+   "bytes": 30454,
+   "retrieved_at": "2026-08-28T03:02:33Z",
+   "sha256": "efde69b6fad83592bae88f37a4a4f5a37fbdf0318a0fd065e9523420c9e2a925"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/submission.csv",
+   "role": "source_output",
+   "bytes": 5180653,
+   "retrieved_at": "2026-08-28T03:02:33Z",
+   "sha256": "075b44776974aef76490946d9cc549812d2b9f307c23f94be64d7819845ddb2e"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-baseline-v1/xgb_optimize.log",
+   "role": "source_output",
+   "bytes": 0,
+   "retrieved_at": "2026-08-28T03:02:33Z",
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-imports-v1/.download.log",
+   "role": "dependency_metadata",
+   "bytes": 2249,
+   "retrieved_at": "2026-08-28T03:02:36Z"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-imports-v1/files.json",
+   "role": "dependency_metadata",
+   "bytes": 674,
+   "retrieved_at": "2026-08-28T03:02:36Z",
+   "sha256": "ccdda251c2e3b7461ea97458f73644ccb6a44457541bde1cd7f9e23f0bcbb52d"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-imports-v1/kernel-metadata.json",
+   "role": "dependency_metadata",
+   "bytes": 683,
+   "retrieved_at": "2026-08-28T03:02:39Z",
+   "sha256": "69cb42cd75e9aac5d8eebc171d9c5206e38f4dc042a9fe863059453d582f971c"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-imports-v1/myimports.py",
+   "role": "dependency_output",
+   "bytes": 6929,
+   "retrieved_at": "2026-08-28T03:02:46Z",
+   "sha256": "3f23aea4764124f2306ee035c48f40587f88f5640ca0aeddec3694876a6e1973"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-imports-v1/mypp.py",
+   "role": "dependency_output",
+   "bytes": 8370,
+   "retrieved_at": "2026-08-28T03:02:46Z",
+   "sha256": "f5ab8352cc2c8b3233f07a0c35a833009466a5eb53739ec440c477f47c3fa98b"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-imports-v1/mytunedblender.py",
+   "role": "dependency_output",
+   "bytes": 10255,
+   "retrieved_at": "2026-08-28T03:02:46Z",
+   "sha256": "24d389c74c6e3aa4c14897b89a5898702a919c0712f73c057bc9177ee8acd47f"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-imports-v1/myutils.py",
+   "role": "dependency_output",
+   "bytes": 6302,
+   "retrieved_at": "2026-08-28T03:02:46Z",
+   "sha256": "2a98eef32eca0a035473609fe7f37531f6c463dfed411dd62351a7f5216150fa"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-imports-v1/page-version.json",
+   "role": "dependency_metadata",
+   "bytes": 190,
+   "retrieved_at": "2026-08-28T03:02:36Z",
+   "sha256": "85033f8a58d079680d83726b53bf8afcb3f1c5c997ea7a834844b7ed849b5562"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-imports-v1/playgrounds6e8-public-imports-v1.ipynb",
+   "role": "dependency_notebook",
+   "bytes": 42085,
+   "retrieved_at": "2026-08-28T03:02:39Z",
+   "sha256": "737900653b1433481548e0b25d066dd2a1de78ca0ddd2727ab2ff1412c933df3"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-imports-v1/playgrounds6e8-public-imports-v1.log",
+   "role": "dependency_output",
+   "bytes": 3330,
+   "retrieved_at": "2026-08-28T03:02:46Z",
+   "sha256": "f6197ee95426d8a7aae271273d33656296faea8a8f2db6a1f2167524e68faf1f"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-imports-v1/req_kaggle.txt",
+   "role": "dependency_output",
+   "bytes": 100,
+   "retrieved_at": "2026-08-28T03:02:46Z",
+   "sha256": "42518edd920e4f9dcb4f498266904f3ff8126b8a078fb24a36fae2cd32fa7bc5"
+  },
+  {
+   "path": "ravi20076_playgrounds6e8-public-imports-v1/training.py",
+   "role": "dependency_output",
+   "bytes": 5710,
+   "retrieved_at": "2026-08-28T03:02:46Z",
+   "sha256": "26504708be69444a8df97ac7b0ecc95e788340b88b5cfaef823dfe2c9d8a1405"
+  }
+ ]
+}

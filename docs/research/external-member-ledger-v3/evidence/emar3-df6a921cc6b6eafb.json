@@ -1,0 +1,105 @@
+{
+ "issue": 484,
+ "root": "data/external/ext484",
+ "kernel_ref": "lopure/hdviz-pca-parallel-with-linear-svm",
+ "script_version_id": 342359513,
+ "files": [
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/.download.log",
+   "role": "source_metadata",
+   "bytes": 2313,
+   "retrieved_at": "2026-08-28T03:00:24Z"
+  },
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/files.json",
+   "role": "source_metadata",
+   "bytes": 746,
+   "retrieved_at": "2026-08-28T03:00:24Z",
+   "sha256": "c9e8a99c83dba9162133811d27c6cc6492eaf1ab842a549c8acda432645f13cb"
+  },
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+   "role": "source_notebook",
+   "bytes": 24470,
+   "retrieved_at": "2026-08-28T03:00:27Z",
+   "sha256": "a6cccd0afd1c8d46d88367d0d50d8386768be99af1bd9953800f7c0c79504b96"
+  },
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.log",
+   "role": "source_output",
+   "bytes": 8732,
+   "retrieved_at": "2026-08-28T03:00:48Z",
+   "sha256": "669e96ac755beea9e7b2ffee0cc9d7db5b8845021eae00104f63da28b3a21262"
+  },
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/kernel-metadata.json",
+   "role": "source_metadata",
+   "bytes": 662,
+   "retrieved_at": "2026-08-28T03:00:27Z",
+   "sha256": "9dbb8c0d458f0629e57e22f7fc72a1183f5331e9c7418a7ff037f4bcecd0e4cb"
+  },
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/normalized/oof_linear_svm.npy",
+   "role": "normalized",
+   "bytes": 5531080,
+   "retrieved_at": null,
+   "sha256": "6c55dc9b436a28bb6454fd3b9690329ce273b87f351dd1b86eb4219a8da896ae"
+  },
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/normalized/test_linear_svm.npy",
+   "role": "normalized",
+   "bytes": 2370544,
+   "retrieved_at": null,
+   "sha256": "7f3d7bf465218297fdfd316a76e86fbf08ed64830a0df064b31610d67dc47dd9"
+  },
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/oof_linear_svm_gpu.csv",
+   "role": "source_output",
+   "bytes": 18097211,
+   "retrieved_at": "2026-08-28T03:00:48Z",
+   "sha256": "2ebd3580e65efb2bfbe1efe132916a7bbb161080e9eba22ba059e385b1d64725"
+  },
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/oof_poly_svm_gpu.csv",
+   "role": "source_output",
+   "bytes": 17873627,
+   "retrieved_at": "2026-08-28T03:00:48Z",
+   "sha256": "44f30ad81f2346da6af27333588ba375be8b4b7969dbde42eacd5db818a984e0"
+  },
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/oof_rbf_svm_gpu.csv",
+   "role": "source_output",
+   "bytes": 17956441,
+   "retrieved_at": "2026-08-28T03:00:48Z",
+   "sha256": "9ab7783d0b43ec97094da1f8c1801ba07d32d37b5fdf1bf388f374afa2c8f509"
+  },
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/page-version.json",
+   "role": "source_metadata",
+   "bytes": 189,
+   "retrieved_at": "2026-08-28T03:00:24Z",
+   "sha256": "d66a1be75ce8d16ea3fefa4bcda3925d803ec4e688c7823e86d41d6ad6ac9f08"
+  },
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/submission_linear_svm_gpu.csv",
+   "role": "source_output",
+   "bytes": 7805185,
+   "retrieved_at": "2026-08-28T03:00:48Z",
+   "sha256": "8cc06c356e438f438372d72774414286aa1f22f072d0e884563c1e6a9e715567"
+  },
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/submission_poly_svm_gpu.csv",
+   "role": "source_output",
+   "bytes": 7708982,
+   "retrieved_at": "2026-08-28T03:00:48Z",
+   "sha256": "50eb7bd9ecc922fa7fd9f00d3e0775afd3a5a832a65ad73a28fd22fbd7b0182e"
+  },
+  {
+   "path": "lopure_hdviz-pca-parallel-with-linear-svm/submission_rbf_svm_gpu.csv",
+   "role": "source_output",
+   "bytes": 7743640,
+   "retrieved_at": "2026-08-28T03:00:48Z",
+   "sha256": "fac0b74f354547c4487bed62371be63c26c4611894b618413d76e67decd8b654"
+  }
+ ]
+}

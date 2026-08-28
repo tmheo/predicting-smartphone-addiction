@@ -1,0 +1,415 @@
+{
+ "contract_version": "3.0",
+ "contract_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/482",
+ "ledger_version": 3,
+ "ledger_issue": 484,
+ "audit_record_id": "emar3-42c874da017ea186",
+ "audit_revision": 1,
+ "supersedes_audit_record_id": null,
+ "identity": {
+  "member_id": "nb_lopure:linear_svm",
+  "display_name": "lopure linear SVM",
+  "author": "lopure",
+  "source_kind": "notebook_output",
+  "source_key": "nb_lopure",
+  "model_lineage_id": "lopure/hdviz-pca-parallel-with-linear-svm@342359513:linear_svm",
+  "input_population": "v2_reaudit",
+  "exact_duplicate_of": null
+ },
+ "fixed_source": {
+  "kernel_ref": "lopure/hdviz-pca-parallel-with-linear-svm",
+  "title": "HDViz PCA Parallel with Linear SVM",
+  "url": "https://www.kaggle.com/code/lopure/hdviz-pca-parallel-with-linear-svm?scriptVersionId=342359513",
+  "script_version_id": 342359513,
+  "source_file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+  "source_sha256": "a6cccd0afd1c8d46d88367d0d50d8386768be99af1bd9953800f7c0c79504b96",
+  "pinned_source_sha256": "a6cccd0afd1c8d46d88367d0d50d8386768be99af1bd9953800f7c0c79504b96",
+  "pinned_version_confirmed": true,
+  "version_confirmation": {
+   "method": "kaggle kernels pull로 받은 현재 공개 소스의 SHA-256이 조사 보고서의 고정 판본 SHA-256과 같고, www.kaggle.com 페이지의 현재 scriptVersionId가 고정 판본 식별자와 같다",
+   "page": {
+    "url": "https://www.kaggle.com/code/lopure/hdviz-pca-parallel-with-linear-svm",
+    "fetched_at": "2026-08-28T03:00:24Z",
+    "http_ok": true,
+    "script_version_ids": [
+     342359513
+    ]
+   },
+   "page_matches_pinned": true
+  },
+  "retrieved_at": {
+   "page": "2026-08-28T03:00:24Z",
+   "pull": "2026-08-28T03:00:27Z",
+   "files": "2026-08-28T03:00:30Z",
+   "output": "2026-08-28T03:00:48Z"
+  },
+  "provenance_role": "direct",
+  "dependency_refs": [],
+  "output_listing_file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/files.json"
+ },
+ "predictions": {
+  "oof": {
+   "file": "oof_linear_svm_gpu.csv",
+   "raw_sha256": "2ebd3580e65efb2bfbe1efe132916a7bbb161080e9eba22ba059e385b1d64725",
+   "format": "csv",
+   "column": "Linear_oof_pred",
+   "column_index": null,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    691369,
+    2
+   ],
+   "columns": [
+    "id",
+    "Linear_oof_pred"
+   ],
+   "row_alignment": {
+    "method": "id_column",
+    "detail": "id 열이 기준 순서와 정확히 일치",
+    "id_equal": true
+   },
+   "rows": 691369,
+   "finite": true,
+   "dtype_note": null
+  },
+  "test": {
+   "file": "submission_linear_svm_gpu.csv",
+   "raw_sha256": "8cc06c356e438f438372d72774414286aa1f22f072d0e884563c1e6a9e715567",
+   "format": "csv",
+   "column": "addicted_label",
+   "column_index": null,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    296302,
+    2
+   ],
+   "columns": [
+    "id",
+    "addicted_label"
+   ],
+   "row_alignment": {
+    "method": "id_column",
+    "detail": "id 열이 기준 순서와 정확히 일치",
+    "id_equal": true
+   },
+   "rows": 296302,
+   "finite": true,
+   "dtype_note": null
+  },
+  "load_error": null,
+  "semantics": "decision_function 점수(확률 아님, 순위 결합기 입력)",
+  "normalized": {
+   "oof_sha256": "37544a2ff95135c536104e6e1f8f88b8c3fab5bf3d95a479a947ec4caa50e944",
+   "test_sha256": "cd6cde4c3f16df52fe8392f75289707d0e1d3629761316962a947ddd430f9d34",
+   "pair_sha256": "2900eb8774c78852b7c38d442027f0bbbce8a1e3b949a0ab394bcaa59295adcb",
+   "oof_path": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/normalized/oof_linear_svm.npy",
+   "test_path": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/normalized/test_linear_svm.npy",
+   "dtype": "float64",
+   "layout": "C 연속 1차원, OOF 뒤에 시험 예측을 이어 붙여 쌍 해시 계산"
+  },
+  "rescored_auc": 0.9113453805990479,
+  "declared_auc": null,
+  "declared_auc_source": null,
+  "declared_auc_delta": null,
+  "independent_auc": 0.9113453805990479,
+  "independent_auc_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/dc0cc95/docs/research/external-member-ledger-v2-strict-notebook-reaudit.md",
+  "independent_auc_delta": 0.0,
+  "auc_tolerance": 1e-05,
+  "prior_pair_sha256": "2900eb8774c78852b7c38d442027f0bbbce8a1e3b949a0ab394bcaa59295adcb",
+  "prior_pair_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/96ec136/docs/research/external-member-ledger.json",
+  "prior_pair_match": true,
+  "v2_ledger_member": {
+   "sha256": "2900eb8774c78852b7c38d442027f0bbbce8a1e3b949a0ab394bcaa59295adcb",
+   "auc": 0.9113453805990479,
+   "fold_evidence": "published_code",
+   "caveats": [
+    "license_unknown: 노트북 출력물(소스는 Apache-2.0, 출력물은 라이선스 표시 없음, 사용 한정)"
+   ]
+  }
+ },
+ "fold_contract": {
+  "spec_id": "community-skf5-shuffle-seed42-train-csv-order",
+  "spec": "StratifiedKFold(n_splits=5, shuffle=True, random_state=42), train.csv 원본 행 순서",
+  "fold_vector_sha256": "9571f18b6ba175d426593d5576d4846d30f00e015cae09d657b3a53437bee824",
+  "row_order_condition": "train.csv 원본 행 순서(id 0..691368 오름차순)",
+  "exact_match": true,
+  "status": "확인됨",
+  "evidence_kind": "published_code",
+  "evidence": [
+   {
+    "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+    "cell": 9,
+    "line": 37,
+    "text": "# skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)"
+   },
+   {
+    "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+    "cell": 10,
+    "line": 49,
+    "text": "# skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)"
+   },
+   {
+    "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+    "cell": 11,
+    "line": 39,
+    "text": "skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)"
+   }
+  ],
+  "note": "StratifiedKFold(5, shuffle=True, random_state=42)"
+ },
+ "training_contract": {
+  "claims": {
+   "direct_official_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 3,
+      "line": 1,
+      "text": "train = pd.read_csv(\"/kaggle/input/competitions/playground-series-s6e8/train.csv\")"
+     }
+    ],
+    "note": "공식 대회 train.csv만 사용",
+    "claim": "공식 훈련 자료에서 직접 학습했다"
+   },
+   "single_model_lineage": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 9,
+      "line": 40,
+      "text": "# for model_name, classifier in svm_variants.items():"
+     },
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 10,
+      "line": 52,
+      "text": "# for model_name, classifier in svm_variants.items():"
+     },
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 11,
+      "line": 42,
+      "text": "for model_name, classifier in svm_variants.items():"
+     },
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 11,
+      "line": 101,
+      "text": "oof_filename = f\"oof_{model_name.lower()}_svm_gpu.csv\""
+     }
+    ],
+    "note": "svm_variants의 모형 하나씩 별도 OOF·시험 파일로 저장",
+    "claim": "하나의 모델 계보이며 서로 다른 모델이나 설정의 결합이 아니다"
+   },
+   "allowed_aggregation_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 11,
+      "line": 86,
+      "text": "test_preds += test_fold_preds / skf.n_splits"
+     }
+    ],
+    "note": "시험 예측은 5분할 모형 평균",
+    "claim": "같은 고정 설정의 여러 시드나 분할 예측 평균만 사용했다"
+   },
+   "target_preprocessing_isolated": {
+    "status": "해당 없음",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 11,
+      "line": 57,
+      "text": "X_tr_processed = np.ascontiguousarray(preprocessor.fit_transform(X_tr).astype(np.float32))"
+     },
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 11,
+      "line": 58,
+      "text": "X_va_processed = np.ascontiguousarray(preprocessor.transform(X_va).astype(np.float32))"
+     }
+    ],
+    "note": "목표값 기반 전처리 없음. 대치·표준화·원핫은 바깥 학습 부분에서 fit_transform, 검증·시험은 transform",
+    "claim": "목표값 기반 전처리를 각 바깥 학습 부분 안에 격리했다"
+   },
+   "outer_valid_scoring_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 11,
+      "line": 64,
+      "text": "classifier.fit(X_tr_processed, y_tr_gpu)"
+     },
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 11,
+      "line": 67,
+      "text": "val_fold_preds = classifier.decision_function(X_va_processed)"
+     }
+    ],
+    "note": "fit은 학습 부분만 받고 검증은 decision_function 채점에만 쓴다",
+    "claim": "바깥 검증 자료와 목표값은 채점에만 사용했다"
+   },
+   "training_point_fixed": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 11,
+      "line": 33,
+      "text": "'Linear': LinearSVC(C=1.0),"
+     }
+    ],
+    "note": "cuML SVM 설정 고정, 검증 기반 중단 없음",
+    "claim": "학습 횟수나 가중치를 바깥 검증 결과 전에 고정했다"
+   },
+   "public_config_selection_isolated": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 9,
+      "line": 30,
+      "text": "# svm_variants = {"
+     },
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 10,
+      "line": 42,
+      "text": "# svm_variants = {"
+     },
+     {
+      "file": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/hdviz-pca-parallel-with-linear-svm.ipynb",
+      "cell": 11,
+      "line": 32,
+      "text": "svm_variants = {"
+     }
+    ],
+    "note": "svm_variants 설정이 정적으로 고정",
+    "claim": "공개 소스 안의 설정 선택에 바깥 검증 결과를 사용하지 않았다"
+   },
+   "no_external_prediction_retraining": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "외부 예측을 입력으로 다시 학습하지 않았다"
+   },
+   "no_pseudo_label_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "의사 목표값을 학습에 사용하지 않았다"
+   },
+   "no_blend_distillation": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "결합 예측을 교사로 삼아 증류하지 않았다"
+   }
+  },
+  "lineage_evidence": [],
+  "absence_scan": {
+   "patterns": {
+    "pseudo": "pseudo",
+    "external_input": "/kaggle/input/(datasets|notebooks)/",
+    "distill": "distill|teacher"
+   },
+   "hits": [],
+   "unexplained": 0
+  },
+  "prepublication_search_history": "알 수 없음"
+ },
+ "license": {
+  "source_code": {
+   "license": "Apache-2.0",
+   "status": "confirmed",
+   "evidence": "https://www.kaggle.com/datasets/kaggle/meta-kaggle-code",
+   "attribution_required": true,
+   "attribution": "lopure, HDViz PCA Parallel with Linear SVM, https://www.kaggle.com/code/lopure/hdviz-pca-parallel-with-linear-svm?scriptVersionId=342359513"
+  },
+  "output_arrays": {
+   "license": "unknown",
+   "status": "unmarked",
+   "use_scope": "확장 스택 제출의 결합 입력으로만 사용",
+   "redistribution": false,
+   "repository_commit": false
+  }
+ },
+ "audit": {
+  "audit_state": "감사 완료",
+  "transition_log": [
+   {
+    "state": "발견됨",
+    "at": "2026-08-28T03:00:24Z",
+    "by": "fetch"
+   },
+   {
+    "state": "공개 판본 고정됨",
+    "at": "2026-08-28T03:00:27Z",
+    "by": "fetch"
+   },
+   {
+    "state": "감사 완료",
+    "at": "2026-08-28T03:03:42Z",
+    "by": "audit"
+   }
+  ],
+  "eligibility": "자격 있음",
+  "exclusion_reason_codes": [],
+  "insufficiency_reasons": [],
+  "caveat_codes": [
+   "license_unknown_use_limited",
+   "decision_function_scores"
+  ],
+  "caveats": [
+   {
+    "code": "license_unknown_use_limited",
+    "detail": "노트북 출력물(소스는 Apache-2.0, 출력 배열은 사용 조건 표시 없음, 결합 입력 전용)"
+   },
+   {
+    "code": "decision_function_scores",
+    "detail": "예측값이 확률이 아닌 SVM 결정 함수 점수다"
+   }
+  ],
+  "near_duplicate": {
+   "spearman_max": 0.9785303422536704,
+   "closest": "v2:szymon74:logreg",
+   "threshold": 0.998,
+   "population": "판본 2 통과 400개 + 판본 3 후보 19개"
+  },
+  "auditor": "tmheo (Claude Code 세션이 도구를 실행)",
+  "audited_at": "2026-08-28T03:03:42Z",
+  "audit_tool": {
+   "script": "scripts/build_external_member_ledger_v3.py",
+   "commit": "faed3a3877a73796b7047eda73b2c20ef7f7902a"
+  },
+  "evidence_manifest_sha256": "33100c207933d197f80bfef2d4eaed4c08fd2aac76b21272e1835f12b544dc1d",
+  "guarantees": [
+   "기록한 고정 공개 판본의 소스와 연결 산출물에서 확인할 수 있는 학습 계보",
+   "OOF 691,369행과 시험 예측 296,302행의 유한값, 원래 행 순서와 정규화 예측 쌍 해시",
+   "고정 5분할 명세와 소스 안의 분할 코드 위치"
+  ],
+  "non_guarantees": [
+   "공개 이전의 비공개 설정 탐색 이력",
+   "작성자가 공개하지 않은 코드와 숨은 외부 자료 사용",
+   "미래 공개 판본",
+   "출력 배열에 표시되지 않은 권리 범위(사용 한정을 넘는 사용)"
+  ],
+  "notes": []
+ },
+ "record_sha256": "a968fa07187c874270ddfcaa58e7be885818b5f3c7c52f2fc805c70eae11f73f"
+}

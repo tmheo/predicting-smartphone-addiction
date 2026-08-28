@@ -1,0 +1,98 @@
+{
+ "issue": 484,
+ "root": "data/external/ext484",
+ "kernel_ref": "shamanthakreddymallu/s6e8-baseline",
+ "script_version_id": 345105403,
+ "files": [
+  {
+   "path": "shamanthakreddymallu_s6e8-baseline/.download.log",
+   "role": "source_metadata",
+   "bytes": 2078,
+   "retrieved_at": "2026-08-28T03:00:51Z"
+  },
+  {
+   "path": "shamanthakreddymallu_s6e8-baseline/files.json",
+   "role": "source_metadata",
+   "bytes": 589,
+   "retrieved_at": "2026-08-28T03:00:51Z",
+   "sha256": "fdfc74fc2c1a912c3caa151220d86d445c0941eb6eedc730dcad8a1fd0b93535"
+  },
+  {
+   "path": "shamanthakreddymallu_s6e8-baseline/kernel-metadata.json",
+   "role": "source_metadata",
+   "bytes": 586,
+   "retrieved_at": "2026-08-28T03:00:54Z",
+   "sha256": "4b127dc8320478c4c252dc72d420eaa27e92bac08a9820f265caaf3fc97d7b22"
+  },
+  {
+   "path": "shamanthakreddymallu_s6e8-baseline/normalized/oof_lr.npy",
+   "role": "normalized",
+   "bytes": 5531080,
+   "retrieved_at": null,
+   "sha256": "41ce2986050cc13edb2f29b78822221a16dbe21b140130cf66924381db152caa"
+  },
+  {
+   "path": "shamanthakreddymallu_s6e8-baseline/normalized/test_lr.npy",
+   "role": "normalized",
+   "bytes": 2370544,
+   "retrieved_at": null,
+   "sha256": "b52b70af1c881788bf7f86329cf91090a76c2c03dd663b56e20a4aa704c25104"
+  },
+  {
+   "path": "shamanthakreddymallu_s6e8-baseline/oof_lgb_fe.npy",
+   "role": "source_output",
+   "bytes": 5531080,
+   "retrieved_at": "2026-08-28T03:01:12Z",
+   "sha256": "c7bfb5063ff573dae440da75383fce1c585e68d9a8386cd714c4f4e74bb2db93"
+  },
+  {
+   "path": "shamanthakreddymallu_s6e8-baseline/oof_lr.npy",
+   "role": "source_output",
+   "bytes": 5531080,
+   "retrieved_at": "2026-08-28T03:01:12Z",
+   "sha256": "41ce2986050cc13edb2f29b78822221a16dbe21b140130cf66924381db152caa"
+  },
+  {
+   "path": "shamanthakreddymallu_s6e8-baseline/page-version.json",
+   "role": "source_metadata",
+   "bytes": 182,
+   "retrieved_at": "2026-08-28T03:00:51Z",
+   "sha256": "d39812ab0a20cbd61dae3f461a44f40f94aff5aa7e64b90050ac8454dc7252ae"
+  },
+  {
+   "path": "shamanthakreddymallu_s6e8-baseline/pred_lgb_fe.npy",
+   "role": "source_output",
+   "bytes": 2370544,
+   "retrieved_at": "2026-08-28T03:01:12Z",
+   "sha256": "e9e336af0eebfdc7dfe8bcdbf9a504ff206b5158b70eebed6fd987f3dec8cec8"
+  },
+  {
+   "path": "shamanthakreddymallu_s6e8-baseline/pred_lr.npy",
+   "role": "source_output",
+   "bytes": 2370544,
+   "retrieved_at": "2026-08-28T03:01:12Z",
+   "sha256": "b52b70af1c881788bf7f86329cf91090a76c2c03dd663b56e20a4aa704c25104"
+  },
+  {
+   "path": "shamanthakreddymallu_s6e8-baseline/s6e8-baseline.ipynb",
+   "role": "source_notebook",
+   "bytes": 30073,
+   "retrieved_at": "2026-08-28T03:00:54Z",
+   "sha256": "1647535be4fafd0c8bea4b32e7968fe91bfe3e5a6efd3e147e84e68d07a35aa7"
+  },
+  {
+   "path": "shamanthakreddymallu_s6e8-baseline/s6e8-baseline.log",
+   "role": "source_output",
+   "bytes": 13391,
+   "retrieved_at": "2026-08-28T03:01:12Z",
+   "sha256": "18275374733314fffa516ce0123d225af87ab29e6768f328bad243668273b0f9"
+  },
+  {
+   "path": "shamanthakreddymallu_s6e8-baseline/submission_lgb_fe.csv",
+   "role": "source_output",
+   "bytes": 7758204,
+   "retrieved_at": "2026-08-28T03:01:12Z",
+   "sha256": "59a44bfc2d697f8990e203e45330197c0839d52576b128d8bf0241a735c9e05a"
+  }
+ ]
+}

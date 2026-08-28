@@ -1,0 +1,403 @@
+{
+ "contract_version": "3.0",
+ "contract_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/482",
+ "ledger_version": 3,
+ "ledger_issue": 484,
+ "audit_record_id": "emar3-a3a9f74edd4b2543",
+ "audit_revision": 1,
+ "supersedes_audit_record_id": null,
+ "identity": {
+  "member_id": "beicicc/s6e8-fold-safe-tabnet:tabnet",
+  "display_name": "beicicc Fold-Safe TabNet",
+  "author": "Kun Zhang (beicicc)",
+  "source_kind": "notebook_output",
+  "source_key": "beicicc_tabnet",
+  "model_lineage_id": "beicicc/s6e8-fold-safe-tabnet@339872430:tabnet",
+  "input_population": "census",
+  "exact_duplicate_of": null
+ },
+ "fixed_source": {
+  "kernel_ref": "beicicc/s6e8-fold-safe-tabnet",
+  "title": "S6E8 Fold-Safe TabNet",
+  "url": "https://www.kaggle.com/code/beicicc/s6e8-fold-safe-tabnet?scriptVersionId=339872430",
+  "script_version_id": 339872430,
+  "source_file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+  "source_sha256": "3f97a7351a649a6a583edf3492fe4db190d926ef94778c74db3bba41c8abfeb7",
+  "pinned_source_sha256": "3f97a7351a649a6a583edf3492fe4db190d926ef94778c74db3bba41c8abfeb7",
+  "pinned_version_confirmed": true,
+  "version_confirmation": {
+   "method": "kaggle kernels pull로 받은 현재 공개 소스의 SHA-256이 조사 보고서의 고정 판본 SHA-256과 같고, www.kaggle.com 페이지의 현재 scriptVersionId가 고정 판본 식별자와 같다",
+   "page": {
+    "url": "https://www.kaggle.com/code/beicicc/s6e8-fold-safe-tabnet",
+    "fetched_at": "2026-08-28T03:01:15Z",
+    "http_ok": true,
+    "script_version_ids": [
+     339872430
+    ]
+   },
+   "page_matches_pinned": true
+  },
+  "retrieved_at": {
+   "page": "2026-08-28T03:01:15Z",
+   "pull": "2026-08-28T03:01:19Z",
+   "files": "2026-08-28T03:01:21Z",
+   "output": "2026-08-28T03:01:31Z"
+  },
+  "provenance_role": "direct",
+  "dependency_refs": [],
+  "output_listing_file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/files.json"
+ },
+ "predictions": {
+  "oof": {
+   "file": "tabnet_fold_safe_oof.csv",
+   "raw_sha256": "e93038b7859d5da0f0410e62a177a6965c9c83933e840bf0b79ce3d5b12d7451",
+   "format": "csv",
+   "column": "oof_pred",
+   "column_index": null,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    691369,
+    3
+   ],
+   "columns": [
+    "id",
+    "oof_pred",
+    "addicted_label"
+   ],
+   "row_alignment": {
+    "method": "id_column",
+    "detail": "id 열이 기준 순서와 정확히 일치",
+    "id_equal": true
+   },
+   "embedded_label_equals_ours": true,
+   "rows": 691369,
+   "finite": true,
+   "dtype_note": "float32 저장"
+  },
+  "test": {
+   "file": "tabnet_fold_safe_test.csv",
+   "raw_sha256": "84254c4ea4e0bf27a05b3fcabc4bec906c8be5fd71e6d8e751e458c5138b230d",
+   "format": "csv",
+   "column": "tabnet_fold_safe",
+   "column_index": null,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    296302,
+    2
+   ],
+   "columns": [
+    "id",
+    "tabnet_fold_safe"
+   ],
+   "row_alignment": {
+    "method": "id_column",
+    "detail": "id 열이 기준 순서와 정확히 일치",
+    "id_equal": true
+   },
+   "rows": 296302,
+   "finite": true,
+   "dtype_note": "float32 저장"
+  },
+  "load_error": null,
+  "semantics": "양성 확률(predict_proba[:, 1])",
+  "normalized": {
+   "oof_sha256": "e3cf1629a2f8bde8458697f0d3e7ec20bb4857b4400cef921cb9553f9cdeff3f",
+   "test_sha256": "ffe5fe78ca589cfa5044c8054d3f629a339162499e522fb1a1cc658dca48dbce",
+   "pair_sha256": "b339d0b025bc3989e2e87c0c092b1e11d3ceb7df9ca792bfd9e4b9b645535722",
+   "oof_path": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/normalized/oof_tabnet.npy",
+   "test_path": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/normalized/test_tabnet.npy",
+   "dtype": "float64",
+   "layout": "C 연속 1차원, OOF 뒤에 시험 예측을 이어 붙여 쌍 해시 계산"
+  },
+  "rescored_auc": 0.965656809505733,
+  "declared_auc": 0.965656809505733,
+  "declared_auc_source": "tabnet_fold_safe_manifest.json",
+  "declared_auc_delta": 0.0,
+  "independent_auc": 0.96565681,
+  "independent_auc_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/bff57dc/docs/research/strict-external-member-census-2026-08-28.md",
+  "independent_auc_delta": -4.942670717156261e-10,
+  "auc_tolerance": 1e-05,
+  "prior_pair_sha256": "b339d0b025bc3989e2e87c0c092b1e11d3ceb7df9ca792bfd9e4b9b645535722",
+  "prior_pair_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/bff57dc/docs/research/strict-external-member-census-2026-08-28.md",
+  "prior_pair_match": true,
+  "v2_ledger_member": null
+ },
+ "fold_contract": {
+  "spec_id": "community-skf5-shuffle-seed42-train-csv-order",
+  "spec": "StratifiedKFold(n_splits=5, shuffle=True, random_state=42), train.csv 원본 행 순서",
+  "fold_vector_sha256": "9571f18b6ba175d426593d5576d4846d30f00e015cae09d657b3a53437bee824",
+  "row_order_condition": "train.csv 원본 행 순서(id 0..691368 오름차순)",
+  "exact_match": true,
+  "status": "확인됨",
+  "evidence_kind": "published_code",
+  "evidence": [
+   {
+    "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+    "cell": 5,
+    "line": 22,
+    "text": "SEED = 42"
+   },
+   {
+    "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+    "cell": 5,
+    "line": 23,
+    "text": "N_SPLITS = 5"
+   },
+   {
+    "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+    "cell": 17,
+    "line": 6,
+    "text": "outer = StratifiedKFold(n_splits=N_SPLITS, shuffle=True, random_state=SEED)"
+   }
+  ],
+  "note": "SEED=42, N_SPLITS=5의 바깥 StratifiedKFold. 공개 실행 manifest도 outer_folds {5, shuffle, 42}를 기록"
+ },
+ "training_contract": {
+  "claims": {
+   "direct_official_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+      "cell": 7,
+      "line": 1,
+      "text": "train = pd.read_csv(COMPETITION_DIR / \"train.csv\")"
+     },
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/kernel-metadata.json",
+      "line": 15,
+      "text": "\"dataset_sources\": [],"
+     }
+    ],
+    "note": "공식 대회 train.csv만 읽고 다른 자료 입력이 없다(kernel-metadata.json의 dataset_sources 비어 있음)",
+    "claim": "공식 훈련 자료에서 직접 학습했다"
+   },
+   "single_model_lineage": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+      "cell": 15,
+      "line": 35,
+      "text": "model = TabNetClassifier("
+     }
+    ],
+    "note": "TabNetClassifier 단일 모형",
+    "claim": "하나의 모델 계보이며 서로 다른 모델이나 설정의 결합이 아니다"
+   },
+   "allowed_aggregation_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+      "cell": 15,
+      "line": 68,
+      "text": "test_prediction = model.predict_proba(test_array)[:, 1].astype(np.float32)"
+     }
+    ],
+    "note": "시험 예측은 5분할 모형 평균",
+    "claim": "같은 고정 설정의 여러 시드나 분할 예측 평균만 사용했다"
+   },
+   "target_preprocessing_isolated": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+      "cell": 11,
+      "line": 28,
+      "text": "inner = StratifiedKFold(n_splits=inner_splits, shuffle=True, random_state=inner_seed)"
+     },
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+      "cell": 19,
+      "line": 55,
+      "text": "\"outer_valid_and_test\": \"complete_outer_train_mapping\","
+     }
+    ],
+    "note": "목표 부호화는 바깥 학습 부분 안의 내부 5분할 교차 적합이고 검증·시험은 바깥 학습 전체 대응표를 적용",
+    "claim": "목표값 기반 전처리를 각 바깥 학습 부분 안에 격리했다"
+   },
+   "outer_valid_scoring_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+      "cell": 15,
+      "line": 45,
+      "text": "eval_set=[],"
+     },
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+      "cell": 15,
+      "line": 47,
+      "text": "patience=0,"
+     },
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+      "cell": 15,
+      "line": 74,
+      "text": "\"outer_valid_role\": \"scoring_only\","
+     },
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+      "cell": 19,
+      "line": 65,
+      "text": "\"outer_valid_role\": \"scoring_only\","
+     }
+    ],
+    "note": "fit은 eval_set=[], patience=0으로 실행되고 검증은 채점 전용",
+    "claim": "바깥 검증 자료와 목표값은 채점에만 사용했다"
+   },
+   "training_point_fixed": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+      "cell": 15,
+      "line": 50,
+      "text": "max_epochs=FIXED_EPOCHS,"
+     },
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+      "cell": 15,
+      "line": 53,
+      "text": "assert len(model.history[\"loss\"]) == FIXED_EPOCHS"
+     }
+    ],
+    "note": "max_epochs=FIXED_EPOCHS(35) 고정, 학습 뒤 세대 수 단언",
+    "claim": "학습 횟수나 가중치를 바깥 검증 결과 전에 고정했다"
+   },
+   "public_config_selection_isolated": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/s6e8-fold-safe-tabnet.ipynb",
+      "cell": 5,
+      "line": 26,
+      "text": "FIXED_EPOCHS = 35"
+     }
+    ],
+    "note": "TABNET_PARAMS와 FIXED_EPOCHS가 정적으로 고정",
+    "claim": "공개 소스 안의 설정 선택에 바깥 검증 결과를 사용하지 않았다"
+   },
+   "no_external_prediction_retraining": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "외부 예측을 입력으로 다시 학습하지 않았다"
+   },
+   "no_pseudo_label_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "의사 목표값을 학습에 사용하지 않았다"
+   },
+   "no_blend_distillation": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "결합 예측을 교사로 삼아 증류하지 않았다"
+   }
+  },
+  "lineage_evidence": [],
+  "absence_scan": {
+   "patterns": {
+    "pseudo": "pseudo",
+    "external_input": "/kaggle/input/(datasets|notebooks)/",
+    "distill": "distill|teacher"
+   },
+   "hits": [],
+   "unexplained": 0
+  },
+  "prepublication_search_history": "알 수 없음"
+ },
+ "license": {
+  "source_code": {
+   "license": "Apache-2.0",
+   "status": "confirmed",
+   "evidence": "https://www.kaggle.com/datasets/kaggle/meta-kaggle-code",
+   "attribution_required": true,
+   "attribution": "Kun Zhang (beicicc), S6E8 Fold-Safe TabNet, https://www.kaggle.com/code/beicicc/s6e8-fold-safe-tabnet?scriptVersionId=339872430"
+  },
+  "output_arrays": {
+   "license": "unknown",
+   "status": "unmarked",
+   "use_scope": "확장 스택 제출의 결합 입력으로만 사용",
+   "redistribution": false,
+   "repository_commit": false
+  }
+ },
+ "audit": {
+  "audit_state": "감사 완료",
+  "transition_log": [
+   {
+    "state": "발견됨",
+    "at": "2026-08-28T03:01:15Z",
+    "by": "fetch"
+   },
+   {
+    "state": "공개 판본 고정됨",
+    "at": "2026-08-28T03:01:19Z",
+    "by": "fetch"
+   },
+   {
+    "state": "감사 완료",
+    "at": "2026-08-28T03:03:42Z",
+    "by": "audit"
+   }
+  ],
+  "eligibility": "자격 있음",
+  "exclusion_reason_codes": [],
+  "insufficiency_reasons": [],
+  "caveat_codes": [
+   "license_unknown_use_limited",
+   "float32_storage"
+  ],
+  "caveats": [
+   {
+    "code": "license_unknown_use_limited",
+    "detail": "노트북 출력물(소스는 Apache-2.0, 출력 배열은 사용 조건 표시 없음, 결합 입력 전용)"
+   },
+   {
+    "code": "float32_storage",
+    "detail": "출력 CSV가 float32 정밀도로 저장됨"
+   }
+  ],
+  "near_duplicate": {
+   "spearman_max": 0.9815405349603477,
+   "closest": "v2:nb_omid_cat:catboost",
+   "threshold": 0.998,
+   "population": "판본 2 통과 400개 + 판본 3 후보 19개"
+  },
+  "auditor": "tmheo (Claude Code 세션이 도구를 실행)",
+  "audited_at": "2026-08-28T03:03:42Z",
+  "audit_tool": {
+   "script": "scripts/build_external_member_ledger_v3.py",
+   "commit": "faed3a3877a73796b7047eda73b2c20ef7f7902a"
+  },
+  "evidence_manifest_sha256": "8fae7d81937cff763d1749365958c6ca63846ac3ea00ead2ac9a686859fd3dfb",
+  "guarantees": [
+   "기록한 고정 공개 판본의 소스와 연결 산출물에서 확인할 수 있는 학습 계보",
+   "OOF 691,369행과 시험 예측 296,302행의 유한값, 원래 행 순서와 정규화 예측 쌍 해시",
+   "고정 5분할 명세와 소스 안의 분할 코드 위치"
+  ],
+  "non_guarantees": [
+   "공개 이전의 비공개 설정 탐색 이력",
+   "작성자가 공개하지 않은 코드와 숨은 외부 자료 사용",
+   "미래 공개 판본",
+   "출력 배열에 표시되지 않은 권리 범위(사용 한정을 넘는 사용)"
+  ],
+  "notes": []
+ },
+ "record_sha256": "2e79c847a957e417c05b590285f2a86d41ea5008131aef77966fd6e777c44eb4"
+}

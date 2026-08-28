@@ -1,0 +1,460 @@
+{
+ "contract_version": "3.0",
+ "contract_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/482",
+ "ledger_version": 3,
+ "ledger_issue": 484,
+ "audit_record_id": "emar3-0143fa3fbb507d22",
+ "audit_revision": 1,
+ "supersedes_audit_record_id": null,
+ "identity": {
+  "member_id": "nb_zhukov:lgb02",
+  "display_name": "zhukovoleksiy lgb02",
+  "author": "Oleksii Zhukov (zhukovoleksiy)",
+  "source_kind": "notebook_output",
+  "source_key": "nb_zhukov",
+  "model_lineage_id": "zhukovoleksiy/ps6e8-eda-feature-engineering-pipeline@344661133:lgb02",
+  "input_population": "v2_reaudit",
+  "exact_duplicate_of": null
+ },
+ "fixed_source": {
+  "kernel_ref": "zhukovoleksiy/ps6e8-eda-feature-engineering-pipeline",
+  "title": "PS6E8 | EDA + Feature Engineering Pipeline",
+  "url": "https://www.kaggle.com/code/zhukovoleksiy/ps6e8-eda-feature-engineering-pipeline?scriptVersionId=344661133",
+  "script_version_id": 344661133,
+  "source_file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+  "source_sha256": "a1e1f488bb4d68de5c4533df8f3816517d5ca65ceb2bb904f9a389360970d9c5",
+  "pinned_source_sha256": "a1e1f488bb4d68de5c4533df8f3816517d5ca65ceb2bb904f9a389360970d9c5",
+  "pinned_version_confirmed": true,
+  "version_confirmation": {
+   "method": "kaggle kernels pull로 받은 현재 공개 소스의 SHA-256이 조사 보고서의 고정 판본 SHA-256과 같고, www.kaggle.com 페이지의 현재 scriptVersionId가 고정 판본 식별자와 같다",
+   "page": {
+    "url": "https://www.kaggle.com/code/zhukovoleksiy/ps6e8-eda-feature-engineering-pipeline",
+    "fetched_at": "2026-08-28T02:58:33Z",
+    "http_ok": true,
+    "script_version_ids": [
+     344661133
+    ]
+   },
+   "page_matches_pinned": true
+  },
+  "retrieved_at": {
+   "page": "2026-08-28T02:58:33Z",
+   "pull": "2026-08-28T02:58:36Z",
+   "files": "2026-08-28T02:58:38Z",
+   "output": "2026-08-28T02:59:00Z"
+  },
+  "provenance_role": "direct",
+  "dependency_refs": [],
+  "output_listing_file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/files.json"
+ },
+ "predictions": {
+  "oof": {
+   "file": "oof/oof_lexD_lgb02.npy",
+   "raw_sha256": "137f9d932baa333e25a094b4f5be902639dc580b6818ca5a02c40d3804e3f93b",
+   "format": "npy",
+   "column": null,
+   "column_index": null,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    691369
+   ],
+   "row_alignment": {
+    "method": "positional",
+    "detail": "id 열 없음, 저장 코드가 train/test 원본 순서로 배열을 채운다"
+   },
+   "rows": 691369,
+   "finite": true,
+   "dtype_note": null
+  },
+  "test": {
+   "file": "oof/test_lexD_lgb02.npy",
+   "raw_sha256": "fbc4f5e840395990b9f3caa9746a053acb448f37b02c17749df370aedd174c89",
+   "format": "npy",
+   "column": null,
+   "column_index": null,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    296302
+   ],
+   "row_alignment": {
+    "method": "positional",
+    "detail": "id 열 없음, 저장 코드가 train/test 원본 순서로 배열을 채운다"
+   },
+   "rows": 296302,
+   "finite": true,
+   "dtype_note": null
+  },
+  "load_error": null,
+  "semantics": "양성 확률(predict_proba[:, 1])",
+  "normalized": {
+   "oof_sha256": "b76f37824cb6127822b7d783b9e5f158d89fd51c1db8d7c7187d3f50df387029",
+   "test_sha256": "276bf96ed9857f50747a218ad40b3adaa9bbc8ffae553c8bf84b2a1d85487658",
+   "pair_sha256": "966f988ba097508f291356c049903b27e31a560b768238e12172621531419197",
+   "oof_path": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/normalized/oof_lgb02.npy",
+   "test_path": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/normalized/test_lgb02.npy",
+   "dtype": "float64",
+   "layout": "C 연속 1차원, OOF 뒤에 시험 예측을 이어 붙여 쌍 해시 계산"
+  },
+  "rescored_auc": 0.9683553568878653,
+  "declared_auc": 0.9683553568878652,
+  "declared_auc_source": "oof/manifest.csv",
+  "declared_auc_delta": 1.1102230246251565e-16,
+  "independent_auc": 0.9683553568878653,
+  "independent_auc_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/dc0cc95/docs/research/external-member-ledger-v2-strict-notebook-reaudit.md",
+  "independent_auc_delta": 0.0,
+  "auc_tolerance": 1e-05,
+  "prior_pair_sha256": "966f988ba097508f291356c049903b27e31a560b768238e12172621531419197",
+  "prior_pair_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/96ec136/docs/research/external-member-ledger.json",
+  "prior_pair_match": true,
+  "v2_ledger_member": {
+   "sha256": "966f988ba097508f291356c049903b27e31a560b768238e12172621531419197",
+   "auc": 0.9683553568878653,
+   "fold_evidence": "published_code",
+   "caveats": [
+    "license_unknown: 노트북 출력물(소스는 Apache-2.0, 출력물은 라이선스 표시 없음, 사용 한정)"
+   ]
+  }
+ },
+ "fold_contract": {
+  "spec_id": "community-skf5-shuffle-seed42-train-csv-order",
+  "spec": "StratifiedKFold(n_splits=5, shuffle=True, random_state=42), train.csv 원본 행 순서",
+  "fold_vector_sha256": "9571f18b6ba175d426593d5576d4846d30f00e015cae09d657b3a53437bee824",
+  "row_order_condition": "train.csv 원본 행 순서(id 0..691368 오름차순)",
+  "exact_match": true,
+  "status": "확인됨",
+  "evidence_kind": "published_code",
+  "evidence": [
+   {
+    "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+    "cell": 62,
+    "line": 4,
+    "text": "# splitter = Splitter(n_splits=5, seeds=[42])"
+   },
+   {
+    "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+    "cell": 69,
+    "line": 10,
+    "text": "# splitter = Splitter(n_splits=5, seeds=[42])"
+   },
+   {
+    "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+    "cell": 73,
+    "line": 8,
+    "text": "splitter = Splitter(n_splits=5, seeds=[42])"
+   },
+   {
+    "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+    "cell": 57,
+    "line": 14,
+    "text": "skf = StratifiedKFold(n_splits=self.n_splits, shuffle=self.shuffle, random_state=seed)"
+   },
+   {
+    "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+    "cell": 57,
+    "line": 23,
+    "text": "skf = StratifiedKFold(n_splits=self.n_splits, shuffle=self.shuffle, random_state=seed)"
+   },
+   {
+    "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+    "cell": 79,
+    "line": 15,
+    "text": "'folds': 'StratifiedKFold(5, shuffle=True, random_state=42)',"
+   }
+  ],
+  "note": "Splitter(n_splits=5, seeds=[42])가 StratifiedKFold(5, shuffle=True, random_state=42)를 train 원본 순서에 적용하고 manifest.csv에도 같은 분할을 기록한다"
+ },
+ "training_contract": {
+  "claims": {
+   "direct_official_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 4,
+      "line": 1,
+      "text": "train = pd.read_csv('/kaggle/input/competitions/playground-series-s6e8/train.csv')"
+     }
+    ],
+    "note": "공식 대회 train.csv만 읽고 원자료 추가 없음",
+    "claim": "공식 훈련 자료에서 직접 학습했다"
+   },
+   "single_model_lineage": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 59,
+      "line": 39,
+      "text": "m = deepcopy(models[name])"
+     },
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 65,
+      "line": 92,
+      "text": "m = deepcopy(models[name])"
+     },
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 79,
+      "line": 8,
+      "text": "np.save(f'/kaggle/working/oof/oof_lex{VARIANT}_{k}.npy', res['oof'][k].astype(np.float64))"
+     }
+    ],
+    "note": "train_cv_lattice가 모형별로 별도 OOF·시험 배열을 만들고 구성원별 npy로 저장한다. quality_blend 결합은 제출 파일에만 쓰이고 저장 구성원 배열에는 섞이지 않는다.",
+    "claim": "하나의 모델 계보이며 서로 다른 모델이나 설정의 결합이 아니다"
+   },
+   "allowed_aggregation_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 62,
+      "line": 4,
+      "text": "# splitter = Splitter(n_splits=5, seeds=[42])"
+     },
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 69,
+      "line": 10,
+      "text": "# splitter = Splitter(n_splits=5, seeds=[42])"
+     },
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 73,
+      "line": 8,
+      "text": "splitter = Splitter(n_splits=5, seeds=[42])"
+     },
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 65,
+      "line": 96,
+      "text": "tst[name] += m.predict_proba(X_te)[:, 1] / n_fits"
+     }
+    ],
+    "note": "seeds=[42] 단일 시드, 시험 예측은 5분할 모형 평균",
+    "claim": "같은 고정 설정의 여러 시드나 분할 예측 평균만 사용했다"
+   },
+   "target_preprocessing_isolated": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 65,
+      "line": 86,
+      "text": "X_tr = enc.fit_transform(X.iloc[tr_idx], y.iloc[tr_idx])"
+     },
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 65,
+      "line": 87,
+      "text": "X_val = enc.transform(X.iloc[va_idx])[X_tr.columns]"
+     },
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 64,
+      "line": 113,
+      "text": "skf = StratifiedKFold(self.n_inner, shuffle=True, random_state=self.seed)"
+     }
+    ],
+    "note": "LatticeEncoder를 바깥 학습 부분에서 fit_transform(안쪽 교차 적합)하고 검증·시험은 transform만 적용. fit_counts는 train+test 빈도만 세고 목표값을 읽지 않는다.",
+    "claim": "목표값 기반 전처리를 각 바깥 학습 부분 안에 격리했다"
+   },
+   "outer_valid_scoring_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 65,
+      "line": 93,
+      "text": "m.fit(X_tr, y_tr)"
+     },
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 59,
+      "line": 42,
+      "text": "va_pred = m.predict_proba(X_val)[:, 1]"
+     },
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 65,
+      "line": 94,
+      "text": "va_pred = m.predict_proba(X_val)[:, 1]"
+     }
+    ],
+    "note": "train_cv_lattice는 eval_set 없이 m.fit(X_tr, y_tr)만 호출하고 검증은 predict_proba 채점에만 쓴다",
+    "claim": "바깥 검증 자료와 목표값은 채점에만 사용했다"
+   },
+   "training_point_fixed": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 58,
+      "line": 2,
+      "text": "def __init__(self, seed=42, n_estimators=3333, device=\"cpu\"):"
+     },
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 58,
+      "line": 39,
+      "text": "lgb_02 = dict("
+     }
+    ],
+    "note": "LightGBM n_estimators=3333 고정(Classifier 기본값), 조기 종료 없음",
+    "claim": "학습 횟수나 가중치를 바깥 검증 결과 전에 고정했다"
+   },
+   "public_config_selection_isolated": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 75,
+      "line": 1,
+      "text": "VARIANT = 'C'"
+     },
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 75,
+      "line": 8,
+      "text": "cfg = CONFIGS[VARIANT]"
+     }
+    ],
+    "note": "공개 소스는 VARIANT='C'를 정적으로 고르며 바깥 검증 결과로 설정을 고르는 코드가 없다. CONFIGS A~D 사다리는 정의만 있고 실행 판본은 하나만 계산한다.",
+    "claim": "공개 소스 안의 설정 선택에 바깥 검증 결과를 사용하지 않았다"
+   },
+   "no_external_prediction_retraining": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/ps6e8-eda-feature-engineering-pipeline.ipynb",
+      "cell": 80,
+      "line": 2,
+      "text": "print('A vs B lgb02:', np.corrcoef(rankdata(A_lgb02), rankdata(res['oof']['lgb02']))[0,1].round(5))"
+     }
+    ],
+    "note": "구성원 저장(셀 79) 뒤의 셀 80이 작성자 데이터셋의 이전 OOF를 읽지만 순위 상관 비교 출력에만 쓰고 학습에 쓰지 않는다",
+    "claim": "외부 예측을 입력으로 다시 학습하지 않았다"
+   },
+   "no_pseudo_label_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "의사 목표값을 학습에 사용하지 않았다"
+   },
+   "no_blend_distillation": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "결합 예측을 교사로 삼아 증류하지 않았다"
+   }
+  },
+  "lineage_evidence": [],
+  "absence_scan": {
+   "patterns": {
+    "pseudo": "pseudo",
+    "external_input": "/kaggle/input/(datasets|notebooks)/",
+    "distill": "distill|teacher"
+   },
+   "hits": [
+    {
+     "pattern": "external_input",
+     "cell": 80,
+     "line": 1,
+     "text": "A_lgb02 = np.load('/kaggle/input/datasets/zhukovoleksiy/ps6e08-models/oof/oof_lex_lgb02.npy')",
+     "explanation": "저장 뒤 순위 상관 비교 전용(셀 80), 학습 입력 아님"
+    }
+   ],
+   "unexplained": 0
+  },
+  "prepublication_search_history": "알 수 없음"
+ },
+ "license": {
+  "source_code": {
+   "license": "Apache-2.0",
+   "status": "confirmed",
+   "evidence": "https://www.kaggle.com/datasets/kaggle/meta-kaggle-code",
+   "attribution_required": true,
+   "attribution": "Oleksii Zhukov (zhukovoleksiy), PS6E8 | EDA + Feature Engineering Pipeline, https://www.kaggle.com/code/zhukovoleksiy/ps6e8-eda-feature-engineering-pipeline?scriptVersionId=344661133"
+  },
+  "output_arrays": {
+   "license": "unknown",
+   "status": "unmarked",
+   "use_scope": "확장 스택 제출의 결합 입력으로만 사용",
+   "redistribution": false,
+   "repository_commit": false
+  }
+ },
+ "audit": {
+  "audit_state": "감사 완료",
+  "transition_log": [
+   {
+    "state": "발견됨",
+    "at": "2026-08-28T02:58:33Z",
+    "by": "fetch"
+   },
+   {
+    "state": "공개 판본 고정됨",
+    "at": "2026-08-28T02:58:36Z",
+    "by": "fetch"
+   },
+   {
+    "state": "감사 완료",
+    "at": "2026-08-28T03:03:42Z",
+    "by": "audit"
+   }
+  ],
+  "eligibility": "자격 있음",
+  "exclusion_reason_codes": [],
+  "insufficiency_reasons": [],
+  "caveat_codes": [
+   "license_unknown_use_limited",
+   "naming_mismatch_lexD"
+  ],
+  "caveats": [
+   {
+    "code": "license_unknown_use_limited",
+    "detail": "노트북 출력물(소스는 Apache-2.0, 출력 배열은 사용 조건 표시 없음, 결합 입력 전용)"
+   },
+   {
+    "code": "naming_mismatch_lexD",
+    "detail": "소스는 VARIANT='C'(min_count=50)를 계산하고 저장 셀의 VARIANT='D' 이름으로 파일을 쓴다. manifest.csv의 encoder 설명(min_count=50 no-pairs)이 C 설정과 일치하므로 계보 불일치는 아니다."
+   }
+  ],
+  "near_duplicate": {
+   "spearman_max": 0.996561243403222,
+   "closest": "nb_zhukov:xgb_base",
+   "threshold": 0.998,
+   "population": "판본 2 통과 400개 + 판본 3 후보 19개"
+  },
+  "auditor": "tmheo (Claude Code 세션이 도구를 실행)",
+  "audited_at": "2026-08-28T03:03:42Z",
+  "audit_tool": {
+   "script": "scripts/build_external_member_ledger_v3.py",
+   "commit": "faed3a3877a73796b7047eda73b2c20ef7f7902a"
+  },
+  "evidence_manifest_sha256": "2e13982e96796759117f0770436a001d3b5ec1622d324bb5a77b4a0f65a6d658",
+  "guarantees": [
+   "기록한 고정 공개 판본의 소스와 연결 산출물에서 확인할 수 있는 학습 계보",
+   "OOF 691,369행과 시험 예측 296,302행의 유한값, 원래 행 순서와 정규화 예측 쌍 해시",
+   "고정 5분할 명세와 소스 안의 분할 코드 위치"
+  ],
+  "non_guarantees": [
+   "공개 이전의 비공개 설정 탐색 이력",
+   "작성자가 공개하지 않은 코드와 숨은 외부 자료 사용",
+   "미래 공개 판본",
+   "출력 배열에 표시되지 않은 권리 범위(사용 한정을 넘는 사용)"
+  ],
+  "notes": []
+ },
+ "record_sha256": "316bd7ffc8c516b5226da5015c4f6380b5575651fd7593de1579079f76935a6b"
+}

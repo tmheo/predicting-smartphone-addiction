@@ -1,0 +1,368 @@
+{
+ "contract_version": "3.0",
+ "contract_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/482",
+ "ledger_version": 3,
+ "ledger_issue": 484,
+ "audit_record_id": "emar3-acbad29df4fe6235",
+ "audit_revision": 1,
+ "supersedes_audit_record_id": null,
+ "identity": {
+  "member_id": "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+  "display_name": "busyaprime hgb",
+  "author": "busyaprime",
+  "source_kind": "notebook_output",
+  "source_key": "busyaprime",
+  "model_lineage_id": "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task@339485089:hgb",
+  "input_population": "census",
+  "exact_duplicate_of": null
+ },
+ "fixed_source": {
+  "kernel_ref": "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task",
+  "title": "S6E8 tabular baseline that autodetects the task",
+  "url": "https://www.kaggle.com/code/busyaprime/s6e8-tabular-baseline-that-autodetects-the-task?scriptVersionId=339485089",
+  "script_version_id": 339485089,
+  "source_file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+  "source_sha256": "52c509d1b726d2ddeaddd0e07ada8c345a21483c09f0128e0070359552025235",
+  "pinned_source_sha256": "52c509d1b726d2ddeaddd0e07ada8c345a21483c09f0128e0070359552025235",
+  "pinned_version_confirmed": true,
+  "version_confirmation": {
+   "method": "kaggle kernels pull로 받은 현재 공개 소스의 SHA-256이 조사 보고서의 고정 판본 SHA-256과 같고, www.kaggle.com 페이지의 현재 scriptVersionId가 고정 판본 식별자와 같다",
+   "page": {
+    "url": "https://www.kaggle.com/code/busyaprime/s6e8-tabular-baseline-that-autodetects-the-task",
+    "fetched_at": "2026-08-28T03:01:52Z",
+    "http_ok": true,
+    "script_version_ids": [
+     339485089
+    ]
+   },
+   "page_matches_pinned": true
+  },
+  "retrieved_at": {
+   "page": "2026-08-28T03:01:52Z",
+   "pull": "2026-08-28T03:01:55Z",
+   "files": "2026-08-28T03:01:58Z",
+   "output": "2026-08-28T03:02:15Z"
+  },
+  "provenance_role": "direct",
+  "dependency_refs": [],
+  "output_listing_file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/files.json"
+ },
+ "predictions": {
+  "oof": {
+   "file": "oof_hgb.npy",
+   "raw_sha256": "fad2e34d2108497f5f4d91f0dc123a9d44e6e4e424fb29008f3045af8e0898fe",
+   "format": "npy",
+   "column": null,
+   "column_index": 1,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    691369,
+    2
+   ],
+   "row_alignment": {
+    "method": "positional",
+    "detail": "id 열 없음, 저장 코드가 train/test 원본 순서로 배열을 채운다"
+   },
+   "rows": 691369,
+   "finite": true,
+   "dtype_note": null
+  },
+  "test": {
+   "file": "test_hgb.npy",
+   "raw_sha256": "8c16745ba49754a18683e55a3571f0c35fa0b995d4343dec6fa631b4af0129ae",
+   "format": "npy",
+   "column": null,
+   "column_index": 1,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    296302,
+    2
+   ],
+   "row_alignment": {
+    "method": "positional",
+    "detail": "id 열 없음, 저장 코드가 train/test 원본 순서로 배열을 채운다"
+   },
+   "rows": 296302,
+   "finite": true,
+   "dtype_note": null
+  },
+  "load_error": null,
+  "semantics": "양성 확률(predict_proba 2열 행렬의 1열)",
+  "normalized": {
+   "oof_sha256": "ed05f442dc0c8c61140bef6d67404fcda4d65580e9ed0ff76218d14fd97517b0",
+   "test_sha256": "d7f4e3e8adf958e2a4804dd9f0da9a3b236eb7fdb58fab971077cee3956a385e",
+   "pair_sha256": "b7b0afba77e4c3352a3c03b555c5c68fdf5fd9d6c234e4b5b00a402a5f02564a",
+   "oof_path": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/normalized/oof_hgb.npy",
+   "test_path": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/normalized/test_hgb.npy",
+   "dtype": "float64",
+   "layout": "C 연속 1차원, OOF 뒤에 시험 예측을 이어 붙여 쌍 해시 계산"
+  },
+  "rescored_auc": 0.9620483394123205,
+  "declared_auc": null,
+  "declared_auc_source": null,
+  "declared_auc_delta": null,
+  "independent_auc": 0.962048339,
+  "independent_auc_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/bff57dc/docs/research/strict-external-member-census-2026-08-28.md",
+  "independent_auc_delta": 4.1232051106732115e-10,
+  "auc_tolerance": 1e-05,
+  "prior_pair_sha256": "b7b0afba77e4c3352a3c03b555c5c68fdf5fd9d6c234e4b5b00a402a5f02564a",
+  "prior_pair_ref": "https://github.com/tmheo/predicting-smartphone-addiction/blob/bff57dc/docs/research/strict-external-member-census-2026-08-28.md",
+  "prior_pair_match": true,
+  "v2_ledger_member": null
+ },
+ "fold_contract": {
+  "spec_id": "community-skf5-shuffle-seed42-train-csv-order",
+  "spec": "StratifiedKFold(n_splits=5, shuffle=True, random_state=42), train.csv 원본 행 순서",
+  "fold_vector_sha256": "9571f18b6ba175d426593d5576d4846d30f00e015cae09d657b3a53437bee824",
+  "row_order_condition": "train.csv 원본 행 순서(id 0..691368 오름차순)",
+  "exact_match": true,
+  "status": "확인됨",
+  "evidence_kind": "published_code",
+  "evidence": [
+   {
+    "file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+    "cell": 3,
+    "line": 7,
+    "text": "SEED = 42"
+   },
+   {
+    "file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+    "cell": 3,
+    "line": 8,
+    "text": "N_FOLDS = 5"
+   },
+   {
+    "file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+    "cell": 9,
+    "line": 27,
+    "text": "folds = list(StratifiedKFold(N_FOLDS, shuffle=True, random_state=SEED).split(Xtr, y))"
+   }
+  ],
+  "note": "SEED=42, N_FOLDS=5의 StratifiedKFold(shuffle=True)"
+ },
+ "training_contract": {
+  "claims": {
+   "direct_official_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+      "cell": 3,
+      "line": 22,
+      "text": "train = pd.read_csv(find(\"train.csv\")); test = pd.read_csv(find(\"test.csv\"))"
+     },
+     {
+      "file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/kernel-metadata.json",
+      "line": 13,
+      "text": "\"dataset_sources\": [],"
+     }
+    ],
+    "note": "/kaggle/input에서 찾은 대회 train.csv만 읽고 다른 자료 입력이 없다(kernel-metadata.json의 dataset_sources 비어 있음)",
+    "claim": "공식 훈련 자료에서 직접 학습했다"
+   },
+   "single_model_lineage": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+      "cell": 13,
+      "line": 1,
+      "text": "for n in names: np.save(f\"oof_{n}.npy\", oof[n]); np.save(f\"test_{n}.npy\", tst[n])"
+     }
+    ],
+    "note": "oof_of가 모형 종류별로 별도 배열을 만들어 npy로 저장",
+    "claim": "하나의 모델 계보이며 서로 다른 모델이나 설정의 결합이 아니다"
+   },
+   "allowed_aggregation_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+      "cell": 9,
+      "line": 43,
+      "text": "oof[np.ix_(vai, cc)] = m.predict_proba(Xtr.iloc[vai]); tst[:, cc] += m.predict_proba(Xte) / N_FOLDS"
+     }
+    ],
+    "note": "시험 예측은 5분할 모형 평균(분할별 random_state=f는 같은 설정의 시드 변화)",
+    "claim": "같은 고정 설정의 여러 시드나 분할 예측 평균만 사용했다"
+   },
+   "target_preprocessing_isolated": {
+    "status": "해당 없음",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+      "cell": 9,
+      "line": 17,
+      "text": "mm = {v: i for i, v in enumerate(u.unique())}"
+     }
+    ],
+    "note": "목표값 기반 전처리 없음. 범주 정수화는 train·test 범주 합집합만 쓰고 목표값을 읽지 않는다",
+    "claim": "목표값 기반 전처리를 각 바깥 학습 부분 안에 격리했다"
+   },
+   "outer_valid_scoring_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+      "cell": 9,
+      "line": 38,
+      "text": "if kind == \"lgb\": m.fit(Xtr.iloc[tri], y[tri], categorical_feature=CATCOLS)"
+     },
+     {
+      "file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+      "cell": 9,
+      "line": 39,
+      "text": "else: m.fit(Xtr.iloc[tri], y[tri])"
+     }
+    ],
+    "note": "fit은 학습 부분만 받고 검증은 predict_proba 채점에만 쓴다",
+    "claim": "바깥 검증 자료와 목표값은 채점에만 사용했다"
+   },
+   "training_point_fixed": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+      "cell": 3,
+      "line": 9,
+      "text": "FAST = False"
+     },
+     {
+      "file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+      "cell": 3,
+      "line": 15,
+      "text": "N_TREES = {\"lgb\": 200 if FAST else 600, \"hgb\": 150 if FAST else 400, \"xgb\": 150 if FAST else 450}"
+     }
+    ],
+    "note": "FAST=False로 HistGradientBoosting 400회 고정, eval_set·조기 종료 없음",
+    "claim": "학습 횟수나 가중치를 바깥 검증 결과 전에 고정했다"
+   },
+   "public_config_selection_isolated": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/s6e8-tabular-baseline-that-autodetects-the-task.ipynb",
+      "cell": 9,
+      "line": 52,
+      "text": "return C(n_estimators=nt, learning_rate=0.05, num_leaves=63, subsample=0.8, colsample_bytree=0.8,"
+     }
+    ],
+    "note": "모형 설정이 정적으로 고정",
+    "claim": "공개 소스 안의 설정 선택에 바깥 검증 결과를 사용하지 않았다"
+   },
+   "no_external_prediction_retraining": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "외부 예측을 입력으로 다시 학습하지 않았다"
+   },
+   "no_pseudo_label_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "의사 목표값을 학습에 사용하지 않았다"
+   },
+   "no_blend_distillation": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "결합 예측을 교사로 삼아 증류하지 않았다"
+   }
+  },
+  "lineage_evidence": [],
+  "absence_scan": {
+   "patterns": {
+    "pseudo": "pseudo",
+    "external_input": "/kaggle/input/(datasets|notebooks)/",
+    "distill": "distill|teacher"
+   },
+   "hits": [],
+   "unexplained": 0
+  },
+  "prepublication_search_history": "알 수 없음"
+ },
+ "license": {
+  "source_code": {
+   "license": "Apache-2.0",
+   "status": "confirmed",
+   "evidence": "https://www.kaggle.com/datasets/kaggle/meta-kaggle-code",
+   "attribution_required": true,
+   "attribution": "busyaprime, S6E8 tabular baseline that autodetects the task, https://www.kaggle.com/code/busyaprime/s6e8-tabular-baseline-that-autodetects-the-task?scriptVersionId=339485089"
+  },
+  "output_arrays": {
+   "license": "unknown",
+   "status": "unmarked",
+   "use_scope": "확장 스택 제출의 결합 입력으로만 사용",
+   "redistribution": false,
+   "repository_commit": false
+  }
+ },
+ "audit": {
+  "audit_state": "감사 완료",
+  "transition_log": [
+   {
+    "state": "발견됨",
+    "at": "2026-08-28T03:01:52Z",
+    "by": "fetch"
+   },
+   {
+    "state": "공개 판본 고정됨",
+    "at": "2026-08-28T03:01:55Z",
+    "by": "fetch"
+   },
+   {
+    "state": "감사 완료",
+    "at": "2026-08-28T03:03:42Z",
+    "by": "audit"
+   }
+  ],
+  "eligibility": "자격 있음",
+  "exclusion_reason_codes": [],
+  "insufficiency_reasons": [],
+  "caveat_codes": [
+   "license_unknown_use_limited"
+  ],
+  "caveats": [
+   {
+    "code": "license_unknown_use_limited",
+    "detail": "노트북 출력물(소스는 Apache-2.0, 출력 배열은 사용 조건 표시 없음, 결합 입력 전용)"
+   }
+  ],
+  "near_duplicate": {
+   "spearman_max": 0.9973433158047185,
+   "closest": "v2:beicicc:s6e8-fixed900-structural-lgbm-artifacts:raw12",
+   "threshold": 0.998,
+   "population": "판본 2 통과 400개 + 판본 3 후보 19개"
+  },
+  "auditor": "tmheo (Claude Code 세션이 도구를 실행)",
+  "audited_at": "2026-08-28T03:03:42Z",
+  "audit_tool": {
+   "script": "scripts/build_external_member_ledger_v3.py",
+   "commit": "faed3a3877a73796b7047eda73b2c20ef7f7902a"
+  },
+  "evidence_manifest_sha256": "1d6b47b54a05591279f6280793eca99e08ceccbfff9b01f4dfbc770e99b4e373",
+  "guarantees": [
+   "기록한 고정 공개 판본의 소스와 연결 산출물에서 확인할 수 있는 학습 계보",
+   "OOF 691,369행과 시험 예측 296,302행의 유한값, 원래 행 순서와 정규화 예측 쌍 해시",
+   "고정 5분할 명세와 소스 안의 분할 코드 위치"
+  ],
+  "non_guarantees": [
+   "공개 이전의 비공개 설정 탐색 이력",
+   "작성자가 공개하지 않은 코드와 숨은 외부 자료 사용",
+   "미래 공개 판본",
+   "출력 배열에 표시되지 않은 권리 범위(사용 한정을 넘는 사용)"
+  ],
+  "notes": []
+ },
+ "record_sha256": "d959b6729d1a6f93db567a67ae1bef6076d763a9af2823e83af410d5a3ffee2b"
+}
