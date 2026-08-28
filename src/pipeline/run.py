@@ -21,7 +21,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from . import cv, data, initial_score, seed_parallel, tracking
+from . import cv, data, initial_score, seed_reuse, tracking
 from .config import STAGES, load_config
 from .fold_fit_reuse import DEFAULT_ROOT as DEFAULT_FOLD_FIT_REUSE_ROOT
 from .fold_fit_reuse import FoldFitReuseStore, build_runtime_identity
@@ -55,6 +55,13 @@ def main() -> None:
         "--no-fold-fit-reuse",
         action="store_true",
         help="fold-fit 결과 공유를 명시적으로 끄고 항상 계산한다.",
+    )
+    parser.add_argument(
+        "--reuse-seed-run",
+        action="append",
+        default=[],
+        metavar="RUN_ID",
+        help="현재 확정 시드 하나와 조건이 같은 완료 단일 시드 실행을 재사용한다. 여러 번 지정할 수 있다.",
     )
     args = parser.parse_args()
 
@@ -106,6 +113,7 @@ def main() -> None:
                 else str(args.fold_fit_reuse_dir)
             )
         )
+        print(f"재사용 시드 실행: {args.reuse_seed_run or '없음'}")
         return
 
     from .observe import RunObserver
@@ -144,11 +152,31 @@ def main() -> None:
         n_folds = int(train["fold"].max()) + 1
         observer.data_loaded(seed_total=len(cfg.seeds), fold_total=n_folds)
 
-        # 시드 반복: 예측은 평균, metric은 평균 예측 기준으로 다시 계산. (#15)
-        # 시드별 GPU 배정 또는 fold GPU 공유 워커가 있으면 시드를 병렬 실행한다. (#99)
-        results = seed_parallel.run_seeds(
-            cfg, plan, train, test, recorder=observer, recovery=recovery
-        )
+        reused = [
+            seed_reuse.load_reused_seed(
+                cfg, run_id, input_hashes, train, test
+            )
+            for run_id in args.reuse_seed_run
+        ]
+        reused_by_seed = {item.seed: item for item in reused}
+        if len(reused_by_seed) != len(reused):
+            raise seed_reuse.SeedReuseError("같은 시드의 재사용 실행을 두 번 지정했다.")
+        observer.record_seed_reuse([item.provenance for item in reused])
+        for seed, item in sorted(reused_by_seed.items()):
+            for fold in sorted(int(value) for value in train["fold"].unique()):
+                observer.fold_completed(
+                    cfg.seeds.index(seed), fold, item.result.fold_aucs[f"auc_fold_{fold}"]
+                )
+
+        # 재사용하지 않은 시드는 기존 CV 경로를 그대로 순차 실행한다.
+        # 예측은 전체 시드 순서로 다시 모아 평균하고 평균 예측을 재채점한다. (#15)
+        result_by_seed = {seed: item.result for seed, item in reused_by_seed.items()}
+        for seed in cfg.seeds:
+            if seed not in result_by_seed:
+                result_by_seed[seed] = cv.run_cv(
+                    cfg, plan, train, test, seed, recorder=observer, recovery=recovery
+                )
+        results = [result_by_seed[seed] for seed in cfg.seeds]
 
         observer.stage("evaluation")
         # 시드별 OOF AUC는 평균 재채점으로 fold_aucs가 덮이기 전에 확보한다. (ADR 0001)

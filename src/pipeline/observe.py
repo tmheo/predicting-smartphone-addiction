@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import signal
 import socket
@@ -268,6 +269,35 @@ class RunObserver:
     def record_execution_identity(self, identity: dict[str, object]) -> None:
         if self._fold_observability is not None:
             self._fold_observability.record_execution_identity(identity)
+
+    def record_seed_reuse(self, records: list[dict[str, object]]) -> None:
+        """검증을 통과한 단일 시드 재사용 계보를 태그와 산출물로 고정한다."""
+        if not records:
+            return
+        path = self._run_dir / "seed_reuse.json"
+        path.write_text(
+            json.dumps(
+                {"schema_version": 1, "records": records},
+                ensure_ascii=False,
+                allow_nan=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n"
+        )
+        with self._mlflow_lock:
+            self._client.set_tag(
+                self.run_id, "sha256.seed_reuse", tracking.file_sha256(path)
+            )
+            for record in records:
+                seed = int(record["seed"])
+                self._client.set_tag(
+                    self.run_id,
+                    f"reuse.seed_{seed}.source_run_id",
+                    str(record["source_run_id"]),
+                )
+            self._client.log_artifact(self.run_id, str(path))
+        path.unlink()
 
     def record_timing(self, event: dict[str, object]) -> None:
         if self._fold_observability is not None:
