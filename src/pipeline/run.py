@@ -154,7 +154,7 @@ def main() -> None:
 
         reused = [
             seed_reuse.load_reused_seed(
-                cfg, run_id, input_hashes, train, test
+                cfg, run_id, input_hashes, train, test, plan.all_columns()
             )
             for run_id in args.reuse_seed_run
         ]

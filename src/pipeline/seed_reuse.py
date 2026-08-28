@@ -38,6 +38,7 @@ def load_reused_seed(
     input_sha256: dict[str, str],
     train: pd.DataFrame,
     test: pd.DataFrame,
+    feature_names: list[str],
     *,
     store: RunStore | None = None,
 ) -> ReusedSeed:
@@ -130,9 +131,18 @@ def load_reused_seed(
         set(importance["seed"].astype(int)) == {seed},
         "소스 중요도에 다른 시드가 섞였다.",
     )
-    feature_names = sorted(filter(None, meta.params.get("features", "").split(",")))
-    _require(feature_names, "소스 실행에 확정 피처 목록이 없다.")
-    _require(set(importance["feature"]) == set(feature_names), "소스 중요도와 피처 목록이 다르다.")
+    source_feature_names = sorted(
+        filter(None, meta.params.get("features", "").split(","))
+    )
+    _require(source_feature_names, "소스 실행에 확정 피처 목록이 없다.")
+    _require(
+        set(source_feature_names) == set(feature_names),
+        "소스 실행과 현재 피처 계획의 피처 집합이 다르다.",
+    )
+    _require(
+        set(importance["feature"]) == set(feature_names),
+        "소스 중요도와 현재 피처 계획이 다르다.",
+    )
 
     fold_feature_reuse = _entries_artifact(
         store, source_run_id, "fold_feature_reuse.json"
