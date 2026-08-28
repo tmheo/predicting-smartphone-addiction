@@ -1,0 +1,429 @@
+{
+ "schema": "strict-external-selection/2",
+ "candidate_set_id": "ecf-v3-1154a775f8a8",
+ "precommit_sha256": "d634d06e90a570c326f408a9f2a5e88ccb666a56119b118c0d57682bc977a0ee",
+ "rehearsal": false,
+ "outer_folds": [
+  0,
+  1,
+  2,
+  3,
+  4
+ ],
+ "complete": true,
+ "gate": {
+  "delta_required": 2e-05,
+  "folds_required_positive": 5,
+  "comparison": "구성의 봉인 분할 예측 5개를 원래 행 순서로 이어붙인 AUC에서 비교 팔 313의 같은 값을 뺀 차이, 분할별 차이는 같은 봉인 분할 예측끼리",
+  "public_score_used": false
+ },
+ "noise_floor": 5.7e-06,
+ "selection_rules": {
+  "self_check": "시작 조건(비교 팔 자기 검사): 313의 봉인 분할 예측 5개를 이어붙인 AUC와 분할별 AUC가 #455 기준값과 잡음 바닥 5.7e-06 안에서 맞아야 하며, 실패하면 전체가 판정 불가다. 이 봉인 예측이 분할별 비교의 기준이다.",
+  "gate": "313 대비 이어붙인 nested AUC 차이 +2e-05 이상이고 바깥 분할 5곳의 차이가 모두 엄격히 양수인 구성만 통과.",
+  "pick": "통과 구성이 여럿이면 nested 최고. 최고와의 차이가 잡음 바닥 5.7e-06 안이면 그 가운데 구성원 수가 가장 적은 구성, 구성원 수까지 같으면 사다리 순서가 앞선 구성.",
+  "none": "통과 구성이 없으면 현재 두 장(e88f706e + 443b3a71) 유지가 완결된 결론.",
+  "weighted": "가중 OOF AUC는 진단값이며 판정에 쓰지 않는다.",
+  "fixed": "사다리 구성, 선택 규칙, 문턱은 결과 확인 전에 고정하고 결과를 본 뒤 더하거나 빼지 않는다.",
+  "public_score": "공개 점수는 어느 단계에도 쓰지 않는다."
+ },
+ "exact_duplicates": [
+  {
+   "order": 1,
+   "member_id": "nb_zhukov:cat_base",
+   "pair_sha256": "ce0efc575d7b2ba918ed0046d29e1ff2ad22cb2c465412a57c217759d54b4b96",
+   "matches_column": "ext_nb_zhukov:cat_base"
+  },
+  {
+   "order": 2,
+   "member_id": "nb_zhukov:lgb02",
+   "pair_sha256": "966f988ba097508f291356c049903b27e31a560b768238e12172621531419197",
+   "matches_column": "ext_nb_zhukov:lgb02"
+  },
+  {
+   "order": 3,
+   "member_id": "nb_zhukov:xgb_base",
+   "pair_sha256": "2303df4128785ac3f417f0cc3258f04d2e3643a9c3735c53798192228a6732a3",
+   "matches_column": "ext_nb_zhukov:xgb_base"
+  },
+  {
+   "order": 4,
+   "member_id": "nb_reda_lgbm:lgbm",
+   "pair_sha256": "ac29bdd21023f2dc401b4354d3f7900a02d2b1dfdc5aacf0809adc58b21ebe1a",
+   "matches_column": "ext_nb_reda_lgbm:lgbm"
+  },
+  {
+   "order": 5,
+   "member_id": "nb_reda_hgb:hgb",
+   "pair_sha256": "a7a46658f0c4fe1e530881f872610ba2920fd07ac8feecade52df9a4a5fe1739",
+   "matches_column": "ext_nb_reda_hgb:hgb"
+  },
+  {
+   "order": 6,
+   "member_id": "nb_yekenot:trompt",
+   "pair_sha256": "93411f087c5c7e3a7071fa1d63ca2779455c0ab29709cd0ed8ffc092e0b7eb3c",
+   "matches_column": "ext_nb_yekenot:trompt"
+  },
+  {
+   "order": 7,
+   "member_id": "nb_mohan_realmlp:realmlp",
+   "pair_sha256": "5245ad2a78dcb5982153ccbfde5a14fd53eaf6c0ff98faac3ffcae294e7f625d",
+   "matches_column": "ext_nb_mohan_realmlp:realmlp"
+  },
+  {
+   "order": 8,
+   "member_id": "nb_lopure:linear_svm",
+   "pair_sha256": "2900eb8774c78852b7c38d442027f0bbbce8a1e3b949a0ab394bcaa59295adcb",
+   "matches_column": "ext_nb_lopure:linear_svm"
+  },
+  {
+   "order": 9,
+   "member_id": "nb_lopure:poly_svm",
+   "pair_sha256": "953e2da3c591335868bf5d8d665307a0b578c7e153ae6ad448dd8d360711c350",
+   "matches_column": "ext_nb_lopure:poly_svm"
+  },
+  {
+   "order": 10,
+   "member_id": "nb_lopure:rbf_svm",
+   "pair_sha256": "557a0da96cccaa7d336e1b75fbec0bb9049e6e8227924903ae421c13baaa24b2",
+   "matches_column": "ext_nb_lopure:rbf_svm"
+  },
+  {
+   "order": 11,
+   "member_id": "nb_shaman_baseline:lr",
+   "pair_sha256": "e439bd0d7c03aad70bc027fcf66e5fb9036b0f826d13f127ea205a3fd6cb15dc",
+   "matches_column": "ext_nb_shaman_baseline:lr"
+  }
+ ],
+ "ladder_candidate_count": 8,
+ "self_check": {
+  "reference_nested_auc": 0.970350946943525,
+  "baseline_concatenated_auc": 0.970350946943525,
+  "delta": 0.0,
+  "baseline_fold_aucs": {
+   "0": 0.969754284537701,
+   "1": 0.9705148747291037,
+   "2": 0.9703990946138134,
+   "3": 0.9709869070909464,
+   "4": 0.9700995711834858
+  },
+  "baseline_fold_lambdas": {
+   "0": 1.0,
+   "1": 1.0,
+   "2": 1.0,
+   "3": 1.0,
+   "4": 1.0
+  },
+  "fold_deltas_vs_reference": {
+   "0": 0.0,
+   "1": 0.0,
+   "2": 0.0,
+   "3": 0.0,
+   "4": 0.0
+  },
+  "tolerance": 5.7e-06,
+  "passes": true
+ },
+ "comparison_arm_auc": 0.970350946943525,
+ "configs": [
+  {
+   "index": 0,
+   "name": "ext313_strict_all",
+   "kind": "full",
+   "description": "313 + 정확 중복을 뺀 사다리 후보 8개 전부",
+   "member_count": 321,
+   "candidate_member_ids": [
+    "beicicc/s6e8-fold-safe-tabnet:tabnet",
+    "beicicc/s6e8-fold-safe-realmlp:realmlp",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb",
+    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C"
+   ],
+   "removed_member_ids": [],
+   "nested_auc": 0.9703571605997539,
+   "weighted_oof_auc": 0.9712228206035819,
+   "fold_aucs": {
+    "0": 0.9697514751006551,
+    "1": 0.9705078647104871,
+    "2": 0.9704123443583643,
+    "3": 0.9710122584988929,
+    "4": 0.9701018577277615
+   },
+   "fold_lambdas": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   },
+   "delta_vs_313": 6.213656228881703e-06,
+   "delta_minus_gate": -1.3786343771118298e-05,
+   "delta_within_noise_floor": false,
+   "weighted_delta_vs_313_reference": 5.79346377560519e-06,
+   "fold_deltas_vs_313": {
+    "0": -2.8094370458919826e-06,
+    "1": -7.0100186165822365e-06,
+    "2": 1.3249744550969389e-05,
+    "3": 2.5351407946572202e-05,
+    "4": 2.286544275698077e-06
+   },
+   "folds_positive": 3,
+   "passes_gate": false,
+   "elapsed_seconds": 2608.312173459002
+  },
+  {
+   "index": 1,
+   "name": "ablate_source_beicicc",
+   "kind": "ablate_source",
+   "description": "전체 구성에서 출처 `beicicc`의 후보 제외",
+   "member_count": 319,
+   "candidate_member_ids": [
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb",
+    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C"
+   ],
+   "removed_member_ids": [
+    "beicicc/s6e8-fold-safe-tabnet:tabnet",
+    "beicicc/s6e8-fold-safe-realmlp:realmlp"
+   ],
+   "nested_auc": 0.970356628447196,
+   "weighted_oof_auc": 0.9712226567656708,
+   "fold_aucs": {
+    "0": 0.9697636358807156,
+    "1": 0.9705116852201086,
+    "2": 0.9704017388794046,
+    "3": 0.9710005868902063,
+    "4": 0.9701054928054176
+   },
+   "fold_lambdas": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   },
+   "delta_vs_313": 5.68150367097342e-06,
+   "delta_minus_gate": -1.4318496329026582e-05,
+   "delta_within_noise_floor": true,
+   "weighted_delta_vs_313_reference": 5.629625864478349e-06,
+   "fold_deltas_vs_313": {
+    "0": 9.351343014607494e-06,
+    "1": -3.189508995138368e-06,
+    "2": 2.644265591267292e-06,
+    "3": 1.3679799259924685e-05,
+    "4": 5.921621931803678e-06
+   },
+   "folds_positive": 4,
+   "passes_gate": false,
+   "elapsed_seconds": 2572.1776934579975
+  },
+  {
+   "index": 2,
+   "name": "ablate_source_busyaprime",
+   "kind": "ablate_source",
+   "description": "전체 구성에서 출처 `busyaprime`의 후보 제외",
+   "member_count": 318,
+   "candidate_member_ids": [
+    "beicicc/s6e8-fold-safe-tabnet:tabnet",
+    "beicicc/s6e8-fold-safe-realmlp:realmlp",
+    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C"
+   ],
+   "removed_member_ids": [
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb"
+   ],
+   "nested_auc": 0.9703563449910896,
+   "weighted_oof_auc": 0.971222967381604,
+   "fold_aucs": {
+    "0": 0.9697433314628998,
+    "1": 0.9705231289886012,
+    "2": 0.970419847861588,
+    "3": 0.971008884028315,
+    "4": 0.9700865298634942
+   },
+   "fold_lambdas": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   },
+   "delta_vs_313": 5.39804756460871e-06,
+   "delta_minus_gate": -1.4601952435391292e-05,
+   "delta_within_noise_floor": true,
+   "weighted_delta_vs_313_reference": 5.94024179767505e-06,
+   "fold_deltas_vs_313": {
+    "0": -1.095307480114549e-05,
+    "1": 8.254259497464389e-06,
+    "2": 2.075324777461862e-05,
+    "3": 2.1976937368606286e-05,
+    "4": -1.3041319991580202e-05
+   },
+   "folds_positive": 3,
+   "passes_gate": false,
+   "elapsed_seconds": 2573.1373142090015
+  },
+  {
+   "index": 3,
+   "name": "ablate_source_ravi20076",
+   "kind": "ablate_source",
+   "description": "전체 구성에서 출처 `ravi20076`의 후보 제외",
+   "member_count": 318,
+   "candidate_member_ids": [
+    "beicicc/s6e8-fold-safe-tabnet:tabnet",
+    "beicicc/s6e8-fold-safe-realmlp:realmlp",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb"
+   ],
+   "removed_member_ids": [
+    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C"
+   ],
+   "nested_auc": 0.9703482619250928,
+   "weighted_oof_auc": 0.9712145925791761,
+   "fold_aucs": {
+    "0": 0.9697445680921928,
+    "1": 0.9705146253227444,
+    "2": 0.9704018292035794,
+    "3": 0.9709862228092059,
+    "4": 0.9700940616063725
+   },
+   "fold_lambdas": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   },
+   "delta_vs_313": -2.6850184321469683e-06,
+   "delta_minus_gate": -2.268501843214697e-05,
+   "delta_within_noise_floor": true,
+   "weighted_delta_vs_313_reference": -2.4345606302045297e-06,
+   "fold_deltas_vs_313": {
+    "0": -9.71644550817885e-06,
+    "1": -2.494063593427853e-07,
+    "2": 2.7345897660735474e-06,
+    "3": -6.842817404928425e-07,
+    "4": -5.509577113316233e-06
+   },
+   "folds_positive": 1,
+   "passes_gate": false,
+   "elapsed_seconds": 2438.3215202920037
+  },
+  {
+   "index": 4,
+   "name": "ablate_caveat_float32_storage",
+   "kind": "ablate_caveat",
+   "description": "전체 구성에서 주의 사항 부류 `float32_storage`의 후보 제외",
+   "member_count": 316,
+   "candidate_member_ids": [
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb"
+   ],
+   "removed_member_ids": [
+    "beicicc/s6e8-fold-safe-tabnet:tabnet",
+    "beicicc/s6e8-fold-safe-realmlp:realmlp",
+    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C"
+   ],
+   "nested_auc": 0.9703446697557807,
+   "weighted_oof_auc": 0.9712110562829351,
+   "fold_aucs": {
+    "0": 0.9697447083991273,
+    "1": 0.970503333278568,
+    "2": 0.9703962164187578,
+    "3": 0.9709819303811428,
+    "4": 0.9700971577781208
+   },
+   "fold_lambdas": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   },
+   "delta_vs_313": -6.277187744263557e-06,
+   "delta_minus_gate": -2.627718774426356e-05,
+   "delta_within_noise_floor": false,
+   "weighted_delta_vs_313_reference": -5.970856871151398e-06,
+   "fold_deltas_vs_313": {
+    "0": -9.576138573663684e-06,
+    "1": -1.154145053572364e-05,
+    "2": -2.8781950555112346e-06,
+    "3": -4.976709803594659e-06,
+    "4": -2.4134053649982334e-06
+   },
+   "folds_positive": 0,
+   "passes_gate": false,
+   "elapsed_seconds": 2413.329646875005
+  },
+  {
+   "index": 5,
+   "name": "ablate_caveat_near_duplicate_cluster",
+   "kind": "ablate_caveat",
+   "description": "전체 구성에서 주의 사항 부류 `near_duplicate_cluster`의 후보 제외",
+   "member_count": 317,
+   "candidate_member_ids": [
+    "beicicc/s6e8-fold-safe-tabnet:tabnet",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb",
+    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C"
+   ],
+   "removed_member_ids": [
+    "beicicc/s6e8-fold-safe-realmlp:realmlp",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb",
+    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C"
+   ],
+   "nested_auc": 0.9703558525711007,
+   "weighted_oof_auc": 0.9712223252293289,
+   "fold_aucs": {
+    "0": 0.9697519810175221,
+    "1": 0.9705105061851629,
+    "2": 0.9704141437377132,
+    "3": 0.9710061151864039,
+    "4": 0.9700965140849532
+   },
+   "fold_lambdas": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   },
+   "delta_vs_313": 4.905627575713112e-06,
+   "delta_minus_gate": -1.509437242428689e-05,
+   "delta_within_noise_floor": true,
+   "weighted_delta_vs_313_reference": 5.2980895226539815e-06,
+   "fold_deltas_vs_313": {
+    "0": -2.3035201788257353e-06,
+    "1": -4.368543940813652e-06,
+    "2": 1.5049123899824046e-05,
+    "3": 1.9208095457523555e-05,
+    "4": -3.0570985325439892e-06
+   },
+   "folds_positive": 2,
+   "passes_gate": false,
+   "elapsed_seconds": 2442.5023391249997
+  }
+ ],
+ "passing_configs": [],
+ "selection": null,
+ "selected_config": null,
+ "verdict": "미달: 현재 두 장(e88f706e + 443b3a71) 유지",
+ "rows_scored": 691369,
+ "compared_at": "2026-08-28T08:10:16Z"
+}
