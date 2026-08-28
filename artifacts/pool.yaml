@@ -253,22 +253,6 @@ members:
     ensemble_auc_with: 0.9689519956034673
     ensemble_auc_without: 0.9688087354207501
     contribution: 0.00014326018271726415
-- run_id: d107ea874ebe4dbe8094694141a162b6
-  config: exp117_ag25_gbm_r21
-  oof_auc: 0.9687158156369342
-  seeds: 42,43,44
-  entered_at: '2026-08-18'
-  reason: '이슈 197: AutoGluon zeroshot portfolio 2025 GBM _r21 이식판. 3시드 OOF 0.9687158로
-    트리 최고, 최근접 exp074 스피어만 0.99829 초과·성능 우위로 교체 진입'
-  evidence:
-    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
-    champion_oof_auc: 0.9691957618114269
-    floor_margin: 0.009520053825507357
-    nearest_run_id: 446a90bedd2a4d8bafad56f308b2b999
-    nearest_spearman: 0.998294731579965
-    ensemble_auc_with: 0.9688634779244466
-    ensemble_auc_without: 0.9688402384157816
-    contribution: 2.3239508665007236e-05
 - run_id: b47a4184249746cdb1d062aa98364437
   config: exp113_tab_cnn_m0
   oof_auc: 0.9620748339267182
@@ -568,3 +552,24 @@ members:
     contract_version: candidate-pool-v2
     path: artifacts/judgments/issue419-exp183-admission.yaml
     sha256: bf2e78d784e579b8b623632301d6ce46637b7620f9dc712af6abc69da9e98bde
+- run_id: e46d1ca38e0746209e049970d3dd2ab6
+  config: exp208_issue500_ag25_missingness_augmented
+  oof_auc: 0.9688375116147219
+  seeds: 42,43,44
+  entered_at: '2026-08-28'
+  reason: '이슈 503: 일반 포함 nested OOF +0.000021787808, exp117 원자 교체 +0.000019363665,
+    분할 5/5의 경계 기여로 지속 등록'
+  evidence:
+    champion_run_id: 6911a461866b43dc9556553eba6783b7
+    champion_oof_auc: 0.9693676105620948
+    floor_margin: 0.009469901052627128
+    nearest_run_id: d107ea874ebe4dbe8094694141a162b6
+    nearest_spearman: 0.9993256277395354
+    ensemble_auc_with: 0.96913121903866
+    ensemble_auc_without: 0.9691257308037455
+    contribution: 5.488234914419188e-06
+  judgment:
+    judgment_id: issue503-exp208-replacement-exp117
+    contract_version: candidate-pool-v2
+    path: artifacts/judgments/issue503-exp208-replacement-exp117.yaml
+    sha256: c20094a9a8527807873fb0a3d0db4391e9ea2918bb6ec9df74750693acfb92d7

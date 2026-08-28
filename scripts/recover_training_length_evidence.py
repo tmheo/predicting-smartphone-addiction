@@ -192,11 +192,14 @@ RECOVERY: dict[str, MemberRecovery] = {
         "realmlp", "structured", "single"
     ),
     "exp140_realmlp_orig_cdf_diff": MemberRecovery("realmlp", "structured", "single"),
-    # 고정 반복 수 트리 변형(#413·#415·#419)은 실행이 진단 산출물에 관측 학습 길이를
-    # 선언 형태로 직접 남기므로 그 관측을 그대로 읽는다.
+    # 최신 트리 실행은 고정 반복 수나 조기 종료 여부와 관계없이 진단 산출물에 관측
+    # 학습 길이를 선언 형태로 직접 남기므로 그 관측을 그대로 읽는다.
     "exp168_issue413_lgb_no_te_fixed20": MemberRecovery("lightgbm", "declared"),
     "exp197_issue419_lgb_recon_ce_fixed20": MemberRecovery("lightgbm", "declared"),
     "exp183_issue419_cat_exact_fixed10": MemberRecovery("catboost", "declared"),
+    "exp208_issue500_ag25_missingness_augmented": MemberRecovery(
+        "lightgbm", "declared"
+    ),
 }
 
 # 문법 판본 1이 쓰던 재학습 설정 경로. 원 실행 설정과 다른 구성원이 있어 그대로 옮긴다.
