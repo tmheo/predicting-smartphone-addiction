@@ -30,6 +30,11 @@ Kaggle public notebook source is released under the Apache License 2.0.
 When reviewing, adapting, or reusing a public notebook, follow the license and provenance procedure in `docs/agents/kaggle-public-notebook-licensing.md`.
 Verify licenses for input datasets, pretrained models, packages, and external assets separately.
 
+### Strict external candidate freeze and nested selection
+
+외부 후보 동결 명세 생성과 ADR-0005 중첩 선별 판정의 실행 순서, 결과 확인 전에 고정할 항목, 산출물 대응.
+See `docs/agents/strict-external-selection-run.md`.
+
 ### Domain docs
 
 Single-context layout: one `CONTEXT.md` and `docs/adr/` at the repo root.
