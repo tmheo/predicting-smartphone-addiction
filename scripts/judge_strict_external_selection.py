@@ -1,44 +1,43 @@
-"""엄격 외부 후보의 중첩 선별 판정 도구. (#486, ADR-0005)
+"""엄격 외부 후보의 사전 고정 사다리 판정 도구. (#486 → #491, ADR-0006)
 
 외부 후보 동결 명세(`scripts/freeze_external_candidates.py`)를 입력으로, 현재 313개
-확장 구성을 비교 팔로 두고 자체 35개를 필수 시작 구성으로 삼는 후보 절차 팔을
-바깥 분할 5곳에서 각각 선별해 교체 문턱(+0.00002, 5/5 양수)을 판정한다.
+확장 구성(비교 팔) 위에 정확 중복을 뺀 후보를 더한 사다리 구성을 nested OOF 5분할로
+재어 교체 문턱(+0.00002, 바깥 분할 5/5 양수)을 판정한다.
 
 판정은 읽기 전용이다. `artifacts/pool.yaml`과 champion 판정을 건드리지 않고 MLflow
 실행을 만들지 않는다. 산출물은 `run-logs/strict-external-selection/<후보 집합 식별자>/`
-(커밋 제외 경로)에 ADR-0005의 변경 불가 산출물 이름으로 남긴다.
+(커밋 제외 경로)에 ADR-0006의 변경 불가 산출물 이름으로 남긴다.
 
-    precommit.json                  동결 입력·규칙·코드 상태(결과 확인 전에 고정)
-    cache/*.parquet                 자체 35, 비교 팔 313, 후보 OOF 행렬(해시는 precommit에)
-    fold-<k>/selection.json         바깥 분할 k의 선별 기록(모든 이동·승인·명단·중단 상태)
-    fold-<k>/predictions.parquet    후보 절차 팔의 봉인 분할 예측
-    fold-<k>/baseline-predictions.parquet  비교 팔 313의 같은 분할 예측
-    nested-comparison.json          이어붙인 전체 AUC 차이·분할별 차이·문턱 판정
-    selection-stability.json        후보별 분할 선택 수, 분할 명단과 전체 OOF 제안 명단의 차이
-    full-selection.json             절차 통과 뒤에만: 전체 OOF 검색과 실제 제안 명단
-    report.md, manifest.sha256      사람이 읽는 요약과 모든 산출물의 내용 해시
+    precommit.json                          동결 입력·정확 중복·사다리 구성·선택 규칙·코드 상태(결과 확인 전에 고정)
+    cache/*.parquet                         자체 35, 비교 팔 313, 후보 OOF 행렬(해시는 precommit에)
+    fold-<k>/baseline-predictions.parquet   비교 팔 313의 봉인 분할 예측(자기 검사·분할별 비교 기준)
+    fold-<k>/baseline.json                  그 AUC와 λ
+    ladder/<구성>/fold-<k>/predictions.parquet  구성의 봉인 분할 예측
+    ladder/<구성>/nested.json               이어붙인 nested AUC, 가중 OOF AUC(진단), 분할별 AUC·λ
+    ladder-comparison.json                  자기 검사, 구성별 313 대비 차이와 분할 부호, 문턱 판정, 선택 규칙 적용과 제안 구성
+    report.md, manifest.sha256              사람이 읽는 요약과 모든 산출물의 내용 해시
 
 사용법(실행 회차 순서):
     uv run python scripts/judge_strict_external_selection.py precommit --spec <동결 명세>
-    uv run python scripts/judge_strict_external_selection.py run --run-dir <출력 폴더> [--workers 5 --heavy-workers 2 --threads 2]
+    uv run python scripts/judge_strict_external_selection.py run --run-dir <출력 폴더> [--workers 3 --threads 4]
     uv run python scripts/judge_strict_external_selection.py compare --run-dir <출력 폴더>
-    uv run python scripts/judge_strict_external_selection.py full --run-dir <출력 폴더>      # 통과했을 때만
     uv run python scripts/judge_strict_external_selection.py report --run-dir <출력 폴더>
     uv run python scripts/judge_strict_external_selection.py assemble --run-dir <출력 폴더> # 통과 뒤, 사용자 확인 뒤
 
-`run`은 (baseline k, select k) 작업 10개를 하위 프로세스로 돌린다. 이미 산출물이 있는
-작업은 건너뛰므로 중단 뒤 같은 명령으로 이어 달릴 수 있다. 모든 하위 명령은 시작할 때
-precommit의 입력 해시와 코드 상태를 다시 계산해 정확히 같을 때만 진행한다(ADR-0005
-재개 규칙). 하나라도 어긋나면 `판정 불가`로 두고 precommit부터 다시 한다.
+`run`은 `baseline k`(비교 팔 313의 봉인 분할 예측 5개)와 `ladder <구성>`(구성 하나의
+nested 5분할) 작업을 하위 프로세스로 돌린다. 모두 300열대 shrunk 적합이라 동시 상한은
+3이다(#455: 400열대는 5개에서 커널 패닉). 이미 산출물이 있는 작업은 건너뛰므로 중단 뒤
+같은 명령으로 이어 달릴 수 있다. 모든 하위 명령은 시작할 때 precommit의 입력 해시와
+코드 상태를 다시 계산해 정확히 같을 때만 진행한다(재개 규칙). 하나라도 어긋나면
+`판정 불가`로 두고 precommit부터 다시 한다.
 
-후보 절차 팔의 결합기는 등록 전략 `shrunk_rank_logit_logistic`과 같은 계산(rank_logit
-이중 표현 로지스틱, λ는 학습 부분 안의 leave-one-fold-out, 순위 공간 볼록 결합)을
-열 부분집합에 대해 빠르게 반복하도록 순위 특성을 학습 분할 집합별로 캐시한 구현이다.
-봉인 분할 예측에서는 등록 결합기를 그대로 한 번 더 적합해 두 구현의 예측 차이를
-`selection.json`에 남긴다. 비교 팔 313은 등록 결합기로만 예측한다.
+비교 팔과 사다리 구성은 모두 등록 결합기 `shrunk_rank_logit_logistic`을
+`pipeline.ensemble.evaluate_nested`와 같은 분할 순서·행 순서로 적합한다. 등록 결합기는
+학습 행 순서에 민감하므로(#486 예행, 행 순서만으로 7.96e-04 차이) 원래 행 순서를 지킨다.
 
-예행(자체 35개만, 합성 후보)은 `rehearsal-index`로 판본 3 모양의 합성 색인을 만들고
-동결 생성기로 예행 명세를 만든 뒤 위 순서를 `--folds 0`으로 돌린다.
+ADR-0005의 정확 검색(`adr0005-select`, `adr0005-compare`, `adr0005-full`)과 빠른 결합기
+`FastShrunk`, `Search`는 계약이 되살아날 때를 위해 보존하며 사다리 판정에서는 쓰지 않는다.
+예행(자체 35개만, 합성 후보)은 `rehearsal-index`로 판본 3 모양의 합성 색인을 만든다.
 """
 
 from __future__ import annotations
@@ -72,13 +71,19 @@ import judge_extended_stack as ladder
 
 from pipeline import ensemble
 from pipeline.data import ID, TARGET, TRAIN_PATH, file_sha256, labels
-from pipeline.judgment import DUPLICATE_SPEARMAN, FOLDS_PATH
+from pipeline.judgment import (
+    DUPLICATE_SPEARMAN,
+    FOLDS_PATH,
+    missingness_reweighting,
+    weighted_oof_auc,
+)
 from pipeline.ledger import POOL_PATH, Pool
 from pipeline.pool_audit import prediction_array_sha256
 from pipeline.runs import MlflowRunStore
 
-ISSUE = 486
-SCHEMA = "strict-external-selection/1"
+ISSUE = 491
+SCHEMA = "strict-external-selection/2"
+CONTRACT_ADR_PATH = Path("docs/adr/0006-strict-external-candidate-ladder.md")
 STRATEGY = "shrunk_rank_logit_logistic"
 OUT_ROOT = Path("run-logs/strict-external-selection")
 COMPARISON_MANIFEST_PATH = Path("docs/research/extended-stack-submission-2-manifest.json")
@@ -101,7 +106,36 @@ META_MAX_ITER = 1000
 N_TRAIN = 691369
 N_TEST = 296302
 ALL_FOLDS = (0, 1, 2, 3, 4)
+MISSINGNESS_TEST_PATH = ensemble.MISSINGNESS_TEST_PATH
 
+FULL_CONFIG = "ext313_strict_all"
+LADDER_DIR = "ladder"
+CONFIG_NAME_PATTERN = re.compile(r"[A-Za-z0-9_.:-]+")
+CONCAT_AUC_TOLERANCE = 1e-12  # nested.json의 이어붙인 AUC와 parquet 재계산의 허용 차이
+
+LADDER_RULES = {
+    "comparison_arm": "비교 팔은 현재 313개 확장 구성이며 바꾸지 않는다.",
+    "exact_duplicate": "예측 쌍 SHA-256(float64 정규화 OOF·시험 배열)이 313 구성원 하나와 같은 후보는 정확 중복이며 사다리 후보에서 자동으로 빠진다.",
+    "full": f"`{FULL_CONFIG}`: 313 + 정확 중복을 뺀 사다리 후보 전부.",
+    "ablate_source": "`ablate_source_<출처>`: 전체 구성에서 출처(고정 공개 판본의 작성자) 하나의 후보를 모두 뺀 구성을 출처마다 하나(동결 순서).",
+    "ablate_caveat": "`ablate_caveat_<부류>`: 전체 구성에서 주의 사항 부류 하나를 가진 후보를 모두 뺀 구성을 부류마다 하나(동결 순서). 사다리 후보 전원이 공통으로 가진 부류는 절제하면 313과 같아지므로 두지 않는다.",
+    "dedupe": "구성원 집합이 앞선 구성과 같은 구성은 하나만 남긴다.",
+    "no_single_add": "후보 하나씩 더한 구성은 두지 않는다.",
+    "column_order": "구성원 열 순서는 313 manifest 순서 뒤 동결 명세 순서다.",
+    "near_duplicate": f"스피어만 {DUPLICATE_SPEARMAN} 이상 쌍(자체끼리, 313끼리, 후보와 313 사이, 후보끼리)은 열린 4분할의 진단값으로만 기록하고 제외하지 않는다.",
+    "empty": "정확 중복을 뺀 사다리 후보가 없으면 사다리를 실행하지 않고 현재 두 장 유지를 완결된 결론으로 기록한다.",
+}
+SELECTION_RULES = {
+    "self_check": f"시작 조건(비교 팔 자기 검사): 313의 봉인 분할 예측 5개를 이어붙인 AUC와 분할별 AUC가 #455 기준값과 잡음 바닥 {NOISE_FLOOR} 안에서 맞아야 하며, 실패하면 전체가 판정 불가다. 이 봉인 예측이 분할별 비교의 기준이다.",
+    "gate": f"313 대비 이어붙인 nested AUC 차이 +{GATE_DELTA} 이상이고 바깥 분할 5곳의 차이가 모두 엄격히 양수인 구성만 통과.",
+    "pick": f"통과 구성이 여럿이면 nested 최고. 최고와의 차이가 잡음 바닥 {NOISE_FLOOR} 안이면 그 가운데 구성원 수가 가장 적은 구성, 구성원 수까지 같으면 사다리 순서가 앞선 구성.",
+    "none": "통과 구성이 없으면 현재 두 장(e88f706e + 443b3a71) 유지가 완결된 결론.",
+    "weighted": "가중 OOF AUC는 진단값이며 판정에 쓰지 않는다.",
+    "fixed": "사다리 구성, 선택 규칙, 문턱은 결과 확인 전에 고정하고 결과를 본 뒤 더하거나 빼지 않는다.",
+    "public_score": "공개 점수는 어느 단계에도 쓰지 않는다.",
+}
+
+# ADR-0005 정확 검색 규칙(보존). 사다리 판정에서는 쓰지 않는다.
 SEARCH_RULES = {
     "start": "자체 35개만 담은 필수 시작 구성. 자체 구성원은 제거·교체하지 않는다.",
     "score": "열린 분할 안에서 한 분할씩 빼고 고정 결합기를 맞춰 예측을 이어붙인 AUC(검색 풀 점수).",
@@ -198,11 +232,17 @@ def load_own(fold_of: pd.Series) -> tuple[pd.DataFrame, list[dict]]:
 
 
 def load_comparison_arm(own: pd.DataFrame, fold_of: pd.Series, y: pd.Series) -> tuple[pd.DataFrame, list[dict]]:
-    """#457 manifest의 313구성원 OOF 행렬. 자체 35는 풀 순서, 외부는 판본 2 장부 경로."""
+    """#457 manifest의 313구성원 OOF 행렬. 자체 35는 풀 순서, 외부는 판본 2 장부 경로.
+
+    정확 중복 판정을 위해 시험 배열도 읽어 manifest의 시험 예측 해시와 대조하고
+    후보와 같은 규칙(float64 OOF·시험 배열)의 예측 쌍 SHA-256을 구성원마다 남긴다.
+    """
     manifest = read_json(COMPARISON_MANIFEST_PATH)
     _require(manifest["issue"] == 457 and len(manifest["members"]) == COMPARISON_MEMBER_COUNT, "비교 팔 manifest가 #457 313구성원이 아니다.")
     _, accepted = ladder.load_ledger()
     by_column = {f"ext_{row['member_id']}": row for row in accepted}
+    own_test = pd.read_parquet(OWN_TEST_PATH).set_index(ID)
+    _require(len(own_test) == N_TEST, f"5:1 혼합판 시험 예측 행 수 {len(own_test)}")
     label_values = y.to_numpy()
     columns: dict[str, np.ndarray] = {}
     rows: list[dict] = []
@@ -211,6 +251,7 @@ def load_comparison_arm(own: pd.DataFrame, fold_of: pd.Series, y: pd.Series) -> 
         if entry["origin"] == "own":
             _require(column in own.columns, f"비교 팔의 자체 구성원 {column}이 풀에 없다.")
             values = own[column].to_numpy(np.float64)
+            test = own_test[column].to_numpy(np.float64)
         else:
             ledger_row = by_column[column]
             _require(ledger_row["oof_path"] == entry["oof_path"], f"{column}: manifest와 장부의 OOF 경로가 다르다.")
@@ -218,8 +259,20 @@ def load_comparison_arm(own: pd.DataFrame, fold_of: pd.Series, y: pd.Series) -> 
             _require(len(values) == N_TRAIN and bool(np.isfinite(values).all()), f"{column}: 행 수 {len(values)} 또는 비유한값")
             delta = float(roc_auc_score(label_values, values)) - float(ledger_row["auc"])
             _require(abs(delta) < 1e-9, f"{column}: 장부 AUC와 {delta:+.2e} 차이")
+            _require(ledger_row["test_path"] == entry["test"]["test_path"], f"{column}: manifest와 장부의 시험 경로가 다르다.")
+            test = ladder.load_ledger_array(entry["test"]["test_path"])
+        _require(test.shape == (N_TEST,) and bool(np.isfinite(test).all()), f"{column}: 시험 배열 형태 {test.shape} 또는 비유한값")
+        _require(prediction_array_sha256(test) == entry["test"]["prediction_sha256"], f"{column}: 시험 배열 해시가 #457 manifest와 다르다.")
         columns[column] = values
-        rows.append({"column": column, "origin": entry["origin"], "oof_sha256": prediction_array_sha256(values), "test_path": entry["test"]["test_path"]})
+        rows.append({
+            "column": column,
+            "origin": entry["origin"],
+            "oof_sha256": prediction_array_sha256(values),
+            "test_path": entry["test"]["test_path"],
+            "test_sha256": freeze.array_sha256(test),
+            "test_prediction_sha256": entry["test"]["prediction_sha256"],
+            "pair_sha256": freeze.pair_sha256(values, test),
+        })
     matrix = pd.DataFrame(columns, index=fold_of.index).astype(np.float64)
     _require(list(matrix.columns[:OWN_MEMBER_COUNT]) == list(own.columns), "비교 팔의 자체 35 순서가 풀과 다르다.")
     return matrix, rows
@@ -241,9 +294,100 @@ def load_candidates(spec: dict, fold_of: pd.Series) -> tuple[pd.DataFrame, list[
         _require(freeze.pair_sha256(oof, test) == candidate["pair_sha256"], f"{candidate['member_id']}: 쌍 해시가 명세와 다르다.")
         column = candidate_column(candidate["member_id"])
         columns[column] = oof
-        rows.append({"order": candidate["order"], "member_id": candidate["member_id"], "column": column, "audit_record_id": candidate["audit_record_id"], "pair_sha256": candidate["pair_sha256"], "oof_sha256": candidate["oof_sha256"], "test_sha256": candidate["test_sha256"], "test_path": candidate["test_path"]})
+        rows.append({"order": candidate["order"], "member_id": candidate["member_id"], "column": column, "audit_record_id": candidate["audit_record_id"], "kernel_ref": candidate["kernel_ref"], "source": source_of(candidate), "caveat_codes": list(candidate["caveat_codes"]), "rescored_auc": candidate["rescored_auc"], "pair_sha256": candidate["pair_sha256"], "oof_sha256": candidate["oof_sha256"], "test_sha256": candidate["test_sha256"], "test_path": candidate["test_path"]})
     matrix = pd.DataFrame(columns, index=fold_of.index).astype(np.float64) if columns else pd.DataFrame(index=fold_of.index)
     return matrix, rows
+
+
+# ---------------------------------------------------------------------------
+# 사다리 구성(ADR-0006)
+
+
+def source_of(candidate: dict) -> str:
+    """출처는 고정 공개 판본의 작성자(kernel_ref의 첫 조각)다."""
+    return str(candidate["kernel_ref"]).split("/")[0]
+
+
+def _unique_in_order(values) -> list:
+    seen: list = []
+    for value in values:
+        if value not in seen:
+            seen.append(value)
+    return seen
+
+
+def find_exact_duplicates(candidate_rows: list[dict], comparison_rows: list[dict]) -> tuple[list[dict], list[dict]]:
+    """예측 쌍 SHA-256이 313 구성원과 같은 후보(정확 중복)와, OOF만 같은 후보(진단)."""
+    pair_to_column = {row["pair_sha256"]: row["column"] for row in comparison_rows}
+    oof_to_column = {row["oof_sha256"]: row["column"] for row in comparison_rows}
+    exact: list[dict] = []
+    oof_only: list[dict] = []
+    for row in candidate_rows:
+        base = {"order": row["order"], "member_id": row["member_id"], "pair_sha256": row["pair_sha256"]}
+        if row["pair_sha256"] in pair_to_column:
+            exact.append({**base, "matches_column": pair_to_column[row["pair_sha256"]]})
+        elif row["oof_sha256"] in oof_to_column:
+            oof_only.append({**base, "oof_sha256": row["oof_sha256"], "matches_column": oof_to_column[row["oof_sha256"]], "note": "OOF만 같고 시험 배열이 다르다. 정확 중복이 아니므로 사다리 후보에 남는다."})
+    return exact, oof_only
+
+
+def build_ladder(candidate_rows: list[dict], duplicate_ids: set[str], comparison_columns: list[str]) -> dict:
+    """동결 명세 순서에서 결정적으로 사다리 구성을 만든다(ADR-0006 사다리 구성 규칙)."""
+    pool = [row for row in candidate_rows if row["member_id"] not in duplicate_ids]
+    configs: list[dict] = []
+    omitted: list[dict] = []
+    seen: dict[frozenset[str], str] = {}
+
+    def add(name: str, kind: str, description: str, keep) -> None:
+        _require(CONFIG_NAME_PATTERN.fullmatch(name) is not None, f"구성 이름에 쓸 수 없는 문자: {name}")
+        kept = [row for row in pool if keep(row)]
+        removed = [row["member_id"] for row in pool if not keep(row)]
+        key = frozenset(row["member_id"] for row in kept)
+        if not kept:
+            omitted.append({"name": name, "kind": kind, "reason": "후보가 남지 않아 313과 같다", "removed_member_ids": removed})
+            return
+        if key in seen:
+            omitted.append({"name": name, "kind": kind, "reason": f"구성원 집합이 `{seen[key]}`와 같다", "same_members_as": seen[key], "removed_member_ids": removed})
+            return
+        seen[key] = name
+        candidate_columns = [row["column"] for row in kept]
+        configs.append({
+            "index": len(configs),
+            "name": name,
+            "kind": kind,
+            "description": description,
+            "candidate_member_ids": [row["member_id"] for row in kept],
+            "candidate_columns": candidate_columns,
+            "removed_member_ids": removed,
+            "columns": list(comparison_columns) + candidate_columns,
+            "member_count": len(comparison_columns) + len(candidate_columns),
+        })
+
+    if pool:
+        add(FULL_CONFIG, "full", f"313 + 정확 중복을 뺀 사다리 후보 {len(pool)}개 전부", lambda row: True)
+        for source in _unique_in_order(row["source"] for row in pool):
+            add(f"ablate_source_{source}", "ablate_source", f"전체 구성에서 출처 `{source}`의 후보 제외", lambda row, s=source: row["source"] != s)
+        codes = _unique_in_order(code for row in pool for code in row["caveat_codes"])
+        common = [code for code in codes if all(code in row["caveat_codes"] for row in pool)]
+        for code in codes:
+            if code in common:
+                omitted.append({"name": f"ablate_caveat_{code}", "kind": "ablate_caveat", "reason": "사다리 후보 전원이 공통으로 가진 부류라 절제하면 313과 같다"})
+                continue
+            add(f"ablate_caveat_{code}", "ablate_caveat", f"전체 구성에서 주의 사항 부류 `{code}`의 후보 제외", lambda row, c=code: c not in row["caveat_codes"])
+    else:
+        common = []
+    return {
+        "candidate_count": len(pool),
+        "candidate_member_ids": [row["member_id"] for row in pool],
+        "candidate_columns": [row["column"] for row in pool],
+        "sources_in_order": _unique_in_order(row["source"] for row in pool),
+        "caveat_codes_in_order": _unique_in_order(code for row in pool for code in row["caveat_codes"]),
+        "common_caveat_codes": common,
+        "config_count": len(configs),
+        "configs": configs,
+        "omitted": omitted,
+        "rules": LADDER_RULES,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -267,6 +411,10 @@ def precommit(args: argparse.Namespace) -> None:
     evidence = read_json(COMPARISON_EVIDENCE_PATH)
     reference = evidence["configs"][COMPARISON_CONFIG]["strategies"][STRATEGY]
     _require(evidence["selected_config"] == COMPARISON_CONFIG and reference["member_count"] == COMPARISON_MEMBER_COUNT, "#455 근거의 선택 구성이 313구성원이 아니다.")
+    _require(set(reference["fold_aucs"]) == {str(k) for k in ALL_FOLDS}, "#455 근거에 분할별 AUC 5개가 없다.")
+
+    exact_duplicates, oof_only_matches = find_exact_duplicates(candidate_rows, comparison_rows)
+    ladder_spec = build_ladder(candidate_rows, {row["member_id"] for row in exact_duplicates}, list(comparison.columns))
 
     cache_dir = run_dir / "cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -278,6 +426,7 @@ def precommit(args: argparse.Namespace) -> None:
     payload: dict[str, object] = {
         "schema": SCHEMA,
         "issue": ISSUE,
+        "contract": {"adr": str(CONTRACT_ADR_PATH), "adr_sha256": file_sha256(CONTRACT_ADR_PATH) if CONTRACT_ADR_PATH.is_file() else None},
         "candidate_set_id": spec["candidate_set_id"],
         "rehearsal": spec["rehearsal"],
         "created_at": now_iso(),
@@ -294,7 +443,9 @@ def precommit(args: argparse.Namespace) -> None:
         },
         "inputs": {
             "train": {"path": str(TRAIN_PATH), "sha256": file_sha256(TRAIN_PATH)},
+            "test": {"path": str(TEST_PATH), "sha256": file_sha256(TEST_PATH)},
             "folds": {"path": str(FOLDS_PATH), "sha256": file_sha256(FOLDS_PATH), "fold_vector_sha256": fold_vector_sha, "rows_per_fold": {str(k): int((fold_of == k).sum()) for k in ALL_FOLDS}},
+            "own_test": {"path": str(OWN_TEST_PATH), "sha256": file_sha256(OWN_TEST_PATH), "kind": "cv5_full1_mix"},
         },
         "own_start": {
             "pool_path": str(POOL_PATH),
@@ -310,35 +461,50 @@ def precommit(args: argparse.Namespace) -> None:
             "member_count": len(comparison_rows),
             "members": comparison_rows,
             "composition_sha256": canonical_sha256([(r["column"], r["oof_sha256"]) for r in comparison_rows]),
-            "reference": {"evidence_path": str(COMPARISON_EVIDENCE_PATH), "evidence_sha256": file_sha256(COMPARISON_EVIDENCE_PATH), "config": COMPARISON_CONFIG, "nested_auc": reference["nested_auc"], "fold_aucs": reference["fold_aucs"]},
+            "pair_composition_sha256": canonical_sha256([(r["column"], r["pair_sha256"]) for r in comparison_rows]),
+            "reference": {"evidence_path": str(COMPARISON_EVIDENCE_PATH), "evidence_sha256": file_sha256(COMPARISON_EVIDENCE_PATH), "config": COMPARISON_CONFIG, "nested_auc": reference["nested_auc"], "weighted_oof_auc": reference["weighted_oof_auc"], "fold_aucs": reference["fold_aucs"]},
         },
         "candidate_arm": {
             "columns": list(own.columns) + list(candidates.columns),
             "candidates": candidate_rows,
             "composition_sha256": canonical_sha256([(r["column"], r["oof_sha256"]) for r in candidate_rows]),
         },
+        "exact_duplicates": exact_duplicates,
+        "oof_only_matches": oof_only_matches,
+        "ladder": ladder_spec,
         "caches": caches,
         "combiner": {
             "name": STRATEGY,
             "lambda_grid": list(LAMBDA_GRID),
             "meta": {"representation": "rank_logit", "C": 1.0, "solver": "lbfgs", "max_iter": META_MAX_ITER, "random_state": 0, "logit_eps": LOGIT_EPS},
-            "candidate_arm_implementation": "학습 분할 집합별 순위 특성 캐시를 쓰는 같은 계산(봉인 분할 예측에서 등록 결합기와 대조)",
-            "comparison_arm_implementation": "pipeline.ensemble.COMBINER_REGISTRY 등록 결합기",
+            "implementation": "pipeline.ensemble.COMBINER_REGISTRY 등록 결합기. 비교 팔과 사다리 구성 모두 evaluate_nested와 같은 분할 순서·행 순서로 분할마다 fit → predict.",
+            "nested": "바깥 분할 하나를 봉인하고 나머지 4분할 행으로 결합기를 맞춰 봉인 분할을 예측한 뒤 5개 예측을 원래 행 순서로 이어붙여 채점. λ는 학습 부분 안의 leave-one-fold-out.",
+            "weighted_oof": {"test_path": str(MISSINGNESS_TEST_PATH), "note": "test 결측 패턴 구성비 재가중(#383). 진단값."},
         },
-        "search_rules": SEARCH_RULES,
-        "gate": {"delta_required": GATE_DELTA, "folds_required_positive": FOLDS_REQUIRED_POSITIVE, "comparison": "두 팔의 봉인 분할 예측을 원래 행 순서로 이어붙여 직접 채점한 AUC 차이", "public_score_used": False},
+        "gate": {"delta_required": GATE_DELTA, "folds_required_positive": FOLDS_REQUIRED_POSITIVE, "comparison": "구성의 봉인 분할 예측 5개를 원래 행 순서로 이어붙인 AUC에서 비교 팔 313의 같은 값을 뺀 차이, 분할별 차이는 같은 봉인 분할 예측끼리", "public_score_used": False},
         "noise_floor": NOISE_FLOOR,
+        "self_check": {"reference_nested_auc": reference["nested_auc"], "reference_fold_aucs": reference["fold_aucs"], "tolerance": NOISE_FLOOR, "rule": SELECTION_RULES["self_check"]},
+        "selection_rules": SELECTION_RULES,
         "rules": {
             "failure": "계산 하나라도 실패하거나 끝나지 않으면 완료한 일부 결과를 쓰지 않고 전체를 판정 불가로 둔다.",
             "resume": "모든 입력 해시와 코드 상태가 precommit과 정확히 같을 때만 재개한다.",
-            "full_selection": "절차 통과 뒤에만 같은 동결 검색을 전체 OOF에 한 번 적용한다. 전체 OOF 점수로 문턱을 다시 판정하지 않는다.",
-            "upload": "문턱 통과 뒤 Kaggle 업로드와 최종 두 장 수동 고정은 사용자 승인 뒤에만 한다.",
+            "assembly": "선택한 구성이 엄격 외부 제안 구성이다. 조립은 #444 규칙대로 전체 OOF에 결합기를 한 번 맞추며, 자체 35의 시험 예측은 5:1 혼합판, 313의 외부는 장부 시험 배열, 후보는 동결 명세의 정규화 시험 배열이다.",
+            "upload": "문턱 통과 뒤 조립, Kaggle 업로드와 최종 두 장 수동 고정은 사용자 승인 뒤에만 한다.",
         },
+        "preserved_adr0005": {"search_rules": SEARCH_RULES, "note": "ADR-0005 정확 검색 규칙. 사다리 판정에서 쓰지 않으며 adr0005-* 명령이 되살아날 때를 위해 남긴다."},
         "code_state": code_state(),
     }
     payload["precommit_sha256"] = canonical_sha256(payload)
     write_json(run_dir / "precommit.json", payload)
-    print(f"precommit 저장: {run_dir / 'precommit.json'}\n  후보 {len(candidate_rows)}개, 비교 팔 {len(comparison_rows)}, 자체 {len(own_rows)}, 분할 {list(folds)}, precommit_sha256 {payload['precommit_sha256']}")
+    print(f"precommit 저장: {run_dir / 'precommit.json'}")
+    print(f"  동결 후보 {len(candidate_rows)}개, 정확 중복 {len(exact_duplicates)}개 → 사다리 후보 {ladder_spec['candidate_count']}개, 구성 {ladder_spec['config_count']}개(생략 {len(ladder_spec['omitted'])}), 비교 팔 {len(comparison_rows)}, 자체 {len(own_rows)}, 분할 {list(folds)}")
+    for row in exact_duplicates:
+        print(f"  정확 중복 {row['order']:>2} {row['member_id']} = {row['matches_column']}")
+    for config in ladder_spec["configs"]:
+        print(f"  구성 {config['index']} {config['name']:<44} {config['member_count']}구성원 (후보 {len(config['candidate_member_ids'])}, 뺌 {len(config['removed_member_ids'])})")
+    for entry in ladder_spec["omitted"]:
+        print(f"  생략 {entry['name']}: {entry['reason']}")
+    print(f"  precommit_sha256 {payload['precommit_sha256']}")
 
 
 def load_precommit(run_dir: Path) -> dict:
@@ -350,7 +516,7 @@ def load_precommit(run_dir: Path) -> dict:
     _require(canonical_sha256({k: v for k, v in payload.items() if k != "precommit_sha256"}) == recorded, "precommit.json이 제자리에서 바뀌었다.")
     spec = freeze.verify_spec_file(Path(payload["freeze_spec"]["path"]))
     _require(spec["spec_sha256"] == payload["freeze_spec"]["sha256"], "동결 명세가 precommit과 다르다.")
-    for key in ("train", "folds"):
+    for key in ("train", "test", "folds", "own_test"):
         _require(file_sha256(Path(payload["inputs"][key]["path"])) == payload["inputs"][key]["sha256"], f"{key} 해시가 precommit과 다르다.")
     _require(file_sha256(POOL_PATH) == payload["own_start"]["pool_sha256"], "pool.yaml이 precommit과 다르다.")
     _require(file_sha256(COMPARISON_MANIFEST_PATH) == payload["comparison_arm"]["manifest_sha256"], "비교 팔 manifest가 precommit과 다르다.")
@@ -673,8 +839,8 @@ def select_fold(args: argparse.Namespace) -> None:
         "precommit_sha256": payload["precommit_sha256"],
         "sealed_fold": sealed,
         "open_folds": sorted(open_folds),
-        "open_rows": int(len(open_rows)),
-        "sealed_rows": int(len(sealed_rows)),
+        "open_rows": len(open_rows),
+        "sealed_rows": len(sealed_rows),
         "columns": columns,
         "own_count": own_count,
         "diagnostics": {k: v for k, v in diagnostics.items() if k != "spearman"},
@@ -725,7 +891,7 @@ def diagnose(values: np.ndarray, label_values: np.ndarray, rows: np.ndarray, col
             "spearman_vs_candidates_max": float(max((spearman[c, d] for d in candidate_indices if d != c), default=float("nan"))),
         }
     return {
-        "rows": int(len(rows)),
+        "rows": len(rows),
         "duplicate_spearman": DUPLICATE_SPEARMAN,
         "own_standalone_auc": {columns[i]: float(roc_auc_score(y, block[:, i])) for i in range(own_count)},
         "own_pairs_max_spearman": float(max(spearman[i, j] for i in range(own_count) for j in range(i + 1, own_count))) if own_count > 1 else None,
@@ -800,63 +966,178 @@ def baseline_fold(args: argparse.Namespace) -> None:
 
 
 # ---------------------------------------------------------------------------
+# 사다리 구성 작업(ADR-0006)
+
+
+def load_ladder_matrix(run_dir: Path, payload: dict, config: dict, fold_of: pd.Series) -> pd.DataFrame:
+    """구성의 OOF 행렬: 비교 팔 313(manifest 순서) 뒤에 그 구성의 후보 열(동결 순서)."""
+    cache = run_dir / "cache"
+    comparison = pd.read_parquet(cache / "comparison-arm-oof.parquet").astype(np.float64)
+    _require(list(comparison.columns) == [m["column"] for m in payload["comparison_arm"]["members"]], "비교 팔 열 순서가 precommit과 다르다.")
+    frames = [comparison]
+    if config["candidate_columns"]:
+        candidates = pd.read_parquet(cache / "candidates-oof.parquet", columns=config["candidate_columns"]).astype(np.float64)
+        frames.append(candidates)
+    matrix = pd.concat(frames, axis=1)
+    _require(list(matrix.columns) == config["columns"], f"{config['name']}: 열 순서가 precommit과 다르다.")
+    _require(matrix.index.equals(fold_of.index), f"{config['name']}: 행 순서가 folds와 다르다.")
+    return matrix
+
+
+def near_duplicate_diagnostics(matrix: pd.DataFrame, fold_of: pd.Series, own_count: int, comparison_count: int) -> dict:
+    """열린 4분할마다 스피어만 0.998 이상 쌍을 종류별로 기록한다(진단값, 제외 없음)."""
+    columns = list(matrix.columns)
+    values = matrix.to_numpy(np.float64)
+    fold = fold_of.to_numpy(np.int64)
+
+    def kind_of(i: int, j: int) -> str:
+        def group(c: int) -> str:
+            return "own" if c < own_count else ("ext313" if c < comparison_count else "candidate")
+        return f"{group(i)}-{group(j)}"
+
+    per_fold: dict[str, dict] = {}
+    for sealed in ALL_FOLDS:
+        rows = np.flatnonzero(fold != sealed)
+        spearman = spearman_matrix(values[rows])
+        upper = np.triu_indices(len(columns), k=1)
+        hits = np.flatnonzero(spearman[upper] >= DUPLICATE_SPEARMAN)
+        pairs = [{"a": columns[upper[0][h]], "b": columns[upper[1][h]], "kind": kind_of(int(upper[0][h]), int(upper[1][h])), "spearman": float(spearman[upper[0][h], upper[1][h]])} for h in hits]
+        counts: dict[str, int] = {}
+        for pair in pairs:
+            counts[pair["kind"]] = counts.get(pair["kind"], 0) + 1
+        candidate_max = {columns[c]: float(np.max(np.delete(spearman[c], c))) for c in range(comparison_count, len(columns))}
+        per_fold[str(sealed)] = {"open_rows": len(rows), "pair_count": len(pairs), "counts_by_kind": counts, "pairs": pairs, "candidate_max_spearman_vs_any": candidate_max}
+        del spearman
+    return {"threshold": DUPLICATE_SPEARMAN, "note": "열린 4분할의 진단값. 제외·선택에 쓰지 않는다.", "by_sealed_fold": per_fold}
+
+
+def ladder_job(args: argparse.Namespace) -> None:
+    """사다리 구성 하나의 nested 5분할. evaluate_nested와 같은 분할 순서·행 순서로 등록 결합기를 적합한다."""
+    run_dir = Path(args.run_dir)
+    payload = load_precommit(run_dir)
+    config = next((c for c in payload["ladder"]["configs"] if c["name"] == args.config), None)
+    _require(config is not None, f"precommit의 사다리 구성이 아니다: {args.config}")
+    out_dir = run_dir / LADDER_DIR / config["name"]
+    out_path = out_dir / "nested.json"
+    _require(args.force or not out_path.exists(), f"이미 있다: {out_path}")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    started = time.monotonic()
+    fold_of, y = load_folds_and_labels()
+    matrix = load_ladder_matrix(run_dir, payload, config, fold_of)
+    print(f"=== 사다리 {config['name']} ({matrix.shape[1]}구성원: 313 + 후보 {len(config['candidate_columns'])}) ===", flush=True)
+    diagnostics = None
+    if config["name"] == FULL_CONFIG:
+        diagnostics_started = time.monotonic()
+        diagnostics = near_duplicate_diagnostics(matrix, fold_of, payload["own_start"]["member_count"], payload["comparison_arm"]["member_count"])
+        diagnostics["elapsed_seconds"] = time.monotonic() - diagnostics_started
+        print(f"  근접 중복 진단: 분할별 쌍 수 {[v['pair_count'] for v in diagnostics['by_sealed_fold'].values()]} ({diagnostics['elapsed_seconds']:.0f}s)", flush=True)
+    combiner = ensemble.COMBINER_REGISTRY[STRATEGY]
+    nested = np.full(len(matrix), np.nan)
+    folds_out: dict[str, dict] = {}
+    for fold in payload["outer_folds"]:
+        fold_started = time.monotonic()
+        inner = (fold_of != fold).to_numpy()
+        outer = (fold_of == fold).to_numpy()
+        try:
+            fitted = combiner.fit(matrix[inner], y[inner])
+        except ensemble.CombinerConvergenceError as exc:
+            raise JudgmentError(f"{config['name']}: 바깥 분할 {fold}에서 미수렴({exc}). 전체 판정은 판정 불가다.") from exc
+        prediction = np.asarray(fitted.predict(matrix[outer]), dtype=np.float64)
+        _require(prediction.shape == (int(outer.sum()),) and bool(np.isfinite(prediction).all()), f"{config['name']}: 분할 {fold} 예측이 유한하지 않다.")
+        nested[outer] = prediction
+        fold_dir = out_dir / f"fold-{fold}"
+        fold_dir.mkdir(exist_ok=True)
+        pd.DataFrame({ID: fold_of.index.to_numpy()[outer], "prediction": prediction}).to_parquet(fold_dir / "predictions.parquet", index=False)
+        folds_out[str(fold)] = {"rows": int(outer.sum()), "auc": float(roc_auc_score(y[outer].to_numpy(), prediction)), "lambda": float(fitted.shrinkage_lambda), "prediction_sha256": prediction_array_sha256(prediction), "elapsed_seconds": time.monotonic() - fold_started}
+        print(f"  분할 {fold}: AUC {folds_out[str(fold)]['auc']:.7f}, λ={fitted.shrinkage_lambda} ({folds_out[str(fold)]['elapsed_seconds']:.0f}s)", flush=True)
+    complete = list(payload["outer_folds"]) == list(ALL_FOLDS)
+    scored = ~np.isnan(nested)
+    series = pd.Series(nested, index=matrix.index, name="prediction")
+    nested_auc = float(roc_auc_score(y.to_numpy()[scored], nested[scored]))
+    weighted = weighted_oof_auc(series[scored], y[scored], missingness_reweighting(TRAIN_PATH, MISSINGNESS_TEST_PATH))
+    record = {
+        "schema": SCHEMA,
+        "candidate_set_id": payload["candidate_set_id"],
+        "precommit_sha256": payload["precommit_sha256"],
+        "config": {k: config[k] for k in ("index", "name", "kind", "description", "candidate_member_ids", "removed_member_ids", "member_count")},
+        "strategy": STRATEGY,
+        "member_count": int(matrix.shape[1]),
+        "columns": list(matrix.columns),
+        "outer_folds": list(payload["outer_folds"]),
+        "complete": complete,
+        "nested_auc": nested_auc,
+        "weighted_oof_auc": weighted.auc,
+        "weighted": {"effective_sample_size": weighted.effective_sample_size, "effective_sample_fraction": weighted.effective_sample_fraction, "zero_weight_rows": weighted.zero_weight_rows, "test_only_pattern_count": weighted.test_only_pattern_count},
+        "fold_aucs": {k: v["auc"] for k, v in folds_out.items()},
+        "folds": folds_out,
+        "near_duplicate_diagnostics": diagnostics,
+        "elapsed_seconds": time.monotonic() - started,
+        "finished_at": now_iso(),
+    }
+    write_json(out_path, record)
+    print(f"  nested {nested_auc:.7f}, 가중 {weighted.auc:.7f} → {out_path} ({record['elapsed_seconds']:.0f}s)", flush=True)
+
+
+# ---------------------------------------------------------------------------
 # 작업 실행기
 
 
-def jobs_for(payload: dict) -> list[tuple[str, int]]:
-    return [("baseline", k) for k in payload["outer_folds"]] + [("select", k) for k in payload["outer_folds"]]
+def jobs_for(payload: dict) -> list[tuple[str, str]]:
+    """(종류, 키) 작업 목록. 자기 검사의 baseline을 먼저, 사다리 구성을 사다리 순서로."""
+    if not payload["ladder"]["configs"]:
+        return []
+    return [("baseline", str(k)) for k in payload["outer_folds"]] + [("ladder", c["name"]) for c in payload["ladder"]["configs"]]
 
 
-def job_output(run_dir: Path, kind: str, fold: int) -> Path:
-    return run_dir / f"fold-{fold}" / ("baseline-predictions.parquet" if kind == "baseline" else "selection.json")
+def job_output(run_dir: Path, kind: str, key: str) -> Path:
+    if kind == "baseline":
+        return run_dir / f"fold-{key}" / "baseline-predictions.parquet"
+    return run_dir / LADDER_DIR / key / "nested.json"
 
 
-def _running_jobs(run_dir: Path) -> set[tuple[str, int]]:
+def job_command(run_dir: Path, kind: str, key: str) -> list[str]:
+    option = "--fold" if kind == "baseline" else "--config"
+    return [sys.executable, __file__, kind, "--run-dir", str(run_dir), option, key]
+
+
+def _running_jobs(run_dir: Path) -> set[tuple[str, str]]:
     listing = subprocess.run(["ps", "-axo", "command"], capture_output=True, text=True, check=False).stdout
-    pattern = re.compile(rf"judge_strict_external_selection\.py (baseline|select) --run-dir {re.escape(str(run_dir))} --fold (\d+)")
-    return {(kind, int(fold)) for kind, fold in pattern.findall(listing)}
+    pattern = re.compile(rf"judge_strict_external_selection\.py (baseline|ladder) --run-dir {re.escape(str(run_dir))} --(?:fold|config) (\S+)")
+    return {(kind, key) for kind, key in pattern.findall(listing)}
 
 
 def run_jobs(args: argparse.Namespace) -> None:
     run_dir = Path(args.run_dir)
     payload = load_precommit(run_dir)
-    pending = [(kind, fold) for kind, fold in jobs_for(payload) if not job_output(run_dir, kind, fold).exists()]
+    jobs = jobs_for(payload)
+    if not jobs:
+        print("사다리 후보가 없다. 실행할 작업이 없고 compare가 현재 두 장 유지를 기록한다.")
+        return
+    pending = [job for job in jobs if not job_output(run_dir, *job).exists()]
     log_dir = run_dir / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ)
     for key in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
         env[key] = str(args.threads)
-    print(f"남은 작업 {len(pending)}개, 동시 상한 {args.workers}(무거운 baseline {args.heavy_workers}), 스레드 {args.threads}", flush=True)
-    active: dict[tuple[str, int], subprocess.Popen] = {}
-    results: dict[tuple[str, int], int] = {}
+    print(f"남은 작업 {len(pending)}/{len(jobs)}개, 동시 상한 {args.workers}(300열대 shrunk는 작업당 10GB대, 상한 3), 스레드 {args.threads}", flush=True)
+    active: dict[tuple[str, str], subprocess.Popen] = {}
+    results: dict[tuple[str, str], int] = {}
     while pending or active:
         for job, process in list(active.items()):
             code = process.poll()
             if code is not None:
                 results[job] = code
                 del active[job]
-                print(f"{'완료' if code == 0 else f'실패({code})'} {job[0]} fold {job[1]}", flush=True)
+                print(f"{'완료' if code == 0 else f'실패({code})'} {job[0]} {job[1]}", flush=True)
         running = _running_jobs(run_dir) | set(active)
-        heavy = sum(1 for kind, _ in running if kind == "baseline")
         while pending and len(running) < args.workers:
-            kind, fold = pending[0]
-            if kind == "baseline" and heavy >= args.heavy_workers:
-                # 무거운 작업이 상한이면 가벼운 작업을 먼저 띄운다.
-                light = next((job for job in pending if job[0] == "select"), None)
-                if light is None:
-                    break
-                pending.remove(light)
-                kind, fold = light
-            else:
-                pending.pop(0)
-            if (kind, fold) in running:
+            job = pending.pop(0)
+            if job in running or job_output(run_dir, *job).exists():
                 continue
-            command = [sys.executable, __file__, kind, "--run-dir", str(run_dir), "--fold", str(fold)]
-            handle = (log_dir / f"{kind}-fold-{fold}.log").open("w")
-            active[(kind, fold)] = subprocess.Popen(command, env=env, stdout=handle, stderr=subprocess.STDOUT)
-            running.add((kind, fold))
-            heavy += kind == "baseline"
-            print(f"시작 {kind} fold {fold}", flush=True)
+            handle = (log_dir / f"{job[0]}-{job[1]}.log").open("w")
+            active[job] = subprocess.Popen(job_command(run_dir, *job), env=env, stdout=handle, stderr=subprocess.STDOUT)
+            running.add(job)
+            print(f"시작 {job[0]} {job[1]}", flush=True)
         time.sleep(15)
     failed = [job for job, code in results.items() if code != 0]
     if failed:
@@ -882,7 +1163,8 @@ def _load_fold_outputs(run_dir: Path, payload: dict) -> tuple[dict[int, dict], d
     return selections, baselines
 
 
-def compare(args: argparse.Namespace) -> None:
+def adr0005_compare(args: argparse.Namespace) -> None:
+    """ADR-0005 보존: 후보 절차 팔(selection.json)과 비교 팔의 이어붙인 비교. 사다리 판정에서 쓰지 않는다."""
     run_dir = Path(args.run_dir)
     payload = load_precommit(run_dir)
     fold_of, y = load_folds_and_labels()
@@ -1015,7 +1297,7 @@ def full_selection(args: argparse.Namespace) -> None:
         "precommit_sha256": payload["precommit_sha256"],
         "nested_comparison_passes": True,
         "open_folds": list(ALL_FOLDS),
-        "rows": int(len(all_rows)),
+        "rows": len(all_rows),
         "diagnostics": {k: v for k, v in diagnostics.items() if k != "spearman"},
         "start": {"members": list(own.columns), "score": search.scores[search.subset([])]},
         "stages": [named_stage(stage, columns) for stage in search.stages],
@@ -1053,67 +1335,212 @@ def _manifest_files(run_dir: Path) -> list[Path]:
     return files
 
 
+def _load_baseline(run_dir: Path, payload: dict, fold_of: pd.Series, y: pd.Series) -> tuple[pd.Series, dict[str, dict]]:
+    """비교 팔 313의 봉인 분할 예측 5개를 원래 행 순서로 모으고 분할별 AUC·λ를 돌려준다."""
+    baseline = pd.Series(np.nan, index=fold_of.index)
+    per_fold: dict[str, dict] = {}
+    for fold in payload["outer_folds"]:
+        fold_dir = run_dir / f"fold-{fold}"
+        path = fold_dir / "baseline.json"
+        _require(path.is_file(), f"분할 {fold}의 baseline 산출물이 없다. 전체 판정은 판정 불가다.")
+        record = read_json(path)
+        _require(record["precommit_sha256"] == payload["precommit_sha256"], f"분할 {fold}의 baseline이 다른 precommit에서 나왔다.")
+        base = pd.read_parquet(fold_dir / "baseline-predictions.parquet").set_index(ID)["prediction"]
+        ids = fold_of.index[(fold_of == fold).to_numpy()]
+        _require(base.index.equals(pd.Index(ids)), f"분할 {fold}의 baseline 예측 id가 분할 배정과 다르다.")
+        _require(prediction_array_sha256(base.to_numpy()) == record["prediction_sha256"], f"분할 {fold}의 baseline 예측 해시가 baseline.json과 다르다.")
+        baseline.loc[ids] = base.to_numpy()
+        per_fold[str(fold)] = {"auc": float(roc_auc_score(y.loc[ids].to_numpy(), base.to_numpy())), "lambda": record["lambda"], "prediction_sha256": record["prediction_sha256"]}
+    return baseline, per_fold
+
+
+def _load_ladder_result(run_dir: Path, payload: dict, config: dict, fold_of: pd.Series, y: pd.Series) -> tuple[dict, pd.Series]:
+    """구성의 nested.json과 분할 예측을 읽어 해시와 이어붙인 AUC를 다시 확인한다."""
+    out_dir = run_dir / LADDER_DIR / config["name"]
+    path = out_dir / "nested.json"
+    _require(path.is_file(), f"사다리 구성 {config['name']}의 산출물이 없다. 전체 판정은 판정 불가다.")
+    record = read_json(path)
+    _require(record["precommit_sha256"] == payload["precommit_sha256"], f"{config['name']}: 다른 precommit에서 나왔다.")
+    _require(record["columns"] == config["columns"], f"{config['name']}: 산출물의 열 순서가 precommit과 다르다.")
+    prediction = pd.Series(np.nan, index=fold_of.index)
+    for fold in payload["outer_folds"]:
+        part = pd.read_parquet(out_dir / f"fold-{fold}" / "predictions.parquet").set_index(ID)["prediction"]
+        ids = fold_of.index[(fold_of == fold).to_numpy()]
+        _require(part.index.equals(pd.Index(ids)), f"{config['name']}: 분할 {fold} 예측 id가 분할 배정과 다르다.")
+        _require(prediction_array_sha256(part.to_numpy()) == record["folds"][str(fold)]["prediction_sha256"], f"{config['name']}: 분할 {fold} 예측 해시가 nested.json과 다르다.")
+        _require(abs(float(roc_auc_score(y.loc[ids].to_numpy(), part.to_numpy())) - record["fold_aucs"][str(fold)]) <= CONCAT_AUC_TOLERANCE, f"{config['name']}: 분할 {fold} AUC 재계산이 nested.json과 다르다.")
+        prediction.loc[ids] = part.to_numpy()
+    mask = prediction.notna().to_numpy()
+    recomputed = float(roc_auc_score(y.to_numpy()[mask], prediction.to_numpy()[mask]))
+    _require(abs(recomputed - record["nested_auc"]) <= CONCAT_AUC_TOLERANCE, f"{config['name']}: 이어붙인 AUC 재계산 {recomputed:.9f}이 nested.json {record['nested_auc']:.9f}과 다르다.")
+    return record, prediction
+
+
+def compare(args: argparse.Namespace) -> None:
+    """자기 검사 → 구성별 313 대비 차이·분할 부호 → 문턱 → 선택 규칙. `ladder-comparison.json`."""
+    run_dir = Path(args.run_dir)
+    payload = load_precommit(run_dir)
+    fold_of, y = load_folds_and_labels()
+    folds = payload["outer_folds"]
+    complete = list(folds) == list(ALL_FOLDS)
+    configs = payload["ladder"]["configs"]
+    record: dict[str, object] = {
+        "schema": SCHEMA,
+        "candidate_set_id": payload["candidate_set_id"],
+        "precommit_sha256": payload["precommit_sha256"],
+        "rehearsal": payload["rehearsal"],
+        "outer_folds": folds,
+        "complete": complete,
+        "gate": payload["gate"],
+        "noise_floor": NOISE_FLOOR,
+        "selection_rules": payload["selection_rules"],
+        "exact_duplicates": payload["exact_duplicates"],
+        "ladder_candidate_count": payload["ladder"]["candidate_count"],
+    }
+    if not configs:
+        record.update(self_check=None, configs=[], passing_configs=[], selected_config=None, verdict="사다리 후보 없음: 현재 두 장(e88f706e + 443b3a71) 유지", compared_at=now_iso())
+        write_json(run_dir / "ladder-comparison.json", record)
+        print(record["verdict"])
+        return
+
+    baseline, base_folds = _load_baseline(run_dir, payload, fold_of, y)
+    mask = baseline.notna().to_numpy()
+    base_auc = float(roc_auc_score(y.to_numpy()[mask], baseline.to_numpy()[mask]))
+    reference = payload["self_check"]
+    fold_deltas_vs_reference = {k: base_folds[k]["auc"] - reference["reference_fold_aucs"][k] for k in base_folds}
+    self_check = {
+        "reference_nested_auc": reference["reference_nested_auc"],
+        "baseline_concatenated_auc": base_auc,
+        "delta": base_auc - reference["reference_nested_auc"],
+        "baseline_fold_aucs": {k: v["auc"] for k, v in base_folds.items()},
+        "baseline_fold_lambdas": {k: v["lambda"] for k, v in base_folds.items()},
+        "fold_deltas_vs_reference": fold_deltas_vs_reference,
+        "tolerance": NOISE_FLOOR,
+        "passes": bool(complete and abs(base_auc - reference["reference_nested_auc"]) <= NOISE_FLOOR and all(abs(v) <= NOISE_FLOOR for v in fold_deltas_vs_reference.values())),
+    }
+
+    results: list[dict] = []
+    for config in configs:
+        nested_record, _ = _load_ladder_result(run_dir, payload, config, fold_of, y)
+        fold_deltas = {k: nested_record["fold_aucs"][k] - base_folds[k]["auc"] for k in base_folds}
+        delta = nested_record["nested_auc"] - base_auc
+        positives = sum(v > 0.0 for v in fold_deltas.values())
+        results.append({
+            "index": config["index"],
+            "name": config["name"],
+            "kind": config["kind"],
+            "description": config["description"],
+            "member_count": config["member_count"],
+            "candidate_member_ids": config["candidate_member_ids"],
+            "removed_member_ids": config["removed_member_ids"],
+            "nested_auc": nested_record["nested_auc"],
+            "weighted_oof_auc": nested_record["weighted_oof_auc"],
+            "fold_aucs": nested_record["fold_aucs"],
+            "fold_lambdas": {k: v["lambda"] for k, v in nested_record["folds"].items()},
+            "delta_vs_313": delta,
+            "delta_minus_gate": delta - GATE_DELTA,
+            "delta_within_noise_floor": abs(delta) <= NOISE_FLOOR,
+            "weighted_delta_vs_313_reference": nested_record["weighted_oof_auc"] - payload["comparison_arm"]["reference"]["weighted_oof_auc"],
+            "fold_deltas_vs_313": fold_deltas,
+            "folds_positive": positives,
+            "passes_gate": bool(self_check["passes"] and delta >= GATE_DELTA and positives >= FOLDS_REQUIRED_POSITIVE),
+            "elapsed_seconds": nested_record["elapsed_seconds"],
+        })
+    passing = [r for r in results if r["passes_gate"]]
+    selected = None
+    selection_trace = None
+    if passing:
+        top = max(passing, key=lambda r: r["nested_auc"])
+        tied = [r for r in passing if top["nested_auc"] - r["nested_auc"] <= NOISE_FLOOR]
+        chosen = min(tied, key=lambda r: (r["member_count"], r["index"]))
+        selected = chosen["name"]
+        selection_trace = {"highest_nested": top["name"], "within_noise_floor_of_highest": [r["name"] for r in tied], "fewest_members_then_ladder_order": chosen["name"]}
+    if not complete:
+        verdict = "판정 불가(부분 분할, 예행)"
+    elif not self_check["passes"]:
+        verdict = "판정 불가(비교 팔 자기 검사 실패)"
+    elif selected is not None:
+        verdict = "통과"
+    else:
+        verdict = "미달: 현재 두 장(e88f706e + 443b3a71) 유지"
+    record.update(self_check=self_check, comparison_arm_auc=base_auc, configs=results, passing_configs=[r["name"] for r in passing], selection=selection_trace, selected_config=selected, verdict=verdict, rows_scored=int(mask.sum()), compared_at=now_iso())
+    write_json(run_dir / "ladder-comparison.json", record)
+    print(f"자기 검사: 313 이어붙인 {base_auc:.7f} (#455 {reference['reference_nested_auc']:.7f}, 차이 {self_check['delta']:+.2e}, 분할 최대 {max(abs(v) for v in fold_deltas_vs_reference.values()):.2e}) → {'통과' if self_check['passes'] else '실패'}")
+    for r in results:
+        print(f"  {r['name']:<44} {r['member_count']:>4} nested {r['nested_auc']:.7f} 가중 {r['weighted_oof_auc']:.7f} Δ {r['delta_vs_313']:+.7f} 분할 {r['folds_positive']}/5{' 통과' if r['passes_gate'] else ''}")
+    print(f"판정: {verdict}" + (f", 선택 {selected}" if selected else ""))
+
+
 def report(args: argparse.Namespace) -> None:
     run_dir = Path(args.run_dir)
     payload = load_precommit(run_dir)
-    comparison_path = run_dir / "nested-comparison.json"
-    _require(comparison_path.is_file(), "nested-comparison.json이 없다. compare를 먼저 한다.")
+    comparison_path = run_dir / "ladder-comparison.json"
+    _require(comparison_path.is_file(), "ladder-comparison.json이 없다. compare를 먼저 한다.")
     comparison = read_json(comparison_path)
-    stability_record = read_json(run_dir / "selection-stability.json")
-    selections, baselines = _load_fold_outputs(run_dir, payload)
-    full_path = run_dir / "full-selection.json"
-    full = read_json(full_path) if full_path.is_file() else None
+    _require(comparison["precommit_sha256"] == payload["precommit_sha256"], "ladder-comparison.json이 다른 precommit에서 나왔다.")
+    by_member = {c["member_id"]: c for c in payload["candidate_arm"]["candidates"]}
     lines: list[str] = []
-    lines += [f"# 엄격 외부 후보 중첩 선별 판정 보고 (`{payload['candidate_set_id']}`)", ""]
+    lines += [f"# 엄격 외부 후보 사다리 판정 보고 (`{payload['candidate_set_id']}`)", ""]
     if payload["rehearsal"]:
         lines += ["**예행 실행이다.** 합성 후보로 도구 경로만 확인했으며 실제 후보 판정이 아니다.", ""]
     lines += ["## 판정", ""]
+    lines += [f"- 결과: **{comparison['verdict']}**" + (f", 제안 구성 `{comparison['selected_config']}`" if comparison.get("selected_config") else "")]
+    lines += [f"- 문턱: 313 대비 이어붙인 nested AUC 차이 `+{GATE_DELTA}` 이상, 바깥 분할 {FOLDS_REQUIRED_POSITIVE}/5 엄격 양수. 결과 확인 뒤 바꾸지 않는다."]
+    lines += [f"- 선택 규칙: {payload['selection_rules']['pick']}"]
+    lines += [f"- 동결 후보 {payload['freeze_spec']['candidate_count']}개 가운데 정확 중복 {len(payload['exact_duplicates'])}개를 뺀 사다리 후보 {payload['ladder']['candidate_count']}개, 구성 {payload['ladder']['config_count']}개."]
+    self_check = comparison.get("self_check")
+    if self_check is not None:
+        lines += [f"- 비교 팔 자기 검사: 313 이어붙인 AUC {self_check['baseline_concatenated_auc']:.7f}, #455 기준 {self_check['reference_nested_auc']:.7f}, 차이 `{self_check['delta']:+.2e}`, 분할 최대 차이 `{max(abs(v) for v in self_check['fold_deltas_vs_reference'].values()):.2e}`, 잡음 바닥 `{NOISE_FLOOR}` → **{'통과' if self_check['passes'] else '실패(판정 불가)'}**"]
+    if comparison.get("selection"):
+        trace = comparison["selection"]
+        lines += [f"- 선택 경로: nested 최고 `{trace['highest_nested']}`, 잡음 바닥 안 {', '.join(f'`{n}`' for n in trace['within_noise_floor_of_highest'])} → 구성원 적은 쪽·사다리 순서 `{trace['fewest_members_then_ladder_order']}`"]
+    lines += [""]
+    if comparison.get("configs"):
+        folds = comparison["outer_folds"]
+        lines += ["## 사다리", "", "| 순서 | 구성 | 구성원 | nested AUC | 가중 OOF(진단) | 313 대비 | " + " | ".join(f"분할 {k}" for k in folds) + " | 양수 | 통과 |", "| ---: | --- | ---: | ---: | ---: | ---: | " + " | ".join("---:" for _ in folds) + " | ---: | --- |"]
+        for r in comparison["configs"]:
+            lines.append(f"| {r['index']} | `{r['name']}` | {r['member_count']} | {r['nested_auc']:.7f} | {r['weighted_oof_auc']:.7f} | {r['delta_vs_313']:+.7f} | " + " | ".join(f"{r['fold_deltas_vs_313'][str(k)]:+.7f}" for k in folds) + f" | {r['folds_positive']}/5 | {'통과' if r['passes_gate'] else '-'} |")
+        lines += ["", "구성별 후보:", ""]
+        for r in comparison["configs"]:
+            lines.append(f"- `{r['name']}`: {r['description']}. 후보 {len(r['candidate_member_ids'])}개" + (f", 뺀 후보 {', '.join(f'`{m}`' for m in r['removed_member_ids'])}" if r["removed_member_ids"] else "") + f", λ {r['fold_lambdas']}")
+        if self_check is not None:
+            lines += ["", "비교 팔 313 분할별 AUC(자기 검사 기준): " + ", ".join(f"분할 {k} {v:.7f}" for k, v in self_check["baseline_fold_aucs"].items()) + f", λ {self_check['baseline_fold_lambdas']}"]
+    lines += ["", "## 정확 중복(자동 제외)", ""]
+    if payload["exact_duplicates"]:
+        lines += ["| 동결 순서 | 후보 | 313 구성원 |", "| ---: | --- | --- |"]
+        lines += [f"| {d['order']} | `{d['member_id']}` | `{d['matches_column']}` |" for d in payload["exact_duplicates"]]
+    else:
+        lines += ["- 없음"]
+    if payload["oof_only_matches"]:
+        lines += ["", "OOF만 같은 후보(정확 중복 아님, 진단): " + ", ".join(f"`{d['member_id']}`=`{d['matches_column']}`" for d in payload["oof_only_matches"])]
+    lines += ["", "## 사다리 후보(동결 순서, 단독 AUC는 진단값)", "", "| 동결 순서 | 후보 | 출처 | 주의 사항 | 전체 OOF 단독 AUC |", "| ---: | --- | --- | --- | ---: |"]
+    for member_id in payload["ladder"]["candidate_member_ids"]:
+        c = by_member[member_id]
+        lines.append(f"| {c['order']} | `{member_id}` | {c['source']} | {', '.join(c['caveat_codes'])} | {c['rescored_auc']:.6f} |")
+    if payload["ladder"]["omitted"]:
+        lines += ["", "생략한 구성: " + "; ".join(f"`{o['name']}` ({o['reason']})" for o in payload["ladder"]["omitted"])]
+    full_path = run_dir / LADDER_DIR / FULL_CONFIG / "nested.json"
+    if full_path.is_file():
+        diagnostics = read_json(full_path).get("near_duplicate_diagnostics")
+        if diagnostics:
+            lines += ["", f"## 근접 중복 진단(스피어만 {DUPLICATE_SPEARMAN} 이상, 열린 4분할, 제외 없음)", "", "| 봉인 분할 | 쌍 수 | 종류별 | 후보가 낀 쌍 |", "| ---: | ---: | --- | --- |"]
+            for fold, entry in diagnostics["by_sealed_fold"].items():
+                involving = [p for p in entry["pairs"] if "candidate" in p["kind"]]
+                lines.append(f"| {fold} | {entry['pair_count']} | {entry['counts_by_kind']} | {', '.join(f'`{p['a']}`·`{p['b']}` {p['spearman']:.6f}' for p in involving) or '-'} |")
+    lines += ["", "## 실행 인계 완결 조건(#481, ADR-0006 개정 항목) 대조", ""]
     lines += [
-        f"- 결과: **{comparison['verdict']}** (후보 절차 팔 {comparison['candidate_arm_auc']:.7f} vs 비교 팔 313 {comparison['comparison_arm_auc']:.7f}, 차이 `{comparison['delta']:+.7f}`, 분할 양수 {comparison['folds_positive']}/{len(comparison['outer_folds'])})",
-        f"- 문턱: 차이 `+{GATE_DELTA}` 이상, 바깥 분할 {FOLDS_REQUIRED_POSITIVE}/5 엄격 양수. 결과 확인 뒤 바꾸지 않는다.",
-        f"- 경계 보고: 문턱과의 차이 `{comparison['boundary_report']['delta_minus_gate']:+.7f}`, 잡음 바닥 `{NOISE_FLOOR}` 안 여부 {comparison['boundary_report']['delta_within_noise_floor']}",
-        f"- 비교 팔 재현: 이어붙인 AUC {comparison['comparison_arm_reproduction']['baseline_concatenated_auc']:.7f}, #455 기준 {comparison['comparison_arm_reproduction']['reference_nested_auc']:.7f}, 차이 {comparison['comparison_arm_reproduction']['delta']}",
-        "",
-    ]
-    lines += ["## 분할별", "", "| 봉인 분할 | 후보 팔 AUC | 비교 팔 AUC | 차이 | 후보 팔 λ | 비교 팔 λ | 선택 외부 후보 | 평가 횟수 | 등록 결합기 최대 차이 |", "| ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: |"]
-    for fold, entry in comparison["fold_results"].items():
-        selection = selections[int(fold)]
-        lines.append(f"| {fold} | {entry['candidate_auc']:.7f} | {entry['baseline_auc']:.7f} | {entry['delta']:+.7f} | {entry['candidate_lambda']} | {entry['baseline_lambda']} | {', '.join(entry['selected']) or '(없음)'} | {selection['evaluations']} | {selection['sealed_prediction']['registered_max_abs_diff']} |")
-    lines += ["", "## 선택 안정성(감시값)", "", "| 후보 | 선택된 분할 수 | 전체 OOF 제안 |", "| --- | ---: | --- |"]
-    full_ids = set(stability_record["full_oof_proposal"] or [])
-    for member, count in stability_record["selection_count_by_candidate"].items():
-        lines.append(f"| `{member}` | {count} | {'포함' if member in full_ids else ('-' if stability_record['full_oof_proposal'] is None else '제외')} |")
-    lines += ["", "## 후보 진단(열린 분할 단독 AUC, 자격·순서에 쓰지 않음)", "", "| 후보 | " + " | ".join(f"분할 {fold}" for fold in comparison["outer_folds"]) + " | 자체와 최대 스피어만 | 제외 분할 |", "| --- | " + " | ".join("---:" for _ in comparison["outer_folds"]) + " | ---: | --- |"]
-    for candidate in payload["freeze_spec"]["candidates"]:
-        column = candidate_column(candidate["member_id"])
-        cells = []
-        max_rho = 0.0
-        excluded_folds = []
-        for fold in comparison["outer_folds"]:
-            entry = next(e for e in selections[fold]["diagnostics"]["candidates"].values() if e["column"] == column)
-            cells.append(f"{entry['standalone_auc']:.6f}")
-            max_rho = max(max_rho, entry["spearman_vs_own_max"])
-            if entry["excluded_for_own_conflict"]:
-                excluded_folds.append(str(fold))
-        lines.append(f"| `{candidate['member_id']}` | " + " | ".join(cells) + f" | {max_rho:.6f} | {', '.join(excluded_folds) or '-'} |")
-    if full is not None:
-        proposal = full["proposal"]
-        lines += ["", "## 엄격 외부 제안 구성(전체 OOF 1회 검색)", "", f"- 자체 {proposal['own_member_count']} + 외부 {proposal['external_member_count']} = {proposal['member_count']}구성원: {', '.join(f'`{m}`' for m in proposal['external_member_ids']) or '(외부 없음)'}", f"- 전체 OOF 검색 점수 {full['full_oof_search_score']:.7f} (문턱 재판정에 쓰지 않음), 평가 {full['evaluations']}회"]
-    lines += ["", "## 실행 인계 완결 조건(#481) 대조", ""]
-    lines += [
-        f"- 변경 불가 감사 기록·자격 판정: 동결 명세 `{payload['freeze_spec']['path']}` (spec_sha256 `{payload['freeze_spec']['sha256']}`)의 후보 {payload['freeze_spec']['candidate_count']}개, 사용자 제외 {len(payload['freeze_spec']['user_exclusions'])}개.",
-        f"- 외부 후보 동결 명세: 후보 집합 식별자 `{payload['candidate_set_id']}`, 계약 판본 {payload['freeze_spec']['contract_version']}, 조사 기준 시각 `{payload['freeze_spec']['survey_cutoff']}`.",
-        f"- 두 입력 명세와 내용 해시: 비교 팔 313 `{payload['comparison_arm']['composition_sha256']}`, 자체 35 `{payload['own_start']['composition_sha256']}`, 후보 `{payload['candidate_arm']['composition_sha256']}`.",
-        f"- 고정 결합기와 검색 규칙: `precommit.json`의 `combiner`·`search_rules` (λ 격자 {payload['combiner']['lambda_grid']}).",
-        f"- 교체 문턱: `precommit.json`의 `gate` (+{GATE_DELTA}, {FOLDS_REQUIRED_POSITIVE}/5).",
-        "- 산출물: `precommit.json`, `fold-<k>/selection.json`, `fold-<k>/predictions.parquet`, `fold-<k>/baseline-predictions.parquet`, `nested-comparison.json`, `selection-stability.json`, `full-selection.json`(통과 시), `report.md`, `manifest.sha256`.",
+        f"- 변경 불가 감사 기록·자격 판정: 동결 명세 `{payload['freeze_spec']['path']}` (spec_sha256 `{payload['freeze_spec']['sha256']}`)의 후보 {payload['freeze_spec']['candidate_count']}개, 사용자 제외 {len(payload['freeze_spec']['user_exclusions'])}개, 조사 기준 시각 `{payload['freeze_spec']['survey_cutoff']}`.",
+        f"- 313개와 사다리 후보의 입력 명세: 비교 팔 313 구성 해시 `{payload['comparison_arm']['composition_sha256']}`, 후보 구성 해시 `{payload['candidate_arm']['composition_sha256']}`, 자체 35 `{payload['own_start']['composition_sha256']}`.",
+        "- 사다리 구성 목록·선택 규칙: `precommit.json`의 `ladder`·`selection_rules`.",
+        f"- 교체 문턱: `precommit.json`의 `gate` (+{GATE_DELTA}, {FOLDS_REQUIRED_POSITIVE}/5), 잡음 바닥 {NOISE_FLOOR}.",
+        "- 비교 팔 자기 검사·구성별 봉인 예측·사다리 비교: `fold-<k>/baseline-predictions.parquet`·`baseline.json`, `ladder/<구성>/fold-<k>/predictions.parquet`·`nested.json`, `ladder-comparison.json`.",
         "- 실패·재개 규칙: `precommit.json`의 `rules` (모든 하위 명령이 입력 해시와 코드 상태를 다시 확인).",
-        "- 실행 경계: 업로드와 최종 두 장 수동 고정은 사용자 승인 뒤에만.",
+        "- 실행 경계: 조립·업로드와 최종 두 장 수동 고정은 사용자 승인 뒤에만(#488).",
         "",
         "## 코드 상태",
         "",
-        f"- git `{payload['code_state']['git']['commit']}` (dirty {payload['code_state']['git']['dirty']}), 판정 도구 sha256 `{payload['code_state']['script']['sha256']}`, 결합기 module sha256 `{payload['code_state']['ensemble_module']['sha256']}`, sklearn {payload['code_state']['sklearn']}, numpy {payload['code_state']['numpy']}.",
-        f"- precommit_sha256 `{payload['precommit_sha256']}`, 작성 {now_iso()}.",
+        f"- git `{payload['code_state']['git']['commit']}` (dirty {payload['code_state']['git']['dirty']}), 판정 도구 sha256 `{payload['code_state']['script']['sha256']}`, 동결 생성기 sha256 `{payload['code_state']['freeze_script_sha256']}`, 결합기 module sha256 `{payload['code_state']['ensemble_module']['sha256']}`, sklearn {payload['code_state']['sklearn']}, numpy {payload['code_state']['numpy']}.",
+        f"- precommit_sha256 `{payload['precommit_sha256']}`, 비교 {comparison['compared_at']}, 보고 작성 {now_iso()}.",
         "",
     ]
     (run_dir / "report.md").write_text("\n".join(lines), encoding="utf-8")
@@ -1132,50 +1559,63 @@ def assemble(args: argparse.Namespace) -> None:
     run_dir = Path(args.run_dir)
     payload = load_precommit(run_dir)
     _require(not payload["rehearsal"], "예행 실행은 조립하지 않는다.")
-    comparison = read_json(run_dir / "nested-comparison.json")
-    full = read_json(run_dir / "full-selection.json")
-    _require(comparison["passes"] and full["precommit_sha256"] == payload["precommit_sha256"] and comparison["precommit_sha256"] == payload["precommit_sha256"], "통과한 전체 OOF 제안 명단이 없다.")
+    comparison = read_json(run_dir / "ladder-comparison.json")
+    _require(comparison["precommit_sha256"] == payload["precommit_sha256"], "ladder-comparison.json이 다른 precommit에서 나왔다.")
+    _require(comparison["complete"] and comparison["self_check"] and comparison["self_check"]["passes"], "자기 검사를 통과한 완전한 판정이 없다.")
+    _require(comparison["selected_config"] is not None, "문턱을 통과한 구성이 없다. 현재 두 장을 유지한다.")
+    config = next(c for c in payload["ladder"]["configs"] if c["name"] == comparison["selected_config"])
+    result = next(r for r in comparison["configs"] if r["name"] == config["name"])
+    _require(result["passes_gate"], f"{config['name']}이 문턱을 넘지 못했다.")
     started = time.monotonic()
     fold_of, y = load_folds_and_labels()
-    own, candidates, _ = load_arm_matrices(run_dir, payload)
-    proposal = full["proposal"]
-    oof = pd.concat([own, candidates], axis=1)[proposal["oof_columns"]].astype(np.float64)
+    oof = load_ladder_matrix(run_dir, payload, config, fold_of)
     test_ids = pd.read_csv(TEST_PATH, usecols=[ID])[ID]
     _require(len(test_ids) == N_TEST and not test_ids.duplicated().any(), "test.csv의 행 수나 id가 기대와 다르다.")
     own_test = pd.read_parquet(OWN_TEST_PATH)
     _require(own_test[ID].to_numpy().tolist() == test_ids.to_numpy().tolist(), "5:1 혼합판 시험 예측의 id 순서가 test.csv와 다르다.")
     own_test = own_test.set_index(ID)
+    by_comparison = {row["column"]: row for row in payload["comparison_arm"]["members"]}
+    by_candidate = {row["column"]: row for row in payload["candidate_arm"]["candidates"]}
     columns: dict[str, np.ndarray] = {}
     sources: dict[str, dict] = {}
-    for entry in proposal["test_columns"]:
-        if entry["origin"] == "own":
-            values = own_test[entry["column"]].to_numpy(np.float64)
-            sources[entry["column"]] = {"kind": "own_cv5_full1_mix", "test_path": str(OWN_TEST_PATH)}
-        else:
+    for column in config["columns"]:
+        if column in by_candidate:
+            entry = by_candidate[column]
             values = freeze.load_array(Path(entry["test_path"]), N_TEST, entry["member_id"])
-            _require(freeze.array_sha256(values) == entry["test_sha256"], f"{entry['member_id']}: 시험 배열 해시가 제안 명단과 다르다.")
-            sources[entry["column"]] = {"kind": "external_cv_fold_average", "test_path": entry["test_path"], "member_id": entry["member_id"]}
-        columns[entry["column"]] = values
-        sources[entry["column"]]["prediction_sha256"] = prediction_array_sha256(values)
+            _require(freeze.array_sha256(values) == entry["test_sha256"], f"{entry['member_id']}: 시험 배열 해시가 동결 명세와 다르다.")
+            sources[column] = {"kind": "external_frozen_candidate", "test_path": entry["test_path"], "member_id": entry["member_id"], "audit_record_id": entry["audit_record_id"]}
+        else:
+            entry = by_comparison[column]
+            if entry["origin"] == "own":
+                values = own_test[column].to_numpy(np.float64)
+                sources[column] = {"kind": "own_cv5_full1_mix", "test_path": str(OWN_TEST_PATH)}
+            else:
+                values = ladder.load_ledger_array(entry["test_path"])
+                sources[column] = {"kind": "external_cv_fold_average", "test_path": entry["test_path"]}
+            _require(values.shape == (N_TEST,) and bool(np.isfinite(values).all()), f"{column}: 시험 배열 형태 {values.shape} 또는 비유한값")
+            _require(prediction_array_sha256(values) == entry["test_prediction_sha256"], f"{column}: 시험 배열 해시가 #457 manifest와 다르다.")
+        columns[column] = values
+        sources[column]["prediction_sha256"] = prediction_array_sha256(values)
     test = pd.DataFrame(columns, index=test_ids.to_numpy()).astype(np.float64)
+    _require(list(test.columns) == list(oof.columns), "시험 행렬의 열 순서가 OOF와 다르다.")
     combiner = ensemble.COMBINER_REGISTRY[STRATEGY]
     fitted = combiner.fit(oof, y)
     prediction = ensemble.full_fit_predictions(combiner, oof, y, test)
     in_sample_auc = float(roc_auc_score(y.to_numpy(), np.asarray(fitted.predict(oof), dtype=np.float64)))
     SUBMISSION_DIR.mkdir(parents=True, exist_ok=True)
-    submission_path = SUBMISSION_DIR / f"strict-external-{payload['candidate_set_id']}.csv"
+    submission_path = SUBMISSION_DIR / f"strict-external-{payload['candidate_set_id']}-{config['name']}.csv"
     pd.DataFrame({ID: test_ids.to_numpy(), TARGET: prediction}).to_csv(submission_path, index=False)
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "issue": ISSUE,
         "candidate_set_id": payload["candidate_set_id"],
         "precommit_sha256": payload["precommit_sha256"],
         "git": git_state(),
         "strategy": STRATEGY,
-        "judged": {"nested_comparison": comparison["delta"], "folds_positive": comparison["folds_positive"], "candidate_arm_auc": comparison["candidate_arm_auc"], "comparison_arm_auc": comparison["comparison_arm_auc"], "verdict": comparison["verdict"]},
-        "assembled": {"member_count": proposal["member_count"], "own_member_count": proposal["own_member_count"], "external_member_count": proposal["external_member_count"], "external_member_ids": proposal["external_member_ids"]},
+        "judged": {"config": config["name"], "nested_auc": result["nested_auc"], "weighted_oof_auc": result["weighted_oof_auc"], "delta_vs_313": result["delta_vs_313"], "folds_positive": result["folds_positive"], "comparison_arm_auc": comparison["comparison_arm_auc"], "verdict": comparison["verdict"], "self_check_passes": comparison["self_check"]["passes"]},
+        "assembled": {"member_count": config["member_count"], "own_member_count": payload["own_start"]["member_count"], "comparison_external_count": payload["comparison_arm"]["member_count"] - payload["own_start"]["member_count"], "candidate_count": len(config["candidate_member_ids"]), "candidate_member_ids": config["candidate_member_ids"]},
         "combiner": {"shrinkage_lambda": float(fitted.shrinkage_lambda), "lambda_grid": list(combiner.lambda_grid), "fit_protocol": "전체 OOF 1회 적합(ensemble.full_fit_predictions), λ는 5분할 leave-one-fold-out", "in_sample_oof_auc": in_sample_auc},
-        "inputs": {"train_sha256": file_sha256(TRAIN_PATH), "test_sha256": file_sha256(TEST_PATH), "folds_sha256": file_sha256(FOLDS_PATH), "pool_sha256": file_sha256(POOL_PATH), "freeze_spec": payload["freeze_spec"], "own_test": {"kind": "cv5_full1_mix", "path": str(OWN_TEST_PATH), "full_refit_manifest_sha256": file_sha256(FULL_REFIT_MANIFEST_PATH)}},
+        "inputs": {"train_sha256": file_sha256(TRAIN_PATH), "test_sha256": file_sha256(TEST_PATH), "folds_sha256": file_sha256(FOLDS_PATH), "pool_sha256": file_sha256(POOL_PATH), "comparison_manifest_sha256": payload["comparison_arm"]["manifest_sha256"], "freeze_spec": payload["freeze_spec"], "own_test": {"kind": "cv5_full1_mix", "path": str(OWN_TEST_PATH), "full_refit_manifest_sha256": file_sha256(FULL_REFIT_MANIFEST_PATH)}},
         "members": [{"column": column, "weight": float(weight), "test": sources[column]} for column, weight in fitted.summary().items()],
         "submission": {"path": str(submission_path), "file_sha256": file_sha256(submission_path), "prediction_sha256": prediction_array_sha256(prediction), "checks": prior_assembly.rank_space_checks(prediction, test_ids)},
         "elapsed_seconds": time.monotonic() - started,
@@ -1283,29 +1723,31 @@ def rehearsal_index(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="엄격 외부 후보 중첩 선별 판정 (#486, ADR-0005)")
+    parser = argparse.ArgumentParser(description="엄격 외부 후보 사다리 판정 (#491, ADR-0006)")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p = sub.add_parser("precommit", help="동결 입력·규칙·코드 상태를 고정하고 캐시를 만든다.")
+    p = sub.add_parser("precommit", help="동결 입력·정확 중복·사다리 구성·선택 규칙·코드 상태를 고정하고 캐시를 만든다.")
     p.add_argument("--spec", type=Path, required=True, help="외부 후보 동결 명세")
     p.add_argument("--run-dir", type=Path, help="출력 폴더(기본 run-logs/strict-external-selection/<후보 집합 식별자>)")
     p.add_argument("--folds", type=int, nargs="+", help="예행 전용: 봉인할 바깥 분할 부분집합")
     p.set_defaults(func=precommit)
 
-    for name, func, help_text in (("select", select_fold, "바깥 분할 하나의 후보 선별과 봉인 예측"), ("baseline", baseline_fold, "비교 팔 313의 봉인 분할 예측")):
-        p = sub.add_parser(name, help=help_text)
-        p.add_argument("--run-dir", type=Path, required=True)
-        p.add_argument("--fold", type=int, required=True)
-        p.add_argument("--force", action="store_true")
-        if name == "select":
-            p.add_argument("--skip-registered-check", action="store_true", help="등록 결합기 대조를 건너뛴다(권장하지 않음)")
-        p.set_defaults(func=func)
-
-    p = sub.add_parser("run", help="남은 (baseline, select) 작업을 하위 프로세스로 실행한다.")
+    p = sub.add_parser("baseline", help="비교 팔 313의 봉인 분할 예측(자기 검사·분할별 비교 기준)")
     p.add_argument("--run-dir", type=Path, required=True)
-    p.add_argument("--workers", type=int, default=5)
-    p.add_argument("--heavy-workers", type=int, default=2, help="313열 baseline 동시 상한(작업당 10GB대)")
-    p.add_argument("--threads", type=int, default=2)
+    p.add_argument("--fold", type=int, required=True)
+    p.add_argument("--force", action="store_true")
+    p.set_defaults(func=baseline_fold)
+
+    p = sub.add_parser("ladder", help="사다리 구성 하나의 nested 5분할")
+    p.add_argument("--run-dir", type=Path, required=True)
+    p.add_argument("--config", required=True)
+    p.add_argument("--force", action="store_true")
+    p.set_defaults(func=ladder_job)
+
+    p = sub.add_parser("run", help="남은 (baseline, ladder) 작업을 하위 프로세스로 실행한다.")
+    p.add_argument("--run-dir", type=Path, required=True)
+    p.add_argument("--workers", type=int, default=3, help="동시 작업 상한(300열대 shrunk 작업당 10GB대, 48GB 기계에서 3)")
+    p.add_argument("--threads", type=int, default=4)
     p.set_defaults(func=run_jobs)
 
     for name, func in (("compare", compare), ("report", report), ("assemble", assemble)):
@@ -1313,7 +1755,17 @@ def main() -> None:
         p.add_argument("--run-dir", type=Path, required=True)
         p.set_defaults(func=func)
 
-    p = sub.add_parser("full", help="절차 통과 뒤 전체 OOF에 동결 검색을 한 번 적용한다.")
+    # ADR-0005 보존 명령. 사다리 판정에서 쓰지 않는다.
+    p = sub.add_parser("adr0005-select", help="(보존) 바깥 분할 하나의 후보 정확 검색과 봉인 예측")
+    p.add_argument("--run-dir", type=Path, required=True)
+    p.add_argument("--fold", type=int, required=True)
+    p.add_argument("--force", action="store_true")
+    p.add_argument("--skip-registered-check", action="store_true", help="등록 결합기 대조를 건너뛴다(권장하지 않음)")
+    p.set_defaults(func=select_fold)
+    p = sub.add_parser("adr0005-compare", help="(보존) 후보 절차 팔과 비교 팔의 이어붙인 비교")
+    p.add_argument("--run-dir", type=Path, required=True)
+    p.set_defaults(func=adr0005_compare)
+    p = sub.add_parser("adr0005-full", help="(보존) 절차 통과 뒤 전체 OOF에 동결 검색을 한 번 적용한다.")
     p.add_argument("--run-dir", type=Path, required=True)
     p.add_argument("--force", action="store_true")
     p.set_defaults(func=full_selection)

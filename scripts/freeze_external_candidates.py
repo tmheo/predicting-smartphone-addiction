@@ -1,4 +1,4 @@
-"""판본 3 외부 구성원 장부 색인에서 외부 후보 동결 명세를 만든다. (#486)
+"""판본 3 외부 구성원 장부 색인에서 외부 후보 동결 명세를 만든다. (#486, 판정 계약은 #491 ADR-0006)
 
 입력은 `docs/research/external-member-ledger-v3/index.json`의
 `eligible_current_records_in_order`다. 순서와 예측 쌍 SHA-256을 그대로 받아
@@ -47,7 +47,7 @@ SCHEMA = "external-candidate-freeze/1"
 DEFAULT_INDEX = Path("docs/research/external-member-ledger-v3/index.json")
 DEFAULT_OUT_DIR = Path("docs/research/external-candidate-freeze")
 REHEARSAL_OUT_DIR = Path("run-logs/strict-external-selection/freeze")
-SELECTION_ADR = Path("docs/adr/0005-strict-external-member-nested-selection.md")
+SELECTION_ADR = Path("docs/adr/0006-strict-external-candidate-ladder.md")
 AUDIT_CONTRACT_REF = "https://github.com/tmheo/predicting-smartphone-addiction/issues/482"
 ELIGIBLE = "자격 있음"
 AUDIT_DONE = "감사 완료"
@@ -58,7 +58,8 @@ AUC_TOLERANCE = 1e-9
 SELECTION_POLICY = [
     "자격 있는 현행 외부 구성원 감사 기록을 색인 순서대로 모두 동결한다(전체 OOF 성능·근접 중복으로 미리 빼지 않는다).",
     "선별 단위는 검증된 개별 OOF·시험 예측 쌍이며 단독 AUC는 진단값이다.",
-    "선별은 ADR-0005의 중첩 선별 절차(자체 35 필수 시작, 고정 shrunk_rank_logit_logistic, 바깥 학습 부분 안의 정확 검색, 상관 0.998 충돌 규칙, +0.00002·5/5 문턱)로만 한다.",
+    "판정은 ADR-0006의 사전 고정 사다리(현재 313개 비교 팔 위에 정확 중복을 뺀 후보를 더한 전체·출처 절제·주의 사항 부류 절제 구성, 고정 shrunk_rank_logit_logistic, 313 대비 +0.00002·바깥 분할 5/5 문턱, 통과 중 nested 최고·잡음 바닥 안이면 구성원 적은 쪽)로만 한다.",
+    "예측 쌍 SHA-256이 313 구성원과 같은 후보는 정확 중복으로 판정 도구가 자동 제외하고 precommit에 기록한다.",
     "공개 점수는 어느 단계에도 쓰지 않는다.",
     "이 명세는 변경 불가이며 후보가 늘거나 공개 판본이 바뀌면 새 명세를 만든다.",
 ]
