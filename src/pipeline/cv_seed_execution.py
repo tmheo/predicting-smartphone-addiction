@@ -395,7 +395,26 @@ def execute_seed(
             actor_kind="pipeline",
             actor_name="fold_result",
         ):
-            adapter = model_mod.create(cfg.model, seed)
+            model_config = cfg.model
+            if paired_training_lengths is not None:
+                assert row_batch is not None and row_evidence is not None
+                optimizer_step_plan = (
+                    paired_training_length_mod.build_optimizer_step_plan(
+                        cfg.model.kind,
+                        cfg.model.params,
+                        original_row_count=row_batch.original_row_count,
+                        training_row_count=len(row_batch.frame),
+                    )
+                )
+                if optimizer_step_plan is not None:
+                    model_config = replace(
+                        cfg.model,
+                        params=optimizer_step_plan.apply(cfg.model.params),
+                    )
+                    row_evidence["paired_optimizer_step_plan"] = (
+                        optimizer_step_plan.evidence()
+                    )
+            adapter = model_mod.create(model_config, seed)
             model_mod.set_dataset_reference(adapter, X_fold, X_test_fold)
             with timed_operation(
                 recorder,

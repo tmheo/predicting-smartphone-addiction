@@ -1398,7 +1398,12 @@ class LookupTransformerAdapter:
     ) -> None:
         _reject_initial_score("lookup_transformer", initial_score, None)
         self._impl = self._new_impl()
-        self._impl.fit_full_member_epochs(X, y, training_lengths)
+        self._impl.fit_full_member_training_points(
+            X,
+            y,
+            training_lengths,
+            int(self._params.get("epochs", 32)),
+        )
 
     def fit_predict_training_states(
         self,

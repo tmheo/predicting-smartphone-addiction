@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass
 
 from .config import PairedTrainingLengthConfig
@@ -11,6 +12,99 @@ from .data import file_sha256
 
 SCHEMA_VERSION = 1
 CONTRACT = "paired-training-length-v1"
+
+
+_NEURAL_BATCH_SIZE_DEFAULTS = {
+    "lookup_transformer": 2048,
+    "contextualized_spline_transformer": 4096,
+    "tabm": 128,
+    "realmlp": 256,
+}
+
+
+@dataclass(frozen=True)
+class PairedOptimizerStepPlan:
+    """복제 행에서도 출처와 같은 epoch별 최적화 갱신 수를 만드는 계획."""
+
+    model_kind: str
+    row_multiplier: int
+    original_row_count: int
+    training_row_count: int
+    source_batch_size: int
+    paired_batch_size: int
+    source_steps_per_epoch: int
+    paired_steps_per_epoch: int
+
+    def apply(self, params: dict) -> dict:
+        adjusted = dict(params)
+        adjusted["batch_size"] = self.paired_batch_size
+        return adjusted
+
+    def evidence(self) -> dict[str, object]:
+        return {
+            "contract": "paired-optimizer-step-v1",
+            "model_kind": self.model_kind,
+            "row_multiplier": self.row_multiplier,
+            "original_row_count": self.original_row_count,
+            "training_row_count": self.training_row_count,
+            "source_batch_size": self.source_batch_size,
+            "paired_batch_size": self.paired_batch_size,
+            "source_steps_per_epoch": self.source_steps_per_epoch,
+            "paired_steps_per_epoch": self.paired_steps_per_epoch,
+            "optimizer_steps_per_epoch_preserved": True,
+        }
+
+
+def build_optimizer_step_plan(
+    model_kind: str,
+    params: dict,
+    *,
+    original_row_count: int,
+    training_row_count: int,
+) -> PairedOptimizerStepPlan | None:
+    """신경망 복제 행의 물리 배치를 늘려 epoch별 갱신 수를 보존한다."""
+    default_batch_size = _NEURAL_BATCH_SIZE_DEFAULTS.get(model_kind)
+    if default_batch_size is None:
+        return None
+    if (
+        isinstance(original_row_count, bool)
+        or isinstance(training_row_count, bool)
+        or not isinstance(original_row_count, int)
+        or not isinstance(training_row_count, int)
+        or original_row_count < 1
+        or training_row_count < 1
+    ):
+        raise ValueError("짝비교 학습 행 수는 양의 정수여야 한다.")
+    row_multiplier, remainder = divmod(training_row_count, original_row_count)
+    if remainder or row_multiplier < 1:
+        raise ValueError(
+            "신경망 짝비교 학습 행 수는 원본 학습 행 수의 양의 정수배여야 한다."
+        )
+    source_batch_size = params.get("batch_size", default_batch_size)
+    if (
+        isinstance(source_batch_size, bool)
+        or not isinstance(source_batch_size, int)
+        or source_batch_size < 1
+    ):
+        raise ValueError(f"{model_kind}: batch_size는 양의 정수여야 한다.")
+    paired_batch_size = source_batch_size * row_multiplier
+    source_steps = math.ceil(original_row_count / source_batch_size)
+    paired_steps = math.ceil(training_row_count / paired_batch_size)
+    if source_steps != paired_steps:
+        raise AssertionError(
+            f"{model_kind}: 복제 행의 epoch별 최적화 갱신 수가 보존되지 않았다: "
+            f"{source_steps} != {paired_steps}"
+        )
+    return PairedOptimizerStepPlan(
+        model_kind=model_kind,
+        row_multiplier=row_multiplier,
+        original_row_count=original_row_count,
+        training_row_count=training_row_count,
+        source_batch_size=source_batch_size,
+        paired_batch_size=paired_batch_size,
+        source_steps_per_epoch=source_steps,
+        paired_steps_per_epoch=paired_steps,
+    )
 
 
 @dataclass(frozen=True)

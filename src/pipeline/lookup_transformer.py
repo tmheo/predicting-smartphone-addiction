@@ -1382,6 +1382,61 @@ class LookupTransformerFold:
             for member, epochs in zip(self._members, member_epochs):
                 member.fit_full(X, y, epochs)
 
+    def fit_full_member_training_points(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        member_epochs: tuple[int, ...],
+        schedule_horizon_epochs: int,
+    ) -> None:
+        """구성원별 완료 시점과 출처의 학습률 일정 지평을 함께 보존한다."""
+        if (
+            isinstance(schedule_horizon_epochs, bool)
+            or not isinstance(schedule_horizon_epochs, int)
+            or schedule_horizon_epochs < 1
+        ):
+            raise ValueError("Lookup-Transformer 일정 지평은 양의 정수여야 한다.")
+        if len(member_epochs) != len(self._members) or any(
+            isinstance(epochs, bool)
+            or not isinstance(epochs, int)
+            or epochs < 1
+            or epochs > schedule_horizon_epochs
+            for epochs in member_epochs
+        ):
+            raise ValueError(
+                "Lookup-Transformer 구성원별 완료 시점이 내부 구성원 또는 "
+                "학습률 일정 지평과 맞지 않는다."
+            )
+        self._captured_completed_epochs = ()
+        self._selected_completed_epoch = None
+        self._columns = list(X.columns)
+        for index, (member, epochs) in enumerate(
+            zip(self._members, member_epochs), start=1
+        ):
+            print(
+                f"[lookup_transformer] paired member {index}/{len(self._members)} "
+                f"seed={member._seed} device={member._device} "
+                f"end={epochs} horizon={schedule_horizon_epochs}",
+                flush=True,
+            )
+
+        def fit_member(item) -> None:
+            member, epochs = item
+            member._fit_full_training_point(
+                X,
+                y,
+                trajectory_end_epochs=epochs,
+                schedule_horizon_epochs=schedule_horizon_epochs,
+            )
+
+        items = list(zip(self._members, member_epochs))
+        if self._parallel:
+            with ThreadPoolExecutor(max_workers=len(self._members)) as executor:
+                list(executor.map(fit_member, items))
+        else:
+            for item in items:
+                fit_member(item)
+
     def fit_full_training_point(
         self,
         X: pd.DataFrame,
