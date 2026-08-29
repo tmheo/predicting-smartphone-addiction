@@ -168,11 +168,9 @@ def run_member(
                 raise ValueError(f"{record_path}: 대응하는 예측 파일이 없다.")
             X_train, X_test = feature_plan.build_full_matrices(train, test, seed)
             provider = initial_score.create(cfg.initial_score)
-            scores = (
-                provider.compute(train.drop(columns=[TARGET]), test, seed)
-                if provider is not None
-                else None
-            )
+            # 바깥쪽 분할 계약은 전체 학습 행의 내부 OOF와 전체 학습 자료 적합의 시험
+            # 초기 점수를 같은 계약으로 만든다. (#505)
+            scores = initial_score.full_data_scores(provider, train, test, seed)
             adapter = model.create(cfg.model, seed)
             model.set_dataset_reference(adapter, X_train, X_test)
             if isinstance(member.derivation, TrajectoryStateBudgetDerivation):

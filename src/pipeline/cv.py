@@ -45,6 +45,8 @@ class CVResult:
     fold_feature_reuse_evidence: list[dict[str, object]] = field(default_factory=list)
     model_training_diagnostics: list[dict[str, object]] = field(default_factory=list)
     training_row_evidence: list[dict[str, object]] = field(default_factory=list)
+    # 바깥쪽 분할 계약 초기 점수의 분할별 계보(1단 OOF AUC, 로짓 범위, 해시). (#505)
+    initial_score_evidence: list[dict[str, object]] = field(default_factory=list)
     # 기존 단일 시점은 fold_recovery.json, 여러 시점은 별도 원자 경계 이름을 쓴다.
     recovery_evidence_name: str = "fold_recovery.json"
 

@@ -18,7 +18,8 @@ artifact는 로컬 mlartifacts/ 아래 파일로 남으므로 소비 방식은 �
   fold_recovery.json(완료 fold의 해시와 재사용 여부),
   model_training_diagnostics.json(모델별 구조화 학습 관측과 반복형 계열의
   training_length_evidence 관측 학습 길이 근거), training_row_evidence.json(명시한
-  학습 행 구성의 부모 대응, 마스크와 누출 방지 불변식). (#19, #141, #160, #372, #500)
+  학습 행 구성의 부모 대응, 마스크와 누출 방지 불변식), initial_score_evidence.json(초기
+  점수 실행의 분할별 1단 계보). (#19, #141, #160, #372, #500, #505)
   test_pred는 라벨이 없어 재채점 가치가 없으므로 시드 평균본만 남긴다. (#98)
 - tags: git_commit, git_dirty, 입력 파일 sha256, 원격 실행 환경과 작업 식별자.
   dirty 실행은 앙상블 후보에서 제외하는 관행. (#14, #414)
@@ -42,6 +43,8 @@ from .cv import CVResult
 from .data import ID, TARGET, file_sha256
 from .features import PLACEBO
 from .fold_fit_reuse import EVIDENCE_NAME as FOLD_FIT_REUSE_EVIDENCE_NAME
+from .initial_score import EVIDENCE_NAME as INITIAL_SCORE_EVIDENCE_NAME
+from .initial_score import EVIDENCE_SCHEMA_VERSION as INITIAL_SCORE_EVIDENCE_SCHEMA_VERSION
 from .fold_fit_reuse import SCHEMA_VERSION as FOLD_FIT_REUSE_SCHEMA_VERSION
 from .fold_fit_reuse import canonical_json_bytes
 from .judgment import mean_gain_of, placebo_gain_of
@@ -310,6 +313,26 @@ def log_final_records(
                 file_sha256(training_row_evidence_path),
             )
             names.append(TRAINING_ROW_EVIDENCE_NAME)
+        if cfg.initial_score is not None:
+            # 자료 전체 계약은 분할별 계보가 없어 entries가 비고, 바깥쪽 분할 계약은
+            # 시드·분할마다 1단 OOF AUC, 로짓 범위와 해시를 남긴다. (#505)
+            initial_score_evidence_path = tmp_dir / INITIAL_SCORE_EVIDENCE_NAME
+            initial_score_evidence_path.write_bytes(
+                canonical_json_bytes(
+                    {
+                        "schema_version": INITIAL_SCORE_EVIDENCE_SCHEMA_VERSION,
+                        "kind": cfg.initial_score.kind,
+                        "entries": result.initial_score_evidence,
+                    }
+                )
+                + b"\n"
+            )
+            client.set_tag(
+                run_id,
+                "sha256.initial_score_evidence",
+                file_sha256(initial_score_evidence_path),
+            )
+            names.append(INITIAL_SCORE_EVIDENCE_NAME)
         for seed, oof in seed_oofs.items():
             names.append(oof_seed_artifact(seed))
             oof.to_parquet(tmp_dir / oof_seed_artifact(seed), index=False)

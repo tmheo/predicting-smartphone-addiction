@@ -1,0 +1,86 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #505: 정확값 one-hot L2 로지스틱 회귀의 누출 없는 내부 OOF 로짓을 LightGBM
+# 초기 점수로 주는 잔차 대조. 기준은 exp110_lgb_kitopl_no_te이며 피처 계획과
+# LightGBM 설정을 그대로 두고 initial_score 블록만 더했다.
+# 초기 점수는 바깥쪽 분할 계약(nested_logistic_onehot)이다.
+# - 바깥쪽 학습 부분의 초기 로짓: 그 부분 안에서만 만든 10분할 층화 OOF 예측.
+# - 바깥쪽 검증과 시험의 초기 로짓: 학습 부분 전체로 맞춘 회귀의 예측.
+# 로지스틱 회귀 좌표는 exp058_logreg_onehot과 같다(C=100, L2, lbfgs, max_iter=3000,
+# onehot_max_card=5000). 입력은 raw 12열만이고 플라시보 잡음 열은 초기 점수 회귀에
+# 넣지 않는다(플라시보는 2단 LightGBM의 카나리아로만 존재한다).
+# 로지스틱 예측은 초기 점수로만 쓰이고 LightGBM 입력 열로 들어가지 않는다.
+# 내부 분할 수, 규제 강도, LightGBM 설정과 피처는 결과를 보고 바꾸지 않는다.
+# 판정 경로는 계열 2(다양성 구성원): seed 42 스크리닝에서 기준보다 낮고 풀 진입 하한
+# 또는 다양성 가능성도 없으면 3시드 실행 없이 닫는다.
+
+name: exp209_issue505_lgb_lr_onehot_init
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [other_screen, screen_slack]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.03172214617330919
+    num_leaves: 45
+    min_child_samples: 229
+    n_estimators: 10000
+    max_bin: 1023
+    colsample_bytree: 0.4654152088234655
+    subsample: 0.9225106784455195
+    subsample_freq: 1
+    reg_lambda: 0.9179636700368584
+    force_row_wise: true
+  fit:
+    early_stopping_rounds: 200
+
+initial_score:
+  kind: nested_logistic_onehot
+  params:
+    cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+    categorical: [gender, stress_level, academic_work_impact]
+    C: 100.0
+    max_iter: 3000
+    onehot_max_card: 5000
+    inner_splits: 10
+    clip: 1.0e-6

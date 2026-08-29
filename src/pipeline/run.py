@@ -210,6 +210,9 @@ def main() -> None:
         final.training_row_evidence = [
             item for result in results for item in result.training_row_evidence
         ]
+        final.initial_score_evidence = [
+            item for result in results for item in result.initial_score_evidence
+        ]
         # 확정 재검증의 시드별 비교를 위해 대표 metric과 함께 기록된다. (ADR 0001)
         for seed, auc in seed_aucs.items():
             final.fold_aucs[f"auc_oof_seed_{seed}"] = auc
