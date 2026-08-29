@@ -706,6 +706,10 @@ class LatticePairTargetEncoder:
             "smoothing": self.smoothing,
         }
 
+    def training_row_context_columns(self) -> list[str]:
+        """복제본이 부모 원본 행의 내부 분할을 물려받는 데 필요한 문맥."""
+        return [PARENT_ID]
+
     def _pair_keys(
         self,
         df: pd.DataFrame,
@@ -729,9 +733,18 @@ class LatticePairTargetEncoder:
         m = self.smoothing
         skf = StratifiedKFold(n_splits=self.inner_folds, shuffle=True, random_state=seed)
         splits = list(skf.split(train_fold, y))
+        inner_fold = np.empty(len(train_fold), dtype=np.int64)
+        for fold_index, (_, va_i) in enumerate(splits):
+            inner_fold[va_i] = fold_index
+        self.inner_fold_by_id_ = pd.Series(
+            inner_fold, index=pd.Index(train_fold[ID], name=ID)
+        )
         cache: dict[tuple[str, str], pd.Series] = {}
         self.te_tables_: dict[str, pd.Series] = {}
         self.ct_tables_: dict[str, pd.Series] = {}
+        self.inner_te_tables_: dict[str, list[pd.Series]] = {}
+        self.inner_ct_tables_: dict[str, list[pd.Series]] = {}
+        self.inner_means_: dict[str, list[float]] = {}
         oof: dict[str, np.ndarray] = {}
         for stem, pair, res in self._stems():
             keys = self._pair_keys(train_fold, pair, res, cache)
@@ -740,14 +753,25 @@ class LatticePairTargetEncoder:
             self.ct_tables_[stem] = grp["count"].astype("float64")
             te = np.empty(len(train_fold), dtype="float64")
             ct = np.empty(len(train_fold), dtype="float64")
+            inner_te_tables: list[pd.Series] = []
+            inner_ct_tables: list[pd.Series] = []
+            inner_means: list[float] = []
             for tr_i, va_i in splits:
-                g = y.iloc[tr_i].groupby(keys.iloc[tr_i]).agg(["sum", "count"])
-                mp = (g["sum"] + m * gm) / (g["count"] + m)
+                inner_y = y.iloc[tr_i]
+                inner_mean = float(inner_y.mean())
+                g = inner_y.groupby(keys.iloc[tr_i]).agg(["sum", "count"])
+                mp = (g["sum"] + m * inner_mean) / (g["count"] + m)
+                inner_te_tables.append(mp)
+                inner_ct_tables.append(g["count"].astype("float64"))
+                inner_means.append(inner_mean)
                 va_keys = keys.iloc[va_i]
-                te[va_i] = va_keys.map(mp).fillna(gm).to_numpy()
+                te[va_i] = va_keys.map(mp).fillna(inner_mean).to_numpy()
                 ct[va_i] = va_keys.map(g["count"]).fillna(0.0).to_numpy()
             oof[f"{stem}_te"] = te
             oof[f"{stem}_ct"] = ct
+            self.inner_te_tables_[stem] = inner_te_tables
+            self.inner_ct_tables_[stem] = inner_ct_tables
+            self.inner_means_[stem] = inner_means
         self.oof_ = pd.DataFrame(oof, index=pd.Index(train_fold[ID], name=ID))
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -760,7 +784,31 @@ class LatticePairTargetEncoder:
             keys = self._pair_keys(df, pair, res, cache)
             te = keys.map(self.te_tables_[stem]).fillna(self.global_mean_)
             ct = keys.map(self.ct_tables_[stem]).fillna(0.0)
-            if is_fit_row.any():
+            if PARENT_ID in df.columns:
+                parent_ids = df[PARENT_ID]
+                has_parent = parent_ids.notna().to_numpy()
+                if has_parent.any():
+                    unknown = ~parent_ids.iloc[has_parent].isin(self.inner_fold_by_id_.index)
+                    if unknown.any():
+                        raise ValueError("격자 목표값 부호화 복제본의 부모 내부 분할이 없다.")
+                    inherited_folds = parent_ids.iloc[has_parent].map(
+                        self.inner_fold_by_id_
+                    )
+                    inherited_positions = np.flatnonzero(has_parent)
+                    te, ct = te.copy(), ct.copy()
+                    for inner_fold in range(self.inner_folds):
+                        selected = inherited_folds.to_numpy() == inner_fold
+                        if not selected.any():
+                            continue
+                        positions = inherited_positions[selected]
+                        selected_keys = keys.iloc[positions]
+                        te.iloc[positions] = selected_keys.map(
+                            self.inner_te_tables_[stem][inner_fold]
+                        ).fillna(self.inner_means_[stem][inner_fold]).to_numpy()
+                        ct.iloc[positions] = selected_keys.map(
+                            self.inner_ct_tables_[stem][inner_fold]
+                        ).fillna(0.0).to_numpy()
+            elif is_fit_row.any():
                 te, ct = te.copy(), ct.copy()
                 te.iloc[is_fit_row] = self.oof_[f"{stem}_te"].loc[fit_ids].to_numpy()
                 ct.iloc[is_fit_row] = self.oof_[f"{stem}_ct"].loc[fit_ids].to_numpy()
@@ -887,6 +935,10 @@ class RichLatticeEncoder:
             "smoothing": self.smoothing,
         }
 
+    def training_row_context_columns(self) -> list[str]:
+        """복제본이 부모 원본 행의 내부 분할을 물려받는 데 필요한 문맥."""
+        return [PARENT_ID]
+
     def _keys(
         self,
         df: pd.DataFrame,
@@ -927,9 +979,18 @@ class RichLatticeEncoder:
                 n_splits=self.inner_folds, shuffle=True, random_state=seed
             ).split(train_fold, y)
         )
+        inner_fold = np.empty(total_count, dtype=np.int64)
+        for fold_index, (_, va_i) in enumerate(splits):
+            inner_fold[va_i] = fold_index
+        self.inner_fold_by_id_ = pd.Series(
+            inner_fold, index=pd.Index(train_fold[ID], name=ID)
+        )
         cache: dict[tuple[str, str], pd.Series] = {}
         self.te_tables_: dict[str, pd.Series] = {}
         self.freq_tables_: dict[str, pd.Series] = {}
+        self.inner_te_tables_: dict[str, list[pd.Series]] = {}
+        self.inner_freq_tables_: dict[str, list[pd.Series]] = {}
+        self.inner_means_: dict[str, list[float]] = {}
         oof: dict[str, np.ndarray] = {}
 
         for stem, key_kind, cols, emits_te in self._specs():
@@ -944,7 +1005,10 @@ class RichLatticeEncoder:
 
             te_values = np.empty(total_count, dtype="float64") if emits_te else None
             freq_values = np.empty(total_count, dtype="float64")
-            for _, va_i in splits:
+            inner_te_tables: list[pd.Series] = []
+            inner_freq_tables: list[pd.Series] = []
+            inner_means: list[float] = []
+            for tr_i, va_i in splits:
                 va_keys = keys.iloc[va_i]
                 va_y = y.iloc[va_i]
                 held_out = va_y.groupby(va_keys).agg(["sum", "count"])
@@ -957,6 +1021,15 @@ class RichLatticeEncoder:
                     - va_keys.map(held_out["sum"]).to_numpy(dtype="float64")
                 )
                 inner_global = (total_sum - float(va_y.sum())) / (total_count - len(va_i))
+                inner_grouped = y.iloc[tr_i].groupby(keys.iloc[tr_i]).agg(["sum", "count"])
+                inner_freq = inner_grouped["count"].astype("float64")
+                inner_freq_tables.append(inner_freq)
+                inner_means.append(float(inner_global))
+                if emits_te:
+                    inner_te_tables.append(
+                        (inner_grouped["sum"] + self.smoothing * inner_global)
+                        / (inner_freq + self.smoothing)
+                    )
                 freq_values[va_i] = inner_count
                 if te_values is not None:
                     te_values[va_i] = (
@@ -965,7 +1038,10 @@ class RichLatticeEncoder:
 
             if te_values is not None:
                 oof[f"{stem}_te"] = te_values
+                self.inner_te_tables_[stem] = inner_te_tables
             oof[f"{stem}_freq"] = freq_values
+            self.inner_freq_tables_[stem] = inner_freq_tables
+            self.inner_means_[stem] = inner_means
 
         self.oof_ = pd.DataFrame(oof, index=pd.Index(train_fold[ID], name=ID))
         assert list(self.oof_.columns) == self.columns()
@@ -977,14 +1053,46 @@ class RichLatticeEncoder:
         out: dict[str, pd.Series] = {}
         for stem, key_kind, cols, emits_te in self._specs():
             keys = self._keys(df, key_kind, cols, cache)
+            inherited: tuple[np.ndarray, np.ndarray] | None = None
+            if PARENT_ID in df.columns:
+                parent_ids = df[PARENT_ID]
+                has_parent = parent_ids.notna().to_numpy()
+                if has_parent.any():
+                    unknown = ~parent_ids.iloc[has_parent].isin(self.inner_fold_by_id_.index)
+                    if unknown.any():
+                        raise ValueError("풍부한 격자 부호화 복제본의 부모 내부 분할이 없다.")
+                    inherited = (
+                        np.flatnonzero(has_parent),
+                        parent_ids.iloc[has_parent].map(self.inner_fold_by_id_).to_numpy(),
+                    )
             if emits_te:
                 te = keys.map(self.te_tables_[stem]).fillna(self.global_mean_)
-                if is_fit_row.any():
+                if inherited is not None:
+                    te = te.copy()
+                    positions, folds = inherited
+                    for inner_fold in range(self.inner_folds):
+                        selected_positions = positions[folds == inner_fold]
+                        if not len(selected_positions):
+                            continue
+                        te.iloc[selected_positions] = keys.iloc[selected_positions].map(
+                            self.inner_te_tables_[stem][inner_fold]
+                        ).fillna(self.inner_means_[stem][inner_fold]).to_numpy()
+                elif is_fit_row.any():
                     te = te.copy()
                     te.iloc[is_fit_row] = self.oof_[f"{stem}_te"].loc[fit_ids].to_numpy()
                 out[f"{stem}_te"] = te.astype("float64")
             freq = keys.map(self.freq_tables_[stem]).fillna(0.0)
-            if is_fit_row.any():
+            if inherited is not None:
+                freq = freq.copy()
+                positions, folds = inherited
+                for inner_fold in range(self.inner_folds):
+                    selected_positions = positions[folds == inner_fold]
+                    if not len(selected_positions):
+                        continue
+                    freq.iloc[selected_positions] = keys.iloc[selected_positions].map(
+                        self.inner_freq_tables_[stem][inner_fold]
+                    ).fillna(0.0).to_numpy()
+            elif is_fit_row.any():
                 freq = freq.copy()
                 freq.iloc[is_fit_row] = self.oof_[f"{stem}_freq"].loc[fit_ids].to_numpy()
             out[f"{stem}_freq"] = freq.astype("float64")

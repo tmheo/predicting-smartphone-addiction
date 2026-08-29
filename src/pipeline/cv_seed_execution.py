@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -15,6 +16,7 @@ from sklearn.metrics import roc_auc_score
 
 from . import initial_score as initial_score_mod
 from . import model as model_mod
+from . import paired_training_length as paired_training_length_mod
 from . import training_length as training_length_mod
 from .config import ExperimentConfig
 from .data import ID, TARGET
@@ -49,6 +51,17 @@ def execute_seed(
     uses_replicas = bool(
         cfg.training_rows is not None and cfg.training_rows.replica_count
     )
+    paired_training_lengths = paired_training_length_mod.load(
+        cfg.paired_training_length
+    )
+    if paired_training_lengths is not None:
+        if not uses_replicas:
+            raise ValueError("짝비교 학습 길이는 복제 학습 행 실행에서만 쓸 수 있다.")
+        if paired_training_lengths.model_kind != cfg.model.kind:
+            raise ValueError(
+                "짝비교 학습 길이의 모형 계열이 설정과 다르다: "
+                f"{paired_training_lengths.model_kind!r} != {cfg.model.kind!r}"
+            )
     if uses_replicas:
         plan.validate_training_row_augmentation()
         if PLACEBO not in feature_names or PLACEBO_MASK_SOURCE not in plan.raw_columns():
@@ -93,8 +106,12 @@ def execute_seed(
     if needs_computation:
         initial_provider = initial_score_mod.create(cfg.initial_score)
         # 자료 전체 계약은 시드마다 한 번, 바깥쪽 분할 계약은 분할 안에서 계산한다. (#505)
-        initial_scores = initial_score_mod.seed_level_scores(
-            initial_provider, train, test, seed
+        initial_scores = (
+            None
+            if uses_replicas
+            else initial_score_mod.seed_level_scores(
+                initial_provider, train, test, seed
+            )
         )
         X = plan.build_matrix(train, seed)
         X_test = plan.build_matrix(test, seed)
@@ -141,6 +158,12 @@ def execute_seed(
                 cfg.training_rows,
                 seed=seed,
                 outer_fold=fold,
+            )
+            row_batch = replace(
+                row_batch,
+                frame=plan.recompute_training_row_dataset_wide(
+                    row_batch.frame, test
+                ),
             )
             row_evidence = dict(row_batch.evidence)
             row_evidence.update(
@@ -300,9 +323,27 @@ def execute_seed(
         ):
             # 초기 로짓은 바깥쪽 학습 부분(tr_idx)의 목표값만 본다. 검증 부분 목표값은
             # 아래 1단 진단 AUC 채점에만 쓰이고 어떤 적합에도 들어가지 않는다. (#505)
-            fold_initial = initial_score_mod.fold_scores(
-                initial_provider, initial_scores, train, test, seed, fold, tr_idx, va_idx
-            )
+            if uses_replicas:
+                assert row_batch is not None
+                fold_initial = initial_score_mod.training_row_fold_scores(
+                    initial_provider,
+                    row_batch.frame,
+                    fold_frame.loc[model_validation_index],
+                    test,
+                    seed,
+                    fold,
+                )
+            else:
+                fold_initial = initial_score_mod.fold_scores(
+                    initial_provider,
+                    initial_scores,
+                    train,
+                    test,
+                    seed,
+                    fold,
+                    tr_idx,
+                    va_idx,
+                )
             if fold_initial is not None and fold_initial.evidence is not None:
                 evidence = dict(fold_initial.evidence)
                 evidence["validation_first_stage_auc"] = float(
@@ -364,17 +405,30 @@ def execute_seed(
                 actor_kind="model",
                 actor_name=cfg.model.kind,
             ):
-                va_pred = np.asarray(
-                    adapter.fit(
+                if paired_training_lengths is not None:
+                    va_pred = model_mod.fit_paired_training_lengths(
+                        adapter,
+                        cfg.model.kind,
                         X_fold.loc[model_training_index],
                         model_training_target,
                         X_fold.loc[model_validation_index],
                         model_validation_target,
+                        paired_training_lengths.for_coordinate(seed, fold),
                         fold_initial.training if fold_initial is not None else None,
                         fold_initial.validation if fold_initial is not None else None,
-                    ),
-                    dtype="float64",
-                )
+                    )
+                else:
+                    va_pred = np.asarray(
+                        adapter.fit(
+                            X_fold.loc[model_training_index],
+                            model_training_target,
+                            X_fold.loc[model_validation_index],
+                            model_validation_target,
+                            fold_initial.training if fold_initial is not None else None,
+                            fold_initial.validation if fold_initial is not None else None,
+                        ),
+                        dtype="float64",
+                    )
             oof_pred[va_idx] = va_pred
             with timed_operation(
                 recorder,
@@ -401,7 +455,17 @@ def execute_seed(
                 actor_kind="model",
                 actor_name=cfg.model.kind,
             ):
-                raw_importance = adapter.importance()
+                raw_importance = (
+                    model_mod.paired_permutation_importance(
+                        adapter,
+                        X_fold.loc[model_validation_index],
+                        model_validation_target,
+                        seed,
+                        fold_initial.validation if fold_initial is not None else None,
+                    )
+                    if paired_training_lengths is not None
+                    else adapter.importance()
+                )
             with timed_operation(
                 recorder,
                 seed=seed,
@@ -424,16 +488,21 @@ def execute_seed(
                 adapter_training_diagnostics = model_mod.collect_training_diagnostics(adapter)
                 # 반복형 계열은 원시 선택값과 관측 학습 길이를 계열과 무관한 같은
                 # 형식으로 남긴다. 시드와 바깥쪽 분할 좌표는 여기서만 안다. (#372)
-                declaration = model_mod.collect_training_length_declaration(
-                    adapter, cfg.model.kind
-                )
-                training_length_evidence = (
-                    None
-                    if declaration is None
-                    else training_length_mod.observe_declaration(
-                        declaration, seed=seed, outer_fold=fold
-                    ).to_json()
-                )
+                if paired_training_lengths is not None:
+                    training_length_evidence = paired_training_lengths.evidence(
+                        seed, fold
+                    )
+                else:
+                    declaration = model_mod.collect_training_length_declaration(
+                        adapter, cfg.model.kind
+                    )
+                    training_length_evidence = (
+                        None
+                        if declaration is None
+                        else training_length_mod.observe_declaration(
+                            declaration, seed=seed, outer_fold=fold
+                        ).to_json()
+                    )
                 fold_training_diagnostics = (
                     {
                         "model_kind": cfg.model.kind,

@@ -16,6 +16,7 @@ from typing import Protocol
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import roc_auc_score
 
 from .config import ModelConfig, TrainingStateConfig
 from .data import TARGET
@@ -196,6 +197,99 @@ def fit_full(
     ):
         raise ValueError("전체 자료 재학습 길이는 양의 정수 또는 None이어야 한다.")
     provider(X, y, training_budget, initial_score)
+
+
+def fit_paired_training_lengths(
+    adapter: ModelAdapter,
+    kind: str,
+    X_tr: pd.DataFrame,
+    y_tr: pd.Series,
+    X_va: pd.DataFrame,
+    y_va: pd.Series,
+    training_lengths: tuple[int, ...] | None,
+    initial_score_tr: pd.Series | None = None,
+    initial_score_va: pd.Series | None = None,
+) -> np.ndarray:
+    """출처 실행에서 고정한 노출량으로 학습하고 검증 예측을 만든다.
+
+    반복 수 개념이 없는 로지스틱 회귀만 기존 적합 경로를 쓴다.
+    반복형 계열은 검증 목표값을 학습 종료 결정에 쓰지 않고, 출처에서 관측한
+    내부 구성원별 길이만큼 정확히 학습한다.
+    """
+    if training_lengths is None:
+        if kind != "logistic_onehot":
+            raise ValueError(f"{kind}: 반복형 모형의 짝비교 학습 길이가 없다.")
+        return np.asarray(
+            adapter.fit(
+                X_tr,
+                y_tr,
+                X_va,
+                y_va,
+                initial_score_tr,
+                initial_score_va,
+            ),
+            dtype="float64",
+        )
+    if not training_lengths or any(
+        isinstance(length, bool) or not isinstance(length, int) or length < 1
+        for length in training_lengths
+    ):
+        raise ValueError(f"{kind}: 짝비교 학습 길이는 양의 정수 묶음이어야 한다.")
+    provider = getattr(adapter, "fit_paired_training_lengths", None)
+    if provider is not None:
+        provider(X_tr, y_tr, training_lengths, initial_score_tr)
+    else:
+        if len(training_lengths) != 1:
+            raise ValueError(
+                f"{kind}: 내부 구성원 {len(training_lengths)}개의 서로 다른 학습 길이를 "
+                "지원하지 않는다."
+            )
+        fit_full(adapter, X_tr, y_tr, training_lengths[0], initial_score_tr)
+    prediction = adapter.predict(X_va, initial_score_va)
+    prediction = np.asarray(prediction, dtype="float64")
+    if prediction.shape != (len(X_va),) or not np.isfinite(prediction).all():
+        raise ValueError(f"{kind}: 고정 노출량 검증 예측이 유한한 1차원 배열이 아니다.")
+    return prediction
+
+
+def paired_permutation_importance(
+    adapter: ModelAdapter,
+    X_va: pd.DataFrame,
+    y_va: pd.Series,
+    seed: int,
+    initial_score_va: pd.Series | None = None,
+) -> pd.DataFrame:
+    """고정 노출량 경로에서 검증 목표값을 오직 순열 중요도 평가에만 쓴다."""
+    if len(X_va) > 50_000:
+        keep = np.random.default_rng(seed).choice(
+            len(X_va), size=50_000, replace=False
+        )
+        keep.sort()
+        X_va = X_va.iloc[keep].copy()
+        y_va = y_va.iloc[keep].copy()
+        if initial_score_va is not None:
+            initial_score_va = initial_score_va.iloc[keep].copy()
+    base_prediction = np.asarray(adapter.predict(X_va, initial_score_va), dtype="float64")
+    base_auc = roc_auc_score(y_va, base_prediction)
+    gains: list[float] = []
+    for column_index, column in enumerate(X_va.columns):
+        drops: list[float] = []
+        for repeat in range(3):
+            generator = np.random.default_rng(
+                seed * 10007 + column_index * 101 + repeat
+            )
+            permuted = X_va.copy()
+            order = generator.permutation(len(permuted))
+            permuted[column] = X_va[column].iloc[order].set_axis(permuted.index)
+            score = roc_auc_score(
+                y_va,
+                np.asarray(
+                    adapter.predict(permuted, initial_score_va), dtype="float64"
+                ),
+            )
+            drops.append(float(base_auc - score))
+        gains.append(float(np.mean(drops)))
+    return pd.DataFrame({"feature": list(X_va.columns), "gain": gains})
 
 
 def fit_predict_training_states(
@@ -1294,6 +1388,17 @@ class LookupTransformerAdapter:
         self._impl = self._new_impl()
         self._impl.fit_full(X, y, training_budget)
 
+    def fit_paired_training_lengths(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        training_lengths: tuple[int, ...],
+        initial_score: pd.Series | None = None,
+    ) -> None:
+        _reject_initial_score("lookup_transformer", initial_score, None)
+        self._impl = self._new_impl()
+        self._impl.fit_full_member_epochs(X, y, training_lengths)
+
     def fit_predict_training_states(
         self,
         X_tr: pd.DataFrame,
@@ -1641,6 +1746,19 @@ class TabMAdapter:
             raise ValueError("tabm 전체 자료 재학습에는 고정 epoch 수가 필요하다.")
         self._impl = tabm.TabMFold(self._params, self._seed)
         self._impl.fit_full(X, y, training_budget)
+
+    def fit_paired_training_lengths(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        training_lengths: tuple[int, ...],
+        initial_score: pd.Series | None = None,
+    ) -> None:
+        from . import tabm
+
+        _reject_initial_score("tabm", initial_score, None)
+        self._impl = tabm.TabMFold(self._params, self._seed)
+        self._impl.fit_full_member_epochs(X, y, training_lengths)
 
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None

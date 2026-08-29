@@ -1346,10 +1346,25 @@ class LookupTransformerFold:
 
     def fit_full(self, X: pd.DataFrame, y: pd.Series, epochs: int) -> None:
         """초기화 구성원 모두를 전체 자료에서 같은 고정 epoch 수로 학습한다."""
+        self.fit_full_member_epochs(X, y, (epochs,) * len(self._members))
+
+    def fit_full_member_epochs(
+        self, X: pd.DataFrame, y: pd.Series, member_epochs: tuple[int, ...]
+    ) -> None:
+        """초기화 구성원마다 출처 실행에서 고정한 epoch 수로 학습한다."""
+        if len(member_epochs) != len(self._members) or any(
+            isinstance(epochs, bool) or not isinstance(epochs, int) or epochs < 1
+            for epochs in member_epochs
+        ):
+            raise ValueError(
+                "Lookup-Transformer 구성원별 epoch 수가 초기화 구성원과 맞지 않는다."
+            )
         self._captured_completed_epochs = ()
         self._selected_completed_epoch = None
         self._columns = list(X.columns)
-        for index, member in enumerate(self._members, start=1):
+        for index, (member, epochs) in enumerate(
+            zip(self._members, member_epochs), start=1
+        ):
             print(
                 f"[lookup_transformer] full member {index}/{len(self._members)} "
                 f"seed={member._seed} device={member._device} epochs={epochs}",
@@ -1359,11 +1374,12 @@ class LookupTransformerFold:
             with ThreadPoolExecutor(max_workers=len(self._members)) as executor:
                 list(
                     executor.map(
-                        lambda member: member.fit_full(X, y, epochs), self._members
+                        lambda item: item[0].fit_full(X, y, item[1]),
+                        zip(self._members, member_epochs),
                     )
                 )
         else:
-            for member in self._members:
+            for member, epochs in zip(self._members, member_epochs):
                 member.fit_full(X, y, epochs)
 
     def fit_full_training_point(

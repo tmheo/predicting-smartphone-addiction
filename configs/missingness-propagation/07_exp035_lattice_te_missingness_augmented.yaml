@@ -1,0 +1,75 @@
+name: mpv1_exp035_lattice_te_missingness_augmented
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+features:
+  base: raw
+  categorical:
+  - gender
+  - stress_level
+  - academic_work_impact
+  providers:
+  - kind: derived
+    names:
+    - other_screen
+    - screen_slack
+  - kind: target_encoding
+    inner_folds: 10
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+    - placebo_noise
+  - kind: constrained_impute_aux
+    widths: false
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+  - kind: lattice_pair_te
+    resolutions:
+    - floor
+    inner_folds: 4
+    smoothing: 20
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.05
+    num_leaves: 255
+    n_estimators: 10000
+    force_row_wise: true
+  fit:
+    early_stopping_rounds: 200
+training_rows:
+  arm: missingness_augmented
+  replica_count: 2
+  observed_cell_mask_probability: 0.25
+paired_training_length:
+  source: artifacts/issue510-paired-training-lengths.json
+  sha256: 9c94657cb59ceef78a95b2e5254a03bed4849198a1f0848241ce807dbd46e613
+  member: exp035_lattice_te

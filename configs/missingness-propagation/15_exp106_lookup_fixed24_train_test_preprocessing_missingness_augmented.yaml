@@ -1,0 +1,50 @@
+name: mpv1_exp106_lookup_fixed24_train_test_preprocessing_missingness_augmented
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+features:
+  base: raw
+  categorical:
+  - gender
+  - stress_level
+  - academic_work_impact
+  providers:
+  - kind: derived
+    names:
+    - screen_slack
+    - sgw_sum
+    - slack_frac
+    - wk_minus_sgw
+    - wk_other
+    - sgw_frac
+model:
+  kind: lookup_transformer
+  params:
+    lookup_cols:
+    - age
+    - gender
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+    - stress_level
+    - academic_work_impact
+    preprocessing_scope: train_test
+    validation_selection: final
+    epochs: 24
+    ema_decay: 0.999
+  fit: {}
+training_rows:
+  arm: missingness_augmented
+  replica_count: 2
+  observed_cell_mask_probability: 0.25
+paired_training_length:
+  source: artifacts/issue510-paired-training-lengths.json
+  sha256: 9c94657cb59ceef78a95b2e5254a03bed4849198a1f0848241ce807dbd46e613
+  member: exp106_lookup_fixed24_train_test_preprocessing

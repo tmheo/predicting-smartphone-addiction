@@ -30,6 +30,7 @@ from sklearn.model_selection import StratifiedKFold
 from .config import InitialScoreConfig
 from .data import ID, TARGET, file_sha256
 from .features import ORIGINAL_PROXY_SHA256, PLACEBO
+from .training_rows import PARENT_ID
 
 EVIDENCE_NAME = "initial_score_evidence.json"
 EVIDENCE_SCHEMA_VERSION = 1
@@ -161,6 +162,76 @@ def fold_scores(
         validation=seed_scores.train.loc[validation_index],
         test=seed_scores.test,
         evidence=None,
+    )
+
+
+def training_row_fold_scores(
+    provider: object,
+    training: pd.DataFrame,
+    validation: pd.DataFrame,
+    test: pd.DataFrame,
+    seed: int,
+    fold: int,
+) -> FoldInitialScores | None:
+    """복제본을 포함한 실제 학습 행에서 초기 점수를 새로 계산한다."""
+    if provider is None:
+        return None
+    if is_outer_fold_provider(provider):
+        result = provider.compute_outer_fold(
+            training,
+            validation.drop(columns=[TARGET], errors="ignore"),
+            test,
+            seed,
+            fold,
+        )
+        if not result.training.index.equals(training.index):
+            raise AssertionError(f"fold {fold} 실제 학습 행 초기 점수 인덱스가 다르다.")
+        if not result.validation.index.equals(validation.index):
+            raise AssertionError(f"fold {fold} 검증 행 초기 점수 인덱스가 다르다.")
+        if not result.test.index.equals(test.index):
+            raise AssertionError(f"fold {fold} 시험 행 초기 점수 인덱스가 다르다.")
+        evidence = dict(result.evidence)
+        evidence.update(
+            {
+                "actual_training_rows_recomputed": True,
+                "parent_scores_inherited": False,
+            }
+        )
+        return FoldInitialScores(
+            training=result.training,
+            validation=result.validation,
+            test=result.test,
+            evidence=evidence,
+        )
+    validation_features = validation.drop(columns=[TARGET], errors="ignore")
+    other = pd.concat([validation_features, test], ignore_index=True)
+    scores = provider.compute(training.drop(columns=[TARGET]), other, seed)
+    validation_count = len(validation_features)
+    training_scores = scores.train.copy()
+    training_scores.index = training.index
+    validation_scores = scores.test.iloc[:validation_count].copy()
+    validation_scores.index = validation.index
+    test_scores = scores.test.iloc[validation_count:].copy()
+    test_scores.index = test.index
+    return FoldInitialScores(
+        training=training_scores,
+        validation=validation_scores,
+        test=test_scores,
+        evidence={
+            "kind": type(provider).__name__,
+            "seed": int(seed),
+            "outer_fold": int(fold),
+            "training_rows": int(len(training)),
+            "validation_rows": int(len(validation)),
+            "test_rows": int(len(test)),
+            "actual_training_rows_recomputed": True,
+            "parent_scores_inherited": False,
+            "sha256": {
+                "training": _array_sha256(training_scores.to_numpy()),
+                "validation": _array_sha256(validation_scores.to_numpy()),
+                "test": _array_sha256(test_scores.to_numpy()),
+            },
+        },
     )
 
 
@@ -412,12 +483,56 @@ class NestedLogisticOnehot:
         return y.astype(int)
 
     def _inner_oof(
-        self, X: pd.DataFrame, y: pd.Series, seed: int
-    ) -> tuple[np.ndarray, list[int]]:
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        seed: int,
+        groups: pd.Series | None = None,
+    ) -> tuple[np.ndarray, list[int], dict[str, object]]:
         splitter = StratifiedKFold(n_splits=self.inner_splits, shuffle=True, random_state=seed)
+        if groups is None:
+            splits = list(splitter.split(X, y))
+            group_evidence = {
+                "parent_grouping_used": False,
+                "parent_groups_exclusive": None,
+            }
+        else:
+            if groups.isna().any():
+                raise ValueError("내부 초기 점수의 부모 행 식별자에 결측이 있다.")
+            grouped_targets = y.groupby(groups, sort=False)
+            if (grouped_targets.nunique() != 1).any():
+                raise ValueError("같은 부모에서 나온 행의 목표값이 서로 다르다.")
+            parent_targets = grouped_targets.first()
+            parent_ids = parent_targets.index.to_numpy()
+            splits = []
+            assignment = np.full(len(X), -1, dtype="int64")
+            for inner_fold, (parent_tr, parent_va) in enumerate(
+                splitter.split(parent_ids, parent_targets.to_numpy())
+            ):
+                training_parents = set(parent_ids[parent_tr])
+                validation_parents = set(parent_ids[parent_va])
+                if training_parents & validation_parents:
+                    raise AssertionError("초기 점수 내부 분할에서 부모 행이 양쪽에 걸쳤다.")
+                tr_i = np.flatnonzero(groups.isin(training_parents).to_numpy())
+                va_i = np.flatnonzero(groups.isin(validation_parents).to_numpy())
+                assignment[va_i] = inner_fold
+                splits.append((tr_i, va_i))
+            if (assignment < 0).any():
+                raise AssertionError("초기 점수 내부 분할에 배정되지 않은 행이 있다.")
+            digest = hashlib.sha256(
+                pd.DataFrame(
+                    {"parent": groups.astype(str), "inner_fold": assignment}
+                ).to_csv(index=False).encode()
+            ).hexdigest()
+            group_evidence = {
+                "parent_grouping_used": True,
+                "parent_groups": int(groups.nunique()),
+                "parent_groups_exclusive": True,
+                "parent_inner_fold_sha256": digest,
+            }
         oof = np.full(len(X), np.nan, dtype="float64")
         iterations: list[int] = []
-        for tr_i, va_i in splitter.split(X, y):
+        for tr_i, va_i in splits:
             adapter = self._adapter(seed)
             oof[va_i] = np.asarray(
                 adapter.fit(X.iloc[tr_i], y.iloc[tr_i], X.iloc[va_i], y.iloc[va_i]),
@@ -426,7 +541,7 @@ class NestedLogisticOnehot:
             iterations.append(adapter.training_iterations())
         if not np.isfinite(oof).all():
             raise AssertionError("내부 OOF 예측에 채워지지 않았거나 유한하지 않은 값이 있다.")
-        return oof, iterations
+        return oof, iterations, group_evidence
 
     def _fit_and_predict(
         self, training: pd.DataFrame, others: dict[str, pd.DataFrame], seed: int
@@ -434,7 +549,10 @@ class NestedLogisticOnehot:
         started = time.perf_counter()
         X_tr = self._matrix(training, "training")
         y_tr = self._training_target(training)
-        inner_oof, inner_iterations = self._inner_oof(X_tr, y_tr, seed)
+        groups = training[PARENT_ID] if PARENT_ID in training.columns else None
+        inner_oof, inner_iterations, group_evidence = self._inner_oof(
+            X_tr, y_tr, seed, groups
+        )
         full = self._adapter(seed)
         full.fit_full(X_tr, y_tr, None)
         predictions = {
@@ -454,6 +572,7 @@ class NestedLogisticOnehot:
             "full_fit_iterations": full.training_iterations(),
             "n_features": full.feature_count(),
             "seconds": time.perf_counter() - started,
+            **group_evidence,
         }
         return inner_oof, predictions, evidence
 

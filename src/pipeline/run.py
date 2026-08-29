@@ -88,6 +88,13 @@ def main() -> None:
                 "observed-cell-mask-p="
                 f"{cfg.training_rows.observed_cell_mask_probability}"
             )
+        if cfg.paired_training_length is not None:
+            print(
+                "paired length: "
+                f"{cfg.paired_training_length.member} "
+                f"{cfg.paired_training_length.source} "
+                f"sha256={cfg.paired_training_length.sha256}"
+            )
         if cfg.initial_score is not None:
             print(f"init score : {cfg.initial_score.kind} {cfg.initial_score.params}")
         for name, h in _input_hashes(cfg).items():
@@ -257,6 +264,10 @@ def _input_hashes(cfg) -> dict[str, str]:
     hashes.update(
         {name: data.file_sha256(path) for name, path in initial_score.input_paths(cfg.initial_score).items()}
     )
+    if cfg.paired_training_length is not None:
+        hashes["paired_training_length"] = data.file_sha256(
+            cfg.paired_training_length.source
+        )
     return hashes
 
 

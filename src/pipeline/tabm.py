@@ -248,17 +248,26 @@ class TabMFold:
 
     def fit_full(self, X: pd.DataFrame, y: pd.Series, epochs: int) -> None:
         """전체 자료를 검증 분할과 조기 종료 없이 고정 epoch 수로 학습한다."""
+        self.fit_full_member_epochs(X, y, (epochs,) * self._n_seed_avg)
+
+    def fit_full_member_epochs(
+        self, X: pd.DataFrame, y: pd.Series, member_epochs: tuple[int, ...]
+    ) -> None:
+        """내부 시드 구성원마다 출처 실행에서 고정한 epoch 수로 학습한다."""
         import torch
 
-        if isinstance(epochs, bool) or not isinstance(epochs, int) or epochs < 1:
-            raise ValueError("TabM 전체 자료 재학습 epoch 수는 양의 정수여야 한다.")
+        if len(member_epochs) != self._n_seed_avg or any(
+            isinstance(epochs, bool) or not isinstance(epochs, int) or epochs < 1
+            for epochs in member_epochs
+        ):
+            raise ValueError("TabM 구성원별 epoch 수가 내부 시드 구성원과 맞지 않는다.")
         device = "cuda" if torch.cuda.is_available() else "cpu"
         self._fit_medians(X)
         X_t = self._transform(X)
-        params = dict(self._pytabkit)
-        params["n_epochs"] = epochs
         self._models = []
-        for s in range(self._n_seed_avg):
+        for s, epochs in enumerate(member_epochs):
+            params = dict(self._pytabkit)
+            params["n_epochs"] = epochs
             member = _FixedEpochTabMMember(
                 params=params,
                 seed=self._seed + 1000 * s,
@@ -274,7 +283,8 @@ class TabMFold:
             )
         self._training_diagnostics = {
             "full_fit": True,
-            "epochs": epochs,
+            "epochs": member_epochs[0] if len(set(member_epochs)) == 1 else None,
+            "member_epochs": list(member_epochs),
             "optimizer": self._optimizer_name,
             "members": [member.training_diagnostics() for member in self._models],
         }

@@ -1,0 +1,28 @@
+name: mpv1_exp058_logreg_onehot_missingness_augmented
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+features:
+  base: raw
+  categorical:
+  - gender
+  - stress_level
+  - academic_work_impact
+  providers: []
+model:
+  kind: logistic_onehot
+  params:
+    C: 100.0
+    max_iter: 3000
+    onehot_max_card: 5000
+  fit: {}
+training_rows:
+  arm: missingness_augmented
+  replica_count: 2
+  observed_cell_mask_probability: 0.25
+paired_training_length:
+  source: artifacts/issue510-paired-training-lengths.json
+  sha256: 9c94657cb59ceef78a95b2e5254a03bed4849198a1f0848241ce807dbd46e613
+  member: exp058_logreg_onehot

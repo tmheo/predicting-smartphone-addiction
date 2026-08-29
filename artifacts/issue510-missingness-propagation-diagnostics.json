@@ -1,0 +1,835 @@
+{
+  "configuration_boundaries": [
+    {
+      "config": "01_exp006_te_drop_gaming_missingness_augmented.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        312
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "01_exp006_te_drop_gaming_tripled.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        312
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "02_exp011_resid_pair_missingness_augmented.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        485
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "02_exp011_resid_pair_tripled.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        485
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "03_exp022_orig_knn_missingness_augmented.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        360
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "03_exp022_orig_knn_tripled.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        360
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "04_exp023_orig_proxy_residual_missingness_augmented.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        364
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "04_exp023_orig_proxy_residual_tripled.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        364
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "05_exp025_constrained_impute_missingness_augmented.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        354
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "05_exp025_constrained_impute_tripled.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        354
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "06_exp032_recon_orig_mean_top3_missingness_augmented.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        493
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "06_exp032_recon_orig_mean_top3_tripled.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        493
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "07_exp035_lattice_te_missingness_augmented.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        193
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "07_exp035_lattice_te_tripled.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        193
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "08_exp058_logreg_onehot_missingness_augmented.yaml",
+      "model_kind": "logistic_onehot",
+      "source_lengths": null,
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "08_exp058_logreg_onehot_tripled.yaml",
+      "model_kind": "logistic_onehot",
+      "source_lengths": null,
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "09_exp059_lookup_transformer_missingness_augmented.yaml",
+      "model_kind": "lookup_transformer",
+      "source_lengths": [
+        12
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "09_exp059_lookup_transformer_tripled.yaml",
+      "model_kind": "lookup_transformer",
+      "source_lengths": [
+        12
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "10_exp070_cat_exact_cats_missingness_augmented.yaml",
+      "model_kind": "catboost",
+      "source_lengths": [
+        4214
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "10_exp070_cat_exact_cats_tripled.yaml",
+      "model_kind": "catboost",
+      "source_lengths": [
+        4214
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "11_exp081_lookup_fold_initialization_avg3_missingness_augmented.yaml",
+      "model_kind": "lookup_transformer",
+      "source_lengths": [
+        12,
+        12,
+        12
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "11_exp081_lookup_fold_initialization_avg3_tripled.yaml",
+      "model_kind": "lookup_transformer",
+      "source_lengths": [
+        12,
+        12,
+        12
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "12_exp110_lgb_kitopl_no_te_missingness_augmented.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        5216
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "12_exp110_lgb_kitopl_no_te_tripled.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        5216
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "13_exp111_xgb_depth8_no_te_missingness_augmented.yaml",
+      "model_kind": "xgboost",
+      "source_lengths": [
+        1490
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "13_exp111_xgb_depth8_no_te_tripled.yaml",
+      "model_kind": "xgboost",
+      "source_lengths": [
+        1490
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "14_exp071_cat_exact_no_te_missingness_augmented.yaml",
+      "model_kind": "catboost",
+      "source_lengths": [
+        4630
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "14_exp071_cat_exact_no_te_tripled.yaml",
+      "model_kind": "catboost",
+      "source_lengths": [
+        4630
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "15_exp106_lookup_fixed24_train_test_preprocessing_missingness_augmented.yaml",
+      "model_kind": "lookup_transformer",
+      "source_lengths": [
+        24
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "15_exp106_lookup_fixed24_train_test_preprocessing_tripled.yaml",
+      "model_kind": "lookup_transformer",
+      "source_lengths": [
+        24
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "16_exp113_tab_cnn_m0_missingness_augmented.yaml",
+      "model_kind": "tab_cnn",
+      "source_lengths": [
+        28
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "16_exp113_tab_cnn_m0_tripled.yaml",
+      "model_kind": "tab_cnn",
+      "source_lengths": [
+        28
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "17_exp085_contextual_spline_m0_missingness_augmented.yaml",
+      "model_kind": "contextualized_spline_transformer",
+      "source_lengths": [
+        11
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "17_exp085_contextual_spline_m0_tripled.yaml",
+      "model_kind": "contextualized_spline_transformer",
+      "source_lengths": [
+        11
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "18_exp027_recon_ce_missingness_augmented.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        450
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "18_exp027_recon_ce_tripled.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        450
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "19_exp048_lgb_orig_cdf_diff_missingness_augmented.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        463
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "19_exp048_lgb_orig_cdf_diff_tripled.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        463
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "20_exp134_realmlp_muon_missingness_augmented.yaml",
+      "model_kind": "realmlp",
+      "source_lengths": [
+        4
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "20_exp134_realmlp_muon_tripled.yaml",
+      "model_kind": "realmlp",
+      "source_lengths": [
+        4
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "21_exp135_xgb_hpo_trial30_missingness_augmented.yaml",
+      "model_kind": "xgboost",
+      "source_lengths": [
+        8492
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "21_exp135_xgb_hpo_trial30_tripled.yaml",
+      "model_kind": "xgboost",
+      "source_lengths": [
+        8492
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "22_exp131_lookup_bivariate_plr5_missingness_augmented.yaml",
+      "model_kind": "lookup_transformer",
+      "source_lengths": [
+        12,
+        12,
+        12
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "22_exp131_lookup_bivariate_plr5_tripled.yaml",
+      "model_kind": "lookup_transformer",
+      "source_lengths": [
+        12,
+        12,
+        12
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "23_exp136_realmlp_muon_recon_widths_missingness_augmented.yaml",
+      "model_kind": "realmlp",
+      "source_lengths": [
+        4
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "23_exp136_realmlp_muon_recon_widths_tripled.yaml",
+      "model_kind": "realmlp",
+      "source_lengths": [
+        4
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "24_exp137_tabm_recon_widths_missingness_augmented.yaml",
+      "model_kind": "tabm",
+      "source_lengths": [
+        19,
+        10,
+        16
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "24_exp137_tabm_recon_widths_tripled.yaml",
+      "model_kind": "tabm",
+      "source_lengths": [
+        19,
+        10,
+        16
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "25_exp133_scalar_token_transformer_oof_te_missingness_augmented.yaml",
+      "model_kind": "scalar_token_transformer",
+      "source_lengths": [
+        16
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "25_exp133_scalar_token_transformer_oof_te_tripled.yaml",
+      "model_kind": "scalar_token_transformer",
+      "source_lengths": [
+        16
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "26_exp131_tab_cnn_oof_target_mean_missingness_augmented.yaml",
+      "model_kind": "tab_cnn",
+      "source_lengths": [
+        14
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "26_exp131_tab_cnn_oof_target_mean_tripled.yaml",
+      "model_kind": "tab_cnn",
+      "source_lengths": [
+        14
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "27_exp132_tab_cnn_epochs100_missingness_augmented.yaml",
+      "model_kind": "tab_cnn",
+      "source_lengths": [
+        42
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "27_exp132_tab_cnn_epochs100_tripled.yaml",
+      "model_kind": "tab_cnn",
+      "source_lengths": [
+        42
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "28_exp139_realmlp_reference_qnormal_train_test_missingness_augmented.yaml",
+      "model_kind": "realmlp",
+      "source_lengths": [
+        4
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "28_exp139_realmlp_reference_qnormal_train_test_tripled.yaml",
+      "model_kind": "realmlp",
+      "source_lengths": [
+        4
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "29_exp140_realmlp_orig_cdf_diff_missingness_augmented.yaml",
+      "model_kind": "realmlp",
+      "source_lengths": [
+        4
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "29_exp140_realmlp_orig_cdf_diff_tripled.yaml",
+      "model_kind": "realmlp",
+      "source_lengths": [
+        4
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "30_exp157_lookup_muon_initavg8_missingness_augmented.yaml",
+      "model_kind": "lookup_transformer",
+      "source_lengths": [
+        12,
+        12,
+        10,
+        10,
+        12,
+        12,
+        10,
+        10
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "30_exp157_lookup_muon_initavg8_tripled.yaml",
+      "model_kind": "lookup_transformer",
+      "source_lengths": [
+        12,
+        12,
+        10,
+        10,
+        12,
+        12,
+        10,
+        10
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "31_exp168_issue413_lgb_no_te_fixed20_missingness_augmented.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        913
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "31_exp168_issue413_lgb_no_te_fixed20_tripled.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        913
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "32_exp197_issue419_lgb_recon_ce_fixed20_missingness_augmented.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        76
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "32_exp197_issue419_lgb_recon_ce_fixed20_tripled.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        76
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "33_exp183_issue419_cat_exact_fixed10_missingness_augmented.yaml",
+      "model_kind": "catboost",
+      "source_lengths": [
+        410
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "33_exp183_issue419_cat_exact_fixed10_tripled.yaml",
+      "model_kind": "catboost",
+      "source_lengths": [
+        410
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "34_exp209_issue505_lgb_lr_onehot_init_missingness_augmented.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        1357
+      ],
+      "training_row_boundary_supported": true
+    },
+    {
+      "config": "34_exp209_issue505_lgb_lr_onehot_init_tripled.yaml",
+      "model_kind": "lightgbm",
+      "source_lengths": [
+        1357
+      ],
+      "training_row_boundary_supported": true
+    }
+  ],
+  "initial_score_boundaries": {
+    "actual_replica_scores_recomputed": true,
+    "nested_parent_groups": 60,
+    "nested_parent_groups_exclusive": true,
+    "nested_parent_inner_fold_sha256": "b5293408938ead62fe5fea7db47391c3b4741fe65fcb68525b2ecd2301ac764c",
+    "parent_scores_inherited": false,
+    "validation_and_test_fit_from_actual_outer_training_block": true
+  },
+  "inputs": {
+    "freeze_path": "artifacts/issue510-missingness-propagation-precommit.json",
+    "freeze_sha256": "b2e91630cb4ef935232a8988b8e6ccfcc4cb6fd02b21650cd22395e11886c020",
+    "test_sha256": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "train_sha256": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+  },
+  "issue": {
+    "number": 510,
+    "title": "모든 모델 계열에서 결측 증강 짝비교 실행 경계를 구현하고 진단한다",
+    "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/510"
+  },
+  "pair_contracts": [
+    {
+      "member": "exp006_te_drop_gaming",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp011_resid_pair",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp022_orig_knn",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp023_orig_proxy_residual",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp025_constrained_impute",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp032_recon_orig_mean_top3",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp035_lattice_te",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp058_logreg_onehot",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp059_lookup_transformer",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp070_cat_exact_cats",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp081_lookup_fold_initialization_avg3",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp110_lgb_kitopl_no_te",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp111_xgb_depth8_no_te",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp071_cat_exact_no_te",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp106_lookup_fixed24_train_test_preprocessing",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp113_tab_cnn_m0",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp085_contextual_spline_m0",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp027_recon_ce",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp048_lgb_orig_cdf_diff",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp134_realmlp_muon",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp135_xgb_hpo_trial30",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp131_lookup_bivariate_plr5",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp136_realmlp_muon_recon_widths",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp137_tabm_recon_widths",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp133_scalar_token_transformer_oof_te",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp131_tab_cnn_oof_target_mean",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp132_tab_cnn_epochs100",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp139_realmlp_reference_qnormal_train_test",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp140_realmlp_orig_cdf_diff",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp157_lookup_muon_initavg8",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp168_issue413_lgb_no_te_fixed20",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp197_issue419_lgb_recon_ce_fixed20",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp183_issue419_cat_exact_fixed10",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    },
+    {
+      "member": "exp209_issue505_lgb_lr_onehot_init",
+      "only_name_and_training_rows_differ": true,
+      "paired_training_length_reference_equal": true
+    }
+  ],
+  "reduced_end_to_end": [
+    {
+      "config": "08_exp058_logreg_onehot_missingness_augmented.yaml",
+      "finite_predictions": true,
+      "fold_count": 5,
+      "model_kind": "logistic_onehot",
+      "observed_training_lengths": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "oof_auc": 0.512,
+      "paired_training_evidence_recorded": true,
+      "rows": 100
+    },
+    {
+      "config": "32_exp197_issue419_lgb_recon_ce_fixed20_missingness_augmented.yaml",
+      "finite_predictions": true,
+      "fold_count": 5,
+      "model_kind": "lightgbm",
+      "observed_training_lengths": [
+        [
+          76
+        ],
+        [
+          76
+        ],
+        [
+          76
+        ],
+        [
+          76
+        ],
+        [
+          76
+        ]
+      ],
+      "oof_auc": 0.858,
+      "paired_training_evidence_recorded": true,
+      "rows": 100
+    }
+  ],
+  "row_and_feature_boundaries": {
+    "added_missing_cells": 411,
+    "categorical_copies_recomputed": true,
+    "mask_deterministic": true,
+    "p0_lattice_oof_equal": true,
+    "p0_raw_blocks_equal": true,
+    "parent_inner_fold_inherited": true,
+    "source_rows": 80,
+    "state_fit_rows": 80,
+    "target_and_outer_fold_inherited": true,
+    "training_rows": 240
+  },
+  "schema_version": 1,
+  "summary": {
+    "all_assertions_passed": true,
+    "config_count": 68,
+    "model_kinds": [
+      "catboost",
+      "contextualized_spline_transformer",
+      "lightgbm",
+      "logistic_onehot",
+      "lookup_transformer",
+      "realmlp",
+      "scalar_token_transformer",
+      "tab_cnn",
+      "tabm",
+      "xgboost"
+    ],
+    "pair_count": 34
+  }
+}

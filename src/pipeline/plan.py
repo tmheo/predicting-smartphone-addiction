@@ -691,11 +691,14 @@ class FeaturePlan:
 
     def validate_training_row_augmentation(self) -> None:
         """복제 행을 쓸 때 현재 피처 계획이 부모 내부 분할 상속을 지킬 수 있는지 확인한다."""
-        dataset_wide = [kind for kind, _ in self._stages[DATASET_WIDE]]
-        if dataset_wide:
+        unsupported_dataset_wide = [
+            kind for kind, _ in self._stages[DATASET_WIDE]
+            if kind != "categorical_copies"
+        ]
+        if unsupported_dataset_wide:
             raise ValueError(
                 "복제 학습 행은 상태를 원본에만 맞출 수 없는 dataset-wide 제공자를 "
-                f"지원하지 않는다: {dataset_wide}"
+                f"지원하지 않는다: {unsupported_dataset_wide}"
             )
         unsupported = [
             kind
@@ -709,6 +712,30 @@ class FeaturePlan:
                 "복제 학습 행의 부모 내부 분할 상속을 지원하지 않는 타깃 참조 제공자가 있다: "
                 f"{unsupported}"
             )
+
+    def recompute_training_row_dataset_wide(
+        self, training_rows: pd.DataFrame, test: pd.DataFrame
+    ) -> pd.DataFrame:
+        """결측 가림 뒤 범주 복제 열을 실제 원자료 값에서 다시 만든다."""
+        out = training_rows.copy()
+        for kind, provider in self._stages[DATASET_WIDE]:
+            if kind != "categorical_copies":
+                raise ValueError(
+                    f"복제 학습 행에서 다시 계산할 수 없는 dataset-wide 제공자다: {kind}"
+                )
+            new_training, _ = provider.compute(out, test)
+            if list(new_training.columns) != provider.columns():
+                raise AssertionError(f"{kind}의 복제 행 산출 컬럼이 선언과 다르다.")
+            for column in provider.columns():
+                reference = test[column]
+                if isinstance(reference.dtype, pd.CategoricalDtype):
+                    source_column = column.removesuffix("_cat")
+                    out[column] = pd.Categorical(
+                        out[source_column], categories=reference.cat.categories
+                    )
+                else:
+                    out[column] = new_training[column]
+        return out
 
     def _declared_by_stage(self) -> dict[str, list[str]]:
         return {

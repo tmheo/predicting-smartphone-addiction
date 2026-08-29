@@ -66,6 +66,15 @@ class TrainingRowsConfig:
 
 
 @dataclass(frozen=True)
+class PairedTrainingLengthConfig:
+    """짝비교가 출처 실행에서 물려받는 시드·분할·내부 구성원별 학습 길이."""
+
+    source: Path
+    sha256: str
+    member: str
+
+
+@dataclass(frozen=True)
 class ExperimentConfig:
     name: str
     data: DataConfig
@@ -79,6 +88,8 @@ class ExperimentConfig:
     training_state: TrainingStateConfig | None = None
     # 명시한 실험만 바깥쪽 학습 행 구성을 바꾼다. None이면 기존 원본 행 경로다.
     training_rows: TrainingRowsConfig | None = None
+    # 결측 증강 짝비교만 출처 실행의 관측 학습 길이를 고정해 쓴다.
+    paired_training_length: PairedTrainingLengthConfig | None = None
 
 
 # #71 이전 features 스키마의 키. 종결 실험 config 16개는 역사 기록으로 보존하되
@@ -151,6 +162,9 @@ def load_config(path: str | Path, stage: str) -> ExperimentConfig:
     )
     training_state = _load_training_state(raw.get("training_state"), model, path)
     training_rows = _load_training_rows(raw.get("training_rows"), path)
+    paired_training_length = _load_paired_training_length(
+        raw.get("paired_training_length"), path
+    )
     if training_state is not None and training_rows is not None:
         raise ValueError(f"{path}: training_state와 training_rows를 한 실행에서 함께 쓸 수 없다.")
     initial_score = (
@@ -158,9 +172,20 @@ def load_config(path: str | Path, stage: str) -> ExperimentConfig:
         if raw.get("initial_score") is not None
         else None
     )
-    if training_rows is not None and training_rows.replica_count and initial_score is not None:
+    if paired_training_length is not None and (
+        training_rows is None or not training_rows.replica_count
+    ):
         raise ValueError(
-            f"{path}: 복제 학습 행과 initial_score의 부모 행 상속 계약은 정의되지 않았다."
+            f"{path}: paired_training_length는 복제 학습 행 짝비교에만 쓸 수 있다."
+        )
+    if (
+        training_rows is not None
+        and training_rows.replica_count
+        and initial_score is not None
+        and paired_training_length is None
+    ):
+        raise ValueError(
+            f"{path}: 복제 학습 행과 initial_score는 고정 짝비교 계약에서만 쓸 수 있다."
         )
     return ExperimentConfig(
         name=raw["name"],
@@ -173,6 +198,40 @@ def load_config(path: str | Path, stage: str) -> ExperimentConfig:
         source_path=path,
         training_state=training_state,
         training_rows=training_rows,
+        paired_training_length=paired_training_length,
+    )
+
+
+def _load_paired_training_length(
+    raw: object, path: Path
+) -> PairedTrainingLengthConfig | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError(f"{path}: paired_training_length는 객체여야 한다.")
+    expected = {"source", "sha256", "member"}
+    unknown = sorted(set(raw) - expected)
+    missing = sorted(expected - set(raw))
+    if unknown or missing:
+        raise ValueError(
+            f"{path}: paired_training_length 필드가 정확하지 않다. "
+            f"누락={missing}, 알 수 없음={unknown}"
+        )
+    source = raw["source"]
+    digest = raw["sha256"]
+    member = raw["member"]
+    if not isinstance(source, str) or not source.strip():
+        raise ValueError(f"{path}: paired_training_length.source가 비어 있다.")
+    if (
+        not isinstance(digest, str)
+        or len(digest) != 64
+        or any(character not in "0123456789abcdef" for character in digest)
+    ):
+        raise ValueError(f"{path}: paired_training_length.sha256은 소문자 SHA-256이어야 한다.")
+    if not isinstance(member, str) or not member.strip():
+        raise ValueError(f"{path}: paired_training_length.member가 비어 있다.")
+    return PairedTrainingLengthConfig(
+        source=Path(source), sha256=digest, member=member
     )
 
 

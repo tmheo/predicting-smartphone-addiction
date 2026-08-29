@@ -1,0 +1,788 @@
+{
+  "config_manifest_sha256": "36e481103ad23b31ea8b775ef758cfcbda08d884db1d6c341e528e455e427ee6",
+  "frozen_at_utc": "2026-08-29T02:13:40.889485+00:00",
+  "inputs": {
+    "candidate_pool": {
+      "member_count": 36,
+      "path": "artifacts/pool.yaml",
+      "sha256": "c513443b6d1cc8af348dc06f8c547ed2728a659261cf7d78dc4e17a27ca668d9"
+    },
+    "capacity_freeze": {
+      "path": "artifacts/issue509-parallel-capacity-freeze.json",
+      "sha256": "7685163fc3b5fbaeaea3f2ae2b35f9a23a93777a7524ea9ab6f8f0714dda5e1c"
+    },
+    "full_refit_plan": {
+      "path": "artifacts/full-refit-plan.yaml",
+      "sha256": "b40c091ee2998f90c1916eeb8498b210176f01040a15f80b578df01c53f65770"
+    }
+  },
+  "issue": {
+    "number": 510,
+    "title": "모든 모델 계열에서 결측 증강 짝비교 실행 경계를 구현하고 진단한다",
+    "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/510"
+  },
+  "map": {
+    "number": 506,
+    "title": "지도: 결측 증강을 후보 풀 전 계열에 전파해 마지막 제출 개선을 판정한다",
+    "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/506"
+  },
+  "pair_contract": {
+    "config_differences": [
+      "name",
+      "training_rows"
+    ],
+    "missingness_augmented": {
+      "observed_cell_mask_probability": 0.25,
+      "replica_count": 2
+    },
+    "outer_folds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "same_source_training_lengths": true,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "tripled": {
+      "observed_cell_mask_probability": 0.0,
+      "replica_count": 2
+    }
+  },
+  "paired_training_length_evidence": {
+    "path": "artifacts/issue510-paired-training-lengths.json",
+    "sha256": "9c94657cb59ceef78a95b2e5254a03bed4849198a1f0848241ce807dbd46e613"
+  },
+  "pairs": [
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp006_te_drop_gaming_tripled",
+          "path": "configs/missingness-propagation/01_exp006_te_drop_gaming_tripled.yaml",
+          "sha256": "83b96fd897e484b998cc25f6c3982068372eec0888b0be0a62cc579d3026b565"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp006_te_drop_gaming_missingness_augmented",
+          "path": "configs/missingness-propagation/01_exp006_te_drop_gaming_missingness_augmented.yaml",
+          "sha256": "90a9d510fd3e81cd0c9e94f6648a6ad53352e6f15bf5fb0807c019d3ee8b878d"
+        }
+      ],
+      "common_config_semantic_sha256": "f135ed9673a518fb77c5fadf6a3dd636c89c58d57083c8826710ce1583d859ea",
+      "member": "exp006_te_drop_gaming",
+      "ordinal": 1,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp011_resid_pair_tripled",
+          "path": "configs/missingness-propagation/02_exp011_resid_pair_tripled.yaml",
+          "sha256": "ed6ee20c34f356201561770c942b630ab0c9b4d103ef3f44086a884a97cfde31"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp011_resid_pair_missingness_augmented",
+          "path": "configs/missingness-propagation/02_exp011_resid_pair_missingness_augmented.yaml",
+          "sha256": "411a2137504a9740c0f2e2f53150732cb997b0956ba53feaec98f894f289b75e"
+        }
+      ],
+      "common_config_semantic_sha256": "614088f2b9811fbb7ff41ff68eb0b6153cebfbc47aceffc6bab3bc40e47a4a15",
+      "member": "exp011_resid_pair",
+      "ordinal": 2,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp022_orig_knn_tripled",
+          "path": "configs/missingness-propagation/03_exp022_orig_knn_tripled.yaml",
+          "sha256": "3031d8a992e78eb77ccd3908e1196b8e6d5c64aedc6617b65d42763ad34f5b54"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp022_orig_knn_missingness_augmented",
+          "path": "configs/missingness-propagation/03_exp022_orig_knn_missingness_augmented.yaml",
+          "sha256": "ee231539588b10ed29744c15d801a023edfa1ff8b464f2d1da1f8954db267940"
+        }
+      ],
+      "common_config_semantic_sha256": "824b4fc6cc10b1aa07e1604520a9db546055c5c38fda585c98b3664057ce6a92",
+      "member": "exp022_orig_knn",
+      "ordinal": 3,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp023_orig_proxy_residual_tripled",
+          "path": "configs/missingness-propagation/04_exp023_orig_proxy_residual_tripled.yaml",
+          "sha256": "e7247c98e9fc0e6f3200881422cd0ec76c941355374e8829dd33c939295eb29d"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp023_orig_proxy_residual_missingness_augmented",
+          "path": "configs/missingness-propagation/04_exp023_orig_proxy_residual_missingness_augmented.yaml",
+          "sha256": "21132a2e273fb1336913630e2642c78149c567fd5ea4f829939a196670f56d9d"
+        }
+      ],
+      "common_config_semantic_sha256": "9e7389cc0f360881451913d14749326c65ed9d08eb7351cb6206d136f21abf5b",
+      "member": "exp023_orig_proxy_residual",
+      "ordinal": 4,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp025_constrained_impute_tripled",
+          "path": "configs/missingness-propagation/05_exp025_constrained_impute_tripled.yaml",
+          "sha256": "4a944fe782f6e3d0bf2065b383083213e8f0baef907941218cb6f489bd69b350"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp025_constrained_impute_missingness_augmented",
+          "path": "configs/missingness-propagation/05_exp025_constrained_impute_missingness_augmented.yaml",
+          "sha256": "c295fc22adcfb4ab0485146c273602e0dd8dd8fa4eab0270645c9869d57b0329"
+        }
+      ],
+      "common_config_semantic_sha256": "c7f627e0d3de7ee9276e74d6c449410801026f1ada85ad1ab2a281813d7e5021",
+      "member": "exp025_constrained_impute",
+      "ordinal": 5,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp032_recon_orig_mean_top3_tripled",
+          "path": "configs/missingness-propagation/06_exp032_recon_orig_mean_top3_tripled.yaml",
+          "sha256": "f721fcbcff9d3f3caf689991ce1b5a3d68254ece6feff4ef8327aac3493ce8c1"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp032_recon_orig_mean_top3_missingness_augmented",
+          "path": "configs/missingness-propagation/06_exp032_recon_orig_mean_top3_missingness_augmented.yaml",
+          "sha256": "6facb34087e5abf551b923c82fb3d9170e547e4c7de9df34f189c2bd51b194ea"
+        }
+      ],
+      "common_config_semantic_sha256": "67a674fdb251d500afd1367f50f52b34d2e8b7a2e5b20e9dd712860391e15b97",
+      "member": "exp032_recon_orig_mean_top3",
+      "ordinal": 6,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp035_lattice_te_tripled",
+          "path": "configs/missingness-propagation/07_exp035_lattice_te_tripled.yaml",
+          "sha256": "eea6e1b35c836d3ae692c3d0ba00db6aec669f9277a0bae0addb89a69fe3fb1a"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp035_lattice_te_missingness_augmented",
+          "path": "configs/missingness-propagation/07_exp035_lattice_te_missingness_augmented.yaml",
+          "sha256": "d05bca7b373700e20ecbcb89d08f84af243847cfc0af38a123046d95bcff9195"
+        }
+      ],
+      "common_config_semantic_sha256": "2f2990456fa8d5c98a81b956073feeab88b8e04fab73b7e7cf68d3e2d99ab100",
+      "member": "exp035_lattice_te",
+      "ordinal": 7,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp058_logreg_onehot_tripled",
+          "path": "configs/missingness-propagation/08_exp058_logreg_onehot_tripled.yaml",
+          "sha256": "6cfab98033e1e1130d340ee831158900be1bb434e56e86c11fcce6cf6725bc44"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp058_logreg_onehot_missingness_augmented",
+          "path": "configs/missingness-propagation/08_exp058_logreg_onehot_missingness_augmented.yaml",
+          "sha256": "d27b574807507220375056d00c05b2ca808c86bf64a297e71a8fa16d65ec6ba4"
+        }
+      ],
+      "common_config_semantic_sha256": "ce86e26eb7b3946220036a1e3c552f52b08823d3e758b060d371d1d2108caa75",
+      "member": "exp058_logreg_onehot",
+      "ordinal": 8,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp059_lookup_transformer_tripled",
+          "path": "configs/missingness-propagation/09_exp059_lookup_transformer_tripled.yaml",
+          "sha256": "ad42aed4907ca923b60a60e6700ac5034cff3a44e64f50ed234d2866184dc779"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp059_lookup_transformer_missingness_augmented",
+          "path": "configs/missingness-propagation/09_exp059_lookup_transformer_missingness_augmented.yaml",
+          "sha256": "21d3aa7de22701ab8ccaa39002eb0166b813c5986a31a9d1dd0ea992fd2f54b1"
+        }
+      ],
+      "common_config_semantic_sha256": "c5908a7b954ec0a3ba80b6355e8159af7e4c19b2dbf0faf8510972653d5b9fdc",
+      "member": "exp059_lookup_transformer",
+      "ordinal": 9,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp070_cat_exact_cats_tripled",
+          "path": "configs/missingness-propagation/10_exp070_cat_exact_cats_tripled.yaml",
+          "sha256": "3fc336b0a619e115c305dbac4506b330280206349eab6b12654530657f636cef"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp070_cat_exact_cats_missingness_augmented",
+          "path": "configs/missingness-propagation/10_exp070_cat_exact_cats_missingness_augmented.yaml",
+          "sha256": "6c0c1a9c6f98fbdf06c5b73c75e7071b8d8da1817a23eaf1cbfa43958e0c2d39"
+        }
+      ],
+      "common_config_semantic_sha256": "bc9008f7828d308c7e6ba2a4a9462ca6c85deeaedca8d41869ec7bdbde1dc37b",
+      "member": "exp070_cat_exact_cats",
+      "ordinal": 10,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp081_lookup_fold_initialization_avg3_tripled",
+          "path": "configs/missingness-propagation/11_exp081_lookup_fold_initialization_avg3_tripled.yaml",
+          "sha256": "26d73758e018be6f76f3b166f02b008eaf34c9f0f5177228294abb5e94265fbd"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp081_lookup_fold_initialization_avg3_missingness_augmented",
+          "path": "configs/missingness-propagation/11_exp081_lookup_fold_initialization_avg3_missingness_augmented.yaml",
+          "sha256": "3f22fab0798cd5ff9e3c7228bbdabbf275929c59091b86fab5ebcd6c90bbd1bd"
+        }
+      ],
+      "common_config_semantic_sha256": "6fb9b9f40047d55d6b9cbd21b1ca2be7287795a5161e8575ddae60da019cfcd5",
+      "member": "exp081_lookup_fold_initialization_avg3",
+      "ordinal": 11,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp110_lgb_kitopl_no_te_tripled",
+          "path": "configs/missingness-propagation/12_exp110_lgb_kitopl_no_te_tripled.yaml",
+          "sha256": "8e3a0a9243bfcbe68b334a1c26f6b23db6a3ef7e216809b2b909550be20f669d"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp110_lgb_kitopl_no_te_missingness_augmented",
+          "path": "configs/missingness-propagation/12_exp110_lgb_kitopl_no_te_missingness_augmented.yaml",
+          "sha256": "aca4c1895659d773504888cb5784a72c5cb3594ac8da57c8bf4d2a49d2ab9b35"
+        }
+      ],
+      "common_config_semantic_sha256": "c59cbce1d57758c19b8bfba3a26c41cd7a6e664056b1e1455991b5290d08a7bd",
+      "member": "exp110_lgb_kitopl_no_te",
+      "ordinal": 12,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp111_xgb_depth8_no_te_tripled",
+          "path": "configs/missingness-propagation/13_exp111_xgb_depth8_no_te_tripled.yaml",
+          "sha256": "38a1e4e0d0b7e5efacc8e06dfe657ce0db1ea49a7f1fa547840ae5fb627ea496"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp111_xgb_depth8_no_te_missingness_augmented",
+          "path": "configs/missingness-propagation/13_exp111_xgb_depth8_no_te_missingness_augmented.yaml",
+          "sha256": "cc0a075744fd4964bdc2048759cd423c8c1af573364f3667ece15f392e4fba9d"
+        }
+      ],
+      "common_config_semantic_sha256": "3e32f7eb20e5d039afc871e9ef8540d2ad21d37811c09d052bc7fbadf4501743",
+      "member": "exp111_xgb_depth8_no_te",
+      "ordinal": 13,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp071_cat_exact_no_te_tripled",
+          "path": "configs/missingness-propagation/14_exp071_cat_exact_no_te_tripled.yaml",
+          "sha256": "6e9d0e661a4bf13463619618e60b28780bb0f09ea28a1057b1e2c7717dbb54ed"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp071_cat_exact_no_te_missingness_augmented",
+          "path": "configs/missingness-propagation/14_exp071_cat_exact_no_te_missingness_augmented.yaml",
+          "sha256": "67bb19cf20c25aee74fd95547f5527f2207e25e6bdbe28bc6d82b4639246aa41"
+        }
+      ],
+      "common_config_semantic_sha256": "3b8a948c94827394b7b08269e95873e7235264ec23babf04570e15b9a9d38192",
+      "member": "exp071_cat_exact_no_te",
+      "ordinal": 14,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp106_lookup_fixed24_train_test_preprocessing_tripled",
+          "path": "configs/missingness-propagation/15_exp106_lookup_fixed24_train_test_preprocessing_tripled.yaml",
+          "sha256": "d955b046c14dfc19c9364b1bc1aa35787dcda6b6c1ac93e45f6e8f3a9f1cf0dd"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp106_lookup_fixed24_train_test_preprocessing_missingness_augmented",
+          "path": "configs/missingness-propagation/15_exp106_lookup_fixed24_train_test_preprocessing_missingness_augmented.yaml",
+          "sha256": "82ea09472151bd3dfe2ebe02f72ca7eb2b5163830ccaa8b24a05cf609ca7ea0a"
+        }
+      ],
+      "common_config_semantic_sha256": "36b813781c00dbfc7073664d5141ef2adebfe20a4ff43ae014f299fa3e71a06d",
+      "member": "exp106_lookup_fixed24_train_test_preprocessing",
+      "ordinal": 15,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp113_tab_cnn_m0_tripled",
+          "path": "configs/missingness-propagation/16_exp113_tab_cnn_m0_tripled.yaml",
+          "sha256": "383e31b702e24defa7df7db1a6d528801264b343e486ad8ac2ea13d4a4de0df9"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp113_tab_cnn_m0_missingness_augmented",
+          "path": "configs/missingness-propagation/16_exp113_tab_cnn_m0_missingness_augmented.yaml",
+          "sha256": "98a8e1917d06fce63a2e19adcaa5f6623e4772f0374d0a1892731bccdbf7fcae"
+        }
+      ],
+      "common_config_semantic_sha256": "ccd5d8dd9aced5ed70080a162b72d106c881342ab484d1e02d3f154a147950a8",
+      "member": "exp113_tab_cnn_m0",
+      "ordinal": 16,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp085_contextual_spline_m0_tripled",
+          "path": "configs/missingness-propagation/17_exp085_contextual_spline_m0_tripled.yaml",
+          "sha256": "ffd9e29cc6e2b0dae850859122cb8afa1a313aae9fbbbe58993cf1cd2ef37220"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp085_contextual_spline_m0_missingness_augmented",
+          "path": "configs/missingness-propagation/17_exp085_contextual_spline_m0_missingness_augmented.yaml",
+          "sha256": "3d1d3ced1d27f820259b57d97fce82520603b461e4096e03b942564f63a8e146"
+        }
+      ],
+      "common_config_semantic_sha256": "0863c373fd8fe6a17d636196b92c4068a1f96628ece68485e982efa4a6d0339b",
+      "member": "exp085_contextual_spline_m0",
+      "ordinal": 17,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp027_recon_ce_tripled",
+          "path": "configs/missingness-propagation/18_exp027_recon_ce_tripled.yaml",
+          "sha256": "1bdcd17d32fca72ce750c54f2ad5e8cf49eb6fe8b3d1e33c4e2894f02b65ab6d"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp027_recon_ce_missingness_augmented",
+          "path": "configs/missingness-propagation/18_exp027_recon_ce_missingness_augmented.yaml",
+          "sha256": "c37bf5dabacaa37c45da4039217eb0720996eba7414531fbe2cca252e8b9934e"
+        }
+      ],
+      "common_config_semantic_sha256": "b233b20e7bf02dd4f97d625400bf3281a6499fdd96ed3a4e0c8b94e5d9243e12",
+      "member": "exp027_recon_ce",
+      "ordinal": 18,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp048_lgb_orig_cdf_diff_tripled",
+          "path": "configs/missingness-propagation/19_exp048_lgb_orig_cdf_diff_tripled.yaml",
+          "sha256": "332407d01e75781bff84048f7a940c377cb5807e0f95bf89d31064ec7646b243"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp048_lgb_orig_cdf_diff_missingness_augmented",
+          "path": "configs/missingness-propagation/19_exp048_lgb_orig_cdf_diff_missingness_augmented.yaml",
+          "sha256": "19edf1f050432b7726c97588bde49ee3b5ead15aa5c0a727b1ca567e139bcb3d"
+        }
+      ],
+      "common_config_semantic_sha256": "93509baf17878c24d27a89a4679228e0dfb50cb702d3b065b23ac0d069f5e66e",
+      "member": "exp048_lgb_orig_cdf_diff",
+      "ordinal": 19,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp134_realmlp_muon_tripled",
+          "path": "configs/missingness-propagation/20_exp134_realmlp_muon_tripled.yaml",
+          "sha256": "bb0231724a18d4ce58d07241095a01f91af6eed13d8e679dbb7d751e557ea08d"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp134_realmlp_muon_missingness_augmented",
+          "path": "configs/missingness-propagation/20_exp134_realmlp_muon_missingness_augmented.yaml",
+          "sha256": "428aa14643ec991741e15ffa8041c236afa7d4759d539dc20e7b790bd5a0cb75"
+        }
+      ],
+      "common_config_semantic_sha256": "1cfb323ab0103dc3d53f6f3e0696bd1a0ec89489b3ef7e09100748373298cb07",
+      "member": "exp134_realmlp_muon",
+      "ordinal": 20,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp135_xgb_hpo_trial30_tripled",
+          "path": "configs/missingness-propagation/21_exp135_xgb_hpo_trial30_tripled.yaml",
+          "sha256": "e08be956b816c617fbf05abb30f1a73d7ab2d2796acedfecc47470a847ee4e2e"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp135_xgb_hpo_trial30_missingness_augmented",
+          "path": "configs/missingness-propagation/21_exp135_xgb_hpo_trial30_missingness_augmented.yaml",
+          "sha256": "718ab1313cbd4440711aea0c41959f9837937d405dfdbca9a48dd41e8ae7ba1d"
+        }
+      ],
+      "common_config_semantic_sha256": "b2202532008cdbcc489dfd6b30749c87330f303eb3e8c4b77bfa5db790636bb7",
+      "member": "exp135_xgb_hpo_trial30",
+      "ordinal": 21,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp131_lookup_bivariate_plr5_tripled",
+          "path": "configs/missingness-propagation/22_exp131_lookup_bivariate_plr5_tripled.yaml",
+          "sha256": "901c02f70ae8a47929e3a816194474093e43e64cf083cef2f01b72a896900fa1"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp131_lookup_bivariate_plr5_missingness_augmented",
+          "path": "configs/missingness-propagation/22_exp131_lookup_bivariate_plr5_missingness_augmented.yaml",
+          "sha256": "45c5c7e26788d30bf69df8c1b022acc63359289c7ac3e13bc2944a8220dd6772"
+        }
+      ],
+      "common_config_semantic_sha256": "96fb4f9ffaf3e4c047778036d5d7ff46767b1ee783464abc8b0d25275c78d252",
+      "member": "exp131_lookup_bivariate_plr5",
+      "ordinal": 22,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp136_realmlp_muon_recon_widths_tripled",
+          "path": "configs/missingness-propagation/23_exp136_realmlp_muon_recon_widths_tripled.yaml",
+          "sha256": "180fd899918ccee82eed58469a5787fe57cd054f171a5fb3085232bb93a14e93"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp136_realmlp_muon_recon_widths_missingness_augmented",
+          "path": "configs/missingness-propagation/23_exp136_realmlp_muon_recon_widths_missingness_augmented.yaml",
+          "sha256": "e0449df7ca360da9bf276795223f9c1e4707ed04abd361c2507cb49845de0550"
+        }
+      ],
+      "common_config_semantic_sha256": "5024521d6227b73a622bd587828ec698a1b4e9a31b89f0c14a2fd137338e155c",
+      "member": "exp136_realmlp_muon_recon_widths",
+      "ordinal": 23,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp137_tabm_recon_widths_tripled",
+          "path": "configs/missingness-propagation/24_exp137_tabm_recon_widths_tripled.yaml",
+          "sha256": "11f0b498fb3b89cc7ed618e9be139ad18a4b9fc6b140108cf9e7d4166a47a530"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp137_tabm_recon_widths_missingness_augmented",
+          "path": "configs/missingness-propagation/24_exp137_tabm_recon_widths_missingness_augmented.yaml",
+          "sha256": "397a513e77fc213decc00a3fdc8e4b57bd3d29467bbe957f108f64e33a2b00bf"
+        }
+      ],
+      "common_config_semantic_sha256": "20702d3e614316508770e9defdd154a7125ea765f822e12eede2aba8a75afde6",
+      "member": "exp137_tabm_recon_widths",
+      "ordinal": 24,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp133_scalar_token_transformer_oof_te_tripled",
+          "path": "configs/missingness-propagation/25_exp133_scalar_token_transformer_oof_te_tripled.yaml",
+          "sha256": "18e444a75390415e35a3aab2fb187db7c97bca65de117ec6a9bad1395e6fcd37"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp133_scalar_token_transformer_oof_te_missingness_augmented",
+          "path": "configs/missingness-propagation/25_exp133_scalar_token_transformer_oof_te_missingness_augmented.yaml",
+          "sha256": "b0e3498bd91bf555b08cb29a0aa378273fc8dd2a5bbaf1d06d52eef4ec9bd2c9"
+        }
+      ],
+      "common_config_semantic_sha256": "11d191d432c496546819957a0a33a7b5b345c8b82dbfaf4396296f97d228bd0c",
+      "member": "exp133_scalar_token_transformer_oof_te",
+      "ordinal": 25,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp131_tab_cnn_oof_target_mean_tripled",
+          "path": "configs/missingness-propagation/26_exp131_tab_cnn_oof_target_mean_tripled.yaml",
+          "sha256": "b0b584805c499e78d24764b347be6fe630f2b81e98a1a63691d8eaf9212573d2"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp131_tab_cnn_oof_target_mean_missingness_augmented",
+          "path": "configs/missingness-propagation/26_exp131_tab_cnn_oof_target_mean_missingness_augmented.yaml",
+          "sha256": "35c3c629b637a2478668355252ee95cf399ccaff90553a7b3760ad0a001680f5"
+        }
+      ],
+      "common_config_semantic_sha256": "8f17dce3910e2e898a564b8a6e8e9dfaddc16cde8486b55ae89a7fc5d8d8f565",
+      "member": "exp131_tab_cnn_oof_target_mean",
+      "ordinal": 26,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp132_tab_cnn_epochs100_tripled",
+          "path": "configs/missingness-propagation/27_exp132_tab_cnn_epochs100_tripled.yaml",
+          "sha256": "e0bec57e4341a96d28c596a4952c0e6cc0b2fdd46dd0a6257d1324c21e79bac9"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp132_tab_cnn_epochs100_missingness_augmented",
+          "path": "configs/missingness-propagation/27_exp132_tab_cnn_epochs100_missingness_augmented.yaml",
+          "sha256": "84f0ede4267e88cc3e49b0551e95c760daa9a7f7f7c9a50e680b2fc6daf54f82"
+        }
+      ],
+      "common_config_semantic_sha256": "64a5d1bed0959505a442e01b780d2cb9aaa1f7df64af0a4766366bda290aee6a",
+      "member": "exp132_tab_cnn_epochs100",
+      "ordinal": 27,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp139_realmlp_reference_qnormal_train_test_tripled",
+          "path": "configs/missingness-propagation/28_exp139_realmlp_reference_qnormal_train_test_tripled.yaml",
+          "sha256": "9e50d9e5f25c1c88ec6fa2af1b67713708615af35ddb8e907b2270355d15594a"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp139_realmlp_reference_qnormal_train_test_missingness_augmented",
+          "path": "configs/missingness-propagation/28_exp139_realmlp_reference_qnormal_train_test_missingness_augmented.yaml",
+          "sha256": "8ffc77aead4f948d9e340f89fe519bb1bbbc0f48cd40e929e6aa307ac45d4ec9"
+        }
+      ],
+      "common_config_semantic_sha256": "2b29d5884c439319455689d737e55c2c5c26f231d34ce8a61593983982f1c77e",
+      "member": "exp139_realmlp_reference_qnormal_train_test",
+      "ordinal": 28,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp140_realmlp_orig_cdf_diff_tripled",
+          "path": "configs/missingness-propagation/29_exp140_realmlp_orig_cdf_diff_tripled.yaml",
+          "sha256": "a3461bef6ca3b7177a8155d26240d294be5651e5a4a29b404a06e4797e9067b8"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp140_realmlp_orig_cdf_diff_missingness_augmented",
+          "path": "configs/missingness-propagation/29_exp140_realmlp_orig_cdf_diff_missingness_augmented.yaml",
+          "sha256": "1dd6e2754c9357363a5cb14af9d96654b98de011595f5b44742c1f2e415166f9"
+        }
+      ],
+      "common_config_semantic_sha256": "7760ca233cb4d87a66454fd952f68956bfeea82de3cf21df6737b17a84ec3079",
+      "member": "exp140_realmlp_orig_cdf_diff",
+      "ordinal": 29,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp157_lookup_muon_initavg8_tripled",
+          "path": "configs/missingness-propagation/30_exp157_lookup_muon_initavg8_tripled.yaml",
+          "sha256": "2d1b4cbc8f2b1b63065abbea970dfb577317896ad9ae2dc47c4445b667347f4c"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp157_lookup_muon_initavg8_missingness_augmented",
+          "path": "configs/missingness-propagation/30_exp157_lookup_muon_initavg8_missingness_augmented.yaml",
+          "sha256": "5bf0de0f1473add91298a1a60951975090463238f84f63847720cf13e3bc4654"
+        }
+      ],
+      "common_config_semantic_sha256": "1af6560a73b07736baa885c9faa7a0893411fd0162010acfe92b01f793685245",
+      "member": "exp157_lookup_muon_initavg8",
+      "ordinal": 30,
+      "runtime_class": "gpu_16_plus_gib"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp168_issue413_lgb_no_te_fixed20_tripled",
+          "path": "configs/missingness-propagation/31_exp168_issue413_lgb_no_te_fixed20_tripled.yaml",
+          "sha256": "8708506146eaf701daafca4bb60d8b8e35d47d8505ef0692288c1b0d934dd377"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp168_issue413_lgb_no_te_fixed20_missingness_augmented",
+          "path": "configs/missingness-propagation/31_exp168_issue413_lgb_no_te_fixed20_missingness_augmented.yaml",
+          "sha256": "92b9479081e2cf5bb50ef45e9fff6c5c7d7491fc3c14a2ecaa757b95179dbdf2"
+        }
+      ],
+      "common_config_semantic_sha256": "d3d53b504d217557165ae91d956f5759697d740c3117fcaa4d8c9f03d8aaade7",
+      "member": "exp168_issue413_lgb_no_te_fixed20",
+      "ordinal": 31,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp197_issue419_lgb_recon_ce_fixed20_tripled",
+          "path": "configs/missingness-propagation/32_exp197_issue419_lgb_recon_ce_fixed20_tripled.yaml",
+          "sha256": "122d83dbad7f3ece8a216e9df4c6b517cdcea5e7dc98982746ff9d092025f6eb"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp197_issue419_lgb_recon_ce_fixed20_missingness_augmented",
+          "path": "configs/missingness-propagation/32_exp197_issue419_lgb_recon_ce_fixed20_missingness_augmented.yaml",
+          "sha256": "d6fbc85908116d0ac96dc9a1113a8416d463a935169074adfd9e682a9ebaf79d"
+        }
+      ],
+      "common_config_semantic_sha256": "7435db0fc157dab47d99b6753695a41dbe7bd0b010cd73af128ca150f84fcfea",
+      "member": "exp197_issue419_lgb_recon_ce_fixed20",
+      "ordinal": 32,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp183_issue419_cat_exact_fixed10_tripled",
+          "path": "configs/missingness-propagation/33_exp183_issue419_cat_exact_fixed10_tripled.yaml",
+          "sha256": "96cab1e8b61bcef2782fb4d3de8af080512a6661afbe46299ab03b4c736b7d73"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp183_issue419_cat_exact_fixed10_missingness_augmented",
+          "path": "configs/missingness-propagation/33_exp183_issue419_cat_exact_fixed10_missingness_augmented.yaml",
+          "sha256": "752bcdebb3baf7909fd1f8f4ed398e5489e0940e878bf1c57f13140aea7b02ab"
+        }
+      ],
+      "common_config_semantic_sha256": "510285c0f746ed3a52c5019ed4f4e00e06ab6a235f091fa640e21a1441b8273d",
+      "member": "exp183_issue419_cat_exact_fixed10",
+      "ordinal": 33,
+      "runtime_class": "cpu"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp209_issue505_lgb_lr_onehot_init_tripled",
+          "path": "configs/missingness-propagation/34_exp209_issue505_lgb_lr_onehot_init_tripled.yaml",
+          "sha256": "694560c65b26fdf76ca2a5742ec8d8f680da2ebb09bb72694023ddb05134c581"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp209_issue505_lgb_lr_onehot_init_missingness_augmented",
+          "path": "configs/missingness-propagation/34_exp209_issue505_lgb_lr_onehot_init_missingness_augmented.yaml",
+          "sha256": "57b5b8d91a59ceee73c65e74c30b92ea1048d692352bb08a4d3a687b10b68d72"
+        }
+      ],
+      "common_config_semantic_sha256": "1085f70e895780877df15594a407d3e4f3e2a1e78f9128976e71effa6fa95f53",
+      "member": "exp209_issue505_lgb_lr_onehot_init",
+      "ordinal": 34,
+      "runtime_class": "cpu"
+    }
+  ],
+  "schema_version": 1,
+  "scope": {
+    "arm_count": 68,
+    "excluded": [
+      "exp067_tabpfn3",
+      "exp208_issue500_ag25_missingness_augmented"
+    ],
+    "member_order": [
+      "exp006_te_drop_gaming",
+      "exp011_resid_pair",
+      "exp022_orig_knn",
+      "exp023_orig_proxy_residual",
+      "exp025_constrained_impute",
+      "exp032_recon_orig_mean_top3",
+      "exp035_lattice_te",
+      "exp058_logreg_onehot",
+      "exp059_lookup_transformer",
+      "exp070_cat_exact_cats",
+      "exp081_lookup_fold_initialization_avg3",
+      "exp110_lgb_kitopl_no_te",
+      "exp111_xgb_depth8_no_te",
+      "exp071_cat_exact_no_te",
+      "exp106_lookup_fixed24_train_test_preprocessing",
+      "exp113_tab_cnn_m0",
+      "exp085_contextual_spline_m0",
+      "exp027_recon_ce",
+      "exp048_lgb_orig_cdf_diff",
+      "exp134_realmlp_muon",
+      "exp135_xgb_hpo_trial30",
+      "exp131_lookup_bivariate_plr5",
+      "exp136_realmlp_muon_recon_widths",
+      "exp137_tabm_recon_widths",
+      "exp133_scalar_token_transformer_oof_te",
+      "exp131_tab_cnn_oof_target_mean",
+      "exp132_tab_cnn_epochs100",
+      "exp139_realmlp_reference_qnormal_train_test",
+      "exp140_realmlp_orig_cdf_diff",
+      "exp157_lookup_muon_initavg8",
+      "exp168_issue413_lgb_no_te_fixed20",
+      "exp197_issue419_lgb_recon_ce_fixed20",
+      "exp183_issue419_cat_exact_fixed10",
+      "exp209_issue505_lgb_lr_onehot_init"
+    ],
+    "pair_count": 34,
+    "selected_member_count": 34
+  }
+}

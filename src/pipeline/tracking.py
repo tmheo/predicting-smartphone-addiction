@@ -165,6 +165,13 @@ def log_start_records(
             "training_rows.observed_cell_mask_probability",
             cfg.training_rows.observed_cell_mask_probability,
         )
+    if cfg.paired_training_length is not None:
+        client.log_param(
+            run_id, "paired_training_length.member", cfg.paired_training_length.member
+        )
+        client.log_param(
+            run_id, "paired_training_length.sha256", cfg.paired_training_length.sha256
+        )
     for key, value in (fixed_git_state or git_state()).items():
         client.set_tag(run_id, key, value)
     for key, environment_name in (

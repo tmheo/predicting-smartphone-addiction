@@ -1,0 +1,43 @@
+name: mpv1_exp006_te_drop_gaming_missingness_augmented
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+features:
+  base: raw
+  categorical:
+  - gender
+  - stress_level
+  - academic_work_impact
+  providers:
+  - kind: target_encoding
+    inner_folds: 10
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+    - placebo_noise
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.05
+    num_leaves: 255
+    n_estimators: 10000
+  fit:
+    early_stopping_rounds: 200
+training_rows:
+  arm: missingness_augmented
+  replica_count: 2
+  observed_cell_mask_probability: 0.25
+paired_training_length:
+  source: artifacts/issue510-paired-training-lengths.json
+  sha256: 9c94657cb59ceef78a95b2e5254a03bed4849198a1f0848241ce807dbd46e613
+  member: exp006_te_drop_gaming
