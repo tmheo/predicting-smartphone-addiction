@@ -439,6 +439,28 @@ def test_xgboost_adapter_smoke():
     assert 0.0 <= diagnostics["best_score"] <= 1.0
 
 
+def test_xgboost_paired_fixed_fit_reports_fixed_training_schedule():
+    cfg = ModelConfig(
+        kind="xgboost",
+        params={
+            "n_estimators": 30,
+            "max_depth": 3,
+            "learning_rate": 0.1,
+            "tree_method": "hist",
+            "eval_metric": "auc",
+        },
+        fit={"early_stopping_rounds": 5},
+    )
+    adapter = model_mod.create(cfg, seed=SEED)
+    X, y = _smoke_data()
+    adapter.fit_full(X.iloc[:180], y.iloc[:180], training_budget=7)
+
+    assert model_mod.collect_training_diagnostics(adapter) == {
+        "training_schedule": FIXED_COUNT,
+        "n_estimators": 7,
+    }
+
+
 def test_catboost_adapter_smoke():
     cfg = ModelConfig(
         kind="catboost",

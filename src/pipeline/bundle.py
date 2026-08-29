@@ -238,6 +238,37 @@ def _git_file_sha256(commit: str, path: str) -> str | None:
     return hashlib.sha256(shown.stdout).hexdigest()
 
 
+def _git_config_paths_named(commit: str, name: str) -> list[str]:
+    """커밋의 configs 아래에서 파일 이름이 같은 경로를 찾는다."""
+    listed = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", commit, "--", "configs"],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if listed.returncode != 0:
+        return []
+    return [
+        path
+        for path in listed.stdout.splitlines()
+        if Path(path).name == name
+    ]
+
+
+def _legacy_nested_config_sha256(manifest: dict, commit: str) -> str | None:
+    """예전 export가 하위 경로를 버린 경우, 유일한 같은 파일만 복구한다."""
+    artifact = manifest["config_artifact"]
+    if manifest["config_path"] != f"configs/{artifact}":
+        return None
+    expected = manifest["config_sha256"]
+    matches = [
+        path
+        for path in _git_config_paths_named(commit, artifact)
+        if _git_file_sha256(commit, path) == expected
+    ]
+    return expected if len(matches) == 1 else None
+
+
 def _verify_provenance(manifest: dict, bundle_dir: Path) -> None:
     tags = manifest["tags"]
     if tags.get("git_dirty") != "False":
@@ -249,6 +280,8 @@ def _verify_provenance(manifest: dict, bundle_dir: Path) -> None:
     bundled = file_sha256(bundle_dir / ARTIFACTS_DIR / manifest["config_artifact"])
     if bundled != manifest["config_sha256"]:
         raise BundleError("반입 거부: 묶음 안의 config가 manifest의 config_sha256과 다르다.")
+    if committed != manifest["config_sha256"]:
+        committed = _legacy_nested_config_sha256(manifest, commit)
     if committed != manifest["config_sha256"]:
         raise BundleError(
             f"반입 거부: 커밋 {commit[:8]}의 {manifest['config_path']}와 묶음의 config가 다르다."

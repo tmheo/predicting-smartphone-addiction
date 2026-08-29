@@ -369,6 +369,26 @@ def test_import_refuses_config_drift(env, monkeypatch):
         import_bundle(out, tracking_uri=env["local_uri"])
 
 
+def test_import_recovers_legacy_flat_path_for_unique_nested_config(env, monkeypatch):
+    out = _export(env)
+    nested_path = f"configs/missingness-propagation/{CONFIG_NAME}"
+    expected_sha256 = file_sha256(env["tmp_path"] / CONFIG_NAME)
+    monkeypatch.setattr(
+        bundle_mod,
+        "_git_file_sha256",
+        lambda commit, path: expected_sha256 if path == nested_path else None,
+    )
+    monkeypatch.setattr(
+        bundle_mod,
+        "_git_config_paths_named",
+        lambda commit, name: [nested_path],
+    )
+
+    new_run_id = import_bundle(out, tracking_uri=env["local_uri"])
+    imported = MlflowRunStore(tracking_uri=env["local_uri"]).facts_of(new_run_id)
+    assert imported.status == "FINISHED"
+
+
 def test_import_refuses_dirty_source_run(env):
     env["client"].set_tag(env["run_id"], "git_dirty", "True")
     out = _export(env)

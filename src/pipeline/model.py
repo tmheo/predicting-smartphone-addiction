@@ -836,6 +836,7 @@ class XGBoostAdapter:
         )
         self._model.fit(X, y, verbose=200)
         # 전체 자료 재학습은 조기 종료가 없다. 없는 관측을 지어내지 않는다. (#372)
+        self._fixed_iteration_count = training_budget
         self._validated_fit = False
 
     def predict(
@@ -857,7 +858,7 @@ class XGBoostAdapter:
         """조기 종료 선택값 또는 설정이 고정한 반복 수를 기록한다."""
         if self._model is None:
             raise ValueError("xgboost 학습 관측은 fit 뒤에만 읽을 수 있다.")
-        if self._early_stopping_rounds is None:
+        if not self._validated_fit or self._early_stopping_rounds is None:
             return {
                 "training_schedule": FIXED_COUNT,
                 "n_estimators": self._fixed_iteration_count,
