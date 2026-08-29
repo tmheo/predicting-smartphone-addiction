@@ -51,11 +51,19 @@ Use the SSH standard-stream procedure with SHA-256 verification described in `do
 Use the credential, lifecycle, cleanup, and evidence rules in `docs/agents/vast-resource-control.md`.
 The accepted baseline is recorded in `docs/agents/vast-control-acceptance-2026-08-15.md`.
 
-### Remote GPU provider selection
+### Remote execution provider selection
 
 For S6E8 external GPU runs, Vast.ai is the primary execution environment and Runpod is the fallback execution environment.
 If the user does not name a provider, start with Vast.ai and follow `docs/agents/vast-resource-control.md` before creating any paid resource.
 Use Runpod only when the switch conditions in that document are met.
-Do not select Kaggle or Colab for an improvement-judgment run.
-Kaggle and Colab are limited to human-observed compatibility checks and diagnostics, and an agent must not choose them merely because a model needs a GPU.
-This policy comes from GitHub issues 123 and 126 and supersedes older Kaggle and Runpod execution precedents.
+
+For CPU-only improvement-judgment runs, use available local CPU, Kaggle CPU and Vast.ai CPU capacity in parallel when this shortens wall-clock time.
+Kaggle CPU results may enter an improvement judgment only when the configurations, folds, seeds and comparison arms were fixed before execution, the standard `pipeline.run` and execution-record bundle path was used, and the imported run passes the input-hash, source-commit, clean-state, rescoring, required-diagnostic and provider-tag checks in `docs/kaggle-gpu-run.md`.
+Keep both arms of a matched comparison on the same provider and runtime class.
+Different validated candidate pairs may come from local CPU, Kaggle CPU and Vast.ai CPU and may be judged together after import.
+Do not use incomplete or timed-out Kaggle runs, and never use a Kaggle Public score as adoption evidence.
+
+Kaggle GPU and Colab remain limited to human-observed compatibility checks and diagnostics unless a later explicit policy changes their scope.
+An agent must not choose Kaggle merely because a model needs a GPU.
+The GPU-provider policy comes from GitHub issues 123 and 126.
+The Kaggle CPU policy generalizes the completed mixed Kaggle CPU and Vast.ai CPU confirmation in GitHub issue 414.

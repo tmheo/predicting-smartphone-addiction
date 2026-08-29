@@ -1,9 +1,10 @@
-# Kaggle GPU 실행 절차 (#98)
+# Kaggle 원격 실행 절차 (#98)
 
-이 문서는 과거 Kaggle GPU 실행을 재현하거나, 사용자가 명시적으로 요청한 사람이 지켜보는 호환성 확인과 진단에만 사용하는 절차다.
+이 문서는 Kaggle CPU의 정식 개선 판정 실행과 과거 Kaggle GPU 실행의 재현, 사용자가 명시적으로 요청한 GPU 호환성 진단에 사용하는 절차다.
 [Vast.ai 중심 원격 실험 운영 전환](https://github.com/tmheo/predicting-smartphone-addiction/issues/123) 이후 S6E8 외부 GPU 실행의 주 실행 환경은 Vast.ai이고 예비 실행 환경은 Runpod이다.
-GPU가 필요하다는 이유만으로 이 경로를 자동 선택하지 않으며, Kaggle 실행 결과는 개선 판정에 포함하지 않는다.
-현재 공급자 선택과 전환 규칙은 `docs/agents/vast-resource-control.md`를 따른다.
+GPU가 필요하다는 이유만으로 이 경로를 자동 선택하지 않는다.
+GPU를 쓰지 않는 실행은 `docs/agents/vast-resource-control.md`의 Kaggle CPU 무결성 관문을 모두 통과하면 정식 개선 판정에 포함할 수 있다.
+현재 공급자 선택, 짝비교 배치와 전환 규칙은 그 문서를 따른다.
 
 Kaggle에서 실행한 결과를 실행 기록 묶음으로 로컬에 반입하는 기술 절차는 아래에 보존한다.
 용어는 CONTEXT.md의 "실행 기록 묶음"과 "묶음 반입"을 따른다.
@@ -20,13 +21,18 @@ Kaggle에서 실행한 결과를 실행 기록 묶음으로 로컬에 반입하�
 - 커널은 인터넷을 켠 상태로 실행한다(GPU 실험 커널은 허용, 제출 노트북 아님).
 - 자동으로 돌아온 결과도 반입 게이트(입력 해시·출처·재채점)가 검증하므로,
   실행 경로가 자동화됐다고 신뢰를 더 얹지 않는다.
+- 정식 CPU 짝비교는 대조군과 후보군을 모두 Kaggle CPU에 배정한다.
+  한 팔만 완주했거나 두 팔의 실행 이미지와 주요 의존성 판본이 다르면 그 짝을 판정에 사용하지 않는다.
+- CPU 실행은 `REMOTE_RUN_PROVIDER=kaggle`을 설정하고 실행 이미지, Python과 주요 의존성 판본을 실행 기록 묶음에 남긴다.
+- Kaggle Public 점수와 제출 결과는 정식 개선 판정에 사용하지 않는다.
 
 ## 자동 실행 (kaggle CLI, 권장)
 
 kaggle CLI의 kernels 명령으로 사람 개입 없이 전체 루프를 돌린다.
 push(업로드 + 즉시 배치 실행), status(폴링), logs(실행 로그), output(산출물 다운로드)을 쓴다.
 
-전제: API 토큰 설정, 계정 전화번호 인증(GPU·인터넷 커널 요건), 대회 규칙 동의.
+전제: API 토큰 설정, 계정 전화번호 인증, 대회 규칙 동의.
+실측 CPU 동시 실행 한도는 5개였고 배치 실행 상한은 12시간이다.
 GPU 주간 할당은 30시간, 배치 실행 상한은 GPU 약 9시간이다.
 
 1. 커널 폴더를 만든다: `kaggle/exp0NN/`(템플릿)을 `kaggle/expNNN/`으로 복사하고
@@ -49,7 +55,13 @@ GPU 주간 할당은 30시간, 배치 실행 상한은 GPU 약 9시간이다.
    데이터셋을 `dataset_sources`로 연결하고 저장소 경로에 심볼릭 링크한다
    (예: `kaggle/exp060`의 원본 프록시).
 
-2. 실행을 밀어 넣는다. `--accelerator`의 유효값은 CLI enum 문자열 `NvidiaTeslaT4`·
+2. CPU 실행은 가속기 인수 없이 밀어 넣는다.
+
+   ```bash
+   uv run kaggle kernels push -p kaggle/expNNN
+   ```
+
+   GPU 진단 실행에서 `--accelerator`의 유효값은 CLI enum 문자열 `NvidiaTeslaT4`·
    `NvidiaTeslaP100`이다(#61). 잘못된 문자열은 오류 없이 무시되고 기본 P100이 배정되는데,
    torch 2.13 wheel은 sm_75 미만을 지원하지 않아 P100에서는 CUDA 커널 이미지 오류로
    즉시 죽는다. 항상 T4를 쓴다. T4는 2개가 붙으므로 시드가 여럿이면 시드 병렬이 켜진다.
@@ -138,6 +150,9 @@ push → status 폴링 → output → import 네 단계를 감싸는 드라이�
 uv run python -m pipeline.compare <반입 run_id>
 uv run python -m pipeline.pool <반입 run_id>
 ```
+
+정식 CPU 일괄 판정은 각 짝비교의 두 팔이 같은 Kaggle CPU 실행 환경에서 완주했고 `remote.provider=kaggle` 태그와 모든 반입 관문이 일치하는지 먼저 확인한다.
+서로 다른 짝비교의 검증된 OOF는 로컬 CPU 또는 Vast.ai CPU 결과와 같은 일괄 판정에 넣을 수 있다.
 
 ## 주의
 
