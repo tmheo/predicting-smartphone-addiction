@@ -479,14 +479,7 @@ def run_fold_diagnostic(
 
     started = clock()
     initial_provider = initial_score.create(cfg.initial_score)
-    initial_scores = (
-        initial_provider.compute(train.drop(columns=[TARGET]), test, seed)
-        if initial_provider is not None
-        else None
-    )
-    if initial_scores is not None:
-        assert initial_scores.train.index.equals(train.index), "train 초기 점수 인덱스가 다르다."
-        assert initial_scores.test.index.equals(test.index), "test 초기 점수 인덱스가 다르다."
+    initial_scores = initial_score.seed_level_scores(initial_provider, train, test, seed)
     X = plan.build_matrix(train, seed)
     X_test = plan.build_matrix(test, seed)
     timings["feature_build"] = _seconds(clock, started)
@@ -497,6 +490,10 @@ def run_fold_diagnostic(
     y = train[TARGET]
 
     started = clock()
+    # 바깥쪽 분할 계약 초기 점수는 fold 준비 단계에서 학습 부분 목표값만으로 만든다. (#505)
+    fold_initial = initial_score.fold_scores(
+        initial_provider, initial_scores, train, test, seed, fold, tr_idx, va_idx
+    )
     X_fold, X_test_fold = X, X_test
     transformers = plan.fold_fit_transformers()
     if transformers:
@@ -524,8 +521,8 @@ def run_fold_diagnostic(
         y.loc[tr_idx],
         X_fold.loc[va_idx],
         y.loc[va_idx],
-        initial_scores.train.loc[tr_idx] if initial_scores is not None else None,
-        initial_scores.train.loc[va_idx] if initial_scores is not None else None,
+        fold_initial.training if fold_initial is not None else None,
+        fold_initial.validation if fold_initial is not None else None,
     )
     timings["fit_and_validation_predict"] = _seconds(clock, started)
     started = clock()
@@ -563,7 +560,7 @@ def run_fold_diagnostic(
         test_pred = np.asarray(
             adapter.predict(
                 X_test_fold,
-                initial_scores.test if initial_scores is not None else None,
+                fold_initial.test if fold_initial is not None else None,
             ),
             dtype="float64",
         )
