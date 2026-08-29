@@ -117,6 +117,9 @@ def env(tmp_path, monkeypatch):
         "git_dirty": "False",
         "remote.provider": "vast",
         "remote.job_id": "issue414-exp-test",
+        "remote.runtime_class": "cpu",
+        "remote.container_image_identity_sha256": "a" * 64,
+        "remote.dependency_lock_sha256": "b" * 64,
         "sha256.train": file_sha256(tmp_path / "data" / "train.csv"),
         "sha256.test": file_sha256(tmp_path / "data" / "test.csv"),
         "sha256.folds": file_sha256(tmp_path / "artifacts" / "folds.parquet"),
@@ -256,6 +259,9 @@ def test_roundtrip_reproduces_run(env):
     assert meta.tags["source.run_id"] == env["run_id"]
     assert meta.tags["remote.provider"] == "vast"
     assert meta.tags["remote.job_id"] == "issue414-exp-test"
+    assert meta.tags["remote.runtime_class"] == "cpu"
+    assert meta.tags["remote.container_image_identity_sha256"] == "a" * 64
+    assert meta.tags["remote.dependency_lock_sha256"] == "b" * 64
     # 산출물 전체가 재생되어 실행 저장소 소비자가 그대로 동작한다.
     assert len(store.oof_of(new_run_id)) == N
     assert not store.importance_of(new_run_id).empty
