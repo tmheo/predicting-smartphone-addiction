@@ -1,0 +1,2617 @@
+{
+  "schema": "missingness-propagation-batch-v1/precommit/1",
+  "contract_version": "missingness-propagation-batch-v1",
+  "frozen_at_utc": "2026-08-29T02:38:12Z",
+  "issue": {
+    "number": 515,
+    "title": "결측 증강 전파 일괄 원자 교체 판정 계약을 구현하고 사전 고정한다",
+    "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/515"
+  },
+  "map": {
+    "number": 506,
+    "title": "지도: 결측 증강을 후보 풀 전 계열에 전파해 마지막 제출 개선을 판정한다",
+    "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/506"
+  },
+  "source_commit_before_contract": "c831c40f80e4115856364586643b6312a7a1bca5",
+  "inputs": {
+    "candidate_pool": {
+      "path": "artifacts/pool.yaml",
+      "sha256": "c513443b6d1cc8af348dc06f8c547ed2728a659261cf7d78dc4e17a27ca668d9",
+      "member_count": 36
+    },
+    "champion": {
+      "path": "artifacts/champion.yaml",
+      "sha256": "aa012114107c06532cf51c0fa9c741f5949146428cf266cf4bedded783d20e09"
+    },
+    "folds": {
+      "path": "artifacts/folds.parquet",
+      "sha256": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+      "role": "고정 5분할과 행 순서"
+    },
+    "full_refit_plan": {
+      "path": "artifacts/full-refit-plan.yaml",
+      "sha256": "b40c091ee2998f90c1916eeb8498b210176f01040a15f80b578df01c53f65770"
+    },
+    "parallel_capacity_freeze": {
+      "path": "artifacts/issue509-parallel-capacity-freeze.json",
+      "sha256": "7685163fc3b5fbaeaea3f2ae2b35f9a23a93777a7524ea9ab6f8f0714dda5e1c"
+    },
+    "pair_execution_freeze": {
+      "path": "artifacts/issue510-missingness-propagation-precommit.json",
+      "sha256": "b2e91630cb4ef935232a8988b8e6ccfcc4cb6fd02b21650cd22395e11886c020"
+    },
+    "paired_training_length_evidence": {
+      "path": "artifacts/issue510-paired-training-lengths.json",
+      "sha256": "9c94657cb59ceef78a95b2e5254a03bed4849198a1f0848241ce807dbd46e613"
+    },
+    "fixed_tabpfn_identity_evidence": {
+      "path": "artifacts/pool-baseline-2026-08-21.yaml",
+      "sha256": "cef5c08efad104580dc9fab7a3c7605d1e5f95ce5f9b825caa66206dc50ff96f"
+    },
+    "fixed_exp208_identity_evidence": {
+      "path": "artifacts/issue503-missingness-candidate-pool-freeze.json",
+      "sha256": "28aeb93fabd1971eaa5bf00f203ac354a3298a248885df43051d4d0112516a0b"
+    }
+  },
+  "scope": {
+    "pool_member_count": 36,
+    "pool_member_order": [
+      "exp006_te_drop_gaming",
+      "exp011_resid_pair",
+      "exp022_orig_knn",
+      "exp023_orig_proxy_residual",
+      "exp025_constrained_impute",
+      "exp032_recon_orig_mean_top3",
+      "exp035_lattice_te",
+      "exp058_logreg_onehot",
+      "exp059_lookup_transformer",
+      "exp070_cat_exact_cats",
+      "exp067_tabpfn3",
+      "exp081_lookup_fold_initialization_avg3",
+      "exp110_lgb_kitopl_no_te",
+      "exp111_xgb_depth8_no_te",
+      "exp071_cat_exact_no_te",
+      "exp106_lookup_fixed24_train_test_preprocessing",
+      "exp113_tab_cnn_m0",
+      "exp085_contextual_spline_m0",
+      "exp027_recon_ce",
+      "exp048_lgb_orig_cdf_diff",
+      "exp134_realmlp_muon",
+      "exp135_xgb_hpo_trial30",
+      "exp131_lookup_bivariate_plr5",
+      "exp136_realmlp_muon_recon_widths",
+      "exp137_tabm_recon_widths",
+      "exp133_scalar_token_transformer_oof_te",
+      "exp131_tab_cnn_oof_target_mean",
+      "exp132_tab_cnn_epochs100",
+      "exp139_realmlp_reference_qnormal_train_test",
+      "exp140_realmlp_orig_cdf_diff",
+      "exp157_lookup_muon_initavg8",
+      "exp168_issue413_lgb_no_te_fixed20",
+      "exp197_issue419_lgb_recon_ce_fixed20",
+      "exp183_issue419_cat_exact_fixed10",
+      "exp208_issue500_ag25_missingness_augmented",
+      "exp209_issue505_lgb_lr_onehot_init"
+    ],
+    "fixed_members": [
+      "exp067_tabpfn3",
+      "exp208_issue500_ag25_missingness_augmented"
+    ],
+    "pair_count": 34,
+    "pair_member_order": [
+      "exp006_te_drop_gaming",
+      "exp011_resid_pair",
+      "exp022_orig_knn",
+      "exp023_orig_proxy_residual",
+      "exp025_constrained_impute",
+      "exp032_recon_orig_mean_top3",
+      "exp035_lattice_te",
+      "exp058_logreg_onehot",
+      "exp059_lookup_transformer",
+      "exp070_cat_exact_cats",
+      "exp081_lookup_fold_initialization_avg3",
+      "exp110_lgb_kitopl_no_te",
+      "exp111_xgb_depth8_no_te",
+      "exp071_cat_exact_no_te",
+      "exp106_lookup_fixed24_train_test_preprocessing",
+      "exp113_tab_cnn_m0",
+      "exp085_contextual_spline_m0",
+      "exp027_recon_ce",
+      "exp048_lgb_orig_cdf_diff",
+      "exp134_realmlp_muon",
+      "exp135_xgb_hpo_trial30",
+      "exp131_lookup_bivariate_plr5",
+      "exp136_realmlp_muon_recon_widths",
+      "exp137_tabm_recon_widths",
+      "exp133_scalar_token_transformer_oof_te",
+      "exp131_tab_cnn_oof_target_mean",
+      "exp132_tab_cnn_epochs100",
+      "exp139_realmlp_reference_qnormal_train_test",
+      "exp140_realmlp_orig_cdf_diff",
+      "exp157_lookup_muon_initavg8",
+      "exp168_issue413_lgb_no_te_fixed20",
+      "exp197_issue419_lgb_recon_ce_fixed20",
+      "exp183_issue419_cat_exact_fixed10",
+      "exp209_issue505_lgb_lr_onehot_init"
+    ],
+    "proposal_member_count": 36,
+    "prediction_values_read_while_freezing": false
+  },
+  "fixed_members": [
+    {
+      "member": "exp067_tabpfn3",
+      "pool_position": 11,
+      "identity": {
+        "role": "fixed_current_pool_member",
+        "member": "exp067_tabpfn3",
+        "pool_position": 11,
+        "run_id": "85b09132aae543aab16e69dea5906a30",
+        "pool_entry_sha256": "8da8630f5173bce97aa7926959e1e9b70ffe7aaa65268bb95f2300db340bca65",
+        "source_git_commit": "ccce6c3308083c036e0dcfe3ada1e4266f439bb8",
+        "source_config_path": "configs/exp067_tabpfn3.yaml",
+        "source_config_sha256": "ef40507faf97ba6e61c48e4e1798172d84a38a5c40ff8171e91e96379ed894bb",
+        "oof_auc": 0.9672432266679856,
+        "oof_identity": {
+          "kind": "prediction_array_sha256",
+          "sha256": "59a742f0a4ad336826d87491a01f92b1f23bb2ba23ba6c0380d3eede34c070f7"
+        }
+      },
+      "identity_sha256": "59f5a8e0796342cbde2c9f25fdfad6c7ca96d0ce70d80dc1ba06d616c42c4c6e"
+    },
+    {
+      "member": "exp208_issue500_ag25_missingness_augmented",
+      "pool_position": 35,
+      "identity": {
+        "role": "fixed_current_pool_member",
+        "member": "exp208_issue500_ag25_missingness_augmented",
+        "pool_position": 35,
+        "run_id": "e46d1ca38e0746209e049970d3dd2ab6",
+        "pool_entry_sha256": "56e3e574d2459e920fee4cdc217adafdfe2dda33b373201f1c88eca37bc908c3",
+        "source_git_commit": "7f714622653185b0eda0519716ce633f79edf1c3",
+        "source_config_path": "configs/exp208_issue500_ag25_missingness_augmented.yaml",
+        "source_config_sha256": "2a2273b745d9bc372ec943c0627614f5225d69caafcddfad94a228233e0bc508",
+        "oof_auc": 0.9688375116147219,
+        "oof_identity": {
+          "kind": "prediction_array_sha256",
+          "sha256": "3444abd8d827c2f1548eea5de330bd71ceff80fefbe05c5a0eebd3a3524bbc67",
+          "artifact_file_sha256": "2d7da113d1609aaf0d5eb4e1c9fe477b3fd4413d497e6d8d76ea9ca4d09cb280"
+        }
+      },
+      "identity_sha256": "e53c585fe18094e28adc9eb4f4f40d977f0d5c35a0a3b67cf8c71af5d4b6777d"
+    }
+  ],
+  "pair_execution_contract": {
+    "sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+    "value": {
+      "config_differences": [
+        "name",
+        "training_rows"
+      ],
+      "missingness_augmented": {
+        "observed_cell_mask_probability": 0.25,
+        "replica_count": 2
+      },
+      "outer_folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "same_source_training_lengths": true,
+      "seeds": [
+        42,
+        43,
+        44
+      ],
+      "tripled": {
+        "observed_cell_mask_probability": 0.0,
+        "replica_count": 2
+      }
+    }
+  },
+  "pairs": [
+    {
+      "ordinal": 1,
+      "slot": "exp006_te_drop_gaming",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp006_te_drop_gaming_tripled",
+          "path": "configs/missingness-propagation/01_exp006_te_drop_gaming_tripled.yaml",
+          "sha256": "83b96fd897e484b998cc25f6c3982068372eec0888b0be0a62cc579d3026b565"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp006_te_drop_gaming_missingness_augmented",
+          "path": "configs/missingness-propagation/01_exp006_te_drop_gaming_missingness_augmented.yaml",
+          "sha256": "90a9d510fd3e81cd0c9e94f6648a6ad53352e6f15bf5fb0807c019d3ee8b878d"
+        }
+      ],
+      "original": {
+        "member": "exp006_te_drop_gaming",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp006_te_drop_gaming",
+          "pool_position": 1,
+          "run_id": "4aaddd505ade428588cf83659f205cf6",
+          "pool_entry_sha256": "faa9d3a04f5d0c5755213190abe519af8e61f9e4b0812de94c667681b847d449",
+          "source_identity_sha256": "16f35ea73b8c36d9e5405ba81a439b36643d7057bca32b3a758959ca949f2025",
+          "source_git_commit": "9e61a9654a14d91a71f02892ef0f4764e4a6fb04",
+          "source_config_artifact_sha256": "c4deaafabe14032ac6b352322f1b39b4c4139f3bbb0d4057c8289adb3f69e75b",
+          "normalized_config_sha256": "0147137893d6b3e82220c1ea300caaf445f35cb1214eabfa0902da60e576f5c0",
+          "oof_artifact_sha256": "a4fe9b772b7d2c0195646ca4db20b3f92240fce0a1e448c5e9027190336cc8b8",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "0a5106259eab39de0b3cbfd9e8f9ee0f0c696fc51a8ae0c4ee774601e9a922ee"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp006_te_drop_gaming_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp006_te_drop_gaming_missingness_augmented",
+          "slot_original_member": "exp006_te_drop_gaming",
+          "ordinal": 1,
+          "config_path": "configs/missingness-propagation/01_exp006_te_drop_gaming_missingness_augmented.yaml",
+          "config_sha256": "90a9d510fd3e81cd0c9e94f6648a6ad53352e6f15bf5fb0807c019d3ee8b878d",
+          "common_config_semantic_sha256": "f135ed9673a518fb77c5fadf6a3dd636c89c58d57083c8826710ce1583d859ea",
+          "source_original_identity_sha256": "0a5106259eab39de0b3cbfd9e8f9ee0f0c696fc51a8ae0c4ee774601e9a922ee",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "e67704723e0d1e0ae471ebec6796b0bc3c82308de13bf03096d4ee802b905305"
+      }
+    },
+    {
+      "ordinal": 2,
+      "slot": "exp011_resid_pair",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp011_resid_pair_tripled",
+          "path": "configs/missingness-propagation/02_exp011_resid_pair_tripled.yaml",
+          "sha256": "ed6ee20c34f356201561770c942b630ab0c9b4d103ef3f44086a884a97cfde31"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp011_resid_pair_missingness_augmented",
+          "path": "configs/missingness-propagation/02_exp011_resid_pair_missingness_augmented.yaml",
+          "sha256": "411a2137504a9740c0f2e2f53150732cb997b0956ba53feaec98f894f289b75e"
+        }
+      ],
+      "original": {
+        "member": "exp011_resid_pair",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp011_resid_pair",
+          "pool_position": 2,
+          "run_id": "e21d19af37bb461db5dc1a59b66411a6",
+          "pool_entry_sha256": "572df0390b53a28f4ff3a2d1b89d1913f89af111f84548cda4cc95997547cdbd",
+          "source_identity_sha256": "b6804f5a777a590a55a82420039f5a48c30c0c3036958ca34c9a39441b424e00",
+          "source_git_commit": "e529837229c249e4751a8237093d17d75446913e",
+          "source_config_artifact_sha256": "d2609af20ce94d9a4565db830640f93bc3b8940e9da46d02b14876e289a70a0c",
+          "normalized_config_sha256": "21dd6d8df039765b41926b31eb63f52fce7508942f79a6b5dbd3c44aa8675d16",
+          "oof_artifact_sha256": "f9d4767d728ec8b0b3839fa2c4ba5be0d36f4f0a45f35e6d112a16216462b34f",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "a8a68c483ce2d4ddeffc679f784b42892fb53ba83dc0e5b89d368dde88686102"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp011_resid_pair_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp011_resid_pair_missingness_augmented",
+          "slot_original_member": "exp011_resid_pair",
+          "ordinal": 2,
+          "config_path": "configs/missingness-propagation/02_exp011_resid_pair_missingness_augmented.yaml",
+          "config_sha256": "411a2137504a9740c0f2e2f53150732cb997b0956ba53feaec98f894f289b75e",
+          "common_config_semantic_sha256": "614088f2b9811fbb7ff41ff68eb0b6153cebfbc47aceffc6bab3bc40e47a4a15",
+          "source_original_identity_sha256": "a8a68c483ce2d4ddeffc679f784b42892fb53ba83dc0e5b89d368dde88686102",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "9bb350b27c8ebe4f585442168c6db2c7a5962beb2fba865c8eeb10a2c867f8db"
+      }
+    },
+    {
+      "ordinal": 3,
+      "slot": "exp022_orig_knn",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp022_orig_knn_tripled",
+          "path": "configs/missingness-propagation/03_exp022_orig_knn_tripled.yaml",
+          "sha256": "3031d8a992e78eb77ccd3908e1196b8e6d5c64aedc6617b65d42763ad34f5b54"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp022_orig_knn_missingness_augmented",
+          "path": "configs/missingness-propagation/03_exp022_orig_knn_missingness_augmented.yaml",
+          "sha256": "ee231539588b10ed29744c15d801a023edfa1ff8b464f2d1da1f8954db267940"
+        }
+      ],
+      "original": {
+        "member": "exp022_orig_knn",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp022_orig_knn",
+          "pool_position": 3,
+          "run_id": "52e9c12bcfb94ee9912e4bb7f43e3f09",
+          "pool_entry_sha256": "268c485e6285be49c992a29e3ae4b897b0beed10827bc091d36d7c21b3bfa726",
+          "source_identity_sha256": "838064db7544aeeb914a574001f1da28800a47ebf8fade9c43f1da494e1b99a0",
+          "source_git_commit": "2c8087158d25e459e2b63065eef55075083c3eb9",
+          "source_config_artifact_sha256": "5e9d52d59467e98d6498a5bf23e3b4a57b99d60336dc8f42e73cf30f66d754b9",
+          "normalized_config_sha256": "1ef0bc2119481955c6d8a5df072dfd013f9a45ebc3431e9dac37c4eccb3bffa3",
+          "oof_artifact_sha256": "62e33b80545340188c9108204786ed58ca9891c718d0e3720ab8054f0b92ffa0",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "ecdf74a0113a00000a4702a808dc15737070e71e7e9ed476ff56aef130cffaa1"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp022_orig_knn_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp022_orig_knn_missingness_augmented",
+          "slot_original_member": "exp022_orig_knn",
+          "ordinal": 3,
+          "config_path": "configs/missingness-propagation/03_exp022_orig_knn_missingness_augmented.yaml",
+          "config_sha256": "ee231539588b10ed29744c15d801a023edfa1ff8b464f2d1da1f8954db267940",
+          "common_config_semantic_sha256": "824b4fc6cc10b1aa07e1604520a9db546055c5c38fda585c98b3664057ce6a92",
+          "source_original_identity_sha256": "ecdf74a0113a00000a4702a808dc15737070e71e7e9ed476ff56aef130cffaa1",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "6096621743d214f839a5539701cd406773b055f4af18a5a4d15af28cf87a8e8e"
+      }
+    },
+    {
+      "ordinal": 4,
+      "slot": "exp023_orig_proxy_residual",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp023_orig_proxy_residual_tripled",
+          "path": "configs/missingness-propagation/04_exp023_orig_proxy_residual_tripled.yaml",
+          "sha256": "e7247c98e9fc0e6f3200881422cd0ec76c941355374e8829dd33c939295eb29d"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp023_orig_proxy_residual_missingness_augmented",
+          "path": "configs/missingness-propagation/04_exp023_orig_proxy_residual_missingness_augmented.yaml",
+          "sha256": "21132a2e273fb1336913630e2642c78149c567fd5ea4f829939a196670f56d9d"
+        }
+      ],
+      "original": {
+        "member": "exp023_orig_proxy_residual",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp023_orig_proxy_residual",
+          "pool_position": 4,
+          "run_id": "202b7d47c3bd4b8e8904fa5c005c7423",
+          "pool_entry_sha256": "2e320f6adae0a5a9a7a162f1770e639704174de63e4302f67930d1c0d6b8efe4",
+          "source_identity_sha256": "88d6dd650ed30bb947f68218fcd964735fa0fa1e849fd7230cb617a452f1c86c",
+          "source_git_commit": "c22237bfeb3dc57668e492346acdcfe42c1d3ed2",
+          "source_config_artifact_sha256": "f7e792369fd4cb69fd90c605bcded9a13050ec4c9e4fd0cc2be30c180a048122",
+          "normalized_config_sha256": "808f0bf7d46ec5d64b728f19bc2aca4932b6e896344cd2359ab0148d0391d88d",
+          "oof_artifact_sha256": "791277d466c22c6bdb6922c850d45dd96b0c5570b081d46500c6d9918337a1d0",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "0b16507e07aada811145500256585fa19fab84ac00ba2fe8c32cc43f199ec37a"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp023_orig_proxy_residual_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp023_orig_proxy_residual_missingness_augmented",
+          "slot_original_member": "exp023_orig_proxy_residual",
+          "ordinal": 4,
+          "config_path": "configs/missingness-propagation/04_exp023_orig_proxy_residual_missingness_augmented.yaml",
+          "config_sha256": "21132a2e273fb1336913630e2642c78149c567fd5ea4f829939a196670f56d9d",
+          "common_config_semantic_sha256": "9e7389cc0f360881451913d14749326c65ed9d08eb7351cb6206d136f21abf5b",
+          "source_original_identity_sha256": "0b16507e07aada811145500256585fa19fab84ac00ba2fe8c32cc43f199ec37a",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "3addceceee61a42f4db76f42381cf051bf7fd52cbc806c97007ae8e0bcbc2b96"
+      }
+    },
+    {
+      "ordinal": 5,
+      "slot": "exp025_constrained_impute",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp025_constrained_impute_tripled",
+          "path": "configs/missingness-propagation/05_exp025_constrained_impute_tripled.yaml",
+          "sha256": "4a944fe782f6e3d0bf2065b383083213e8f0baef907941218cb6f489bd69b350"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp025_constrained_impute_missingness_augmented",
+          "path": "configs/missingness-propagation/05_exp025_constrained_impute_missingness_augmented.yaml",
+          "sha256": "c295fc22adcfb4ab0485146c273602e0dd8dd8fa4eab0270645c9869d57b0329"
+        }
+      ],
+      "original": {
+        "member": "exp025_constrained_impute",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp025_constrained_impute",
+          "pool_position": 5,
+          "run_id": "9804689a5e3642e586abb972b522f3d4",
+          "pool_entry_sha256": "9e1cc5b1c13ea8cb0a8b42496611fc8d51b5adbd7f82cb33a2739fbc75f56b5a",
+          "source_identity_sha256": "8b9afe37777c433984bd725141a2fe3fe1bb843a1d91e469ae9813a855284809",
+          "source_git_commit": "327a973898b09b9f8861adc92155d4f527cc4c6a",
+          "source_config_artifact_sha256": "2b8bf71956c90493b127a1db449f3843e4fb50dbcf81a45b5cf3392de1700bf2",
+          "normalized_config_sha256": "a28eb31ccbcc235270aa2edb32e430f764db70a8061f2788b63f2ad10f7ec14f",
+          "oof_artifact_sha256": "6e35c0a08b1e61ea04b9a1cd0e98610f0293e4ff7dc8299d5975ba72915f1963",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "2a6519c2061ba8a538523821aaeb19d7f4a284d9730b2706dd0f5661322e1772"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp025_constrained_impute_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp025_constrained_impute_missingness_augmented",
+          "slot_original_member": "exp025_constrained_impute",
+          "ordinal": 5,
+          "config_path": "configs/missingness-propagation/05_exp025_constrained_impute_missingness_augmented.yaml",
+          "config_sha256": "c295fc22adcfb4ab0485146c273602e0dd8dd8fa4eab0270645c9869d57b0329",
+          "common_config_semantic_sha256": "c7f627e0d3de7ee9276e74d6c449410801026f1ada85ad1ab2a281813d7e5021",
+          "source_original_identity_sha256": "2a6519c2061ba8a538523821aaeb19d7f4a284d9730b2706dd0f5661322e1772",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "478001168daa67be55b2e9cdaf65b05ba96c433165da12e15d17ae0a259704da"
+      }
+    },
+    {
+      "ordinal": 6,
+      "slot": "exp032_recon_orig_mean_top3",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp032_recon_orig_mean_top3_tripled",
+          "path": "configs/missingness-propagation/06_exp032_recon_orig_mean_top3_tripled.yaml",
+          "sha256": "f721fcbcff9d3f3caf689991ce1b5a3d68254ece6feff4ef8327aac3493ce8c1"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp032_recon_orig_mean_top3_missingness_augmented",
+          "path": "configs/missingness-propagation/06_exp032_recon_orig_mean_top3_missingness_augmented.yaml",
+          "sha256": "6facb34087e5abf551b923c82fb3d9170e547e4c7de9df34f189c2bd51b194ea"
+        }
+      ],
+      "original": {
+        "member": "exp032_recon_orig_mean_top3",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp032_recon_orig_mean_top3",
+          "pool_position": 6,
+          "run_id": "b1bd4b08386946c9a4e05b755dbd5f26",
+          "pool_entry_sha256": "b99b41d9de19be1b8fec349ec7fb0f45b2e404ad4e71efb8eae81ee4a758cc91",
+          "source_identity_sha256": "9b8bf079fb702744bee51df7273aeaff47fc8efb9ad5a1b5f9fc7ce8cad21b68",
+          "source_git_commit": "addc845ad893d208a079d109b148dc03d7cb5f00",
+          "source_config_artifact_sha256": "7b74c858cb40103a99de32a5d3452fe97f54bc5d13e164fce1645dc6e7bb897c",
+          "normalized_config_sha256": "49734beedbaf99234574777e661db5a0b0064fc9a14f4ca395a5020454adedd9",
+          "oof_artifact_sha256": "782723af74cb6c2edbfd2d5dce031649e0628ce38f85cf44966cca1ad817d61e",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "3851bc26806c8614f6560978c0aa0489828513eb5c15708198769852562cada8"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp032_recon_orig_mean_top3_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp032_recon_orig_mean_top3_missingness_augmented",
+          "slot_original_member": "exp032_recon_orig_mean_top3",
+          "ordinal": 6,
+          "config_path": "configs/missingness-propagation/06_exp032_recon_orig_mean_top3_missingness_augmented.yaml",
+          "config_sha256": "6facb34087e5abf551b923c82fb3d9170e547e4c7de9df34f189c2bd51b194ea",
+          "common_config_semantic_sha256": "67a674fdb251d500afd1367f50f52b34d2e8b7a2e5b20e9dd712860391e15b97",
+          "source_original_identity_sha256": "3851bc26806c8614f6560978c0aa0489828513eb5c15708198769852562cada8",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "f85d052b55aa3c3fcdc8f0226a344d7d65f3dddd0122ffbf06c6fde4008940b3"
+      }
+    },
+    {
+      "ordinal": 7,
+      "slot": "exp035_lattice_te",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp035_lattice_te_tripled",
+          "path": "configs/missingness-propagation/07_exp035_lattice_te_tripled.yaml",
+          "sha256": "eea6e1b35c836d3ae692c3d0ba00db6aec669f9277a0bae0addb89a69fe3fb1a"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp035_lattice_te_missingness_augmented",
+          "path": "configs/missingness-propagation/07_exp035_lattice_te_missingness_augmented.yaml",
+          "sha256": "d05bca7b373700e20ecbcb89d08f84af243847cfc0af38a123046d95bcff9195"
+        }
+      ],
+      "original": {
+        "member": "exp035_lattice_te",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp035_lattice_te",
+          "pool_position": 7,
+          "run_id": "c62a9ad334bf486cb46d738474ccd767",
+          "pool_entry_sha256": "09bbb61ca198f07601a26416731f637b854c8010f1e5ed7e2bf90f1e5cb7e863",
+          "source_identity_sha256": "6be98fab363810e49770487e620165aba257a0ab72260163f4e24459a878ac27",
+          "source_git_commit": "0d571eaa1130e35d588b66057daede8fe131fc01",
+          "source_config_artifact_sha256": "e905418ebedaef4859dd8684a6921e4cad4f890caba89b949a1f100336f18e5e",
+          "normalized_config_sha256": "e08606666b362ec1fd0b0037e8aba1fce7b4ca16911d98bb4c8150cc1410ffe9",
+          "oof_artifact_sha256": "dc627c9c67bb9b54f7b8e713e85dfd6717adad798f8109c61e083dda85758507",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "651ae3c6d679653bbc8da49340aae4714542af6f6f08d6279be6b56516eef9a7"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp035_lattice_te_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp035_lattice_te_missingness_augmented",
+          "slot_original_member": "exp035_lattice_te",
+          "ordinal": 7,
+          "config_path": "configs/missingness-propagation/07_exp035_lattice_te_missingness_augmented.yaml",
+          "config_sha256": "d05bca7b373700e20ecbcb89d08f84af243847cfc0af38a123046d95bcff9195",
+          "common_config_semantic_sha256": "2f2990456fa8d5c98a81b956073feeab88b8e04fab73b7e7cf68d3e2d99ab100",
+          "source_original_identity_sha256": "651ae3c6d679653bbc8da49340aae4714542af6f6f08d6279be6b56516eef9a7",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "6684602ce251c9fdb40978babc4ee434b6efb735677d1af8bb6708ad7ae3730c"
+      }
+    },
+    {
+      "ordinal": 8,
+      "slot": "exp058_logreg_onehot",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp058_logreg_onehot_tripled",
+          "path": "configs/missingness-propagation/08_exp058_logreg_onehot_tripled.yaml",
+          "sha256": "6cfab98033e1e1130d340ee831158900be1bb434e56e86c11fcce6cf6725bc44"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp058_logreg_onehot_missingness_augmented",
+          "path": "configs/missingness-propagation/08_exp058_logreg_onehot_missingness_augmented.yaml",
+          "sha256": "d27b574807507220375056d00c05b2ca808c86bf64a297e71a8fa16d65ec6ba4"
+        }
+      ],
+      "original": {
+        "member": "exp058_logreg_onehot",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp058_logreg_onehot",
+          "pool_position": 8,
+          "run_id": "e2b76edd9d204290810e39a7457c4c48",
+          "pool_entry_sha256": "6b0d38070d91a13f9d8a5660e824c12c893247a877fd211e833adce89d79c9e2",
+          "source_identity_sha256": "7f935f5e19612e88c75b356352abd2940c22d37e286c59bfddd0e82d14bb72d0",
+          "source_git_commit": "7b7d9ff78b4f693af500784f7c39229470d65678",
+          "source_config_artifact_sha256": "0ae00bb534653755448916edbb7c5c6e11f60014cefe47d9becaf35cf2940d9a",
+          "normalized_config_sha256": "c48c9c556d97ea7d60e31b6b4b87bfbe52f2550edbfda75942fab1afdec6247c",
+          "oof_artifact_sha256": "3b7d1edc5bc09255ab0b2b6442ceb12c8843a587b30fcb91f6593482f4c81e51",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "ab2c37614a5310c8876065a214f903e5014f7918dc99613f19c8f4e56953a6c4"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp058_logreg_onehot_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp058_logreg_onehot_missingness_augmented",
+          "slot_original_member": "exp058_logreg_onehot",
+          "ordinal": 8,
+          "config_path": "configs/missingness-propagation/08_exp058_logreg_onehot_missingness_augmented.yaml",
+          "config_sha256": "d27b574807507220375056d00c05b2ca808c86bf64a297e71a8fa16d65ec6ba4",
+          "common_config_semantic_sha256": "ce86e26eb7b3946220036a1e3c552f52b08823d3e758b060d371d1d2108caa75",
+          "source_original_identity_sha256": "ab2c37614a5310c8876065a214f903e5014f7918dc99613f19c8f4e56953a6c4",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "5a0f5f2a358fb459ff253014f952cd3081c0831bd6772ee8d1bc8454a5453687"
+      }
+    },
+    {
+      "ordinal": 9,
+      "slot": "exp059_lookup_transformer",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp059_lookup_transformer_tripled",
+          "path": "configs/missingness-propagation/09_exp059_lookup_transformer_tripled.yaml",
+          "sha256": "ad42aed4907ca923b60a60e6700ac5034cff3a44e64f50ed234d2866184dc779"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp059_lookup_transformer_missingness_augmented",
+          "path": "configs/missingness-propagation/09_exp059_lookup_transformer_missingness_augmented.yaml",
+          "sha256": "21d3aa7de22701ab8ccaa39002eb0166b813c5986a31a9d1dd0ea992fd2f54b1"
+        }
+      ],
+      "original": {
+        "member": "exp059_lookup_transformer",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp059_lookup_transformer",
+          "pool_position": 9,
+          "run_id": "b951fac51b6b44298f7fdb0b543caba6",
+          "pool_entry_sha256": "42f32337b41843990bac8005fa5c5fd6a419d060d02401e1e5a38bef9ed78d6b",
+          "source_identity_sha256": "5085e5dca1170e924a0b78aa46d38ed2ac520633fb448e79ce0f87af4325b21a",
+          "source_git_commit": "495cc49df87e1de625da99f440b7d7fb80ac4f33",
+          "source_config_artifact_sha256": "6ce0c5344269d23915cf1bf273ee5124a73b3d6547d5ad56b327a5a83155e4a8",
+          "normalized_config_sha256": "2ec02ab597c77ebd236be7c988c9a5a7ec9122c8d6ce8f0f1bdb0ff47852a97c",
+          "oof_artifact_sha256": "9a2844f5d67e6696b15c57a95cfc2aaedae339d0d289f504c7649492389c97d0",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "f10118b6f4011ce758c962727a8e466ddbd28102612824160c3f2c4a07874995"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp059_lookup_transformer_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp059_lookup_transformer_missingness_augmented",
+          "slot_original_member": "exp059_lookup_transformer",
+          "ordinal": 9,
+          "config_path": "configs/missingness-propagation/09_exp059_lookup_transformer_missingness_augmented.yaml",
+          "config_sha256": "21d3aa7de22701ab8ccaa39002eb0166b813c5986a31a9d1dd0ea992fd2f54b1",
+          "common_config_semantic_sha256": "c5908a7b954ec0a3ba80b6355e8159af7e4c19b2dbf0faf8510972653d5b9fdc",
+          "source_original_identity_sha256": "f10118b6f4011ce758c962727a8e466ddbd28102612824160c3f2c4a07874995",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "cae59e1c8cc346f4ae5228f45d6286dcddb69e747adb70c1ca73bde7f693081e"
+      }
+    },
+    {
+      "ordinal": 10,
+      "slot": "exp070_cat_exact_cats",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp070_cat_exact_cats_tripled",
+          "path": "configs/missingness-propagation/10_exp070_cat_exact_cats_tripled.yaml",
+          "sha256": "3fc336b0a619e115c305dbac4506b330280206349eab6b12654530657f636cef"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp070_cat_exact_cats_missingness_augmented",
+          "path": "configs/missingness-propagation/10_exp070_cat_exact_cats_missingness_augmented.yaml",
+          "sha256": "6c0c1a9c6f98fbdf06c5b73c75e7071b8d8da1817a23eaf1cbfa43958e0c2d39"
+        }
+      ],
+      "original": {
+        "member": "exp070_cat_exact_cats",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp070_cat_exact_cats",
+          "pool_position": 10,
+          "run_id": "6238d8c58beb42ee8102209ded92516e",
+          "pool_entry_sha256": "60c10fc622fb0583ad6eaef0f2d7d3ccf0294d6e7c3960621bf488f11eae89f8",
+          "source_identity_sha256": "3c6c3dfdae83f681a2e65e5648e9f8d49620fcc2687d2f46baa39b8826ee0ed4",
+          "source_git_commit": "07616e55c9e7ab7a1e5860f0f1b28c150e42ac42",
+          "source_config_artifact_sha256": "78d564c6c4e255f910b62bce855844697ed4ba16640e9f9fa15b1d625ebbb91d",
+          "normalized_config_sha256": "632945ae9304ff6e4a4648df05105713607e6000b63599d32567e76b8e7e3905",
+          "oof_artifact_sha256": "af31d799698063f4dbc10bf66f16501c154ade6d5506ea12581ab290f978e7bc",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "3f41530af634b6bfc0d2fa10c088cbdc82b295e356f826955cc2f49ead05bb90"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp070_cat_exact_cats_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp070_cat_exact_cats_missingness_augmented",
+          "slot_original_member": "exp070_cat_exact_cats",
+          "ordinal": 10,
+          "config_path": "configs/missingness-propagation/10_exp070_cat_exact_cats_missingness_augmented.yaml",
+          "config_sha256": "6c0c1a9c6f98fbdf06c5b73c75e7071b8d8da1817a23eaf1cbfa43958e0c2d39",
+          "common_config_semantic_sha256": "bc9008f7828d308c7e6ba2a4a9462ca6c85deeaedca8d41869ec7bdbde1dc37b",
+          "source_original_identity_sha256": "3f41530af634b6bfc0d2fa10c088cbdc82b295e356f826955cc2f49ead05bb90",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "0f6df1947fd618fe604f0596ea6c8cc4fa26e735e31630be332ee4d7f0bffb5e"
+      }
+    },
+    {
+      "ordinal": 11,
+      "slot": "exp081_lookup_fold_initialization_avg3",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp081_lookup_fold_initialization_avg3_tripled",
+          "path": "configs/missingness-propagation/11_exp081_lookup_fold_initialization_avg3_tripled.yaml",
+          "sha256": "26d73758e018be6f76f3b166f02b008eaf34c9f0f5177228294abb5e94265fbd"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp081_lookup_fold_initialization_avg3_missingness_augmented",
+          "path": "configs/missingness-propagation/11_exp081_lookup_fold_initialization_avg3_missingness_augmented.yaml",
+          "sha256": "3f22fab0798cd5ff9e3c7228bbdabbf275929c59091b86fab5ebcd6c90bbd1bd"
+        }
+      ],
+      "original": {
+        "member": "exp081_lookup_fold_initialization_avg3",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp081_lookup_fold_initialization_avg3",
+          "pool_position": 12,
+          "run_id": "d55d1cd49c194eb8bf7b5128e548df81",
+          "pool_entry_sha256": "51248bdb86c8afaa03f14fd90528ea30d19cdf1203ec7edfc045526a21ea8a97",
+          "source_identity_sha256": "e78be564c8509983e56fd3ac82c9a8f330e604fc021cf512fb6ef0a01d873800",
+          "source_git_commit": "8c61ca1d588383955b73e1881422bbc1e6c442f3",
+          "source_config_artifact_sha256": "d5e143369cfc1de2eebe5bcc01c7aae18e926b5695058f8c31a9f7f4436a4d9c",
+          "normalized_config_sha256": "936eb6d5c6b6820be23e91564a29219bd3cdea03f0d343e95d1cae7b48dc2968",
+          "oof_artifact_sha256": "417ae30dd59cad5c2fe2ea7e136c0f6a74f2a1801de248db6847ad0fadfef89b",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "099333cc638bcafd9034951b7e34f98ee1dda326ec87bb012acd8e3e16309c52"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp081_lookup_fold_initialization_avg3_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp081_lookup_fold_initialization_avg3_missingness_augmented",
+          "slot_original_member": "exp081_lookup_fold_initialization_avg3",
+          "ordinal": 11,
+          "config_path": "configs/missingness-propagation/11_exp081_lookup_fold_initialization_avg3_missingness_augmented.yaml",
+          "config_sha256": "3f22fab0798cd5ff9e3c7228bbdabbf275929c59091b86fab5ebcd6c90bbd1bd",
+          "common_config_semantic_sha256": "6fb9b9f40047d55d6b9cbd21b1ca2be7287795a5161e8575ddae60da019cfcd5",
+          "source_original_identity_sha256": "099333cc638bcafd9034951b7e34f98ee1dda326ec87bb012acd8e3e16309c52",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "1acbf6ebdc0255a46a51304d7f38a207e5f3d3c6b506d6b4de58359cdb16bc4e"
+      }
+    },
+    {
+      "ordinal": 12,
+      "slot": "exp110_lgb_kitopl_no_te",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp110_lgb_kitopl_no_te_tripled",
+          "path": "configs/missingness-propagation/12_exp110_lgb_kitopl_no_te_tripled.yaml",
+          "sha256": "8e3a0a9243bfcbe68b334a1c26f6b23db6a3ef7e216809b2b909550be20f669d"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp110_lgb_kitopl_no_te_missingness_augmented",
+          "path": "configs/missingness-propagation/12_exp110_lgb_kitopl_no_te_missingness_augmented.yaml",
+          "sha256": "aca4c1895659d773504888cb5784a72c5cb3594ac8da57c8bf4d2a49d2ab9b35"
+        }
+      ],
+      "original": {
+        "member": "exp110_lgb_kitopl_no_te",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp110_lgb_kitopl_no_te",
+          "pool_position": 13,
+          "run_id": "ae829ae3d886402ab100a8e966c3131a",
+          "pool_entry_sha256": "b1f25abce2533a0a7fef9f922aa2fd282121bf92451d7e524cabaf38e5fb3d99",
+          "source_identity_sha256": "9ee67b837f7450543ec601739d32945647f1f43cc94d21a4b73ed9c2b26f5fbb",
+          "source_git_commit": "f07383ec3b0e404d37a7c32d775e8438b2e239fe",
+          "source_config_artifact_sha256": "5056d260735c2672035c720f1c3b98059f1128df79fc873fecf460976924535d",
+          "normalized_config_sha256": "cb12f8a9b553982eb800a27b645cb918e59847541d0202f29898a29ae1594421",
+          "oof_artifact_sha256": "1489b4d6f4b566834f84b55e823386639afd3357a517b93e25625ae31b6618d5",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "2fa5b4db53c62d69c44a6bdbb7d778cf7e33f8ba6e6860bb84a241f4a23c0ae7"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp110_lgb_kitopl_no_te_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp110_lgb_kitopl_no_te_missingness_augmented",
+          "slot_original_member": "exp110_lgb_kitopl_no_te",
+          "ordinal": 12,
+          "config_path": "configs/missingness-propagation/12_exp110_lgb_kitopl_no_te_missingness_augmented.yaml",
+          "config_sha256": "aca4c1895659d773504888cb5784a72c5cb3594ac8da57c8bf4d2a49d2ab9b35",
+          "common_config_semantic_sha256": "c59cbce1d57758c19b8bfba3a26c41cd7a6e664056b1e1455991b5290d08a7bd",
+          "source_original_identity_sha256": "2fa5b4db53c62d69c44a6bdbb7d778cf7e33f8ba6e6860bb84a241f4a23c0ae7",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "29908a6e667884c9a9375a93c41132ce3332a396ed7df6501d5939c5e3603770"
+      }
+    },
+    {
+      "ordinal": 13,
+      "slot": "exp111_xgb_depth8_no_te",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp111_xgb_depth8_no_te_tripled",
+          "path": "configs/missingness-propagation/13_exp111_xgb_depth8_no_te_tripled.yaml",
+          "sha256": "38a1e4e0d0b7e5efacc8e06dfe657ce0db1ea49a7f1fa547840ae5fb627ea496"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp111_xgb_depth8_no_te_missingness_augmented",
+          "path": "configs/missingness-propagation/13_exp111_xgb_depth8_no_te_missingness_augmented.yaml",
+          "sha256": "cc0a075744fd4964bdc2048759cd423c8c1af573364f3667ece15f392e4fba9d"
+        }
+      ],
+      "original": {
+        "member": "exp111_xgb_depth8_no_te",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp111_xgb_depth8_no_te",
+          "pool_position": 14,
+          "run_id": "3cbc2ccce9eb46458d884006a33e516e",
+          "pool_entry_sha256": "69af7c55eb28e2ce09851e9b7a7d0accfd265b6287f14fbdbffdc7e75cb32abe",
+          "source_identity_sha256": "76f2847c552ae953c5cd1625e75311dbe96f5f306877e699c7bb135720a8f395",
+          "source_git_commit": "f07383ec3b0e404d37a7c32d775e8438b2e239fe",
+          "source_config_artifact_sha256": "b6adfccb792cd02f8e360f7ae5bd6328fd4d417ae14e8d2beb3bb893674e8bc3",
+          "normalized_config_sha256": "0bb2c9f0fed25734e7ea4ed69fd72c397130f3ca9f0fc87b047276cd2ccf9396",
+          "oof_artifact_sha256": "e082fbe530993afa4d64cbdfaa8d74161ae1ab92600523b28cbcca878ffff1cb",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "3bf6696c853a8683f673b32eac52f5b84f1715b0b7c95b514e418f7d7eac1f27"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp111_xgb_depth8_no_te_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp111_xgb_depth8_no_te_missingness_augmented",
+          "slot_original_member": "exp111_xgb_depth8_no_te",
+          "ordinal": 13,
+          "config_path": "configs/missingness-propagation/13_exp111_xgb_depth8_no_te_missingness_augmented.yaml",
+          "config_sha256": "cc0a075744fd4964bdc2048759cd423c8c1af573364f3667ece15f392e4fba9d",
+          "common_config_semantic_sha256": "3e32f7eb20e5d039afc871e9ef8540d2ad21d37811c09d052bc7fbadf4501743",
+          "source_original_identity_sha256": "3bf6696c853a8683f673b32eac52f5b84f1715b0b7c95b514e418f7d7eac1f27",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "695aadf9dabd1700bb76dd87efae56c75afc376173be7e836acd6b2bafca0d78"
+      }
+    },
+    {
+      "ordinal": 14,
+      "slot": "exp071_cat_exact_no_te",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp071_cat_exact_no_te_tripled",
+          "path": "configs/missingness-propagation/14_exp071_cat_exact_no_te_tripled.yaml",
+          "sha256": "6e9d0e661a4bf13463619618e60b28780bb0f09ea28a1057b1e2c7717dbb54ed"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp071_cat_exact_no_te_missingness_augmented",
+          "path": "configs/missingness-propagation/14_exp071_cat_exact_no_te_missingness_augmented.yaml",
+          "sha256": "67bb19cf20c25aee74fd95547f5527f2207e25e6bdbe28bc6d82b4639246aa41"
+        }
+      ],
+      "original": {
+        "member": "exp071_cat_exact_no_te",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp071_cat_exact_no_te",
+          "pool_position": 15,
+          "run_id": "521b4924b2ef4ba1830724333b83deb2",
+          "pool_entry_sha256": "6bffbf8e9f85ee029abb674cd753b4c6f56409ccc490a52b879c7929c849c9ae",
+          "source_identity_sha256": "d8d56f095e553276056bf3be6bb6f73fcc8f1ee64c6f036917a69adad41ffac9",
+          "source_git_commit": "5fa7bf8f2a540fbe99670c262aef45a67b8ca321",
+          "source_config_artifact_sha256": "888484ca2434466cf48e2a03a0260cfa994de7dabfb47c8bd10a93961d39b616",
+          "normalized_config_sha256": "cb383c6445b6560275ec864df5f5750ff3c760a2906b9a41431c188aa8e15eba",
+          "oof_artifact_sha256": "95e7ba72bf359baa421646f1f5ae6e6614623ffc90ec100358540dfa151255dd",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "adf44c8e4e25b60fc9b2c87d58c924fd79ba262d5d811c047063981a46103996"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp071_cat_exact_no_te_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp071_cat_exact_no_te_missingness_augmented",
+          "slot_original_member": "exp071_cat_exact_no_te",
+          "ordinal": 14,
+          "config_path": "configs/missingness-propagation/14_exp071_cat_exact_no_te_missingness_augmented.yaml",
+          "config_sha256": "67bb19cf20c25aee74fd95547f5527f2207e25e6bdbe28bc6d82b4639246aa41",
+          "common_config_semantic_sha256": "3b8a948c94827394b7b08269e95873e7235264ec23babf04570e15b9a9d38192",
+          "source_original_identity_sha256": "adf44c8e4e25b60fc9b2c87d58c924fd79ba262d5d811c047063981a46103996",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "f9adf52b5bce2e34a221aeabb55514b1e888ec532b49b22e9d63793c2da575d1"
+      }
+    },
+    {
+      "ordinal": 15,
+      "slot": "exp106_lookup_fixed24_train_test_preprocessing",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp106_lookup_fixed24_train_test_preprocessing_tripled",
+          "path": "configs/missingness-propagation/15_exp106_lookup_fixed24_train_test_preprocessing_tripled.yaml",
+          "sha256": "d955b046c14dfc19c9364b1bc1aa35787dcda6b6c1ac93e45f6e8f3a9f1cf0dd"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp106_lookup_fixed24_train_test_preprocessing_missingness_augmented",
+          "path": "configs/missingness-propagation/15_exp106_lookup_fixed24_train_test_preprocessing_missingness_augmented.yaml",
+          "sha256": "82ea09472151bd3dfe2ebe02f72ca7eb2b5163830ccaa8b24a05cf609ca7ea0a"
+        }
+      ],
+      "original": {
+        "member": "exp106_lookup_fixed24_train_test_preprocessing",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp106_lookup_fixed24_train_test_preprocessing",
+          "pool_position": 16,
+          "run_id": "547e7bc90b9f4c448307d406f053629a",
+          "pool_entry_sha256": "c3755fde256cb06a9eb5c4d64697f0531308bc29e58906edc53af9329f43142a",
+          "source_identity_sha256": "257246ed7ee5ebd873e3269af4857242cf7c359c4198b791e47aa699aeee1eec",
+          "source_git_commit": "2d819bcb766774fd3fbfb47feaf1e2190b438613",
+          "source_config_artifact_sha256": "535334f0113294ad06c977578d390b20ab2db8f64643a0c50fe87d69a423fe93",
+          "normalized_config_sha256": "8f293b04b283afac1a9d40667dee3792526c607455a0f40609fbee72927871fc",
+          "oof_artifact_sha256": "2d25fbb090be25f16c84db8482dd78cbbbb8c1f36cd058060df6c3230c1e53fe",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "bec8d2262cefb3c89c8e2f940cae9959e2d36b6cb3ae03820acc87a4182884c9"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp106_lookup_fixed24_train_test_preprocessing_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp106_lookup_fixed24_train_test_preprocessing_missingness_augmented",
+          "slot_original_member": "exp106_lookup_fixed24_train_test_preprocessing",
+          "ordinal": 15,
+          "config_path": "configs/missingness-propagation/15_exp106_lookup_fixed24_train_test_preprocessing_missingness_augmented.yaml",
+          "config_sha256": "82ea09472151bd3dfe2ebe02f72ca7eb2b5163830ccaa8b24a05cf609ca7ea0a",
+          "common_config_semantic_sha256": "36b813781c00dbfc7073664d5141ef2adebfe20a4ff43ae014f299fa3e71a06d",
+          "source_original_identity_sha256": "bec8d2262cefb3c89c8e2f940cae9959e2d36b6cb3ae03820acc87a4182884c9",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "e8ae520627cd89418edae16a100810f67441d4f8c65b85cf4b0abc976269373d"
+      }
+    },
+    {
+      "ordinal": 16,
+      "slot": "exp113_tab_cnn_m0",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp113_tab_cnn_m0_tripled",
+          "path": "configs/missingness-propagation/16_exp113_tab_cnn_m0_tripled.yaml",
+          "sha256": "383e31b702e24defa7df7db1a6d528801264b343e486ad8ac2ea13d4a4de0df9"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp113_tab_cnn_m0_missingness_augmented",
+          "path": "configs/missingness-propagation/16_exp113_tab_cnn_m0_missingness_augmented.yaml",
+          "sha256": "98a8e1917d06fce63a2e19adcaa5f6623e4772f0374d0a1892731bccdbf7fcae"
+        }
+      ],
+      "original": {
+        "member": "exp113_tab_cnn_m0",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp113_tab_cnn_m0",
+          "pool_position": 17,
+          "run_id": "b47a4184249746cdb1d062aa98364437",
+          "pool_entry_sha256": "c970c0882f1211c742b433b8dbb5e4d48665fe0429e71b68149008cac439822e",
+          "source_identity_sha256": "df8fd0e130f20f4abc6d2c3e4fb69de02cdb38730cfc0c566ebf0e2d2ed09862",
+          "source_git_commit": "b684ce9b0d618cab8ce392b8cc5d57b3ef22bb0b",
+          "source_config_artifact_sha256": "6ea07223019f68ab86683bdcd7d55cc15eed7a72ce830bb068bf53c3ceaca886",
+          "normalized_config_sha256": "31b92926a8248783f46d6ce96ccb5e89b423e72e43a8baec0c8bd346f43f92f9",
+          "oof_artifact_sha256": "c2ba050cd4a0b8c0590766cecb973ccb82d65a1ed7691bf451c3310608fa39ad",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "af24d737303429c9272f4cfb13552db3210fa46e414a2484f0d7b8c49604dd71"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp113_tab_cnn_m0_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp113_tab_cnn_m0_missingness_augmented",
+          "slot_original_member": "exp113_tab_cnn_m0",
+          "ordinal": 16,
+          "config_path": "configs/missingness-propagation/16_exp113_tab_cnn_m0_missingness_augmented.yaml",
+          "config_sha256": "98a8e1917d06fce63a2e19adcaa5f6623e4772f0374d0a1892731bccdbf7fcae",
+          "common_config_semantic_sha256": "ccd5d8dd9aced5ed70080a162b72d106c881342ab484d1e02d3f154a147950a8",
+          "source_original_identity_sha256": "af24d737303429c9272f4cfb13552db3210fa46e414a2484f0d7b8c49604dd71",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "2da8510822e15d15988e4ad0bb736055dcb43dbdc5bab1e372cc7641e4541460"
+      }
+    },
+    {
+      "ordinal": 17,
+      "slot": "exp085_contextual_spline_m0",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp085_contextual_spline_m0_tripled",
+          "path": "configs/missingness-propagation/17_exp085_contextual_spline_m0_tripled.yaml",
+          "sha256": "ffd9e29cc6e2b0dae850859122cb8afa1a313aae9fbbbe58993cf1cd2ef37220"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp085_contextual_spline_m0_missingness_augmented",
+          "path": "configs/missingness-propagation/17_exp085_contextual_spline_m0_missingness_augmented.yaml",
+          "sha256": "3d1d3ced1d27f820259b57d97fce82520603b461e4096e03b942564f63a8e146"
+        }
+      ],
+      "original": {
+        "member": "exp085_contextual_spline_m0",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp085_contextual_spline_m0",
+          "pool_position": 18,
+          "run_id": "e84d97e875754af1b073b399db2a0616",
+          "pool_entry_sha256": "ca4d1161584701596e254e72e995ca82f35330802002e85a11826d399c56fc29",
+          "source_identity_sha256": "23d6a47c52a16e8bf3985683834a85aeb03391c2743e51b633a61673308afe5d",
+          "source_git_commit": "5381f1a2e515c0aa751193cd66023c6f89df77b8",
+          "source_config_artifact_sha256": "0c498704cb79af55924e0173bc6803558b3500ed0a2bf9c2b2964b1ea8085135",
+          "normalized_config_sha256": "ebb7754490007eb408fb3b4fd04e27a2b55a67ebd2189acbe78d9a83663dece4",
+          "oof_artifact_sha256": "48a42ef68c2a8566ad00b3b2904c31699988c6a58e405f8ea769acab349d6eb9",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "1a0f27c149148725916f766632bec25dd25a2188313e2be7ebe341d6c291b0f2"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp085_contextual_spline_m0_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp085_contextual_spline_m0_missingness_augmented",
+          "slot_original_member": "exp085_contextual_spline_m0",
+          "ordinal": 17,
+          "config_path": "configs/missingness-propagation/17_exp085_contextual_spline_m0_missingness_augmented.yaml",
+          "config_sha256": "3d1d3ced1d27f820259b57d97fce82520603b461e4096e03b942564f63a8e146",
+          "common_config_semantic_sha256": "0863c373fd8fe6a17d636196b92c4068a1f96628ece68485e982efa4a6d0339b",
+          "source_original_identity_sha256": "1a0f27c149148725916f766632bec25dd25a2188313e2be7ebe341d6c291b0f2",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "af2049571b76c86a0e93e74222ff2f8759f455739d364a0c0b0d5c8961265b12"
+      }
+    },
+    {
+      "ordinal": 18,
+      "slot": "exp027_recon_ce",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp027_recon_ce_tripled",
+          "path": "configs/missingness-propagation/18_exp027_recon_ce_tripled.yaml",
+          "sha256": "1bdcd17d32fca72ce750c54f2ad5e8cf49eb6fe8b3d1e33c4e2894f02b65ab6d"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp027_recon_ce_missingness_augmented",
+          "path": "configs/missingness-propagation/18_exp027_recon_ce_missingness_augmented.yaml",
+          "sha256": "c37bf5dabacaa37c45da4039217eb0720996eba7414531fbe2cca252e8b9934e"
+        }
+      ],
+      "original": {
+        "member": "exp027_recon_ce",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp027_recon_ce",
+          "pool_position": 19,
+          "run_id": "e4e81bdce7df4a72bf250ef842fd8781",
+          "pool_entry_sha256": "a5ed18260fcbb785cb4e2cde069c10b748c984547db3055e6ed3c404ef68a034",
+          "source_identity_sha256": "50b09a3da891dbb6bd8bcbb119030d12c2e39e648226450cb894816446b5cc05",
+          "source_git_commit": "327a973898b09b9f8861adc92155d4f527cc4c6a",
+          "source_config_artifact_sha256": "f530adf264655d090a1a4e9220353a6e433c0f7400b1f65dcd81c978f79d7f21",
+          "normalized_config_sha256": "933e1ad2f226bd537090bd4f3178dd098e79ccb89493c281d9426f32c613d15f",
+          "oof_artifact_sha256": "c9124922d8470d7db8e5ed66acff63dafb8a2c85f7b37d123a9681470bdc4344",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "7cf3c09d677d6b354a606e035a821965a06175727ef9e62774b4e923d53d705a"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp027_recon_ce_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp027_recon_ce_missingness_augmented",
+          "slot_original_member": "exp027_recon_ce",
+          "ordinal": 18,
+          "config_path": "configs/missingness-propagation/18_exp027_recon_ce_missingness_augmented.yaml",
+          "config_sha256": "c37bf5dabacaa37c45da4039217eb0720996eba7414531fbe2cca252e8b9934e",
+          "common_config_semantic_sha256": "b233b20e7bf02dd4f97d625400bf3281a6499fdd96ed3a4e0c8b94e5d9243e12",
+          "source_original_identity_sha256": "7cf3c09d677d6b354a606e035a821965a06175727ef9e62774b4e923d53d705a",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "7d9b55776d4e18873aec1505eadfc2fdf18a9f7d1b24f41eb236f5e11e9dd7e2"
+      }
+    },
+    {
+      "ordinal": 19,
+      "slot": "exp048_lgb_orig_cdf_diff",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp048_lgb_orig_cdf_diff_tripled",
+          "path": "configs/missingness-propagation/19_exp048_lgb_orig_cdf_diff_tripled.yaml",
+          "sha256": "332407d01e75781bff84048f7a940c377cb5807e0f95bf89d31064ec7646b243"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp048_lgb_orig_cdf_diff_missingness_augmented",
+          "path": "configs/missingness-propagation/19_exp048_lgb_orig_cdf_diff_missingness_augmented.yaml",
+          "sha256": "19edf1f050432b7726c97588bde49ee3b5ead15aa5c0a727b1ca567e139bcb3d"
+        }
+      ],
+      "original": {
+        "member": "exp048_lgb_orig_cdf_diff",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp048_lgb_orig_cdf_diff",
+          "pool_position": 20,
+          "run_id": "2b5fda6d3ea94ff886c5fe616376f0f0",
+          "pool_entry_sha256": "65c44932dbaf022b60515a96a95059ac5deb5bbb4a9c043934b4498b1bd5ffc0",
+          "source_identity_sha256": "5dcfdf0a76e70ba3a9ff1f95a7593f5fbf78ecc19467b03a8f7dd6a1c08ae038",
+          "source_git_commit": "327a973898b09b9f8861adc92155d4f527cc4c6a",
+          "source_config_artifact_sha256": "78aa4f87470c0c6eb03cd646e6949fec48bf59009a37d590fd10ec8445212977",
+          "normalized_config_sha256": "687f13e4c286038b1b7973c03d593ec3483b32ca49057839fa95fb9b82b9669f",
+          "oof_artifact_sha256": "1cc28c1f625fa92f400e3ced247bcea2a7d3bd3ac666f87e319e1502b47e11b2",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "ce6d1d4adda5943aedc87f5fb3b2e7dda080c97238051fab7e5217219a351bcc"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp048_lgb_orig_cdf_diff_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp048_lgb_orig_cdf_diff_missingness_augmented",
+          "slot_original_member": "exp048_lgb_orig_cdf_diff",
+          "ordinal": 19,
+          "config_path": "configs/missingness-propagation/19_exp048_lgb_orig_cdf_diff_missingness_augmented.yaml",
+          "config_sha256": "19edf1f050432b7726c97588bde49ee3b5ead15aa5c0a727b1ca567e139bcb3d",
+          "common_config_semantic_sha256": "93509baf17878c24d27a89a4679228e0dfb50cb702d3b065b23ac0d069f5e66e",
+          "source_original_identity_sha256": "ce6d1d4adda5943aedc87f5fb3b2e7dda080c97238051fab7e5217219a351bcc",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "6ceaff85d64c985fce593902ab5cc4ba5ca800a340fa3c5aba96238c611fcfeb"
+      }
+    },
+    {
+      "ordinal": 20,
+      "slot": "exp134_realmlp_muon",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp134_realmlp_muon_tripled",
+          "path": "configs/missingness-propagation/20_exp134_realmlp_muon_tripled.yaml",
+          "sha256": "bb0231724a18d4ce58d07241095a01f91af6eed13d8e679dbb7d751e557ea08d"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp134_realmlp_muon_missingness_augmented",
+          "path": "configs/missingness-propagation/20_exp134_realmlp_muon_missingness_augmented.yaml",
+          "sha256": "428aa14643ec991741e15ffa8041c236afa7d4759d539dc20e7b790bd5a0cb75"
+        }
+      ],
+      "original": {
+        "member": "exp134_realmlp_muon",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp134_realmlp_muon",
+          "pool_position": 21,
+          "run_id": "f72eeee10b1b4947af79228f888e7a81",
+          "pool_entry_sha256": "9230d3ef04e614fe1052433deca78842dbb2824fef1592b924b93c6e93cf5905",
+          "source_identity_sha256": "b15f4490cdeea197d343b839cacf2d73a438a246582e2e25f3d7c6a9ec4c90c7",
+          "source_git_commit": "c792484169b56190323c01731f2e9d510c60e0be",
+          "source_config_artifact_sha256": "430eb0836f3784d3c2c212bad22fb7e4ed6833e8633eeb75ba70fed5ab7f4894",
+          "normalized_config_sha256": "90d3e5c733913c2a33b510f82061d05f942291475bf73d7132990cd456c91115",
+          "oof_artifact_sha256": "c86febb146e62b4c848fa9bd2240ab3910fec0a5a11c93c7122bc8b6d9b631b3",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "b408f9746d0e5163fffabd6c761c1a69e13a473a87ff874adcd20896ecce8c0b"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp134_realmlp_muon_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp134_realmlp_muon_missingness_augmented",
+          "slot_original_member": "exp134_realmlp_muon",
+          "ordinal": 20,
+          "config_path": "configs/missingness-propagation/20_exp134_realmlp_muon_missingness_augmented.yaml",
+          "config_sha256": "428aa14643ec991741e15ffa8041c236afa7d4759d539dc20e7b790bd5a0cb75",
+          "common_config_semantic_sha256": "1cfb323ab0103dc3d53f6f3e0696bd1a0ec89489b3ef7e09100748373298cb07",
+          "source_original_identity_sha256": "b408f9746d0e5163fffabd6c761c1a69e13a473a87ff874adcd20896ecce8c0b",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "2d8d963e5d01d9bb0cbe92040098a338e37af5781f65d21fb4f351f65d0b3ebf"
+      }
+    },
+    {
+      "ordinal": 21,
+      "slot": "exp135_xgb_hpo_trial30",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp135_xgb_hpo_trial30_tripled",
+          "path": "configs/missingness-propagation/21_exp135_xgb_hpo_trial30_tripled.yaml",
+          "sha256": "e08be956b816c617fbf05abb30f1a73d7ab2d2796acedfecc47470a847ee4e2e"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp135_xgb_hpo_trial30_missingness_augmented",
+          "path": "configs/missingness-propagation/21_exp135_xgb_hpo_trial30_missingness_augmented.yaml",
+          "sha256": "718ab1313cbd4440711aea0c41959f9837937d405dfdbca9a48dd41e8ae7ba1d"
+        }
+      ],
+      "original": {
+        "member": "exp135_xgb_hpo_trial30",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp135_xgb_hpo_trial30",
+          "pool_position": 22,
+          "run_id": "119b9c4e44674d38a6f758b65a68593e",
+          "pool_entry_sha256": "7252eb5421fa9ffc298ad5897ec5c137c690088b0130c26a294f961beaa69d2b",
+          "source_identity_sha256": "04b3a1e8244becfcaffc372b740363807492ca4b46ac7fc7437453851be7e630",
+          "source_git_commit": "f9a03a787086cac588861f2cd4db5bbf456949b7",
+          "source_config_artifact_sha256": "653c4a07185cc25b00bbb339bdbcf27e058b9d1f36bbb57ef5bbb29749a2baf9",
+          "normalized_config_sha256": "21155fb5d7fcb4798c4a2dca269ed0536780743ffba49e44195a81da9b57220d",
+          "oof_artifact_sha256": "fda71c324e05c24cef54307eea10e5c36e231526bc67ab4918113cb9e126a16b",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "6369131cd2e12468bebb6f2c04bf42bc2babb8af871b0fa39c84ecada1338aad"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp135_xgb_hpo_trial30_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp135_xgb_hpo_trial30_missingness_augmented",
+          "slot_original_member": "exp135_xgb_hpo_trial30",
+          "ordinal": 21,
+          "config_path": "configs/missingness-propagation/21_exp135_xgb_hpo_trial30_missingness_augmented.yaml",
+          "config_sha256": "718ab1313cbd4440711aea0c41959f9837937d405dfdbca9a48dd41e8ae7ba1d",
+          "common_config_semantic_sha256": "b2202532008cdbcc489dfd6b30749c87330f303eb3e8c4b77bfa5db790636bb7",
+          "source_original_identity_sha256": "6369131cd2e12468bebb6f2c04bf42bc2babb8af871b0fa39c84ecada1338aad",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "9d005901fff999b6ca5389bfd4e53d91bd872bcd369bb3582a5d99b7a544e0a9"
+      }
+    },
+    {
+      "ordinal": 22,
+      "slot": "exp131_lookup_bivariate_plr5",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp131_lookup_bivariate_plr5_tripled",
+          "path": "configs/missingness-propagation/22_exp131_lookup_bivariate_plr5_tripled.yaml",
+          "sha256": "901c02f70ae8a47929e3a816194474093e43e64cf083cef2f01b72a896900fa1"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp131_lookup_bivariate_plr5_missingness_augmented",
+          "path": "configs/missingness-propagation/22_exp131_lookup_bivariate_plr5_missingness_augmented.yaml",
+          "sha256": "45c5c7e26788d30bf69df8c1b022acc63359289c7ac3e13bc2944a8220dd6772"
+        }
+      ],
+      "original": {
+        "member": "exp131_lookup_bivariate_plr5",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp131_lookup_bivariate_plr5",
+          "pool_position": 23,
+          "run_id": "54acd002d3c04ec3a74c09871e83da50",
+          "pool_entry_sha256": "69e527c0024221f722a8a8f26b6408d54d1b738df865e85093b981e40cbdd28f",
+          "source_identity_sha256": "942c6040ed934b63f05bb501d1eaede6fbf64b760d4b4fd6296690fda146b2fb",
+          "source_git_commit": "58719c6b86c8d62a027760ff367892eaed5a141f",
+          "source_config_artifact_sha256": "d344102b44330a9e89a15e330f90694e19652575595ec5bb8dbb03beaa91b5b2",
+          "normalized_config_sha256": "6252967adaddf95f74152bf7870ebdc3cc0f731f615cd93fe70151e69e6553cf",
+          "oof_artifact_sha256": "6500e86a24e79428ee039209072ba935f530e5a54668e604589594e8c6d79721",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "d891dad100f97e39e5e33eee59d1a5e2cf48b8998ad1769e5592f20847025a8b"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp131_lookup_bivariate_plr5_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp131_lookup_bivariate_plr5_missingness_augmented",
+          "slot_original_member": "exp131_lookup_bivariate_plr5",
+          "ordinal": 22,
+          "config_path": "configs/missingness-propagation/22_exp131_lookup_bivariate_plr5_missingness_augmented.yaml",
+          "config_sha256": "45c5c7e26788d30bf69df8c1b022acc63359289c7ac3e13bc2944a8220dd6772",
+          "common_config_semantic_sha256": "96fb4f9ffaf3e4c047778036d5d7ff46767b1ee783464abc8b0d25275c78d252",
+          "source_original_identity_sha256": "d891dad100f97e39e5e33eee59d1a5e2cf48b8998ad1769e5592f20847025a8b",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "6231ce8f0b1cf555d6da16068115de22d04fcef26d7dcacf262dbdcb30adcff5"
+      }
+    },
+    {
+      "ordinal": 23,
+      "slot": "exp136_realmlp_muon_recon_widths",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp136_realmlp_muon_recon_widths_tripled",
+          "path": "configs/missingness-propagation/23_exp136_realmlp_muon_recon_widths_tripled.yaml",
+          "sha256": "180fd899918ccee82eed58469a5787fe57cd054f171a5fb3085232bb93a14e93"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp136_realmlp_muon_recon_widths_missingness_augmented",
+          "path": "configs/missingness-propagation/23_exp136_realmlp_muon_recon_widths_missingness_augmented.yaml",
+          "sha256": "e0449df7ca360da9bf276795223f9c1e4707ed04abd361c2507cb49845de0550"
+        }
+      ],
+      "original": {
+        "member": "exp136_realmlp_muon_recon_widths",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp136_realmlp_muon_recon_widths",
+          "pool_position": 24,
+          "run_id": "bd2bd1154e6343f68b364714e2fedcc4",
+          "pool_entry_sha256": "d4b5efca011bdac55f85dfaf4f4fbaa5c2ba461582e4ec49bb50121303b16ab7",
+          "source_identity_sha256": "8fd23946e467c9e85d05ed0faf8ce49adb1028b8abfcf35de86eb825bf4fc9cc",
+          "source_git_commit": "d09f976e6772ec35a05493d6e8b1f88e3daa843f",
+          "source_config_artifact_sha256": "9556597389aff1dd9f038c68a6a3e80bbbb200bd6047e61c673084badd1313ac",
+          "normalized_config_sha256": "3418269c8a447dc0554e25ae0b3d8a03d1928dcdeed6863446db5548664677e5",
+          "oof_artifact_sha256": "6e03e22f6f53c401c766e47bbfab5f485594b052ef621a52bfd775dddf1fe571",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "ad39cb7fb90eb4c285f0039420b73625a2f05412ff609e2d1fe23c05a325a51d"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp136_realmlp_muon_recon_widths_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp136_realmlp_muon_recon_widths_missingness_augmented",
+          "slot_original_member": "exp136_realmlp_muon_recon_widths",
+          "ordinal": 23,
+          "config_path": "configs/missingness-propagation/23_exp136_realmlp_muon_recon_widths_missingness_augmented.yaml",
+          "config_sha256": "e0449df7ca360da9bf276795223f9c1e4707ed04abd361c2507cb49845de0550",
+          "common_config_semantic_sha256": "5024521d6227b73a622bd587828ec698a1b4e9a31b89f0c14a2fd137338e155c",
+          "source_original_identity_sha256": "ad39cb7fb90eb4c285f0039420b73625a2f05412ff609e2d1fe23c05a325a51d",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "0046eee6d7ffd67ea5c9b74ee58fd6420a80d46d12a0e5467434a0adc172b23b"
+      }
+    },
+    {
+      "ordinal": 24,
+      "slot": "exp137_tabm_recon_widths",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp137_tabm_recon_widths_tripled",
+          "path": "configs/missingness-propagation/24_exp137_tabm_recon_widths_tripled.yaml",
+          "sha256": "11f0b498fb3b89cc7ed618e9be139ad18a4b9fc6b140108cf9e7d4166a47a530"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp137_tabm_recon_widths_missingness_augmented",
+          "path": "configs/missingness-propagation/24_exp137_tabm_recon_widths_missingness_augmented.yaml",
+          "sha256": "397a513e77fc213decc00a3fdc8e4b57bd3d29467bbe957f108f64e33a2b00bf"
+        }
+      ],
+      "original": {
+        "member": "exp137_tabm_recon_widths",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp137_tabm_recon_widths",
+          "pool_position": 25,
+          "run_id": "e7682b186be14dea822d41d7d411bb98",
+          "pool_entry_sha256": "5b8d16caf28f34305af82bae51c00e0918f4b40f3b479ee3238c64fd229a06fb",
+          "source_identity_sha256": "3e041406fd768efb4f5e057cc46fd26352ef4326b357a85a87a6e8d34bb3909c",
+          "source_git_commit": "1bdbce6f21f2c38aa1cd99553ac22998c6ad1387",
+          "source_config_artifact_sha256": "b4b818d80aff90cc4199d4022d761531621070d3077b34c968ebd7c0bb6f30a3",
+          "normalized_config_sha256": "db84722107f104b38d97f585442b80d53a7515262353e06da8311c8fab2ee566",
+          "oof_artifact_sha256": "c7a86fe822ead6e575b2af71993bed0cd716586eaf15e0a56cefebd82cdbe808",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "6ab3c05b4dd6ff02a9c12aea2d4eb745e2bf5e03d356a33458b73335e34b73f3"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp137_tabm_recon_widths_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp137_tabm_recon_widths_missingness_augmented",
+          "slot_original_member": "exp137_tabm_recon_widths",
+          "ordinal": 24,
+          "config_path": "configs/missingness-propagation/24_exp137_tabm_recon_widths_missingness_augmented.yaml",
+          "config_sha256": "397a513e77fc213decc00a3fdc8e4b57bd3d29467bbe957f108f64e33a2b00bf",
+          "common_config_semantic_sha256": "20702d3e614316508770e9defdd154a7125ea765f822e12eede2aba8a75afde6",
+          "source_original_identity_sha256": "6ab3c05b4dd6ff02a9c12aea2d4eb745e2bf5e03d356a33458b73335e34b73f3",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "cf9e209f0b69bd3883260e5361e7f06a99d890f858384cb8661516c466da36b6"
+      }
+    },
+    {
+      "ordinal": 25,
+      "slot": "exp133_scalar_token_transformer_oof_te",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp133_scalar_token_transformer_oof_te_tripled",
+          "path": "configs/missingness-propagation/25_exp133_scalar_token_transformer_oof_te_tripled.yaml",
+          "sha256": "18e444a75390415e35a3aab2fb187db7c97bca65de117ec6a9bad1395e6fcd37"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp133_scalar_token_transformer_oof_te_missingness_augmented",
+          "path": "configs/missingness-propagation/25_exp133_scalar_token_transformer_oof_te_missingness_augmented.yaml",
+          "sha256": "b0e3498bd91bf555b08cb29a0aa378273fc8dd2a5bbaf1d06d52eef4ec9bd2c9"
+        }
+      ],
+      "original": {
+        "member": "exp133_scalar_token_transformer_oof_te",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp133_scalar_token_transformer_oof_te",
+          "pool_position": 26,
+          "run_id": "f16dbc88860a41f39194da2f581f057d",
+          "pool_entry_sha256": "acf0c0308aebeb0e3f76b6d0063f1d2debefd2cf379166efdd7a103b010119a0",
+          "source_identity_sha256": "8bb562da297be4e564d468ee47fb9451020c469b3401c49b5f7ca07327738744",
+          "source_git_commit": "76ed92d415283692e6bddef0456e4c44643ed407",
+          "source_config_artifact_sha256": "af1a1049b706152faad8274cd47443eb3c1f17f20f46f78e6798f0e54eee8b10",
+          "normalized_config_sha256": "d7ba4d064235e57cde0b2ff91bd3132b018b45777efd7401aa882bcc5de019c2",
+          "oof_artifact_sha256": "f4212a4f6934f680bfef995e1a4dfe4e95fc0024bcf961e159a74f950e55a51c",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "3d94bdbb474692873e8a2587cc42355569b8a37b7c0ecd999f293b0978c0c7f9"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp133_scalar_token_transformer_oof_te_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp133_scalar_token_transformer_oof_te_missingness_augmented",
+          "slot_original_member": "exp133_scalar_token_transformer_oof_te",
+          "ordinal": 25,
+          "config_path": "configs/missingness-propagation/25_exp133_scalar_token_transformer_oof_te_missingness_augmented.yaml",
+          "config_sha256": "b0e3498bd91bf555b08cb29a0aa378273fc8dd2a5bbaf1d06d52eef4ec9bd2c9",
+          "common_config_semantic_sha256": "11d191d432c496546819957a0a33a7b5b345c8b82dbfaf4396296f97d228bd0c",
+          "source_original_identity_sha256": "3d94bdbb474692873e8a2587cc42355569b8a37b7c0ecd999f293b0978c0c7f9",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "66f714cd7951605a826e86e9aacf4532332a196ce2c2cdd3163c95863f023412"
+      }
+    },
+    {
+      "ordinal": 26,
+      "slot": "exp131_tab_cnn_oof_target_mean",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp131_tab_cnn_oof_target_mean_tripled",
+          "path": "configs/missingness-propagation/26_exp131_tab_cnn_oof_target_mean_tripled.yaml",
+          "sha256": "b0b584805c499e78d24764b347be6fe630f2b81e98a1a63691d8eaf9212573d2"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp131_tab_cnn_oof_target_mean_missingness_augmented",
+          "path": "configs/missingness-propagation/26_exp131_tab_cnn_oof_target_mean_missingness_augmented.yaml",
+          "sha256": "35c3c629b637a2478668355252ee95cf399ccaff90553a7b3760ad0a001680f5"
+        }
+      ],
+      "original": {
+        "member": "exp131_tab_cnn_oof_target_mean",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp131_tab_cnn_oof_target_mean",
+          "pool_position": 27,
+          "run_id": "ea78fe0dbe2442788580dec56cf7f3ad",
+          "pool_entry_sha256": "c9e8635020b94ae545cb7a38f1fe4879d41398ffd4f59c5561d849d3d1dec05d",
+          "source_identity_sha256": "abd792d36cb0833e2e05e5d9085b32efe4628bb9475283177f6076eb5a6d3cce",
+          "source_git_commit": "f3f7862e447083ef354b1c436d79752ec496f107",
+          "source_config_artifact_sha256": "36c92397da6b36f3232a153a2693426c9a150560f718f850c0107b0a8d532b6a",
+          "normalized_config_sha256": "22a9955a6bce928b13980d6b9f1fb0f43b23867bef29840ce6439c6f099a7ae7",
+          "oof_artifact_sha256": "099f943b3c0470f4ef73cc98b315f2bb2235a09dc0a39f47e709c23908cb98f8",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "827b4230602fb4c8c751f6eb14622ca167cc8080048725ba3957ffbe5dadb6ac"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp131_tab_cnn_oof_target_mean_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp131_tab_cnn_oof_target_mean_missingness_augmented",
+          "slot_original_member": "exp131_tab_cnn_oof_target_mean",
+          "ordinal": 26,
+          "config_path": "configs/missingness-propagation/26_exp131_tab_cnn_oof_target_mean_missingness_augmented.yaml",
+          "config_sha256": "35c3c629b637a2478668355252ee95cf399ccaff90553a7b3760ad0a001680f5",
+          "common_config_semantic_sha256": "8f17dce3910e2e898a564b8a6e8e9dfaddc16cde8486b55ae89a7fc5d8d8f565",
+          "source_original_identity_sha256": "827b4230602fb4c8c751f6eb14622ca167cc8080048725ba3957ffbe5dadb6ac",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "379aa77c68d5b39d9f3525d8c00fb0c74f0ab7d01c10d9ff35005c6aec6957fb"
+      }
+    },
+    {
+      "ordinal": 27,
+      "slot": "exp132_tab_cnn_epochs100",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp132_tab_cnn_epochs100_tripled",
+          "path": "configs/missingness-propagation/27_exp132_tab_cnn_epochs100_tripled.yaml",
+          "sha256": "e0bec57e4341a96d28c596a4952c0e6cc0b2fdd46dd0a6257d1324c21e79bac9"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp132_tab_cnn_epochs100_missingness_augmented",
+          "path": "configs/missingness-propagation/27_exp132_tab_cnn_epochs100_missingness_augmented.yaml",
+          "sha256": "84f0ede4267e88cc3e49b0551e95c760daa9a7f7f7c9a50e680b2fc6daf54f82"
+        }
+      ],
+      "original": {
+        "member": "exp132_tab_cnn_epochs100",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp132_tab_cnn_epochs100",
+          "pool_position": 28,
+          "run_id": "09d17ca4091e45118d201ba7a321f956",
+          "pool_entry_sha256": "319aaf6cb0f92cdd5a8018195efd9381227e814af0904a733525fe73faa26285",
+          "source_identity_sha256": "3040bcda604ddbfdc417e50c515c4507ec991b91b1ca5fed7d1ae3d81944e112",
+          "source_git_commit": "f3f7862e447083ef354b1c436d79752ec496f107",
+          "source_config_artifact_sha256": "64fd99949f46df6cd9483195a58854989cce6f6e7de6eee2b715772a8a4e41a3",
+          "normalized_config_sha256": "e64d7cc2533b99668bc2f1544cdf6f5cd0e715affd1f82028624bf9d55507048",
+          "oof_artifact_sha256": "904f8222894f2da99e025bcc3426dc54f26fd485e351cafc9cffd0b69409cc5f",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "b0824fcb6449cd9b4c4aef15d908ade961e3b509092964409ddccb4ca3cf23f0"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp132_tab_cnn_epochs100_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp132_tab_cnn_epochs100_missingness_augmented",
+          "slot_original_member": "exp132_tab_cnn_epochs100",
+          "ordinal": 27,
+          "config_path": "configs/missingness-propagation/27_exp132_tab_cnn_epochs100_missingness_augmented.yaml",
+          "config_sha256": "84f0ede4267e88cc3e49b0551e95c760daa9a7f7f7c9a50e680b2fc6daf54f82",
+          "common_config_semantic_sha256": "64a5d1bed0959505a442e01b780d2cb9aaa1f7df64af0a4766366bda290aee6a",
+          "source_original_identity_sha256": "b0824fcb6449cd9b4c4aef15d908ade961e3b509092964409ddccb4ca3cf23f0",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "d17a1e306f84dfa322618aa0027f61550bcb5019ebdf14816274c8636d3b3456"
+      }
+    },
+    {
+      "ordinal": 28,
+      "slot": "exp139_realmlp_reference_qnormal_train_test",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp139_realmlp_reference_qnormal_train_test_tripled",
+          "path": "configs/missingness-propagation/28_exp139_realmlp_reference_qnormal_train_test_tripled.yaml",
+          "sha256": "9e50d9e5f25c1c88ec6fa2af1b67713708615af35ddb8e907b2270355d15594a"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp139_realmlp_reference_qnormal_train_test_missingness_augmented",
+          "path": "configs/missingness-propagation/28_exp139_realmlp_reference_qnormal_train_test_missingness_augmented.yaml",
+          "sha256": "8ffc77aead4f948d9e340f89fe519bb1bbbc0f48cd40e929e6aa307ac45d4ec9"
+        }
+      ],
+      "original": {
+        "member": "exp139_realmlp_reference_qnormal_train_test",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp139_realmlp_reference_qnormal_train_test",
+          "pool_position": 29,
+          "run_id": "1af9442e67c14a96a5256251f23a1b9d",
+          "pool_entry_sha256": "077dd6907a8833cb561bcdb6e3fdb0454575acb525b1b4193fe600021703ea14",
+          "source_identity_sha256": "3ddd986f024a4dbbe3e5239bdd215a7c0c5636145bb31d7bf4d7f4baa2bd38ec",
+          "source_git_commit": "781b3e58222ef8a808adf942085fa4cf8b98dba8",
+          "source_config_artifact_sha256": "85c74e4ec735fbd4934ea8541600d5c65fc33d7fed5cd9d85613f635ce1ac3e2",
+          "normalized_config_sha256": "036695a79b30f12a0cc2d7fac0d72143aefb948de84afec933682489853d26b2",
+          "oof_artifact_sha256": "155fa2bff8fbfa5df0fdbbdcbb456dce190c6eeb3961f4e9fcbad5321d66db89",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "ad4613bc1a90ecf0d0493afa0a17829414b55f4e87bc4f144ed9b5aa82b27391"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp139_realmlp_reference_qnormal_train_test_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp139_realmlp_reference_qnormal_train_test_missingness_augmented",
+          "slot_original_member": "exp139_realmlp_reference_qnormal_train_test",
+          "ordinal": 28,
+          "config_path": "configs/missingness-propagation/28_exp139_realmlp_reference_qnormal_train_test_missingness_augmented.yaml",
+          "config_sha256": "8ffc77aead4f948d9e340f89fe519bb1bbbc0f48cd40e929e6aa307ac45d4ec9",
+          "common_config_semantic_sha256": "2b29d5884c439319455689d737e55c2c5c26f231d34ce8a61593983982f1c77e",
+          "source_original_identity_sha256": "ad4613bc1a90ecf0d0493afa0a17829414b55f4e87bc4f144ed9b5aa82b27391",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "01f3c1d537e0b9e62996fd46673fc00f53d6eaeb28668088f164d0345e9563c2"
+      }
+    },
+    {
+      "ordinal": 29,
+      "slot": "exp140_realmlp_orig_cdf_diff",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp140_realmlp_orig_cdf_diff_tripled",
+          "path": "configs/missingness-propagation/29_exp140_realmlp_orig_cdf_diff_tripled.yaml",
+          "sha256": "a3461bef6ca3b7177a8155d26240d294be5651e5a4a29b404a06e4797e9067b8"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp140_realmlp_orig_cdf_diff_missingness_augmented",
+          "path": "configs/missingness-propagation/29_exp140_realmlp_orig_cdf_diff_missingness_augmented.yaml",
+          "sha256": "1dd6e2754c9357363a5cb14af9d96654b98de011595f5b44742c1f2e415166f9"
+        }
+      ],
+      "original": {
+        "member": "exp140_realmlp_orig_cdf_diff",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp140_realmlp_orig_cdf_diff",
+          "pool_position": 30,
+          "run_id": "984b0fd5277243ab95acff71688644a9",
+          "pool_entry_sha256": "c06cdb3f285cf7996ecbefffa8ec33407e6fbc8d77076a9b3a2f55648521fcaf",
+          "source_identity_sha256": "f0b2ac4d54c11bf49f09e7eef97997535998f78c60e50aa33ddf31e560b4a7f7",
+          "source_git_commit": "b802367a28de90ad6828f1b691522d578364ef66",
+          "source_config_artifact_sha256": "c9b530a80960f4a129af4550a585f03de4c16fc7550753361e9ac94d5074f820",
+          "normalized_config_sha256": "75fcd30a96404a06b340df68d1674d1dc8e48f86364248b23c36f3501236e286",
+          "oof_artifact_sha256": "4ac213856af7258ac4ae3eb8e71d298c34151e0c53d027c548bebd7b9cfa8414",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "6514489ff40315f202e436bb98837d92ad8c40ee4dae867d7b7a71d4fb6bee93"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp140_realmlp_orig_cdf_diff_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp140_realmlp_orig_cdf_diff_missingness_augmented",
+          "slot_original_member": "exp140_realmlp_orig_cdf_diff",
+          "ordinal": 29,
+          "config_path": "configs/missingness-propagation/29_exp140_realmlp_orig_cdf_diff_missingness_augmented.yaml",
+          "config_sha256": "1dd6e2754c9357363a5cb14af9d96654b98de011595f5b44742c1f2e415166f9",
+          "common_config_semantic_sha256": "7760ca233cb4d87a66454fd952f68956bfeea82de3cf21df6737b17a84ec3079",
+          "source_original_identity_sha256": "6514489ff40315f202e436bb98837d92ad8c40ee4dae867d7b7a71d4fb6bee93",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "d081abb5574ecb8a801cf467174885c785daf6de97953f40d7e9f952345abc95"
+      }
+    },
+    {
+      "ordinal": 30,
+      "slot": "exp157_lookup_muon_initavg8",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp157_lookup_muon_initavg8_tripled",
+          "path": "configs/missingness-propagation/30_exp157_lookup_muon_initavg8_tripled.yaml",
+          "sha256": "2d1b4cbc8f2b1b63065abbea970dfb577317896ad9ae2dc47c4445b667347f4c"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp157_lookup_muon_initavg8_missingness_augmented",
+          "path": "configs/missingness-propagation/30_exp157_lookup_muon_initavg8_missingness_augmented.yaml",
+          "sha256": "5bf0de0f1473add91298a1a60951975090463238f84f63847720cf13e3bc4654"
+        }
+      ],
+      "original": {
+        "member": "exp157_lookup_muon_initavg8",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp157_lookup_muon_initavg8",
+          "pool_position": 31,
+          "run_id": "bb7be9baf1b64888818600d7e0b5927b",
+          "pool_entry_sha256": "52e4967b2c106da67a35f7cf6f8794499b87cfbfeb67548f85895eea38bc5021",
+          "source_identity_sha256": "999d32706d190c7f760d39ea2f10f4961279a9b95b7eaf050f4d3ad46e106b0c",
+          "source_git_commit": "170b4f4faf50e499e30f78d518276203bc16f12e",
+          "source_config_artifact_sha256": "150c2e3098e182034827bf586b669558dee21fa692222b123ed06ae4a883d3cd",
+          "normalized_config_sha256": "2db95d3971fca0860778d0e2df898191d3e39587337ef7a5947d62ef21459be9",
+          "oof_artifact_sha256": "05ddeb12e367128db99d71d27659cd85306e997ef08ff0e9ffd84f6ad1f29226",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "cfe76a0f6669aad53e7577a344441e278bfaceceb3fccb240d3fbaeb626fbe46"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp157_lookup_muon_initavg8_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp157_lookup_muon_initavg8_missingness_augmented",
+          "slot_original_member": "exp157_lookup_muon_initavg8",
+          "ordinal": 30,
+          "config_path": "configs/missingness-propagation/30_exp157_lookup_muon_initavg8_missingness_augmented.yaml",
+          "config_sha256": "5bf0de0f1473add91298a1a60951975090463238f84f63847720cf13e3bc4654",
+          "common_config_semantic_sha256": "1af6560a73b07736baa885c9faa7a0893411fd0162010acfe92b01f793685245",
+          "source_original_identity_sha256": "cfe76a0f6669aad53e7577a344441e278bfaceceb3fccb240d3fbaeb626fbe46",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "gpu_16_plus_gib"
+        },
+        "identity_sha256": "42f1bea7a28d00187407ca8f5fd515382ca6a5f2aeed80678957f6064da7ae82"
+      }
+    },
+    {
+      "ordinal": 31,
+      "slot": "exp168_issue413_lgb_no_te_fixed20",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp168_issue413_lgb_no_te_fixed20_tripled",
+          "path": "configs/missingness-propagation/31_exp168_issue413_lgb_no_te_fixed20_tripled.yaml",
+          "sha256": "8708506146eaf701daafca4bb60d8b8e35d47d8505ef0692288c1b0d934dd377"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp168_issue413_lgb_no_te_fixed20_missingness_augmented",
+          "path": "configs/missingness-propagation/31_exp168_issue413_lgb_no_te_fixed20_missingness_augmented.yaml",
+          "sha256": "92b9479081e2cf5bb50ef45e9fff6c5c7d7491fc3c14a2ecaa757b95179dbdf2"
+        }
+      ],
+      "original": {
+        "member": "exp168_issue413_lgb_no_te_fixed20",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp168_issue413_lgb_no_te_fixed20",
+          "pool_position": 32,
+          "run_id": "2142b26c2d304307bb0c2717b803d643",
+          "pool_entry_sha256": "96598aa7385ebd5ab7b78b4111df12ae142b64249e9cd1c5968b7cefaa601ae3",
+          "source_identity_sha256": "93c14c674dfa396c75aa2abd57546736cd42e17b748ecf71c9fa6f0faf8c8707",
+          "source_git_commit": "a899c3d33cf1dd92262b23d89dae10cd0f7890b2",
+          "source_config_artifact_sha256": "9d55c1dc8579031ad6a598c7fec8bc19fd7e073566979292ea73fcab539526a1",
+          "normalized_config_sha256": "be68c737e5e74145b0c94c3805e4848ca25a7e73d7daa5602f93da1d23be32be",
+          "oof_artifact_sha256": "85e695c0b249e6277bea9655d128a08d9b67e5da04236c886b69e4c41767418d",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "5e59b7db2ec5f707df902a0efe652a196d1a1f14149451306c59155aab9cee10"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp168_issue413_lgb_no_te_fixed20_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp168_issue413_lgb_no_te_fixed20_missingness_augmented",
+          "slot_original_member": "exp168_issue413_lgb_no_te_fixed20",
+          "ordinal": 31,
+          "config_path": "configs/missingness-propagation/31_exp168_issue413_lgb_no_te_fixed20_missingness_augmented.yaml",
+          "config_sha256": "92b9479081e2cf5bb50ef45e9fff6c5c7d7491fc3c14a2ecaa757b95179dbdf2",
+          "common_config_semantic_sha256": "d3d53b504d217557165ae91d956f5759697d740c3117fcaa4d8c9f03d8aaade7",
+          "source_original_identity_sha256": "5e59b7db2ec5f707df902a0efe652a196d1a1f14149451306c59155aab9cee10",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "132ccb7fd0d1861c09c0c8b002773ebcabc9917dc73fa285c90d8c2423adb65b"
+      }
+    },
+    {
+      "ordinal": 32,
+      "slot": "exp197_issue419_lgb_recon_ce_fixed20",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp197_issue419_lgb_recon_ce_fixed20_tripled",
+          "path": "configs/missingness-propagation/32_exp197_issue419_lgb_recon_ce_fixed20_tripled.yaml",
+          "sha256": "122d83dbad7f3ece8a216e9df4c6b517cdcea5e7dc98982746ff9d092025f6eb"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp197_issue419_lgb_recon_ce_fixed20_missingness_augmented",
+          "path": "configs/missingness-propagation/32_exp197_issue419_lgb_recon_ce_fixed20_missingness_augmented.yaml",
+          "sha256": "d6fbc85908116d0ac96dc9a1113a8416d463a935169074adfd9e682a9ebaf79d"
+        }
+      ],
+      "original": {
+        "member": "exp197_issue419_lgb_recon_ce_fixed20",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp197_issue419_lgb_recon_ce_fixed20",
+          "pool_position": 33,
+          "run_id": "a7a59a1829da4e4e93c3f581ed58597e",
+          "pool_entry_sha256": "554b043884eb82a5db6376734d34b4b39ad95f11092cfee92b3a110b8b610040",
+          "source_identity_sha256": "d10b2b6287967c33a5f0d3c94351e7a153d3354e8a38460b1806cd5dff08c499",
+          "source_git_commit": "446378d3f88ad0693cb7b5bba74209fcee5e2b93",
+          "source_config_artifact_sha256": "bc3d003af0633290b94b56b749f19b9af4171663caf64e21172b93a7adf11a58",
+          "normalized_config_sha256": "0a0a91c58939ac0f5f0e36e9e423dd07627a69d745f0cb5cac3134770bba036a",
+          "oof_artifact_sha256": "9f0377a88c750ff34cc7ac44ee4caaa8afd96c693777bce899994235e3c0667b",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "c16aa44e76b145bf59f492cbd9b2424b71977d28b53bbb1bb3ac81628529771f"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp197_issue419_lgb_recon_ce_fixed20_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp197_issue419_lgb_recon_ce_fixed20_missingness_augmented",
+          "slot_original_member": "exp197_issue419_lgb_recon_ce_fixed20",
+          "ordinal": 32,
+          "config_path": "configs/missingness-propagation/32_exp197_issue419_lgb_recon_ce_fixed20_missingness_augmented.yaml",
+          "config_sha256": "d6fbc85908116d0ac96dc9a1113a8416d463a935169074adfd9e682a9ebaf79d",
+          "common_config_semantic_sha256": "7435db0fc157dab47d99b6753695a41dbe7bd0b010cd73af128ca150f84fcfea",
+          "source_original_identity_sha256": "c16aa44e76b145bf59f492cbd9b2424b71977d28b53bbb1bb3ac81628529771f",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "030001628918d404699d1e7c8e957b2cabf6576be92b4f0bba7c0021bb566c9f"
+      }
+    },
+    {
+      "ordinal": 33,
+      "slot": "exp183_issue419_cat_exact_fixed10",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp183_issue419_cat_exact_fixed10_tripled",
+          "path": "configs/missingness-propagation/33_exp183_issue419_cat_exact_fixed10_tripled.yaml",
+          "sha256": "96cab1e8b61bcef2782fb4d3de8af080512a6661afbe46299ab03b4c736b7d73"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp183_issue419_cat_exact_fixed10_missingness_augmented",
+          "path": "configs/missingness-propagation/33_exp183_issue419_cat_exact_fixed10_missingness_augmented.yaml",
+          "sha256": "752bcdebb3baf7909fd1f8f4ed398e5489e0940e878bf1c57f13140aea7b02ab"
+        }
+      ],
+      "original": {
+        "member": "exp183_issue419_cat_exact_fixed10",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp183_issue419_cat_exact_fixed10",
+          "pool_position": 34,
+          "run_id": "eded39146a164b6ca421a20d22b10f52",
+          "pool_entry_sha256": "98aa4740775c16df1d6286c0a2fe5172f90d85c166ca335c35745ac06b88a620",
+          "source_identity_sha256": "1197de76cb86b7ffbbe3e7dcacdad5f7a2218942fadb5f8e82a69d609fab2d5b",
+          "source_git_commit": "446378d3f88ad0693cb7b5bba74209fcee5e2b93",
+          "source_config_artifact_sha256": "5dcf44e781423fa4719f4d07cf25c3baac7bf6d44119a1ff5077d7f165803f4e",
+          "normalized_config_sha256": "e506be5dfae2e856394f38838800ab28924e85ee5341ed521a619ea387baa7ff",
+          "oof_artifact_sha256": "d45e93b421d2372a5a306c88db11de703be578b4a48f34196989139c8fbfeb72",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "61ed3d33b84bccb1d4868e09b9620594896e2f60c3763c32d5535f0c3f3da6ec"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp183_issue419_cat_exact_fixed10_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp183_issue419_cat_exact_fixed10_missingness_augmented",
+          "slot_original_member": "exp183_issue419_cat_exact_fixed10",
+          "ordinal": 33,
+          "config_path": "configs/missingness-propagation/33_exp183_issue419_cat_exact_fixed10_missingness_augmented.yaml",
+          "config_sha256": "752bcdebb3baf7909fd1f8f4ed398e5489e0940e878bf1c57f13140aea7b02ab",
+          "common_config_semantic_sha256": "510285c0f746ed3a52c5019ed4f4e00e06ab6a235f091fa640e21a1441b8273d",
+          "source_original_identity_sha256": "61ed3d33b84bccb1d4868e09b9620594896e2f60c3763c32d5535f0c3f3da6ec",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "4e8bdae0341199685bf6cf206e4488c6ce8eff10d746c5912f763af4b6cf2273"
+      }
+    },
+    {
+      "ordinal": 34,
+      "slot": "exp209_issue505_lgb_lr_onehot_init",
+      "comparison_arms": [
+        {
+          "arm": "tripled",
+          "name": "mpv1_exp209_issue505_lgb_lr_onehot_init_tripled",
+          "path": "configs/missingness-propagation/34_exp209_issue505_lgb_lr_onehot_init_tripled.yaml",
+          "sha256": "694560c65b26fdf76ca2a5742ec8d8f680da2ebb09bb72694023ddb05134c581"
+        },
+        {
+          "arm": "missingness_augmented",
+          "name": "mpv1_exp209_issue505_lgb_lr_onehot_init_missingness_augmented",
+          "path": "configs/missingness-propagation/34_exp209_issue505_lgb_lr_onehot_init_missingness_augmented.yaml",
+          "sha256": "57b5b8d91a59ceee73c65e74c30b92ea1048d692352bb08a4d3a687b10b68d72"
+        }
+      ],
+      "original": {
+        "member": "exp209_issue505_lgb_lr_onehot_init",
+        "identity": {
+          "role": "current_pool_original",
+          "member": "exp209_issue505_lgb_lr_onehot_init",
+          "pool_position": 36,
+          "run_id": "8b4111a9a93147caa6b9012e49456474",
+          "pool_entry_sha256": "4d02b9e0b468b498cc2ccf03b0563b11f7a2cd5a10792b4325772b7da9628823",
+          "source_identity_sha256": "7b6f0e316c244be8f7989bd647786e10b3baf02cac13b5dd750057be43c8d9b8",
+          "source_git_commit": "74984a0a958cbaa39373c1805a332341f5a8fc36",
+          "source_config_artifact_sha256": "9d5d8d3f2c15b6e5631d746a7c3a9317263f02f00a9e8d06b355525c753a7964",
+          "normalized_config_sha256": "61fef486783de7a27be3c2c8144132ed347cce80f1242a35ef73ba67f8b12121",
+          "oof_artifact_sha256": "dcfe58feecc57cea527553799b547983b2f0b8e0a0e4a4c075ef74d8e40515a3",
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          }
+        },
+        "identity_sha256": "ef0a30b7cbb6dbd01f460b7dd7590db03f58a6582d868299ec7c99d7e23449dc"
+      },
+      "missingness_augmented": {
+        "member": "mpv1_exp209_issue505_lgb_lr_onehot_init_missingness_augmented",
+        "identity": {
+          "role": "missingness_augmented_replacement",
+          "member": "mpv1_exp209_issue505_lgb_lr_onehot_init_missingness_augmented",
+          "slot_original_member": "exp209_issue505_lgb_lr_onehot_init",
+          "ordinal": 34,
+          "config_path": "configs/missingness-propagation/34_exp209_issue505_lgb_lr_onehot_init_missingness_augmented.yaml",
+          "config_sha256": "57b5b8d91a59ceee73c65e74c30b92ea1048d692352bb08a4d3a687b10b68d72",
+          "common_config_semantic_sha256": "1085f70e895780877df15594a407d3e4f3e2a1e78f9128976e71effa6fa95f53",
+          "source_original_identity_sha256": "ef0a30b7cbb6dbd01f460b7dd7590db03f58a6582d868299ec7c99d7e23449dc",
+          "pair_execution_contract_sha256": "13ea74fddde8d518e447fb549fc9403df721de54884531a4637e6993b568d64c",
+          "required_seeds": [
+            42,
+            43,
+            44
+          ],
+          "required_outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "runtime_class": "cpu"
+        },
+        "identity_sha256": "4d908a1f86036ee9f0c9134ecb3b629f420dcee61d56016dcf818feff62d01a1"
+      }
+    }
+  ],
+  "identity_manifest_sha256": "b20fe7a84bae6fb55aa8d586f3ff6fe286a376503deeca7238a60e8497215fc9",
+  "collection_contract": {
+    "central_import_cutoff_utc": "2026-08-31T06:00:00Z",
+    "execution_source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+    "state_rows": 34,
+    "complete_pair_requires_both_arms": true,
+    "complete_pair_included_regardless_of_direct_delta": true,
+    "same_provider": true,
+    "same_runtime_class": true,
+    "same_container_image_digest": true,
+    "same_dependency_lock_sha256": true,
+    "cross_provider_partial_merge": false,
+    "incomplete_pair_records_reason_only": true,
+    "required_arm_integrity": [
+      "input hashes",
+      "source commit",
+      "clean state",
+      "three-seed OOF rescore",
+      "required diagnostics",
+      "provider tag",
+      "runtime class tag",
+      "execution-record bundle hash"
+    ]
+  },
+  "search_parameters": {
+    "strategy": "shrunk_rank_logit_logistic",
+    "champion": {
+      "config": "exp156_lookup_bivariate_plr5_initavg8",
+      "run_id": "6911a461866b43dc9556553eba6783b7",
+      "oof_auc": 0.9693676105620948
+    },
+    "champion_floor_margin": 0.01,
+    "missingness_augmented_entry_threshold": 0.9593676105620947,
+    "entry_floor_applies_only_to_forward_search_moves": true,
+    "duplicate_spearman": 0.998,
+    "strict_positive_move": true,
+    "floating_point_tolerance": null,
+    "outer_folds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "adoption_strategies": [
+      "missing_segmented_rank_logit",
+      "missing_interaction_rank_logit",
+      "shrunk_rank_logit_logistic"
+    ]
+  },
+  "search": {
+    "state": "현재 36개 풀의 고정 구성원 2개와 34개 상호 배타 자리로 구성하며, 각 자리는 원본과 결측 증강판 가운데 정확히 하나만 가진다.",
+    "score": "검색 범위의 고정 OOF에서 shrunk_rank_logit_logistic의 nested OOF AUC를 쓴다.",
+    "eligibility": "결측 증강판의 시드 평균 OOF AUC가 동결 champion OOF AUC보다 0.01 이상 낮으면 원본에서 결측 증강판으로 가는 검색 이동 자격이 없다.",
+    "forward": "자격 있는 미선택 결측 증강판으로 바꾸는 모든 단일 원자 교체를 정확히 평가하고, 중복 불변식을 지키는 엄격 양수 이동 가운데 증가가 가장 큰 하나를 받아 수렴시킨다.",
+    "backward": "선택된 결측 증강판을 원본으로 되돌리는 모든 단일 원자 교체를 정확히 평가하고, 중복 불변식을 지키는 엄격 양수 이동 가운데 증가가 가장 큰 하나를 받아 수렴시킨다.",
+    "pair": "남은 자격 있는 결측 증강판의 순서 없는 두 개 원자 교체를 한 번 전수 평가하고, 엄격 양수인 최선 묶음 하나만 받는다.",
+    "sequence": "순방향 수렴, 역방향 수렴, 순방향 수렴, 두 개 묶음 전수 평가 순서다. 묶음을 받으면 순방향, 역방향, 순방향을 다시 수렴시킨다.",
+    "tie": "AUC 증가가 정확히 같을 때만 후보 풀과 짝의 동결 순서가 앞선 이동을 고른다. 별도 부동소수점 허용 오차는 쓰지 않는다.",
+    "direct_pair_delta": "3배 행 대조군과 결측 증강군의 직접 OOF 차이는 진단으로만 기록하고 검색 전 제외에 쓰지 않는다."
+  },
+  "duplicate_invariant": {
+    "threshold": 0.998,
+    "full_oof": "전체 OOF 제안 풀의 모든 구성원 쌍은 스피어만 순위 상관이 0.998 미만이어야 한다.",
+    "outer_open_folds": "바깥쪽 채점 분할을 뺀 네 분할 검색은 시작 풀의 기존 위반만 보존할 수 있고 새 위반을 만들 수 없다."
+  },
+  "conditional_procedure": {
+    "outer_search": "바깥쪽 채점 분할마다 나머지 네 분할에서 전체 검색을 다시 수행하고, 선택 풀에 결합기를 한 번 맞춰 빠진 분할을 예측한다.",
+    "procedure_score": "다섯 바깥쪽 예측을 원래 행 순서로 이어 붙인 AUC가 동결 OOF 조건부 절차 점수다.",
+    "proposal": "전체 다섯 분할 OOF 검색의 단일 제안 풀만 공식화 후보이며, 분할별 풀은 절차 점수와 선택 안정성 진단에만 쓴다.",
+    "no_fold_pool_aggregation": "분할별 풀의 투표, 교집합 또는 합집합으로 제안 풀을 만들지 않는다."
+  },
+  "adoption_gates": {
+    "conditional_gate": "제안 절차의 동결 OOF 조건부 절차 점수가 현재 고정 36개 풀의 같은 절차 점수보다 엄격히 높아야 한다.",
+    "direct_gate": "단일 제안 풀과 현재 36개 풀을 핵심 결합 방식 세 가지로 각각 nested 평가하고, 각 풀의 최선 방식끼리 비교한 전체 nested OOF 차이가 엄격히 양수여야 한다.",
+    "diagnostics_only": "방식별 차이, 바깥 분할 승수와 성능 동등 대역은 경고와 진단이며 채택 문턱이 아니다.",
+    "all_required": "두 채택 관문은 모두 완결되고 통과해야 한다."
+  },
+  "failure_handling": {
+    "pair_completion": "중앙 반입 마감까지 같은 공급자와 실행 환경 등급의 두 팔 및 모든 무결성 관문을 완결한 짝만 입력한다.",
+    "all_completed_pairs": "완결된 짝은 직접 OOF 차이의 부호와 관계없이 모두 입력하며, 미완결 짝은 상태와 사유만 기록한다.",
+    "no_partial_recovery": "한 팔만 완주한 짝이나 서로 다른 공급자 결과를 이어 붙여야 하는 짝은 입력하지 않는다.",
+    "judgment_failure": "입력 묶음을 동결한 뒤 전체 검색이나 두 관문 가운데 하나라도 실패하거나 미완결이면 부분 결과를 채택하지 않고 현재 36개 풀을 유지한다."
+  },
+  "formalization": {
+    "proposal_only": "검색 결과는 제안이며 후보 풀 장부를 직접 바꾸지 않는다.",
+    "refit_rehearsal": "새로 선택된 모든 결측 증강판이 전체 자료 training_rows를 지원하고, 전체 자료 재학습 스모크 예행과 계보 및 예측 산출물 검증을 통과해야 한다.",
+    "atomic_ledgers": "모든 관문이 통과한 같은 제안 커밋과 공식화 경로에서 artifacts/pool.yaml과 artifacts/full-refit-plan.yaml을 함께 바꾼다.",
+    "failure_keeps_both": "하나라도 실패하거나 미완결이면 두 장부를 모두 현재 상태로 유지한다.",
+    "public_score": "Public 점수는 구현, 선택, 판정과 채택에 사용하지 않는다."
+  },
+  "required_judgment_outputs": [
+    "immutable input bundle with all 34 collection states",
+    "full OOF search trajectory and proposal pool",
+    "five outer conditional search trajectories and sealed predictions",
+    "selection stability diagnostics",
+    "three-strategy direct nested comparison",
+    "duplicate diagnostics for every accepted state",
+    "selected replacement full-refit rehearsal manifest",
+    "final verdict and file SHA-256 manifest"
+  ],
+  "code": {
+    "contract_module": {
+      "path": "src/pipeline/missingness_propagation_batch.py",
+      "sha256": "c4bfe6082cd67fd390ef75fc3b6cd061283dba002c11555efe734bb9203360bc"
+    },
+    "freeze_script": {
+      "path": "scripts/freeze_issue515_missingness_propagation_batch.py",
+      "sha256": "ead2fbeb5e2eed8ae2b5c0096ba39f660e95f1ab74e7020b97f904ecb355feb3"
+    }
+  },
+  "search_mechanics_verification": {
+    "maximum_gain_first": [
+      2
+    ],
+    "frozen_order_tie_first": [
+      2
+    ],
+    "pair_sweep_selected": [
+      1,
+      2
+    ]
+  },
+  "precommit_sha256": "0e8944b2e29f5bf8100a4132c5a7352c341a1789612ca3bceb79ab2bdc0dc611"
+}
