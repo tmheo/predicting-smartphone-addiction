@@ -250,7 +250,12 @@ def precommit(args: argparse.Namespace) -> None:
     reference = baseline_comparison["candidate"]
     _require(reference["strategy"] == ensemble.CSelectedShrunkRankLogitCombiner.name, "현재 두 번째 제출 기준이 C 선택 결합 절차가 아니다.")
     _require(baseline_assembly["judged"]["candidate_nested_auc"] == reference["nested_auc"], "현재 두 번째 제출 조립과 판정 기준의 nested AUC가 다르다.")
-    _require(baseline_assembly["submission"]["run_id"] == CURRENT_SUBMISSION_RUN_ID, "현재 두 번째 제출 실행 신원이 다르다.")
+    store = MlflowRunStore(tracking_uri=f"sqlite:///{source_root / 'mlflow.db'}")
+    current_run = store.facts_of(CURRENT_SUBMISSION_RUN_ID)
+    _require(current_run.status == "FINISHED", "현재 두 번째 제출 실행이 완료 상태가 아니다.")
+    _require(current_run.metrics.get("auc_oof") == reference["nested_auc"], "현재 두 번째 제출 실행의 nested OOF가 판정 기록과 다르다.")
+    _require(store.artifact_sha256_of(CURRENT_SUBMISSION_RUN_ID, "assembly-manifest.json") == file_sha256(BASELINE_ASSEMBLY_PATH), "현재 두 번째 제출 실행의 조립 기록이 저장소 기록과 다르다.")
+    _require(store.artifact_sha256_of(CURRENT_SUBMISSION_RUN_ID, "comparison.json") == file_sha256(BASELINE_COMPARISON_PATH), "현재 두 번째 제출 실행의 판정 기록이 저장소 기록과 다르다.")
     inputs = {
         "baseline_manifest": _tracked_input(BASELINE_MANIFEST_PATH),
         "baseline_precommit": _tracked_input(BASELINE_PRECOMMIT_PATH),
@@ -271,6 +276,8 @@ def precommit(args: argparse.Namespace) -> None:
         "inputs": inputs,
         "baseline": {
             "submission_run_id": CURRENT_SUBMISSION_RUN_ID,
+            "submission_run_name": current_run.run_name,
+            "submission_source_run_id": current_run.tags.get("source.run_id"),
             "member_count": len(baseline_rows),
             "own_member_count": OWN_MEMBER_COUNT,
             "members": baseline_rows,
@@ -420,7 +427,7 @@ def _reference_check(run_dir: Path, payload: dict) -> None:
         "composition_matches_issue489": payload["baseline"]["composition_sha256"] == baseline_precommit["members"]["composition_sha256"],
         "strategy_matches_current_submission": payload["baseline"]["strategy"] == comparison["candidate"]["strategy"],
         "nested_reference_matches_current_submission": payload["baseline"]["nested_auc"] == assembly["judged"]["candidate_nested_auc"],
-        "current_submission_run_matches": assembly["submission"]["run_id"] == CURRENT_SUBMISSION_RUN_ID,
+        "current_submission_run_matches": payload["baseline"]["submission_run_id"] == CURRENT_SUBMISSION_RUN_ID,
     }
     _require(all(checks.values()), f"현재 두 번째 제출 기준 호환성 검사가 실패했다: {checks}")
     out_dir = run_dir / "baseline"
