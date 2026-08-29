@@ -573,3 +573,25 @@ members:
     contract_version: candidate-pool-v2
     path: artifacts/judgments/issue503-exp208-replacement-exp117.yaml
     sha256: c20094a9a8527807873fb0a3d0db4391e9ea2918bb6ec9df74750693acfb92d7
+- run_id: 8b4111a9a93147caa6b9012e49456474
+  config: exp209_issue505_lgb_lr_onehot_init
+  oof_auc: 0.968104144497054
+  seeds: 42,43,44
+  entered_at: '2026-08-29'
+  reason: '이슈 #505: exp110에 정확값 one-hot L2 로지스틱 회귀의 내부 OOF 로짓(nested_logistic_onehot,
+    내부 10분할, C=100)을 초기 점수로만 더한 판. 3시드 OOF 0.96810(exp110 대비 +0.00077), 최근접 exp135
+    스피어만 0.99189, candidate-pool-v2 핵심 결합 3개 포함 nested +0.0000060(경계 기여, 분할 4/5)'
+  evidence:
+    champion_run_id: 6911a461866b43dc9556553eba6783b7
+    champion_oof_auc: 0.9693676105620948
+    floor_margin: 0.008736533934959212
+    nearest_run_id: 119b9c4e44674d38a6f758b65a68593e
+    nearest_spearman: 0.9918935959181786
+    ensemble_auc_with: 0.9691483498754029
+    ensemble_auc_without: 0.96913121903866
+    contribution: 1.7130836742929034e-05
+  judgment:
+    judgment_id: issue505-exp209-admission
+    contract_version: candidate-pool-v2
+    path: artifacts/judgments/issue505-exp209-admission.yaml
+    sha256: 87a266d116238c82dabd762a5054574d9ee6b39047117682e3ae8c21b6038dbb
