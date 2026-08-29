@@ -235,6 +235,33 @@ def main() -> None:
             "passed": verdict.passed,
         }
 
+    # 참고용 3난수 대조: 같은 커밋의 기준이 난수 42뿐이면 기록된 3난수 기준 실행의
+    # 시드별 OOF와 짝지어 남긴다. 판정이 아니라 규모 감각을 위한 기록이다.
+    recorded_three_seed_reference = None
+    if (
+        args.recorded_baseline_run
+        and confirmation is None
+        and candidate.seeds == [42, 43, 44]
+    ):
+        recorded = load_run_facts(args.recorded_baseline_run, store)
+        if recorded.seeds == [42, 43, 44]:
+            per_seed = {
+                seed: candidate.seed_aucs[seed] - recorded.seed_aucs[seed]
+                for seed in (42, 43, 44)
+            }
+            recorded_three_seed_reference = {
+                "recorded_run_id": recorded.run_id,
+                "recorded_git_commit": recorded.git_commit,
+                "recorded_auc_oof": recorded.auc_oof,
+                "recorded_seed_aucs": recorded.seed_aucs,
+                "candidate_auc_oof": candidate.auc_oof,
+                "candidate_seed_aucs": candidate.seed_aucs,
+                "delta_seed_avg": candidate.auc_oof - recorded.auc_oof,
+                "delta_per_seed": per_seed,
+                "seed_wins": int(sum(delta > 0 for delta in per_seed.values())),
+                "note": "커밋이 달라 정식 짝비교가 아닌 참고 기록이다.",
+            }
+
     stop = not pairwise42["passed"] and not entry["prerequisites_passed_seed42"]
     result = {
         "schema_version": 1,
@@ -266,6 +293,7 @@ def main() -> None:
         "first_stage": first_stage,
         "series2_entry_and_duplicate": entry,
         "confirmation_vs_baseline": confirmation,
+        "recorded_three_seed_reference": recorded_three_seed_reference,
         "stop_without_three_seeds": stop,
         "pool_size": len(pool.members),
     }
