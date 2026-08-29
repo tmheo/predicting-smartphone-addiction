@@ -1151,6 +1151,18 @@ class LogisticOnehotAdapter:
             f"n_iter={int(self._model.n_iter_[0])}"
         )
 
+    def training_iterations(self) -> int:
+        """마지막 적합이 쓴 solver 반복 수. 초기 점수 계보 기록이 읽는다. (#505)"""
+        if self._model is None:
+            raise ValueError("적합 전에는 반복 수가 없다.")
+        return int(self._model.n_iter_[0])
+
+    def feature_count(self) -> int:
+        """마지막 적합의 인코딩 열 수."""
+        if self._train_matrix is None:
+            raise ValueError("적합 전에는 인코딩 열 수가 없다.")
+        return int(self._train_matrix.shape[1])
+
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
     ) -> np.ndarray:

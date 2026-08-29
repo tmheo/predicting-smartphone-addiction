@@ -92,18 +92,10 @@ def execute_seed(
     needs_computation = any(checkpoint is None for checkpoint in checkpoints)
     if needs_computation:
         initial_provider = initial_score_mod.create(cfg.initial_score)
-        initial_scores = (
-            initial_provider.compute(train.drop(columns=[TARGET]), test, seed)
-            if initial_provider is not None
-            else None
+        # 자료 전체 계약은 시드마다 한 번, 바깥쪽 분할 계약은 분할 안에서 계산한다. (#505)
+        initial_scores = initial_score_mod.seed_level_scores(
+            initial_provider, train, test, seed
         )
-        if initial_scores is not None:
-            assert initial_scores.train.index.equals(train.index), (
-                "train 초기 점수 인덱스가 다르다."
-            )
-            assert initial_scores.test.index.equals(test.index), (
-                "test 초기 점수 인덱스가 다르다."
-            )
         X = plan.build_matrix(train, seed)
         X_test = plan.build_matrix(test, seed)
         if provider_declarations:
@@ -113,6 +105,7 @@ def execute_seed(
             train_ff = None
             test_ff = None
     else:
+        initial_provider = None
         initial_scores = None
         X = None
         X_test = None
@@ -126,6 +119,7 @@ def execute_seed(
     fold_feature_reuse_records: list[dict[str, object]] = []
     model_training_diagnostics: list[dict[str, object]] = []
     training_row_evidence: list[dict[str, object]] = []
+    initial_score_evidence: list[dict[str, object]] = []
     test_raw_sha256 = (
         dataframe_value_sha256(test[plan.raw_columns()])
         if cfg.training_rows is not None
@@ -304,6 +298,17 @@ def execute_seed(
             actor_kind="pipeline",
             actor_name="feature_plan",
         ):
+            # 초기 로짓은 바깥쪽 학습 부분(tr_idx)의 목표값만 본다. 검증 부분 목표값은
+            # 아래 1단 진단 AUC 채점에만 쓰이고 어떤 적합에도 들어가지 않는다. (#505)
+            fold_initial = initial_score_mod.fold_scores(
+                initial_provider, initial_scores, train, test, seed, fold, tr_idx, va_idx
+            )
+            if fold_initial is not None and fold_initial.evidence is not None:
+                evidence = dict(fold_initial.evidence)
+                evidence["validation_first_stage_auc"] = float(
+                    roc_auc_score(y.loc[va_idx], fold_initial.validation.to_numpy())
+                )
+                initial_score_evidence.append(evidence)
             if providers:
                 assert fold_train_ff is not None and test_ff is not None
                 # fold-fit 단계: 학습 fold로만 fit하고, 같은 상태를 검증 fold와 test에 적용한다.
@@ -365,8 +370,8 @@ def execute_seed(
                         model_training_target,
                         X_fold.loc[model_validation_index],
                         model_validation_target,
-                        initial_scores.train.loc[tr_idx] if initial_scores is not None else None,
-                        initial_scores.train.loc[va_idx] if initial_scores is not None else None,
+                        fold_initial.training if fold_initial is not None else None,
+                        fold_initial.validation if fold_initial is not None else None,
                     ),
                     dtype="float64",
                 )
@@ -383,7 +388,7 @@ def execute_seed(
                 fold_test_pred = np.asarray(
                     adapter.predict(
                         X_test_fold,
-                        initial_scores.test if initial_scores is not None else None,
+                        fold_initial.test if fold_initial is not None else None,
                     ),
                     dtype="float64",
                 )
@@ -501,4 +506,5 @@ def execute_seed(
         fold_feature_reuse_evidence=fold_feature_reuse_records,
         model_training_diagnostics=model_training_diagnostics,
         training_row_evidence=training_row_evidence,
+        initial_score_evidence=initial_score_evidence,
     )
