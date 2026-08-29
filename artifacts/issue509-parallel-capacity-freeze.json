@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "issue": {
     "number": 509,
     "title": "마감 전 병렬 실행 용량과 비용 예약을 동결한다",
@@ -10,12 +10,17 @@
     "title": "지도: 결측 증강을 후보 풀 전 계열에 전파해 마지막 제출 개선을 판정한다",
     "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/506"
   },
-  "frozen_at_utc": "2026-08-29T00:34:35Z",
-  "measurement_window_utc": {
-    "start": "2026-08-29T00:22:10Z",
-    "end": "2026-08-29T00:34:35Z"
+  "revision": {
+    "revised_at_utc": "2026-08-29T01:16:14Z",
+    "reason": "이슈 505에서 exp209_issue505_lgb_lr_onehot_init이 후보 풀에 등록되어 실행 대상과 자원 예약을 한 짝 늘렸다.",
+    "superseded_artifact_sha256": "7b1bd55de6050cd397f8cad94f25e9a840e7962a6a3816be781c4b4b1fb5c3bb"
   },
-  "source_commit": "6a556c9dd6ed567823f298a297758a25fe843d70",
+  "frozen_at_utc": "2026-08-29T01:16:14Z",
+  "measurement_window_utc": {
+    "start": "2026-08-29T01:14:44Z",
+    "end": "2026-08-29T01:16:14Z"
+  },
+  "source_commit": "ef044a8e74927742c7c322941f316922d9fa5221",
   "deadlines_utc": {
     "latest_kaggle_pair_start": "2026-08-30T18:00:00Z",
     "latest_local_or_vast_pair_start": "2026-08-30T20:00:00Z",
@@ -23,8 +28,8 @@
   },
   "frozen_inputs": {
     "candidate_pool_path": "artifacts/pool.yaml",
-    "candidate_pool_sha256": "4d66739beaab8a5a0360c7382bf5abbdbec4eacdc74f0c573ce688cdcc5a2e71",
-    "candidate_pool_member_count": 35,
+    "candidate_pool_sha256": "c513443b6d1cc8af348dc06f8c547ed2728a659261cf7d78dc4e17a27ca668d9",
+    "candidate_pool_member_count": 36,
     "candidate_pool_is_modified_by_this_freeze": false,
     "folds_path": "artifacts/folds.parquet",
     "folds_sha256": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
@@ -38,14 +43,14 @@
         "reason": "외부 대형 모형은 후보 풀에 유지하되 이번 결측 증강 짝비교에서는 실행하지 않는다."
       }
     ],
-    "pair_count": 33,
-    "experiment_arm_count": 66,
+    "pair_count": 34,
+    "experiment_arm_count": 68,
     "seeds": [42, 43, 44],
     "fold_count": 5
   },
   "runtime_classes": {
     "cpu": {
-      "pair_count": 18,
+      "pair_count": 19,
       "members": [
         "exp006_te_drop_gaming",
         "exp011_resid_pair",
@@ -64,7 +69,8 @@
         "exp135_xgb_hpo_trial30",
         "exp168_issue413_lgb_no_te_fixed20",
         "exp197_issue419_lgb_recon_ce_fixed20",
-        "exp183_issue419_cat_exact_fixed10"
+        "exp183_issue419_cat_exact_fixed10",
+        "exp209_issue505_lgb_lr_onehot_init"
       ]
     },
     "gpu_16_plus_gib": {
@@ -95,9 +101,9 @@
       "physical_cpu": 14,
       "logical_cpu": 14,
       "memory_bytes": 51539607552,
-      "memory_pressure_free_percent": 83,
-      "observed_cpu_idle_percent": 83.24,
-      "available_disk_gib": 300,
+      "memory_pressure_free_percent": 82,
+      "observed_cpu_idle_percent": 33.33,
+      "available_disk_gib": 282,
       "active_pipeline_training_processes": 0
     },
     "kaggle_cpu": {
@@ -121,8 +127,8 @@
       "legacy_basic_monthly_remaining_krw": 0,
       "legacy_monthly_limit_restricts_this_freeze": false,
       "user_capacity_override": {
-        "recorded_at_utc": "2026-08-29T00:41:04Z",
-        "scope": "결측 증강 33개 짝비교를 최대 병렬로 실행하는 데 필요한 Vast.ai 비용과 크레딧 추가",
+        "recorded_at_utc": "2026-08-29T01:16:14Z",
+        "scope": "결측 증강 34개 짝비교를 최대 병렬로 실행하는 데 필요한 Vast.ai 비용과 크레딧 추가",
         "expires_at_utc": "2026-08-31T06:00:00Z"
       }
     }
@@ -141,13 +147,13 @@
       "requirements": {
         "num_gpus": 1,
         "minimum_effective_cpu": 48,
-        "minimum_cpu_ram_gib": 128,
+        "minimum_cpu_ram_gb": 128,
         "maximum_hourly_total_usd": 1.0
       },
-      "qualifying_offer_count": 27,
-      "unique_machine_count": 27,
-      "observed_minimum_hourly_total_usd": 0.2733333333333333,
-      "observed_maximum_hourly_total_usd": 0.9219259259259259
+      "qualifying_offer_count": 29,
+      "unique_machine_count": 29,
+      "observed_minimum_hourly_total_usd": 0.2511111111111111,
+      "observed_maximum_hourly_total_usd": 0.8474074074074074
     },
     "gpu_pair_host": {
       "requirements": {
@@ -159,14 +165,14 @@
         "minimum_cuda_max_good": 12.8,
         "maximum_hourly_total_usd": 1.0
       },
-      "qualifying_offer_count": 27,
-      "unique_machine_count": 27,
+      "qualifying_offer_count": 25,
+      "unique_machine_count": 25,
       "counts_by_gpu": {
-        "RTX A4000": 1,
-        "RTX 3090": 15,
-        "RTX 4090": 11
+        "RTX A4000": 0,
+        "RTX 3090": 11,
+        "RTX 4090": 14
       },
-      "observed_minimum_hourly_total_usd": 0.22074074074074077,
+      "observed_minimum_hourly_total_usd": 0.3097777777777778,
       "observed_maximum_hourly_total_usd": 0.8185185185185184
     }
   },
@@ -186,13 +192,14 @@
       "placement_rule": "사전 추정 짝 경과 시간이 10시간 이하이고 두 팔 동시 실행이 메모리 관문을 통과한 CPU 짝 가운데 짧은 순서, 동률은 후보 풀 순서"
     },
     "vast_cpu": {
-      "normal_pair_slots": 12,
-      "fallback_pair_slots": 18,
-      "maximum_parallel_experiment_arms_normal": 24,
-      "maximum_parallel_experiment_arms_with_fallback": 36,
+      "normal_pair_slots": 13,
+      "fallback_pair_slots": 19,
+      "maximum_parallel_experiment_arms_normal": 26,
+      "maximum_parallel_experiment_arms_with_fallback": 38,
       "processes_per_host": 2,
       "arm_cpu_threads": 24,
-      "arm_memory_budget_gib": 56
+      "arm_memory_budget_gib": 50,
+      "host_memory_reserve_gib": 18
     },
     "vast_gpu_16_plus_gib": {
       "pair_slots": 15,
@@ -201,8 +208,8 @@
       "gpus_per_host": 2,
       "gpus_per_arm": 1
     },
-    "normal_total_pair_slots": 33,
-    "normal_maximum_parallel_experiment_arms": 66
+    "normal_total_pair_slots": 34,
+    "normal_maximum_parallel_experiment_arms": 68
   },
   "pair_affinity": {
     "same_provider": true,
@@ -219,21 +226,21 @@
   "cost_reservation": {
     "maximum_charged_hours_per_pair_host": 8,
     "safety_multiplier": 1.2,
-    "cpu_fallback_pair_hosts": 18,
+    "cpu_fallback_pair_hosts": 19,
     "cpu_hourly_cap_usd": 1.0,
-    "cpu_reserved_usd": 172.8,
+    "cpu_reserved_usd": 182.4,
     "gpu_16_plus_gib_pair_hosts": 15,
     "gpu_16_plus_gib_hourly_cap_usd": 1.0,
     "gpu_16_plus_gib_reserved_usd": 144.0,
-    "total_reserved_usd": 316.8,
+    "total_reserved_usd": 326.4,
     "current_credit_usd": 13.03158340596893,
-    "minimum_additional_credit_usd": 303.7684165940311,
-    "operational_target_credit_usd": 320.0
+    "minimum_additional_credit_usd": 313.3684165940311,
+    "operational_target_credit_usd": 330.0
   },
   "start_gates": [
-    "33개 짝의 두 팔, 설정, 시드, 분할, 입력, 이미지와 잠금 파일을 결과 확인 전에 모두 고정한다.",
-    "Vast.ai 생성 직전에 같은 검색 조건으로 CPU 짝 호스트 18대와 일반 GPU 짝 호스트 15대가 있는지 다시 확인한다.",
-    "Vast.ai 크레딧이 316.80달러 이상인지 확인하고 부족하면 사용자가 충전한 뒤 다시 조회한다.",
+    "34개 짝의 두 팔, 설정, 시드, 분할, 입력, 이미지와 잠금 파일을 결과 확인 전에 모두 고정한다.",
+    "Vast.ai 생성 직전에 같은 검색 조건으로 CPU 짝 호스트 19대와 일반 GPU 짝 호스트 15대가 있는지 다시 확인한다.",
+    "Vast.ai 크레딧이 326.40달러 이상인지 확인하고 부족하면 사용자가 충전한 뒤 다시 조회한다.",
     "로컬과 Kaggle 동시 실행 관문을 통과하지 못한 CPU 짝은 두 팔 전체를 Vast.ai CPU 예비 슬롯으로 옮긴다.",
     "각 짝의 두 팔은 같은 호스트나 같은 공급자와 같은 실행 환경 등급에서 동시에 시작한다.",
     "자원 생성, 독립 종료 예약, 결과 회수와 정리는 docs/agents/vast-resource-control.md와 docs/agents/remote-gpu-transfer.md를 따른다."
