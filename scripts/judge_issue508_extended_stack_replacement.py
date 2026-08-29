@@ -177,7 +177,11 @@ def _load_baseline_matrix(source_root: Path, fold_of: pd.Series) -> tuple[pd.Dat
             _require(values.notna().all(), f"{column}: 실행 OOF id가 고정 분할과 맞지 않는다.")
             array = values.to_numpy(np.float64)
         else:
-            array = ladder.load_ledger_array(source_root / member["oof_path"])
+            path, separator, selector = member["oof_path"].partition("[")
+            source_spec = str(source_root / path)
+            if separator:
+                source_spec += f"[{selector}"
+            array = ladder.load_ledger_array(source_spec)
             array = np.asarray(array, dtype=np.float64)
         _require(array.shape == (len(fold_of),) and bool(np.isfinite(array).all()), f"{column}: OOF 형태나 유한값 검사가 실패했다.")
         digest = prediction_array_sha256(array)
