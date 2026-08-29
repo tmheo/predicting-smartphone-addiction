@@ -497,12 +497,12 @@ def _load_fold_results(run_dir: Path, payload: dict, fold_of: pd.Series, y: pd.S
 
 
 def _spearman_against(values: np.ndarray, matrix: pd.DataFrame) -> list[dict[str, object]]:
-    x = pd.Series(values).rank(method="average").to_numpy(np.float64)
+    x = pd.Series(values).rank(method="average").to_numpy(np.float64, copy=True)
     x -= x.mean()
     x_norm = float(np.linalg.norm(x))
     rows: list[dict[str, object]] = []
     for column in matrix.columns:
-        y = matrix[column].rank(method="average").to_numpy(np.float64)
+        y = matrix[column].rank(method="average").to_numpy(np.float64, copy=True)
         y -= y.mean()
         correlation = float(np.dot(x, y) / (x_norm * np.linalg.norm(y)))
         rows.append({"column": column, "spearman": correlation})
