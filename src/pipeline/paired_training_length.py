@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from dataclasses import dataclass
+
+import pandas as pd
 
 from .config import PairedTrainingLengthConfig
 from .data import file_sha256
@@ -23,8 +26,54 @@ _NEURAL_BATCH_SIZE_DEFAULTS = {
 
 
 @dataclass(frozen=True)
+class ParentBalancedExposure:
+    """블록 순서 복제 행에서 부모별 한 보기를 고르는 실행 문맥."""
+
+    original_row_count: int
+    row_multiplier: int
+    source_index_component: int | None = None
+
+    @property
+    def training_row_count(self) -> int:
+        return self.original_row_count * self.row_multiplier
+
+    def validate_training_row_count(self, actual: int) -> None:
+        if actual != self.training_row_count:
+            raise ValueError(
+                "부모 균형 학습 행 수가 고정한 원본 행 수와 복제 배수에 맞지 않는다: "
+                f"{actual} != {self.original_row_count} * {self.row_multiplier}"
+            )
+
+
+def pop_parent_balanced_exposure(params: dict) -> ParentBalancedExposure | None:
+    """모형 params에서 파이프라인 전용 부모 균형 실행 문맥을 꺼낸다."""
+    original = params.pop("paired_original_row_count", None)
+    multiplier = params.pop("paired_row_multiplier", None)
+    source_index_component = params.pop("paired_source_index_component", None)
+    if original is None and multiplier is None:
+        return None
+    if (
+        isinstance(original, bool)
+        or not isinstance(original, int)
+        or original < 1
+        or isinstance(multiplier, bool)
+        or not isinstance(multiplier, int)
+        or multiplier < 2
+        or isinstance(source_index_component, bool)
+        or (
+            source_index_component is not None
+            and not isinstance(source_index_component, int)
+        )
+    ):
+        raise ValueError(
+            "부모 균형 학습 문맥에는 양의 원본 행 수와 2 이상의 복제 배수가 필요하다."
+        )
+    return ParentBalancedExposure(original, multiplier, source_index_component)
+
+
+@dataclass(frozen=True)
 class PairedOptimizerStepPlan:
-    """복제 행에서도 출처와 같은 epoch별 최적화 갱신 수를 만드는 계획."""
+    """복제 행에서도 출처와 같은 부모 노출과 최적화 경로를 만드는 계획."""
 
     model_kind: str
     row_multiplier: int
@@ -34,15 +83,19 @@ class PairedOptimizerStepPlan:
     paired_batch_size: int
     source_steps_per_epoch: int
     paired_steps_per_epoch: int
+    source_index_component: int | None
 
     def apply(self, params: dict) -> dict:
         adjusted = dict(params)
-        adjusted["batch_size"] = self.paired_batch_size
+        adjusted["paired_original_row_count"] = self.original_row_count
+        adjusted["paired_row_multiplier"] = self.row_multiplier
+        if self.source_index_component is not None:
+            adjusted["paired_source_index_component"] = self.source_index_component
         return adjusted
 
     def evidence(self) -> dict[str, object]:
         return {
-            "contract": "paired-optimizer-step-v1",
+            "contract": "paired-parent-balanced-exposure-v2",
             "model_kind": self.model_kind,
             "row_multiplier": self.row_multiplier,
             "original_row_count": self.original_row_count,
@@ -52,6 +105,11 @@ class PairedOptimizerStepPlan:
             "source_steps_per_epoch": self.source_steps_per_epoch,
             "paired_steps_per_epoch": self.paired_steps_per_epoch,
             "optimizer_steps_per_epoch_preserved": True,
+            "physical_batch_size_preserved": True,
+            "parent_rows_per_epoch_preserved": True,
+            "preprocessing_fit_on_original_rows_only": True,
+            "replica_selection": "deterministic_parent_rotation",
+            "source_index_component": self.source_index_component,
         }
 
 
@@ -61,8 +119,9 @@ def build_optimizer_step_plan(
     *,
     original_row_count: int,
     training_row_count: int,
+    original_index: pd.Index | None = None,
 ) -> PairedOptimizerStepPlan | None:
-    """신경망 복제 행의 물리 배치를 늘려 epoch별 갱신 수를 보존한다."""
+    """신경망 복제 행을 부모 균형 표본으로 읽어 출처 최적화 경로를 보존한다."""
     default_batch_size = _NEURAL_BATCH_SIZE_DEFAULTS.get(model_kind)
     if default_batch_size is None:
         return None
@@ -87,13 +146,23 @@ def build_optimizer_step_plan(
         or source_batch_size < 1
     ):
         raise ValueError(f"{model_kind}: batch_size는 양의 정수여야 한다.")
-    paired_batch_size = source_batch_size * row_multiplier
+    paired_batch_size = source_batch_size
     source_steps = math.ceil(original_row_count / source_batch_size)
-    paired_steps = math.ceil(training_row_count / paired_batch_size)
+    paired_steps = math.ceil(original_row_count / paired_batch_size)
     if source_steps != paired_steps:
         raise AssertionError(
             f"{model_kind}: 복제 행의 epoch별 최적화 갱신 수가 보존되지 않았다: "
             f"{source_steps} != {paired_steps}"
+        )
+    source_index_component = None
+    if original_index is not None:
+        if len(original_index) != original_row_count:
+            raise ValueError("원본 학습 행 인덱스 길이가 원본 행 수와 다르다.")
+        hashed = pd.util.hash_pandas_object(original_index, index=False).to_numpy(
+            dtype="uint64"
+        )
+        source_index_component = int.from_bytes(
+            hashlib.sha256(hashed.tobytes()).digest()[:8], "little"
         )
     return PairedOptimizerStepPlan(
         model_kind=model_kind,
@@ -104,6 +173,7 @@ def build_optimizer_step_plan(
         paired_batch_size=paired_batch_size,
         source_steps_per_epoch=source_steps,
         paired_steps_per_epoch=paired_steps,
+        source_index_component=source_index_component,
     )
 
 

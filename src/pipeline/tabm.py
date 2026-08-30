@@ -25,6 +25,8 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
+from .paired_training_length import pop_parent_balanced_exposure
+
 _OPTIMIZERS = {"adamw", "muon"}
 _MUON_PATCH_LOCK = threading.Lock()
 
@@ -133,6 +135,7 @@ class TabMFold:
 
     def __init__(self, params: dict, seed: int) -> None:
         params = dict(params)
+        self._paired_exposure = pop_parent_balanced_exposure(params)
         self._n_seed_avg = int(params.pop("n_seed_avg", 3))
         self._perm_repeats = int(params.pop("perm_repeats", 3))
         self._perm_sample = int(params.pop("perm_sample", 50_000))
@@ -262,7 +265,14 @@ class TabMFold:
         ):
             raise ValueError("TabM 구성원별 epoch 수가 내부 시드 구성원과 맞지 않는다.")
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        self._fit_medians(X)
+        if self._paired_exposure is not None:
+            self._paired_exposure.validate_training_row_count(len(X))
+            preprocessing_frame = X.iloc[
+                : self._paired_exposure.original_row_count
+            ]
+        else:
+            preprocessing_frame = X
+        self._fit_medians(preprocessing_frame)
         X_t = self._transform(X)
         self._models = []
         for s, epochs in enumerate(member_epochs):
@@ -273,6 +283,7 @@ class TabMFold:
                 seed=self._seed + 1000 * s,
                 device=device,
                 optimizer=self._optimizer_name,
+                paired_exposure=self._paired_exposure,
             )
             member.fit(X_t, y)
             self._models.append(member)
@@ -288,6 +299,13 @@ class TabMFold:
             "optimizer": self._optimizer_name,
             "members": [member.training_diagnostics() for member in self._models],
         }
+        if self._paired_exposure is not None:
+            self._training_diagnostics["parent_balanced_exposure"] = {
+                "original_row_count": self._paired_exposure.original_row_count,
+                "row_multiplier": self._paired_exposure.row_multiplier,
+                "preprocessing_fit_rows": self._paired_exposure.original_row_count,
+                "replica_selection": "deterministic_parent_rotation",
+            }
         # 전체 자료 재학습에는 검증 선택이 없다. 없는 관측을 지어내지 않는다. (#372)
         self._raw_training_length_selections = None
 
@@ -368,12 +386,19 @@ class _FixedEpochTabMMember:
     """
 
     def __init__(
-        self, *, params: dict, seed: int, device: str, optimizer: str = "adamw"
+        self,
+        *,
+        params: dict,
+        seed: int,
+        device: str,
+        optimizer: str = "adamw",
+        paired_exposure=None,
     ) -> None:
         self._params = dict(params)
         self._seed = seed
         self._device_name = device
         self._optimizer_name = optimizer
+        self._paired_exposure = paired_exposure
         self._converter = None
         self._transform = None
         self._model = None
@@ -393,28 +418,57 @@ class _FixedEpochTabMMember:
         torch.manual_seed(training_seed)
         np.random.seed(training_seed)
         device = torch.device(self._device_name)
-        categorical = [isinstance(dtype, pd.CategoricalDtype) for dtype in X.dtypes]
+        if self._paired_exposure is not None:
+            self._paired_exposure.validate_training_row_count(len(X))
+            preprocessing_X = X.iloc[: self._paired_exposure.original_row_count]
+            preprocessing_y = y.iloc[: self._paired_exposure.original_row_count]
+        else:
+            preprocessing_X = X
+            preprocessing_y = y
+        categorical = [
+            isinstance(dtype, pd.CategoricalDtype) for dtype in X.dtypes
+        ]
         self._converter = ToDictDatasetConverter(cat_features=categorical, verbosity=0)
-        x_ds = self._converter.fit_transform(X)
-        y_values = y.to_numpy(dtype=np.int64).reshape(-1, 1)
+        preprocessing_x_ds = self._converter.fit_transform(preprocessing_X)
+        preprocessing_y_values = preprocessing_y.to_numpy(
+            dtype=np.int64, copy=True
+        ).reshape(-1, 1)
+        preprocessing_y_ds = DictDataset(
+            tensors={"y": torch.as_tensor(preprocessing_y_values, dtype=torch.long)},
+            tensor_infos={"y": TensorInfo(cat_sizes=[2])},
+        )
+        preprocessing_dataset = DictDataset.join(
+            preprocessing_x_ds, preprocessing_y_ds
+        )
+        x_ds = self._converter.transform(X)
+        y_values = y.to_numpy(dtype=np.int64, copy=True).reshape(-1, 1)
         y_ds = DictDataset(
             tensors={"y": torch.as_tensor(y_values, dtype=torch.long)},
             tensor_infos={"y": TensorInfo(cat_sizes=[2])},
         )
         dataset = DictDataset.join(x_ds, y_ds)
         factory = PreprocessingFactory(**self._params)
-        fitter = factory.create(dataset.tensor_infos)
-        self._transform, transformed = fitter.fit_transform(dataset)
+        fitter = factory.create(preprocessing_dataset.tensor_infos)
+        self._transform, preprocessing_transformed = fitter.fit_transform(
+            preprocessing_dataset
+        )
+        preprocessing_transformed = preprocessing_transformed.to(device)
+        preprocessing_x_cont = preprocessing_transformed.tensors["x_cont"]
+        self._num_col_mask = ~torch.all(
+            preprocessing_x_cont == preprocessing_x_cont[0:1, :], dim=0
+        )
+        transformed = self._transform(dataset)
         transformed = transformed.to(device)
         x_cont = transformed.tensors["x_cont"]
-        self._num_col_mask = ~torch.all(x_cont == x_cont[0:1, :], dim=0)
         transformed.tensors["x_cont"] = x_cont[:, self._num_col_mask]
         n_cont = int(transformed.tensors["x_cont"].shape[1])
         cat_sizes = dataset.tensor_infos["x_cat"].get_cat_sizes().numpy().tolist()
         bins = (
             rtdl_num_embeddings.compute_bins(
-                transformed.tensors["x_cont"],
-                n_bins=min(int(self._params["num_emb_n_bins"]), len(X) - 1),
+                preprocessing_x_cont[:, self._num_col_mask],
+                n_bins=min(
+                    int(self._params["num_emb_n_bins"]), len(preprocessing_X) - 1
+                ),
             )
             if self._params["num_emb_type"] == "pwl" and n_cont > 0
             else None
@@ -461,20 +515,32 @@ class _FixedEpochTabMMember:
                 lr=float(self._params["lr"]),
                 weight_decay=float(self._params["weight_decay"]),
             )
-        n_train = len(X)
+        n_train = len(preprocessing_X)
         batch_size = min(int(self._params["batch_size"]), n_train)
         y_train = transformed.tensors["y"]
         x_cat = transformed.tensors["x_cat"]
         has_categories = bool(cat_sizes)
-        for _ in range(int(self._params["n_epochs"])):
+        for epoch_index in range(int(self._params["n_epochs"])):
             if self._model.share_training_batches:
-                batches = torch.randperm(n_train, device=device).split(batch_size)
+                order = torch.randperm(n_train, device=device)
+                if self._paired_exposure is not None:
+                    replica = (
+                        order + epoch_index
+                    ) % self._paired_exposure.row_multiplier
+                    order = order + replica * n_train
+                batches = order.split(batch_size)
             else:
+                member_orders = torch.rand(
+                    (self._model.k, n_train), device=device
+                ).argsort(dim=1)
+                if self._paired_exposure is not None:
+                    replica = (
+                        member_orders + epoch_index
+                    ) % self._paired_exposure.row_multiplier
+                    member_orders = member_orders + replica * n_train
                 batches = [
                     indexes.transpose(0, 1).flatten()
-                    for indexes in torch.rand(
-                        (self._model.k, n_train), device=device
-                    ).argsort(dim=1).split(batch_size, dim=1)
+                    for indexes in member_orders.split(batch_size, dim=1)
                 ]
             self._model.train()
             for indexes in batches:
@@ -520,8 +586,14 @@ class _FixedEpochTabMMember:
         training_seed = int(
             np.random.RandomState(self._seed).randint(0, 2**31 - 1)
         )
-        return {
+        diagnostics = {
             "random_state": self._seed,
             "training_seed": training_seed,
             "epochs": int(self._params["n_epochs"]),
         }
+        if self._paired_exposure is not None:
+            diagnostics["parent_balanced_exposure"] = {
+                "original_row_count": self._paired_exposure.original_row_count,
+                "row_multiplier": self._paired_exposure.row_multiplier,
+            }
+        return diagnostics

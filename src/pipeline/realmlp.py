@@ -48,6 +48,7 @@ from torch import nn
 
 from .data import TARGET
 from .model import AdapterDiagnostics
+from .paired_training_length import pop_parent_balanced_exposure
 
 
 SOURCE_NOTEBOOK_URL = "https://www.kaggle.com/code/beicicc/s6e8-fold-safe-realmlp"
@@ -760,10 +761,13 @@ def _smoothed_cross_entropy(
 class _FixedEpochClassifier:
     """검증 자료를 받지 않고 일정의 앞부분만 고정 길이로 학습한다."""
 
-    def __init__(self, config: dict, seed: int, device: str) -> None:
+    def __init__(
+        self, config: dict, seed: int, device: str, paired_exposure=None
+    ) -> None:
         self.config = config
         self.seed = seed
         self.device = device
+        self.paired_exposure = paired_exposure
         self.model: _RealMLP | None = None
         self.training_history: list[dict[str, float | int]] = []
         self._captured_ema_states: dict[int, dict[str, torch.Tensor]] = {}
@@ -812,17 +816,23 @@ class _FixedEpochClassifier:
             dtype="int64", copy=True
         )
         labels = target.to_numpy(dtype="int64", copy=True)
+        if self.paired_exposure is not None:
+            self.paired_exposure.validate_training_row_count(len(frame))
+            parent_rows = self.paired_exposure.original_row_count
+        else:
+            parent_rows = len(frame)
         self.preprocessor = _NumericalPreprocessor(self.config["tfms"]).fit(
-            numerical
+            numerical[:parent_rows]
         )
         numerical = self.preprocessor.transform(numerical)
 
-        class_values = np.unique(labels)
+        source_labels = labels[:parent_rows]
+        class_values = np.unique(source_labels)
         if not np.array_equal(class_values, np.array([0, 1])):
             raise ValueError("RealMLP 학습 부분에는 두 클래스가 모두 있어야 한다.")
         class_weights = torch.as_tensor(
             compute_class_weight(
-                class_weight="balanced", classes=class_values, y=labels
+                class_weight="balanced", classes=class_values, y=source_labels
             ),
             dtype=torch.float32,
             device=self.device,
@@ -862,8 +872,8 @@ class _FixedEpochClassifier:
         )
         n_ens = int(self.config["n_ens"])
         batch_size = int(self.config["batch_size"])
-        total_schedule_steps = int(self.config["schedule_epochs"]) * len(frame)
-        train_order = np.arange(len(frame))
+        total_schedule_steps = int(self.config["schedule_epochs"]) * parent_rows
+        train_order = np.arange(parent_rows)
         rng = np.random.RandomState(self.seed)
         ema_decay = float(self.config["ema_decay"])
         ema_state = {
@@ -876,9 +886,19 @@ class _FixedEpochClassifier:
             started = time.monotonic()
             weighted_loss = 0.0
             self.model.train()
-            for start in range(0, len(frame), batch_size):
-                progress = (epoch * len(frame) + start) / total_schedule_steps
-                batch_indices = train_order[start : start + batch_size]
+            replica = None
+            if self.paired_exposure is not None:
+                replica = (
+                    train_order + epoch
+                ) % self.paired_exposure.row_multiplier
+            epoch_order = (
+                train_order
+                if replica is None
+                else train_order + replica * parent_rows
+            )
+            for start in range(0, parent_rows, batch_size):
+                progress = (epoch * parent_rows + start) / total_schedule_steps
+                batch_indices = epoch_order[start : start + batch_size]
                 for group in optimizer.param_groups:
                     group["lr"] = _schedule(
                         group["lr_base"],
@@ -937,7 +957,7 @@ class _FixedEpochClassifier:
                 }
             record = {
                 "epoch": completed_epoch,
-                "loss": weighted_loss / len(frame),
+                "loss": weighted_loss / parent_rows,
                 "seconds": time.monotonic() - started,
                 "smoothing": float(smoothing),
                 "dropout": float(dropout),
@@ -1022,6 +1042,8 @@ class RealMLPFold:
     """fold 전처리, 두 초기화 평균, 예측과 중요도 상태."""
 
     def __init__(self, params: dict, seed: int) -> None:
+        params = dict(params)
+        self._paired_exposure = pop_parent_balanced_exposure(params)
         unknown = sorted(set(params) - set(_DEFAULTS))
         if unknown:
             raise ValueError(f"realmlp가 모르는 params: {unknown}")
@@ -1160,17 +1182,34 @@ class RealMLPFold:
         fold_component = int.from_bytes(digest[:8], "little")
         return int((self.seed * 1_000_003 + fold_component) % (2**31 - 1))
 
+    def _paired_fold_seed(self, index: pd.Index) -> int:
+        if self._paired_exposure is None:
+            return self._fold_seed(index)
+        component = self._paired_exposure.source_index_component
+        if component is None:
+            raise ValueError("RealMLP 부모 균형 학습에는 원본 인덱스 지문이 필요하다.")
+        return int((self.seed * 1_000_003 + component) % (2**31 - 1))
+
     def _prepare(
         self,
         X_train: pd.DataFrame,
         y_train: pd.Series,
         X_validation: pd.DataFrame | None,
     ) -> _PreparedFold:
+        if self._paired_exposure is not None:
+            self._paired_exposure.validate_training_row_count(len(X_train))
+            parent_rows = self._paired_exposure.original_row_count
+            state_X = X_train.iloc[:parent_rows]
+            state_y = y_train.iloc[:parent_rows]
+        else:
+            parent_rows = len(X_train)
+            state_X = X_train
+            state_y = y_train
         reference_columns = self.config["reference_qnormal_columns"]
         reference_frame = None
         if reference_columns:
             if self.config["preprocessing_scope"] == "fold_train":
-                reference_frame = X_train[reference_columns]
+                reference_frame = state_X[reference_columns]
             else:
                 if self._dataset_reference is None:
                     raise RuntimeError(
@@ -1181,19 +1220,29 @@ class RealMLPFold:
                     list(self._dataset_reference), ignore_index=True
                 )
         self.engineer = _FoldFeatureEngineer(reference_columns, self.seed)
-        train = self.engineer.fit_transform(X_train, reference_frame)
+        self.engineer.fit(state_X, reference_frame)
+        train = self.engineer.transform(X_train)
+        state_train = train.iloc[:parent_rows].copy()
         validation = (
             self.engineer.transform(X_validation)
             if X_validation is not None
             else None
         )
-        fold_seed = self._fold_seed(X_train.index)
+        fold_seed = self._paired_fold_seed(state_X.index)
         self.target_encoder = _FoldTargetEncoder(
             int(self.config["inner_folds"]), fold_seed
         )
-        train = self.target_encoder.fit_transform(
-            train, y_train, self.engineer.output_cat_cols
+        state_train = self.target_encoder.fit_transform(
+            state_train, state_y, self.engineer.output_cat_cols
         )
+        if self._paired_exposure is None:
+            train = state_train
+        else:
+            for column in self.target_encoder.output_names:
+                train[column] = np.tile(
+                    state_train[column].to_numpy(),
+                    self._paired_exposure.row_multiplier,
+                )
         if validation is not None:
             validation = self.target_encoder.transform(validation)
         return _PreparedFold(train=train, validation=validation)
@@ -1271,7 +1320,7 @@ class RealMLPFold:
             torch.cuda.reset_peak_memory_stats(self.device)
         prepared = self._prepare(X_train, y_train, X_validation)
         assert prepared.validation is not None
-        fold_seed = self._fold_seed(X_train.index)
+        fold_seed = self._paired_fold_seed(X_train.index)
         validation_prediction = np.zeros(len(X_validation), dtype="float64")
         trajectory_predictions = {
             epoch: np.zeros(len(X_validation), dtype="float64")
@@ -1284,7 +1333,10 @@ class RealMLPFold:
                 fold_seed + member_index * int(self.config["init_seed_stride"])
             ) % (2**31 - 1)
             model = _FixedEpochClassifier(
-                dict(self.config), initialization_seed, self.device
+                dict(self.config),
+                initialization_seed,
+                self.device,
+                self._paired_exposure,
             )
             model.fit(
                 prepared.train,
@@ -1500,7 +1552,7 @@ class RealMLPFold:
         # 전체 자료 재학습의 epoch 수는 관측이 아니라 이미 정해진 예산이다. (#372)
         self._raw_training_length_selection = None
         prepared = self._prepare(X, y, None)
-        fold_seed = self._fold_seed(X.index)
+        fold_seed = self._paired_fold_seed(X.index)
         self.models = []
         member_records = []
         for member_index in range(int(self.config["n_init_avg"])):
@@ -1508,7 +1560,10 @@ class RealMLPFold:
                 fold_seed + member_index * int(self.config["init_seed_stride"])
             ) % (2**31 - 1)
             model = _FixedEpochClassifier(
-                dict(self.config), initialization_seed, self.device
+                dict(self.config),
+                initialization_seed,
+                self.device,
+                self._paired_exposure,
             )
             model.fit(
                 prepared.train,
@@ -1550,8 +1605,8 @@ class RealMLPFold:
             "dataset_reference_test_rows": self._dataset_reference_test_rows,
             "full_fit": True,
             "full_training_budget": training_budget,
-            "preprocessing_fit_rows": len(X),
-            "target_encoding_fit_rows": len(X),
+            "preprocessing_fit_rows": self.engineer.fit_rows,
+            "target_encoding_fit_rows": self.target_encoder.fit_rows,
             "training_rows": len(X),
             "validation_rows": 0,
             "fold_initialization_seed": fold_seed,
@@ -1561,6 +1616,16 @@ class RealMLPFold:
             "schedule_horizon_epochs": int(self.config["schedule_epochs"]),
             "validation_selection": "none",
         }
+        if self._paired_exposure is not None:
+            self._diagnostics["parent_balanced_exposure"] = {
+                "original_row_count": self._paired_exposure.original_row_count,
+                "row_multiplier": self._paired_exposure.row_multiplier,
+                "preprocessing_fit_rows": self._paired_exposure.original_row_count,
+                "replica_selection": "deterministic_parent_rotation",
+                "source_index_component": (
+                    self._paired_exposure.source_index_component
+                ),
+            }
 
     def _transform(self, frame: pd.DataFrame) -> pd.DataFrame:
         if self.engineer is None or self.target_encoder is None:

@@ -42,6 +42,7 @@ from sklearn.metrics import roc_auc_score
 from torch import nn
 
 from .model import AdapterDiagnostics
+from .paired_training_length import pop_parent_balanced_exposure
 
 _NA_ID = 0
 _MODES = {"spline", "periodic"}
@@ -564,6 +565,7 @@ class ContextualizedSplineTransformerFold:
 
     def __init__(self, params: dict, seed: int) -> None:
         params = dict(params)
+        self._paired_exposure = pop_parent_balanced_exposure(params)
         self._exact_cols = list(params.pop("exact_cols"))
         self._mode = str(params.pop("numeric_mode", "spline"))
         if self._mode not in _MODES:
@@ -799,9 +801,18 @@ class ContextualizedSplineTransformerFold:
         torch.Generator,
     ]:
         self._seed_everything()
-        self._fit_preprocessing(X)
+        if self._paired_exposure is not None:
+            self._paired_exposure.validate_training_row_count(len(X))
+            preprocessing_frame = X.iloc[
+                : self._paired_exposure.original_row_count
+            ]
+        else:
+            preprocessing_frame = X
+        self._fit_preprocessing(preprocessing_frame)
         numeric_cpu, exact_cpu = self._encode(X)
-        model = self._build_model(numeric_cpu.numpy()).to(self._device)
+        model = self._build_model(
+            numeric_cpu[: len(preprocessing_frame)].numpy()
+        ).to(self._device)
         self._model = model
         self._trainable_parameters = sum(
             parameter.numel()
@@ -856,14 +867,25 @@ class ContextualizedSplineTransformerFold:
         soft_target: torch.Tensor,
         optimizer: torch.optim.Optimizer,
         generator: torch.Generator,
+        epoch_index: int,
     ) -> float:
         model.train()
-        permutation = torch.randperm(
-            len(x_num), generator=generator, device=self._device
+        parent_rows = (
+            self._paired_exposure.original_row_count
+            if self._paired_exposure is not None
+            else len(x_num)
         )
+        permutation = torch.randperm(
+            parent_rows, generator=generator, device=self._device
+        )
+        if self._paired_exposure is not None:
+            replica = (
+                permutation + epoch_index
+            ) % self._paired_exposure.row_multiplier
+            permutation = permutation + replica * parent_rows
         epoch_loss = 0.0
         batches = 0
-        for start in range(0, len(x_num), self._batch_size):
+        for start in range(0, len(permutation), self._batch_size):
             rows = permutation[start : start + self._batch_size]
             output = model(x_num[rows], x_exact[rows])
             final_loss = F.binary_cross_entropy_with_logits(
@@ -918,7 +940,7 @@ class ContextualizedSplineTransformerFold:
         for epoch in range(1, self._epochs + 1):
             end_epoch = epoch
             epoch_loss = self._train_epoch(
-                model, x_num, x_exact, soft_target, optimizer, generator
+                model, x_num, x_exact, soft_target, optimizer, generator, epoch - 1
             )
             final_logit, additive_logit = self._predict_tensors(x_num_va, x_exact_va)
             final_auc = float(roc_auc_score(y_va_array, final_logit))
@@ -978,7 +1000,7 @@ class ContextualizedSplineTransformerFold:
         )
         for epoch in range(1, epochs + 1):
             epoch_loss = self._train_epoch(
-                model, x_num, x_exact, soft_target, optimizer, generator
+                model, x_num, x_exact, soft_target, optimizer, generator, epoch - 1
             )
             print(
                 f"[contextualized_spline_transformer] mode={self._mode} "
@@ -997,6 +1019,13 @@ class ContextualizedSplineTransformerFold:
             "best_validation_auc": None,
             "full_fit": True,
         }
+        if self._paired_exposure is not None:
+            self._training_diagnostics["parent_balanced_exposure"] = {
+                "original_row_count": self._paired_exposure.original_row_count,
+                "row_multiplier": self._paired_exposure.row_multiplier,
+                "preprocessing_fit_rows": self._paired_exposure.original_row_count,
+                "replica_selection": "deterministic_parent_rotation",
+            }
         # 전체 자료 재학습에는 검증 선택이 없다. 없는 관측을 지어내지 않는다. (#372)
         self._raw_training_length_selection = None
 

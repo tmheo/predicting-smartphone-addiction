@@ -46,6 +46,8 @@ import torch
 from sklearn.metrics import roc_auc_score
 from torch import nn
 
+from .paired_training_length import pop_parent_balanced_exposure
+
 _NA = 0  # 컬럼별 local id 0은 결측 전용. lookup 컬럼의 마지막 id는 UNK.
 _TORCH_INIT_LOCK = threading.Lock()
 _OPTIMIZERS = {"adamw", "radam", "nadam", "muon"}
@@ -353,6 +355,7 @@ class _LookupTransformerMember:
         init_barrier: threading.Barrier | None = None,
     ) -> None:
         params = dict(params)
+        self._paired_exposure = pop_parent_balanced_exposure(params)
         self._lookup_cols = list(params.pop("lookup_cols"))
         self._lookup_max_card = int(params.pop("lookup_max_card", 5000))
         self._d_model = int(params.pop("d_model", 128))
@@ -769,7 +772,14 @@ class _LookupTransformerMember:
         self._schedule_horizon_epochs = schedule_horizon if training_point_path else None
         self._trajectory_steps_per_epoch = None
         torch.backends.cuda.matmul.allow_tf32 = True
-        self._fit_specs(X_tr)
+        if self._paired_exposure is not None:
+            self._paired_exposure.validate_training_row_count(len(X_tr))
+            preprocessing_frame = X_tr.iloc[
+                : self._paired_exposure.original_row_count
+            ]
+        else:
+            preprocessing_frame = X_tr
+        self._fit_specs(preprocessing_frame)
         dev = self._device
         ids_tr, num_tr, mask_tr = (t.to(dev) for t in self._encode(X_tr))
         validation = X_va is not None
@@ -868,7 +878,11 @@ class _LookupTransformerMember:
             ]
             group_lr_scales = [1.0, 1.0]
         opt = _create_optimizer(self._optimizer_name, parameter_groups, self._lr)
-        n_tr = len(X_tr)
+        n_tr = (
+            self._paired_exposure.original_row_count
+            if self._paired_exposure is not None
+            else len(X_tr)
+        )
         steps_per_epoch = math.ceil(n_tr / self._batch_size)
         steps = steps_per_epoch * schedule_horizon + 10
         if training_point_path:
@@ -903,6 +917,9 @@ class _LookupTransformerMember:
             end_epoch = ep
             model.train()
             perm = torch.randperm(n_tr, generator=g).to(dev)
+            if self._paired_exposure is not None:
+                replica = (perm + ep) % self._paired_exposure.row_multiplier
+                perm = perm + replica * n_tr
             epoch_loss_sum = torch.zeros((), dtype=torch.float32, device=dev)
             epoch_gradient_norm_sum = torch.zeros((), dtype=torch.float32, device=dev)
             epoch_clipped_steps = torch.zeros((), dtype=torch.float32, device=dev)
@@ -1058,6 +1075,13 @@ class _LookupTransformerMember:
             "planned_total_steps": steps,
             "full_fit": not validation,
         }
+        if self._paired_exposure is not None:
+            self._training_diagnostics["parent_balanced_exposure"] = {
+                "original_row_count": self._paired_exposure.original_row_count,
+                "row_multiplier": self._paired_exposure.row_multiplier,
+                "preprocessing_fit_rows": self._paired_exposure.original_row_count,
+                "replica_selection": "deterministic_parent_rotation",
+            }
         if training_point_path:
             self._training_diagnostics.update(
                 {

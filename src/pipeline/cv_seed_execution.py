@@ -396,6 +396,7 @@ def execute_seed(
             actor_name="fold_result",
         ):
             model_config = cfg.model
+            optimizer_step_plan = None
             if paired_training_lengths is not None:
                 assert row_batch is not None and row_evidence is not None
                 optimizer_step_plan = (
@@ -404,6 +405,9 @@ def execute_seed(
                         cfg.model.params,
                         original_row_count=row_batch.original_row_count,
                         training_row_count=len(row_batch.frame),
+                        original_index=row_batch.parent_source_index[
+                            : row_batch.original_row_count
+                        ],
                     )
                 )
                 if optimizer_step_plan is not None:
@@ -415,7 +419,26 @@ def execute_seed(
                         optimizer_step_plan.evidence()
                     )
             adapter = model_mod.create(model_config, seed)
-            model_mod.set_dataset_reference(adapter, X_fold, X_test_fold)
+            if optimizer_step_plan is not None:
+                assert row_batch is not None
+                source_training_reference = X_fold.loc[
+                    row_batch.state_fit_index
+                ].copy()
+                source_training_reference.index = row_batch.parent_source_index[
+                    : row_batch.original_row_count
+                ]
+                source_validation_reference = X_fold.loc[
+                    model_validation_index
+                ].copy()
+                source_validation_reference.index = train.index[va_idx]
+                dataset_reference_train = pd.concat(
+                    [source_training_reference, source_validation_reference]
+                ).sort_index()
+            else:
+                dataset_reference_train = X_fold
+            model_mod.set_dataset_reference(
+                adapter, dataset_reference_train, X_test_fold
+            )
             with timed_operation(
                 recorder,
                 seed=seed,
