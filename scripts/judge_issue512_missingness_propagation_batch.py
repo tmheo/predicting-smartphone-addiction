@@ -987,6 +987,21 @@ def _search_and_gates(
             allowed=allowed,
             allow_invalid_start=excluded_fold is None and bool(baseline_violations),
         ).run()
+        if excluded_fold is None and search.selected:
+            # 공식 장부는 선택된 각 교체의 단일 제거 점수를 요구한다. 중복 해소를
+            # 강제하는 교체를 빼면 허용되지 않는 상태가 되므로 검색 이동에서는 그
+            # 상태를 평가하지 않는다. 선택에는 쓰지 않고 기여 진단에만 쓸 단일 제거
+            # 상태를 여기서 명시적으로 점수화한다.
+            score_many(
+                tuple(
+                    tuple(
+                        value
+                        for value in search.selected
+                        if value != removed
+                    )
+                    for removed in search.selected
+                )
+            )
         return search, baseline_violations
 
     with StrategyEvaluator(search_context, jobs) as evaluator:
