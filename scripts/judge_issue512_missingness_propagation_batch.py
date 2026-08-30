@@ -21,9 +21,12 @@ import pandas as pd
 import yaml
 from sklearn.metrics import roc_auc_score
 
+from pipeline import ensemble as ensemble_module
 from pipeline.data import ID, TARGET, file_sha256
 from pipeline.missingness_propagation_batch import (
+    ADOPTION_STRATEGIES,
     INPUT_BUNDLE_SCHEMA,
+    MaximumGainSearch,
     MissingnessPropagationBatchError,
     self_hashed_payload,
     spearman_violations,
@@ -32,6 +35,7 @@ from pipeline.missingness_propagation_batch import (
     verify_self_hash,
 )
 from pipeline.pool_audit import prediction_array_sha256
+from pipeline.pool_rereview import InputContext, PoolScore, StrategyEvaluator
 from pipeline.runs import ArtifactNotFound, MlflowRunStore
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -48,6 +52,10 @@ ISSUE_URL = "https://github.com/tmheo/predicting-smartphone-addiction/issues/512
 MAP_URL = "https://github.com/tmheo/predicting-smartphone-addiction/issues/506"
 INPUT_NAME = "input-bundle.json"
 PREFLIGHT_NAME = "preflight.json"
+SEARCH_NAME = "search.json"
+CONDITIONAL_NAME = "conditional-gate.json"
+DIRECT_NAME = "direct-nested-gate.json"
+REFIT_REHEARSAL_NAME = "full-refit-rehearsal.json"
 JUDGMENT_NAME = "judgment.json"
 REPORT_NAME = "report.md"
 MANIFEST_NAME = "manifest.sha256"
@@ -72,6 +80,12 @@ def _args() -> argparse.Namespace:
         default=DEFAULT_OUTPUT_ROOT,
     )
     parser.add_argument("--verify-only", action="store_true")
+    parser.add_argument("--jobs", type=int, default=8)
+    parser.add_argument(
+        "--gates-only",
+        action="store_true",
+        help="정확 검색과 두 OOF 관문까지만 진단하고 공식 장부는 쓰지 않는다.",
+    )
     return parser.parse_args()
 
 
@@ -243,6 +257,51 @@ def _runtime_identity_fields(
     )
 
 
+def _source_contract(
+    *,
+    member: str,
+    completed: dict[str, Any],
+    confirmation: dict[str, Any],
+    precommit: dict[str, Any],
+) -> dict[str, Any]:
+    source_commit = str(completed["source_commit"])
+    sources = confirmation["source_commits"]
+    default_source = precommit["collection_contract"]["execution_source_commit"]
+    if source_commit == default_source == sources["default"]:
+        return {
+            "kind": "precommitted_execution_source",
+            "source_commit": source_commit,
+            "validation_contract": None,
+        }
+    if source_commit == sources["xgb_diagnostic_fix_exception"]:
+        _require(
+            member in {"exp111_xgb_depth8_no_te", "exp135_xgb_hpo_trial30"},
+            f"{member}: XGBoost 교정 출처를 허용한 대상이 아니다.",
+        )
+        return {
+            "kind": "issue511_xgb_diagnostic_fix",
+            "source_commit": source_commit,
+            "validation_contract": "issue511-confirmed-xgb-diagnostic-fix",
+        }
+    if source_commit == sources["neural_parent_balanced_correction"]:
+        contracts = {
+            completed["tripled"].get("neural_validation_contract"),
+            completed["missingness_augmented"].get("neural_validation_contract"),
+        }
+        _require(
+            contracts == {"paired-parent-balanced-exposure-v2"},
+            f"{member}: 신경망 교정 검증 계약이 다르다.",
+        )
+        return {
+            "kind": "issue511_neural_parent_balanced_correction",
+            "source_commit": source_commit,
+            "validation_contract": "paired-parent-balanced-exposure-v2",
+        }
+    raise MissingnessPropagationBatchError(
+        f"{member}: 이슈 511 최종 기록에 허용되지 않은 실행 출처다: {source_commit}"
+    )
+
+
 def _arm_record(
     *,
     store: MlflowRunStore,
@@ -251,6 +310,7 @@ def _arm_record(
     expected: dict[str, Any],
     pair: dict[str, Any],
     precommit: dict[str, Any],
+    source_contract: dict[str, Any],
     targets: pd.DataFrame,
 ) -> tuple[dict[str, Any], pd.Series]:
     facts = store.facts_of(run_id)
@@ -266,12 +326,20 @@ def _arm_record(
     _require(config_sha256 == expected["sha256"], f"{run_id}: 실행 설정 해시가 다르다.")
     git_commit = facts.tags.get("git_commit")
     _require(
-        git_commit == precommit["collection_contract"]["execution_source_commit"],
-        f"{run_id}: 출처 커밋 {git_commit}이 사전 기록과 다르다.",
+        git_commit == source_contract["source_commit"],
+        f"{run_id}: 출처 커밋 {git_commit}이 허용된 교정 계보와 다르다.",
     )
     _require(
         facts.tags.get("git_dirty") == "False", f"{run_id}: 깨끗하지 않은 코드 상태다."
     )
+    if source_contract["kind"] == "issue511_neural_parent_balanced_correction":
+        _require(
+            facts.tags.get("issue511.valid") == "true"
+            and facts.tags.get("issue511.judgment_status") == "valid"
+            and facts.tags.get("issue511.validation_contract")
+            == source_contract["validation_contract"],
+            f"{run_id}: 이슈 511 신경망 교정 유효성 꼬리표가 다르다.",
+        )
     provider = facts.tags.get("remote.provider")
     runtime_class = facts.tags.get("remote.runtime_class")
     _require(bool(provider), f"{run_id}: 공급자 꼬리표가 없다.")
@@ -312,6 +380,7 @@ def _arm_record(
             "experiment": expected["name"],
             "config_sha256": config_sha256,
             "git_commit": git_commit,
+            "source_contract": source_contract,
             "git_dirty": False,
             "provider": provider,
             "runtime_class": runtime_class,
@@ -369,24 +438,12 @@ def _input_bundle(
                 }
             )
             continue
-        expected_source = precommit["collection_contract"]["execution_source_commit"]
-        if completed["source_commit"] != expected_source:
-            reason = (
-                f"중앙 반입 출처 커밋 {completed['source_commit']}이 "
-                f"사전 기록 출처 {expected_source}와 다르다"
-            )
-            collection.append(
-                {"member": member, "status": "incomplete", "reason": reason}
-            )
-            classification.append(
-                {
-                    "member": member,
-                    "source_status": "completed_after_execution_correction",
-                    "batch_status": "incomplete",
-                    "reason": reason,
-                }
-            )
-            continue
+        source_contract = _source_contract(
+            member=member,
+            completed=completed,
+            confirmation=confirmation,
+            precommit=precommit,
+        )
         expected_arms = {arm["arm"]: arm for arm in pair["comparison_arms"]}
         arms: list[dict[str, Any]] = []
         predictions: dict[str, pd.Series] = {}
@@ -399,6 +456,7 @@ def _input_bundle(
                     expected=expected_arms[arm_name],
                     pair=pair,
                     precommit=precommit,
+                    source_contract=source_contract,
                     targets=targets,
                 )
                 arms.append(arm)
@@ -449,7 +507,7 @@ def _input_bundle(
         classification.append(
             {
                 "member": member,
-                "source_status": "completed",
+                "source_status": source_contract["kind"],
                 "batch_status": "complete",
                 "reason": None,
             }
@@ -474,7 +532,18 @@ def _input_bundle(
         },
         "input_bundle_sha256",
     )
-    validate_input_bundle(payload, precommit=precommit)
+    allowed_source_commits = {
+        record["member"]: next(
+            arm for arm in record["arms"] if arm["arm"] == "tripled"
+        )["git_commit"]
+        for record in collection
+        if record["status"] == "complete"
+    }
+    validate_input_bundle(
+        payload,
+        precommit=precommit,
+        allowed_source_commits=allowed_source_commits,
+    )
     return payload, augmented_predictions, classification
 
 
@@ -530,6 +599,7 @@ def _preflight(
     precommit: dict[str, Any],
     bundle: dict[str, Any],
     current_predictions: pd.DataFrame,
+    augmented_predictions: dict[str, pd.Series],
     recorded_at_utc: str,
 ) -> dict[str, Any]:
     pool_order = list(precommit["scope"]["pool_member_order"])
@@ -580,6 +650,21 @@ def _preflight(
         eligible_resolvers = [
             name for name in resolver_slots if eligibility[name]["forward_eligible"]
         ]
+        resolving_moves = []
+        for name in eligible_resolvers:
+            candidate = current_predictions.copy()
+            candidate[name] = augmented_predictions[name]
+            after = sorted(spearman_violations(candidate, pool_order))
+            resolving_moves.append(
+                {
+                    "member": name,
+                    "violations_after": [list(pair) for pair in after],
+                    "reaches_valid_full_oof_pool": not after,
+                }
+            )
+        reachable = any(
+            move["reaches_valid_full_oof_pool"] for move in resolving_moves
+        )
         item = {
             "left": left,
             "right": right,
@@ -587,11 +672,12 @@ def _preflight(
             "threshold": float(precommit["search_parameters"]["duplicate_spearman"]),
             "resolver_slots": resolver_slots,
             "eligible_resolvers": eligible_resolvers,
+            "resolving_moves": resolving_moves,
             "resolver_status": {name: eligibility[name] for name in resolver_slots},
-            "reachable_resolution": bool(eligible_resolvers),
+            "reachable_resolution": reachable,
         }
         violation_records.append(item)
-        if not eligible_resolvers:
+        if not reachable:
             unresolved.append(item)
     payload = self_hashed_payload(
         {
@@ -609,15 +695,372 @@ def _preflight(
             "unresolved_duplicate_violations": unresolved,
             "reachable_valid_proposal": not unresolved,
             "proof": (
-                "원자 교체는 자기 자리의 예측만 바꾼다. 현재 중복 위반의 두 자리 가운데 "
-                "검색 이동 자격이 있는 완결 결측 증강판이 하나도 없으므로 모든 도달 가능한 "
-                "상태가 같은 중복 위반을 보존한다. 따라서 전체 OOF 제안 풀 중복 불변식을 "
-                "만족하는 도달 가능한 상태가 없다."
+                "이슈 511에서 유효 판정된 exp131 교정 결측 증강판은 현재 exp131과 exp157의 "
+                "기존 중복 위반을 해소하면서 새 위반을 만들지 않는다. 따라서 현재 풀을 "
+                "점수 기준점으로 두고 첫 채택 이동부터 전체 OOF 중복 불변식을 만족하는 "
+                "정확 검색을 시작할 수 있다."
             ),
         },
         "preflight_sha256",
     )
     return payload
+
+
+def _allowed_source_commits(bundle: dict[str, Any]) -> dict[str, str]:
+    return {
+        record["member"]: next(
+            arm for arm in record["arms"] if arm["arm"] == "tripled"
+        )["git_commit"]
+        for record in bundle["collection"]
+        if record["status"] == "complete"
+    }
+
+
+def _evaluation_context(
+    *,
+    source_root: Path,
+    precommit: dict[str, Any],
+    current_predictions: pd.DataFrame,
+    augmented_predictions: dict[str, pd.Series],
+    targets: pd.DataFrame,
+    strategies: list[str],
+) -> tuple[InputContext, dict[int, str], dict[str, str]]:
+    folds_frame = pd.read_parquet(REPO_ROOT / precommit["inputs"]["folds"]["path"])
+    ids = current_predictions.index
+    _require(folds_frame[ID].tolist() == ids.tolist(), "현재 OOF와 분할 행 순서가 다르다.")
+    folds = pd.Series(folds_frame["fold"].to_numpy(), index=ids, name="fold")
+    labels = targets[TARGET].reindex(ids)
+    _require(not labels.isna().any(), "현재 OOF와 목표값 행이 다르다.")
+    bands = ensemble_module.missingness_bands(
+        source_root / "data/train.csv", source_root / "data/test.csv"
+    ).reindex(ids)
+    _require(not bands.isna().any(), "결측 개수 구간이 현재 OOF 행을 덮지 않는다.")
+
+    predictions = current_predictions.copy()
+    augmented_columns: dict[str, str] = {}
+    for member, prediction in augmented_predictions.items():
+        column = f"missingness_augmented:{member}"
+        predictions[column] = prediction.reindex(ids)
+        augmented_columns[member] = column
+    _require(
+        np.isfinite(predictions.to_numpy(dtype=np.float64)).all(),
+        "검색 예측 행렬에 유한하지 않은 값이 있다.",
+    )
+    ordinal_members = {
+        int(pair["ordinal"]): str(pair["slot"]) for pair in precommit["pairs"]
+    }
+    context = InputContext(
+        predictions=predictions,
+        labels=labels,
+        folds=folds,
+        missingness_bands=bands.astype(np.int8),
+        ledger={
+            "strategies": {"included": strategies},
+            "candidate_pool": {
+                "members": list(precommit["scope"]["pool_member_order"])
+            },
+        },
+        baseline={},
+        source_hashes={},
+        prediction_file_sha256="",
+        member_prediction_sha256={},
+    )
+    return context, ordinal_members, augmented_columns
+
+
+def _members_for_state(
+    state: tuple[int, ...],
+    *,
+    pool_order: list[str],
+    ordinal_members: dict[int, str],
+    augmented_columns: dict[str, str],
+) -> tuple[str, ...]:
+    selected = {ordinal_members[ordinal] for ordinal in state}
+    return tuple(
+        augmented_columns[member] if member in selected else member
+        for member in pool_order
+    )
+
+
+def _correlation_violations(
+    correlations: pd.DataFrame,
+    members: tuple[str, ...],
+    threshold: float,
+) -> tuple[tuple[str, str], ...]:
+    violations = []
+    for position, left in enumerate(members):
+        for right in members[position + 1 :]:
+            if float(correlations.loc[left, right]) >= threshold:
+                violations.append((left, right))
+    return tuple(violations)
+
+
+def _pool_score_payload(score: PoolScore) -> dict[str, Any]:
+    return {
+        "members": list(score.members),
+        "best_strategy": score.best_strategy,
+        "best_auc": score.best_auc,
+        "best_fold_auc": score.best_fold_auc,
+        "strategy_auc": score.strategy_auc,
+        "strategy_fold_auc": score.strategy_fold_auc,
+    }
+
+
+def _search_and_gates(
+    *,
+    source_root: Path,
+    precommit: dict[str, Any],
+    bundle: dict[str, Any],
+    preflight: dict[str, Any],
+    current_predictions: pd.DataFrame,
+    augmented_predictions: dict[str, pd.Series],
+    targets: pd.DataFrame,
+    jobs: int,
+    recorded_at_utc: str,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    _require(preflight["reachable_valid_proposal"], "유효 제안 풀에 도달할 수 없다.")
+    pool_order = list(precommit["scope"]["pool_member_order"])
+    search_strategy = str(precommit["search_parameters"]["strategy"])
+    search_context, ordinal_members, augmented_columns = _evaluation_context(
+        source_root=source_root,
+        precommit=precommit,
+        current_predictions=current_predictions,
+        augmented_predictions=augmented_predictions,
+        targets=targets,
+        strategies=[search_strategy],
+    )
+    pair_order = tuple(int(pair["ordinal"]) for pair in precommit["pairs"])
+    eligible = tuple(
+        int(pair["ordinal"])
+        for pair in precommit["pairs"]
+        if preflight["forward_eligibility"][pair["slot"]]["forward_eligible"]
+    )
+    threshold = float(precommit["search_parameters"]["duplicate_spearman"])
+    all_correlations = search_context.predictions.corr(method="spearman")
+    outer_correlations = {
+        fold: search_context.predictions.loc[
+            search_context.folds.to_numpy() != fold
+        ].corr(method="spearman")
+        for fold in precommit["search_parameters"]["outer_folds"]
+    }
+
+    def members(state: tuple[int, ...]) -> tuple[str, ...]:
+        return _members_for_state(
+            state,
+            pool_order=pool_order,
+            ordinal_members=ordinal_members,
+            augmented_columns=augmented_columns,
+        )
+
+    def run_search(
+        evaluator: StrategyEvaluator, excluded_fold: int | None
+    ) -> tuple[Any, tuple[tuple[str, str], ...]]:
+        correlations = (
+            all_correlations
+            if excluded_fold is None
+            else outer_correlations[excluded_fold]
+        )
+        baseline_members = members(())
+        baseline_violations = _correlation_violations(
+            correlations, baseline_members, threshold
+        )
+
+        def allowed(state: tuple[int, ...]) -> bool:
+            violations = _correlation_violations(correlations, members(state), threshold)
+            if excluded_fold is None:
+                return not violations
+            return set(violations) <= set(baseline_violations)
+
+        def score_many(states: tuple[tuple[int, ...], ...]) -> list[float]:
+            scores = evaluator.evaluate_many(
+                [(members(state), None) for state in states],
+                excluded_fold=excluded_fold,
+            )
+            return [score.best_auc for score in scores]
+
+        search = MaximumGainSearch(
+            pair_order=pair_order,
+            eligible=eligible,
+            score=lambda state: score_many((state,))[0],
+            score_many=score_many,
+            allowed=allowed,
+            allow_invalid_start=excluded_fold is None and bool(baseline_violations),
+        ).run()
+        return search, baseline_violations
+
+    with StrategyEvaluator(search_context, jobs) as evaluator:
+        full_search, full_baseline_violations = run_search(evaluator, None)
+        outer_searches = {}
+        outer_baseline_violations = {}
+        for fold in precommit["search_parameters"]["outer_folds"]:
+            result, violations = run_search(evaluator, int(fold))
+            outer_searches[str(fold)] = result
+            outer_baseline_violations[str(fold)] = violations
+        search_fits = evaluator.fits
+        search_arm_evaluations = evaluator.arm_evaluations
+
+    proposal_members = members(full_search.selected)
+    proposal_violations = _correlation_violations(
+        all_correlations, proposal_members, threshold
+    )
+    _require(not proposal_violations, "전체 OOF 검색 제안 풀이 중복 불변식을 어겼다.")
+    search_payload = self_hashed_payload(
+        {
+            "schema": "missingness-propagation-batch-v1/search/2",
+            "recorded_at_utc": recorded_at_utc,
+            "precommit_sha256": precommit["precommit_sha256"],
+            "input_bundle_sha256": bundle["input_bundle_sha256"],
+            "preflight_sha256": preflight["preflight_sha256"],
+            "strategy": search_strategy,
+            "eligible_ordinals": list(eligible),
+            "eligible_members": [ordinal_members[value] for value in eligible],
+            "full_oof": full_search.as_payload(),
+            "outer": {
+                fold: result.as_payload() for fold, result in outer_searches.items()
+            },
+            "baseline_duplicate_violations": {
+                "full_oof": [list(pair) for pair in full_baseline_violations],
+                "outer": {
+                    fold: [list(pair) for pair in violations]
+                    for fold, violations in outer_baseline_violations.items()
+                },
+            },
+            "proposal": {
+                "selected_ordinals": list(full_search.selected),
+                "selected_replacements": [
+                    ordinal_members[value] for value in full_search.selected
+                ],
+                "members": list(proposal_members),
+                "duplicate_violations": [list(pair) for pair in proposal_violations],
+            },
+            "execution": {
+                "jobs": jobs,
+                "fits": search_fits,
+                "arm_evaluations": search_arm_evaluations,
+            },
+        },
+        "search_sha256",
+    )
+
+    labels = search_context.labels.to_numpy(dtype=np.int8)
+    folds = search_context.folds.to_numpy(dtype=np.int8)
+    baseline_sealed = np.full(len(labels), np.nan, dtype=np.float64)
+    proposal_sealed = np.full(len(labels), np.nan, dtype=np.float64)
+    conditional_folds = {}
+    for fold in precommit["search_parameters"]["outer_folds"]:
+        fold = int(fold)
+        train_mask = folds != fold
+        test_mask = folds == fold
+        fold_proposal = members(outer_searches[str(fold)].selected)
+        fold_record = {}
+        for label, selected_members, target in (
+            ("current", members(()), baseline_sealed),
+            ("proposal", fold_proposal, proposal_sealed),
+        ):
+            combiner = ensemble_module.combiner_for_context(
+                search_strategy,
+                fold_of=search_context.folds,
+                band_of=search_context.missingness_bands,
+            )
+            fitted = combiner.fit(
+                search_context.predictions.loc[train_mask, list(selected_members)],
+                search_context.labels.loc[train_mask],
+            )
+            prediction = np.asarray(
+                fitted.predict(
+                    search_context.predictions.loc[test_mask, list(selected_members)]
+                ),
+                dtype=np.float64,
+            )
+            target[test_mask] = prediction
+            fold_record[label] = {
+                "members": list(selected_members),
+                "auc": float(roc_auc_score(labels[test_mask], prediction)),
+                "prediction_sha256": prediction_array_sha256(prediction),
+            }
+        conditional_folds[str(fold)] = fold_record
+    _require(
+        np.isfinite(baseline_sealed).all() and np.isfinite(proposal_sealed).all(),
+        "조건부 절차 예측이 전체 행을 덮지 않는다.",
+    )
+    baseline_conditional_auc = float(roc_auc_score(labels, baseline_sealed))
+    proposal_conditional_auc = float(roc_auc_score(labels, proposal_sealed))
+    conditional_delta = proposal_conditional_auc - baseline_conditional_auc
+    selected_sets = [set(result.selected) for result in outer_searches.values()]
+    conditional_payload = self_hashed_payload(
+        {
+            "schema": "missingness-propagation-batch-v1/conditional-gate/1",
+            "recorded_at_utc": recorded_at_utc,
+            "search_sha256": search_payload["search_sha256"],
+            "strategy": search_strategy,
+            "folds": conditional_folds,
+            "current": {
+                "auc": baseline_conditional_auc,
+                "prediction_sha256": prediction_array_sha256(baseline_sealed),
+            },
+            "proposal": {
+                "auc": proposal_conditional_auc,
+                "prediction_sha256": prediction_array_sha256(proposal_sealed),
+            },
+            "delta": conditional_delta,
+            "passed": conditional_delta > 0.0,
+            "selection_stability": [
+                {
+                    "ordinal": ordinal,
+                    "member": ordinal_members[ordinal],
+                    "selected_outer_fold_count": sum(
+                        ordinal in selected for selected in selected_sets
+                    ),
+                    "selected_in_full_oof_proposal": ordinal
+                    in set(full_search.selected),
+                }
+                for ordinal in eligible
+            ],
+        },
+        "conditional_gate_sha256",
+    )
+
+    direct_context, _, _ = _evaluation_context(
+        source_root=source_root,
+        precommit=precommit,
+        current_predictions=current_predictions,
+        augmented_predictions=augmented_predictions,
+        targets=targets,
+        strategies=list(ADOPTION_STRATEGIES),
+    )
+    with StrategyEvaluator(direct_context, jobs) as evaluator:
+        current_score, proposal_score = evaluator.evaluate_many(
+            [(members(()), None), (proposal_members, None)], excluded_fold=None
+        )
+        direct_fits = evaluator.fits
+    direct_delta = proposal_score.best_auc - current_score.best_auc
+    direct_payload = self_hashed_payload(
+        {
+            "schema": "missingness-propagation-batch-v1/direct-nested-gate/1",
+            "recorded_at_utc": recorded_at_utc,
+            "search_sha256": search_payload["search_sha256"],
+            "strategies": list(ADOPTION_STRATEGIES),
+            "current": _pool_score_payload(current_score),
+            "proposal": _pool_score_payload(proposal_score),
+            "best_strategy_delta": direct_delta,
+            "passed": direct_delta > 0.0,
+            "diagnostics": {
+                "fold_delta": {
+                    fold: proposal_score.best_fold_auc[fold]
+                    - current_score.best_fold_auc[fold]
+                    for fold in current_score.best_fold_auc
+                },
+                "outer_fold_wins": sum(
+                    proposal_score.best_fold_auc[fold]
+                    > current_score.best_fold_auc[fold]
+                    for fold in current_score.best_fold_auc
+                ),
+                "fits": direct_fits,
+            },
+        },
+        "direct_nested_gate_sha256",
+    )
+    return search_payload, conditional_payload, direct_payload
 
 
 def _judgment(
@@ -810,7 +1253,11 @@ def main() -> None:
     args = _args()
     output_root = args.output_root.resolve()
     precommit = _load_json(PRECOMMIT_PATH)
-    validate_precommit(precommit, REPO_ROOT)
+    validate_precommit(
+        precommit,
+        REPO_ROOT,
+        allow_contract_module_correction=True,
+    )
     if args.verify_only:
         _verify(output_root, precommit)
         print(f"verified {output_root}")
@@ -822,7 +1269,7 @@ def main() -> None:
     confirmation = _load_json(CONFIRMATION_PATH)
     targets = _targets(source_root)
     store = MlflowRunStore(_tracking_uri(source_root, args.tracking_uri))
-    bundle, _augmented_predictions, _classification = _input_bundle(
+    bundle, augmented_predictions, _classification = _input_bundle(
         precommit=precommit,
         confirmation=confirmation,
         store=store,
@@ -840,8 +1287,45 @@ def main() -> None:
         precommit=precommit,
         bundle=bundle,
         current_predictions=current_predictions,
+        augmented_predictions=augmented_predictions,
         recorded_at_utc=recorded_at_utc,
     )
+    if args.gates_only:
+        search, conditional, direct = _search_and_gates(
+            source_root=source_root,
+            precommit=precommit,
+            bundle=bundle,
+            preflight=preflight,
+            current_predictions=current_predictions,
+            augmented_predictions=augmented_predictions,
+            targets=targets,
+            jobs=args.jobs,
+            recorded_at_utc=recorded_at_utc,
+        )
+        output_root.mkdir(parents=True, exist_ok=True)
+        _write_json(output_root / INPUT_NAME, bundle)
+        _write_json(output_root / PREFLIGHT_NAME, preflight)
+        _write_json(output_root / SEARCH_NAME, search)
+        _write_json(output_root / CONDITIONAL_NAME, conditional)
+        _write_json(output_root / DIRECT_NAME, direct)
+        _write_manifest(output_root)
+        print(
+            json.dumps(
+                {
+                    "selected_replacements": search["proposal"][
+                        "selected_replacements"
+                    ],
+                    "full_oof_search_auc": search["full_oof"]["score"],
+                    "conditional_delta": conditional["delta"],
+                    "conditional_passed": conditional["passed"],
+                    "direct_delta": direct["best_strategy_delta"],
+                    "direct_passed": direct["passed"],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return
     judgment = _judgment(
         precommit=precommit,
         bundle=bundle,

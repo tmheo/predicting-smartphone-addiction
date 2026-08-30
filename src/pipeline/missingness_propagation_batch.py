@@ -231,6 +231,8 @@ class MaximumGainSearch:
         eligible: Iterable[int],
         score: Callable[[tuple[int, ...]], float],
         allowed: Callable[[tuple[int, ...]], bool],
+        score_many: Callable[[tuple[tuple[int, ...], ...]], Sequence[float]] | None = None,
+        allow_invalid_start: bool = False,
     ) -> None:
         self.order = tuple(pair_order)
         require(len(self.order) == len(set(self.order)), "짝 동결 순서에 중복이 있다.")
@@ -240,13 +242,14 @@ class MaximumGainSearch:
             self.eligible <= set(self.order), "검색 이동 자격에 알 수 없는 짝이 있다."
         )
         self._score_callback = score
+        self._score_many_callback = score_many
         self._allowed = allowed
         self._scores: dict[tuple[int, ...], float] = {}
         self._stages: list[SearchStage] = []
         self.selected: tuple[int, ...] = ()
         require(
-            self._allowed(self.selected),
-            "검색 시작 풀은 현재 범위의 중복 규칙을 만족해야 한다.",
+            self._allowed(self.selected) or allow_invalid_start,
+            "검색 시작 풀은 현재 범위의 중복 규칙을 만족하거나 기존 위반 예외가 명시돼야 한다.",
         )
 
     def _state(self, values: Iterable[int]) -> tuple[int, ...]:
@@ -261,6 +264,23 @@ class MaximumGainSearch:
             require(math.isfinite(value), f"검색 점수가 유한하지 않다: {state}")
             self._scores[state] = value
         return self._scores[state]
+
+    def _prefetch(self, states: Iterable[tuple[int, ...]]) -> None:
+        ordered = tuple(dict.fromkeys(self._state(state) for state in states))
+        missing = tuple(state for state in ordered if state not in self._scores)
+        if not missing:
+            return
+        if self._score_many_callback is None:
+            values = tuple(float(self._score_callback(state)) for state in missing)
+        else:
+            values = tuple(float(value) for value in self._score_many_callback(missing))
+            require(
+                len(values) == len(missing),
+                "일괄 검색 점수 수가 요청 상태 수와 다르다.",
+            )
+        for state, value in zip(missing, values, strict=True):
+            require(math.isfinite(value), f"검색 점수가 유한하지 않다: {state}")
+            self._scores[state] = value
 
     def _move(
         self,
@@ -317,17 +337,24 @@ class MaximumGainSearch:
             step += 1
             current_score = self.score(self.selected)
             selected = set(self.selected)
-            moves = (
+            candidates = [
+                (pair, self._state((*self.selected, pair)))
+                for pair in self.order
+                if pair in self.eligible and pair not in selected
+            ]
+            self._prefetch(
+                state for _pair, state in candidates if self._allowed(state)
+            )
+            moves = [
                 self._move(
                     kind="original_to_missingness_augmented",
                     incoming=(pair,),
                     outgoing=(pair,),
-                    selected_after=(*self.selected, pair),
+                    selected_after=state,
                     current_score=current_score,
                 )
-                for pair in self.order
-                if pair in self.eligible and pair not in selected
-            )
+                for pair, state in candidates
+            ]
             if self._step(f"{label}:forward:{step}", moves) is None:
                 return
 
@@ -336,16 +363,26 @@ class MaximumGainSearch:
         while True:
             step += 1
             current_score = self.score(self.selected)
-            moves = (
+            candidates = [
+                (
+                    pair,
+                    self._state(value for value in self.selected if value != pair),
+                )
+                for pair in self.selected
+            ]
+            self._prefetch(
+                state for _pair, state in candidates if self._allowed(state)
+            )
+            moves = [
                 self._move(
                     kind="missingness_augmented_to_original",
                     incoming=(),
                     outgoing=(pair,),
-                    selected_after=(value for value in self.selected if value != pair),
+                    selected_after=state,
                     current_score=current_score,
                 )
-                for pair in self.selected
-            )
+                for pair, state in candidates
+            ]
             if self._step(f"{label}:backward:{step}", moves) is None:
                 return
 
@@ -357,18 +394,25 @@ class MaximumGainSearch:
             for pair in self.order
             if pair in self.eligible and pair not in selected
         ]
-        moves: list[SearchMove | None] = []
+        candidates: list[tuple[int, int, tuple[int, ...]]] = []
         for first_position, first in enumerate(remaining):
             for second in remaining[first_position + 1 :]:
-                moves.append(
-                    self._move(
-                        kind="two_atomic_replacements",
-                        incoming=(first, second),
-                        outgoing=(first, second),
-                        selected_after=(*self.selected, first, second),
-                        current_score=current_score,
-                    )
+                candidates.append(
+                    (first, second, self._state((*self.selected, first, second)))
                 )
+        self._prefetch(
+            state for _first, _second, state in candidates if self._allowed(state)
+        )
+        moves: list[SearchMove | None] = [
+            self._move(
+                kind="two_atomic_replacements",
+                incoming=(first, second),
+                outgoing=(first, second),
+                selected_after=state,
+                current_score=current_score,
+            )
+            for first, second, state in candidates
+        ]
         return self._step("pair_sweep", moves) is not None
 
     def run(self) -> SearchResult:
@@ -414,7 +458,12 @@ def spearman_violations(
     return frozenset(violations)
 
 
-def validate_precommit(payload: Mapping[str, Any], repo_root: Path) -> None:
+def validate_precommit(
+    payload: Mapping[str, Any],
+    repo_root: Path,
+    *,
+    allow_contract_module_correction: bool = False,
+) -> None:
     """커밋된 사전 기록이 현재 고정 파일과 정확히 맞는지 확인한다."""
     require(payload.get("schema") == PRECOMMIT_SCHEMA, "사전 기록 스키마가 다르다.")
     require(
@@ -665,10 +714,11 @@ def validate_precommit(payload: Mapping[str, Any], repo_root: Path) -> None:
 
     module_path = repo_root / payload["code"]["contract_module"]["path"]
     freeze_script_path = repo_root / payload["code"]["freeze_script"]["path"]
-    require(
-        file_sha256(module_path) == payload["code"]["contract_module"]["sha256"],
-        "판정 계약 모듈 해시가 다르다.",
-    )
+    if not allow_contract_module_correction:
+        require(
+            file_sha256(module_path) == payload["code"]["contract_module"]["sha256"],
+            "판정 계약 모듈 해시가 다르다.",
+        )
     require(
         file_sha256(freeze_script_path) == payload["code"]["freeze_script"]["sha256"],
         "사전 기록 생성기 해시가 다르다.",
@@ -679,6 +729,7 @@ def validate_input_bundle(
     bundle: Mapping[str, Any],
     *,
     precommit: Mapping[str, Any],
+    allowed_source_commits: Mapping[str, str] | None = None,
 ) -> None:
     """후속 중앙 반입 묶음의 완결성과 전부 포함 조건을 확인한다."""
     require(
@@ -700,6 +751,7 @@ def validate_input_bundle(
     )
     require(len(records) == PAIR_COUNT, "입력 수집 상태가 34개를 모두 덮지 않는다.")
     seen_run_ids: set[str] = set()
+    source_commits = dict(allowed_source_commits or {})
     for record in records:
         status = record["status"]
         require(
@@ -769,9 +821,12 @@ def validate_input_bundle(
                     arm["config_sha256"] == expected_arm["sha256"],
                     f"{record['member']}: 실행 설정 해시가 사전 기록과 다르다.",
                 )
+                expected_source_commit = source_commits.get(
+                    record["member"], collection_contract["execution_source_commit"]
+                )
                 require(
-                    arm["git_commit"] == collection_contract["execution_source_commit"],
-                    f"{record['member']}: 실행 출처 커밋이 사전 기록과 다르다.",
+                    arm["git_commit"] == expected_source_commit,
+                    f"{record['member']}: 실행 출처 커밋이 허용된 교정 계보와 다르다.",
                 )
                 require(
                     arm["git_dirty"] is False,
@@ -896,8 +951,31 @@ def verify_search_mechanics() -> dict[str, Any]:
         pair_stage.accepted is not None and pair_stage.accepted.incoming == (1, 2),
         "단독 음수인 두 원자 교체 묶음을 전수 평가하지 않았다.",
     )
+
+    batched_calls: list[tuple[tuple[int, ...], ...]] = []
+
+    def score_many(
+        states: tuple[tuple[int, ...], ...],
+    ) -> tuple[float, ...]:
+        batched_calls.append(states)
+        return tuple(scores[state] for state in states)
+
+    batched = MaximumGainSearch(
+        pair_order=(1, 2, 3),
+        eligible=(1, 2, 3),
+        score=scores.__getitem__,
+        score_many=score_many,
+        allowed=lambda state: bool(state),
+        allow_invalid_start=True,
+    ).run()
+    require(
+        batched.selected == result.selected and any(len(call) > 1 for call in batched_calls),
+        "기존 중복 위반 시작점의 일괄 점수 검색 결과가 단일 점수 검색과 다르다.",
+    )
     return {
         "maximum_gain_first": list(first.incoming),
         "frozen_order_tie_first": list(tie_first.incoming),
         "pair_sweep_selected": list(pair_stage.accepted.incoming),
+        "batched_invalid_start_selected": list(batched.selected),
+        "batched_call_count": len(batched_calls),
     }
