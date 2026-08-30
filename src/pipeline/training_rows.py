@@ -20,6 +20,7 @@ from .fold_fit_reuse import canonical_json_bytes, series_value_document
 
 EVIDENCE_SCHEMA_VERSION = 1
 EVIDENCE_NAME = "training_row_evidence.json"
+FULL_DATA_OUTER_FOLD = -1
 
 # 피처가 아니라 변환 문맥이다.
 # 목표값 참조 fold-fit 제공자만 이 열을 읽어 복제본에 부모의 내부 분할을 물려준다.
@@ -218,6 +219,31 @@ def build_training_rows(
         frame=frame,
         parent_source_index=parent_source_index,
         original_row_count=len(source),
+        evidence=evidence,
+    )
+
+
+def build_full_data_training_rows(
+    source: pd.DataFrame,
+    raw_columns: list[str],
+    config: TrainingRowsConfig,
+    *,
+    seed: int,
+) -> TrainingRowBatch:
+    """전체 자료 재학습용 학습 행을 고정 좌표로 결정적으로 만든다."""
+    batch = build_training_rows(
+        source,
+        raw_columns,
+        config,
+        seed=seed,
+        outer_fold=FULL_DATA_OUTER_FOLD,
+    )
+    evidence = dict(batch.evidence)
+    evidence["coordinate_scope"] = "full_data"
+    return TrainingRowBatch(
+        frame=batch.frame,
+        parent_source_index=batch.parent_source_index,
+        original_row_count=batch.original_row_count,
         evidence=evidence,
     )
 

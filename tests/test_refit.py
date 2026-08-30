@@ -30,7 +30,13 @@ import pytest
 import yaml
 
 from pipeline import data, refit, refit_plan
-from pipeline.config import DataConfig, ExperimentConfig, FeatureConfig, ModelConfig
+from pipeline.config import (
+    DataConfig,
+    ExperimentConfig,
+    FeatureConfig,
+    ModelConfig,
+    TrainingRowsConfig,
+)
 from pipeline.ledger import POOL_PATH, Pool
 from pipeline.refit import mix_member_predictions
 from pipeline.refit_plan import (
@@ -507,6 +513,62 @@ def test_run_member_can_fit_seeds_independently_before_finalizing(
     assert (final.parent / "manifest.json").is_file()
     averaged = pd.read_parquet(final)
     assert averaged["pred"].to_numpy() == pytest.approx([0.43, 0.43])
+
+
+def test_run_member_refits_on_full_data_missingness_replicas(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    plan = executable_plan_of_one(tmp_path, "shrunk_rank_logit_logistic")
+    member = plan.member("fake")
+    raw_train = TOY_TRAIN.copy()
+    raw_test = TOY_TEST.copy()
+    for index in range(10):
+        raw_train[f"raw_{index}"] = float(index)
+        raw_test[f"raw_{index}"] = float(index)
+    config = toy_config(member.config_path, member.config, [42])
+    config = ExperimentConfig(
+        **{
+            **config.__dict__,
+            "training_rows": TrainingRowsConfig(
+                arm="missingness_augmented",
+                replica_count=2,
+                observed_cell_mask_probability=1.0,
+            ),
+        }
+    )
+    fitted_rows = []
+
+    class AugmentedFakeAdapter(FakeAdapter):
+        def fit_full(self, X, y, training_budget, initial_score=None) -> None:
+            fitted_rows.append((len(X), len(y)))
+            super().fit_full(X, y, training_budget, initial_score)
+
+    monkeypatch.setattr(refit, "load_config", lambda path, stage: config)
+    monkeypatch.setattr(
+        refit.data,
+        "load_csv",
+        lambda path: raw_train.copy() if str(path) == "train.csv" else raw_test.copy(),
+    )
+    monkeypatch.setattr(refit.data, "file_sha256", lambda path: f"hash:{path}")
+    monkeypatch.setattr(
+        refit.tracking,
+        "git_state",
+        lambda: {"git_commit": "commit-1", "git_dirty": "False"},
+    )
+    fits = []
+    monkeypatch.setattr(
+        refit.model,
+        "create",
+        lambda model_cfg, seed: AugmentedFakeAdapter(seed, fits),
+    )
+
+    result = refit.run_member(plan, member, tmp_path / "out")
+
+    assert fitted_rows == [(len(raw_train) * 3, len(raw_train) * 3)]
+    record = json.loads((result.parent / "test_pred_seed_42.json").read_text())
+    assert record["training_rows"]["coordinate_scope"] == "full_data"
+    assert record["training_rows"]["training_row_count"] == len(raw_train) * 3
+    assert record["training_rows"]["added_missing_cells"] > 0
 
 
 # 조립

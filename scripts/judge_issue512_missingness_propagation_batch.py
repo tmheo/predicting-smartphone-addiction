@@ -9,9 +9,11 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import io
 import json
 import subprocess
+import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -22,7 +24,9 @@ import yaml
 from sklearn.metrics import roc_auc_score
 
 from pipeline import ensemble as ensemble_module
+from pipeline import refit as refit_module
 from pipeline.data import ID, TARGET, file_sha256
+from pipeline.ledger import Pool
 from pipeline.missingness_propagation_batch import (
     ADOPTION_STRATEGIES,
     INPUT_BUNDLE_SCHEMA,
@@ -36,7 +40,9 @@ from pipeline.missingness_propagation_batch import (
 )
 from pipeline.pool_audit import prediction_array_sha256
 from pipeline.pool_rereview import InputContext, PoolScore, StrategyEvaluator
+from pipeline.refit_plan import RefitPlan
 from pipeline.runs import ArtifactNotFound, MlflowRunStore
+from pipeline.training_length import derive_refit_budgets, observe_training_length
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PRECOMMIT_PATH = (
@@ -56,6 +62,7 @@ SEARCH_NAME = "search.json"
 SCORE_CACHE_NAME = "search-score-cache.json"
 CONDITIONAL_NAME = "conditional-gate.json"
 DIRECT_NAME = "direct-nested-gate.json"
+SELECTION_NAME = "selection-evidence.json"
 REFIT_REHEARSAL_NAME = "full-refit-rehearsal.json"
 JUDGMENT_NAME = "judgment.json"
 REPORT_NAME = "report.md"
@@ -135,6 +142,20 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
 def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     _write_json(temporary, payload)
+    temporary.replace(path)
+
+
+def _write_yaml(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False, width=100),
+        encoding="utf-8",
+    )
+
+
+def _write_yaml_atomic(path: Path, payload: dict[str, Any]) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    _write_yaml(temporary, payload)
     temporary.replace(path)
 
 
@@ -980,6 +1001,20 @@ def _search_and_gates(
         search_arm_evaluations = evaluator.arm_evaluations
 
     proposal_members = members(full_search.selected)
+    selected_slots = {ordinal_members[value] for value in full_search.selected}
+    formal_member_by_slot = {
+        record["member"]: next(
+            arm["experiment"]
+            for arm in record["arms"]
+            if arm["arm"] == "missingness_augmented"
+        )
+        for record in bundle["collection"]
+        if record["status"] == "complete"
+    }
+    formal_proposal_members = [
+        formal_member_by_slot[member] if member in selected_slots else member
+        for member in pool_order
+    ]
     proposal_violations = _correlation_violations(
         all_correlations, proposal_members, threshold
     )
@@ -1011,6 +1046,7 @@ def _search_and_gates(
                     ordinal_members[value] for value in full_search.selected
                 ],
                 "members": list(proposal_members),
+                "formal_members": formal_proposal_members,
                 "duplicate_violations": [list(pair) for pair in proposal_violations],
             },
             "execution": {
@@ -1019,7 +1055,7 @@ def _search_and_gates(
                 "fits": search_fits,
                 "arm_evaluations": search_arm_evaluations,
                 "score_cache": {
-                    "path": str(score_cache_path),
+                    "path": SCORE_CACHE_NAME,
                     "sha256": score_cache["score_cache_sha256"],
                     "hits": cache_hits,
                     "misses": cache_misses,
@@ -1153,28 +1189,531 @@ def _search_and_gates(
     return search_payload, conditional_payload, direct_payload
 
 
+def _selection_evidence(
+    *,
+    precommit: dict[str, Any],
+    bundle: dict[str, Any],
+    preflight: dict[str, Any],
+    search: dict[str, Any],
+    conditional: dict[str, Any],
+    direct: dict[str, Any],
+    recorded_at_utc: str,
+) -> dict[str, Any]:
+    _require(conditional["passed"], "조건부 절차 관문을 통과하지 못했다.")
+    _require(direct["passed"], "직접 중첩 관문을 통과하지 못했다.")
+    return self_hashed_payload(
+        {
+            "schema": "missingness-propagation-batch-v1/selection-evidence/1",
+            "recorded_at_utc": recorded_at_utc,
+            "issue": {"number": 512, "url": ISSUE_URL},
+            "precommit_sha256": precommit["precommit_sha256"],
+            "input_bundle_sha256": bundle["input_bundle_sha256"],
+            "preflight_sha256": preflight["preflight_sha256"],
+            "search_sha256": search["search_sha256"],
+            "conditional_gate_sha256": conditional["conditional_gate_sha256"],
+            "direct_nested_gate_sha256": direct["direct_nested_gate_sha256"],
+            "selected_ordinals": search["proposal"]["selected_ordinals"],
+            "selected_replacements": search["proposal"]["selected_replacements"],
+            "proposal_members": search["proposal"]["formal_members"],
+            "public_score_used": False,
+        },
+        "selection_evidence_sha256",
+    )
+
+
+def _proposal_pool_document(
+    *,
+    precommit: dict[str, Any],
+    bundle: dict[str, Any],
+    pool: dict[str, Any],
+    search: dict[str, Any],
+    conditional: dict[str, Any],
+    direct: dict[str, Any],
+    selection: dict[str, Any],
+    current_predictions: pd.DataFrame,
+    augmented_predictions: dict[str, pd.Series],
+    score_cache: dict[str, Any],
+) -> dict[str, Any]:
+    proposal = copy.deepcopy(pool)
+    pool_order = list(precommit["scope"]["pool_member_order"])
+    selected = set(search["proposal"]["selected_ordinals"])
+    pair_by_ordinal = {int(pair["ordinal"]): pair for pair in precommit["pairs"]}
+    complete_by_member = {
+        record["member"]: record
+        for record in bundle["collection"]
+        if record["status"] == "complete"
+    }
+    state = tuple(sorted(selected))
+    state_key = ",".join(str(value) for value in state)
+    full_scores = score_cache["scores"]["full_oof"]
+    _require(
+        abs(float(full_scores[state_key]) - float(search["full_oof"]["score"]))
+        <= 1e-15,
+        "제안 풀 점수가 정확 검색 이어쓰기 기록과 다르다.",
+    )
+
+    selected_slots: dict[str, dict[str, Any]] = {}
+    for ordinal in sorted(selected):
+        pair = pair_by_ordinal[ordinal]
+        slot = pair["slot"]
+        collection = complete_by_member[slot]
+        augmented = next(
+            arm for arm in collection["arms"] if arm["arm"] == "missingness_augmented"
+        )
+        expected = next(
+            arm
+            for arm in pair["comparison_arms"]
+            if arm["arm"] == "missingness_augmented"
+        )
+        _require(
+            augmented["experiment"] == expected["name"],
+            f"{slot}: 결측 증강 실행 이름이 사전 기록과 다르다.",
+        )
+        selected_slots[slot] = {
+            "ordinal": ordinal,
+            "augmented": augmented,
+            "expected": expected,
+        }
+
+    proposal_series: dict[str, pd.Series] = {}
+    proposal_run_ids: dict[str, str] = {}
+    for position, entry in enumerate(proposal["members"]):
+        slot = pool_order[position]
+        selected_record = selected_slots.get(slot)
+        if selected_record is None:
+            proposal_series[entry["config"]] = current_predictions[slot]
+            proposal_run_ids[entry["config"]] = entry["run_id"]
+            continue
+        augmented = selected_record["augmented"]
+        new_name = augmented["experiment"]
+        entry["run_id"] = augmented["run_id"]
+        entry["config"] = new_name
+        entry["oof_auc"] = augmented["oof_auc"]
+        entry["seeds"] = ",".join(str(seed) for seed in augmented["seeds"])
+        entry["entered_at"] = "2026-08-30"
+        without = tuple(value for value in state if value != selected_record["ordinal"])
+        without_key = ",".join(str(value) for value in without)
+        _require(
+            without_key in full_scores,
+            f"{slot}: 제안 풀 기여를 계산할 역방향 검색 점수가 없다.",
+        )
+        entry["reason"] = (
+            "이슈 512: 교정된 24짝의 결정적 최대 상승 검색과 동결 OOF 조건부 절차 및 "
+            "직접 중첩 관문을 통과한 원자 교체"
+        )
+        entry["evidence"] = {
+            "champion_run_id": precommit["search_parameters"]["champion"]["run_id"],
+            "champion_oof_auc": precommit["search_parameters"]["champion"]["oof_auc"],
+            "floor_margin": float(augmented["oof_auc"])
+            - float(
+                precommit["search_parameters"][
+                    "missingness_augmented_entry_threshold"
+                ]
+            ),
+            "nearest_run_id": None,
+            "nearest_spearman": None,
+            "ensemble_auc_with": float(search["full_oof"]["score"]),
+            "ensemble_auc_without": float(full_scores[without_key]),
+            "contribution": float(search["full_oof"]["score"])
+            - float(full_scores[without_key]),
+        }
+        entry["judgment"] = {
+            "judgment_id": "issue512-missingness-propagation-batch-selection",
+            "contract_version": "missingness-propagation-batch-v1",
+            "path": str((DEFAULT_OUTPUT_ROOT / SELECTION_NAME).relative_to(REPO_ROOT)),
+            "sha256": selection["selection_evidence_sha256"],
+        }
+        proposal_series[new_name] = augmented_predictions[slot]
+        proposal_run_ids[new_name] = augmented["run_id"]
+
+    proposal_matrix = pd.DataFrame(proposal_series, index=current_predictions.index)
+    correlations = proposal_matrix.corr(method="spearman")
+    for entry in proposal["members"]:
+        if "judgment" not in entry or entry["judgment"].get("judgment_id") != (
+            "issue512-missingness-propagation-batch-selection"
+        ):
+            continue
+        name = entry["config"]
+        neighbors = correlations[name].drop(index=name)
+        nearest_name = str(neighbors.idxmax())
+        entry["evidence"]["nearest_run_id"] = proposal_run_ids[nearest_name]
+        entry["evidence"]["nearest_spearman"] = float(neighbors.loc[nearest_name])
+
+    _require(
+        [entry["config"] for entry in proposal["members"]]
+        == search["proposal"]["formal_members"],
+        "공식화 후보 풀 순서가 검색 제안과 다르다.",
+    )
+    _require(
+        conditional["passed"] and direct["passed"],
+        "채택 관문을 모두 통과하지 않은 제안을 후보 풀로 만들 수 없다.",
+    )
+    return proposal
+
+
+def _paired_lengths_from_diagnostics(
+    store: MlflowRunStore,
+    run_id: str,
+    *,
+    expected_member: str,
+    expected_model_kind: str,
+) -> dict[tuple[int, int, int | None], int]:
+    entries = json.loads(store.artifact_bytes_of(run_id, "model_training_diagnostics.json"))
+    _require(isinstance(entries, list) and len(entries) == 15, f"{run_id}: 학습 길이 진단이 15개가 아니다.")
+    coordinates: dict[tuple[int, int, int | None], int] = {}
+    for entry in entries:
+        evidence = entry.get("training_length_evidence")
+        _require(isinstance(evidence, dict), f"{run_id}: 짝비교 학습 길이 진단이 없다.")
+        _require(
+            evidence.get("contract") == "paired-training-length-v1"
+            and evidence.get("member") == expected_member
+            and evidence.get("model_kind") == expected_model_kind,
+            f"{run_id}: 짝비교 학습 길이 계보가 다르다.",
+        )
+        values = evidence.get("observed_training_lengths")
+        if values is None:
+            continue
+        _require(isinstance(values, list) and values, f"{run_id}: 관측 학습 길이가 비었다.")
+        inner_coordinates = [None] if len(values) == 1 else list(range(len(values)))
+        for inner_member, value in zip(inner_coordinates, values, strict=True):
+            coordinate = (
+                int(evidence["seed"]),
+                int(evidence["outer_fold"]),
+                inner_member,
+            )
+            _require(coordinate not in coordinates, f"{run_id}: 학습 길이 좌표가 중복된다.")
+            coordinates[coordinate] = int(value)
+    return coordinates
+
+
+def _proposal_refit_plan_document(
+    *,
+    precommit: dict[str, Any],
+    bundle: dict[str, Any],
+    search: dict[str, Any],
+    store: MlflowRunStore,
+    proposal_pool_sha256: str,
+) -> dict[str, Any]:
+    proposal = copy.deepcopy(_load_yaml(REFIT_PLAN_PATH))
+    proposal["source_pool_sha256"] = proposal_pool_sha256
+    pair_by_ordinal = {int(pair["ordinal"]): pair for pair in precommit["pairs"]}
+    complete_by_member = {
+        record["member"]: record
+        for record in bundle["collection"]
+        if record["status"] == "complete"
+    }
+    current_pool = _load_yaml(POOL_PATH)
+    plan_by_name = {entry["config"]: entry for entry in proposal["members"]}
+    for position, pool_member in enumerate(current_pool["members"]):
+        if pool_member["config"] in plan_by_name:
+            continue
+        entry = _structured_refit_plan_member(store, pool_member)
+        proposal["members"].insert(position, entry)
+        plan_by_name[entry["config"]] = entry
+    for ordinal in search["proposal"]["selected_ordinals"]:
+        pair = pair_by_ordinal[int(ordinal)]
+        slot = pair["slot"]
+        current = plan_by_name[slot]
+        collection = complete_by_member[slot]
+        augmented = next(
+            arm for arm in collection["arms"] if arm["arm"] == "missingness_augmented"
+        )
+        expected = next(
+            arm
+            for arm in pair["comparison_arms"]
+            if arm["arm"] == "missingness_augmented"
+        )
+        model_kind = str(current["training_length_evidence"]["model_family"])
+        paired = _paired_lengths_from_diagnostics(
+            store,
+            augmented["run_id"],
+            expected_member=slot,
+            expected_model_kind=model_kind,
+        )
+        expected_lengths = {
+            (
+                int(observation["seed"]),
+                int(observation["outer_fold"]),
+                observation["inner_member"],
+            ): int(observation["observed_training_length"])
+            for observation in current["training_length_evidence"]["observations"]
+        }
+        _require(
+            paired == expected_lengths,
+            f"{slot}: 결측 증강 실행이 물려받은 학습 길이가 현재 재학습 근거와 다르다.",
+        )
+        current["config"] = augmented["experiment"]
+        current["config_path"] = expected["path"]
+        current["lineage"] = {
+            "source_run_id": augmented["run_id"],
+            "source_git_commit": augmented["git_commit"],
+            "source_config_path": expected["path"],
+            "source_config_sha256": augmented["config_sha256"],
+            "evidence_artifact_path": "model_training_diagnostics.json",
+            "evidence_artifact_sha256": store.artifact_sha256_of(
+                augmented["run_id"], "model_training_diagnostics.json"
+            ),
+        }
+    _require(
+        len(proposal["members"]) == len(current_pool["members"]),
+        "제안 전체 자료 재학습 계획의 구성원 수가 후보 풀과 다르다.",
+    )
+    return proposal
+
+
+def _structured_refit_plan_member(
+    store: MlflowRunStore,
+    pool_member: dict[str, Any],
+) -> dict[str, Any]:
+    name = str(pool_member["config"])
+    run_id = str(pool_member["run_id"])
+    config_path = Path("configs") / f"{name}.yaml"
+    _require(config_path.is_file(), f"{name}: 전체 자료 재학습 설정 파일이 없다.")
+    artifact_name = "model_training_diagnostics.json"
+    entries = json.loads(store.artifact_bytes_of(run_id, artifact_name))
+    _require(isinstance(entries, list) and entries, f"{name}: 학습 길이 진단이 없다.")
+    observations: list[dict[str, Any]] = []
+    observed = []
+    families: set[str] = set()
+    converters: set[str] = set()
+    for entry in entries:
+        evidence = entry.get("training_length_evidence")
+        _require(isinstance(evidence, dict), f"{name}: 구조화 학습 길이 근거가 없다.")
+        families.add(str(evidence["model_family"]))
+        converters.add(str(evidence["converter"]))
+        for item in evidence["observations"]:
+            record = {
+                key: item[key]
+                for key in (
+                    "seed",
+                    "outer_fold",
+                    "inner_member",
+                    "raw_field",
+                    "raw_value",
+                    "raw_meaning",
+                    "observed_training_length",
+                )
+            }
+            observations.append(record)
+            observed.append(
+                observe_training_length(
+                    seed=int(record["seed"]),
+                    outer_fold=int(record["outer_fold"]),
+                    inner_member=record["inner_member"],
+                    raw_field=str(record["raw_field"]),
+                    raw_value=int(record["raw_value"]),
+                    raw_meaning=str(record["raw_meaning"]),
+                )
+            )
+    _require(len(families) == 1 and len(converters) == 1, f"{name}: 학습 길이 규약이 하나가 아니다.")
+    derivation = derive_refit_budgets(observed)
+    facts = store.facts_of(run_id)
+    return {
+        "config": name,
+        "config_path": str(config_path),
+        "lineage": {
+            "source_run_id": run_id,
+            "source_git_commit": facts.tags["git_commit"],
+            "source_config_path": str(config_path),
+            "source_config_sha256": store.artifact_sha256_of(run_id, config_path.name),
+            "evidence_artifact_path": artifact_name,
+            "evidence_artifact_sha256": store.artifact_sha256_of(run_id, artifact_name),
+        },
+        "training_length_evidence": {
+            "status": "confirmed",
+            "model_family": next(iter(families)),
+            "converter": next(iter(converters)),
+            "observations": observations,
+        },
+        "refit_budget_derivation": {
+            "statistic": derivation.policy.statistic,
+            "multiplier": derivation.policy.multiplier,
+            "rounding": derivation.policy.rounding,
+            "seeds": [
+                {
+                    "seed": seed.seed,
+                    "observed_lengths": list(seed.observed_lengths),
+                    "median": seed.median,
+                    "scaled": seed.scaled,
+                    "budget": seed.budget,
+                }
+                for seed in derivation.seeds
+            ],
+        },
+    }
+
+
+def _refit_rehearsal(
+    *,
+    source_root: Path,
+    precommit: dict[str, Any],
+    search: dict[str, Any],
+    selection: dict[str, Any],
+    proposal_pool: dict[str, Any],
+    proposal_plan: dict[str, Any],
+    store: MlflowRunStore,
+    recorded_at_utc: str,
+) -> dict[str, Any]:
+    selected_ordinals = set(search["proposal"]["selected_ordinals"])
+    selected_names = {
+        next(
+            arm["name"]
+            for arm in pair["comparison_arms"]
+            if arm["arm"] == "missingness_augmented"
+        )
+        for pair in precommit["pairs"]
+        if int(pair["ordinal"]) in selected_ordinals
+    }
+    results: list[dict[str, Any]] = []
+    with tempfile.TemporaryDirectory(prefix="issue512-refit-rehearsal-") as directory:
+        root = Path(directory)
+        pool_path = root / "pool.yaml"
+        plan_path = root / "full-refit-plan.yaml"
+        output = root / "predictions"
+        _write_yaml(pool_path, proposal_pool)
+        _write_yaml(plan_path, proposal_plan)
+        proposal_pool_sha256 = file_sha256(pool_path)
+        _require(
+            proposal_plan["source_pool_sha256"] == proposal_pool_sha256,
+            "재학습 예행 계획이 다른 후보 풀 해시를 가리킨다.",
+        )
+        executable = RefitPlan.load(plan_path).validate_for_refit(
+            store=store,
+            pool=Pool.load(pool_path),
+            pool_sha256=proposal_pool_sha256,
+        )
+        for member in executable.members:
+            if member.config not in selected_names:
+                continue
+            seed = next(iter(member.budgets))
+            prediction_path = refit_module.run_member(
+                executable,
+                member,
+                output,
+                seeds=(seed,),
+                finalize=False,
+                data_root=source_root,
+            )
+            record_path = prediction_path.with_suffix(".json")
+            record = _load_json(record_path)
+            frame = pd.read_parquet(prediction_path)
+            _require(list(frame.columns) == [ID, "pred"], f"{member.config}: 시험 예측 열이 다르다.")
+            prediction = frame["pred"].to_numpy(dtype=np.float64)
+            _require(np.isfinite(prediction).all(), f"{member.config}: 시험 예측이 유한하지 않다.")
+            _require(
+                record["prediction_sha256"] == prediction_array_sha256(prediction),
+                f"{member.config}: 재학습 예행 예측 해시가 다르다.",
+            )
+            _require(
+                record["training_rows"]["coordinate_scope"] == "full_data"
+                and record["training_rows"]["assertions"]["replicas_excluded_from_state_fit"],
+                f"{member.config}: 전체 자료 학습 행 상태 경계가 다르다.",
+            )
+            results.append(
+                {
+                    "config": member.config,
+                    "seed": seed,
+                    "training_budget": member.budgets[seed],
+                    "member_entry_sha256": member.entry_sha256,
+                    "record_sha256": file_sha256(record_path),
+                    "prediction_sha256": record["prediction_sha256"],
+                    "prediction_rows": len(frame),
+                    "training_row_count": record["training_rows"]["training_row_count"],
+                    "state_fit_row_count": record["training_rows"]["state_fit_row_count"],
+                    "passed": True,
+                }
+            )
+    _require(
+        {result["config"] for result in results} == selected_names,
+        "새 결측 증강 구성원 전체의 재학습 예행이 끝나지 않았다.",
+    )
+    return self_hashed_payload(
+        {
+            "schema": "missingness-propagation-batch-v1/full-refit-rehearsal/1",
+            "recorded_at_utc": recorded_at_utc,
+            "selection_evidence_sha256": selection["selection_evidence_sha256"],
+            "proposal_pool_sha256": proposal_plan["source_pool_sha256"],
+            "selected_members": sorted(selected_names),
+            "results": results,
+            "passed": all(result["passed"] for result in results),
+        },
+        "full_refit_rehearsal_sha256",
+    )
+
+
+def _formalize_ledgers(
+    *,
+    proposal_pool: dict[str, Any],
+    proposal_plan: dict[str, Any],
+) -> None:
+    pool_before = POOL_PATH.read_bytes()
+    plan_before = REFIT_PLAN_PATH.read_bytes()
+    pool_temporary = POOL_PATH.with_suffix(".yaml.issue512.tmp")
+    plan_temporary = REFIT_PLAN_PATH.with_suffix(".yaml.issue512.tmp")
+    _write_yaml(pool_temporary, proposal_pool)
+    _write_yaml(plan_temporary, proposal_plan)
+    _require(
+        file_sha256(pool_temporary) == proposal_plan["source_pool_sha256"],
+        "공식화할 재학습 계획이 다른 후보 풀을 가리킨다.",
+    )
+    try:
+        pool_temporary.replace(POOL_PATH)
+        plan_temporary.replace(REFIT_PLAN_PATH)
+    except Exception:
+        POOL_PATH.write_bytes(pool_before)
+        REFIT_PLAN_PATH.write_bytes(plan_before)
+        pool_temporary.unlink(missing_ok=True)
+        plan_temporary.unlink(missing_ok=True)
+        raise
+
+
 def _judgment(
     *,
     precommit: dict[str, Any],
     bundle: dict[str, Any],
     preflight: dict[str, Any],
+    search: dict[str, Any],
+    conditional: dict[str, Any],
+    direct: dict[str, Any],
+    selection: dict[str, Any] | None,
+    refit_rehearsal: dict[str, Any] | None,
     runtime: dict[str, Any],
     recorded_at_utc: str,
+    pool_before_sha256: str,
+    refit_before_sha256: str,
 ) -> dict[str, Any]:
+    _require(preflight["reachable_valid_proposal"], "유효 제안 풀에 도달할 수 없다.")
+    gates_passed = bool(conditional["passed"] and direct["passed"])
+    refit_passed = bool(refit_rehearsal and refit_rehearsal["passed"])
+    formalized = gates_passed and refit_passed
     _require(
-        not preflight["reachable_valid_proposal"],
-        "유효 제안 풀이 도달 가능하므로 종결 판정 경로를 사용할 수 없다.",
+        (selection is not None) == gates_passed,
+        "채택 관문 결과와 선택 근거 존재 여부가 다르다.",
     )
-    pool_sha256 = file_sha256(POOL_PATH)
-    refit_sha256 = file_sha256(REFIT_PLAN_PATH)
+    pool_after_sha256 = file_sha256(POOL_PATH)
+    refit_after_sha256 = file_sha256(REFIT_PLAN_PATH)
     complete_count = len(bundle["complete_pair_members"])
-    source_mismatch_count = sum(
-        item["source_status"] == "completed_after_execution_correction"
+    source_correction_count = sum(
+        item["source_status"]
+        in {
+            "issue511_xgb_diagnostic_fix",
+            "issue511_neural_parent_balanced_correction",
+        }
         for item in bundle["classification"]
     )
+    evaluated_state_count = int(search["full_oof"]["evaluated_state_count"]) + sum(
+        int(result["evaluated_state_count"]) for result in search["outer"].values()
+    )
+    failure_reasons = []
+    if not conditional["passed"]:
+        failure_reasons.append("conditional_gate_not_strictly_positive")
+    if not direct["passed"]:
+        failure_reasons.append("direct_nested_gate_not_strictly_positive")
+    if gates_passed and not refit_passed:
+        failure_reasons.append("full_refit_rehearsal_not_passed")
     payload = self_hashed_payload(
         {
-            "schema": "missingness-propagation-batch-v1/judgment/1",
+            "schema": "missingness-propagation-batch-v1/judgment/2",
             "recorded_at_utc": recorded_at_utc,
             "issue": {"number": 512, "url": ISSUE_URL},
             "map": {"number": 506, "url": MAP_URL},
@@ -1186,37 +1725,62 @@ def _judgment(
                 "state_count": len(bundle["collection"]),
                 "complete_pair_count": complete_count,
                 "incomplete_pair_count": len(bundle["collection"]) - complete_count,
-                "source_commit_mismatch_count": source_mismatch_count,
+                "accepted_correction_count": source_correction_count,
             },
             "search": {
-                "status": "not_started",
-                "evaluated_state_count": 0,
-                "reason_code": "proposal_duplicate_invariant_unreachable",
-                "reason": preflight["proof"],
+                "status": "completed",
+                "sha256": search["search_sha256"],
+                "evaluated_state_count": evaluated_state_count,
+                "selected_ordinals": search["proposal"]["selected_ordinals"],
+                "selected_replacements": search["proposal"]["selected_replacements"],
+                "full_oof_auc": search["full_oof"]["score"],
                 "partial_result_adopted": False,
             },
-            "conditional_gate": {"status": "not_run", "passed": False},
-            "direct_nested_gate": {"status": "not_run", "passed": False},
-            "full_refit_rehearsal": {"status": "not_run", "passed": False},
+            "conditional_gate": {
+                "status": "completed",
+                "sha256": conditional["conditional_gate_sha256"],
+                "delta": conditional["delta"],
+                "passed": conditional["passed"],
+            },
+            "direct_nested_gate": {
+                "status": "completed",
+                "sha256": direct["direct_nested_gate_sha256"],
+                "delta": direct["best_strategy_delta"],
+                "passed": direct["passed"],
+            },
+            "full_refit_rehearsal": (
+                {
+                    "status": "completed",
+                    "sha256": refit_rehearsal["full_refit_rehearsal_sha256"],
+                    "passed": refit_rehearsal["passed"],
+                }
+                if refit_rehearsal is not None
+                else {"status": "not_run", "passed": False}
+            ),
             "verdict": {
-                "status": "keep_current_ledgers",
-                "proposal_pool": None,
-                "selected_replacements": [],
+                "status": (
+                    "formalize_proposal_ledgers"
+                    if formalized
+                    else "keep_current_ledgers"
+                ),
+                "proposal_pool": search["proposal"]["formal_members"],
+                "selected_replacements": search["proposal"]["selected_replacements"],
+                "failure_reason_codes": failure_reasons,
                 "public_score_used": False,
-                "formalized": False,
+                "formalized": formalized,
             },
             "official_ledgers": {
                 "candidate_pool": {
                     "path": str(POOL_PATH.relative_to(REPO_ROOT)),
-                    "before_sha256": pool_sha256,
-                    "after_sha256": pool_sha256,
-                    "changed": False,
+                    "before_sha256": pool_before_sha256,
+                    "after_sha256": pool_after_sha256,
+                    "changed": pool_before_sha256 != pool_after_sha256,
                 },
                 "full_refit_plan": {
                     "path": str(REFIT_PLAN_PATH.relative_to(REPO_ROOT)),
-                    "before_sha256": refit_sha256,
-                    "after_sha256": refit_sha256,
-                    "changed": False,
+                    "before_sha256": refit_before_sha256,
+                    "after_sha256": refit_after_sha256,
+                    "changed": refit_before_sha256 != refit_after_sha256,
                 },
             },
         },
@@ -1228,14 +1792,30 @@ def _judgment(
 def _report(
     bundle: dict[str, Any],
     preflight: dict[str, Any],
+    search: dict[str, Any],
+    conditional: dict[str, Any],
+    direct: dict[str, Any],
+    selection: dict[str, Any] | None,
+    refit_rehearsal: dict[str, Any] | None,
     judgment: dict[str, Any],
 ) -> str:
-    mismatches = [
+    corrected = [
         item["member"]
         for item in bundle["classification"]
-        if item["source_status"] == "completed_after_execution_correction"
+        if item["source_status"]
+        in {
+            "issue511_xgb_diagnostic_fix",
+            "issue511_neural_parent_balanced_correction",
+        }
     ]
-    violations = preflight["unresolved_duplicate_violations"]
+    completed = [
+        record for record in bundle["collection"] if record["status"] == "complete"
+    ]
+    direct_positive = sum(float(record["direct_oof_delta"]) > 0.0 for record in completed)
+    baseline_search_auc = float(direct["current"]["strategy_auc"][search["strategy"]])
+    full_search_auc = float(search["full_oof"]["score"])
+    full_search_delta = full_search_auc - baseline_search_auc
+    formalized = bool(judgment["verdict"]["formalized"])
     lines = [
         "# 결측 증강 전파 일괄 판정",
         "",
@@ -1243,50 +1823,91 @@ def _report(
         "",
         "## 결론",
         "",
-        "현재 후보 풀과 전체 자료 재학습 계획을 그대로 유지한다.",
-        "허용된 원자 교체로 현재 풀의 중복 위반을 해소할 수 없어 전체 OOF 제안 풀 자체가 존재하지 않는다.",
-        "따라서 검색 점수, 동결 OOF 조건부 절차 관문, 핵심 결합 방식 세 가지의 직접 중첩 관문과 전체 자료 재학습 스모크 예행은 시작하지 않았다.",
+        (
+            "교정 실행을 포함한 정확 검색의 제안이 두 OOF 관문과 전체 자료 재학습 예행을 모두 통과해 후보 풀과 전체 자료 재학습 계획을 함께 바꿨다."
+            if formalized
+            else "교정 실행을 포함한 정확 검색은 유효 제안 풀을 만들었지만 필수 후속 관문 가운데 하나 이상을 통과하지 못해 후보 풀과 전체 자료 재학습 계획을 유지했다."
+        ),
+        f"전체 OOF 검색은 현재 풀 AUC `{baseline_search_auc:.12f}`에서 `{full_search_auc:.12f}`로 `{full_search_delta:+.12f}` 개선되는 {len(search['proposal']['selected_replacements'])}개 원자 교체를 선택했다.",
+        "선택된 원본 자리는 다음과 같다.",
+        "",
+        *[f"- `{member}`" for member in search["proposal"]["selected_replacements"]],
+        "",
         "부분 결과와 Public 점수는 판정에 사용하지 않았다.",
         "",
-        "## 판정 입력",
+        "## 기존 판정 정정",
         "",
-        f"사전 고정한 34개 짝 가운데 일괄 판정 입력 묶음의 완결 짝은 {judgment['collection']['complete_pair_count']}개이고 미완결 짝은 {judgment['collection']['incomplete_pair_count']}개다.",
-        f"중앙 반입에서 완결로 기록됐지만 사전 기록 출처 커밋과 달라 미완결로 분류한 짝은 {judgment['collection']['source_commit_mismatch_count']}개다.",
-        "해당 짝은 다음과 같다.",
+        "앞선 종결 기록은 이슈 511에서 유효성이 확인된 교정 실행 7개를 사전 기록의 오래된 출처 커밋과 다르다는 이유로 제외했다.",
+        "그 결과 실제 완결 짝 24개를 17개로 줄여 읽었고, 현재 풀의 기존 중복 위반을 해소하는 `exp131_lookup_bivariate_plr5` 교정판도 제외했다.",
+        "검색 상태를 한 건도 평가하지 않은 채 제안 풀에 도달할 수 없다고 결론 내린 것은 잘못이었다.",
+        f"교정 계약을 적용한 이번 입력은 완결 {judgment['collection']['complete_pair_count']}짝과 미완결 {judgment['collection']['incomplete_pair_count']}짝이며, 완결 짝 중 직접 OOF 차이가 양수인 짝은 {direct_positive}개다.",
+        "직접 짝비교 차이의 부호는 검색 입력 포함이나 최종 교체를 단독으로 결정하지 않았다.",
+        "허용한 교정 실행은 다음과 같다.",
         "",
-        *[f"- `{member}`" for member in mismatches],
+        *[f"- `{member}`" for member in corrected],
         "",
-        "그 밖의 미완결 짝은 이슈 511에서 TabCNN 계열 제외 또는 비용 검토 뒤 미실행으로 확정한 짝이다.",
-        "완결 짝의 직접 OOF 차이 부호는 입력 포함 여부에 사용하지 않았다.",
+        "## 도달 가능성과 정확 검색",
         "",
-        "## 도달 가능성 판정",
+        preflight["proof"],
+        f"전체 OOF와 바깥 분할 검색에서 중복 불변식을 지킨 채 총 {judgment['search']['evaluated_state_count']}개 고유 상태를 정확 채점했다.",
+        f"최종 전체 OOF 제안의 선택 번호는 `{search['proposal']['selected_ordinals']}`이고 중복 위반은 `{search['proposal']['duplicate_violations']}`다.",
+        "",
+        "## 채택 관문",
+        "",
+        f"동결 OOF 조건부 절차 점수 차이는 `{conditional['delta']:+.12f}`이며 관문 통과 여부는 `{str(conditional['passed']).lower()}`다.",
+        f"핵심 결합 방식 세 가지에서 각 풀의 최선 방식끼리 비교한 직접 중첩 OOF 차이는 `{direct['best_strategy_delta']:+.12f}`이며 관문 통과 여부는 `{str(direct['passed']).lower()}`다.",
+        f"현재 풀의 최선 방식은 `{direct['current']['best_strategy']}`, 제안 풀의 최선 방식은 `{direct['proposal']['best_strategy']}`다.",
+        f"직접 중첩 비교의 바깥 분할 승수는 `{direct['diagnostics']['outer_fold_wins']}/5`다.",
+        "",
+        "## 전체 자료 재학습 예행",
         "",
     ]
-    for violation in violations:
+    if refit_rehearsal is None:
+        lines.append("두 OOF 관문을 모두 통과하지 못해 전체 자료 재학습 예행은 시작하지 않았다.")
+    else:
+        lines.append(
+            f"새로 선택된 결측 증강판 {len(refit_rehearsal['results'])}개의 전체 자료 좌표에서 원본 행에만 피처 상태를 맞추고 원본과 복제본 세 블록으로 한 시드씩 재학습했다."
+        )
+        lines.append(
+            f"모든 계보 기록과 시험 예측 해시 검증을 통과했으며 예행 통과 여부는 `{str(refit_rehearsal['passed']).lower()}`다."
+        )
         lines.extend(
             [
-                f"- `{violation['left']}`와 `{violation['right']}`의 스피어만 순위 상관은 `{violation['spearman']:.10f}`로 문턱 `{violation['threshold']}` 이상이다.",
-                f"- 바꿀 수 있는 자리는 {', '.join(f'`{name}`' for name in violation['resolver_slots'])}이지만 판정 입력을 통과해 검색 이동 자격을 얻은 결측 증강판은 없다.",
+                f"- `{result['config']}`: 시드 `{result['seed']}`, 예산 `{result['training_budget']}`, 시험 예측 `{result['prediction_rows']}`행"
+                for result in refit_rehearsal["results"]
             ]
         )
     lines.extend(
         [
-            "",
-            "원자 교체는 해당 자리의 예측만 바꾸므로 다른 자리를 바꾸어 이 중복 관계를 없앨 수 없다.",
-            "모든 도달 가능한 상태가 같은 위반을 보존하므로 전체 OOF 제안 풀의 모든 구성원 쌍이 `0.998` 미만이어야 한다는 조건을 만족할 수 없다.",
-            "이 판정은 검색 결과를 본 뒤 문턱을 바꾼 것이 아니라 사전 기록의 출처와 중복 조건을 그대로 적용한 결과다.",
             "",
             "## 공식 장부",
             "",
             f"- `artifacts/pool.yaml`: `{judgment['official_ledgers']['candidate_pool']['after_sha256']}`",
             f"- `artifacts/full-refit-plan.yaml`: `{judgment['official_ledgers']['full_refit_plan']['after_sha256']}`",
             "",
-            "두 파일은 판정 전후에 바이트 단위로 같고 이번 이슈에서 수정하지 않았다.",
+            (
+                "두 파일은 같은 공식화 경로에서 함께 바뀌었다."
+                if formalized
+                else "두 파일은 판정 전후에 바이트 단위로 같고 이번 이슈에서 수정하지 않았다."
+            ),
             "",
             "## 근거 파일",
             "",
             f"- 입력 묶음: `{INPUT_NAME}` (`{bundle['input_bundle_sha256']}`)",
             f"- 도달 가능성 기록: `{PREFLIGHT_NAME}` (`{preflight['preflight_sha256']}`)",
+            f"- 정확 검색: `{SEARCH_NAME}` (`{search['search_sha256']}`)",
+            f"- 조건부 절차 관문: `{CONDITIONAL_NAME}` (`{conditional['conditional_gate_sha256']}`)",
+            f"- 직접 중첩 관문: `{DIRECT_NAME}` (`{direct['direct_nested_gate_sha256']}`)",
+            *(
+                [f"- 선택 근거: `{SELECTION_NAME}` (`{selection['selection_evidence_sha256']}`)"]
+                if selection is not None
+                else []
+            ),
+            *(
+                [f"- 전체 자료 재학습 예행: `{REFIT_REHEARSAL_NAME}` (`{refit_rehearsal['full_refit_rehearsal_sha256']}`)"]
+                if refit_rehearsal is not None
+                else []
+            ),
             f"- 최종 판정: `{JUDGMENT_NAME}` (`{judgment['judgment_sha256']}`)",
             f"- 파일 목록: `{MANIFEST_NAME}`",
             "",
@@ -1308,28 +1929,103 @@ def _write_manifest(output_root: Path) -> None:
 def _verify(output_root: Path, precommit: dict[str, Any]) -> None:
     bundle = _load_json(output_root / INPUT_NAME)
     preflight = _load_json(output_root / PREFLIGHT_NAME)
+    search = _load_json(output_root / SEARCH_NAME)
+    score_cache = _load_json(output_root / SCORE_CACHE_NAME)
+    conditional = _load_json(output_root / CONDITIONAL_NAME)
+    direct = _load_json(output_root / DIRECT_NAME)
     judgment = _load_json(output_root / JUDGMENT_NAME)
-    validate_input_bundle(bundle, precommit=precommit)
+    selection = (
+        _load_json(output_root / SELECTION_NAME)
+        if (output_root / SELECTION_NAME).is_file()
+        else None
+    )
+    refit_rehearsal = (
+        _load_json(output_root / REFIT_REHEARSAL_NAME)
+        if (output_root / REFIT_REHEARSAL_NAME).is_file()
+        else None
+    )
+    validate_input_bundle(
+        bundle,
+        precommit=precommit,
+        allowed_source_commits=_allowed_source_commits(bundle),
+    )
     verify_self_hash(preflight, "preflight_sha256")
+    verify_self_hash(search, "search_sha256")
+    verify_self_hash(score_cache, "score_cache_sha256")
+    verify_self_hash(conditional, "conditional_gate_sha256")
+    verify_self_hash(direct, "direct_nested_gate_sha256")
+    if selection is not None:
+        verify_self_hash(selection, "selection_evidence_sha256")
+    if refit_rehearsal is not None:
+        verify_self_hash(refit_rehearsal, "full_refit_rehearsal_sha256")
     verify_self_hash(judgment, "judgment_sha256")
     _require(
         preflight["input_bundle_sha256"] == bundle["input_bundle_sha256"],
         "도달 가능성 기록이 다른 입력 묶음을 가리킨다.",
     )
     _require(
-        judgment["preflight_sha256"] == preflight["preflight_sha256"],
-        "최종 판정이 다른 도달 가능성 기록을 가리킨다.",
+        search["preflight_sha256"] == preflight["preflight_sha256"],
+        "정확 검색이 다른 도달 가능성 기록을 가리킨다.",
+    )
+    _require(
+        search["execution"]["score_cache"]["sha256"]
+        == score_cache["score_cache_sha256"],
+        "정확 검색이 다른 점수 이어쓰기 기록을 가리킨다.",
+    )
+    _require(
+        conditional["search_sha256"] == search["search_sha256"]
+        and direct["search_sha256"] == search["search_sha256"],
+        "채택 관문이 다른 정확 검색을 가리킨다.",
+    )
+    gates_passed = bool(conditional["passed"] and direct["passed"])
+    _require(
+        (selection is not None) == gates_passed,
+        "채택 관문과 선택 근거 존재 여부가 다르다.",
+    )
+    if selection is not None:
+        _require(
+            selection["search_sha256"] == search["search_sha256"]
+            and selection["conditional_gate_sha256"]
+            == conditional["conditional_gate_sha256"]
+            and selection["direct_nested_gate_sha256"]
+            == direct["direct_nested_gate_sha256"],
+            "선택 근거가 다른 검색 또는 관문을 가리킨다.",
+        )
+    if refit_rehearsal is not None:
+        _require(
+            selection is not None
+            and refit_rehearsal["selection_evidence_sha256"]
+            == selection["selection_evidence_sha256"],
+            "전체 자료 재학습 예행이 다른 선택 근거를 가리킨다.",
+        )
+    _require(
+        judgment["preflight_sha256"] == preflight["preflight_sha256"]
+        and judgment["search"]["sha256"] == search["search_sha256"]
+        and judgment["conditional_gate"]["sha256"]
+        == conditional["conditional_gate_sha256"]
+        and judgment["direct_nested_gate"]["sha256"]
+        == direct["direct_nested_gate_sha256"],
+        "최종 판정이 다른 입력, 검색 또는 관문을 가리킨다.",
     )
     for ledger in judgment["official_ledgers"].values():
         path = REPO_ROOT / ledger["path"]
         actual = file_sha256(path)
+        _require(actual == ledger["after_sha256"], f"공식 장부 해시가 다르다: {path}")
         _require(
-            actual == ledger["before_sha256"] == ledger["after_sha256"],
-            f"공식 장부가 판정 뒤 바뀌었다: {path}",
+            bool(ledger["changed"])
+            == (ledger["before_sha256"] != ledger["after_sha256"]),
+            f"공식 장부 변경 꼬리표가 잘못됐다: {path}",
         )
-        _require(
-            ledger["changed"] is False, f"공식 장부 변경 꼬리표가 잘못됐다: {path}"
-        )
+    formalized = bool(judgment["verdict"]["formalized"])
+    ledger_changes = [
+        bool(ledger["changed"]) for ledger in judgment["official_ledgers"].values()
+    ]
+    _require(
+        ledger_changes == [formalized, formalized],
+        "후보 풀과 전체 자료 재학습 계획의 원자 변경 상태가 다르다.",
+    )
+    Pool.load(POOL_PATH)
+    RefitPlan.load(REFIT_PLAN_PATH)
     manifest = output_root / MANIFEST_NAME
     _require(manifest.is_file(), "파일 SHA-256 목록이 없다.")
     for line in manifest.read_text(encoding="utf-8").splitlines():
@@ -1389,24 +2085,25 @@ def main() -> None:
         augmented_predictions=augmented_predictions,
         recorded_at_utc=recorded_at_utc,
     )
+    search, conditional, direct = _search_and_gates(
+        source_root=source_root,
+        precommit=precommit,
+        bundle=bundle,
+        preflight=preflight,
+        current_predictions=current_predictions,
+        augmented_predictions=augmented_predictions,
+        targets=targets,
+        jobs=args.jobs,
+        score_batch_size=args.score_batch_size,
+        score_cache_path=score_cache_path,
+        recorded_at_utc=recorded_at_utc,
+    )
     if args.gates_only:
-        search, conditional, direct = _search_and_gates(
-            source_root=source_root,
-            precommit=precommit,
-            bundle=bundle,
-            preflight=preflight,
-            current_predictions=current_predictions,
-            augmented_predictions=augmented_predictions,
-            targets=targets,
-            jobs=args.jobs,
-            score_batch_size=args.score_batch_size,
-            score_cache_path=score_cache_path,
-            recorded_at_utc=recorded_at_utc,
-        )
         output_root.mkdir(parents=True, exist_ok=True)
         _write_json(output_root / INPUT_NAME, bundle)
         _write_json(output_root / PREFLIGHT_NAME, preflight)
         _write_json(output_root / SEARCH_NAME, search)
+        (output_root / SCORE_CACHE_NAME).write_bytes(score_cache_path.read_bytes())
         _write_json(output_root / CONDITIONAL_NAME, conditional)
         _write_json(output_root / DIRECT_NAME, direct)
         _write_manifest(output_root)
@@ -1427,19 +2124,100 @@ def main() -> None:
             )
         )
         return
+    pool_before_sha256 = file_sha256(POOL_PATH)
+    refit_before_sha256 = file_sha256(REFIT_PLAN_PATH)
+    selection = None
+    refit_rehearsal = None
+    if conditional["passed"] and direct["passed"]:
+        selection = _selection_evidence(
+            precommit=precommit,
+            bundle=bundle,
+            preflight=preflight,
+            search=search,
+            conditional=conditional,
+            direct=direct,
+            recorded_at_utc=recorded_at_utc,
+        )
+        score_cache = _load_json(score_cache_path)
+        verify_self_hash(score_cache, "score_cache_sha256")
+        proposal_pool = _proposal_pool_document(
+            precommit=precommit,
+            bundle=bundle,
+            pool=pool,
+            search=search,
+            conditional=conditional,
+            direct=direct,
+            selection=selection,
+            current_predictions=current_predictions,
+            augmented_predictions=augmented_predictions,
+            score_cache=score_cache,
+        )
+        with tempfile.TemporaryDirectory(prefix="issue512-ledger-proposal-") as directory:
+            proposal_pool_path = Path(directory) / "pool.yaml"
+            _write_yaml(proposal_pool_path, proposal_pool)
+            proposal_pool_sha256 = file_sha256(proposal_pool_path)
+        proposal_plan = _proposal_refit_plan_document(
+            precommit=precommit,
+            bundle=bundle,
+            search=search,
+            store=store,
+            proposal_pool_sha256=proposal_pool_sha256,
+        )
+        refit_rehearsal = _refit_rehearsal(
+            source_root=source_root,
+            precommit=precommit,
+            search=search,
+            selection=selection,
+            proposal_pool=proposal_pool,
+            proposal_plan=proposal_plan,
+            store=store,
+            recorded_at_utc=recorded_at_utc,
+        )
+        if refit_rehearsal["passed"]:
+            _formalize_ledgers(
+                proposal_pool=proposal_pool,
+                proposal_plan=proposal_plan,
+            )
     judgment = _judgment(
         precommit=precommit,
         bundle=bundle,
         preflight=preflight,
+        search=search,
+        conditional=conditional,
+        direct=direct,
+        selection=selection,
+        refit_rehearsal=refit_rehearsal,
         runtime=runtime,
         recorded_at_utc=recorded_at_utc,
+        pool_before_sha256=pool_before_sha256,
+        refit_before_sha256=refit_before_sha256,
     )
     output_root.mkdir(parents=True, exist_ok=True)
     _write_json(output_root / INPUT_NAME, bundle)
     _write_json(output_root / PREFLIGHT_NAME, preflight)
+    _write_json(output_root / SEARCH_NAME, search)
+    (output_root / SCORE_CACHE_NAME).write_bytes(score_cache_path.read_bytes())
+    _write_json(output_root / CONDITIONAL_NAME, conditional)
+    _write_json(output_root / DIRECT_NAME, direct)
+    for optional_name in (SELECTION_NAME, REFIT_REHEARSAL_NAME):
+        (output_root / optional_name).unlink(missing_ok=True)
+    if selection is not None:
+        _write_json(output_root / SELECTION_NAME, selection)
+    if refit_rehearsal is not None:
+        _write_json(output_root / REFIT_REHEARSAL_NAME, refit_rehearsal)
     _write_json(output_root / JUDGMENT_NAME, judgment)
     (output_root / REPORT_NAME).write_text(
-        _report(bundle, preflight, judgment), encoding="utf-8"
+        _report(
+            bundle,
+            preflight,
+            search,
+            conditional,
+            direct,
+            selection,
+            refit_rehearsal,
+            judgment,
+        ),
+        encoding="utf-8",
     )
     _write_manifest(output_root)
     _verify(output_root, precommit)

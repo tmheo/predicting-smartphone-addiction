@@ -15,9 +15,13 @@ import pandas as pd
 import pytest
 
 from pipeline import plan as plan_mod
-from pipeline.config import FeatureConfig, load_config
+from pipeline.config import FeatureConfig, TrainingRowsConfig, load_config
 from pipeline.features import PLACEBO
 from pipeline.plan import FeaturePlan
+from pipeline.training_rows import (
+    FULL_DATA_OUTER_FOLD,
+    build_full_data_training_rows,
+)
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -184,6 +188,50 @@ def test_build_full_matrices_fits_fold_providers_on_all_training_rows():
     assert list(X_test.columns) == plan.all_columns()
     assert X_train.index.equals(train.index)
     assert X_test.index.equals(test.index)
+    assert X_train[["gaming_hours_te", "placebo_noise_te"]].notna().all().all()
+    assert X_test[["gaming_hours_te", "placebo_noise_te"]].notna().all().all()
+
+
+def test_build_full_matrices_fits_state_on_original_rows_before_transforming_replicas():
+    plan = FeaturePlan.from_config(
+        make_config(
+            [
+                {
+                    "kind": "target_encoding",
+                    "inner_folds": 3,
+                    "cols": ["gaming_hours", PLACEBO],
+                }
+            ]
+        )
+    )
+    train, test = toy_frames()
+    for index in range(7):
+        train[f"raw_{index}"] = index
+        test[f"raw_{index}"] = index
+    train, test = plan.apply_dataset_wide(train, test)
+    row_batch = build_full_data_training_rows(
+        train,
+        plan.raw_columns(),
+        TrainingRowsConfig(
+            arm="missingness_augmented",
+            replica_count=2,
+            observed_cell_mask_probability=0.25,
+        ),
+        seed=7,
+    )
+
+    X_train, X_test = plan.build_full_matrices(
+        row_batch.frame,
+        test,
+        seed=7,
+        state_fit_index=row_batch.state_fit_index,
+    )
+
+    (target_encoder,) = plan.fold_fit_transformers()
+    assert row_batch.evidence["outer_fold"] == FULL_DATA_OUTER_FOLD
+    assert row_batch.evidence["coordinate_scope"] == "full_data"
+    assert len(X_train) == len(train) * 3
+    assert len(target_encoder.oof_) == len(train)
     assert X_train[["gaming_hours_te", "placebo_noise_te"]].notna().all().all()
     assert X_test[["gaming_hours_te", "placebo_noise_te"]].notna().all().all()
 

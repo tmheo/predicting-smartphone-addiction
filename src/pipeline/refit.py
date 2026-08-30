@@ -31,13 +31,21 @@ import json
 import os
 import subprocess
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
-import yaml
 import pandas as pd
+import yaml
 
-from . import data, initial_score, model, tracking
+from . import (
+    data,
+    initial_score,
+    model,
+    paired_training_length,
+    tracking,
+    training_rows,
+)
 from .config import load_config
 from .data import ID, TARGET
 from .ensemble import (
@@ -93,6 +101,7 @@ def run_member(
     *,
     seeds: tuple[int, ...] | None = None,
     finalize: bool = True,
+    data_root: Path | None = None,
 ) -> Path:
     """구성원 하나를 전체 자료로 시드별 재학습하고 평균 시험 예측을 저장한다.
 
@@ -100,10 +109,27 @@ def run_member(
     `member.budgets`는 원시 근거에서 다시 계산한 재학습 예산이다.
     """
     cfg = load_config(member.config_path, "confirm")
-    if cfg.training_rows is not None and cfg.training_rows.replica_count:
+    if data_root is not None:
+        data_root = data_root.resolve()
+
+        def rooted(path: Path) -> Path:
+            return path if path.is_absolute() else data_root / path
+
+        cfg = replace(
+            cfg,
+            data=replace(
+                cfg.data,
+                train=rooted(cfg.data.train),
+                test=rooted(cfg.data.test),
+                sample_submission=rooted(cfg.data.sample_submission),
+                folds=rooted(cfg.data.folds),
+            ),
+        )
+    paired_lengths = paired_training_length.load(cfg.paired_training_length)
+    if paired_lengths is not None and paired_lengths.model_kind != cfg.model.kind:
         raise ValueError(
-            f"{member.config}: 바깥쪽 분할 좌표가 없는 전체 자료 재학습에는 "
-            "결측 증강 마스크 계약을 적용할 수 없다."
+            "짝비교 학습 길이의 모형 계열이 설정과 다르다: "
+            f"{paired_lengths.model_kind!r} != {cfg.model.kind!r}"
         )
     if cfg.name != member.config:
         raise ValueError(f"계획 구성원과 설정 name이 다르다: {member.config} != {cfg.name}")
@@ -130,7 +156,8 @@ def run_member(
     data.align_categories(train, test, cfg.features.categorical)
     feature_plan = FeaturePlan.from_config(cfg.features)
     train, test = feature_plan.apply_dataset_wide(train, test)
-    y = train[TARGET]
+    if cfg.training_rows is not None:
+        feature_plan.validate_training_row_augmentation()
     input_hashes = _input_hashes(cfg)
     config_sha256 = data.file_sha256(member.config_path)
     provenance = {**_ledger_context(plan), **_member_provenance(member)}
@@ -139,6 +166,36 @@ def run_member(
     seed_records = []
     for seed in selected_seeds:
         budget = member.budgets[seed]
+        row_batch = None
+        row_evidence = None
+        optimizer_step_plan = None
+        model_config = cfg.model
+        if cfg.training_rows is not None:
+            row_batch = training_rows.build_full_data_training_rows(
+                train,
+                feature_plan.raw_columns(),
+                cfg.training_rows,
+                seed=seed,
+            )
+            row_evidence = dict(row_batch.evidence)
+            if cfg.training_rows.replica_count:
+                optimizer_step_plan = paired_training_length.build_optimizer_step_plan(
+                    cfg.model.kind,
+                    cfg.model.params,
+                    original_row_count=row_batch.original_row_count,
+                    training_row_count=len(row_batch.frame),
+                    original_index=row_batch.parent_source_index[
+                        : row_batch.original_row_count
+                    ],
+                )
+                if optimizer_step_plan is not None:
+                    model_config = replace(
+                        cfg.model,
+                        params=optimizer_step_plan.apply(cfg.model.params),
+                    )
+                    row_evidence["paired_optimizer_step_plan"] = (
+                        optimizer_step_plan.evidence()
+                    )
         prediction_path = member_dir / f"test_pred_seed_{seed}.parquet"
         record_path = member_dir / f"test_pred_seed_{seed}.json"
         seed_identity = {
@@ -151,6 +208,7 @@ def run_member(
             "seed": seed,
             "training_budget": budget,
             **_training_state_seed_identity(member),
+            **({"training_rows": row_evidence} if row_evidence is not None else {}),
         }
         if prediction_path.exists():
             if not record_path.exists():
@@ -166,13 +224,36 @@ def run_member(
         else:
             if record_path.exists():
                 raise ValueError(f"{record_path}: 대응하는 예측 파일이 없다.")
-            X_train, X_test = feature_plan.build_full_matrices(train, test, seed)
+            model_train = train
+            state_fit_index = None
+            if row_batch is not None:
+                model_train = feature_plan.recompute_training_row_dataset_wide(
+                    row_batch.frame,
+                    test,
+                )
+                state_fit_index = row_batch.state_fit_index
+            X_train, X_test = feature_plan.build_full_matrices(
+                model_train,
+                test,
+                seed,
+                state_fit_index=state_fit_index,
+            )
+            y = model_train[TARGET]
             provider = initial_score.create(cfg.initial_score)
             # 바깥쪽 분할 계약은 전체 학습 행의 내부 OOF와 전체 학습 자료 적합의 시험
             # 초기 점수를 같은 계약으로 만든다. (#505)
-            scores = initial_score.full_data_scores(provider, train, test, seed)
-            adapter = model.create(cfg.model, seed)
-            model.set_dataset_reference(adapter, X_train, X_test)
+            scores = initial_score.full_data_scores(provider, model_train, test, seed)
+            adapter = model.create(model_config, seed)
+            dataset_reference_train = X_train
+            if optimizer_step_plan is not None:
+                assert row_batch is not None
+                dataset_reference_train = X_train.loc[
+                    row_batch.state_fit_index
+                ].copy()
+                dataset_reference_train.index = row_batch.parent_source_index[
+                    : row_batch.original_row_count
+                ]
+            model.set_dataset_reference(adapter, dataset_reference_train, X_test)
             if isinstance(member.derivation, TrajectoryStateBudgetDerivation):
                 if cfg.training_state is None:
                     raise ValueError(
@@ -228,6 +309,7 @@ def run_member(
                 "seed": seed,
                 "training_budget": budget,
                 **_training_state_seed_identity(member),
+                **({"training_rows": row_evidence} if row_evidence is not None else {}),
                 "prediction_sha256": prediction_array_sha256(prediction),
             }
         )
@@ -652,6 +734,11 @@ def main() -> None:
     action.add_argument("--assemble", action="store_true")
     parser.add_argument("--seed", type=int)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument(
+        "--data-root",
+        type=Path,
+        help="비공개 data 파일이 있는 저장소 경로",
+    )
     args = parser.parse_args()
 
     if args.seed is not None and args.member is None:
@@ -680,6 +767,7 @@ def main() -> None:
             args.out_dir,
             seeds=None if args.seed is None else (args.seed,),
             finalize=args.seed is None,
+            data_root=args.data_root,
         )
         print(f"[{member.config}] 완료: {path}", flush=True)
 

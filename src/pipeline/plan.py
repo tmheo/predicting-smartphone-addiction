@@ -28,9 +28,9 @@ from typing import Any, Protocol
 import pandas as pd
 
 from . import features
-from .denoising_autoencoder import DenoisingAutoencoderLatent
 from .config import FeatureConfig
 from .data import ID, TARGET
+from .denoising_autoencoder import DenoisingAutoencoderLatent
 from .features import PLACEBO
 from .fold_fit_reuse import (
     FoldFitReuseError,
@@ -258,7 +258,7 @@ class FeaturePlan:
                 f"{sorted(forbidden)}"
             )
         if not isinstance(settings, dict):
-            raise ValueError(f"{kind} 재사용 설정 선언은 객체여야 한다.")
+            raise TypeError(f"{kind} 재사용 설정 선언은 객체여야 한다.")
         try:
             canonical_json_bytes(settings)
         except (TypeError, ValueError) as exc:
@@ -386,7 +386,7 @@ class FeaturePlan:
         declared_inputs = transformer.reuse_input_columns()
         self._validate_fold_fit_reuse_declaration(kind, transformer)
         context_columns = list(
-            getattr(transformer, "training_row_context_columns", lambda: [])()
+            getattr(transformer, "training_row_context_columns", list)()
         )
         unknown_context = sorted(set(context_columns) - {PARENT_ID})
         if unknown_context:
@@ -485,7 +485,7 @@ class FeaturePlan:
         assert self._fold_fit_runtime_identity is not None
         assert self._fold_fit_input_files is not None
         external_hashes = getattr(
-            transformer, "reuse_external_file_sha256", lambda: {}
+            transformer, "reuse_external_file_sha256", dict
         )()
         execution = getattr(transformer, "reuse_execution", lambda: {"mode": "cpu"})()
         provider_identity = provider_identity_document(
@@ -636,12 +636,18 @@ class FeaturePlan:
         train: pd.DataFrame,
         test: pd.DataFrame,
         seed: int,
+        *,
+        state_fit_index: pd.Index | None = None,
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """전체 학습 자료로 fold-fit 제공자를 맞춘 최종 학습·시험 행렬을 만든다.
 
         타깃 인코더처럼 학습 행에 내부 OOF 값을 돌려주는 제공자의 계약은 그대로
         유지한다. 따라서 전체 자료 재학습에서도 학습 행 표현은 자기 타깃을 직접
         포함하지 않고, 시험 행은 전체 학습 자료로 맞춘 평균표를 쓴다.
+
+        결측 증강처럼 학습 행 복제본이 있는 경우에는 ``state_fit_index``로 원본 행만
+        지정한다. 제공자의 상태는 원본 행에만 맞추되 변환은 복제본을 포함한 전체 학습
+        행에 적용한다.
 
         ``apply_dataset_wide``를 먼저 호출한 frame 쌍을 받아야 한다.
         """
@@ -651,12 +657,23 @@ class FeaturePlan:
         if transformers:
             train_ff = prepare_fold_fit_input(train, X_train)
             test_ff = prepare_fold_fit_input(test, X_test)
+            fit_input = train_ff
+            if state_fit_index is not None:
+                if not state_fit_index.is_unique:
+                    raise ValueError("전체 자료 재학습의 상태 적합 행 인덱스가 중복된다.")
+                missing = state_fit_index.difference(train_ff.index)
+                if len(missing):
+                    raise ValueError(
+                        "전체 자료 재학습의 상태 적합 행이 학습 행에 없다: "
+                        f"{list(missing[:5])}"
+                    )
+                fit_input = train_ff.loc[state_fit_index]
             for transformer in transformers:
                 enter_full_data = getattr(transformer, "enter_full_data_fit", None)
                 if enter_full_data is not None:
                     # 내부 분할 대신 사전 규칙 학습 횟수를 쓰는 제공자에게 경로를 알린다. (#483)
                     enter_full_data()
-                transformer.fit(train_ff, seed)
+                transformer.fit(fit_input, seed)
             X_train = self.add_fold_fit_columns(X_train, train_ff)
             X_test = self.add_fold_fit_columns(X_test, test_ff)
         if list(X_train.columns) != list(X_test.columns):
@@ -705,7 +722,7 @@ class FeaturePlan:
             for kind, provider in self._stages[FOLD_FIT]
             if provider.uses_target
             and PARENT_ID
-            not in getattr(provider, "training_row_context_columns", lambda: [])()
+            not in getattr(provider, "training_row_context_columns", list)()
         ]
         if unsupported:
             raise ValueError(
