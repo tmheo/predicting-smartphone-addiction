@@ -53,6 +53,7 @@ MAP_URL = "https://github.com/tmheo/predicting-smartphone-addiction/issues/506"
 INPUT_NAME = "input-bundle.json"
 PREFLIGHT_NAME = "preflight.json"
 SEARCH_NAME = "search.json"
+SCORE_CACHE_NAME = "search-score-cache.json"
 CONDITIONAL_NAME = "conditional-gate.json"
 DIRECT_NAME = "direct-nested-gate.json"
 REFIT_REHEARSAL_NAME = "full-refit-rehearsal.json"
@@ -81,6 +82,12 @@ def _args() -> argparse.Namespace:
     )
     parser.add_argument("--verify-only", action="store_true")
     parser.add_argument("--jobs", type=int, default=8)
+    parser.add_argument(
+        "--score-cache",
+        type=Path,
+        default=None,
+        help="중단 뒤 같은 입력의 정확 검색 점수를 이어 쓸 파일",
+    )
     parser.add_argument(
         "--gates-only",
         action="store_true",
@@ -112,6 +119,12 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+
+
+def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    _write_json(temporary, payload)
+    temporary.replace(path)
 
 
 def _git(*arguments: str) -> str:
@@ -816,6 +829,7 @@ def _search_and_gates(
     augmented_predictions: dict[str, pd.Series],
     targets: pd.DataFrame,
     jobs: int,
+    score_cache_path: Path,
     recorded_at_utc: str,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     _require(preflight["reachable_valid_proposal"], "유효 제안 풀에 도달할 수 없다.")
@@ -843,6 +857,38 @@ def _search_and_gates(
         ].corr(method="spearman")
         for fold in precommit["search_parameters"]["outer_folds"]
     }
+    cache_identity = {
+        "schema": "missingness-propagation-batch-v1/search-score-cache/1",
+        "precommit_sha256": precommit["precommit_sha256"],
+        "input_bundle_sha256": bundle["input_bundle_sha256"],
+        "preflight_sha256": preflight["preflight_sha256"],
+        "strategy": search_strategy,
+    }
+    if score_cache_path.is_file():
+        score_cache = _load_json(score_cache_path)
+        verify_self_hash(score_cache, "score_cache_sha256")
+        _require(
+            all(score_cache.get(key) == value for key, value in cache_identity.items()),
+            "정확 검색 점수 이어쓰기 파일의 입력 신원이 다르다.",
+        )
+    else:
+        score_cache = {**cache_identity, "scores": {}}
+    score_cache_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_hits = 0
+    cache_misses = 0
+
+    def flush_score_cache() -> None:
+        payload = self_hashed_payload(
+            {
+                key: value
+                for key, value in score_cache.items()
+                if key != "score_cache_sha256"
+            },
+            "score_cache_sha256",
+        )
+        score_cache.clear()
+        score_cache.update(payload)
+        _write_json_atomic(score_cache_path, score_cache)
 
     def members(state: tuple[int, ...]) -> tuple[str, ...]:
         return _members_for_state(
@@ -872,11 +918,27 @@ def _search_and_gates(
             return set(violations) <= set(baseline_violations)
 
         def score_many(states: tuple[tuple[int, ...], ...]) -> list[float]:
-            scores = evaluator.evaluate_many(
-                [(members(state), None) for state in states],
-                excluded_fold=excluded_fold,
-            )
-            return [score.best_auc for score in scores]
+            nonlocal cache_hits, cache_misses
+            scope = "full_oof" if excluded_fold is None else f"outer_{excluded_fold}"
+            cached = score_cache["scores"].setdefault(scope, {})
+            keys = [",".join(str(value) for value in state) for state in states]
+            missing_positions = [
+                position for position, key in enumerate(keys) if key not in cached
+            ]
+            cache_hits += len(states) - len(missing_positions)
+            cache_misses += len(missing_positions)
+            if missing_positions:
+                missing_states = [states[position] for position in missing_positions]
+                evaluated = evaluator.evaluate_many(
+                    [(members(state), None) for state in missing_states],
+                    excluded_fold=excluded_fold,
+                )
+                for position, score in zip(
+                    missing_positions, evaluated, strict=True
+                ):
+                    cached[keys[position]] = score.best_auc
+                flush_score_cache()
+            return [float(cached[key]) for key in keys]
 
         search = MaximumGainSearch(
             pair_order=pair_order,
@@ -937,6 +999,15 @@ def _search_and_gates(
                 "jobs": jobs,
                 "fits": search_fits,
                 "arm_evaluations": search_arm_evaluations,
+                "score_cache": {
+                    "path": str(score_cache_path),
+                    "sha256": score_cache["score_cache_sha256"],
+                    "hits": cache_hits,
+                    "misses": cache_misses,
+                    "state_count": sum(
+                        len(values) for values in score_cache["scores"].values()
+                    ),
+                },
             },
         },
         "search_sha256",
@@ -1266,6 +1337,11 @@ def main() -> None:
     runtime = _runtime_identity()
     recorded_at_utc = datetime.now(UTC).isoformat(timespec="seconds")
     source_root = args.source_root.resolve()
+    score_cache_path = (
+        args.score_cache.resolve()
+        if args.score_cache is not None
+        else output_root / SCORE_CACHE_NAME
+    )
     confirmation = _load_json(CONFIRMATION_PATH)
     targets = _targets(source_root)
     store = MlflowRunStore(_tracking_uri(source_root, args.tracking_uri))
@@ -1300,6 +1376,7 @@ def main() -> None:
             augmented_predictions=augmented_predictions,
             targets=targets,
             jobs=args.jobs,
+            score_cache_path=score_cache_path,
             recorded_at_utc=recorded_at_utc,
         )
         output_root.mkdir(parents=True, exist_ok=True)
