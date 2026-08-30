@@ -83,6 +83,12 @@ def _args() -> argparse.Namespace:
     parser.add_argument("--verify-only", action="store_true")
     parser.add_argument("--jobs", type=int, default=8)
     parser.add_argument(
+        "--score-batch-size",
+        type=int,
+        default=16,
+        help="정확 검색 점수를 이 개수씩 평가하고 이어쓰기 파일에 반영한다.",
+    )
+    parser.add_argument(
         "--score-cache",
         type=Path,
         default=None,
@@ -92,6 +98,11 @@ def _args() -> argparse.Namespace:
         "--gates-only",
         action="store_true",
         help="정확 검색과 두 OOF 관문까지만 진단하고 공식 장부는 쓰지 않는다.",
+    )
+    parser.add_argument(
+        "--recorded-at-utc",
+        default=None,
+        help=argparse.SUPPRESS,
     )
     return parser.parse_args()
 
@@ -829,10 +840,12 @@ def _search_and_gates(
     augmented_predictions: dict[str, pd.Series],
     targets: pd.DataFrame,
     jobs: int,
+    score_batch_size: int,
     score_cache_path: Path,
     recorded_at_utc: str,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     _require(preflight["reachable_valid_proposal"], "유효 제안 풀에 도달할 수 없다.")
+    _require(score_batch_size >= 1, "검색 점수 묶음 크기는 1 이상이어야 한다.")
     pool_order = list(precommit["scope"]["pool_member_order"])
     search_strategy = str(precommit["search_parameters"]["strategy"])
     search_context, ordinal_members, augmented_columns = _evaluation_context(
@@ -929,15 +942,20 @@ def _search_and_gates(
             cache_misses += len(missing_positions)
             if missing_positions:
                 missing_states = [states[position] for position in missing_positions]
-                evaluated = evaluator.evaluate_many(
-                    [(members(state), None) for state in missing_states],
-                    excluded_fold=excluded_fold,
-                )
-                for position, score in zip(
-                    missing_positions, evaluated, strict=True
-                ):
-                    cached[keys[position]] = score.best_auc
-                flush_score_cache()
+                for start in range(0, len(missing_states), score_batch_size):
+                    state_chunk = missing_states[start : start + score_batch_size]
+                    position_chunk = missing_positions[
+                        start : start + score_batch_size
+                    ]
+                    evaluated = evaluator.evaluate_many(
+                        [(members(state), None) for state in state_chunk],
+                        excluded_fold=excluded_fold,
+                    )
+                    for position, score in zip(
+                        position_chunk, evaluated, strict=True
+                    ):
+                        cached[keys[position]] = score.best_auc
+                    flush_score_cache()
             return [float(cached[key]) for key in keys]
 
         search = MaximumGainSearch(
@@ -997,6 +1015,7 @@ def _search_and_gates(
             },
             "execution": {
                 "jobs": jobs,
+                "score_batch_size": score_batch_size,
                 "fits": search_fits,
                 "arm_evaluations": search_arm_evaluations,
                 "score_cache": {
@@ -1335,7 +1354,11 @@ def main() -> None:
         return
 
     runtime = _runtime_identity()
-    recorded_at_utc = datetime.now(UTC).isoformat(timespec="seconds")
+    recorded_at_utc = (
+        datetime.fromisoformat(args.recorded_at_utc).isoformat(timespec="seconds")
+        if args.recorded_at_utc is not None
+        else datetime.now(UTC).isoformat(timespec="seconds")
+    )
     source_root = args.source_root.resolve()
     score_cache_path = (
         args.score_cache.resolve()
@@ -1376,6 +1399,7 @@ def main() -> None:
             augmented_predictions=augmented_predictions,
             targets=targets,
             jobs=args.jobs,
+            score_batch_size=args.score_batch_size,
             score_cache_path=score_cache_path,
             recorded_at_utc=recorded_at_utc,
         )
