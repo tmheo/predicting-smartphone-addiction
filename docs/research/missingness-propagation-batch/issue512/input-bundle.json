@@ -1,0 +1,1741 @@
+{
+  "classification": [
+    {
+      "batch_status": "complete",
+      "member": "exp006_te_drop_gaming",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp011_resid_pair",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp022_orig_knn",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp023_orig_proxy_residual",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp025_constrained_impute",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp032_recon_orig_mean_top3",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp035_lattice_te",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp058_logreg_onehot",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp059_lookup_transformer",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "source_status": "not_completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp070_cat_exact_cats",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp081_lookup_fold_initialization_avg3",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "source_status": "not_completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp110_lgb_kitopl_no_te",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp111_xgb_depth8_no_te",
+      "reason": "중앙 반입 출처 커밋 7000df00329b3e0d71fc0dcf7bbd1be293144b69이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "source_status": "completed_after_execution_correction"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp071_cat_exact_no_te",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp106_lookup_fixed24_train_test_preprocessing",
+      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "source_status": "completed_after_execution_correction"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp113_tab_cnn_m0",
+      "reason": "TabCNN 계열 사전 제외",
+      "source_status": "not_completed"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp085_contextual_spline_m0",
+      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "source_status": "completed_after_execution_correction"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp027_recon_ce",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp048_lgb_orig_cdf_diff",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp134_realmlp_muon",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "source_status": "not_completed"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp135_xgb_hpo_trial30",
+      "reason": "중앙 반입 출처 커밋 7000df00329b3e0d71fc0dcf7bbd1be293144b69이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "source_status": "completed_after_execution_correction"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp131_lookup_bivariate_plr5",
+      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "source_status": "completed_after_execution_correction"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp136_realmlp_muon_recon_widths",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "source_status": "not_completed"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp137_tabm_recon_widths",
+      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "source_status": "completed_after_execution_correction"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp133_scalar_token_transformer_oof_te",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "source_status": "not_completed"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp131_tab_cnn_oof_target_mean",
+      "reason": "TabCNN 계열 사전 제외",
+      "source_status": "not_completed"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp132_tab_cnn_epochs100",
+      "reason": "TabCNN 계열 사전 제외",
+      "source_status": "not_completed"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp139_realmlp_reference_qnormal_train_test",
+      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "source_status": "completed_after_execution_correction"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp140_realmlp_orig_cdf_diff",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "source_status": "not_completed"
+    },
+    {
+      "batch_status": "incomplete",
+      "member": "exp157_lookup_muon_initavg8",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "source_status": "not_completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp168_issue413_lgb_no_te_fixed20",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp197_issue419_lgb_recon_ce_fixed20",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp183_issue419_cat_exact_fixed10",
+      "reason": null,
+      "source_status": "completed"
+    },
+    {
+      "batch_status": "complete",
+      "member": "exp209_issue505_lgb_lr_onehot_init",
+      "reason": null,
+      "source_status": "completed"
+    }
+  ],
+  "collection": [
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T04:53:09+00:00",
+          "config_sha256": "83b96fd897e484b998cc25f6c3982068372eec0888b0be0a62cc579d3026b565",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "bc223c0ba9b1fc0833d79b8675876e4345f578e47cbc2c35ccd7e8ca008bb478",
+          "experiment": "mpv1_exp006_te_drop_gaming_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9664985589276762,
+          "oof_prediction_sha256": "1b7cd3fed08477b5e6dff6bb77424ad3fe7381394fd98a1c0af35bdbedaad717",
+          "oof_sha256": "80dbf37993526a78478ad1910815489a41e9b29c707e79cf8dcc863bf7d4c087",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "11d48af0dd964803aafd45eabd1d1968",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T04:53:17+00:00",
+          "config_sha256": "90a9d510fd3e81cd0c9e94f6648a6ad53352e6f15bf5fb0807c019d3ee8b878d",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "6e4cce3485f040736680bc6b82461f9485fdf43245a43ee0226519c2c7f319ce",
+          "experiment": "mpv1_exp006_te_drop_gaming_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9668758280751386,
+          "oof_prediction_sha256": "47938d0b542f2f2ed30bea705f47b6b42ee2aad1ca3b481db19ba4ef3cb82ba9",
+          "oof_sha256": "8f33b1b427ca75db2e4d44f1a7adaa94053ab9f48a3ac679badcec444c093726",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "590e5975d00641119c79ebc8970c737f",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.00037726914746238904,
+      "member": "exp006_te_drop_gaming",
+      "status": "complete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T07:07:59+00:00",
+          "config_sha256": "ed6ee20c34f356201561770c942b630ab0c9b4d103ef3f44086a884a97cfde31",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "790b857042c5dcce04617ba50a24134c1f28acf6995add80823cbe4dd5830482",
+          "experiment": "mpv1_exp011_resid_pair_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9673305441849205,
+          "oof_prediction_sha256": "0a0b00c7652ec77f06b0a85532ba1d6802c13e336bb7048fc783fd135e3f30e0",
+          "oof_sha256": "bfb18c9409d429a1d050c591ebb5d8ff17abba06cacea66abcb055b24566f80a",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "dc8aaaa66d3d4e44a50ab570c33c91c3",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T07:08:07+00:00",
+          "config_sha256": "411a2137504a9740c0f2e2f53150732cb997b0956ba53feaec98f894f289b75e",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "b0661d1b221cb5562fd48c81d2a5657089f2498a71db5eed3b5540744af1012f",
+          "experiment": "mpv1_exp011_resid_pair_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9676794857460115,
+          "oof_prediction_sha256": "35710dbb4cd3dfa31d27cb5ae09b541bc8678c477bbd7d6cb95d667d33b0eb0d",
+          "oof_sha256": "19e7eeecf9876127461be2d1dd3b9b73e6d617fec5e47c5dc3b5cb48e48d414f",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "b0832fb2477446768da52a4d95f99825",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.0003489415610909985,
+      "member": "exp011_resid_pair",
+      "status": "complete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T12:01:03+00:00",
+          "config_sha256": "3031d8a992e78eb77ccd3908e1196b8e6d5c64aedc6617b65d42763ad34f5b54",
+          "container_image_digest": "6c6be73d8d8e22d3096928991d1b26b62de43bdcbe21c9943abd86d26158b154",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "303a9380af9044a79fc31702580f2d60731cbf4d22ac2bca08cab31f0bb9d52b",
+          "experiment": "mpv1_exp022_orig_knn_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9672731827010621,
+          "oof_prediction_sha256": "9bb17abb5880464dd8152dc6f6d50eacdb1dd7b8e869a096f739f2ecab75fbfd",
+          "oof_sha256": "c0237c8d42b1b9ecf6418853aa0d69ef276dc7a4afe6e9756d633163aed747e9",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "d1427312166340899ce943ebf22c1428",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T12:01:07+00:00",
+          "config_sha256": "ee231539588b10ed29744c15d801a023edfa1ff8b464f2d1da1f8954db267940",
+          "container_image_digest": "6c6be73d8d8e22d3096928991d1b26b62de43bdcbe21c9943abd86d26158b154",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "8105caeceb55d5563349f0c0c3198e974ad6498af0ffabb7ddabbb075b275ece",
+          "experiment": "mpv1_exp022_orig_knn_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9676698098556131,
+          "oof_prediction_sha256": "019797d93ee6c6aabf82c5e7e983dc4dc9521c069543081e7f85ed2cf4d79dfb",
+          "oof_sha256": "d600dbf4187ee0bdbaae1c27f2e19ec22385176f05c0a45dc483dc264cb56fb6",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "6e770b47cc524454986ef00d8110cf26",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.0003966271545510214,
+      "member": "exp022_orig_knn",
+      "status": "complete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T08:48:58+00:00",
+          "config_sha256": "e7247c98e9fc0e6f3200881422cd0ec76c941355374e8829dd33c939295eb29d",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "0c05d5bb54209c2d1411c7155e506343c2573ce91addcec13621cca01c554346",
+          "experiment": "mpv1_exp023_orig_proxy_residual_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.967272417197045,
+          "oof_prediction_sha256": "3849bd07d21621f1c365d14192c02811ea044347dc028226340559f62135b1a5",
+          "oof_sha256": "84e8c0aab1fc47c7776286bb8dc0ffb731859146a9a71f953ab12981348baadc",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "82f5bbf431c54590b16b2bead6ca12e6",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": "65401093e1b12e10aef8edd74701898dbcc45509e554b44ea7dfd382df70ba92",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T08:49:04+00:00",
+          "config_sha256": "21132a2e273fb1336913630e2642c78149c567fd5ea4f829939a196670f56d9d",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "b1b8e5382d86d6213f79ad7ae9df47879aa0c7d0dc6eb5b86af7bed51ebe9c5a",
+          "experiment": "mpv1_exp023_orig_proxy_residual_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9675915373489494,
+          "oof_prediction_sha256": "ce2f602879ddb544920ffa22ecad4265f4bf3c12a4cead5c905b2d3b5f3fef55",
+          "oof_sha256": "3829e06e784d4b3c0842e729d2defec7f750c8840448a5ac3d51d8eba52dddff",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "636908c5d68d4259a9fb86553961bfb2",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": "65401093e1b12e10aef8edd74701898dbcc45509e554b44ea7dfd382df70ba92",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.00031912015190438403,
+      "member": "exp023_orig_proxy_residual",
+      "status": "complete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T09:17:43+00:00",
+          "config_sha256": "4a944fe782f6e3d0bf2065b383083213e8f0baef907941218cb6f489bd69b350",
+          "container_image_digest": "93e872d7d8da497155ca2544266c3cb7adbe09b20ddd6eca4ab4eb5ac4ef3c40",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "57aef85c1a42736d9dbbea621a0b5f6396c0d3213b55267f8cb7c12a60675ca6",
+          "experiment": "mpv1_exp025_constrained_impute_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9675273735122406,
+          "oof_prediction_sha256": "7622dfe478ee6df60a3939bd08a22589efd36e4f2d685f37a1afcd7347c7b8f7",
+          "oof_sha256": "cfd83636c8c4f5d7b8552a4ccee54602354f9bb53a57890da2f577f45b399529",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "84da7b7079ac4c57acc4b9b5458b5d1d",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T09:17:49+00:00",
+          "config_sha256": "c295fc22adcfb4ab0485146c273602e0dd8dd8fa4eab0270645c9869d57b0329",
+          "container_image_digest": "93e872d7d8da497155ca2544266c3cb7adbe09b20ddd6eca4ab4eb5ac4ef3c40",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "989c035f26582da625b746f48253e1968bc2e5635d02237958502fd2ce5b18e6",
+          "experiment": "mpv1_exp025_constrained_impute_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9678206258536414,
+          "oof_prediction_sha256": "30c2df7a88ac886b1ec5ac27307b927d2d78a024bdcc742e60c38ae4aae71bf7",
+          "oof_sha256": "93eb0c7ee6aba36662c0a78e32895cbae351572fb6a454cbf23e96ccbb76cb2c",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "c3bd36067dbe4c9fb68935da48bb4f98",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.0002932523414007626,
+      "member": "exp025_constrained_impute",
+      "status": "complete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T09:35:09+00:00",
+          "config_sha256": "f721fcbcff9d3f3caf689991ce1b5a3d68254ece6feff4ef8327aac3493ce8c1",
+          "container_image_digest": "334bfe4a8f28f067110be4ce0397c02d1985fd1ec5e8c2ce9e3cedd7f7c3fff1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "958b29ceb2ba14852b96c6ceca45f50dcec68bd112e552d99cd45fa7647b11b4",
+          "experiment": "mpv1_exp032_recon_orig_mean_top3_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9675635360770856,
+          "oof_prediction_sha256": "57d2b8719b6176867fd3763fccda7000006d258760234321a575fd38f228636f",
+          "oof_sha256": "2cbcfdd616d5d1fa6cfd7cd6301c8b190e2d9ee180b5dcd04b0ff6bbdb0edbc2",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "1369fdd2f80f4cc4897b7f1905544100",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T09:35:12+00:00",
+          "config_sha256": "6facb34087e5abf551b923c82fb3d9170e547e4c7de9df34f189c2bd51b194ea",
+          "container_image_digest": "334bfe4a8f28f067110be4ce0397c02d1985fd1ec5e8c2ce9e3cedd7f7c3fff1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "c5ed45a4ff6a21ddd157d19921dbeea743d7e1d3f9e65cff6cd271c8b04b2e55",
+          "experiment": "mpv1_exp032_recon_orig_mean_top3_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9678601015971658,
+          "oof_prediction_sha256": "ec7563c31fbd62bbf908eb47f9d65ec507b5867e7dc359436c10537d4562640d",
+          "oof_sha256": "2b62aa2efef3372c06ae531bf8d04eb8d7802ab757629eeee964b1ed2f0af1b3",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "8ad47dda4f75432e946330c23fccf317",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.00029656552008028303,
+      "member": "exp032_recon_orig_mean_top3",
+      "status": "complete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T09:23:12+00:00",
+          "config_sha256": "eea6e1b35c836d3ae692c3d0ba00db6aec669f9277a0bae0addb89a69fe3fb1a",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "a1c577237aeb5c4c9d2b237e7e22faeb5c9793c387537fdef2b7efd73e205418",
+          "experiment": "mpv1_exp035_lattice_te_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9671330570679186,
+          "oof_prediction_sha256": "e2512813be2224351f395789b6641a98460c2f6b7dfdd5ad287f08fcbc606f57",
+          "oof_sha256": "1d515cc002e3f52f799107815800f1545a3d0f75663917544076875bca22bff5",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "042527e9bd3d419ab3ccea50b904808d",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T09:23:20+00:00",
+          "config_sha256": "d05bca7b373700e20ecbcb89d08f84af243847cfc0af38a123046d95bcff9195",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "862ad4702d7d0c2c8cc466610a5f76d77ff240f35130ebfecf409fe26063de14",
+          "experiment": "mpv1_exp035_lattice_te_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9674748763300264,
+          "oof_prediction_sha256": "f4c6ce0c29f0f4aec9a3a3cc01877231fd107ec42176a5c364fd30bdefdbeedf",
+          "oof_sha256": "38db7c603df0fb5b5ef1fa7391ec0b500cfe5c3408f78d042410821a6ffcdabf",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "f525ee26f7e54d4b96f515c858e39e99",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.0003418192621077454,
+      "member": "exp035_lattice_te",
+      "status": "complete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T03:26:12+00:00",
+          "config_sha256": "6cfab98033e1e1130d340ee831158900be1bb434e56e86c11fcce6cf6725bc44",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "2cdef7556757dbaf67f36eb71fec7e07a0d255b40176ad426ead3f98e6998a9b",
+          "experiment": "mpv1_exp058_logreg_onehot_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9596852253956334,
+          "oof_prediction_sha256": "72549d9c7867e5f1fce1469e7959fb2b7e71e84bf8197db13a520a6ec2b12f91",
+          "oof_sha256": "4dd407a9513622eed3161f73ec57a6b0a1df3a6c6069fcaa69e5064d4b6cafe5",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "6b75c87cf644438288c0ae00175248e2",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T03:27:07+00:00",
+          "config_sha256": "d27b574807507220375056d00c05b2ca808c86bf64a297e71a8fa16d65ec6ba4",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "bd89c40704556b23ee7c9382524bb92264b1ae8b6735047ee1f3020c016ac251",
+          "experiment": "mpv1_exp058_logreg_onehot_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9596153717027877,
+          "oof_prediction_sha256": "deb6d0a062861ab17d7aa9dac69aea1f9423c3c7be1134bec953ecd4e8f67427",
+          "oof_sha256": "9a404cd304964c4550a5bf4a33ec4ab9c792bad5d3f1c16b54aef65c5547cb8d",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "90aed4413e4b48e7a56f92fa9ecd5285",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": -6.985369284573384e-05,
+      "member": "exp058_logreg_onehot",
+      "status": "complete"
+    },
+    {
+      "member": "exp059_lookup_transformer",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "status": "incomplete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T19:31:04+00:00",
+          "config_sha256": "3fc336b0a619e115c305dbac4506b330280206349eab6b12654530657f636cef",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "ee9f923903516d0a7a2456ebbdb037fbf85bb4ae8764766013c53f8907b21872",
+          "experiment": "mpv1_exp070_cat_exact_cats_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9685734289059922,
+          "oof_prediction_sha256": "804624fe8b51f63703d20999d6693c3d26f8f34ec23c637f020c248e15591fd8",
+          "oof_sha256": "29c58b93489003e616a2b0e593d6fb4fa70de1d8e4dc679c88c4a9c1753f636a",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "ef0c6024d86d48ec8a75930cdaf17c2d",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T19:31:12+00:00",
+          "config_sha256": "6c0c1a9c6f98fbdf06c5b73c75e7071b8d8da1817a23eaf1cbfa43958e0c2d39",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "460f0485fdc65fe7b0def993c0199d0d7f7ac96511e523bf8b3941020aa1af3c",
+          "experiment": "mpv1_exp070_cat_exact_cats_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9687455117591307,
+          "oof_prediction_sha256": "bc63a96284b4c33f77b6b8b2c00e9e323fa9d87189a2b7e94827903e94468691",
+          "oof_sha256": "2816ceb75cf6872dca2517087e070e8e7c7333786c1e64bd72be0f3aa9b9db61",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "4fd10d9fc1324583a023552acc2cf77f",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.00017208285313852212,
+      "member": "exp070_cat_exact_cats",
+      "status": "complete"
+    },
+    {
+      "member": "exp081_lookup_fold_initialization_avg3",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "status": "incomplete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T20:25:08+00:00",
+          "config_sha256": "8e3a0a9243bfcbe68b334a1c26f6b23db6a3ef7e216809b2b909550be20f669d",
+          "container_image_digest": "a05877ded51aa91a351a3b9a93cd4be4bf5544d51af3e2e45e1a00bc4e002202",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "10beb5f4a213a9988e2757534c410615424550dbc3e49e2a62f21f14a4cdced0",
+          "experiment": "mpv1_exp110_lgb_kitopl_no_te_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9671940316479238,
+          "oof_prediction_sha256": "8330f5c4ae37d2fecb52de7e8c3f023d375b8accc7a07d1fa7faf8ac9ef91fdc",
+          "oof_sha256": "3a7ad844d6fe99042e442f0678d95590d02b3694504cce1008f5f774512fe2e1",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "470b1202750647a483b6006cef8b29e5",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T20:25:11+00:00",
+          "config_sha256": "aca4c1895659d773504888cb5784a72c5cb3594ac8da57c8bf4d2a49d2ab9b35",
+          "container_image_digest": "a05877ded51aa91a351a3b9a93cd4be4bf5544d51af3e2e45e1a00bc4e002202",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "709ed2fdd7b25daa47c10050480dc173bc282d07c25a7dac1ea14898607ed73b",
+          "experiment": "mpv1_exp110_lgb_kitopl_no_te_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9677639450957627,
+          "oof_prediction_sha256": "4a8581dd9ff851d53b165afee35156a12b8430aefe45e8eb209b055f85b4c152",
+          "oof_sha256": "c6ef2d7ea9ba5e0ba446f4ceab5823570942eaf8b078091c31f26f10539b63c6",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "9c51438d9842439881ed151ba66b0c86",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.0005699134478388546,
+      "member": "exp110_lgb_kitopl_no_te",
+      "status": "complete"
+    },
+    {
+      "member": "exp111_xgb_depth8_no_te",
+      "reason": "중앙 반입 출처 커밋 7000df00329b3e0d71fc0dcf7bbd1be293144b69이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "status": "incomplete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T12:32:48+00:00",
+          "config_sha256": "6e9d0e661a4bf13463619618e60b28780bb0f09ea28a1057b1e2c7717dbb54ed",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "af37b3822a9c9fb74ff465ced1adb842002501edab2c5a49db0eba621c661a8c",
+          "experiment": "mpv1_exp071_cat_exact_no_te_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9682027652499473,
+          "oof_prediction_sha256": "42277e750365b80a6cecb6a5a9c7d11d9ef0548aae35dc66f3363b721cb8f937",
+          "oof_sha256": "87498219499e6a96121a5d777976a4a35155cbdc53932e39a55738f15235c724",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "b196a34ef666481e8995b02048edd96a",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": "32139c22c09ef3100de05181a0aecc02d8e3b6aa5836a35d9170fc5b16255001",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T12:32:53+00:00",
+          "config_sha256": "67bb19cf20c25aee74fd95547f5527f2207e25e6bdbe28bc6d82b4639246aa41",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "58d36bab967b77b6d920c65cfe98295c6d4d0822b4f49e0412666fdc3595238b",
+          "experiment": "mpv1_exp071_cat_exact_no_te_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9684607648769652,
+          "oof_prediction_sha256": "f49f58f1e0cac843e161af5249542ad7bae5ca2f6102a893cc8043e7340e1dbb",
+          "oof_sha256": "544542208909accf5e3f2d1018046e95dbdf0b10897e6bd2b8424670ccaabf77",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "ac74499f041e4ef1a5c7f39d9f17e47c",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": "32139c22c09ef3100de05181a0aecc02d8e3b6aa5836a35d9170fc5b16255001",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.0002579996270178908,
+      "member": "exp071_cat_exact_no_te",
+      "status": "complete"
+    },
+    {
+      "member": "exp106_lookup_fixed24_train_test_preprocessing",
+      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "status": "incomplete"
+    },
+    {
+      "member": "exp113_tab_cnn_m0",
+      "reason": "TabCNN 계열 사전 제외",
+      "status": "incomplete"
+    },
+    {
+      "member": "exp085_contextual_spline_m0",
+      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "status": "incomplete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T10:21:16+00:00",
+          "config_sha256": "1bdcd17d32fca72ce750c54f2ad5e8cf49eb6fe8b3d1e33c4e2894f02b65ab6d",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "a8bcceb55075f16c93e885158dc4755472bdb3cb879fe1898ef1611d7da4ddb4",
+          "experiment": "mpv1_exp027_recon_ce_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9676715612956786,
+          "oof_prediction_sha256": "bb0b6e183fe47c5ee1cf0c3547277900b970e0baa0516e75a01b92bfa17efac3",
+          "oof_sha256": "4d42be10595788ea9fff19541d6fccec8ef209d7885a2ad769ffbab8e6e837f3",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "7309d90b64614affb6e041064b12a690",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T10:21:24+00:00",
+          "config_sha256": "c37bf5dabacaa37c45da4039217eb0720996eba7414531fbe2cca252e8b9934e",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "5a30e724c2be006b8919ac38951752d6fd5e6ef46256f17f5c118cce5c86bdc1",
+          "experiment": "mpv1_exp027_recon_ce_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9679660267388907,
+          "oof_prediction_sha256": "c9ee0e4fdfe5fc1a394f99c01bb7bf9654bbcac7516683a231e9981036b99fbd",
+          "oof_sha256": "333890aa135ffd53af16fb36f282c2dfe616d532e4ae5b0f51f2b705353cf318",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "721a05f89e5f443bbd89c903d878d4f2",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.00029446544321209966,
+      "member": "exp027_recon_ce",
+      "status": "complete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T09:12:17+00:00",
+          "config_sha256": "332407d01e75781bff84048f7a940c377cb5807e0f95bf89d31064ec7646b243",
+          "container_image_digest": "cf3281746f46fa91b63f1b53cd86034e591f75ea44b8dec6a56ed69107e5152d",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "a0e7bfcae07d61db9580efd923a9d33c05df7ffcce846c04d05433b17d263472",
+          "experiment": "mpv1_exp048_lgb_orig_cdf_diff_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9675550981581434,
+          "oof_prediction_sha256": "326d18839a18700d4d2fd6c6e8f395f3707ac6318713f0057e6638ee8025ed45",
+          "oof_sha256": "d7977f2d240b25f55e3fbe465a714d021ca3e311823ccc43e66c3f45ea7e6598",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "05d2663a98ed451aaf85c4521f6c5d98",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T09:12:23+00:00",
+          "config_sha256": "19edf1f050432b7726c97588bde49ee3b5ead15aa5c0a727b1ca567e139bcb3d",
+          "container_image_digest": "cf3281746f46fa91b63f1b53cd86034e591f75ea44b8dec6a56ed69107e5152d",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "a58732a3dd02cdbc2ea8a86d1d46732b83417299544d4debd0751bf785006db9",
+          "experiment": "mpv1_exp048_lgb_orig_cdf_diff_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9678390141475454,
+          "oof_prediction_sha256": "df52b6fbb3d592421ec03be67d29b1af0a77d5ff988653f1ce0593fe58e734de",
+          "oof_sha256": "e6fb0c511a8d5cf4c6ea14890c3c6346870ba311d6f1330d49dfed87dfbced75",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "51eedd29ad7a448cb9225aa2c8cf4236",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.0002839159894019172,
+      "member": "exp048_lgb_orig_cdf_diff",
+      "status": "complete"
+    },
+    {
+      "member": "exp134_realmlp_muon",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "status": "incomplete"
+    },
+    {
+      "member": "exp135_xgb_hpo_trial30",
+      "reason": "중앙 반입 출처 커밋 7000df00329b3e0d71fc0dcf7bbd1be293144b69이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "status": "incomplete"
+    },
+    {
+      "member": "exp131_lookup_bivariate_plr5",
+      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "status": "incomplete"
+    },
+    {
+      "member": "exp136_realmlp_muon_recon_widths",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "status": "incomplete"
+    },
+    {
+      "member": "exp137_tabm_recon_widths",
+      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "status": "incomplete"
+    },
+    {
+      "member": "exp133_scalar_token_transformer_oof_te",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "status": "incomplete"
+    },
+    {
+      "member": "exp131_tab_cnn_oof_target_mean",
+      "reason": "TabCNN 계열 사전 제외",
+      "status": "incomplete"
+    },
+    {
+      "member": "exp132_tab_cnn_epochs100",
+      "reason": "TabCNN 계열 사전 제외",
+      "status": "incomplete"
+    },
+    {
+      "member": "exp139_realmlp_reference_qnormal_train_test",
+      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
+      "status": "incomplete"
+    },
+    {
+      "member": "exp140_realmlp_orig_cdf_diff",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "status": "incomplete"
+    },
+    {
+      "member": "exp157_lookup_muon_initavg8",
+      "reason": "비용 검토 뒤 GPU 선별 대상에서 제외",
+      "status": "incomplete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T11:49:35+00:00",
+          "config_sha256": "8708506146eaf701daafca4bb60d8b8e35d47d8505ef0692288c1b0d934dd377",
+          "container_image_digest": "0cc0c98329df826aa512ecda728b3d4ba60f0f4e86cee87eb1fe157fe855de7f",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "84eddda3a4582eeda8b67c9551cbf38f2888d43dbf32d9a622f4cd050cd7b950",
+          "experiment": "mpv1_exp168_issue413_lgb_no_te_fixed20_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9649215109285072,
+          "oof_prediction_sha256": "0ba40f232a52f032209f29f6306c540658d5440885e5d49eb6195a119ae0c815",
+          "oof_sha256": "4949c1b10a7b906b3d53c680b2952da91f8bc01aa33447e902c45e6dce45ea67",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "2d32528f4ac445d89811a938d64b871e",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T11:49:41+00:00",
+          "config_sha256": "92b9479081e2cf5bb50ef45e9fff6c5c7d7491fc3c14a2ecaa757b95179dbdf2",
+          "container_image_digest": "0cc0c98329df826aa512ecda728b3d4ba60f0f4e86cee87eb1fe157fe855de7f",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "886dd34edd421675452456adcb4cc563d82a653eaf4d6170c8aecf41c296a969",
+          "experiment": "mpv1_exp168_issue413_lgb_no_te_fixed20_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.965251506046974,
+          "oof_prediction_sha256": "00e45322b3a3c6fab3b5f3f821610be50ffb634e3400214a412895e5c68f9115",
+          "oof_sha256": "c19d3b954d8be17d8458580d6e7e694e86c4fb9b7cfd50828001e22d208016de",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "c37cf00ffee4445db8dcf97ba5e375c7",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.00032999511846676377,
+      "member": "exp168_issue413_lgb_no_te_fixed20",
+      "status": "complete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T08:48:46+00:00",
+          "config_sha256": "122d83dbad7f3ece8a216e9df4c6b517cdcea5e7dc98982746ff9d092025f6eb",
+          "container_image_digest": "07d21b7ec6bfb5d208b27774397f8a1e60151565133c0a286567e3ff57d1ba6b",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "3c51f78da553479427e0274f81709e04b3bd9c356dea5f1837fc83402ed99845",
+          "experiment": "mpv1_exp197_issue419_lgb_recon_ce_fixed20_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9654478860968725,
+          "oof_prediction_sha256": "cf2a6ee1a187ab56f05d736ef62d752eef13373eae314c76aa8ce4df33c49b06",
+          "oof_sha256": "5dbfa76257628ee258895a88a367315da5ed098316807400634b8fbc4785271e",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "d0aa583196474fef870e9ced20d7c750",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T08:48:52+00:00",
+          "config_sha256": "d6fbc85908116d0ac96dc9a1113a8416d463a935169074adfd9e682a9ebaf79d",
+          "container_image_digest": "07d21b7ec6bfb5d208b27774397f8a1e60151565133c0a286567e3ff57d1ba6b",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "d9421dc8154fc13873c062c70caaa07c1d9135581f4876315e305e9110d53ece",
+          "experiment": "mpv1_exp197_issue419_lgb_recon_ce_fixed20_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9652054886683092,
+          "oof_prediction_sha256": "a89792f30e0981d986cbfa6bb43631cef636a77a77f15b5118d54920c26ddd2b",
+          "oof_sha256": "d219197354615a00ef30a5cee15f20fd01c1f8bdd0e593b42d59363abb581f69",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "f364a98fcbf94320b549c1fea55a0518",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": -0.00024239742856324575,
+      "member": "exp197_issue419_lgb_recon_ce_fixed20",
+      "status": "complete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T09:13:30+00:00",
+          "config_sha256": "96cab1e8b61bcef2782fb4d3de8af080512a6661afbe46299ab03b4c736b7d73",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "4f2eb9c314d0586271aafda07f8cc8cc30f8855cab30fbc33649179608d7a880",
+          "experiment": "mpv1_exp183_issue419_cat_exact_fixed10_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9668387323074329,
+          "oof_prediction_sha256": "4b7a604fa8f3c08cf47ac4590b4b8b41164047694b75f6f2c39d68410ea3d468",
+          "oof_sha256": "04199b678b8193961b74b6248d963ff08c4df34fa66224946a518b888da59398",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "1ea5aeed6228443d89414345e0f2192f",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": "d53347d4eba79da79e332874292479acb54c69ae882a1757c2e0332e5486ca09",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T09:13:35+00:00",
+          "config_sha256": "752bcdebb3baf7909fd1f8f4ed398e5489e0940e878bf1c57f13140aea7b02ab",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "9c4ae66283bc1cd0747e25fcf9b86eb5553026d9f8a632e94b223324992e917e",
+          "experiment": "mpv1_exp183_issue419_cat_exact_fixed10_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.966684550103222,
+          "oof_prediction_sha256": "c544fd1d11af5d85e69ac8240cce3079f8839cd8a1e7fb2fbc4454469526c522",
+          "oof_sha256": "8baf42854e7a951f8b19ca7ab2f498cbb0c53f577730d16a229197eceaa85c8e",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "47f83128009f42afb7e2df3e8a1cb5fb",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": "d53347d4eba79da79e332874292479acb54c69ae882a1757c2e0332e5486ca09",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": -0.00015418220421092865,
+      "member": "exp183_issue419_cat_exact_fixed10",
+      "status": "complete"
+    },
+    {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T13:03:37+00:00",
+          "config_sha256": "694560c65b26fdf76ca2a5742ec8d8f680da2ebb09bb72694023ddb05134c581",
+          "container_image_digest": "4bcd9b80abdb9d67bd6e1d02d7448fd202c59430965e980be63f3975200ac804",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "7360be6a392ce8e7aeded32f88cd154070147eac0d752ccb6bb8ec829ed80044",
+          "experiment": "mpv1_exp209_issue505_lgb_lr_onehot_init_tripled",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9680530960718889,
+          "oof_prediction_sha256": "081f2372e8a4490a1c1f0951a50a8b9ee3672a0555c99dbc429343d44a37fca9",
+          "oof_sha256": "80aec25f9296811b6fb60c79decfe4965bc61fb711ea867cc4f43a30d4c91dc7",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "62f691639416428aa26a6181442e0c3c",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T13:03:42+00:00",
+          "config_sha256": "57b5b8d91a59ceee73c65e74c30b92ea1048d692352bb08a4d3a687b10b68d72",
+          "container_image_digest": "4bcd9b80abdb9d67bd6e1d02d7448fd202c59430965e980be63f3975200ac804",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "98c00c949ff00241593f38e4e87b19d17c7dd9361b5c802c7c5ec25ca39ff919",
+          "experiment": "mpv1_exp209_issue505_lgb_lr_onehot_init_missingness_augmented",
+          "git_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9683458712571026,
+          "oof_prediction_sha256": "0134ea2757c883474fa3ce88f06500165ef6486e3e0e02c5a474d0d995253529",
+          "oof_sha256": "4eb86a3434104b0b757e5375784d94ddb23ef5ddf2a328b176588b79f0607cb2",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "kaggle",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "8281439d83304f1b8b983cf20ba21e6f",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.0002927751852136451,
+      "member": "exp209_issue505_lgb_lr_onehot_init",
+      "status": "complete"
+    }
+  ],
+  "complete_pair_members": [
+    "exp006_te_drop_gaming",
+    "exp011_resid_pair",
+    "exp022_orig_knn",
+    "exp023_orig_proxy_residual",
+    "exp025_constrained_impute",
+    "exp032_recon_orig_mean_top3",
+    "exp035_lattice_te",
+    "exp058_logreg_onehot",
+    "exp070_cat_exact_cats",
+    "exp110_lgb_kitopl_no_te",
+    "exp071_cat_exact_no_te",
+    "exp027_recon_ce",
+    "exp048_lgb_orig_cdf_diff",
+    "exp168_issue413_lgb_no_te_fixed20",
+    "exp197_issue419_lgb_recon_ce_fixed20",
+    "exp183_issue419_cat_exact_fixed10",
+    "exp209_issue505_lgb_lr_onehot_init"
+  ],
+  "input_bundle_sha256": "942821c80551bcad0ddd0be23e63e56bfab6e4de4f2e5b222ca3422a6085de09",
+  "issue": {
+    "number": 512,
+    "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/512"
+  },
+  "map": {
+    "number": 506,
+    "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/506"
+  },
+  "precommit_sha256": "0e8944b2e29f5bf8100a4132c5a7352c341a1789612ca3bceb79ab2bdc0dc611",
+  "recorded_at_utc": "2026-08-30T08:02:28+00:00",
+  "schema": "missingness-propagation-batch-v1/input/1",
+  "source_confirmation": {
+    "path": "artifacts/issue511-missingness-propagation-confirmation.json",
+    "sha256": "47edd93d05f71bd306cf999a04dda36dcb50a9507850a4383524ad2fd2f70477"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "collection": {
+    "complete_pair_count": 17,
+    "incomplete_pair_count": 17,
+    "source_commit_mismatch_count": 7,
+    "state_count": 34
+  },
+  "conditional_gate": {
+    "passed": false,
+    "status": "not_run"
+  },
+  "direct_nested_gate": {
+    "passed": false,
+    "status": "not_run"
+  },
+  "full_refit_rehearsal": {
+    "passed": false,
+    "status": "not_run"
+  },
+  "input_bundle_sha256": "942821c80551bcad0ddd0be23e63e56bfab6e4de4f2e5b222ca3422a6085de09",
+  "issue": {
+    "number": 512,
+    "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/512"
+  },
+  "judgment_sha256": "b2390ea543aee999fad9198a85f54739413d7f0416ecf7d2007fa4d7deb292ae",
+  "map": {
+    "number": 506,
+    "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/506"
+  },
+  "official_ledgers": {
+    "candidate_pool": {
+      "after_sha256": "c513443b6d1cc8af348dc06f8c547ed2728a659261cf7d78dc4e17a27ca668d9",
+      "before_sha256": "c513443b6d1cc8af348dc06f8c547ed2728a659261cf7d78dc4e17a27ca668d9",
+      "changed": false,
+      "path": "artifacts/pool.yaml"
+    },
+    "full_refit_plan": {
+      "after_sha256": "b40c091ee2998f90c1916eeb8498b210176f01040a15f80b578df01c53f65770",
+      "before_sha256": "b40c091ee2998f90c1916eeb8498b210176f01040a15f80b578df01c53f65770",
+      "changed": false,
+      "path": "artifacts/full-refit-plan.yaml"
+    }
+  },
+  "precommit_sha256": "0e8944b2e29f5bf8100a4132c5a7352c341a1789612ca3bceb79ab2bdc0dc611",
+  "preflight_sha256": "e8fd6188212b858c9c522c8da014c4330c933b9b86d83fb7835515deff016e10",
+  "recorded_at_utc": "2026-08-30T08:02:28+00:00",
+  "runtime": {
+    "git_commit": "b129461d22eeb4f213ac66981fdb4125b7855545",
+    "git_worktree_clean": true,
+    "script": {
+      "path": "scripts/judge_issue512_missingness_propagation_batch.py",
+      "sha256": "b5cfc53cc02f5420352d59e296684155f26714450a1f3d8c1ce8be86b8b7ce2c"
+    }
+  },
+  "schema": "missingness-propagation-batch-v1/judgment/1",
+  "search": {
+    "evaluated_state_count": 0,
+    "partial_result_adopted": false,
+    "reason": "원자 교체는 자기 자리의 예측만 바꾼다. 현재 중복 위반의 두 자리 가운데 검색 이동 자격이 있는 완결 결측 증강판이 하나도 없으므로 모든 도달 가능한 상태가 같은 중복 위반을 보존한다. 따라서 전체 OOF 제안 풀 중복 불변식을 만족하는 도달 가능한 상태가 없다.",
+    "reason_code": "proposal_duplicate_invariant_unreachable",
+    "status": "not_started"
+  },
+  "verdict": {
+    "formalized": false,
+    "proposal_pool": null,
+    "public_score_used": false,
+    "selected_replacements": [],
+    "status": "keep_current_ledgers"
+  }
+}
