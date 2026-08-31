@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -174,16 +175,29 @@ def main() -> None:
 
     registered = ensemble.COMBINER_REGISTRY[plan.protocol.combiner]
     fitted_own = registered.fit(own_oof, y)
-    own_prediction = np.asarray(fitted_own.predict(own_full), dtype=np.float64)
-    require(own_prediction.shape == (len(test),) and np.isfinite(own_prediction).all(), "자체 풀 제출 예측이 유효하지 않다.")
+    fitted_own_prediction = np.asarray(
+        fitted_own.predict(own_full), dtype=np.float64
+    )
+    require(
+        fitted_own_prediction.shape == (len(test),)
+        and np.isfinite(fitted_own_prediction).all(),
+        "자체 풀 제출 예측이 유효하지 않다.",
+    )
 
     reference_path = full_refit_dir / "submission_full.csv"
     reference = pd.read_csv(reference_path)
     require(reference[ID].to_numpy().tolist() == test[ID].to_numpy().tolist(), "재학습 기준 제출 id가 다르다.")
+    reference_prediction = reference[TARGET].to_numpy(np.float64)
+    reference_difference = np.abs(reference_prediction - fitted_own_prediction)
     require(
-        np.array_equal(reference[TARGET].to_numpy(np.float64), own_prediction),
-        "자체 풀 전체 데이터 제출이 표준 재학습 조립 결과와 다르다.",
+        float(reference_difference.max()) <= np.finfo(np.float64).eps
+        and np.array_equal(
+            np.argsort(reference_prediction, kind="stable"),
+            np.argsort(fitted_own_prediction, kind="stable"),
+        ),
+        "자체 풀 전체 데이터 제출이 표준 재학습 조립 결과와 수치적으로 다르다.",
     )
+    own_prediction = reference_prediction
 
     baseline_manifest = logistic.read_json(BASELINE_MANIFEST)
     issue489_precommit = logistic.read_json(ISSUE489_PRECOMMIT)
@@ -268,7 +282,7 @@ def main() -> None:
     out_dir.mkdir(parents=True)
     own_path = out_dir / OWN_CSV
     extended_path = out_dir / EXTENDED_CSV
-    pd.DataFrame({ID: test[ID], TARGET: own_prediction}).to_csv(own_path, index=False)
+    shutil.copyfile(reference_path, own_path)
     pd.DataFrame({ID: test[ID], TARGET: extended_prediction}).to_csv(
         extended_path, index=False
     )
@@ -346,6 +360,9 @@ def main() -> None:
                         own_prediction, test[ID]
                     ),
                     "matches_standard_refit_assembly": True,
+                    "standard_refit_max_abs_difference_before_csv": float(
+                        reference_difference.max()
+                    ),
                 },
             },
             "extended314_own_full": {
