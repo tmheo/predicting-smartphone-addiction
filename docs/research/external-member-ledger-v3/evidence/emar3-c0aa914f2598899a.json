@@ -1,0 +1,70 @@
+{
+ "issue": 484,
+ "root": "data/external/ext484",
+ "kernel_ref": "michaelqiu0606/s6e8-depth9-pair-te-inputs",
+ "script_version_id": 1,
+ "files": [
+  {
+   "path": "michaelqiu0606_s6e8-depth9-pair-te-inputs/.download.log",
+   "role": "source_metadata",
+   "bytes": 2277,
+   "retrieved_at": "2026-08-31T12:01:43Z"
+  },
+  {
+   "path": "michaelqiu0606_s6e8-depth9-pair-te-inputs/README.md",
+   "role": "source_description",
+   "bytes": 312,
+   "retrieved_at": "2026-08-31T12:01:52Z",
+   "sha256": "ec1ff5cf164c212335cfa0c748ada21c4ed4f473315524e9e5bccc371e195ee9"
+  },
+  {
+   "path": "michaelqiu0606_s6e8-depth9-pair-te-inputs/base_oof.npy",
+   "role": "source_output",
+   "bytes": 5531080,
+   "retrieved_at": "2026-08-31T12:01:52Z",
+   "sha256": "b181851f29c67b14ee1012a723d0456725da77c51b782ec814537925f596e0f1"
+  },
+  {
+   "path": "michaelqiu0606_s6e8-depth9-pair-te-inputs/base_test.npy",
+   "role": "source_output",
+   "bytes": 2370544,
+   "retrieved_at": "2026-08-31T12:01:52Z",
+   "sha256": "7859efd3e05190f89d868cac5a5c226a453d11aaddad9f9452c1ace82b24b4a3"
+  },
+  {
+   "path": "michaelqiu0606_s6e8-depth9-pair-te-inputs/dataset-metadata.json",
+   "role": "source_output",
+   "bytes": 621,
+   "retrieved_at": "2026-08-31T12:01:52Z",
+   "sha256": "eed0ef61690b51f5c90418ec3ebe93c75516fd3dd70ff4bc8b74aa68f5fecd17"
+  },
+  {
+   "path": "michaelqiu0606_s6e8-depth9-pair-te-inputs/files.json",
+   "role": "source_metadata",
+   "bytes": 318,
+   "retrieved_at": "2026-08-31T12:01:43Z",
+   "sha256": "2118e2b02fcacd5f4c8265b2b251d3750b33ceb31c03bc2b3a440bf879024b0c"
+  },
+  {
+   "path": "michaelqiu0606_s6e8-depth9-pair-te-inputs/normalized/oof_depth9_pair_te.npy",
+   "role": "normalized",
+   "bytes": 5531080,
+   "retrieved_at": null,
+   "sha256": "b181851f29c67b14ee1012a723d0456725da77c51b782ec814537925f596e0f1"
+  },
+  {
+   "path": "michaelqiu0606_s6e8-depth9-pair-te-inputs/normalized/test_depth9_pair_te.npy",
+   "role": "normalized",
+   "bytes": 2370544,
+   "retrieved_at": null,
+   "sha256": "7859efd3e05190f89d868cac5a5c226a453d11aaddad9f9452c1ace82b24b4a3"
+  },
+  {
+   "path": "michaelqiu0606_s6e8-depth9-pair-te-inputs/page-version.json",
+   "role": "source_metadata",
+   "bytes": 549,
+   "retrieved_at": "2026-08-31T12:01:43Z",
+   "sha256": "f108e371c0511adda5bc052f28daa60fa96d1a1d2d45f0202370f698179e98b9"
+  }
+ ]
+}

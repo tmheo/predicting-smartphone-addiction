@@ -1,5 +1,7 @@
 {
  "issue": 484,
+ "incremental_issue": 487,
+ "incremental_survey_cutoff": "2026-08-30T12:00:00Z",
  "ledger_version": 3,
  "contract_version": "3.0",
  "contract_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/482",
@@ -21,10 +23,10 @@
    "note": "판본 2 장부(docs/research/external-member-ledger.json)는 과거 기록으로 보존"
   }
  ],
- "generated_at": "2026-08-28T03:04:06Z",
+ "generated_at": "2026-08-31T12:02:26Z",
  "tool": {
   "script": "scripts/build_external_member_ledger_v3.py",
-  "commit": "faed3a3877a73796b7047eda73b2c20ef7f7902a"
+  "commit": "d43908e5a251856194c093a5d76cc14284636e06"
  },
  "fold_spec": {
   "id": "community-skf5-shuffle-seed42-train-csv-order",
@@ -61,21 +63,31 @@
    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C",
    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C"
+  ],
+  "incremental_issue_487": [
+   "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_rf",
+   "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_logreg",
+   "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_knn",
+   "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_mbsgd",
+   "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:torch_mlp",
+   "michaelqiu0606/s6e8-depth9-pair-te-inputs:depth9_pair_te"
   ]
  },
- "license_policy": "출력 배열은 사용 조건 미표시이므로 license_unknown_use_limited 주의 사항과 결합 입력 전용 범위로 기록한다. 소스는 Apache-2.0이며 저작자 표기를 유지한다. 배열은 커밋·재배포하지 않는다.",
+ "license_policy": "각 공개 소스와 출력의 표시된 사용 조건을 기록한다. 사용 조건이 표시되지 않은 출력 배열은 license_unknown_use_limited 주의 사항과 결합 입력 전용 범위로 한정한다. 외부 배열은 커밋하거나 재배포하지 않는다.",
  "summary": {
-  "record_count": 19,
-  "created_this_run": 0,
-  "eligible": 19,
+  "record_count": 25,
+  "created_this_run": 6,
+  "eligible": 24,
   "ineligible": 0,
-  "insufficient": 0,
-  "prior_pair_match": 19,
+  "insufficient": 1,
+  "prior_pair_match": 25,
   "caveat_counts": {
    "decision_function_scores": 3,
    "fixed_subsample_training": 1,
    "float32_storage": 5,
-   "license_unknown_use_limited": 19,
+   "full_feature_only_preprocessing": 5,
+   "license_unknown_use_limited": 24,
+   "lineage_source_missing": 1,
    "naming_mismatch_lexD": 3,
    "near_duplicate_cluster": 4,
    "rehosted_training_data_private_notebook": 3
@@ -214,6 +226,41 @@
    "pair_sha256": "f3e04b96a6bb416cab11bf092570657e9bc6d74c7446ab8bf7f97815f17e80a0",
    "oof_path": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/normalized/oof_CB1C.npy",
    "test_path": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/normalized/test_CB1C.npy"
+  },
+  {
+   "member_id": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_rf",
+   "audit_record_id": "emar3-b60464831b10210c",
+   "pair_sha256": "b3e6a5c21a006b6f730170e55a3a37a3f8795b62734d7f12679b4919f9bc8ed4",
+   "oof_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/oof_cuml_rf.npy",
+   "test_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/test_cuml_rf.npy"
+  },
+  {
+   "member_id": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_logreg",
+   "audit_record_id": "emar3-94244be6ffc6dc60",
+   "pair_sha256": "949716ab6998c5f084a3ea9318a0f103b35c48d27f22bfdfb41cae070e2153a2",
+   "oof_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/oof_cuml_logreg.npy",
+   "test_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/test_cuml_logreg.npy"
+  },
+  {
+   "member_id": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_knn",
+   "audit_record_id": "emar3-b551419f49d9e782",
+   "pair_sha256": "6cc0389e39fd8ec6658322cf524d37d6a0b77bf5a86de587be074f77a841a90b",
+   "oof_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/oof_cuml_knn.npy",
+   "test_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/test_cuml_knn.npy"
+  },
+  {
+   "member_id": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_mbsgd",
+   "audit_record_id": "emar3-85f73bd0c91f4b5a",
+   "pair_sha256": "57c44070baf52a346fe78c881f04d47952ed9e1bf29f5736e1f754d01caa85c6",
+   "oof_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/oof_cuml_mbsgd.npy",
+   "test_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/test_cuml_mbsgd.npy"
+  },
+  {
+   "member_id": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:torch_mlp",
+   "audit_record_id": "emar3-a1d84b8ece183b07",
+   "pair_sha256": "8f3d5ea1e94adbeb6162ec49995803c9f8d88b9d30325dbd343c68374842ca8f",
+   "oof_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/oof_torch_mlp.npy",
+   "test_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/test_torch_mlp.npy"
   }
  ],
  "current_records": [
@@ -231,8 +278,11 @@
     "license_unknown_use_limited",
     "naming_mismatch_lexD"
    ],
+   "source_kind": "notebook",
+   "source_ref": "zhukovoleksiy/ps6e8-eda-feature-engineering-pipeline",
    "kernel_ref": "zhukovoleksiy/ps6e8-eda-feature-engineering-pipeline",
    "script_version_id": 344661133,
+   "dataset_version_number": null,
    "input_population": "v2_reaudit",
    "rescored_auc": 0.9679922323929437,
    "oof_path": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/normalized/oof_cat_base.npy",
@@ -257,8 +307,11 @@
     "license_unknown_use_limited",
     "naming_mismatch_lexD"
    ],
+   "source_kind": "notebook",
+   "source_ref": "zhukovoleksiy/ps6e8-eda-feature-engineering-pipeline",
    "kernel_ref": "zhukovoleksiy/ps6e8-eda-feature-engineering-pipeline",
    "script_version_id": 344661133,
+   "dataset_version_number": null,
    "input_population": "v2_reaudit",
    "rescored_auc": 0.9683553568878653,
    "oof_path": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/normalized/oof_lgb02.npy",
@@ -283,8 +336,11 @@
     "license_unknown_use_limited",
     "naming_mismatch_lexD"
    ],
+   "source_kind": "notebook",
+   "source_ref": "zhukovoleksiy/ps6e8-eda-feature-engineering-pipeline",
    "kernel_ref": "zhukovoleksiy/ps6e8-eda-feature-engineering-pipeline",
    "script_version_id": 344661133,
+   "dataset_version_number": null,
    "input_population": "v2_reaudit",
    "rescored_auc": 0.9678590908574395,
    "oof_path": "data/external/ext484/zhukovoleksiy_ps6e8-eda-feature-engineering-pipeline/normalized/oof_xgb_base.npy",
@@ -308,8 +364,11 @@
    "caveat_codes": [
     "license_unknown_use_limited"
    ],
+   "source_kind": "notebook",
+   "source_ref": "redamountassir/s6e8-lgbm-lb-0-96965",
    "kernel_ref": "redamountassir/s6e8-lgbm-lb-0-96965",
    "script_version_id": 340546450,
+   "dataset_version_number": null,
    "input_population": "v2_reaudit",
    "rescored_auc": 0.9682590393147879,
    "oof_path": "data/external/ext484/redamountassir_s6e8-lgbm-lb-0-96965/normalized/oof_lgbm.npy",
@@ -333,8 +392,11 @@
    "caveat_codes": [
     "license_unknown_use_limited"
    ],
+   "source_kind": "notebook",
+   "source_ref": "redamountassir/s6e8-histgradientboosting-lb-0-96945",
    "kernel_ref": "redamountassir/s6e8-histgradientboosting-lb-0-96945",
    "script_version_id": 340546105,
+   "dataset_version_number": null,
    "input_population": "v2_reaudit",
    "rescored_auc": 0.9680258266201603,
    "oof_path": "data/external/ext484/redamountassir_s6e8-histgradientboosting-lb-0-96945/normalized/oof_hgb.npy",
@@ -358,8 +420,11 @@
    "caveat_codes": [
     "license_unknown_use_limited"
    ],
+   "source_kind": "notebook",
+   "source_ref": "yekenot/ps-s6-e8-trompt-pytorch-frame",
    "kernel_ref": "yekenot/ps-s6-e8-trompt-pytorch-frame",
    "script_version_id": 344781653,
+   "dataset_version_number": null,
    "input_population": "v2_reaudit",
    "rescored_auc": 0.9666710825586122,
    "oof_path": "data/external/ext484/yekenot_ps-s6-e8-trompt-pytorch-frame/normalized/oof_trompt.npy",
@@ -383,8 +448,11 @@
    "caveat_codes": [
     "license_unknown_use_limited"
    ],
+   "source_kind": "notebook",
+   "source_ref": "mohankrishnathalla/s6e8-realmlp-oof-saver",
    "kernel_ref": "mohankrishnathalla/s6e8-realmlp-oof-saver",
    "script_version_id": 342288210,
+   "dataset_version_number": null,
    "input_population": "v2_reaudit",
    "rescored_auc": 0.9581337349072739,
    "oof_path": "data/external/ext484/mohankrishnathalla_s6e8-realmlp-oof-saver/normalized/oof_realmlp.npy",
@@ -409,8 +477,11 @@
     "license_unknown_use_limited",
     "decision_function_scores"
    ],
+   "source_kind": "notebook",
+   "source_ref": "lopure/hdviz-pca-parallel-with-linear-svm",
    "kernel_ref": "lopure/hdviz-pca-parallel-with-linear-svm",
    "script_version_id": 342359513,
+   "dataset_version_number": null,
    "input_population": "v2_reaudit",
    "rescored_auc": 0.9113453805990479,
    "oof_path": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/normalized/oof_linear_svm.npy",
@@ -435,8 +506,11 @@
     "license_unknown_use_limited",
     "decision_function_scores"
    ],
+   "source_kind": "notebook",
+   "source_ref": "lopure/hdviz-pca-parallel-with-linear-svm",
    "kernel_ref": "lopure/hdviz-pca-parallel-with-linear-svm",
    "script_version_id": 342359513,
+   "dataset_version_number": null,
    "input_population": "v2_reaudit",
    "rescored_auc": 0.9287951221261161,
    "oof_path": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/normalized/oof_poly_svm.npy",
@@ -461,8 +535,11 @@
     "license_unknown_use_limited",
     "decision_function_scores"
    ],
+   "source_kind": "notebook",
+   "source_ref": "lopure/hdviz-pca-parallel-with-linear-svm",
    "kernel_ref": "lopure/hdviz-pca-parallel-with-linear-svm",
    "script_version_id": 342359513,
+   "dataset_version_number": null,
    "input_population": "v2_reaudit",
    "rescored_auc": 0.9221668586742819,
    "oof_path": "data/external/ext484/lopure_hdviz-pca-parallel-with-linear-svm/normalized/oof_rbf_svm.npy",
@@ -487,8 +564,11 @@
     "license_unknown_use_limited",
     "fixed_subsample_training"
    ],
+   "source_kind": "notebook",
+   "source_ref": "shamanthakreddymallu/s6e8-baseline",
    "kernel_ref": "shamanthakreddymallu/s6e8-baseline",
    "script_version_id": 345105403,
+   "dataset_version_number": null,
    "input_population": "v2_reaudit",
    "rescored_auc": 0.9366091741556544,
    "oof_path": "data/external/ext484/shamanthakreddymallu_s6e8-baseline/normalized/oof_lr.npy",
@@ -513,8 +593,11 @@
     "license_unknown_use_limited",
     "float32_storage"
    ],
+   "source_kind": "notebook",
+   "source_ref": "beicicc/s6e8-fold-safe-tabnet",
    "kernel_ref": "beicicc/s6e8-fold-safe-tabnet",
    "script_version_id": 339872430,
+   "dataset_version_number": null,
    "input_population": "census",
    "rescored_auc": 0.965656809505733,
    "oof_path": "data/external/ext484/beicicc_s6e8-fold-safe-tabnet/normalized/oof_tabnet.npy",
@@ -540,8 +623,11 @@
     "float32_storage",
     "near_duplicate_cluster"
    ],
+   "source_kind": "notebook",
+   "source_ref": "beicicc/s6e8-fold-safe-realmlp",
    "kernel_ref": "beicicc/s6e8-fold-safe-realmlp",
    "script_version_id": 339864149,
+   "dataset_version_number": null,
    "input_population": "census",
    "rescored_auc": 0.968156386578921,
    "oof_path": "data/external/ext484/beicicc_s6e8-fold-safe-realmlp/normalized/oof_realmlp.npy",
@@ -566,8 +652,11 @@
     "license_unknown_use_limited",
     "near_duplicate_cluster"
    ],
+   "source_kind": "notebook",
+   "source_ref": "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task",
    "kernel_ref": "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task",
    "script_version_id": 339485089,
+   "dataset_version_number": null,
    "input_population": "census",
    "rescored_auc": 0.9625575875142238,
    "oof_path": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/normalized/oof_lgb.npy",
@@ -591,8 +680,11 @@
    "caveat_codes": [
     "license_unknown_use_limited"
    ],
+   "source_kind": "notebook",
+   "source_ref": "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task",
    "kernel_ref": "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task",
    "script_version_id": 339485089,
+   "dataset_version_number": null,
    "input_population": "census",
    "rescored_auc": 0.9620483394123205,
    "oof_path": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/normalized/oof_hgb.npy",
@@ -616,8 +708,11 @@
    "caveat_codes": [
     "license_unknown_use_limited"
    ],
+   "source_kind": "notebook",
+   "source_ref": "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task",
    "kernel_ref": "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task",
    "script_version_id": 339485089,
+   "dataset_version_number": null,
    "input_population": "census",
    "rescored_auc": 0.9623141868459005,
    "oof_path": "data/external/ext484/busyaprime_s6e8-tabular-baseline-that-autodetects-the-task/normalized/oof_xgb.npy",
@@ -644,8 +739,11 @@
     "rehosted_training_data_private_notebook",
     "near_duplicate_cluster"
    ],
+   "source_kind": "notebook",
+   "source_ref": "ravi20076/playgrounds6e8-public-baseline-v1",
    "kernel_ref": "ravi20076/playgrounds6e8-public-baseline-v1",
    "script_version_id": 339444387,
+   "dataset_version_number": null,
    "input_population": "census",
    "rescored_auc": 0.9642014816182081,
    "oof_path": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/normalized/oof_XGB1C.npy",
@@ -672,8 +770,11 @@
     "rehosted_training_data_private_notebook",
     "near_duplicate_cluster"
    ],
+   "source_kind": "notebook",
+   "source_ref": "ravi20076/playgrounds6e8-public-baseline-v1",
    "kernel_ref": "ravi20076/playgrounds6e8-public-baseline-v1",
    "script_version_id": 339444387,
+   "dataset_version_number": null,
    "input_population": "census",
    "rescored_auc": 0.9641730989593497,
    "oof_path": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/normalized/oof_LGBM1C.npy",
@@ -699,8 +800,11 @@
     "float32_storage",
     "rehosted_training_data_private_notebook"
    ],
+   "source_kind": "notebook",
+   "source_ref": "ravi20076/playgrounds6e8-public-baseline-v1",
    "kernel_ref": "ravi20076/playgrounds6e8-public-baseline-v1",
    "script_version_id": 339444387,
+   "dataset_version_number": null,
    "input_population": "census",
    "rescored_auc": 0.9639441018700132,
    "oof_path": "data/external/ext484/ravi20076_playgrounds6e8-public-baseline-v1/normalized/oof_CB1C.npy",
@@ -710,6 +814,191 @@
    "pair_sha256": "f3e04b96a6bb416cab11bf092570657e9bc6d74c7446ab8bf7f97815f17e80a0",
    "record_sha256": "7e5953776271be5761ef15afc9bfd55d3be7774a821bdf1fd6c966c91378b09a",
    "evidence_manifest_sha256": "28286be88c01237d8c3b6e69aaa51db2eb22a291594cade922d5d04fd477b69a"
+  },
+  {
+   "member_id": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_rf",
+   "display_name": "Subodh Deogade cuML RandomForest",
+   "audit_record_id": "emar3-b60464831b10210c",
+   "audit_revision": 1,
+   "supersedes_audit_record_id": null,
+   "audit_state": "감사 완료",
+   "eligibility": "자격 있음",
+   "exclusion_reason_codes": [],
+   "insufficiency_reasons": [],
+   "caveat_codes": [
+    "license_unknown_use_limited",
+    "full_feature_only_preprocessing"
+   ],
+   "source_kind": "notebook",
+   "source_ref": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+   "kernel_ref": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+   "script_version_id": 346039237,
+   "dataset_version_number": null,
+   "input_population": "incremental_issue_487",
+   "rescored_auc": 0.9405041017122113,
+   "oof_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/oof_cuml_rf.npy",
+   "test_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/test_cuml_rf.npy",
+   "oof_sha256": "89151a02d81ac6898e9f6e48e67e565b636c845ddeaf02bff79fd20009e1cd9d",
+   "test_sha256": "9f27567de1b1a840b7a55807bea6608eee0b1b1c5be88833da2cb6724b22b250",
+   "pair_sha256": "b3e6a5c21a006b6f730170e55a3a37a3f8795b62734d7f12679b4919f9bc8ed4",
+   "record_sha256": "1e9fa154acf27872a358b952475b643059b6e7b14778ab455e10942cfa0808d2",
+   "evidence_manifest_sha256": "009f28bc78190cce513931edd40d34eb96d30ac274798bf3e32336e2fec0ec93"
+  },
+  {
+   "member_id": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_logreg",
+   "display_name": "Subodh Deogade cuML LogisticRegression",
+   "audit_record_id": "emar3-94244be6ffc6dc60",
+   "audit_revision": 1,
+   "supersedes_audit_record_id": null,
+   "audit_state": "감사 완료",
+   "eligibility": "자격 있음",
+   "exclusion_reason_codes": [],
+   "insufficiency_reasons": [],
+   "caveat_codes": [
+    "license_unknown_use_limited",
+    "full_feature_only_preprocessing"
+   ],
+   "source_kind": "notebook",
+   "source_ref": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+   "kernel_ref": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+   "script_version_id": 346039237,
+   "dataset_version_number": null,
+   "input_population": "incremental_issue_487",
+   "rescored_auc": 0.9278269053573429,
+   "oof_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/oof_cuml_logreg.npy",
+   "test_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/test_cuml_logreg.npy",
+   "oof_sha256": "760c2dbc37f9dceb30d83bdc4605c335106688a724e8457594b131280bc78f37",
+   "test_sha256": "3bd4ef7763e903edfc9a7f06c9749fca3e11abc47cd452776c80ca104b192286",
+   "pair_sha256": "949716ab6998c5f084a3ea9318a0f103b35c48d27f22bfdfb41cae070e2153a2",
+   "record_sha256": "15c45cacd5a3ee954648c7aa92290b93fa123bdc3d2b45b1cb07b0697c94cbe8",
+   "evidence_manifest_sha256": "009f28bc78190cce513931edd40d34eb96d30ac274798bf3e32336e2fec0ec93"
+  },
+  {
+   "member_id": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_knn",
+   "display_name": "Subodh Deogade cuML KNN",
+   "audit_record_id": "emar3-b551419f49d9e782",
+   "audit_revision": 1,
+   "supersedes_audit_record_id": null,
+   "audit_state": "감사 완료",
+   "eligibility": "자격 있음",
+   "exclusion_reason_codes": [],
+   "insufficiency_reasons": [],
+   "caveat_codes": [
+    "license_unknown_use_limited",
+    "full_feature_only_preprocessing"
+   ],
+   "source_kind": "notebook",
+   "source_ref": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+   "kernel_ref": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+   "script_version_id": 346039237,
+   "dataset_version_number": null,
+   "input_population": "incremental_issue_487",
+   "rescored_auc": 0.9290861655548703,
+   "oof_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/oof_cuml_knn.npy",
+   "test_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/test_cuml_knn.npy",
+   "oof_sha256": "f926de18987ce6467e2781e88ce5c404ab030ef95c7e251a2b07ec8b84753d95",
+   "test_sha256": "2b0b92306fcc710e67917c78b82fa7fe1ad7e2421df01dbacfd1162b0f08c328",
+   "pair_sha256": "6cc0389e39fd8ec6658322cf524d37d6a0b77bf5a86de587be074f77a841a90b",
+   "record_sha256": "8feab187fb3de1d7384b367d98881cea4cbe64d9a6146d41c399961cb1b5e4ab",
+   "evidence_manifest_sha256": "009f28bc78190cce513931edd40d34eb96d30ac274798bf3e32336e2fec0ec93"
+  },
+  {
+   "member_id": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_mbsgd",
+   "display_name": "Subodh Deogade cuML MBSGD",
+   "audit_record_id": "emar3-85f73bd0c91f4b5a",
+   "audit_revision": 1,
+   "supersedes_audit_record_id": null,
+   "audit_state": "감사 완료",
+   "eligibility": "자격 있음",
+   "exclusion_reason_codes": [],
+   "insufficiency_reasons": [],
+   "caveat_codes": [
+    "license_unknown_use_limited",
+    "full_feature_only_preprocessing"
+   ],
+   "source_kind": "notebook",
+   "source_ref": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+   "kernel_ref": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+   "script_version_id": 346039237,
+   "dataset_version_number": null,
+   "input_population": "incremental_issue_487",
+   "rescored_auc": 0.8341739019215888,
+   "oof_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/oof_cuml_mbsgd.npy",
+   "test_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/test_cuml_mbsgd.npy",
+   "oof_sha256": "55c9c62f31a2b0dfef1ac920bc9dea749093fe9ec8eb73ac44eec11eb0f89922",
+   "test_sha256": "620f1c39d6a86527b032a216453a5caf4c86266b697857766c0e087dc4288c0f",
+   "pair_sha256": "57c44070baf52a346fe78c881f04d47952ed9e1bf29f5736e1f754d01caa85c6",
+   "record_sha256": "a208812ffcb7a82fc27b747faa801f64c002dab8d9ddfbdbec7c8020fd5120e0",
+   "evidence_manifest_sha256": "009f28bc78190cce513931edd40d34eb96d30ac274798bf3e32336e2fec0ec93"
+  },
+  {
+   "member_id": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:torch_mlp",
+   "display_name": "Subodh Deogade PyTorch MLP",
+   "audit_record_id": "emar3-a1d84b8ece183b07",
+   "audit_revision": 1,
+   "supersedes_audit_record_id": null,
+   "audit_state": "감사 완료",
+   "eligibility": "자격 있음",
+   "exclusion_reason_codes": [],
+   "insufficiency_reasons": [],
+   "caveat_codes": [
+    "license_unknown_use_limited",
+    "full_feature_only_preprocessing"
+   ],
+   "source_kind": "notebook",
+   "source_ref": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+   "kernel_ref": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+   "script_version_id": 346039237,
+   "dataset_version_number": null,
+   "input_population": "incremental_issue_487",
+   "rescored_auc": 0.9408735736144551,
+   "oof_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/oof_torch_mlp.npy",
+   "test_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/test_torch_mlp.npy",
+   "oof_sha256": "cedd6cd7d824195328e0abb9f6a2a1035d9febe3a1906231ce3222c069b6f308",
+   "test_sha256": "eb8c90fbcb015e9e3c94bc36808723d4a19fb55e7f2389f5e3e577f488057a17",
+   "pair_sha256": "8f3d5ea1e94adbeb6162ec49995803c9f8d88b9d30325dbd343c68374842ca8f",
+   "record_sha256": "9169ba147defb6545a993c88c6198f85cd4e9627d8e77143aaf03310f8e47f36",
+   "evidence_manifest_sha256": "009f28bc78190cce513931edd40d34eb96d30ac274798bf3e32336e2fec0ec93"
+  },
+  {
+   "member_id": "michaelqiu0606/s6e8-depth9-pair-te-inputs:depth9_pair_te",
+   "display_name": "Michael Y. Qiu depth9 pair-TE",
+   "audit_record_id": "emar3-c0aa914f2598899a",
+   "audit_revision": 1,
+   "supersedes_audit_record_id": null,
+   "audit_state": "감사 완료",
+   "eligibility": "근거 부족",
+   "exclusion_reason_codes": [],
+   "insufficiency_reasons": [
+    "fold_evidence",
+    "claim_unknown:direct_official_training",
+    "claim_unknown:single_model_lineage",
+    "claim_unknown:allowed_aggregation_only",
+    "claim_unknown:target_preprocessing_isolated",
+    "claim_unknown:outer_valid_scoring_only",
+    "claim_unknown:training_point_fixed",
+    "claim_unknown:public_config_selection_isolated",
+    "claim_unknown:no_external_prediction_retraining",
+    "claim_unknown:no_pseudo_label_training",
+    "claim_unknown:no_blend_distillation"
+   ],
+   "caveat_codes": [
+    "lineage_source_missing"
+   ],
+   "source_kind": "dataset",
+   "source_ref": "michaelqiu0606/s6e8-depth9-pair-te-inputs",
+   "kernel_ref": "michaelqiu0606/s6e8-depth9-pair-te-inputs",
+   "script_version_id": 1,
+   "dataset_version_number": 1,
+   "input_population": "incremental_issue_487",
+   "rescored_auc": 0.9705168395334287,
+   "oof_path": "data/external/ext484/michaelqiu0606_s6e8-depth9-pair-te-inputs/normalized/oof_depth9_pair_te.npy",
+   "test_path": "data/external/ext484/michaelqiu0606_s6e8-depth9-pair-te-inputs/normalized/test_depth9_pair_te.npy",
+   "oof_sha256": "eff3d9e138a7b8703afed2a63688001c65e72b673a2155f374e1594f461eaeea",
+   "test_sha256": "0908a1e481b119a9f6ad309ad57e8c8c4fa352679dc7127996e2b736a7b62281",
+   "pair_sha256": "1d85e728c61ce6c177c90183b97b77e2bf20ff231a57dac6f9fd8b9bb93462d3",
+   "record_sha256": "d06b8cfc02509f7ec2585b7918c1964644f4b48304d33bb3096a6765965328e7",
+   "evidence_manifest_sha256": "8313b57d28245a76084b33e0745a934e777afd6063913c17adffc524dc5fd997"
   }
  ],
  "superseded_record_ids": []

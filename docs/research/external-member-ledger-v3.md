@@ -1,10 +1,11 @@
-# 확장 스택용 외부 구성원 장부 (판본 3, 이슈 #484)
+# 확장 스택용 외부 구성원 장부 (판본 3, 이슈 #484·#487)
 
 ## 결론
 
-판본 3은 [#480](https://github.com/tmheo/predicting-smartphone-addiction/issues/480) 재감사 통과 11개와 [#479](https://github.com/tmheo/predicting-smartphone-addiction/issues/479) 전수 조사 통과 8개, 모두 19개 후보의 고정 공개 판본 소스와 출력을 Kaggle에서 다시 확보해 [#482](https://github.com/tmheo/predicting-smartphone-addiction/issues/482) 계약대로 감사했다.
-19개 전부 `감사 완료` 상태의 감사 기록을 가지며 그중 **19개가 `자격 있음`**, 0개가 `자격 없음`, 0개가 `근거 부족`이다.
-정규화 예측 쌍 SHA-256은 19개 모두 조사 보고서의 값과 같다.
+판본 3은 [판본 2 공개 노트북 재감사](https://github.com/tmheo/predicting-smartphone-addiction/issues/480) 통과 11개, [장부 밖 전수 조사](https://github.com/tmheo/predicting-smartphone-addiction/issues/479) 통과 8개와 [2026-08-30 증분 조사](https://github.com/tmheo/predicting-smartphone-addiction/issues/487)에서 발견한 6개 후보를 같은 계약으로 감사했다.
+현행 후보 25개 전부 `감사 완료` 상태이며 그중 **24개가 `자격 있음`**, 0개가 `자격 없음`, 1개가 `근거 부족`이다.
+증분 조사 후보 6개 가운데 5개는 `자격 있음`, 1개는 `근거 부족`이다.
+정규화 예측 쌍 SHA-256은 25개가 조사 보고서의 값과 일치한다.
 감사 진행 상태, 자격 판정, 후보 동결은 서로 다른 축이며 이 문서와 색인은 후보를 동결하지 않는다.
 
 ## 산출물
@@ -15,7 +16,7 @@
 - 반입 실행 기록: `docs/research/external-member-ledger-v3/ingest-run.json`
 - 외부 파일: `data/external/ext484/<owner>_<slug>/` (소스 `.ipynb`, 출력 원문, `kernel-metadata.json`, `files.json`, `page-version.json`, `.download.log`, `normalized/` float64 npy). `data/`는 커밋 제외 경로다.
 - 생성 도구: `scripts/build_external_member_ledger_v3.py` (`fetch` → `audit` → `verify`). 판본 1·2 장부와 `scripts/build_external_member_ledger.py`는 수정하지 않고 과거 기록으로 보존한다.
-- 도구 커밋: `faed3a3877a73796b7047eda73b2c20ef7f7902a`
+- 도구 커밋: `d43908e5a251856194c093a5d76cc14284636e06`
 
 ## 후보별 자격 판정
 
@@ -40,6 +41,12 @@
 | 17 | `ravi20076/playgrounds6e8-public-baseline-v1:XGB1C` | [339444387](https://www.kaggle.com/code/ravi20076/playgrounds6e8-public-baseline-v1?scriptVersionId=339444387) | 자격 있음 | 0.964201 | -3.8e-10 | - | `d795573efce0…` | 일치 | license_unknown_use_limited, float32_storage, rehosted_training_data_private_notebook, near_duplicate_cluster |
 | 18 | `ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C` | [339444387](https://www.kaggle.com/code/ravi20076/playgrounds6e8-public-baseline-v1?scriptVersionId=339444387) | 자격 있음 | 0.964173 | -4.1e-11 | - | `15ea60831189…` | 일치 | license_unknown_use_limited, float32_storage, rehosted_training_data_private_notebook, near_duplicate_cluster |
 | 19 | `ravi20076/playgrounds6e8-public-baseline-v1:CB1C` | [339444387](https://www.kaggle.com/code/ravi20076/playgrounds6e8-public-baseline-v1?scriptVersionId=339444387) | 자격 있음 | 0.963944 | -1.3e-10 | - | `f3e04b96a6bb…` | 일치 | license_unknown_use_limited, float32_storage, rehosted_training_data_private_notebook |
+| 20 | `sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_rf` | [346039237](https://www.kaggle.com/code/sometimessubodh/stacking-9-models-smartphone-addiction-prediction?scriptVersionId=346039237) | 자격 있음 | 0.940504 | +2.1e-13 | - | `b3e6a5c21a00…` | 일치 | license_unknown_use_limited, full_feature_only_preprocessing |
+| 21 | `sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_logreg` | [346039237](https://www.kaggle.com/code/sometimessubodh/stacking-9-models-smartphone-addiction-prediction?scriptVersionId=346039237) | 자격 있음 | 0.927827 | +3.4e-13 | - | `949716ab6998…` | 일치 | license_unknown_use_limited, full_feature_only_preprocessing |
+| 22 | `sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_knn` | [346039237](https://www.kaggle.com/code/sometimessubodh/stacking-9-models-smartphone-addiction-prediction?scriptVersionId=346039237) | 자격 있음 | 0.929086 | -1.3e-13 | - | `6cc0389e39fd…` | 일치 | license_unknown_use_limited, full_feature_only_preprocessing |
+| 23 | `sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_mbsgd` | [346039237](https://www.kaggle.com/code/sometimessubodh/stacking-9-models-smartphone-addiction-prediction?scriptVersionId=346039237) | 자격 있음 | 0.834174 | -4.1e-13 | - | `57c44070baf5…` | 일치 | license_unknown_use_limited, full_feature_only_preprocessing |
+| 24 | `sometimessubodh/stacking-9-models-smartphone-addiction-prediction:torch_mlp` | [346039237](https://www.kaggle.com/code/sometimessubodh/stacking-9-models-smartphone-addiction-prediction?scriptVersionId=346039237) | 자격 있음 | 0.940874 | +4.6e-13 | - | `8f3d5ea1e94a…` | 일치 | license_unknown_use_limited, full_feature_only_preprocessing |
+| 25 | `michaelqiu0606/s6e8-depth9-pair-te-inputs:depth9_pair_te` | [1](https://www.kaggle.com/datasets/michaelqiu0606/s6e8-depth9-pair-te-inputs/versions/1) | 근거 부족 | 0.970517 | +4.3e-13 | - | `1d85e728c61c…` | 일치 | lineage_source_missing |
 
 모든 후보의 감사 기록 식별자, 제외 사유와 근거 부족 사유는 색인의 `current_records`에 있다.
 
@@ -66,10 +73,16 @@
 | `ravi20076/playgrounds6e8-public-baseline-v1:XGB1C` | `OOF_Preds_MLV1_1.parquet` | `474c9ae81249bfaf026dd8e716ea79a4e4514f8f1e1d0cbd4fece758867879d9` | `Mdl_Preds_MLV1_1.parquet` | `3ded242bf1efefc5acbeeeb340a0fb62fe116633d36d1a5fb62b24c38befdd8c` | `bdf0a479cd53068f555e2c28c9ca5bbfb1cb9116a5e06807985d07f3dffde6f3` | `56e609f55ff864c59c8b56f21f8d159ebe3653a9318f4a52c6eef50371537a82` | `d795573efce0daf7fa1f87e82bd0843f1e12960bc621e033e9d93c207be822ab` |
 | `ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C` | `OOF_Preds_MLV1_1.parquet` | `474c9ae81249bfaf026dd8e716ea79a4e4514f8f1e1d0cbd4fece758867879d9` | `Mdl_Preds_MLV1_1.parquet` | `3ded242bf1efefc5acbeeeb340a0fb62fe116633d36d1a5fb62b24c38befdd8c` | `d1dd6681d86cfce1b9a1bca1faa8f0014f4dfb91d16bb386f172efd1a6d459c1` | `2bfa9f0a1b082b734035ede8211e6afd069c9dbbcb93e1f9903a53350228853f` | `15ea60831189c09204e17cdefbaa8e262cee346fab45ce9f7f97e32870446b66` |
 | `ravi20076/playgrounds6e8-public-baseline-v1:CB1C` | `OOF_Preds_MLV1_1.parquet` | `474c9ae81249bfaf026dd8e716ea79a4e4514f8f1e1d0cbd4fece758867879d9` | `Mdl_Preds_MLV1_1.parquet` | `3ded242bf1efefc5acbeeeb340a0fb62fe116633d36d1a5fb62b24c38befdd8c` | `da5db269a883d4a093e11165a051b52d65430654031a80ab986d65e35ac7cb9b` | `4de941e94c9a3931a9af611ba98c5b953b1808c66d643005593750674dc7835c` | `f3e04b96a6bb416cab11bf092570657e9bc6d74c7446ab8bf7f97815f17e80a0` |
+| `sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_rf` | `stacking_matrices.pkl` | `8c1f7d3e761c1cf66f3095cda530b05f64d8de11de757e87166421a33116c5ad` | `stacking_matrices.pkl` | `8c1f7d3e761c1cf66f3095cda530b05f64d8de11de757e87166421a33116c5ad` | `89151a02d81ac6898e9f6e48e67e565b636c845ddeaf02bff79fd20009e1cd9d` | `9f27567de1b1a840b7a55807bea6608eee0b1b1c5be88833da2cb6724b22b250` | `b3e6a5c21a006b6f730170e55a3a37a3f8795b62734d7f12679b4919f9bc8ed4` |
+| `sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_logreg` | `stacking_matrices.pkl` | `8c1f7d3e761c1cf66f3095cda530b05f64d8de11de757e87166421a33116c5ad` | `stacking_matrices.pkl` | `8c1f7d3e761c1cf66f3095cda530b05f64d8de11de757e87166421a33116c5ad` | `760c2dbc37f9dceb30d83bdc4605c335106688a724e8457594b131280bc78f37` | `3bd4ef7763e903edfc9a7f06c9749fca3e11abc47cd452776c80ca104b192286` | `949716ab6998c5f084a3ea9318a0f103b35c48d27f22bfdfb41cae070e2153a2` |
+| `sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_knn` | `stacking_matrices.pkl` | `8c1f7d3e761c1cf66f3095cda530b05f64d8de11de757e87166421a33116c5ad` | `stacking_matrices.pkl` | `8c1f7d3e761c1cf66f3095cda530b05f64d8de11de757e87166421a33116c5ad` | `f926de18987ce6467e2781e88ce5c404ab030ef95c7e251a2b07ec8b84753d95` | `2b0b92306fcc710e67917c78b82fa7fe1ad7e2421df01dbacfd1162b0f08c328` | `6cc0389e39fd8ec6658322cf524d37d6a0b77bf5a86de587be074f77a841a90b` |
+| `sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_mbsgd` | `stacking_matrices.pkl` | `8c1f7d3e761c1cf66f3095cda530b05f64d8de11de757e87166421a33116c5ad` | `stacking_matrices.pkl` | `8c1f7d3e761c1cf66f3095cda530b05f64d8de11de757e87166421a33116c5ad` | `55c9c62f31a2b0dfef1ac920bc9dea749093fe9ec8eb73ac44eec11eb0f89922` | `620f1c39d6a86527b032a216453a5caf4c86266b697857766c0e087dc4288c0f` | `57c44070baf52a346fe78c881f04d47952ed9e1bf29f5736e1f754d01caa85c6` |
+| `sometimessubodh/stacking-9-models-smartphone-addiction-prediction:torch_mlp` | `stacking_matrices.pkl` | `8c1f7d3e761c1cf66f3095cda530b05f64d8de11de757e87166421a33116c5ad` | `stacking_matrices.pkl` | `8c1f7d3e761c1cf66f3095cda530b05f64d8de11de757e87166421a33116c5ad` | `cedd6cd7d824195328e0abb9f6a2a1035d9febe3a1906231ce3222c069b6f308` | `eb8c90fbcb015e9e3c94bc36808723d4a19fb55e7f2389f5e3e577f488057a17` | `8f3d5ea1e94adbeb6162ec49995803c9f8d88b9d30325dbd343c68374842ca8f` |
+| `michaelqiu0606/s6e8-depth9-pair-te-inputs:depth9_pair_te` | `base_oof.npy` | `b181851f29c67b14ee1012a723d0456725da77c51b782ec814537925f596e0f1` | `base_test.npy` | `7859efd3e05190f89d868cac5a5c226a453d11aaddad9f9452c1ace82b24b4a3` | `eff3d9e138a7b8703afed2a63688001c65e72b673a2155f374e1594f461eaeea` | `0908a1e481b119a9f6ad309ad57e8c8c4fa352679dc7127996e2b736a7b62281` | `1d85e728c61ce6c177c90183b97b77e2bf20ff231a57dac6f9fd8b9bb93462d3` |
 
 ## 고정 공개 판본과 확보
 
-| 노트북 | scriptVersionId | 소스 SHA-256 | 페이지 판본 일치 | 소스 확보 시각(UTC) | 출력 확보 시각(UTC) |
+| 공개 자료 | 판본 | 소스 SHA-256 | 페이지 판본 일치 | 소스 확보 시각(UTC) | 출력 확보 시각(UTC) |
 | --- | ---: | --- | --- | --- | --- |
 | `zhukovoleksiy/ps6e8-eda-feature-engineering-pipeline` | 344661133 | `a1e1f488bb4d68de5c4533df8f3816517d5ca65ceb2bb904f9a389360970d9c5` | 예 | 2026-08-28T02:58:36Z | 2026-08-28T02:59:00Z |
 | `redamountassir/s6e8-lgbm-lb-0-96965` | 340546450 | `c5d72447072a783ce85950c261d61273e1b918872c8f72565471a72431960cbb` | 예 | 2026-08-28T02:59:06Z | 2026-08-28T02:59:19Z |
@@ -83,9 +96,11 @@
 | `busyaprime/s6e8-tabular-baseline-that-autodetects-the-task` | 339485089 | `52c509d1b726d2ddeaddd0e07ada8c345a21483c09f0128e0070359552025235` | 예 | 2026-08-28T03:01:55Z | 2026-08-28T03:02:15Z |
 | `ravi20076/playgrounds6e8-public-baseline-v1` | 339444387 | `186d26a1aba7549fd182ed89322daff43f6083d8f9275175215c7c0207d31c30` | 예 | 2026-08-28T03:02:21Z | 2026-08-28T03:02:33Z |
 | `ravi20076/playgrounds6e8-public-imports-v1` (보조 코드) | 339439580 | `26504708be69444a8df97ac7b0ecc95e788340b88b5cfaef823dfe2c9d8a1405`, `f5ab8352cc2c8b3233f07a0c35a833009466a5eb53739ec440c477f47c3fa98b`, `2a98eef32eca0a035473609fe7f37531f6c463dfed411dd62351a7f5216150fa` | 예 | 2026-08-28T03:02:39Z | 2026-08-28T03:02:46Z |
+| `sometimessubodh/stacking-9-models-smartphone-addiction-prediction` | 346039237 | `691100dcf6f0b365e4c1a5902e52218797cfe00c73dca19b8e6a2b19087473bb` | 예 | 2026-08-31T12:01:21Z | 2026-08-31T12:01:40Z |
+| `michaelqiu0606/s6e8-depth9-pair-te-inputs` | 1 | `ec1ff5cf164c212335cfa0c748ada21c4ed4f473315524e9e5bccc371e195ee9` | 예 | 2026-08-31T12:01:52Z | 2026-08-31T12:01:52Z |
 
-고정 판본 확인은 두 가지다.
-`kaggle kernels pull`이 받은 현재 공개 소스의 SHA-256이 조사 보고서가 기록한 고정 판본 SHA-256과 같고, `www.kaggle.com/code/<ref>` 페이지가 가리키는 현재 `scriptVersionId`가 고정 판본 식별자와 같다.
+노트북 고정 판본은 `kaggle kernels pull`이 받은 공개 소스 SHA-256과 공개 페이지의 `scriptVersionId`를 함께 대조했다.
+자료 고정 판본은 Kaggle 자료 판본 번호와 내려받은 README.md SHA-256을 함께 대조했다.
 Kaggle CLI 2.2.4는 특정 판본 내려받기를 거부(403)하므로 위 두 대조가 판본 고정의 근거다.
 
 ## 검증 항목
@@ -112,5 +127,4 @@ uv run python scripts/build_external_member_ledger_v3.py verify
 
 ## 범위 밖
 
-- 2026-08-30 증분 조사와 새 후보 감사.
 - 외부 후보 동결 명세 생성, 중첩 선별 판정, 확장 스택 조립과 제출.

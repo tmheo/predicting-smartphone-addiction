@@ -1,4 +1,4 @@
-"""엄격 후보 19개의 예측을 반입해 외부 구성원 장부 판본 3의 감사 기록을 만든다. (#484)
+"""엄격 외부 후보를 반입해 외부 구성원 장부 판본 3의 감사 기록을 만든다. (#484, #487)
 
 판본 3은 판본 2(#454)의 단일 `status` 구조 대신 #482 결정 댓글의 계약을 따른다.
 
@@ -27,16 +27,19 @@ import argparse
 import hashlib
 import json
 import re
+import shutil
 import subprocess
 import sys
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from functools import cache
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from joblib.numpy_pickle import NumpyUnpickler
 from scipy.stats import rankdata
 from sklearn.metrics import roc_auc_score
 
@@ -44,6 +47,7 @@ from pipeline.data import ID, TARGET, TRAIN_PATH
 from pipeline.judgment import FOLDS_PATH
 
 ISSUE = 484
+INCREMENTAL_ISSUE = 487
 LEDGER_VERSION = 3
 CONTRACT_VERSION = "3.0"
 CONTRACT_REF = "https://github.com/tmheo/predicting-smartphone-addiction/issues/482"
@@ -72,6 +76,7 @@ CENSUS_REF = (
     "https://github.com/tmheo/predicting-smartphone-addiction/blob/bff57dc/"
     "docs/research/strict-external-member-census-2026-08-28.md"
 )
+INCREMENTAL_REF = "https://github.com/tmheo/predicting-smartphone-addiction/issues/487"
 V2_LEDGER_REF = (
     "https://github.com/tmheo/predicting-smartphone-addiction/blob/96ec136/"
     "docs/research/external-member-ledger.json"
@@ -135,14 +140,17 @@ NON_GUARANTEES = [
 @dataclass(frozen=True)
 class ArraySpec:
     file: str
-    fmt: str  # npy | csv | parquet
+    fmt: str  # npy | csv | parquet | joblib_dataframe
     column: str | None = None
     column_index: int | None = None
+    frame_key: str | None = None
     has_id: bool = False
     label_column: str | None = None
     dtype_note: str | None = None
 
     def label(self) -> str:
+        if self.frame_key is not None and self.column is not None:
+            return f"{self.file}[{self.frame_key}][{self.column}]"
         if self.column is not None:
             return f"{self.file}[{self.column}]"
         if self.column_index is not None:
@@ -209,6 +217,10 @@ class Source:
     dependencies: tuple[Dependency, ...] = ()
     absence_explained: dict[str, str] = field(default_factory=dict)
     notes: tuple[str, ...] = ()
+    source_kind: str = "notebook"  # notebook | dataset
+    fixed_source_file: str | None = None
+    source_license: str = "Apache-2.0"
+    output_license: str = "unknown"
 
     @property
     def directory(self) -> Path:
@@ -217,10 +229,12 @@ class Source:
 
     @property
     def notebook_file(self) -> str:
-        return self.kernel_ref.split("/")[1] + ".ipynb"
+        return self.fixed_source_file or self.kernel_ref.split("/")[1] + ".ipynb"
 
     @property
     def url(self) -> str:
+        if self.source_kind == "dataset":
+            return f"https://www.kaggle.com/datasets/{self.kernel_ref}/versions/{self.script_version_id}"
         return f"https://www.kaggle.com/code/{self.kernel_ref}?scriptVersionId={self.script_version_id}"
 
 
@@ -856,9 +870,171 @@ RAVI = Source(
     ),
 )
 
+
+def _sometime_member(name: str, display_name: str, prior: str, auc: float, training: Claim, semantics: str = "양성 확률") -> Member:
+    return Member(
+        name=name,
+        member_id=f"sometimessubodh/stacking-9-models-smartphone-addiction-prediction:{name}",
+        display_name=f"Subodh Deogade {display_name}",
+        oof=ArraySpec("stacking_matrices.pkl", "joblib_dataframe", column=name, frame_key="oof_preds"),
+        test=ArraySpec("stacking_matrices.pkl", "joblib_dataframe", column=name, frame_key="test_preds"),
+        semantics=semantics,
+        prior_pair_sha256=prior,
+        independent_auc=auc,
+        training_point=training,
+        caveats=(
+            NB_LICENSE_CAVEAT,
+            (
+                "full_feature_only_preprocessing",
+                "범주 사전은 train+test 특성값, 중앙값과 표준화는 전체 train 특성값으로 만들지만 목표값은 읽지 않는다.",
+            ),
+        ),
+    )
+
+
+SOMETIME_STACKING = Source(
+    key="sometime_stacking9",
+    kernel_ref="sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+    script_version_id=346039237,
+    pinned_source_sha256="691100dcf6f0b365e4c1a5902e52218797cfe00c73dca19b8e6a2b19087473bb",
+    author="Subodh Deogade (sometimessubodh)",
+    title="Stacking 9 Models|Smartphone Addiction Prediction",
+    population="incremental_issue_487",
+    prior_ref=INCREMENTAL_REF,
+    fold=Claim(
+        CONFIRMED,
+        "N_FOLDS=5, random_state=42의 StratifiedKFold(shuffle=True)를 원본 train 순서에 적용하고 모든 구성원이 같은 fold_indices를 재사용한다.",
+        ("N_FOLDS = 5", "skf = StratifiedKFold(n_splits=N_FOLDS, shuffle=True, random_state=42)", "fold_indices = list(skf.split(X, y))"),
+    ),
+    claims={
+        "direct_official_training": Claim(
+            CONFIRMED,
+            "공식 대회 train.csv와 test.csv만 읽고 연결 자료가 없다.",
+            ('TRAIN_PATH = "/kaggle/input/competitions/playground-series-s6e8/train.csv"',),
+            extra_files=(("kernel-metadata.json", '"dataset_sources": []'),),
+        ),
+        "single_model_lineage": Claim(
+            CONFIRMED,
+            "stacking_matrices.pkl이 기초 모형별 OOF·시험 열을 따로 저장하며 최종 메타 결합 예측은 별도 제출 CSV에만 쓴다.",
+            ('joblib.dump({"oof_preds": oof_preds, "test_preds": test_preds, "y": y}, "stacking_matrices.pkl")',),
+        ),
+        "allowed_aggregation_only": Claim(
+            CONFIRMED,
+            "각 시험 열은 같은 고정 설정의 5개 바깥 분할 모형 예측 평균이다.",
+            ('test_preds["cuml_rf"] += model.predict_proba(X_test_num.values)[:, 1] / N_FOLDS',),
+        ),
+        "target_preprocessing_isolated": Claim(
+            NOT_APPLICABLE,
+            "목표값 기반 전처리가 없다. 범주 사전은 train+test 특성값만, 중앙값과 표준화는 train 특성값만 보고 목표값을 읽지 않는다.",
+            ("le.fit(combined)", "num_medians = X_num.median()", "scaler.fit_transform(X_num)"),
+        ),
+        "outer_valid_scoring_only": Claim(
+            CONFIRMED,
+            "다섯 구성원은 fit에 바깥 학습 부분만 넘긴다. PyTorch 함수의 X_val은 학습 뒤 예측에만 쓰고 y_val은 읽지 않는다.",
+            ("model.fit(X_num.iloc[tr_idx].values, y.iloc[tr_idx].values.astype(np.int32))", "for _ in range(epochs):", "val_probs = torch.sigmoid(val_logits).cpu().numpy()"),
+        ),
+        "public_config_selection_isolated": Claim(
+            CONFIRMED,
+            "다섯 구성원의 설정이 코드에 정적으로 고정되고 OOF 점수는 출력과 최종 메타 결합에만 쓰인다.",
+            ("MODEL_NAMES = [", "base_scores = {name: roc_auc_score(y, oof_preds[name]) for name in MODEL_NAMES}"),
+        ),
+        "no_external_prediction_retraining": _absent(),
+        "no_pseudo_label_training": _absent(),
+        "no_blend_distillation": _absent(),
+    },
+    members=(
+        _sometime_member(
+            "cuml_rf",
+            "cuML RandomForest",
+            "b3e6a5c21a006b6f730170e55a3a37a3f8795b62734d7f12679b4919f9bc8ed4",
+            0.940504101712,
+            Claim(CONFIRMED, "n_estimators=400, max_depth=12 고정, 검증 기반 중단 없음", ("model = cuRF(n_estimators=400, max_depth=12, random_state=42 + fold)",)),
+        ),
+        _sometime_member(
+            "cuml_logreg",
+            "cuML LogisticRegression",
+            "949716ab6998c5f084a3ea9318a0f103b35c48d27f22bfdfb41cae070e2153a2",
+            0.927826905357,
+            Claim(CONFIRMED, "max_iter=1000 고정, 검증 기반 중단 없음", ("model = cuLogReg(max_iter=1000)",)),
+        ),
+        _sometime_member(
+            "cuml_knn",
+            "cuML KNN",
+            "6cc0389e39fd8ec6658322cf524d37d6a0b77bf5a86de587be074f77a841a90b",
+            0.929086165555,
+            Claim(CONFIRMED, "n_neighbors=25 고정, 검증 기반 중단 없음", ("model = cuKNN(n_neighbors=25)",)),
+        ),
+        _sometime_member(
+            "cuml_mbsgd",
+            "cuML MBSGD",
+            "57c44070baf52a346fe78c881f04d47952ed9e1bf29f5736e1f754d01caa85c6",
+            0.834173901922,
+            Claim(CONFIRMED, "epochs=50, alpha=1e-4 고정, 검증 기반 중단 없음", ('model = cuMBSGD(loss="log", penalty="l2", alpha=1e-4, epochs=50)',)),
+            "0·1 분류 예측(model.predict, 순위 결합기 입력)",
+        ),
+        _sometime_member(
+            "torch_mlp",
+            "PyTorch MLP",
+            "8f3d5ea1e94adbeb6162ec49995803c9f8d88b9d30325dbd343c68374842ca8f",
+            0.940873573614,
+            Claim(CONFIRMED, "고정 구조와 epochs=30, Adam lr=1e-3으로 끝까지 학습하고 검증 기반 상태 선택 없음", ("def train_mlp_fold(X_tr, y_tr, X_val, y_val, n_features, epochs=30, batch_size=1024):", "opt = torch.optim.Adam(model.parameters(), lr=1e-3)")),
+        ),
+    ),
+    notes=("2026-08-30T12:00:00Z 증분 조사에서 발견한 저장 출력이다.",),
+)
+
+
+MICHAEL_DEPTH9 = Source(
+    key="michael_depth9_pair_te",
+    kernel_ref="michaelqiu0606/s6e8-depth9-pair-te-inputs",
+    script_version_id=1,
+    pinned_source_sha256="ec1ff5cf164c212335cfa0c748ada21c4ed4f473315524e9e5bccc371e195ee9",
+    author="Michael Y. Qiu (michaelqiu0606)",
+    title="S6E8 Depth9 Pair TE Inputs",
+    population="incremental_issue_487",
+    prior_ref=INCREMENTAL_REF,
+    fold=Claim(
+        UNKNOWN,
+        "README는 strict outer-fold라고 서술하지만 커뮤니티 고정 5분할과 원본 행 순서를 재현할 분할 벡터나 소스가 없다.",
+        ("strict outer-fold", "aligned to the official competition train/test row order"),
+    ),
+    claims={
+        "direct_official_training": Claim(UNKNOWN, "공식 자료 직접 학습이라는 설명만 있고 확인할 소스가 없다.", ("official competition train/test row order",)),
+        "single_model_lineage": Claim(UNKNOWN, "이름은 depth9 champion 하나를 가리키지만 모형 계보를 확인할 소스가 없다.", ("depth9_m012_champion",)),
+        "allowed_aggregation_only": Claim(UNKNOWN, "분할·시드 집계 방식을 확인할 소스가 없다."),
+        "target_preprocessing_isolated": Claim(UNKNOWN, "pair TE의 목표값 격리 범위를 확인할 소스가 없다."),
+        "outer_valid_scoring_only": Claim(UNKNOWN, "바깥 검증 목표값이 학습 시점이나 상태 선택에 닿지 않았는지 확인할 소스가 없다."),
+        "public_config_selection_isolated": Claim(UNKNOWN, "README의 local CV selected 서술만으로 설정 선택 격리를 확인할 수 없다.", ("selected from local CV only",)),
+        "no_external_prediction_retraining": Claim(UNKNOWN, "입력 계보를 확인할 소스가 없다."),
+        "no_pseudo_label_training": Claim(UNKNOWN, "학습 자료 계보를 확인할 소스가 없다."),
+        "no_blend_distillation": Claim(UNKNOWN, "교사 예측 사용 여부를 확인할 소스가 없다."),
+    },
+    members=(
+        Member(
+            name="depth9_pair_te",
+            member_id="michaelqiu0606/s6e8-depth9-pair-te-inputs:depth9_pair_te",
+            display_name="Michael Y. Qiu depth9 pair-TE",
+            oof=ArraySpec("base_oof.npy", "npy"),
+            test=ArraySpec("base_test.npy", "npy"),
+            semantics="README가 선언한 OOF·시험 예측 배열",
+            prior_pair_sha256="1d85e728c61ce6c177c90183b97b77e2bf20ff231a57dac6f9fd8b9bb93462d3",
+            independent_auc=0.970516839533,
+            training_point=Claim(UNKNOWN, "고정 학습 시점과 검증 기반 중단 여부를 확인할 소스가 없다."),
+            caveats=(("lineage_source_missing", "README와 배열만 있고 학습 소스·분할 벡터·재현 가능한 manifest가 없다."),),
+        ),
+    ),
+    notes=("계보를 현재 계약으로 확정할 수 없어 근거 부족으로 종결한다.", "자료 판본 1, lastUpdated=2026-08-29T17:27:56.327Z."),
+    source_kind="dataset",
+    fixed_source_file="README.md",
+    source_license="CC0-1.0",
+    output_license="CC0-1.0",
+)
+
+
 SOURCES: tuple[Source, ...] = (
     ZHUKOV, REDA_LGBM, REDA_HGB, YEKENOT, MOHAN, LOPURE, SHAMAN,
     BEICICC_TABNET, BEICICC_REALMLP, BUSYAPRIME, RAVI,
+    SOMETIME_STACKING, MICHAEL_DEPTH9,
 )
 
 
@@ -915,7 +1091,8 @@ def kernel_dir(kernel_ref: str) -> Path:
 def all_kernel_refs() -> list[tuple[str, int]]:
     refs: list[tuple[str, int]] = []
     for source in SOURCES:
-        refs.append((source.kernel_ref, source.script_version_id))
+        if source.source_kind == "notebook":
+            refs.append((source.kernel_ref, source.script_version_id))
         for dep in source.dependencies:
             refs.append((dep.kernel_ref, dep.script_version_id))
     return refs
@@ -965,6 +1142,43 @@ def _page_version(kernel_ref: str) -> dict:
     return {"url": url, "fetched_at": started, "http_ok": result.returncode == 0, "script_version_ids": ids}
 
 
+def _dataset_version(dataset_ref: str) -> dict:
+    """Kaggle CLI가 쓰는 Python 환경으로 공개 자료의 현재 판본 메타데이터를 읽는다."""
+    executable = shutil.which("kaggle")
+    if executable is None:
+        raise RuntimeError("kaggle 실행 파일을 찾을 수 없다")
+    first_line = Path(executable).read_text(encoding="utf-8").splitlines()[0]
+    if not first_line.startswith("#!"):
+        raise RuntimeError(f"kaggle 실행 파일의 Python 경로를 읽을 수 없다: {executable}")
+    python = first_line[2:]
+    owner, slug = dataset_ref.split("/")
+    code = """
+import json, sys
+from kaggle.api.kaggle_api_extended import KaggleApi
+from kagglesdk.datasets.types.dataset_api_service import ApiGetDatasetRequest
+api = KaggleApi(); api.authenticate()
+with api.build_kaggle_client() as client:
+    request = ApiGetDatasetRequest()
+    request.owner_slug, request.dataset_slug = sys.argv[1], sys.argv[2]
+    print(json.dumps(client.datasets.dataset_api_client.get_dataset(request).to_dict()))
+"""
+    started = now_iso()
+    result = subprocess.run([python, "-c", code, owner, slug], capture_output=True, text=True)
+    if result.returncode:
+        raise RuntimeError(f"자료 판본 조회 실패: {dataset_ref}: {result.stderr[-1000:]}")
+    metadata = json.loads(result.stdout)
+    return {
+        "url": f"https://www.kaggle.com/datasets/{dataset_ref}",
+        "fetched_at": started,
+        "http_ok": True,
+        "dataset_id": metadata["id"],
+        "dataset_version_number": metadata["currentVersionNumber"],
+        "last_updated": metadata["lastUpdated"],
+        "license": metadata.get("licenseName"),
+        "versions": metadata.get("versions", []),
+    }
+
+
 def fetch(only: set[str] | None) -> None:
     EXT.mkdir(parents=True, exist_ok=True)
     seen: set[str] = set()
@@ -990,6 +1204,27 @@ def fetch(only: set[str] | None) -> None:
         _run_logged(directory, ["kaggle", "kernels", "output", kernel_ref, "-p", str(directory), "-o", "-q"])
         _log(directory, {"at": now_iso(), "event": "fetch_done", "kernel_ref": kernel_ref})
         time.sleep(3)
+    for source in SOURCES:
+        if source.source_kind != "dataset" or (only and source.kernel_ref not in only):
+            continue
+        directory = source.directory
+        directory.mkdir(parents=True, exist_ok=True)
+        print(f"== {source.kernel_ref} (고정 자료 판본 {source.script_version_id})", flush=True)
+        _log(directory, {"at": now_iso(), "event": "fetch_start", "dataset_ref": source.kernel_ref, "pinned_dataset_version_number": source.script_version_id})
+        page = _dataset_version(source.kernel_ref)
+        (directory / "page-version.json").write_text(json.dumps(page, ensure_ascii=False, indent=2) + "\n")
+        _log(directory, {"at": now_iso(), "event": "page_version", **page})
+        if page["dataset_version_number"] != source.script_version_id:
+            print(f"  경고: 자료 판본 {page['dataset_version_number']} != 고정 판본 {source.script_version_id}", flush=True)
+        time.sleep(2)
+        _run_logged(directory, ["kaggle", "datasets", "metadata", source.kernel_ref, "-p", str(directory)])
+        time.sleep(2)
+        files = _run_logged(directory, ["kaggle", "datasets", "files", source.kernel_ref, "--format", "json", "--page-size", "200"])
+        (directory / "files.json").write_text(files.stdout)
+        time.sleep(2)
+        _run_logged(directory, ["kaggle", "datasets", "download", source.kernel_ref, "-p", str(directory), "--unzip", "-o", "-q"])
+        _log(directory, {"at": now_iso(), "event": "fetch_done", "dataset_ref": source.kernel_ref})
+        time.sleep(3)
     print("확보 완료", flush=True)
 
 
@@ -1006,6 +1241,8 @@ class Notebook:
 
 
 def load_notebook(path: Path) -> Notebook:
+    if path.suffix != ".ipynb":
+        return Notebook(path, file_sha256(path), [(0, path.read_text(encoding="utf-8", errors="replace"))])
     data = json.loads(path.read_text(encoding="utf-8"))
     cells = [
         (index, "".join(cell["source"]) if isinstance(cell["source"], list) else cell["source"])
@@ -1013,6 +1250,41 @@ def load_notebook(path: Path) -> Notebook:
         if cell["cell_type"] == "code"
     ]
     return Notebook(path, file_sha256(path), cells)
+
+
+_SAFE_JOBLIB_GLOBALS = {
+    ("builtins", "slice"),
+    ("joblib.numpy_pickle", "NumpyArrayWrapper"),
+    ("numpy", "dtype"),
+    ("numpy", "ndarray"),
+    ("pandas._libs.internals", "_unpickle_block"),
+    ("pandas.core.frame", "DataFrame"),
+    ("pandas.core.indexes.base", "Index"),
+    ("pandas.core.indexes.base", "_new_Index"),
+    ("pandas.core.indexes.range", "RangeIndex"),
+    ("pandas.core.internals.managers", "BlockManager"),
+    ("pandas.core.internals.managers", "SingleBlockManager"),
+    ("pandas.core.series", "Series"),
+}
+
+
+class SafeNumpyUnpickler(NumpyUnpickler):
+    """공개 joblib 출력에서 DataFrame과 ndarray 외의 전역 객체 복원을 거부한다."""
+
+    def find_class(self, module: str, name: str):
+        if (module, name) not in _SAFE_JOBLIB_GLOBALS:
+            raise ValueError(f"허용하지 않은 joblib 전역 객체: {module}.{name}")
+        return super().find_class(module, name)
+
+
+@cache
+def load_safe_joblib(path_text: str) -> dict:
+    path = Path(path_text)
+    with path.open("rb") as handle:
+        value = SafeNumpyUnpickler(str(path), handle, ensure_native_byte_order=True).load()
+    if not isinstance(value, dict):
+        raise ValueError(f"{path}: joblib 최상위 값이 dict가 아니다")
+    return value
 
 
 def locate(notebook: Notebook, snippet: str) -> list[dict]:
@@ -1075,7 +1347,23 @@ def absence_scan(source: Source, notebook: Notebook) -> dict:
 def load_array(directory: Path, spec: ArraySpec, expected_ids: np.ndarray, labels: np.ndarray | None) -> tuple[np.ndarray, dict]:
     path = directory / spec.file
     info: dict = {"file": spec.file, "raw_sha256": file_sha256(path), "format": spec.fmt, "column": spec.column, "column_index": spec.column_index}
-    if spec.fmt == "npy":
+    if spec.fmt == "joblib_dataframe":
+        payload = load_safe_joblib(str(path))
+        frame = payload[spec.frame_key]
+        if not isinstance(frame, pd.DataFrame):
+            raise ValueError(f"{path}[{spec.frame_key}]: DataFrame이 아니다")
+        info["frame_key"] = spec.frame_key
+        info["raw_dtype"] = str(frame[spec.column].dtype)
+        info["raw_shape"] = list(frame.shape)
+        info["columns"] = list(frame.columns)
+        values = frame[spec.column].to_numpy()
+        positional = isinstance(frame.index, pd.RangeIndex) and frame.index.start == 0 and frame.index.step == 1
+        info["row_alignment"] = {"method": "positional", "detail": f"RangeIndex(0..{len(frame) - 1}) 순서, 저장 코드가 공식 train/test 원본 순서로 채운다", "range_index": bool(positional)}
+        if not positional:
+            raise ValueError(f"{path}[{spec.frame_key}]: RangeIndex 원본 순서가 아니다")
+        if spec.frame_key == "oof_preds" and labels is not None and "y" in payload:
+            info["embedded_label_equals_ours"] = bool(np.array_equal(np.asarray(payload["y"]), labels))
+    elif spec.fmt == "npy":
         raw = np.load(path)
         info["raw_dtype"] = str(raw.dtype)
         info["raw_shape"] = list(raw.shape)
@@ -1141,7 +1429,7 @@ def download_times(directory: Path) -> dict[str, str]:
     for line in log.read_text(encoding="utf-8").splitlines():
         entry = json.loads(line)
         cmd = entry.get("cmd") or []
-        if len(cmd) > 2 and cmd[1] == "kernels" and entry.get("returncode") == 0:
+        if len(cmd) > 2 and cmd[1] in {"kernels", "datasets"} and entry.get("returncode") == 0:
             times[cmd[2]] = entry["finished_at"]
         if entry.get("event") == "page_version":
             times["page"] = entry["fetched_at"]
@@ -1157,12 +1445,18 @@ def evidence_manifest(source: Source) -> dict:
             name = path.name
             if path.parent.name == "normalized":
                 role, retrieved = "normalized", None
-            elif name.endswith(".ipynb"):
-                role, retrieved = f"{role_prefix}_notebook", times.get("pull")
+            elif directory == source.directory and name == source.notebook_file:
+                role = f"{role_prefix}_{'notebook' if source.source_kind == 'notebook' else 'description'}"
+                retrieved = times.get("pull" if source.source_kind == "notebook" else "download")
             elif name in {"kernel-metadata.json", "files.json", "page-version.json", ".download.log"}:
-                role, retrieved = f"{role_prefix}_metadata", times.get("pull" if name == "kernel-metadata.json" else "page")
+                if source.source_kind == "dataset":
+                    retrieved = times.get("metadata" if name == "kernel-metadata.json" else "page")
+                else:
+                    retrieved = times.get("pull" if name == "kernel-metadata.json" else "page")
+                role = f"{role_prefix}_metadata"
             else:
-                role, retrieved = f"{role_prefix}_output", times.get("output")
+                role = f"{role_prefix}_output"
+                retrieved = times.get("output" if source.source_kind == "notebook" else "download")
             entry = {"path": str(rel), "role": role, "bytes": path.stat().st_size, "retrieved_at": retrieved}
             if name != ".download.log":
                 entry["sha256"] = file_sha256(path)
@@ -1199,10 +1493,10 @@ class Loaded:
     error: str | None = None
 
 
-def near_duplicates(loaded: list[Loaded], v2_members: list[dict]) -> dict[str, dict]:
-    """19개 후보를 판본 2 통과 400개와 서로에 대해 스피어만 순위 상관으로 대조한다(주의 사항 전용)."""
+def near_duplicates(loaded: list[Loaded], v2_members: list[dict], target_ids: set[str]) -> dict[str, dict]:
+    """새 기록 후보만 판본 2 통과 구성원과 현행 후보에 대해 근접 중복을 대조한다."""
     ranks = {item.member.member_id: spearman_ranks(item.oof) for item in loaded if item.error is None}
-    best: dict[str, dict] = {mid: {"max": -1.0, "closest": None, "over_threshold": []} for mid in ranks}
+    best: dict[str, dict] = {mid: {"max": -1.0, "closest": None, "over_threshold": []} for mid in ranks if mid in target_ids}
 
     def consider(mid: str, other: str, corr: float) -> None:
         if corr > best[mid]["max"]:
@@ -1214,13 +1508,15 @@ def near_duplicates(loaded: list[Loaded], v2_members: list[dict]) -> dict[str, d
     for i, a in enumerate(ids):
         for b in ids[i + 1 :]:
             corr = float(ranks[a] @ ranks[b])
-            consider(a, b, corr)
-            consider(b, a, corr)
+            if a in best:
+                consider(a, b, corr)
+            if b in best:
+                consider(b, a, corr)
     for row in v2_members:
         if row["member_id"] in ranks:
             continue
         other = spearman_ranks(load_v2_array(row["oof_path"]))
-        for mid in ids:
+        for mid in best:
             consider(mid, f"v2:{row['member_id']}", float(ranks[mid] @ other))
     return best
 
@@ -1283,7 +1579,12 @@ def fingerprint(record: dict) -> str:
 
 def build_record(source: Source, member: Member, notebook: Notebook | None, item: Loaded, ids: dict, fold_vector_sha: str, page: dict, dependency_status: list[dict], near: dict | None, exact_dup: str | None, rescored: float | None, v2_row: dict | None) -> dict:
     directory = source.directory
-    pinned_ok = notebook is not None and notebook.sha256 == source.pinned_source_sha256
+    page_matches = (
+        page.get("script_version_ids") == [source.script_version_id]
+        if source.source_kind == "notebook"
+        else page.get("dataset_version_number") == source.script_version_id
+    )
+    pinned_ok = notebook is not None and notebook.sha256 == source.pinned_source_sha256 and page_matches
     if notebook is None:
         fold_contract = {"status": UNKNOWN, "evidence_kind": "none", "evidence": [], "note": "고정 판본 소스 없음"}
         claims = {key: {"status": UNKNOWN, "evidence_kind": "none", "evidence": [], "note": "고정 판본 소스 없음"} for key in CLAIM_KEYS}
@@ -1338,7 +1639,7 @@ def build_record(source: Source, member: Member, notebook: Notebook | None, item
         "independent_auc_delta": None if rescored is None else rescored - member.independent_auc,
         "auc_tolerance": AUC_TOLERANCE,
         "prior_pair_sha256": member.prior_pair_sha256,
-        "prior_pair_ref": V2_LEDGER_REF if source.population == "v2_reaudit" else CENSUS_REF,
+        "prior_pair_ref": source.prior_ref,
         "prior_pair_match": None if normalized is None else normalized["pair_sha256"] == member.prior_pair_sha256,
         "v2_ledger_member": None if v2_row is None else {"sha256": v2_row["sha256"], "auc": v2_row["auc"], "fold_evidence": v2_row["fold_evidence"], "caveats": v2_row["caveats"]},
     }
@@ -1359,25 +1660,32 @@ def build_record(source: Source, member: Member, notebook: Notebook | None, item
             "member_id": member.member_id,
             "display_name": member.display_name,
             "author": source.author,
-            "source_kind": "notebook_output",
+            "source_kind": f"{source.source_kind}_output",
             "source_key": source.key,
-            "model_lineage_id": f"{source.kernel_ref}@{source.script_version_id}:{member.name}",
+            "model_lineage_id": f"{source.source_kind}:{source.kernel_ref}@{source.script_version_id}:{member.name}",
             "input_population": source.population,
             "exact_duplicate_of": exact_dup,
         },
         "fixed_source": {
+            "source_kind": source.source_kind,
+            "source_ref": source.kernel_ref,
             "kernel_ref": source.kernel_ref,
             "title": source.title,
             "url": source.url,
             "script_version_id": source.script_version_id,
+            "dataset_version_number": source.script_version_id if source.source_kind == "dataset" else None,
             "source_file": str(directory / source.notebook_file),
             "source_sha256": None if notebook is None else notebook.sha256,
             "pinned_source_sha256": source.pinned_source_sha256,
             "pinned_version_confirmed": bool(pinned_ok),
             "version_confirmation": {
-                "method": "kaggle kernels pull로 받은 현재 공개 소스의 SHA-256이 조사 보고서의 고정 판본 SHA-256과 같고, www.kaggle.com 페이지의 현재 scriptVersionId가 고정 판본 식별자와 같다",
+                "method": (
+                    "kaggle kernels pull 소스 SHA-256과 www.kaggle.com의 scriptVersionId를 함께 대조"
+                    if source.source_kind == "notebook"
+                    else "Kaggle 자료 판본 번호와 README.md SHA-256을 함께 대조"
+                ),
                 "page": page,
-                "page_matches_pinned": page.get("script_version_ids") == [source.script_version_id],
+                "page_matches_pinned": page_matches,
             },
             "retrieved_at": download_times(directory),
             "provenance_role": "direct",
@@ -1400,8 +1708,20 @@ def build_record(source: Source, member: Member, notebook: Notebook | None, item
             "prepublication_search_history": UNKNOWN,
         },
         "license": {
-            "source_code": {"license": "Apache-2.0", "status": "confirmed", "evidence": SOURCE_LICENSE_EVIDENCE, "attribution_required": True, "attribution": f"{source.author}, {source.title}, {source.url}"},
-            "output_arrays": {"license": "unknown", "status": "unmarked", "use_scope": USE_SCOPE, "redistribution": False, "repository_commit": False},
+            "source_code": {
+                "license": source.source_license,
+                "status": "confirmed",
+                "evidence": SOURCE_LICENSE_EVIDENCE if source.source_kind == "notebook" else page.get("url"),
+                "attribution_required": source.source_license != "CC0-1.0",
+                "attribution": f"{source.author}, {source.title}, {source.url}",
+            },
+            "output_arrays": {
+                "license": source.output_license,
+                "status": "confirmed" if source.output_license != "unknown" else "unmarked",
+                "use_scope": USE_SCOPE,
+                "redistribution": source.output_license == "CC0-1.0",
+                "repository_commit": False,
+            },
         },
         "audit": {
             "audit_state": AUDIT_STATES[2],
@@ -1411,8 +1731,8 @@ def build_record(source: Source, member: Member, notebook: Notebook | None, item
             "insufficiency_reasons": [],
             "caveat_codes": [c["code"] for c in caveats],
             "caveats": caveats,
-            "near_duplicate": None if near is None else {"spearman_max": near["max"], "closest": near["closest"], "threshold": NEAR_DUPLICATE_SPEARMAN, "population": "판본 2 통과 400개 + 판본 3 후보 19개"},
-            "auditor": "tmheo (Claude Code 세션이 도구를 실행)",
+            "near_duplicate": None if near is None else {"spearman_max": near["max"], "closest": near["closest"], "threshold": NEAR_DUPLICATE_SPEARMAN, "population": "판본 2 통과 구성원 + 판본 3 현행 후보"},
+            "auditor": "tmheo (감사 도구 실행)",
             "audited_at": None,
             "audit_tool": None,
             "evidence_manifest_sha256": None,
@@ -1495,16 +1815,37 @@ def audit() -> None:
                 loaded.append(Loaded(source, member, np.empty(0), np.empty(0), {}, {}, error=f"{type(exc).__name__}: {exc}"))
             print(f"적재 {member.member_id}: {'실패 ' + loaded[-1].error if loaded[-1].error else 'OK'}", flush=True)
 
-    print("근접 중복 대조(판본 2 통과 400개)...", flush=True)
-    near = near_duplicates(loaded, v2_accepted)
-
     pair_of = {item.member.member_id: pair_sha256(item.oof, item.test) for item in loaded if item.error is None}
+    target_ids: set[str] = set()
+    for item in loaded:
+        member_id = item.member.member_id
+        existing = current.get(member_id)
+        if existing is None or item.error is not None:
+            target_ids.add(member_id)
+            continue
+        existing_pair = (existing["predictions"].get("normalized") or {}).get("pair_sha256")
+        fixed = existing["fixed_source"]
+        if (
+            fixed.get("script_version_id") != item.source.script_version_id
+            or fixed.get("source_sha256") != item.source.pinned_source_sha256
+            or existing_pair != pair_of[member_id]
+        ):
+            target_ids.add(member_id)
+
+    print(f"근접 중복 대조(새 감사 기록 후보 {len(target_ids)}개, 판본 2 통과 400개)...", flush=True)
+    near = near_duplicates(loaded, v2_accepted, target_ids)
+
     records: list[dict] = []
     created = 0
     audited_at = now_iso()
     manifests: dict[str, dict] = {}
     for item in loaded:
         source, member = item.source, item.member
+        existing = current.get(member.member_id)
+        if member.member_id not in target_ids and existing is not None:
+            records.append(existing)
+            print(f"{member.member_id}: {existing['audit']['eligibility']} ({existing['audit_record_id']}, 유지)", flush=True)
+            continue
         notebook = notebooks[source.key]
         page_file = source.directory / "page-version.json"
         page = json.loads(page_file.read_text()) if page_file.exists() else {}
@@ -1543,7 +1884,6 @@ def audit() -> None:
                 record["audit"]["eligibility"] = INSUFFICIENT
         if source.key not in manifests:
             manifests[source.key] = evidence_manifest(source)
-        existing = current.get(member.member_id)
         final, is_new = finalize_record(record, existing, manifests[source.key], audited_at, commit)
         if is_new:
             created += 1
@@ -1576,8 +1916,11 @@ def write_index(records: list[dict], superseded_ids: list[str], commit: str, fol
             "exclusion_reason_codes": record["audit"]["exclusion_reason_codes"],
             "insufficiency_reasons": record["audit"]["insufficiency_reasons"],
             "caveat_codes": record["audit"]["caveat_codes"],
+            "source_kind": record["fixed_source"].get("source_kind", "notebook"),
+            "source_ref": record["fixed_source"].get("source_ref", record["fixed_source"]["kernel_ref"]),
             "kernel_ref": record["fixed_source"]["kernel_ref"],
             "script_version_id": record["fixed_source"]["script_version_id"],
+            "dataset_version_number": record["fixed_source"].get("dataset_version_number"),
             "input_population": record["identity"]["input_population"],
             "rescored_auc": record["predictions"]["rescored_auc"],
             "oof_path": normalized.get("oof_path"),
@@ -1592,6 +1935,8 @@ def write_index(records: list[dict], superseded_ids: list[str], commit: str, fol
     v2 = json.loads(V2_LEDGER_PATH.read_text(encoding="utf-8"))
     index = {
         "issue": ISSUE,
+        "incremental_issue": INCREMENTAL_ISSUE,
+        "incremental_survey_cutoff": "2026-08-30T12:00:00Z",
         "ledger_version": LEDGER_VERSION,
         "contract_version": CONTRACT_VERSION,
         "contract_ref": CONTRACT_REF,
@@ -1603,8 +1948,9 @@ def write_index(records: list[dict], superseded_ids: list[str], commit: str, fol
         "input_candidates": {
             "v2_reaudit_issue_480": [m.member_id for s in SOURCES if s.population == "v2_reaudit" for m in s.members],
             "census_issue_479": [m.member_id for s in SOURCES if s.population == "census" for m in s.members],
+            "incremental_issue_487": [m.member_id for s in SOURCES if s.population == "incremental_issue_487" for m in s.members],
         },
-        "license_policy": "출력 배열은 사용 조건 미표시이므로 license_unknown_use_limited 주의 사항과 결합 입력 전용 범위로 기록한다. 소스는 Apache-2.0이며 저작자 표기를 유지한다. 배열은 커밋·재배포하지 않는다.",
+        "license_policy": "각 공개 소스와 출력의 표시된 사용 조건을 기록한다. 사용 조건이 표시되지 않은 출력 배열은 license_unknown_use_limited 주의 사항과 결합 입력 전용 범위로 한정한다. 외부 배열은 커밋하거나 재배포하지 않는다.",
         "summary": {
             "record_count": len(rows),
             "created_this_run": created,
@@ -1629,14 +1975,18 @@ def _short(sha: str | None) -> str:
 def write_summary(records: list[dict], commit: str) -> None:
     lines: list[str] = []
     eligible = [r for r in records if r["audit"]["eligibility"] == ELIGIBLE]
+    insufficient = [r for r in records if r["audit"]["eligibility"] == INSUFFICIENT]
+    ineligible = [r for r in records if r["audit"]["eligibility"] == INELIGIBLE]
+    incremental = [r for r in records if r["identity"]["input_population"] == "incremental_issue_487"]
     lines += [
-        "# 확장 스택용 외부 구성원 장부 (판본 3, 이슈 #484)",
+        "# 확장 스택용 외부 구성원 장부 (판본 3, 이슈 #484·#487)",
         "",
         "## 결론",
         "",
-        f"판본 3은 [#480](https://github.com/tmheo/predicting-smartphone-addiction/issues/480) 재감사 통과 11개와 [#479](https://github.com/tmheo/predicting-smartphone-addiction/issues/479) 전수 조사 통과 8개, 모두 19개 후보의 고정 공개 판본 소스와 출력을 Kaggle에서 다시 확보해 [#482](https://github.com/tmheo/predicting-smartphone-addiction/issues/482) 계약대로 감사했다.",
-        f"19개 전부 `감사 완료` 상태의 감사 기록을 가지며 그중 **{len(eligible)}개가 `자격 있음`**, {sum(r['audit']['eligibility'] == INELIGIBLE for r in records)}개가 `자격 없음`, {sum(r['audit']['eligibility'] == INSUFFICIENT for r in records)}개가 `근거 부족`이다.",
-        f"정규화 예측 쌍 SHA-256은 19개 모두 조사 보고서의 값과 {'같다' if all(r['predictions']['prior_pair_match'] for r in records) else '같지 않은 항목이 있다'}.",
+        "판본 3은 [판본 2 공개 노트북 재감사](https://github.com/tmheo/predicting-smartphone-addiction/issues/480) 통과 11개, [장부 밖 전수 조사](https://github.com/tmheo/predicting-smartphone-addiction/issues/479) 통과 8개와 [2026-08-30 증분 조사](https://github.com/tmheo/predicting-smartphone-addiction/issues/487)에서 발견한 6개 후보를 같은 계약으로 감사했다.",
+        f"현행 후보 {len(records)}개 전부 `감사 완료` 상태이며 그중 **{len(eligible)}개가 `자격 있음`**, {len(ineligible)}개가 `자격 없음`, {len(insufficient)}개가 `근거 부족`이다.",
+        f"증분 조사 후보 {len(incremental)}개 가운데 {sum(r['audit']['eligibility'] == ELIGIBLE for r in incremental)}개는 `자격 있음`, {sum(r['audit']['eligibility'] == INSUFFICIENT for r in incremental)}개는 `근거 부족`이다.",
+        f"정규화 예측 쌍 SHA-256은 {sum(bool(r['predictions']['prior_pair_match']) for r in records)}개가 조사 보고서의 값과 일치한다.",
         "감사 진행 상태, 자격 판정, 후보 동결은 서로 다른 축이며 이 문서와 색인은 후보를 동결하지 않는다.",
         "",
         "## 산출물",
@@ -1656,9 +2006,12 @@ def write_summary(records: list[dict], commit: str) -> None:
     ]
     for i, r in enumerate(records, 1):
         p = r["predictions"]
+        rescored = "-" if p["rescored_auc"] is None else f"{p['rescored_auc']:.6f}"
+        independent_delta = "-" if p["independent_auc_delta"] is None else f"{p['independent_auc_delta']:+.1e}"
+        declared_delta = "-" if p["declared_auc_delta"] is None else f"{p['declared_auc_delta']:+.1e}"
         lines.append(
             f"| {i} | `{r['identity']['member_id']}` | [{r['fixed_source']['script_version_id']}]({r['fixed_source']['url']}) | {r['audit']['eligibility']} | "
-            f"{'-' if p['rescored_auc'] is None else f'{p['rescored_auc']:.6f}'} | {'-' if p['independent_auc_delta'] is None else f'{p['independent_auc_delta']:+.1e}'} | {'-' if p['declared_auc_delta'] is None else f'{p['declared_auc_delta']:+.1e}'} | "
+            f"{rescored} | {independent_delta} | {declared_delta} | "
             f"{_short((p['normalized'] or {}).get('pair_sha256'))} | {'일치' if p['prior_pair_match'] else '불일치'} | {', '.join(r['audit']['caveat_codes']) or '-'} |"
         )
     lines += [
@@ -1682,7 +2035,7 @@ def write_summary(records: list[dict], commit: str) -> None:
         "",
         "## 고정 공개 판본과 확보",
         "",
-        "| 노트북 | scriptVersionId | 소스 SHA-256 | 페이지 판본 일치 | 소스 확보 시각(UTC) | 출력 확보 시각(UTC) |",
+        "| 공개 자료 | 판본 | 소스 SHA-256 | 페이지 판본 일치 | 소스 확보 시각(UTC) | 출력 확보 시각(UTC) |",
         "| --- | ---: | --- | --- | --- | --- |",
     ]
     seen: set[str] = set()
@@ -1691,13 +2044,15 @@ def write_summary(records: list[dict], commit: str) -> None:
         if fs["kernel_ref"] in seen:
             continue
         seen.add(fs["kernel_ref"])
-        lines.append(f"| `{fs['kernel_ref']}` | {fs['script_version_id']} | `{fs['source_sha256']}` | {'예' if fs['version_confirmation']['page_matches_pinned'] else '아니오'} | {fs['retrieved_at'].get('pull')} | {fs['retrieved_at'].get('output')} |")
+        source_time = fs["retrieved_at"].get("pull") or fs["retrieved_at"].get("download")
+        output_time = fs["retrieved_at"].get("output") or fs["retrieved_at"].get("download")
+        lines.append(f"| `{fs['kernel_ref']}` | {fs['script_version_id']} | `{fs['source_sha256']}` | {'예' if fs['version_confirmation']['page_matches_pinned'] else '아니오'} | {source_time} | {output_time} |")
         for dep in fs["dependency_refs"]:
             lines.append(f"| `{dep['kernel_ref']}` (보조 코드) | {dep['script_version_id']} | {', '.join('`' + f['sha256'] + '`' for f in dep['files'])} | {'예' if dep['page_matches_pinned'] else '아니오'} | {dep['retrieved_at'].get('pull')} | {dep['retrieved_at'].get('output')} |")
     lines += [
         "",
-        "고정 판본 확인은 두 가지다.",
-        "`kaggle kernels pull`이 받은 현재 공개 소스의 SHA-256이 조사 보고서가 기록한 고정 판본 SHA-256과 같고, `www.kaggle.com/code/<ref>` 페이지가 가리키는 현재 `scriptVersionId`가 고정 판본 식별자와 같다.",
+        "노트북 고정 판본은 `kaggle kernels pull`이 받은 공개 소스 SHA-256과 공개 페이지의 `scriptVersionId`를 함께 대조했다.",
+        "자료 고정 판본은 Kaggle 자료 판본 번호와 내려받은 README.md SHA-256을 함께 대조했다.",
         "Kaggle CLI 2.2.4는 특정 판본 내려받기를 거부(403)하므로 위 두 대조가 판본 고정의 근거다.",
         "",
         "## 검증 항목",
@@ -1724,7 +2079,6 @@ def write_summary(records: list[dict], commit: str) -> None:
         "",
         "## 범위 밖",
         "",
-        "- 2026-08-30 증분 조사와 새 후보 감사.",
         "- 외부 후보 동결 명세 생성, 중첩 선별 판정, 확장 스택 조립과 제출.",
         "",
     ]

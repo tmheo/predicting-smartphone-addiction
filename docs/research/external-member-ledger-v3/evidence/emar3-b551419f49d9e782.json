@@ -1,0 +1,126 @@
+{
+ "issue": 484,
+ "root": "data/external/ext484",
+ "kernel_ref": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+ "script_version_id": 346039237,
+ "files": [
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/.download.log",
+   "role": "source_metadata",
+   "bytes": 2909,
+   "retrieved_at": "2026-08-31T12:01:17Z"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/.virtual_documents/__notebook_source__.ipynb",
+   "role": "source_output",
+   "bytes": 15241,
+   "retrieved_at": "2026-08-31T12:01:40Z",
+   "sha256": "12aba8268db385d21c4c75dd3bdee3c88e4699da6586de7e5651dd942951ab4c"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/catboost_info/catboost_training.json",
+   "role": "source_output",
+   "bytes": 53190,
+   "retrieved_at": "2026-08-31T12:01:40Z",
+   "sha256": "732026679af02c2b193cf649786a8771c971eadbb7f594935fdca982401b080e"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/catboost_info/learn/events.out.tfevents",
+   "role": "source_output",
+   "bytes": 22027,
+   "retrieved_at": "2026-08-31T12:01:40Z",
+   "sha256": "7b84a80cf5cb39a21cc786427fc5a35d9ba54b243cd4b1c143bb665cabad50cc"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/catboost_info/learn_error.tsv",
+   "role": "source_output",
+   "bytes": 6963,
+   "retrieved_at": "2026-08-31T12:01:40Z",
+   "sha256": "843360caecbc6049060276dffb7e72667b62781b1ed9b85dd9f2b565a0f912b1"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/catboost_info/test/events.out.tfevents",
+   "role": "source_output",
+   "bytes": 40846,
+   "retrieved_at": "2026-08-31T12:01:40Z",
+   "sha256": "75ea2170289600fca0a999877ce8d64d7d09a3fa1382229e644e6ad6bc80ffbb"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/catboost_info/test_error.tsv",
+   "role": "source_output",
+   "bytes": 12136,
+   "retrieved_at": "2026-08-31T12:01:40Z",
+   "sha256": "c4c5c0dcd6cd783784b65354e1c895bcce01a56c18348876e4f543ea2096a55e"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/catboost_info/time_left.tsv",
+   "role": "source_output",
+   "bytes": 32230,
+   "retrieved_at": "2026-08-31T12:01:40Z",
+   "sha256": "ace7b9396c334d4bd6182329133944a372e8d2f26e54684702129d90208560bc"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/files.json",
+   "role": "source_metadata",
+   "bytes": 1081,
+   "retrieved_at": "2026-08-31T12:01:17Z",
+   "sha256": "3ae4ee2c7a950cea108e1ba91319ca7c28a341de42e4cb284394ed33b7226e1c"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/kernel-metadata.json",
+   "role": "source_metadata",
+   "bytes": 775,
+   "retrieved_at": "2026-08-31T12:01:21Z",
+   "sha256": "cc8668d9b921f446c7cf69c0a62e226527bdbb97567340b36a3df01aac8e2e64"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/oof_cuml_rf.npy",
+   "role": "normalized",
+   "bytes": 5531080,
+   "retrieved_at": null,
+   "sha256": "5a69f4113098bd3940df1656b5ec5eccc50fad0822b705c1af59da834d618d34"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/test_cuml_rf.npy",
+   "role": "normalized",
+   "bytes": 2370544,
+   "retrieved_at": null,
+   "sha256": "2f91eb7beba061040d8d4bc46e334594c13b07bfbd882ae3c47c6ad3850d859b"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/page-version.json",
+   "role": "source_metadata",
+   "bytes": 213,
+   "retrieved_at": "2026-08-31T12:01:17Z",
+   "sha256": "a9247ab50340e9d93036d6782abccd1e472a897c0f928b799fad0fb51343d4b6"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+   "role": "source_notebook",
+   "bytes": 32496,
+   "retrieved_at": "2026-08-31T12:01:21Z",
+   "sha256": "691100dcf6f0b365e4c1a5902e52218797cfe00c73dca19b8e6a2b19087473bb"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.log",
+   "role": "source_output",
+   "bytes": 805,
+   "retrieved_at": "2026-08-31T12:01:40Z",
+   "sha256": "a21f324e40fd8129ec702e7c14c72cd0b533ad3744c66ba7b72b9e21c816f5d6"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking_matrices.pkl",
+   "role": "source_output",
+   "bytes": 82176781,
+   "retrieved_at": "2026-08-31T12:01:40Z",
+   "sha256": "8c1f7d3e761c1cf66f3095cda530b05f64d8de11de757e87166421a33116c5ad"
+  },
+  {
+   "path": "sometimessubodh_stacking-9-models-smartphone-addiction-prediction/submission_stacked_9models.csv",
+   "role": "source_output",
+   "bytes": 7757639,
+   "retrieved_at": "2026-08-31T12:01:40Z",
+   "sha256": "b9a01197d12870617db540b5e72ebc992b40e700a640f1b7e3ad1eff5741075a"
+  }
+ ]
+}

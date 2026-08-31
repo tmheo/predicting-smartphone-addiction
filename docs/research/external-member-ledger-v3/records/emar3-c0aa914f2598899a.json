@@ -1,0 +1,337 @@
+{
+ "contract_version": "3.0",
+ "contract_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/482",
+ "ledger_version": 3,
+ "ledger_issue": 484,
+ "audit_record_id": "emar3-c0aa914f2598899a",
+ "audit_revision": 1,
+ "supersedes_audit_record_id": null,
+ "identity": {
+  "member_id": "michaelqiu0606/s6e8-depth9-pair-te-inputs:depth9_pair_te",
+  "display_name": "Michael Y. Qiu depth9 pair-TE",
+  "author": "Michael Y. Qiu (michaelqiu0606)",
+  "source_kind": "dataset_output",
+  "source_key": "michael_depth9_pair_te",
+  "model_lineage_id": "dataset:michaelqiu0606/s6e8-depth9-pair-te-inputs@1:depth9_pair_te",
+  "input_population": "incremental_issue_487",
+  "exact_duplicate_of": null
+ },
+ "fixed_source": {
+  "source_kind": "dataset",
+  "source_ref": "michaelqiu0606/s6e8-depth9-pair-te-inputs",
+  "kernel_ref": "michaelqiu0606/s6e8-depth9-pair-te-inputs",
+  "title": "S6E8 Depth9 Pair TE Inputs",
+  "url": "https://www.kaggle.com/datasets/michaelqiu0606/s6e8-depth9-pair-te-inputs/versions/1",
+  "script_version_id": 1,
+  "dataset_version_number": 1,
+  "source_file": "data/external/ext484/michaelqiu0606_s6e8-depth9-pair-te-inputs/README.md",
+  "source_sha256": "ec1ff5cf164c212335cfa0c748ada21c4ed4f473315524e9e5bccc371e195ee9",
+  "pinned_source_sha256": "ec1ff5cf164c212335cfa0c748ada21c4ed4f473315524e9e5bccc371e195ee9",
+  "pinned_version_confirmed": true,
+  "version_confirmation": {
+   "method": "Kaggle 자료 판본 번호와 README.md SHA-256을 함께 대조",
+   "page": {
+    "url": "https://www.kaggle.com/datasets/michaelqiu0606/s6e8-depth9-pair-te-inputs",
+    "fetched_at": "2026-08-31T12:01:43Z",
+    "http_ok": true,
+    "dataset_id": 11828439,
+    "dataset_version_number": 1,
+    "last_updated": "2026-08-29T17:27:56.327Z",
+    "license": "CC0: Public Domain",
+    "versions": [
+     {
+      "versionNumber": 1,
+      "creationDate": "2026-08-29T17:27:56.327Z",
+      "creatorName": "Michael Y. Qiu",
+      "creatorRef": "s6e8-depth9-pair-te-inputs",
+      "versionNotes": "Initial release",
+      "status": "Ready"
+     }
+    ]
+   },
+   "page_matches_pinned": true
+  },
+  "retrieved_at": {
+   "page": "2026-08-31T12:01:43Z",
+   "metadata": "2026-08-31T12:01:46Z",
+   "files": "2026-08-31T12:01:48Z",
+   "download": "2026-08-31T12:01:52Z"
+  },
+  "provenance_role": "direct",
+  "dependency_refs": [],
+  "output_listing_file": "data/external/ext484/michaelqiu0606_s6e8-depth9-pair-te-inputs/files.json"
+ },
+ "predictions": {
+  "oof": {
+   "file": "base_oof.npy",
+   "raw_sha256": "b181851f29c67b14ee1012a723d0456725da77c51b782ec814537925f596e0f1",
+   "format": "npy",
+   "column": null,
+   "column_index": null,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    691369
+   ],
+   "row_alignment": {
+    "method": "positional",
+    "detail": "id 열 없음, 저장 코드가 train/test 원본 순서로 배열을 채운다"
+   },
+   "rows": 691369,
+   "finite": true,
+   "dtype_note": null
+  },
+  "test": {
+   "file": "base_test.npy",
+   "raw_sha256": "7859efd3e05190f89d868cac5a5c226a453d11aaddad9f9452c1ace82b24b4a3",
+   "format": "npy",
+   "column": null,
+   "column_index": null,
+   "raw_dtype": "float64",
+   "raw_shape": [
+    296302
+   ],
+   "row_alignment": {
+    "method": "positional",
+    "detail": "id 열 없음, 저장 코드가 train/test 원본 순서로 배열을 채운다"
+   },
+   "rows": 296302,
+   "finite": true,
+   "dtype_note": null
+  },
+  "load_error": null,
+  "semantics": "README가 선언한 OOF·시험 예측 배열",
+  "normalized": {
+   "oof_sha256": "eff3d9e138a7b8703afed2a63688001c65e72b673a2155f374e1594f461eaeea",
+   "test_sha256": "0908a1e481b119a9f6ad309ad57e8c8c4fa352679dc7127996e2b736a7b62281",
+   "pair_sha256": "1d85e728c61ce6c177c90183b97b77e2bf20ff231a57dac6f9fd8b9bb93462d3",
+   "oof_path": "data/external/ext484/michaelqiu0606_s6e8-depth9-pair-te-inputs/normalized/oof_depth9_pair_te.npy",
+   "test_path": "data/external/ext484/michaelqiu0606_s6e8-depth9-pair-te-inputs/normalized/test_depth9_pair_te.npy",
+   "dtype": "float64",
+   "layout": "C 연속 1차원, OOF 뒤에 시험 예측을 이어 붙여 쌍 해시 계산"
+  },
+  "rescored_auc": 0.9705168395334287,
+  "declared_auc": null,
+  "declared_auc_source": null,
+  "declared_auc_delta": null,
+  "independent_auc": 0.970516839533,
+  "independent_auc_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/487",
+  "independent_auc_delta": 4.2865710980777294e-13,
+  "auc_tolerance": 1e-05,
+  "prior_pair_sha256": "1d85e728c61ce6c177c90183b97b77e2bf20ff231a57dac6f9fd8b9bb93462d3",
+  "prior_pair_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/487",
+  "prior_pair_match": true,
+  "v2_ledger_member": null
+ },
+ "fold_contract": {
+  "spec_id": "community-skf5-shuffle-seed42-train-csv-order",
+  "spec": "StratifiedKFold(n_splits=5, shuffle=True, random_state=42), train.csv 원본 행 순서",
+  "fold_vector_sha256": "9571f18b6ba175d426593d5576d4846d30f00e015cae09d657b3a53437bee824",
+  "row_order_condition": "train.csv 원본 행 순서(id 0..691368 오름차순)",
+  "exact_match": false,
+  "status": "알 수 없음",
+  "evidence_kind": "published_code",
+  "evidence": [
+   {
+    "file": "data/external/ext484/michaelqiu0606_s6e8-depth9-pair-te-inputs/README.md",
+    "cell": 0,
+    "line": 3,
+    "text": "`base_oof.npy` and `base_test.npy` are the frozen strict outer-fold"
+   },
+   {
+    "file": "data/external/ext484/michaelqiu0606_s6e8-depth9-pair-te-inputs/README.md",
+    "cell": 0,
+    "line": 5,
+    "text": "aligned to the official competition train/test row order and were selected from"
+   }
+  ],
+  "note": "README는 strict outer-fold라고 서술하지만 커뮤니티 고정 5분할과 원본 행 순서를 재현할 분할 벡터나 소스가 없다."
+ },
+ "training_contract": {
+  "claims": {
+   "direct_official_training": {
+    "status": "알 수 없음",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/michaelqiu0606_s6e8-depth9-pair-te-inputs/README.md",
+      "cell": 0,
+      "line": 5,
+      "text": "aligned to the official competition train/test row order and were selected from"
+     }
+    ],
+    "note": "공식 자료 직접 학습이라는 설명만 있고 확인할 소스가 없다.",
+    "claim": "공식 훈련 자료에서 직접 학습했다"
+   },
+   "single_model_lineage": {
+    "status": "알 수 없음",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/michaelqiu0606_s6e8-depth9-pair-te-inputs/README.md",
+      "cell": 0,
+      "line": 4,
+      "text": "`nested_te_residual_xgb_transductive_depth9_m012_champion` predictions. They are"
+     }
+    ],
+    "note": "이름은 depth9 champion 하나를 가리키지만 모형 계보를 확인할 소스가 없다.",
+    "claim": "하나의 모델 계보이며 서로 다른 모델이나 설정의 결합이 아니다"
+   },
+   "allowed_aggregation_only": {
+    "status": "알 수 없음",
+    "evidence_kind": "published_code",
+    "evidence": [],
+    "note": "분할·시드 집계 방식을 확인할 소스가 없다.",
+    "claim": "같은 고정 설정의 여러 시드나 분할 예측 평균만 사용했다"
+   },
+   "target_preprocessing_isolated": {
+    "status": "알 수 없음",
+    "evidence_kind": "published_code",
+    "evidence": [],
+    "note": "pair TE의 목표값 격리 범위를 확인할 소스가 없다.",
+    "claim": "목표값 기반 전처리를 각 바깥 학습 부분 안에 격리했다"
+   },
+   "outer_valid_scoring_only": {
+    "status": "알 수 없음",
+    "evidence_kind": "published_code",
+    "evidence": [],
+    "note": "바깥 검증 목표값이 학습 시점이나 상태 선택에 닿지 않았는지 확인할 소스가 없다.",
+    "claim": "바깥 검증 자료와 목표값은 채점에만 사용했다"
+   },
+   "training_point_fixed": {
+    "status": "알 수 없음",
+    "evidence_kind": "published_code",
+    "evidence": [],
+    "note": "고정 학습 시점과 검증 기반 중단 여부를 확인할 소스가 없다.",
+    "claim": "학습 횟수나 가중치를 바깥 검증 결과 전에 고정했다"
+   },
+   "public_config_selection_isolated": {
+    "status": "알 수 없음",
+    "evidence_kind": "published_code",
+    "evidence": [],
+    "note": "README의 local CV selected 서술만으로 설정 선택 격리를 확인할 수 없다. | 고정 판본에서 근거 조각을 찾지 못함: ['selected from local CV only']",
+    "claim": "공개 소스 안의 설정 선택에 바깥 검증 결과를 사용하지 않았다"
+   },
+   "no_external_prediction_retraining": {
+    "status": "알 수 없음",
+    "evidence_kind": "published_code",
+    "evidence": [],
+    "note": "입력 계보를 확인할 소스가 없다.",
+    "claim": "외부 예측을 입력으로 다시 학습하지 않았다"
+   },
+   "no_pseudo_label_training": {
+    "status": "알 수 없음",
+    "evidence_kind": "published_code",
+    "evidence": [],
+    "note": "학습 자료 계보를 확인할 소스가 없다.",
+    "claim": "의사 목표값을 학습에 사용하지 않았다"
+   },
+   "no_blend_distillation": {
+    "status": "알 수 없음",
+    "evidence_kind": "published_code",
+    "evidence": [],
+    "note": "교사 예측 사용 여부를 확인할 소스가 없다.",
+    "claim": "결합 예측을 교사로 삼아 증류하지 않았다"
+   }
+  },
+  "lineage_evidence": [],
+  "absence_scan": {
+   "patterns": {
+    "pseudo": "pseudo",
+    "external_input": "/kaggle/input/(datasets|notebooks)/",
+    "distill": "distill|teacher"
+   },
+   "hits": [],
+   "unexplained": 0
+  },
+  "prepublication_search_history": "알 수 없음"
+ },
+ "license": {
+  "source_code": {
+   "license": "CC0-1.0",
+   "status": "confirmed",
+   "evidence": "https://www.kaggle.com/datasets/michaelqiu0606/s6e8-depth9-pair-te-inputs",
+   "attribution_required": false,
+   "attribution": "Michael Y. Qiu (michaelqiu0606), S6E8 Depth9 Pair TE Inputs, https://www.kaggle.com/datasets/michaelqiu0606/s6e8-depth9-pair-te-inputs/versions/1"
+  },
+  "output_arrays": {
+   "license": "CC0-1.0",
+   "status": "confirmed",
+   "use_scope": "확장 스택 제출의 결합 입력으로만 사용",
+   "redistribution": true,
+   "repository_commit": false
+  }
+ },
+ "audit": {
+  "audit_state": "감사 완료",
+  "transition_log": [
+   {
+    "state": "발견됨",
+    "at": "2026-08-31T12:01:43Z",
+    "by": "fetch"
+   },
+   {
+    "state": "공개 판본 고정됨",
+    "at": null,
+    "by": "fetch"
+   },
+   {
+    "state": "감사 완료",
+    "at": "2026-08-31T12:02:59Z",
+    "by": "audit"
+   }
+  ],
+  "eligibility": "근거 부족",
+  "exclusion_reason_codes": [],
+  "insufficiency_reasons": [
+   "fold_evidence",
+   "claim_unknown:direct_official_training",
+   "claim_unknown:single_model_lineage",
+   "claim_unknown:allowed_aggregation_only",
+   "claim_unknown:target_preprocessing_isolated",
+   "claim_unknown:outer_valid_scoring_only",
+   "claim_unknown:training_point_fixed",
+   "claim_unknown:public_config_selection_isolated",
+   "claim_unknown:no_external_prediction_retraining",
+   "claim_unknown:no_pseudo_label_training",
+   "claim_unknown:no_blend_distillation"
+  ],
+  "caveat_codes": [
+   "lineage_source_missing"
+  ],
+  "caveats": [
+   {
+    "code": "lineage_source_missing",
+    "detail": "README와 배열만 있고 학습 소스·분할 벡터·재현 가능한 manifest가 없다."
+   }
+  ],
+  "near_duplicate": {
+   "spearman_max": 0.9915775709281505,
+   "closest": "v2:adarsh22:gxgbd4",
+   "threshold": 0.998,
+   "population": "판본 2 통과 구성원 + 판본 3 현행 후보"
+  },
+  "auditor": "tmheo (감사 도구 실행)",
+  "audited_at": "2026-08-31T12:02:59Z",
+  "audit_tool": {
+   "script": "scripts/build_external_member_ledger_v3.py",
+   "commit": "d43908e5a251856194c093a5d76cc14284636e06"
+  },
+  "evidence_manifest_sha256": "8313b57d28245a76084b33e0745a934e777afd6063913c17adffc524dc5fd997",
+  "guarantees": [
+   "기록한 고정 공개 판본의 소스와 연결 산출물에서 확인할 수 있는 학습 계보",
+   "OOF 691,369행과 시험 예측 296,302행의 유한값, 원래 행 순서와 정규화 예측 쌍 해시",
+   "고정 5분할 명세와 소스 안의 분할 코드 위치"
+  ],
+  "non_guarantees": [
+   "공개 이전의 비공개 설정 탐색 이력",
+   "작성자가 공개하지 않은 코드와 숨은 외부 자료 사용",
+   "미래 공개 판본",
+   "출력 배열에 표시되지 않은 권리 범위(사용 한정을 넘는 사용)"
+  ],
+  "notes": [
+   "계보를 현재 계약으로 확정할 수 없어 근거 부족으로 종결한다.",
+   "자료 판본 1, lastUpdated=2026-08-29T17:27:56.327Z."
+  ]
+ },
+ "record_sha256": "d06b8cfc02509f7ec2585b7918c1964644f4b48304d33bb3096a6765965328e7"
+}

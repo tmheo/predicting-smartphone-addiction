@@ -1,0 +1,429 @@
+{
+ "contract_version": "3.0",
+ "contract_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/482",
+ "ledger_version": 3,
+ "ledger_issue": 484,
+ "audit_record_id": "emar3-a1d84b8ece183b07",
+ "audit_revision": 1,
+ "supersedes_audit_record_id": null,
+ "identity": {
+  "member_id": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:torch_mlp",
+  "display_name": "Subodh Deogade PyTorch MLP",
+  "author": "Subodh Deogade (sometimessubodh)",
+  "source_kind": "notebook_output",
+  "source_key": "sometime_stacking9",
+  "model_lineage_id": "notebook:sometimessubodh/stacking-9-models-smartphone-addiction-prediction@346039237:torch_mlp",
+  "input_population": "incremental_issue_487",
+  "exact_duplicate_of": null
+ },
+ "fixed_source": {
+  "source_kind": "notebook",
+  "source_ref": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+  "kernel_ref": "sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+  "title": "Stacking 9 Models|Smartphone Addiction Prediction",
+  "url": "https://www.kaggle.com/code/sometimessubodh/stacking-9-models-smartphone-addiction-prediction?scriptVersionId=346039237",
+  "script_version_id": 346039237,
+  "dataset_version_number": null,
+  "source_file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+  "source_sha256": "691100dcf6f0b365e4c1a5902e52218797cfe00c73dca19b8e6a2b19087473bb",
+  "pinned_source_sha256": "691100dcf6f0b365e4c1a5902e52218797cfe00c73dca19b8e6a2b19087473bb",
+  "pinned_version_confirmed": true,
+  "version_confirmation": {
+   "method": "kaggle kernels pull 소스 SHA-256과 www.kaggle.com의 scriptVersionId를 함께 대조",
+   "page": {
+    "url": "https://www.kaggle.com/code/sometimessubodh/stacking-9-models-smartphone-addiction-prediction",
+    "fetched_at": "2026-08-31T12:01:17Z",
+    "http_ok": true,
+    "script_version_ids": [
+     346039237
+    ]
+   },
+   "page_matches_pinned": true
+  },
+  "retrieved_at": {
+   "page": "2026-08-31T12:01:17Z",
+   "pull": "2026-08-31T12:01:21Z",
+   "files": "2026-08-31T12:01:24Z",
+   "output": "2026-08-31T12:01:40Z"
+  },
+  "provenance_role": "direct",
+  "dependency_refs": [],
+  "output_listing_file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/files.json"
+ },
+ "predictions": {
+  "oof": {
+   "file": "stacking_matrices.pkl",
+   "raw_sha256": "8c1f7d3e761c1cf66f3095cda530b05f64d8de11de757e87166421a33116c5ad",
+   "format": "joblib_dataframe",
+   "column": "torch_mlp",
+   "column_index": null,
+   "frame_key": "oof_preds",
+   "raw_dtype": "float64",
+   "raw_shape": [
+    691369,
+    9
+   ],
+   "columns": [
+    "lgb_gpu",
+    "xgb_gpu",
+    "catboost_gpu",
+    "cuml_rf",
+    "cuml_logreg",
+    "cuml_knn",
+    "cuml_mbsgd",
+    "torch_mlp",
+    "tabnet"
+   ],
+   "row_alignment": {
+    "method": "positional",
+    "detail": "RangeIndex(0..691368) 순서, 저장 코드가 공식 train/test 원본 순서로 채운다",
+    "range_index": true
+   },
+   "embedded_label_equals_ours": true,
+   "rows": 691369,
+   "finite": true,
+   "dtype_note": null
+  },
+  "test": {
+   "file": "stacking_matrices.pkl",
+   "raw_sha256": "8c1f7d3e761c1cf66f3095cda530b05f64d8de11de757e87166421a33116c5ad",
+   "format": "joblib_dataframe",
+   "column": "torch_mlp",
+   "column_index": null,
+   "frame_key": "test_preds",
+   "raw_dtype": "float64",
+   "raw_shape": [
+    296302,
+    9
+   ],
+   "columns": [
+    "lgb_gpu",
+    "xgb_gpu",
+    "catboost_gpu",
+    "cuml_rf",
+    "cuml_logreg",
+    "cuml_knn",
+    "cuml_mbsgd",
+    "torch_mlp",
+    "tabnet"
+   ],
+   "row_alignment": {
+    "method": "positional",
+    "detail": "RangeIndex(0..296301) 순서, 저장 코드가 공식 train/test 원본 순서로 채운다",
+    "range_index": true
+   },
+   "rows": 296302,
+   "finite": true,
+   "dtype_note": null
+  },
+  "load_error": null,
+  "semantics": "양성 확률",
+  "normalized": {
+   "oof_sha256": "cedd6cd7d824195328e0abb9f6a2a1035d9febe3a1906231ce3222c069b6f308",
+   "test_sha256": "eb8c90fbcb015e9e3c94bc36808723d4a19fb55e7f2389f5e3e577f488057a17",
+   "pair_sha256": "8f3d5ea1e94adbeb6162ec49995803c9f8d88b9d30325dbd343c68374842ca8f",
+   "oof_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/oof_torch_mlp.npy",
+   "test_path": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/normalized/test_torch_mlp.npy",
+   "dtype": "float64",
+   "layout": "C 연속 1차원, OOF 뒤에 시험 예측을 이어 붙여 쌍 해시 계산"
+  },
+  "rescored_auc": 0.9408735736144551,
+  "declared_auc": null,
+  "declared_auc_source": null,
+  "declared_auc_delta": null,
+  "independent_auc": 0.940873573614,
+  "independent_auc_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/487",
+  "independent_auc_delta": 4.550804177938517e-13,
+  "auc_tolerance": 1e-05,
+  "prior_pair_sha256": "8f3d5ea1e94adbeb6162ec49995803c9f8d88b9d30325dbd343c68374842ca8f",
+  "prior_pair_ref": "https://github.com/tmheo/predicting-smartphone-addiction/issues/487",
+  "prior_pair_match": true,
+  "v2_ledger_member": null
+ },
+ "fold_contract": {
+  "spec_id": "community-skf5-shuffle-seed42-train-csv-order",
+  "spec": "StratifiedKFold(n_splits=5, shuffle=True, random_state=42), train.csv 원본 행 순서",
+  "fold_vector_sha256": "9571f18b6ba175d426593d5576d4846d30f00e015cae09d657b3a53437bee824",
+  "row_order_condition": "train.csv 원본 행 순서(id 0..691368 오름차순)",
+  "exact_match": true,
+  "status": "확인됨",
+  "evidence_kind": "published_code",
+  "evidence": [
+   {
+    "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+    "cell": 10,
+    "line": 1,
+    "text": "N_FOLDS = 5"
+   },
+   {
+    "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+    "cell": 10,
+    "line": 2,
+    "text": "skf = StratifiedKFold(n_splits=N_FOLDS, shuffle=True, random_state=42)"
+   },
+   {
+    "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+    "cell": 10,
+    "line": 3,
+    "text": "fold_indices = list(skf.split(X, y))"
+   }
+  ],
+  "note": "N_FOLDS=5, random_state=42의 StratifiedKFold(shuffle=True)를 원본 train 순서에 적용하고 모든 구성원이 같은 fold_indices를 재사용한다."
+ },
+ "training_contract": {
+  "claims": {
+   "direct_official_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+      "cell": 6,
+      "line": 1,
+      "text": "TRAIN_PATH = \"/kaggle/input/competitions/playground-series-s6e8/train.csv\""
+     },
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/kernel-metadata.json",
+      "line": 18,
+      "text": "\"dataset_sources\": [],"
+     }
+    ],
+    "note": "공식 대회 train.csv와 test.csv만 읽고 연결 자료가 없다.",
+    "claim": "공식 훈련 자료에서 직접 학습했다"
+   },
+   "single_model_lineage": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+      "cell": 34,
+      "line": 9,
+      "text": "joblib.dump({\"oof_preds\": oof_preds, \"test_preds\": test_preds, \"y\": y}, \"stacking_matrices.pkl\")"
+     }
+    ],
+    "note": "stacking_matrices.pkl이 기초 모형별 OOF·시험 열을 따로 저장하며 최종 메타 결합 예측은 별도 제출 CSV에만 쓴다.",
+    "claim": "하나의 모델 계보이며 서로 다른 모델이나 설정의 결합이 아니다"
+   },
+   "allowed_aggregation_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+      "cell": 18,
+      "line": 6,
+      "text": "test_preds[\"cuml_rf\"] += model.predict_proba(X_test_num.values)[:, 1] / N_FOLDS"
+     }
+    ],
+    "note": "각 시험 열은 같은 고정 설정의 5개 바깥 분할 모형 예측 평균이다.",
+    "claim": "같은 고정 설정의 여러 시드나 분할 예측 평균만 사용했다"
+   },
+   "target_preprocessing_isolated": {
+    "status": "해당 없음",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+      "cell": 8,
+      "line": 8,
+      "text": "le.fit(combined)"
+     },
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+      "cell": 8,
+      "line": 20,
+      "text": "num_medians = X_num.median()"
+     },
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+      "cell": 8,
+      "line": 36,
+      "text": "X_num_scaled = pd.DataFrame(scaler.fit_transform(X_num), columns=X_num.columns)"
+     }
+    ],
+    "note": "목표값 기반 전처리가 없다. 범주 사전은 train+test 특성값만, 중앙값과 표준화는 train 특성값만 보고 목표값을 읽지 않는다.",
+    "claim": "목표값 기반 전처리를 각 바깥 학습 부분 안에 격리했다"
+   },
+   "outer_valid_scoring_only": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+      "cell": 18,
+      "line": 3,
+      "text": "model.fit(X_num.iloc[tr_idx].values, y.iloc[tr_idx].values.astype(np.int32))"
+     },
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+      "cell": 26,
+      "line": 26,
+      "text": "for _ in range(epochs):"
+     },
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+      "cell": 26,
+      "line": 38,
+      "text": "val_probs = torch.sigmoid(val_logits).cpu().numpy()"
+     }
+    ],
+    "note": "다섯 구성원은 fit에 바깥 학습 부분만 넘긴다. PyTorch 함수의 X_val은 학습 뒤 예측에만 쓰고 y_val은 읽지 않는다.",
+    "claim": "바깥 검증 자료와 목표값은 채점에만 사용했다"
+   },
+   "training_point_fixed": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+      "cell": 26,
+      "line": 14,
+      "text": "def train_mlp_fold(X_tr, y_tr, X_val, y_val, n_features, epochs=30, batch_size=1024):"
+     },
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+      "cell": 26,
+      "line": 16,
+      "text": "opt = torch.optim.Adam(model.parameters(), lr=1e-3)"
+     }
+    ],
+    "note": "고정 구조와 epochs=30, Adam lr=1e-3으로 끝까지 학습하고 검증 기반 상태 선택 없음",
+    "claim": "학습 횟수나 가중치를 바깥 검증 결과 전에 고정했다"
+   },
+   "public_config_selection_isolated": {
+    "status": "확인됨",
+    "evidence_kind": "published_code",
+    "evidence": [
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+      "cell": 10,
+      "line": 5,
+      "text": "MODEL_NAMES = ["
+     },
+     {
+      "file": "data/external/ext484/sometimessubodh_stacking-9-models-smartphone-addiction-prediction/stacking-9-models-smartphone-addiction-prediction.ipynb",
+      "cell": 30,
+      "line": 1,
+      "text": "base_scores = {name: roc_auc_score(y, oof_preds[name]) for name in MODEL_NAMES}"
+     }
+    ],
+    "note": "다섯 구성원의 설정이 코드에 정적으로 고정되고 OOF 점수는 출력과 최종 메타 결합에만 쓰인다.",
+    "claim": "공개 소스 안의 설정 선택에 바깥 검증 결과를 사용하지 않았다"
+   },
+   "no_external_prediction_retraining": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "외부 예측을 입력으로 다시 학습하지 않았다"
+   },
+   "no_pseudo_label_training": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "의사 목표값을 학습에 사용하지 않았다"
+   },
+   "no_blend_distillation": {
+    "status": "확인됨",
+    "evidence_kind": "published_code_absence",
+    "evidence": [],
+    "note": "고정 판본 소스 전체에 해당 코드가 없다",
+    "claim": "결합 예측을 교사로 삼아 증류하지 않았다"
+   }
+  },
+  "lineage_evidence": [],
+  "absence_scan": {
+   "patterns": {
+    "pseudo": "pseudo",
+    "external_input": "/kaggle/input/(datasets|notebooks)/",
+    "distill": "distill|teacher"
+   },
+   "hits": [],
+   "unexplained": 0
+  },
+  "prepublication_search_history": "알 수 없음"
+ },
+ "license": {
+  "source_code": {
+   "license": "Apache-2.0",
+   "status": "confirmed",
+   "evidence": "https://www.kaggle.com/datasets/kaggle/meta-kaggle-code",
+   "attribution_required": true,
+   "attribution": "Subodh Deogade (sometimessubodh), Stacking 9 Models|Smartphone Addiction Prediction, https://www.kaggle.com/code/sometimessubodh/stacking-9-models-smartphone-addiction-prediction?scriptVersionId=346039237"
+  },
+  "output_arrays": {
+   "license": "unknown",
+   "status": "unmarked",
+   "use_scope": "확장 스택 제출의 결합 입력으로만 사용",
+   "redistribution": false,
+   "repository_commit": false
+  }
+ },
+ "audit": {
+  "audit_state": "감사 완료",
+  "transition_log": [
+   {
+    "state": "발견됨",
+    "at": "2026-08-31T12:01:17Z",
+    "by": "fetch"
+   },
+   {
+    "state": "공개 판본 고정됨",
+    "at": "2026-08-31T12:01:21Z",
+    "by": "fetch"
+   },
+   {
+    "state": "감사 완료",
+    "at": "2026-08-31T12:02:59Z",
+    "by": "audit"
+   }
+  ],
+  "eligibility": "자격 있음",
+  "exclusion_reason_codes": [],
+  "insufficiency_reasons": [],
+  "caveat_codes": [
+   "license_unknown_use_limited",
+   "full_feature_only_preprocessing"
+  ],
+  "caveats": [
+   {
+    "code": "license_unknown_use_limited",
+    "detail": "노트북 출력물(소스는 Apache-2.0, 출력 배열은 사용 조건 표시 없음, 결합 입력 전용)"
+   },
+   {
+    "code": "full_feature_only_preprocessing",
+    "detail": "범주 사전은 train+test 특성값, 중앙값과 표준화는 전체 train 특성값으로 만들지만 목표값은 읽지 않는다."
+   }
+  ],
+  "near_duplicate": {
+   "spearman_max": 0.9951127408978364,
+   "closest": "v2:szymon74:pubmk_nn",
+   "threshold": 0.998,
+   "population": "판본 2 통과 구성원 + 판본 3 현행 후보"
+  },
+  "auditor": "tmheo (감사 도구 실행)",
+  "audited_at": "2026-08-31T12:02:59Z",
+  "audit_tool": {
+   "script": "scripts/build_external_member_ledger_v3.py",
+   "commit": "d43908e5a251856194c093a5d76cc14284636e06"
+  },
+  "evidence_manifest_sha256": "009f28bc78190cce513931edd40d34eb96d30ac274798bf3e32336e2fec0ec93",
+  "guarantees": [
+   "기록한 고정 공개 판본의 소스와 연결 산출물에서 확인할 수 있는 학습 계보",
+   "OOF 691,369행과 시험 예측 296,302행의 유한값, 원래 행 순서와 정규화 예측 쌍 해시",
+   "고정 5분할 명세와 소스 안의 분할 코드 위치"
+  ],
+  "non_guarantees": [
+   "공개 이전의 비공개 설정 탐색 이력",
+   "작성자가 공개하지 않은 코드와 숨은 외부 자료 사용",
+   "미래 공개 판본",
+   "출력 배열에 표시되지 않은 권리 범위(사용 한정을 넘는 사용)"
+  ],
+  "notes": [
+   "2026-08-30T12:00:00Z 증분 조사에서 발견한 저장 출력이다."
+  ]
+ },
+ "record_sha256": "9169ba147defb6545a993c88c6198f85cd4e9627d8e77143aaf03310f8e47f36"
+}
