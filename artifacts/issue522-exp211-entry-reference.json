@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "kind": "candidate_pool_entry_reference",
+  "candidate_run_id": "ee4989467d3f453e8e99d80c89d39ae9",
+  "candidate_config": "exp211_issue520_xgb_lr_onehot_init",
+  "candidate_auc_oof": 0.9679412563997956,
+  "champion": {
+    "path": "artifacts/champion.yaml",
+    "sha256": "aa012114107c06532cf51c0fa9c741f5949146428cf266cf4bedded783d20e09",
+    "run_id": "6911a461866b43dc9556553eba6783b7",
+    "auc_oof": 0.9693676105620948
+  },
+  "entry_floor": 0.9593676105620947,
+  "entry_floor_passed": true,
+  "candidate_pool": {
+    "path": "artifacts/pool.yaml",
+    "sha256": "40947563a00cab8212498c7e339517e387979b14c6477c6ce8e196036e02044c",
+    "member_count": 36
+  },
+  "nearest_pool_member": {
+    "run_id": "8b4111a9a93147caa6b9012e49456474",
+    "config": "exp209_issue505_lgb_lr_onehot_init",
+    "spearman": 0.9974745814883617,
+    "duplicate_threshold": 0.998,
+    "duplicate": false
+  },
+  "standard_evaluation_ensemble": {
+    "auc_without": 0.969142394496097,
+    "auc_with": 0.9691565208351198,
+    "contribution": 0.000014126339022868528,
+    "contribution_positive": true,
+    "used_for_final_admission": false
+  },
+  "folds": {
+    "path": "artifacts/folds.parquet",
+    "sha256": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+  },
+  "public_score_used": false,
+  "final_rank_used": false
+}
