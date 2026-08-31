@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -22,6 +21,7 @@ import yaml
 
 from .data import file_sha256
 from .judgment import DUPLICATE_SPEARMAN
+from .sealed import canonical_json, canonical_sha256
 
 CONTRACT_VERSION = "missingness-propagation-batch-v1"
 PRECOMMIT_SCHEMA = f"{CONTRACT_VERSION}/precommit/1"
@@ -158,19 +158,6 @@ class MissingnessPropagationBatchError(RuntimeError):
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise MissingnessPropagationBatchError(message)
-
-
-def canonical_json(value: Any) -> str:
-    return json.dumps(
-        value,
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-    )
-
-
-def canonical_sha256(value: Any) -> str:
-    return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
 
 
 def identity_sha256(identity: Mapping[str, Any]) -> str:
