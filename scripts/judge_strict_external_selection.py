@@ -228,9 +228,14 @@ def load_folds_and_labels() -> tuple[pd.Series, pd.Series]:
 
 
 def load_own(fold_of: pd.Series) -> tuple[pd.DataFrame, list[dict]]:
-    pool = Pool.load()
-    members = [(member.config, member.run_id) for member in pool.members]
-    _require(len(members) == OWN_MEMBER_COUNT, f"후보 풀 {len(members)}구성원(기대 {OWN_MEMBER_COUNT})")
+    """비교 팔 313에 동결된 자체 35개를 #457 manifest의 (config, run_id)로 적재한다.
+
+    풀은 #500·#505처럼 판정 뒤에도 원자 교체·증원될 수 있으므로 풀을 읽지 않는다.
+    동결 구성의 근거는 manifest이며 OOF·시험 해시 대조가 뒤따른다.
+    """
+    manifest_own = [entry for entry in read_json(COMPARISON_MANIFEST_PATH)["members"] if entry["origin"] == "own"]
+    _require(len(manifest_own) == OWN_MEMBER_COUNT, f"#457 manifest 자체 구성원 {len(manifest_own)}개(기대 {OWN_MEMBER_COUNT})")
+    members = [(entry["column"], entry["run_id"]) for entry in manifest_own]
     matrix = ensemble.member_matrix(members, MlflowRunStore(), fold_of.index)
     rows = [
         {"column": config, "run_id": run_id, "oof_sha256": prediction_array_sha256(matrix[config])}
@@ -240,7 +245,7 @@ def load_own(fold_of: pd.Series) -> tuple[pd.DataFrame, list[dict]]:
 
 
 def load_comparison_arm(own: pd.DataFrame, fold_of: pd.Series, y: pd.Series) -> tuple[pd.DataFrame, list[dict]]:
-    """#457 manifest의 313구성원 OOF 행렬. 자체 35는 풀 순서, 외부는 판본 2 장부 경로.
+    """#457 manifest의 313구성원 OOF 행렬. 자체 35는 manifest 순서, 외부는 판본 2 장부 경로.
 
     정확 중복 판정을 위해 시험 배열도 읽어 manifest의 시험 예측 해시와 대조하고
     후보와 같은 규칙(float64 OOF·시험 배열)의 예측 쌍 SHA-256을 구성원마다 남긴다.
