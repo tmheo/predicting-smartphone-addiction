@@ -1,0 +1,613 @@
+{
+  "schema_version": 1,
+  "contract_version": "initial-score-paired-v1",
+  "frozen_contract": {
+    "path": "artifacts/issue520-initial-score-extension-precommit.json",
+    "precommit_sha256": "f3a5983d3473d40b320327384c0e15d3592617b9a6c3d1237f15e429a374ad94",
+    "pair_key": "catboost",
+    "pair_manifest_sha256": "8d87d0a73022798d8fc935f09cf05fae04712636a465446fa587f19d091c3365",
+    "initial_score_coordinate_sha256": "5ceef1c830d6e68c754ff918af682c2b3657d57e8599e71087b4b0d868a64a02",
+    "folds_sha256": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+  },
+  "execution_identity": {
+    "git_commit": "bf0fd22fd1fe541fd969e7526161da61b68887d0",
+    "git_dirty": false,
+    "same_commit_within_pair": true,
+    "input_sha256": {
+      "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+      "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+      "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+    }
+  },
+  "baseline": {
+    "run_id": "50613337010a48efbf771be90bfa636b",
+    "experiment": "exp071_cat_exact_no_te",
+    "seeds": [
+      42
+    ],
+    "auc_oof": 0.9679475905933742,
+    "seed_aucs": {
+      "42": 0.9679475905933742
+    },
+    "fold_aucs": {
+      "0": 0.9673017424100396,
+      "1": 0.9680726868980056,
+      "2": 0.967967970225539,
+      "3": 0.9685762325018145,
+      "4": 0.9678255069943941
+    },
+    "git_commit": "bf0fd22fd1fe541fd969e7526161da61b68887d0",
+    "git_dirty": false,
+    "input_sha256": {
+      "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+      "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+      "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+    },
+    "runtime_identity": {
+      "provider": "local",
+      "runtime_class": "local"
+    }
+  },
+  "candidate": {
+    "run_id": "26f012284cfc40948faeca7cbb9bb06e",
+    "experiment": "exp210_issue520_cat_lr_onehot_init",
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "auc_oof": 0.9685106348128161,
+    "seed_aucs": {
+      "42": 0.9684155449710514,
+      "43": 0.9683928509048039,
+      "44": 0.9683989413849938
+    },
+    "fold_aucs": {
+      "0": 0.9678574558066677,
+      "1": 0.9685326455056078,
+      "2": 0.9685889905377953,
+      "3": 0.9691297091065167,
+      "4": 0.968445448214039
+    },
+    "git_commit": "bf0fd22fd1fe541fd969e7526161da61b68887d0",
+    "git_dirty": false,
+    "input_sha256": {
+      "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+      "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+      "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+    },
+    "runtime_identity": {
+      "provider": "local",
+      "runtime_class": "local"
+    }
+  },
+  "seed42_pairwise": {
+    "baseline_auc": 0.9679475905933742,
+    "candidate_auc": 0.9684155449710514,
+    "delta": 0.0004679543776772155,
+    "baseline_fold_aucs": {
+      "0": 0.9673017424100396,
+      "1": 0.9680726868980056,
+      "2": 0.967967970225539,
+      "3": 0.9685762325018145,
+      "4": 0.9678255069943941
+    },
+    "candidate_fold_aucs": {
+      "0": 0.9677731399654622,
+      "1": 0.9684294161373914,
+      "2": 0.968512140649314,
+      "3": 0.9690167729341367,
+      "4": 0.9683480792832466
+    },
+    "fold_deltas": {
+      "0": 0.0004713975554225813,
+      "1": 0.00035672923938578904,
+      "2": 0.00054417042377497,
+      "3": 0.00044054043232222284,
+      "4": 0.0005225722888525519
+    },
+    "fold_wins": 5,
+    "fold_total": 5,
+    "spearman_baseline_candidate": 0.981838554016332,
+    "passed": true
+  },
+  "baseline_reproduction": {
+    "status": "recorded",
+    "recorded": {
+      "run_id": "521b4924b2ef4ba1830724333b83deb2",
+      "experiment": "exp071_cat_exact_no_te",
+      "seeds": [
+        42,
+        43,
+        44
+      ],
+      "auc_oof": 0.9681599406445471,
+      "seed_aucs": {
+        "42": 0.9679475905933742,
+        "43": 0.9679760030643454,
+        "44": 0.9679670187337754
+      },
+      "fold_aucs": {
+        "0": 0.9675061802699194,
+        "1": 0.968299292746107,
+        "2": 0.9681755265529282,
+        "3": 0.9688205601560013,
+        "4": 0.9680068947560956
+      },
+      "git_commit": "5fa7bf8f2a540fbe99670c262aef45a67b8ca321",
+      "git_dirty": false,
+      "input_sha256": {
+        "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+        "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+        "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+      },
+      "runtime_identity": {
+        "provider": "local",
+        "runtime_class": "local"
+      }
+    },
+    "recorded_seed42_auc": 0.9679475905933742,
+    "local_seed42_auc": 0.9679475905933742,
+    "local_minus_recorded": 0.0,
+    "spearman_local_recorded": 1.0,
+    "max_abs_pred_diff": 0.0,
+    "recorded_seed42_oof_sha256": "3aeff53e9d13b68297f6d53934f280d8fe6a0b3f02a8f24efb2a8c466e2e71b5"
+  },
+  "first_stage": {
+    "artifact_sha256": "fb385089da8bc64e10b0e29f90912ff7b24f91caad1ea36cc199e76bb825a0d6",
+    "schema_version": 1,
+    "kind": "nested_logistic_onehot",
+    "entry_count": 15,
+    "by_seed": {
+      "42": {
+        "outer_folds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "inner_oof_auc": [
+          0.9596125230110548,
+          0.9595077079454093,
+          0.959277126468949,
+          0.9592775521480799,
+          0.9595471562955225
+        ],
+        "validation_first_stage_auc": [
+          0.9588720994980765,
+          0.9593775515509021,
+          0.9600982958414872,
+          0.96027775602238,
+          0.9593208341983547
+        ],
+        "training_logit_range": [
+          [
+            -11.983014871505768,
+            13.815509557935018
+          ],
+          [
+            -12.399453702178494,
+            13.815509557935018
+          ],
+          [
+            -10.292789003470357,
+            13.815509557935018
+          ],
+          [
+            -11.336355950117028,
+            13.815509557935018
+          ],
+          [
+            -12.54440627694999,
+            13.815509557935018
+          ]
+        ],
+        "validation_logit_range": [
+          [
+            -10.189737464038382,
+            13.815509557935018
+          ],
+          [
+            -10.073381950317891,
+            13.815509557935018
+          ],
+          [
+            -12.010344989560824,
+            13.815509557935018
+          ],
+          [
+            -9.64861207704548,
+            13.815509557935018
+          ],
+          [
+            -9.182611216990981,
+            13.815509557935018
+          ]
+        ],
+        "test_logit_range": [
+          [
+            -10.482190294083045,
+            13.815509557935018
+          ],
+          [
+            -10.880988760977326,
+            13.815509557935018
+          ],
+          [
+            -10.517177372790645,
+            13.815509557935018
+          ],
+          [
+            -10.526472929760596,
+            13.815509557935018
+          ],
+          [
+            -10.232688409533356,
+            13.815509557935018
+          ]
+        ],
+        "full_fit_iterations": [
+          161,
+          150,
+          190,
+          174,
+          184
+        ],
+        "inner_fit_iterations_max": [
+          222,
+          220,
+          224,
+          214,
+          232
+        ],
+        "n_features": [
+          5413,
+          5414,
+          5412,
+          5412,
+          5412
+        ],
+        "coordinate_sha256": [
+          "e7f98e4fba1fb3199dae6d57032dc08dfc8e1b75ac67c6828c6df346e0bd903d",
+          "36b1465200208b38569a41467f8670be008df74748eda9edac54fb0732c2826c",
+          "770ec7d4563e4b9f1ee5cbcc7c5152fdec2e935023b721ee6de5f832aca7dda9",
+          "41d2b8c2f844b8ce1823a368a1a6bc69e935f064f891301aaf908c7c8ac1fdcd",
+          "e0a38ad20d0ea19f2c146b9d9be2c1765025b704b99f4a7c537fba36c864bb2d"
+        ]
+      },
+      "43": {
+        "outer_folds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "inner_oof_auc": [
+          0.959602376706984,
+          0.9595331195338046,
+          0.9593616289142688,
+          0.9592965037178987,
+          0.9595121648116649
+        ],
+        "validation_first_stage_auc": [
+          0.9588720994980765,
+          0.9593775515509021,
+          0.9600982958414872,
+          0.96027775602238,
+          0.9593208341983547
+        ],
+        "training_logit_range": [
+          [
+            -12.024678158175975,
+            13.815509557935018
+          ],
+          [
+            -12.092842739998495,
+            13.815509557935018
+          ],
+          [
+            -10.040285959715154,
+            13.815509557935018
+          ],
+          [
+            -12.027242009858877,
+            13.815509557935018
+          ],
+          [
+            -12.075097980535602,
+            13.815509557935018
+          ]
+        ],
+        "validation_logit_range": [
+          [
+            -10.189737464038382,
+            13.815509557935018
+          ],
+          [
+            -10.073381950317891,
+            13.815509557935018
+          ],
+          [
+            -12.010344989560824,
+            13.815509557935018
+          ],
+          [
+            -9.64861207704548,
+            13.815509557935018
+          ],
+          [
+            -9.182611216990981,
+            13.815509557935018
+          ]
+        ],
+        "test_logit_range": [
+          [
+            -10.482190294083045,
+            13.815509557935018
+          ],
+          [
+            -10.880988760977326,
+            13.815509557935018
+          ],
+          [
+            -10.517177372790645,
+            13.815509557935018
+          ],
+          [
+            -10.526472929760596,
+            13.815509557935018
+          ],
+          [
+            -10.232688409533356,
+            13.815509557935018
+          ]
+        ],
+        "full_fit_iterations": [
+          161,
+          150,
+          190,
+          174,
+          184
+        ],
+        "inner_fit_iterations_max": [
+          216,
+          234,
+          192,
+          204,
+          226
+        ],
+        "n_features": [
+          5413,
+          5414,
+          5412,
+          5412,
+          5412
+        ],
+        "coordinate_sha256": [
+          "eef433de8ca05f8dc4aa56d7560f695f1ca1b9134bab2a24e8a7b6b4fe3848f7",
+          "c02cb9bcd1241f459a06aa6c322be326ed15cde3094dbb4054e75b7c83735630",
+          "9b2472a8ac309b239b405cecfd38a88f3ff4eebeb8600c3a797eeb72151408a1",
+          "fd011763ff51f042699d0b979cc5529ce0bc697a68a00abe8bcc95322134174b",
+          "55415f438cb68b5ef6181ccaec656bc4b7ba4e860a8ef5addf23f8faccaf3c7c"
+        ]
+      },
+      "44": {
+        "outer_folds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "inner_oof_auc": [
+          0.9596104290262077,
+          0.9594877490903844,
+          0.9593857755962704,
+          0.959277470545308,
+          0.9596168553510136
+        ],
+        "validation_first_stage_auc": [
+          0.9588720994980765,
+          0.9593775515509021,
+          0.9600982958414872,
+          0.96027775602238,
+          0.9593208341983547
+        ],
+        "training_logit_range": [
+          [
+            -12.761100554223754,
+            13.815509557935018
+          ],
+          [
+            -12.210672904323228,
+            13.815509557935018
+          ],
+          [
+            -10.152095652648022,
+            13.815509557935018
+          ],
+          [
+            -11.53818403149326,
+            13.815509557935018
+          ],
+          [
+            -12.304417325623058,
+            13.815509557935018
+          ]
+        ],
+        "validation_logit_range": [
+          [
+            -10.189737464038382,
+            13.815509557935018
+          ],
+          [
+            -10.073381950317891,
+            13.815509557935018
+          ],
+          [
+            -12.010344989560824,
+            13.815509557935018
+          ],
+          [
+            -9.64861207704548,
+            13.815509557935018
+          ],
+          [
+            -9.182611216990981,
+            13.815509557935018
+          ]
+        ],
+        "test_logit_range": [
+          [
+            -10.482190294083045,
+            13.815509557935018
+          ],
+          [
+            -10.880988760977326,
+            13.815509557935018
+          ],
+          [
+            -10.517177372790645,
+            13.815509557935018
+          ],
+          [
+            -10.526472929760596,
+            13.815509557935018
+          ],
+          [
+            -10.232688409533356,
+            13.815509557935018
+          ]
+        ],
+        "full_fit_iterations": [
+          161,
+          150,
+          190,
+          174,
+          184
+        ],
+        "inner_fit_iterations_max": [
+          218,
+          216,
+          210,
+          228,
+          221
+        ],
+        "n_features": [
+          5413,
+          5414,
+          5412,
+          5412,
+          5412
+        ],
+        "coordinate_sha256": [
+          "3fb5a78b9514b05d38b7a0b0a4230431ae431c0c4d23ed74eef7f117fb63f5ff",
+          "67153039737de1cc4768f5a5957fc1a632f922043271bf96ffbcd520a0eceb5c",
+          "4f01c6df6bbf58d43cbf960f3d4c0add18daf759fe376b98093584419bf45b3f",
+          "88e2aab08f297504975d7928b1c90982e581f9545f74864335ac8d426a9fc08e",
+          "8e4f8ae731f380afdcc333e8582c7aa0785bc5c4202950f370d8ded304b729c0"
+        ]
+      }
+    }
+  },
+  "entry_and_duplicate": {
+    "candidate_prediction_basis": "seed_average",
+    "champion": {
+      "config": "exp156_lookup_bivariate_plr5_initavg8",
+      "run_id": "6911a461866b43dc9556553eba6783b7",
+      "auc_oof": 0.9693676105620948
+    },
+    "entry_floor_margin": 0.01,
+    "entry_floor": 0.9593676105620947,
+    "candidate_entry_auc": 0.9685106348128161,
+    "entry_floor_passed": true,
+    "duplicate_spearman_threshold": 0.998,
+    "nearest_pool_member": {
+      "config": "exp209_issue505_lgb_lr_onehot_init",
+      "run_id": "8b4111a9a93147caa6b9012e49456474",
+      "lineage_group": "issue505",
+      "spearman_seed_average": 0.9941472664108334,
+      "spearman_seed42": 0.9942320576553793
+    },
+    "nearest_is_duplicate": false,
+    "nearest_is_atomic_replacement_lineage": true,
+    "top5": [
+      {
+        "config": "exp209_issue505_lgb_lr_onehot_init",
+        "run_id": "8b4111a9a93147caa6b9012e49456474",
+        "lineage_group": "issue505",
+        "spearman_seed_average": 0.9941472664108334,
+        "spearman_seed42": 0.9942320576553793
+      },
+      {
+        "config": "mpv1_exp070_cat_exact_cats_missingness_augmented",
+        "run_id": "4fd10d9fc1324583a023552acc2cf77f",
+        "lineage_group": null,
+        "spearman_seed_average": 0.9880189317200582,
+        "spearman_seed42": 0.9881767004163042
+      },
+      {
+        "config": "exp208_issue500_ag25_missingness_augmented",
+        "run_id": "e46d1ca38e0746209e049970d3dd2ab6",
+        "lineage_group": "exp117_ag25_gbm_r21",
+        "spearman_seed_average": 0.9856119924580237,
+        "spearman_seed42": 0.9859489033560768
+      },
+      {
+        "config": "exp140_realmlp_orig_cdf_diff",
+        "run_id": "984b0fd5277243ab95acff71688644a9",
+        "lineage_group": null,
+        "spearman_seed_average": 0.9850945517936055,
+        "spearman_seed42": 0.9852504329939823
+      },
+      {
+        "config": "exp135_xgb_hpo_trial30",
+        "run_id": "119b9c4e44674d38a6f758b65a68593e",
+        "lineage_group": null,
+        "spearman_seed_average": 0.9838406134380003,
+        "spearman_seed42": 0.9842461705066325
+      }
+    ],
+    "pool_member_count": 36
+  },
+  "preliminary_route": {
+    "route": "general_admission",
+    "eligible_for_pool_judgment": true,
+    "reason": "짝차이, 진입 하한과 일반 중복 관문을 통과했다.",
+    "replacement_target_run_id": null
+  },
+  "candidate_pool_v2": {
+    "status": "pending",
+    "reference_contribution_positive": null,
+    "record": null
+  },
+  "decision": {
+    "state": "confirmation_ready",
+    "next_action": "run_candidate_pool_v2_admission",
+    "reason": "짝차이, 진입 하한과 일반 중복 관문을 통과했다."
+  },
+  "artifact_hashes": {
+    "baseline": {
+      "exp071_cat_exact_no_te.yaml": "888484ca2434466cf48e2a03a0260cfa994de7dabfb47c8bd10a93961d39b616",
+      "oof.parquet": "3aeff53e9d13b68297f6d53934f280d8fe6a0b3f02a8f24efb2a8c466e2e71b5",
+      "test_pred.parquet": "bcee9247f81e29ea7a1c4f31173181bc126f491d9883e28e85c8e10672111526",
+      "submission.csv": "ae4f26e94cdfa7b9efd7e102ab52af0edbe6a0ccf0a3259f101578615c9bb57f",
+      "oof_seed_42.parquet": "3aeff53e9d13b68297f6d53934f280d8fe6a0b3f02a8f24efb2a8c466e2e71b5"
+    },
+    "candidate": {
+      "exp210_issue520_cat_lr_onehot_init.yaml": "13393e0b3c79c4151ce29e0b9cd3de35be0bc4389b5a66b737542d9d09a325db",
+      "oof.parquet": "3793f2c119d04b35742433b9b43cc600d9f4377376d5d2cd16dc2d94f7c4f16d",
+      "test_pred.parquet": "eb8df4f58689400f2097e6bb72259fa777eb0f6c7015afd5014395d710a6a761",
+      "submission.csv": "de21c3da9f0054d4f778ad846d2fae1715fa3eff6b449b4bd4ebd98b6afc3c9a",
+      "oof_seed_42.parquet": "7cbecd76c78d49b367c97b74bf92a0d8ef76aadf352b140f34c4924233705e7c",
+      "oof_seed_43.parquet": "ef02a79402f302eb395b0ad3aaa233f761fc705de5194886a99757655d2c11cc",
+      "oof_seed_44.parquet": "b3157383c14d7b96a06422699d79d6e948ca13a9ff86e912d9bbd233c1cc1297",
+      "initial_score_evidence.json": "fb385089da8bc64e10b0e29f90912ff7b24f91caad1ea36cc199e76bb825a0d6"
+    }
+  },
+  "public_score_used": false,
+  "final_rank_used": false,
+  "record_sha256": "64724b24a4be0bbc8d807ff17ce2262e110217e70e55e6b79a9be494d2a614c3"
+}
