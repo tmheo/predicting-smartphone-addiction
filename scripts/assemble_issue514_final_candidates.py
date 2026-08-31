@@ -220,6 +220,7 @@ def main() -> None:
             dtype=np.float64,
         )
         test_path = source_root / frozen["test_path"]
+        test_file_path = source_root / frozen["test_path"].partition("[")[0]
         test_values = np.asarray(ladder.load_ledger_array(str(test_path)), dtype=np.float64)
         require(oof_values.shape == (len(train),) and np.isfinite(oof_values).all(), f"{column}: 외부 OOF가 유효하지 않다.")
         require(test_values.shape == (len(test),) and np.isfinite(test_values).all(), f"{column}: 외부 시험 예측이 유효하지 않다.")
@@ -236,7 +237,7 @@ def main() -> None:
                 "column": column,
                 "oof_sha256": frozen["oof_sha256"],
                 "test_prediction_sha256": frozen["test_prediction_sha256"],
-                "test_file_sha256": file_sha256(test_path),
+                "test_file_sha256": file_sha256(test_file_path),
                 "frozen_test_identity_kind": "prediction_array_sha256",
                 "frozen_test_identity_sha256": frozen["test_sha256"],
                 "test_path": frozen["test_path"],
