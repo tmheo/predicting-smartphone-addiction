@@ -41,6 +41,9 @@ ISSUE513_PRECOMMIT = Path(
 ISSUE513_COMPARISON = Path(
     "docs/research/extended-stack-pool-reassembly/issue513/comparison.json"
 )
+ISSUE512_DIRECT_GATE = Path(
+    "docs/research/missingness-propagation-batch/issue512/direct-nested-gate.json"
+)
 ISSUE489_PRECOMMIT = Path(
     "docs/research/logistic-c-selection/issue489/precommit.json"
 )
@@ -109,6 +112,13 @@ def main() -> None:
 
     issue513_precommit = logistic.read_json(ISSUE513_PRECOMMIT)
     issue513_comparison = logistic.read_json(ISSUE513_COMPARISON)
+    issue512_direct_gate = logistic.read_json(ISSUE512_DIRECT_GATE)
+    require(issue512_direct_gate["passed"] is True, "이슈 512 자체 풀 관문이 통과 상태가 아니다.")
+    require(
+        issue512_direct_gate["proposal"]["best_strategy"]
+        == "shrunk_rank_logit_logistic",
+        "이슈 512 자체 풀의 최선 결합 방식이 등록 방식과 다르다.",
+    )
     require(issue513_comparison["passes_gate"] is True, "이슈 513 교체 문턱이 통과 상태가 아니다.")
     require(issue513_comparison["folds_positive"] == 5, "이슈 513 분할 5/5 통과가 아니다.")
     require(
@@ -289,6 +299,7 @@ def main() -> None:
             "folds_sha256": file_sha256(Path("artifacts/folds.parquet")),
             "issue513_precommit_sha256": file_sha256(ISSUE513_PRECOMMIT),
             "issue513_comparison_sha256": file_sha256(ISSUE513_COMPARISON),
+            "issue512_direct_gate_sha256": file_sha256(ISSUE512_DIRECT_GATE),
             "issue489_precommit_sha256": file_sha256(ISSUE489_PRECOMMIT),
             "baseline_manifest_sha256": file_sha256(BASELINE_MANIFEST),
             "full_refit_manifest_sha256": file_sha256(full_refit_dir / "manifest.json"),
@@ -305,12 +316,21 @@ def main() -> None:
             ],
             "verdict": issue513_comparison["verdict"],
         },
+        "issue512_pool36_gate": {
+            "nested_auc": issue512_direct_gate["proposal"]["best_auc"],
+            "fold_aucs": issue512_direct_gate["proposal"]["best_fold_auc"],
+            "strategy": issue512_direct_gate["proposal"]["best_strategy"],
+            "delta_vs_previous_pool": issue512_direct_gate["best_strategy_delta"],
+            "folds_positive": issue512_direct_gate["diagnostics"]["outer_fold_wins"],
+        },
         "full_refit_members": full_member_records,
         "external_members": external_records,
         "candidates": {
             "pool36_full": {
                 "member_count": 36,
                 "strategy": plan.protocol.combiner,
+                "nested_oof_auc": issue512_direct_gate["proposal"]["best_auc"],
+                "nested_fold_aucs": issue512_direct_gate["proposal"]["best_fold_auc"],
                 "selected_lambda": fitted_own.shrinkage_lambda,
                 "weights": fitted_own.summary(),
                 "oof_composition_sha256": own_oof_composition,
@@ -333,6 +353,8 @@ def main() -> None:
                 "own_member_count": 36,
                 "external_member_count": 278,
                 "strategy": ensemble.CSelectedShrunkRankLogitCombiner.name,
+                "nested_oof_auc": issue513_comparison["reassembled"]["nested_auc"],
+                "nested_fold_aucs": issue513_comparison["reassembled"]["fold_aucs"],
                 "selected_c": fitted_extended.c,
                 "selected_lambda": fitted_extended.shrinkage_lambda,
                 "selection_aucs": [
