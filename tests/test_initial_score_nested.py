@@ -7,7 +7,8 @@ import pandas as pd
 import pytest
 
 from pipeline import initial_score
-from pipeline.config import InitialScoreConfig
+from pipeline import model as model_mod
+from pipeline.config import InitialScoreConfig, ModelConfig
 from pipeline.data import TARGET
 from pipeline.initial_score import KnownOriginalRule, NestedLogisticOnehot
 
@@ -25,7 +26,11 @@ def _frame(n: int, seed: int, with_target: bool) -> pd.DataFrame:
     df.loc[df.index[:3], "social_media_hours"] = np.nan
     if with_target:
         df[TARGET] = (
-            (df["daily_screen_time_hours"] + df["social_media_hours"].fillna(0) + rng.normal(size=n))
+            (
+                df["daily_screen_time_hours"]
+                + df["social_media_hours"].fillna(0)
+                + rng.normal(size=n)
+            )
             > 8
         ).astype(int)
     return df
@@ -40,6 +45,137 @@ def _provider() -> NestedLogisticOnehot:
         onehot_max_card=100,
         inner_splits=3,
     )
+
+
+def _residual_tree_adapter(kind: str, *, early_stopping: bool = False):
+    params = {
+        "xgboost": {
+            "n_estimators": 8,
+            "max_depth": 3,
+            "learning_rate": 0.1,
+            "tree_method": "hist",
+            "eval_metric": "logloss",
+        },
+        "catboost": {
+            "iterations": 8,
+            "depth": 3,
+            "learning_rate": 0.1,
+            "loss_function": "Logloss",
+        },
+    }[kind]
+    fit = {"early_stopping_rounds": 3} if early_stopping else {}
+    return model_mod.create(ModelConfig(kind=kind, params=params, fit=fit), seed=17)
+
+
+def _residual_tree_data() -> tuple[pd.DataFrame, pd.Series]:
+    frame = _frame(120, seed=31, with_target=True)
+    X = frame.drop(columns=[TARGET, "id"])
+    X["gender"] = pd.Categorical(X["gender"], categories=["Female", "Male"])
+    return X, frame[TARGET]
+
+
+def _raw_residual(kind: str, adapter, X: pd.DataFrame) -> np.ndarray:
+    if kind == "xgboost":
+        return np.asarray(
+            adapter._model.predict(
+                X,
+                output_margin=True,
+                base_margin=np.zeros(len(X), dtype="float64"),
+            ),
+            dtype="float64",
+        )
+    prepared, _ = adapter._prepare(X)
+    return np.asarray(
+        adapter._model.predict(prepared, prediction_type="RawFormulaVal"),
+        dtype="float64",
+    )
+
+
+def _sigmoid(values: np.ndarray) -> np.ndarray:
+    return 1.0 / (1.0 + np.exp(-values))
+
+
+@pytest.mark.parametrize("kind", ["xgboost", "catboost"])
+def test_residual_tree_adapters_compose_initial_logits_and_raw_residual(kind):
+    X, y = _residual_tree_data()
+    X_tr, X_va = X.iloc[:90], X.iloc[90:]
+    y_tr, y_va = y.iloc[:90], y.iloc[90:]
+    score_tr = pd.Series(np.linspace(-1.0, 1.0, len(X_tr)), index=X_tr.index)
+    score_va = pd.Series(np.linspace(-0.8, 0.8, len(X_va)), index=X_va.index)
+    adapter = _residual_tree_adapter(kind, early_stopping=True)
+
+    fit_prediction = adapter.fit(X_tr, y_tr, X_va, y_va, score_tr, score_va)
+    residual = _raw_residual(kind, adapter, X_va)
+    expected = _sigmoid(score_va.to_numpy(dtype="float64") + residual)
+
+    np.testing.assert_allclose(fit_prediction, expected, rtol=1e-7, atol=1e-9)
+    np.testing.assert_allclose(
+        adapter.predict(X_va, score_va), expected, rtol=1e-7, atol=1e-9
+    )
+
+    full = _residual_tree_adapter(kind)
+    full.fit_full(X_tr, y_tr, training_budget=6, initial_score=score_tr)
+    full_residual = _raw_residual(kind, full, X_va)
+    np.testing.assert_allclose(
+        full.predict(X_va, score_va),
+        _sigmoid(score_va.to_numpy(dtype="float64") + full_residual),
+        rtol=1e-7,
+        atol=1e-9,
+    )
+
+
+@pytest.mark.parametrize("kind", ["xgboost", "catboost"])
+def test_residual_tree_adapters_require_symmetric_training_and_validation_scores(kind):
+    X, y = _residual_tree_data()
+    score_tr = pd.Series(np.zeros(90), index=X.index[:90])
+    score_va = pd.Series(np.zeros(30), index=X.index[90:])
+
+    with pytest.raises(ValueError, match="함께 주거나 함께 생략"):
+        _residual_tree_adapter(kind, early_stopping=True).fit(
+            X.iloc[:90], y.iloc[:90], X.iloc[90:], y.iloc[90:], score_tr, None
+        )
+    with pytest.raises(ValueError, match="함께 주거나 함께 생략"):
+        _residual_tree_adapter(kind, early_stopping=True).fit(
+            X.iloc[:90], y.iloc[:90], X.iloc[90:], y.iloc[90:], None, score_va
+        )
+
+
+@pytest.mark.parametrize("kind", ["xgboost", "catboost"])
+def test_residual_tree_adapters_enforce_prediction_initial_score_state(kind):
+    X, y = _residual_tree_data()
+    X_tr, X_va = X.iloc[:90], X.iloc[90:]
+    y_tr, y_va = y.iloc[:90], y.iloc[90:]
+    score_tr = pd.Series(np.zeros(len(X_tr)), index=X_tr.index)
+    score_va = pd.Series(np.zeros(len(X_va)), index=X_va.index)
+
+    plain = _residual_tree_adapter(kind)
+    plain.fit(X_tr, y_tr, X_va, y_va)
+    with pytest.raises(ValueError, match="초기 점수 없이 학습"):
+        plain.predict(X_va, score_va)
+
+    residual = _residual_tree_adapter(kind)
+    residual.fit(X_tr, y_tr, X_va, y_va, score_tr, score_va)
+    with pytest.raises(ValueError, match="예측에도 같은 출처의 초기 점수"):
+        residual.predict(X_va)
+
+
+@pytest.mark.parametrize("kind", ["xgboost", "catboost"])
+@pytest.mark.parametrize(
+    ("score", "message"),
+    [
+        (pd.Series([0.0]), "길이가 다르다"),
+        (pd.Series(["not-a-logit"] * 90), "숫자형"),
+        (pd.Series([np.inf] * 90), "유한"),
+    ],
+)
+def test_residual_tree_adapters_validate_initial_score_vectors(kind, score, message):
+    X, y = _residual_tree_data()
+    score_va = pd.Series(np.zeros(30), index=X.index[90:])
+
+    with pytest.raises(ValueError, match=message):
+        _residual_tree_adapter(kind).fit(
+            X.iloc[:90], y.iloc[:90], X.iloc[90:], y.iloc[90:], score, score_va
+        )
 
 
 def test_registry_creates_outer_fold_provider():
@@ -105,7 +241,9 @@ def test_outer_fold_scores_follow_indexes_and_record_lineage():
     assert 0.0 <= evidence["inner_oof_auc"] <= 1.0
     assert set(evidence["sha256"]) == {"training", "validation", "test"}
     assert set(evidence["logit_range"]) == {"training", "validation", "test"}
-    assert "validation_first_stage_auc" not in evidence  # 검증 목표값은 생성기가 보지 않는다.
+    assert (
+        "validation_first_stage_auc" not in evidence
+    )  # 검증 목표값은 생성기가 보지 않는다.
 
     # 같은 입력과 시드는 같은 로짓을 만든다(계보 해시가 재현 근거가 된다).
     again = provider.compute_outer_fold(
@@ -145,7 +283,11 @@ def test_validation_and_test_must_not_carry_target():
     provider = _provider()
     with pytest.raises(ValueError, match="합성 타깃"):
         provider.compute_outer_fold(
-            train.loc[training_index], train.loc[validation_index], test, seed=1, outer_fold=0
+            train.loc[training_index],
+            train.loc[validation_index],
+            test,
+            seed=1,
+            outer_fold=0,
         )
     with pytest.raises(ValueError, match="합성 타깃"):
         provider.compute_outer_fold(
@@ -203,9 +345,12 @@ def test_fold_scores_dispatch_for_both_contracts():
     assert fresh.validation.index.equals(validation_index)
     assert fresh.test.index.equals(test.index)
 
-    assert initial_score.fold_scores(
-        None, None, train, test, 3, 0, training_index, validation_index
-    ) is None
+    assert (
+        initial_score.fold_scores(
+            None, None, train, test, 3, 0, training_index, validation_index
+        )
+        is None
+    )
 
 
 def test_full_data_scores_use_inner_oof_for_train_and_full_fit_for_test():

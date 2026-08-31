@@ -106,8 +106,10 @@ def fake_experiment_config() -> ExperimentConfig:
     return ExperimentConfig(
         name="fake_cv_test",
         data=DataConfig(
-            train=Path("unused"), test=Path("unused"),
-            sample_submission=Path("unused"), folds=Path("unused"),
+            train=Path("unused"),
+            test=Path("unused"),
+            sample_submission=Path("unused"),
+            folds=Path("unused"),
         ),
         features=FeatureConfig(base="raw", categorical=[], providers=[]),
         model=ModelConfig(kind="fake", params={"p": 1}, fit={"f": 2}),
@@ -148,7 +150,11 @@ def test_registry_dispatches_kind_to_adapter(monkeypatch):
     adapter = model_mod.create(cfg, seed=SEED)
     assert created == [adapter]
     # params·fit·seed가 그대로 adapter에 전달된다. 해석은 adapter 소유다.
-    assert (adapter.params, adapter.fit_args, adapter.seed) == ({"p": 1}, {"f": 2}, SEED)
+    assert (adapter.params, adapter.fit_args, adapter.seed) == (
+        {"p": 1},
+        {"f": 2},
+        SEED,
+    )
 
 
 def test_lightgbm_kind_resolves_to_lightgbm_adapter():
@@ -284,9 +290,13 @@ def test_run_cv_with_fake_adapter_verifies_loop_wiring(monkeypatch):
     assert list(result.importance.columns) == ["feature", "gain", "fold", "seed"]
     assert sorted(result.importance["fold"].unique()) == list(range(N_FOLDS))
     assert set(result.importance["seed"]) == {SEED}
-    features_per_fold = set(result.importance[result.importance["fold"] == 0]["feature"])
+    features_per_fold = set(
+        result.importance[result.importance["fold"] == 0]["feature"]
+    )
     assert features_per_fold == set(result.feature_names)
-    assert PLACEBO in features_per_fold  # placebo 자동 삽입까지 fake 학습 입력에 닿는다.
+    assert (
+        PLACEBO in features_per_fold
+    )  # placebo 자동 삽입까지 fake 학습 입력에 닿는다.
 
 
 def test_run_cv_propagates_model_error_before_fold_completion(monkeypatch):
@@ -345,9 +355,7 @@ def test_lightgbm_adapter_smoke():
     assert list(imp["feature"]) == ["a", "b"]
 
     repeated = model_mod.create(cfg, seed=SEED)
-    repeated_pred = repeated.fit(
-        X.iloc[:180], y.iloc[:180], X.iloc[180:], y.iloc[180:]
-    )
+    repeated_pred = repeated.fit(X.iloc[:180], y.iloc[:180], X.iloc[180:], y.iloc[180:])
     np.testing.assert_array_equal(repeated_pred, va_pred)
     pd.testing.assert_frame_equal(repeated.importance(), imp, check_exact=True)
 
@@ -368,9 +376,7 @@ def test_lightgbm_max_bin_by_feature_resolves_names_in_matrix_order():
 
 
 def test_lightgbm_explicit_deterministic_setting_is_preserved():
-    resolved = model_mod._resolve_lightgbm_params(
-        {"deterministic": False}, ["screen"]
-    )
+    resolved = model_mod._resolve_lightgbm_params({"deterministic": False}, ["screen"])
 
     assert resolved["deterministic"] is False
 
@@ -395,13 +401,21 @@ def _smoke_data() -> tuple[pd.DataFrame, pd.Series]:
     rng = np.random.default_rng(1)
     n = 240
     X = pd.DataFrame({"a": rng.normal(size=n), "b": rng.normal(size=n)})
-    cat = pd.Series(rng.choice(["Low", "High"], size=n)).where(rng.uniform(size=n) > 0.1)
+    cat = pd.Series(rng.choice(["Low", "High"], size=n)).where(
+        rng.uniform(size=n) > 0.1
+    )
     X["c"] = pd.Categorical(cat, categories=["High", "Low"])
     y = pd.Series((X["a"] + rng.normal(scale=0.5, size=n) > 0).astype(int))
     return X, y
 
 
-def _assert_adapter_contract(adapter: object, X: pd.DataFrame, y: pd.Series) -> None:
+def _assert_adapter_contract(
+    adapter: object,
+    X: pd.DataFrame,
+    y: pd.Series,
+    *,
+    supports_initial_score: bool = False,
+) -> None:
     """fit/predict/importance 계약: 확률 범위, 예측 shape, (feature, gain) 프레임."""
     va_pred = adapter.fit(X.iloc[:180], y.iloc[:180], X.iloc[180:], y.iloc[180:])
     assert va_pred.shape == (60,)
@@ -410,11 +424,16 @@ def _assert_adapter_contract(adapter: object, X: pd.DataFrame, y: pd.Series) -> 
     imp = adapter.importance()
     assert list(imp.columns) == ["feature", "gain"]
     assert list(imp["feature"]) == list(X.columns)
-    with pytest.raises(ValueError, match="초기 점수"):
-        adapter.fit(
-            X.iloc[:180], y.iloc[:180], X.iloc[180:], y.iloc[180:],
-            pd.Series(np.zeros(180)), pd.Series(np.zeros(60)),
-        )
+    if not supports_initial_score:
+        with pytest.raises(ValueError, match="초기 점수"):
+            adapter.fit(
+                X.iloc[:180],
+                y.iloc[:180],
+                X.iloc[180:],
+                y.iloc[180:],
+                pd.Series(np.zeros(180)),
+                pd.Series(np.zeros(60)),
+            )
 
 
 def test_xgboost_adapter_smoke():
@@ -432,7 +451,7 @@ def test_xgboost_adapter_smoke():
     adapter = model_mod.create(cfg, seed=SEED)
     assert isinstance(adapter, model_mod.XGBoostAdapter)
     X, y = _smoke_data()
-    _assert_adapter_contract(adapter, X, y)
+    _assert_adapter_contract(adapter, X, y, supports_initial_score=True)
     diagnostics = model_mod.collect_training_diagnostics(adapter)
     assert diagnostics is not None
     assert diagnostics["best_iteration"] >= 0
@@ -470,7 +489,7 @@ def test_catboost_adapter_smoke():
     adapter = model_mod.create(cfg, seed=SEED)
     assert isinstance(adapter, model_mod.CatBoostAdapter)
     X, y = _smoke_data()
-    _assert_adapter_contract(adapter, X, y)
+    _assert_adapter_contract(adapter, X, y, supports_initial_score=True)
 
 
 def test_hist_gradient_boosting_adapter_smoke():
@@ -523,9 +542,10 @@ def test_logistic_onehot_encodes_exact_values_without_leaking_unseen():
     imp = adapter.importance()
     assert list(imp["feature"]) == ["v", "w"]
     assert (imp["gain"] >= 0).all()
-    assert imp.loc[imp["feature"] == "v", "gain"].item() > imp.loc[
-        imp["feature"] == "w", "gain"
-    ].item()
+    assert (
+        imp.loc[imp["feature"] == "v", "gain"].item()
+        > imp.loc[imp["feature"] == "w", "gain"].item()
+    )
 
 
 def test_logistic_onehot_penalty_variants():
@@ -559,18 +579,27 @@ def test_logistic_onehot_penalty_variants():
 
     with pytest.raises(ValueError, match="l1_ratio"):
         model_mod.create(
-            ModelConfig(kind="logistic_onehot", params={"penalty": "l1", "l1_ratio": 0.5}, fit={}),
+            ModelConfig(
+                kind="logistic_onehot",
+                params={"penalty": "l1", "l1_ratio": 0.5},
+                fit={},
+            ),
             seed=SEED,
         )
     with pytest.raises(ValueError, match="penalty"):
         model_mod.create(
-            ModelConfig(kind="logistic_onehot", params={"penalty": "none"}, fit={}), seed=SEED
+            ModelConfig(kind="logistic_onehot", params={"penalty": "none"}, fit={}),
+            seed=SEED,
         )
     with pytest.raises(ValueError, match="solver"):
         model_mod.create(
             ModelConfig(
                 kind="logistic_onehot",
-                params={"penalty": "elasticnet", "l1_ratio": 0.5, "solver": "liblinear"},
+                params={
+                    "penalty": "elasticnet",
+                    "l1_ratio": 0.5,
+                    "solver": "liblinear",
+                },
                 fit={},
             ),
             seed=SEED,
@@ -587,7 +616,8 @@ def test_logistic_onehot_cross_pairs_encode_train_fold_pairs_only():
     X = pd.DataFrame({"a": a, "b": b})
     # 라벨이 a·b의 XOR 조합에 달려 있어 단일 컬럼 one-hot으로는 못 맞춘다.
     y = pd.Series(
-        (((a == 2.0) ^ (b == 20.0)).astype(int) ^ (rng.uniform(size=n) < 0.05).astype(int))
+        ((a == 2.0) ^ (b == 20.0)).astype(int)
+        ^ (rng.uniform(size=n) < 0.05).astype(int)
     )
     plain = model_mod.create(
         ModelConfig(kind="logistic_onehot", params={"max_iter": 300}, fit={}), seed=SEED
@@ -604,9 +634,11 @@ def test_logistic_onehot_cross_pairs_encode_train_fold_pairs_only():
         y.iloc[320:], plain.fit(X.iloc[:320], y.iloc[:320], X.iloc[320:], y.iloc[320:])
     )
     crossed_auc = roc_auc_score(
-        y.iloc[320:], crossed.fit(X.iloc[:320], y.iloc[:320], X.iloc[320:], y.iloc[320:])
+        y.iloc[320:],
+        crossed.fit(X.iloc[:320], y.iloc[:320], X.iloc[320:], y.iloc[320:]),
     )
-    assert plain_auc < 0.6 < 0.9 < crossed_auc
+    assert plain_auc < 0.6
+    assert crossed_auc > 0.9
 
     # 학습 fold에 없던 쌍과 결측 포함 행은 교차 블록이 영벡터라 예측이 유한하다.
     unseen = pd.DataFrame({"a": [9.0, np.nan], "b": [10.0, 20.0]})
@@ -782,7 +814,8 @@ def test_each_family_converts_its_own_raw_selection(kind, selections, expected):
     assert evidence.raw_meaning == raw_meaning
     assert evidence.converter == raw_meaning
     assert [
-        (item.inner_member, item.raw_value, item.value) for item in evidence.observations
+        (item.inner_member, item.raw_value, item.value)
+        for item in evidence.observations
     ] == expected
     assert {item.seed for item in evidence.observations} == {SEED}
     assert {item.outer_fold for item in evidence.observations} == {2}
@@ -802,7 +835,9 @@ def test_inner_member_families_name_the_member_in_the_raw_path():
 
 
 def test_single_member_family_rejects_more_than_one_raw_selection():
-    adapter = model_mod.create(ModelConfig(kind="tab_cnn", params={}, fit={}), seed=SEED)
+    adapter = model_mod.create(
+        ModelConfig(kind="tab_cnn", params={}, fit={}), seed=SEED
+    )
     with pytest.raises(ValueError):
         declaration_from_stub(adapter, 9, 10)
 

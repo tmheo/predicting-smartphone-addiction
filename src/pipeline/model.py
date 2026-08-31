@@ -144,7 +144,9 @@ def collect_entry_diagnostics(adapter: ModelAdapter) -> AdapterDiagnostics:
     try:
         json.dumps(diagnostics.observations, allow_nan=False)
     except (TypeError, ValueError) as exc:
-        raise TypeError("adapter 진단 observations는 유한한 JSON 값이어야 한다.") from exc
+        raise TypeError(
+            "adapter 진단 observations는 유한한 JSON 값이어야 한다."
+        ) from exc
     return diagnostics
 
 
@@ -155,7 +157,9 @@ def collect_entry_abort_reason(adapter: ModelAdapter) -> str | None:
         return None
     reason = provider()
     if reason is not None and (not isinstance(reason, str) or not reason.strip()):
-        raise TypeError("entry_abort_reason()은 비어 있지 않은 문자열 또는 None이어야 한다.")
+        raise TypeError(
+            "entry_abort_reason()은 비어 있지 않은 문자열 또는 None이어야 한다."
+        )
     return reason
 
 
@@ -261,15 +265,15 @@ def paired_permutation_importance(
 ) -> pd.DataFrame:
     """고정 노출량 경로에서 검증 목표값을 오직 순열 중요도 평가에만 쓴다."""
     if len(X_va) > 50_000:
-        keep = np.random.default_rng(seed).choice(
-            len(X_va), size=50_000, replace=False
-        )
+        keep = np.random.default_rng(seed).choice(len(X_va), size=50_000, replace=False)
         keep.sort()
         X_va = X_va.iloc[keep].copy()
         y_va = y_va.iloc[keep].copy()
         if initial_score_va is not None:
             initial_score_va = initial_score_va.iloc[keep].copy()
-    base_prediction = np.asarray(adapter.predict(X_va, initial_score_va), dtype="float64")
+    base_prediction = np.asarray(
+        adapter.predict(X_va, initial_score_va), dtype="float64"
+    )
     base_auc = roc_auc_score(y_va, base_prediction)
     gains: list[float] = []
     for column_index, column in enumerate(X_va.columns):
@@ -305,7 +309,9 @@ def fit_predict_training_states(
     """여러 고정 시점 선택 계약을 호출하고 완전한 fold 묶음을 검증한다."""
     provider = getattr(adapter, "fit_predict_training_states", None)
     if provider is None:
-        raise ValueError(f"{kind} model adapter는 여러 학습 시점 실행을 지원하지 않는다.")
+        raise ValueError(
+            f"{kind} model adapter는 여러 학습 시점 실행을 지원하지 않는다."
+        )
     trajectory = provider(X_tr, y_tr, X_va, y_va, X_test, state)
     if not isinstance(trajectory, FoldTrainingStateTrajectory):
         raise TypeError(
@@ -342,7 +348,10 @@ def _validate_training_state_point(
                 f"학습 시점 {point.completed_epochs}의 {label} 예측 모양이 다르다: "
                 f"{getattr(values, 'shape', None)} != {(expected_rows,)}"
             )
-        if not np.issubdtype(values.dtype, np.floating) or not np.isfinite(values).all():
+        if (
+            not np.issubdtype(values.dtype, np.floating)
+            or not np.isfinite(values).all()
+        ):
             raise ValueError(
                 f"학습 시점 {point.completed_epochs}의 {label} 예측은 유한한 부동소수점이어야 한다."
             )
@@ -352,10 +361,14 @@ def _validate_training_state_point(
             f"{list(point.importance.columns)}"
         )
     if point.importance["feature"].duplicated().any():
-        raise ValueError(f"학습 시점 {point.completed_epochs}의 중요도 특성이 중복됐다.")
+        raise ValueError(
+            f"학습 시점 {point.completed_epochs}의 중요도 특성이 중복됐다."
+        )
     gain = point.importance["gain"].to_numpy()
     if not np.issubdtype(gain.dtype, np.floating) or not np.isfinite(gain).all():
-        raise ValueError(f"학습 시점 {point.completed_epochs}의 중요도는 유한해야 한다.")
+        raise ValueError(
+            f"학습 시점 {point.completed_epochs}의 중요도는 유한해야 한다."
+        )
     if point.training_diagnostics is not None:
         try:
             json.dumps(point.training_diagnostics, allow_nan=False)
@@ -386,10 +399,14 @@ def fit_full_training_state(
     """선택된 시점에서 끝내되 원래 일정 지평을 보존해 전체 자료를 학습한다."""
     provider = getattr(adapter, "fit_full_training_state", None)
     if provider is None:
-        raise ValueError("이 model adapter는 학습 시점 후보 전체 자료 재학습을 지원하지 않는다.")
+        raise ValueError(
+            "이 model adapter는 학습 시점 후보 전체 자료 재학습을 지원하지 않는다."
+        )
     diagnostics = provider(X, y, state, initial_score)
     if not isinstance(diagnostics, dict):
-        raise TypeError("fit_full_training_state()는 실제 학습 계약 진단을 돌려줘야 한다.")
+        raise TypeError(
+            "fit_full_training_state()는 실제 학습 계약 진단을 돌려줘야 한다."
+        )
     expected = {
         "completed_epochs": state.selected,
         "schedule_horizon_epochs": state.schedule_horizon_epochs,
@@ -397,11 +414,15 @@ def fit_full_training_state(
     }
     actual = {key: diagnostics.get(key) for key in expected}
     if actual != expected:
-        raise ValueError(f"전체 자료 학습의 실제 시점 계약이 요청과 다르다: {actual} != {expected}")
+        raise ValueError(
+            f"전체 자료 학습의 실제 시점 계약이 요청과 다르다: {actual} != {expected}"
+        )
     try:
         json.dumps(diagnostics, allow_nan=False)
     except (TypeError, ValueError) as exc:
-        raise TypeError("전체 자료 학습 시점 진단은 유한한 JSON 객체여야 한다.") from exc
+        raise TypeError(
+            "전체 자료 학습 시점 진단은 유한한 JSON 객체여야 한다."
+        ) from exc
     return diagnostics
 
 
@@ -497,7 +518,9 @@ def collect_training_length_declaration(
     _registered_training_length_contracts(kind)
     declaration = provider()
     if not isinstance(declaration, TrainingLengthDeclaration):
-        raise TypeError("training_length_evidence()는 TrainingLengthDeclaration을 돌려줘야 한다.")
+        raise TypeError(
+            "training_length_evidence()는 TrainingLengthDeclaration을 돌려줘야 한다."
+        )
     _validate_training_length_declaration(declaration, kind)
     return declaration
 
@@ -579,6 +602,76 @@ def _declare_training_length(
     return contract.declare(
         [RawTrainingLengthSelection(raw_path=raw_path, raw_value=raw_value)]
     )
+
+
+def _validate_initial_score(
+    initial_score: pd.Series | np.ndarray,
+    expected_rows: int,
+    label: str,
+) -> np.ndarray:
+    """초기 로짓을 유한한 float64 1차원 배열로 고정한다."""
+    values = np.asarray(initial_score)
+    if values.shape != (expected_rows,):
+        raise ValueError(
+            f"{label} 초기 점수 길이가 다르다: {values.shape} != {(expected_rows,)}"
+        )
+    if not np.issubdtype(values.dtype, np.number) or np.issubdtype(
+        values.dtype, np.bool_
+    ):
+        raise ValueError(f"{label} 초기 점수는 숫자형이어야 한다: {values.dtype}")
+    values = values.astype("float64", copy=False)
+    if not np.isfinite(values).all():
+        raise ValueError(f"{label} 초기 점수는 모두 유한해야 한다.")
+    return values
+
+
+def _validate_initial_score_pair(
+    initial_score_tr: pd.Series | None,
+    initial_score_va: pd.Series | None,
+    training_rows: int,
+    validation_rows: int,
+) -> tuple[np.ndarray | None, np.ndarray | None]:
+    """학습과 검증 초기 로짓의 대칭 계약을 검증한다."""
+    if (initial_score_tr is None) != (initial_score_va is None):
+        raise ValueError("학습과 검증 초기 점수는 함께 주거나 함께 생략해야 한다.")
+    if initial_score_tr is None:
+        return None, None
+    assert initial_score_va is not None
+    return (
+        _validate_initial_score(initial_score_tr, training_rows, "학습"),
+        _validate_initial_score(initial_score_va, validation_rows, "검증"),
+    )
+
+
+def _validate_residual_margin(
+    residual: np.ndarray,
+    expected_rows: int,
+    kind: str,
+) -> np.ndarray:
+    """잔차 부스팅 원시 출력을 유한한 부동소수점 벡터로 검증한다."""
+    values = np.asarray(residual)
+    if values.shape != (expected_rows,):
+        raise ValueError(
+            f"{kind} 잔차 원시 출력 길이가 다르다: {values.shape} != {(expected_rows,)}"
+        )
+    if not np.issubdtype(values.dtype, np.floating):
+        raise ValueError(
+            f"{kind} 잔차 원시 출력은 부동소수점이어야 한다: {values.dtype}"
+        )
+    values = values.astype("float64", copy=False)
+    if not np.isfinite(values).all():
+        raise ValueError(f"{kind} 잔차 원시 출력은 모두 유한해야 한다.")
+    return values
+
+
+def _stable_sigmoid(margin: np.ndarray) -> np.ndarray:
+    """큰 절댓값에서도 overflow 없이 로짓을 확률로 바꾼다."""
+    out = np.empty_like(margin, dtype="float64")
+    positive = margin >= 0
+    out[positive] = 1.0 / (1.0 + np.exp(-margin[positive]))
+    exp_margin = np.exp(margin[~positive])
+    out[~positive] = exp_margin / (1.0 + exp_margin)
+    return out
 
 
 class LightGBMAdapter:
@@ -663,14 +756,20 @@ class LightGBMAdapter:
     def _predict(self, X: pd.DataFrame, initial_score: pd.Series | None) -> np.ndarray:
         if not self._uses_initial_score:
             if initial_score is not None:
-                raise ValueError("초기 점수 없이 학습한 모델에 예측 초기 점수가 전달됐다.")
+                raise ValueError(
+                    "초기 점수 없이 학습한 모델에 예측 초기 점수가 전달됐다."
+                )
             return self._model.predict_proba(X)[:, 1]
         if initial_score is None:
-            raise ValueError("초기 점수로 학습한 모델은 예측에도 같은 출처의 초기 점수가 필요하다.")
+            raise ValueError(
+                "초기 점수로 학습한 모델은 예측에도 같은 출처의 초기 점수가 필요하다."
+            )
         residual = np.asarray(self._model.predict(X, raw_score=True), dtype="float64")
         margin = np.asarray(initial_score, dtype="float64")
         if residual.shape != margin.shape:
-            raise ValueError(f"예측과 초기 점수 길이가 다르다: {residual.shape} != {margin.shape}")
+            raise ValueError(
+                f"예측과 초기 점수 길이가 다르다: {residual.shape} != {margin.shape}"
+            )
         total = residual + margin
         # 큰 음수에서도 overflow 경고 없이 안정적으로 sigmoid를 계산한다.
         out = np.empty_like(total)
@@ -774,6 +873,7 @@ class XGBoostAdapter:
             else _fixed_iteration_count(params, "n_estimators", "xgboost")
         )
         self._model = None
+        self._uses_initial_score = False
         self._validated_fit = False
 
     def fit(
@@ -787,7 +887,10 @@ class XGBoostAdapter:
     ) -> np.ndarray:
         import xgboost as xgb
 
-        _reject_initial_score("xgboost", initial_score_tr, initial_score_va)
+        score_tr, score_va = _validate_initial_score_pair(
+            initial_score_tr, initial_score_va, len(X_tr), len(X_va)
+        )
+        self._uses_initial_score = score_tr is not None
         early_stopping = (
             {}
             if self._early_stopping_rounds is None
@@ -799,12 +902,21 @@ class XGBoostAdapter:
             enable_categorical=True,
             **early_stopping,
         )
+        fit_kwargs = {"base_margin": score_tr} if self._uses_initial_score else {}
         # 조기 종료 설정만 검증 지표를 학습기에 넘겨 선택하게 한다. 고정 일정은
         # 바깥쪽 검증 자료를 선택에 쓰지 않고 설정 횟수 전부를 돈다.
         if self._early_stopping_rounds is None:
-            self._model.fit(X_tr, y_tr, verbose=200)
+            self._model.fit(X_tr, y_tr, verbose=200, **fit_kwargs)
         else:
-            self._model.fit(X_tr, y_tr, eval_set=[(X_va, y_va)], verbose=200)
+            if self._uses_initial_score:
+                fit_kwargs["base_margin_eval_set"] = [score_va]
+            self._model.fit(
+                X_tr,
+                y_tr,
+                eval_set=[(X_va, y_va)],
+                verbose=200,
+                **fit_kwargs,
+            )
         self._validated_fit = True
         if self._early_stopping_rounds is None:
             print(f"[xgboost] fixed count: n_estimators={self._fixed_iteration_count}")
@@ -813,7 +925,7 @@ class XGBoostAdapter:
                 f"[xgboost] early stopping: best_iteration={self._model.best_iteration} "
                 f"best_score={self._model.best_score:.6f}"
             )
-        return self._model.predict_proba(X_va)[:, 1]
+        return self._predict(X_va, initial_score_va)
 
     def fit_full(
         self,
@@ -824,9 +936,14 @@ class XGBoostAdapter:
     ) -> None:
         import xgboost as xgb
 
-        _reject_initial_score("xgboost", initial_score, None)
         if training_budget is None:
             raise ValueError("xgboost 전체 자료 재학습에는 고정 반복 수가 필요하다.")
+        score = (
+            None
+            if initial_score is None
+            else _validate_initial_score(initial_score, len(X), "학습")
+        )
+        self._uses_initial_score = score is not None
         params = dict(self._params)
         params["n_estimators"] = training_budget
         self._model = xgb.XGBClassifier(
@@ -834,7 +951,8 @@ class XGBoostAdapter:
             random_state=self._seed,
             enable_categorical=True,
         )
-        self._model.fit(X, y, verbose=200)
+        fit_kwargs = {"base_margin": score} if self._uses_initial_score else {}
+        self._model.fit(X, y, verbose=200, **fit_kwargs)
         # 전체 자료 재학습은 조기 종료가 없다. 없는 관측을 지어내지 않는다. (#372)
         self._fixed_iteration_count = training_budget
         self._validated_fit = False
@@ -842,8 +960,30 @@ class XGBoostAdapter:
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
     ) -> np.ndarray:
-        _reject_initial_score("xgboost", initial_score, None)
-        return self._model.predict_proba(X)[:, 1]
+        return self._predict(X, initial_score)
+
+    def _predict(self, X: pd.DataFrame, initial_score: pd.Series | None) -> np.ndarray:
+        if not self._uses_initial_score:
+            if initial_score is not None:
+                raise ValueError(
+                    "초기 점수 없이 학습한 모델에 예측 초기 점수가 전달됐다."
+                )
+            return self._model.predict_proba(X)[:, 1]
+        if initial_score is None:
+            raise ValueError(
+                "초기 점수로 학습한 모델은 예측에도 같은 출처의 초기 점수가 필요하다."
+            )
+        margin = _validate_initial_score(initial_score, len(X), "예측")
+        residual = _validate_residual_margin(
+            self._model.predict(
+                X,
+                output_margin=True,
+                base_margin=np.zeros(len(X), dtype="float64"),
+            ),
+            len(X),
+            "xgboost",
+        )
+        return _stable_sigmoid(margin + residual)
 
     def importance(self) -> pd.DataFrame:
         booster = self._model.get_booster()
@@ -917,6 +1057,7 @@ class CatBoostAdapter:
             else _fixed_iteration_count(params, "iterations", "catboost")
         )
         self._model = None
+        self._uses_initial_score = False
         self._validated_fit = False
 
     @classmethod
@@ -927,7 +1068,10 @@ class CatBoostAdapter:
         ]
         for c in cat_cols:
             out[c] = (
-                out[c].cat.add_categories([cls._MISSING]).fillna(cls._MISSING).astype(str)
+                out[c]
+                .cat.add_categories([cls._MISSING])
+                .fillna(cls._MISSING)
+                .astype(str)
             )
         return out, cat_cols
 
@@ -940,9 +1084,12 @@ class CatBoostAdapter:
         initial_score_tr: pd.Series | None = None,
         initial_score_va: pd.Series | None = None,
     ) -> np.ndarray:
-        from catboost import CatBoostClassifier
+        from catboost import CatBoostClassifier, Pool
 
-        _reject_initial_score("catboost", initial_score_tr, initial_score_va)
+        score_tr, score_va = _validate_initial_score_pair(
+            initial_score_tr, initial_score_va, len(X_tr), len(X_va)
+        )
+        self._uses_initial_score = score_tr is not None
         X_tr, cat_cols = self._prepare(X_tr)
         X_va, _ = self._prepare(X_va)
         self._model = CatBoostClassifier(
@@ -951,17 +1098,32 @@ class CatBoostAdapter:
             cat_features=cat_cols,
             allow_writing_files=False,
         )
+        training_data = (
+            Pool(X_tr, y_tr, cat_features=cat_cols, baseline=score_tr)
+            if self._uses_initial_score
+            else X_tr
+        )
         if self._early_stopping_rounds is None:
-            self._model.fit(X_tr, y_tr, verbose=200)
+            if self._uses_initial_score:
+                self._model.fit(training_data, verbose=200)
+            else:
+                self._model.fit(training_data, y_tr, verbose=200)
         else:
-            self._model.fit(
-                X_tr,
-                y_tr,
-                eval_set=(X_va, y_va),
-                early_stopping_rounds=self._early_stopping_rounds,
-                use_best_model=True,
-                verbose=200,
+            validation_data = (
+                Pool(X_va, y_va, cat_features=cat_cols, baseline=score_va)
+                if self._uses_initial_score
+                else (X_va, y_va)
             )
+            fit_kwargs = {
+                "eval_set": validation_data,
+                "early_stopping_rounds": self._early_stopping_rounds,
+                "use_best_model": True,
+                "verbose": 200,
+            }
+            if self._uses_initial_score:
+                self._model.fit(training_data, **fit_kwargs)
+            else:
+                self._model.fit(training_data, y_tr, **fit_kwargs)
         self._validated_fit = True
         if self._early_stopping_rounds is None:
             print(f"[catboost] fixed count: iterations={self._fixed_iteration_count}")
@@ -971,7 +1133,7 @@ class CatBoostAdapter:
                 f"[catboost] early stopping: best_iteration={self._model.get_best_iteration()} "
                 f"best_score={best_score}"
             )
-        return self._model.predict_proba(X_va)[:, 1]
+        return self._predict(X_va, initial_score_va)
 
     def fit_full(
         self,
@@ -980,11 +1142,16 @@ class CatBoostAdapter:
         training_budget: int | None,
         initial_score: pd.Series | None = None,
     ) -> None:
-        from catboost import CatBoostClassifier
+        from catboost import CatBoostClassifier, Pool
 
-        _reject_initial_score("catboost", initial_score, None)
         if training_budget is None:
             raise ValueError("catboost 전체 자료 재학습에는 고정 반복 수가 필요하다.")
+        score = (
+            None
+            if initial_score is None
+            else _validate_initial_score(initial_score, len(X), "학습")
+        )
+        self._uses_initial_score = score is not None
         X, cat_cols = self._prepare(X)
         params = dict(self._params)
         params["iterations"] = training_budget
@@ -994,22 +1161,48 @@ class CatBoostAdapter:
             cat_features=cat_cols,
             allow_writing_files=False,
         )
-        self._model.fit(X, y, verbose=200)
+        if self._uses_initial_score:
+            self._model.fit(
+                Pool(X, y, cat_features=cat_cols, baseline=score), verbose=200
+            )
+        else:
+            self._model.fit(X, y, verbose=200)
         # 전체 자료 재학습은 조기 종료가 없다. 없는 관측을 지어내지 않는다. (#372)
         self._validated_fit = False
 
     def predict(
         self, X: pd.DataFrame, initial_score: pd.Series | None = None
     ) -> np.ndarray:
-        _reject_initial_score("catboost", initial_score, None)
+        return self._predict(X, initial_score)
+
+    def _predict(self, X: pd.DataFrame, initial_score: pd.Series | None) -> np.ndarray:
+        if not self._uses_initial_score:
+            if initial_score is not None:
+                raise ValueError(
+                    "초기 점수 없이 학습한 모델에 예측 초기 점수가 전달됐다."
+                )
+            X, _ = self._prepare(X)
+            return self._model.predict_proba(X)[:, 1]
+        if initial_score is None:
+            raise ValueError(
+                "초기 점수로 학습한 모델은 예측에도 같은 출처의 초기 점수가 필요하다."
+            )
+        margin = _validate_initial_score(initial_score, len(X), "예측")
         X, _ = self._prepare(X)
-        return self._model.predict_proba(X)[:, 1]
+        residual = _validate_residual_margin(
+            self._model.predict(X, prediction_type="RawFormulaVal"),
+            len(X),
+            "catboost",
+        )
+        return _stable_sigmoid(margin + residual)
 
     def importance(self) -> pd.DataFrame:
         return pd.DataFrame(
             {
                 "feature": self._model.feature_names_,
-                "gain": self._model.get_feature_importance(type="PredictionValuesChange"),
+                "gain": self._model.get_feature_importance(
+                    type="PredictionValuesChange"
+                ),
             }
         )
 
@@ -1069,7 +1262,9 @@ class HistGradientBoostingAdapter:
     ) -> np.ndarray:
         from sklearn.ensemble import HistGradientBoostingClassifier
 
-        _reject_initial_score("hist_gradient_boosting", initial_score_tr, initial_score_va)
+        _reject_initial_score(
+            "hist_gradient_boosting", initial_score_tr, initial_score_va
+        )
         self._model = HistGradientBoostingClassifier(
             **self._params,
             random_state=self._seed,
@@ -1140,14 +1335,19 @@ class LogisticOnehotAdapter:
         if params:
             raise ValueError(f"logistic_onehot이 모르는 params: {sorted(params)}")
         if self._penalty not in {"l2", "l1", "elasticnet"}:
-            raise ValueError(f"penalty는 l2·l1·elasticnet 중 하나다(받은 값: {self._penalty!r})")
+            raise ValueError(
+                f"penalty는 l2·l1·elasticnet 중 하나다(받은 값: {self._penalty!r})"
+            )
         if (self._penalty == "elasticnet") != (self._l1_ratio is not None):
             raise ValueError("l1_ratio는 elasticnet에서만, 그리고 반드시 지정한다.")
         if self._l1_ratio is not None:
             self._l1_ratio = float(self._l1_ratio)
         allowed_solvers = {
             "l2": {"lbfgs"},  # exp058 재현성. 다른 L2 solver는 필요할 때 연다.
-            "l1": {"saga", "liblinear"},  # liblinear 좌표 하강이 saga보다 훨씬 빠르다(#200).
+            "l1": {
+                "saga",
+                "liblinear",
+            },  # liblinear 좌표 하강이 saga보다 훨씬 빠르다(#200).
             "elasticnet": {"saga"},  # sklearn에서 elasticnet은 saga 전용.
         }[self._penalty]
         default_solver = "lbfgs" if self._penalty == "l2" else "saga"
@@ -1161,10 +1361,14 @@ class LogisticOnehotAdapter:
         self._cross_pairs: list[tuple[str, str]] = []
         for pair in cross_pairs:
             if len(pair) != 2 or pair[0] == pair[1]:
-                raise ValueError(f"cross_pairs 항목은 서로 다른 두 컬럼이어야 한다: {pair}")
+                raise ValueError(
+                    f"cross_pairs 항목은 서로 다른 두 컬럼이어야 한다: {pair}"
+                )
             self._cross_pairs.append((str(pair[0]), str(pair[1])))
         if self._cross_min_count < 1:
-            raise ValueError(f"cross_min_count는 1 이상이어야 한다(받은 값: {self._cross_min_count})")
+            raise ValueError(
+                f"cross_min_count는 1 이상이어야 한다(받은 값: {self._cross_min_count})"
+            )
         self._fit = fit
         self._seed = seed
         self._model = None
@@ -1198,7 +1402,9 @@ class LogisticOnehotAdapter:
     ) -> None:
         _reject_initial_score("logistic_onehot", initial_score, None)
         if training_budget is not None:
-            raise ValueError("logistic_onehot은 고정 반복 수 대신 수렴 조건으로 학습한다.")
+            raise ValueError(
+                "logistic_onehot은 고정 반복 수 대신 수렴 조건으로 학습한다."
+            )
         self._fit_model(X, y)
 
     def _fit_model(self, X_tr: pd.DataFrame, y_tr: pd.Series) -> None:
@@ -1319,9 +1525,10 @@ class LogisticOnehotAdapter:
         gains = []
         offset = 0
         for width in self._block_widths():
-            contribution = self._train_matrix[:, offset : offset + width] @ coef[
-                offset : offset + width
-            ]
+            contribution = (
+                self._train_matrix[:, offset : offset + width]
+                @ coef[offset : offset + width]
+            )
             gains.append(float(np.std(contribution)))
             offset += width
         features = self._columns + [f"{a}*{b}" for a, b in self._cross_pairs]
@@ -1352,7 +1559,9 @@ class LookupTransformerAdapter:
     ) -> None:
         """정확값 어휘와 분위 변환에 쓸 목표값 비참조 기준 집합을 보관한다."""
         if self._impl is not None:
-            raise RuntimeError("전처리 기준 집합은 Lookup-Transformer 학습 전에 정해야 한다.")
+            raise RuntimeError(
+                "전처리 기준 집합은 Lookup-Transformer 학습 전에 정해야 한다."
+            )
         self._dataset_reference = (X_train, X_test)
 
     def _new_impl(self):
@@ -1385,7 +1594,9 @@ class LookupTransformerAdapter:
     ) -> None:
         _reject_initial_score("lookup_transformer", initial_score, None)
         if training_budget is None:
-            raise ValueError("lookup_transformer 전체 자료 재학습에는 고정 epoch 수가 필요하다.")
+            raise ValueError(
+                "lookup_transformer 전체 자료 재학습에는 고정 epoch 수가 필요하다."
+            )
         self._impl = self._new_impl()
         self._impl.fit_full(X, y, training_budget)
 
@@ -1416,7 +1627,9 @@ class LookupTransformerAdapter:
     ) -> FoldTrainingStateTrajectory:
         """한 Lookup 궤적에서 미리 고정한 EMA 시점들을 물질화한다."""
         if self._fit:
-            raise ValueError(f"lookup_transformer가 모르는 fit 설정: {sorted(self._fit)}")
+            raise ValueError(
+                f"lookup_transformer가 모르는 fit 설정: {sorted(self._fit)}"
+            )
         self._impl = self._new_impl()
         self._impl.fit_training_trajectory(
             X_tr,
@@ -1472,19 +1685,24 @@ class LookupTransformerAdapter:
         details = self._impl.training_diagnostics()
         members = details.get("fold_initialization_members")
         if not isinstance(members, list) or not members:
-            raise ValueError("Lookup-Transformer 전체 자료 학습 진단에 초기화 구성원이 없다.")
+            raise ValueError(
+                "Lookup-Transformer 전체 자료 학습 진단에 초기화 구성원이 없다."
+            )
         if any(
             not isinstance(member, dict)
             or member.get("end_epoch") != state.selected - 1
             for member in members
         ):
-            raise ValueError("Lookup-Transformer 전체 자료 학습이 선택 시점에서 끝나지 않았다.")
+            raise ValueError(
+                "Lookup-Transformer 전체 자료 학습이 선택 시점에서 끝나지 않았다."
+            )
         if any(
-            member.get("schedule_horizon_epochs")
-            != state.schedule_horizon_epochs
+            member.get("schedule_horizon_epochs") != state.schedule_horizon_epochs
             for member in members
         ):
-            raise ValueError("Lookup-Transformer 전체 자료 학습률 일정 지평이 요청과 다르다.")
+            raise ValueError(
+                "Lookup-Transformer 전체 자료 학습률 일정 지평이 요청과 다르다."
+            )
         return {
             "completed_epochs": state.selected,
             "schedule_horizon_epochs": state.schedule_horizon_epochs,
@@ -1571,9 +1789,7 @@ class ContextualizedSplineTransformerAdapter:
     ) -> None:
         from . import contextualized_spline_transformer
 
-        _reject_initial_score(
-            "contextualized_spline_transformer", initial_score, None
-        )
+        _reject_initial_score("contextualized_spline_transformer", initial_score, None)
         if self._fit:
             raise ValueError(
                 "contextualized_spline_transformer가 모르는 fit 설정: "
@@ -1628,8 +1844,7 @@ class ScalarTokenTransformerAdapter:
         mixing = params.get("mixing", "attention")
         if mixing not in {"attention", "token_mlp"}:
             raise ValueError(
-                "mixing은 ['attention', 'token_mlp'] 중 하나여야 한다: "
-                f"{mixing!r}"
+                f"mixing은 ['attention', 'token_mlp'] 중 하나여야 한다: {mixing!r}"
             )
         self._params = params
         self._fit = fit
@@ -1652,8 +1867,7 @@ class ScalarTokenTransformerAdapter:
         )
         if self._fit:
             raise ValueError(
-                "scalar_token_transformer가 모르는 fit 설정: "
-                f"{sorted(self._fit)}"
+                f"scalar_token_transformer가 모르는 fit 설정: {sorted(self._fit)}"
             )
         self._impl = scalar_token_transformer.ScalarTokenTransformerFold(
             self._params, self._seed
@@ -1672,8 +1886,7 @@ class ScalarTokenTransformerAdapter:
         _reject_initial_score("scalar_token_transformer", initial_score, None)
         if self._fit:
             raise ValueError(
-                "scalar_token_transformer가 모르는 fit 설정: "
-                f"{sorted(self._fit)}"
+                f"scalar_token_transformer가 모르는 fit 설정: {sorted(self._fit)}"
             )
         if training_budget is None:
             raise ValueError(
