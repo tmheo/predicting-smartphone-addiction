@@ -57,7 +57,7 @@ CRITERION_BUDGETS = {
     "exp059_lookup_transformer": {42: 15, 43: 15, 44: 18},
     "exp133_scalar_token_transformer_oof_te": {42: 20, 43: 18, 44: 15},
     # 반복 수가 없는 구성원. 시드 하나를 `None` 예산으로 재학습한다.
-    "exp058_logreg_onehot": {42: None},
+    "mpv1_exp058_logreg_onehot_missingness_augmented": {42: None},
 }
 
 
@@ -208,7 +208,11 @@ def stub_training(monkeypatch: pytest.MonkeyPatch) -> list[tuple[int, int | None
     monkeypatch.setattr(
         refit,
         "load_config",
-        lambda path, stage: toy_config(path, Path(path).stem, [42, 43, 44]),
+        lambda path, stage: toy_config(
+            path,
+            yaml.safe_load(Path(path).read_text())["name"],
+            [42, 43, 44],
+        ),
     )
     monkeypatch.setattr(
         refit.data,
@@ -264,8 +268,8 @@ def test_validated_budgets_reach_the_model(
 def test_the_whole_ledger_recomputes_to_the_committed_refit_count(ledger: MemoryLedger):
     plan = ledger.executable()
 
-    assert len(plan.members) == 35
-    assert sum(len(member.budgets) for member in plan.members) == 103
+    assert len(plan.members) == 36
+    assert sum(len(member.budgets) for member in plan.members) == 106
     assert plan.content_sha256 == sha256_of(ledger.path.read_bytes())
 
 

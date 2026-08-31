@@ -163,4 +163,4 @@ class Pool:
             ]
         }
         with path.open("w") as f:
-            yaml.safe_dump(record, f, allow_unicode=True, sort_keys=False)
+            yaml.safe_dump(record, f, allow_unicode=True, sort_keys=False, width=100)

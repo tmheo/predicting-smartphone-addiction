@@ -81,8 +81,9 @@ def test_issue388_pool_and_refit_plan_are_aligned() -> None:
     pool = Pool.load()
     plan = RefitPlan.load(Path("artifacts/full-refit-plan.yaml"))
 
-    # #415·#419가 뒤에 세 구성원을 더해 현재 풀은 35개, 재학습 103회다.
-    assert len(pool.members) == 35
+    # #512가 결측 증강 교체 6개와 초기 점수 후보 1개를 반영해
+    # 현재 풀은 36개, 재학습 106회다.
+    assert len(pool.members) == 36
     assert results["final"]["final_pool"]["sha256"] == (
         "e430d32dc6d80b7feb34151ed93d431adc42dc9b61ca344368218768c30fc349"
     )
@@ -97,8 +98,8 @@ def test_issue388_pool_and_refit_plan_are_aligned() -> None:
     assert [(member.config, member.lineage.source_run_id) for member in plan.members] == [
         (member.config, member.run_id) for member in pool.members
     ]
-    assert len(plan.members) == 35
-    assert sum(len(member.budget_derivation.seeds) for member in plan.members) == 103
+    assert len(plan.members) == 36
+    assert sum(len(member.budget_derivation.seeds) for member in plan.members) == 106
     correction = results["training_length_correction"]
     assert correction["pool_member"]["membership_changed"] is False
     assert correction["remeasurement"]["run_id"] == (

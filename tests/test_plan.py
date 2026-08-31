@@ -143,6 +143,16 @@ def all_kind_providers(proxy_path: str, proxy_sha: str) -> list[dict]:
             "kind": "xgb_impute_aux",
             "cols": ["daily_screen_time_hours", "social_media_hours"],
         },
+        {
+            "kind": "dae_latent",
+            "numeric_cols": [
+                "daily_screen_time_hours",
+                "social_media_hours",
+                "gaming_hours",
+                "work_study_hours",
+            ],
+            "categorical_cols": ["stress_level"],
+        },
     ]
 
 

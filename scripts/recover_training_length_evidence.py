@@ -140,8 +140,10 @@ RECOVERY: dict[str, MemberRecovery] = {
     "exp023_orig_proxy_residual": MemberRecovery("lightgbm", "run_log", "lightgbm"),
     "exp025_constrained_impute": MemberRecovery("lightgbm", "run_log", "lightgbm"),
     "exp032_recon_orig_mean_top3": MemberRecovery("lightgbm", "run_log", "lightgbm"),
-    "exp035_lattice_te": MemberRecovery("lightgbm", "run_log", "lightgbm"),
-    "exp058_logreg_onehot": MemberRecovery(None, "none"),
+    "mpv1_exp035_lattice_te_missingness_augmented": MemberRecovery(
+        "lightgbm", "declared"
+    ),
+    "mpv1_exp058_logreg_onehot_missingness_augmented": MemberRecovery(None, "none"),
     "exp059_lookup_transformer": MemberRecovery(
         "lookup_transformer",
         "run_log",
@@ -152,18 +154,21 @@ RECOVERY: dict[str, MemberRecovery] = {
             ((42, 4, "seed42-fold4"), (43, 1, "seed43-fold1"), (44, 4, "seed44-fold4")),
         ),
     ),
-    "exp070_cat_exact_cats": MemberRecovery("catboost", "run_log", "catboost"),
+    "mpv1_exp070_cat_exact_cats_missingness_augmented": MemberRecovery(
+        "catboost", "declared"
+    ),
     "exp067_tabpfn3": MemberRecovery(None, "none"),
     "exp081_lookup_fold_initialization_avg3": MemberRecovery(
         "lookup_transformer", "run_log", "lookup_members"
     ),
-    "exp110_lgb_kitopl_no_te": MemberRecovery("lightgbm", "run_log", "lightgbm"),
+    "mpv1_exp110_lgb_kitopl_no_te_missingness_augmented": MemberRecovery(
+        "lightgbm", "declared"
+    ),
     "exp111_xgb_depth8_no_te": MemberRecovery("xgboost", "run_log", "xgboost"),
     "exp071_cat_exact_no_te": MemberRecovery("catboost", "run_log", "catboost"),
     "exp106_lookup_fixed24_train_test_preprocessing": MemberRecovery(
         "lookup_transformer", "structured", "lookup_members_structured"
     ),
-    "exp117_ag25_gbm_r21": MemberRecovery("lightgbm", "run_log", "lightgbm"),
     "exp113_tab_cnn_m0": MemberRecovery("tab_cnn", "structured", "single"),
     "exp085_contextual_spline_m0": MemberRecovery(
         "contextualized_spline_transformer", "run_log", "contextualized_spline"
@@ -175,8 +180,8 @@ RECOVERY: dict[str, MemberRecovery] = {
     "exp048_lgb_orig_cdf_diff": MemberRecovery("lightgbm", "run_log", "lightgbm"),
     "exp134_realmlp_muon": MemberRecovery("realmlp", "structured", "single"),
     "exp135_xgb_hpo_trial30": MemberRecovery("xgboost", "structured", "single"),
-    "exp131_lookup_bivariate_plr5": MemberRecovery(
-        "lookup_transformer", "structured", "lookup_members_structured"
+    "mpv1_exp131_lookup_bivariate_plr5_missingness_augmented": MemberRecovery(
+        "lookup_transformer", "declared"
     ),
     "exp136_realmlp_muon_recon_widths": MemberRecovery("realmlp", "structured", "single"),
     "exp137_tabm_recon_widths": MemberRecovery("tabm", "structured", "tabm_members"),
@@ -200,6 +205,7 @@ RECOVERY: dict[str, MemberRecovery] = {
     "exp208_issue500_ag25_missingness_augmented": MemberRecovery(
         "lightgbm", "declared"
     ),
+    "exp209_issue505_lgb_lr_onehot_init": MemberRecovery("lightgbm", "declared"),
 }
 
 # 문법 판본 1이 쓰던 재학습 설정 경로. 원 실행 설정과 다른 구성원이 있어 그대로 옮긴다.

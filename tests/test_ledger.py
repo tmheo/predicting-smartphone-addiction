@@ -46,6 +46,7 @@ def test_pool_applies_decided_removals_and_later_replacements():
         "exp033_recon_orig_mean_top3_raw",
         "exp107_logreg_onehot_nn10",
         "exp108_logreg_onehot_nn10_l1",
+        "exp117_ag25_gbm_r21",
         "exp124_realmlp_dtype_fix",
         "exp127_lookup_muon",
     }
@@ -72,14 +73,48 @@ def test_pool_applies_decided_removals_and_later_replacements():
             ("exp168_issue413_lgb_no_te_fixed20", "2142b26c2d304307bb0c2717b803d643"),
             ("exp197_issue419_lgb_recon_ce_fixed20", "a7a59a1829da4e4e93c3f581ed58597e"),
             ("exp183_issue419_cat_exact_fixed10", "eded39146a164b6ca421a20d22b10f52"),
+            (
+                "exp208_issue500_ag25_missingness_augmented",
+                "e46d1ca38e0746209e049970d3dd2ab6",
+            ),
+            ("exp209_issue505_lgb_lr_onehot_init", "8b4111a9a93147caa6b9012e49456474"),
         ]
     )
+    replacements = {
+        "exp035_lattice_te": (
+            "mpv1_exp035_lattice_te_missingness_augmented",
+            "f525ee26f7e54d4b96f515c858e39e99",
+        ),
+        "exp058_logreg_onehot": (
+            "mpv1_exp058_logreg_onehot_missingness_augmented",
+            "90aed4413e4b48e7a56f92fa9ecd5285",
+        ),
+        "exp070_cat_exact_cats": (
+            "mpv1_exp070_cat_exact_cats_missingness_augmented",
+            "4fd10d9fc1324583a023552acc2cf77f",
+        ),
+        "exp110_lgb_kitopl_no_te": (
+            "mpv1_exp110_lgb_kitopl_no_te_missingness_augmented",
+            "9c51438d9842439881ed151ba66b0c86",
+        ),
+        "exp131_lookup_bivariate_plr5": (
+            "mpv1_exp131_lookup_bivariate_plr5_missingness_augmented",
+            "9b847a787b25429f872f6eadb7497659",
+        ),
+    }
+    replacement_positions = {
+        config: index
+        for index, (config, _) in enumerate(expected)
+        if config in replacements
+    }
+    for config, index in replacement_positions.items():
+        expected[index] = replacements[config]
     actual = [
         (member.config, member.run_id)
         for member in Pool.load(REPO / "artifacts" / "pool.yaml").members
     ]
 
-    assert len(actual) == 35
+    assert len(actual) == 36
     assert actual == expected
 
 

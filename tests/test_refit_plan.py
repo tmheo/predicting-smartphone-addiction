@@ -816,7 +816,11 @@ CORRECTED_BUDGETS = {
     "exp071_cat_exact_no_te": {42: 5265, 43: 5878, 44: 5526},
     "exp157_lookup_muon_initavg8": {42: 14, 43: 15, 44: 15},
     "exp135_xgb_hpo_trial30": {42: 9759, 43: 10394, 44: 10369},
-    "exp131_lookup_bivariate_plr5": {42: 15, 43: 15, 44: 15},
+    "mpv1_exp131_lookup_bivariate_plr5_missingness_augmented": {
+        42: 15,
+        43: 15,
+        44: 15,
+    },
 }
 
 
@@ -835,16 +839,16 @@ def test_committed_plan_matches_the_candidate_pool(committed_plan: RefitPlan):
 
     pool = Pool.load()
 
-    assert committed_plan.schema_version == 2
+    assert committed_plan.schema_version == 3
     assert committed_plan.source_pool_sha256 == data.file_sha256(POOL_PATH)
     assert [
         (member.config, member.lineage.source_run_id)
         for member in committed_plan.members
     ] == [(member.config, member.run_id) for member in pool.members]
-    assert len(committed_plan.members) == 35
+    assert len(committed_plan.members) == 36
     assert (
         sum(len(member.budget_derivation.seeds) for member in committed_plan.members)
-        == 103
+        == 106
     )
     assert committed_plan.protocol.combiner == COMBINER
     assert committed_plan.protocol.cv_model_weight == 5
@@ -870,9 +874,9 @@ def test_committed_plan_has_no_unresolved_evidence(committed_plan: RefitPlan):
         if member.evidence.status == STATUS_NOT_APPLICABLE
     ]
 
-    assert len(iterative) == 33
+    assert len(iterative) == 34
     assert [member.config for member in empty] == [
-        "exp058_logreg_onehot",
+        "mpv1_exp058_logreg_onehot_missingness_augmented",
         "exp067_tabpfn3",
     ]
     for member in iterative:
