@@ -1,5 +1,5 @@
 schema_version: 3
-source_pool_sha256: 4d66739beaab8a5a0360c7382bf5abbdbec4eacdc74f0c573ce688cdcc5a2e71
+source_pool_sha256: 40947563a00cab8212498c7e339517e387979b14c6477c6ce8e196036e02044c
 protocol:
   iteration_multiplier: 1.25
   budget_statistic: median
@@ -932,15 +932,15 @@ members:
       median: 369.0
       scaled: 461.25
       budget: 461
-- config: exp035_lattice_te
-  config_path: configs/exp035_lattice_te.yaml
+- config: mpv1_exp035_lattice_te_missingness_augmented
+  config_path: configs/missingness-propagation/07_exp035_lattice_te_missingness_augmented.yaml
   lineage:
-    source_run_id: c62a9ad334bf486cb46d738474ccd767
-    source_git_commit: 0d571eaa1130e35d588b66057daede8fe131fc01
-    source_config_path: configs/exp035_lattice_te.yaml
-    source_config_sha256: e905418ebedaef4859dd8684a6921e4cad4f890caba89b949a1f100336f18e5e
-    evidence_artifact_path: training_length_evidence.json
-    evidence_artifact_sha256: 2bcf6a7fba90cae08ef99f65e748cb237ae7d718b6be6a3e1f3ca18288220798
+    source_run_id: f525ee26f7e54d4b96f515c858e39e99
+    source_git_commit: c831c40f80e4115856364586643b6312a7a1bca5
+    source_config_path: configs/missingness-propagation/07_exp035_lattice_te_missingness_augmented.yaml
+    source_config_sha256: d05bca7b373700e20ecbcb89d08f84af243847cfc0af38a123046d95bcff9195
+    evidence_artifact_path: model_training_diagnostics.json
+    evidence_artifact_sha256: 1a193c7918707ee4d1ec4a0c30b6cfdc6fcd7fdaf45a032f97d49d36ea3f0e03
   training_length_evidence:
     status: confirmed
     model_family: lightgbm
@@ -1086,15 +1086,15 @@ members:
       median: 204.0
       scaled: 255.0
       budget: 255
-- config: exp058_logreg_onehot
-  config_path: configs/exp058_logreg_onehot.yaml
+- config: mpv1_exp058_logreg_onehot_missingness_augmented
+  config_path: configs/missingness-propagation/08_exp058_logreg_onehot_missingness_augmented.yaml
   lineage:
-    source_run_id: e2b76edd9d204290810e39a7457c4c48
-    source_git_commit: 7b7d9ff78b4f693af500784f7c39229470d65678
-    source_config_path: configs/exp058_logreg_onehot.yaml
-    source_config_sha256: 0ae00bb534653755448916edbb7c5c6e11f60014cefe47d9becaf35cf2940d9a
-    evidence_artifact_path: logs/run.log
-    evidence_artifact_sha256: 88f89790b9414a3e2785a105c78f38ea8fe21e82a9f2e51f3ac2ae341940cfb9
+    source_run_id: 90aed4413e4b48e7a56f92fa9ecd5285
+    source_git_commit: c831c40f80e4115856364586643b6312a7a1bca5
+    source_config_path: configs/missingness-propagation/08_exp058_logreg_onehot_missingness_augmented.yaml
+    source_config_sha256: d27b574807507220375056d00c05b2ca808c86bf64a297e71a8fa16d65ec6ba4
+    evidence_artifact_path: model_training_diagnostics.json
+    evidence_artifact_sha256: f590e5bc621133668c4bf415c46c72a637722696a3334dfff4e81da1bc56c225
   training_length_evidence:
     status: not_applicable
     model_family: logistic_onehot
@@ -1264,15 +1264,15 @@ members:
       median: 14.0
       scaled: 17.5
       budget: 18
-- config: exp070_cat_exact_cats
-  config_path: configs/exp070_cat_exact_cats.yaml
+- config: mpv1_exp070_cat_exact_cats_missingness_augmented
+  config_path: configs/missingness-propagation/10_exp070_cat_exact_cats_missingness_augmented.yaml
   lineage:
-    source_run_id: 6238d8c58beb42ee8102209ded92516e
-    source_git_commit: 07616e55c9e7ab7a1e5860f0f1b28c150e42ac42
-    source_config_path: configs/exp070_cat_exact_cats.yaml
-    source_config_sha256: 78d564c6c4e255f910b62bce855844697ed4ba16640e9f9fa15b1d625ebbb91d
-    evidence_artifact_path: training_length_evidence.json
-    evidence_artifact_sha256: a66001af59b59e44f302472f2fcaf2b36dbf01118d7755621be0bce102af5611
+    source_run_id: 4fd10d9fc1324583a023552acc2cf77f
+    source_git_commit: c831c40f80e4115856364586643b6312a7a1bca5
+    source_config_path: configs/missingness-propagation/10_exp070_cat_exact_cats_missingness_augmented.yaml
+    source_config_sha256: 6c0c1a9c6f98fbdf06c5b73c75e7071b8d8da1817a23eaf1cbfa43958e0c2d39
+    evidence_artifact_path: model_training_diagnostics.json
+    evidence_artifact_sha256: e6d7cc7c887d8b4ed98a5c08e184b0089d5d6998a2749a50e8c8a4b3fcdc7c0a
   training_length_evidence:
     status: confirmed
     model_family: catboost
@@ -1846,15 +1846,15 @@ members:
       median: 12.0
       scaled: 15.0
       budget: 15
-- config: exp110_lgb_kitopl_no_te
-  config_path: configs/exp110_lgb_kitopl_no_te.yaml
+- config: mpv1_exp110_lgb_kitopl_no_te_missingness_augmented
+  config_path: configs/missingness-propagation/12_exp110_lgb_kitopl_no_te_missingness_augmented.yaml
   lineage:
-    source_run_id: ae829ae3d886402ab100a8e966c3131a
-    source_git_commit: f07383ec3b0e404d37a7c32d775e8438b2e239fe
-    source_config_path: configs/exp110_lgb_kitopl_no_te.yaml
-    source_config_sha256: 5056d260735c2672035c720f1c3b98059f1128df79fc873fecf460976924535d
-    evidence_artifact_path: training_length_evidence.json
-    evidence_artifact_sha256: a080b2215819de0a3c9470ae19b230c2c7928539cc87869089b8e940962fa66b
+    source_run_id: 9c51438d9842439881ed151ba66b0c86
+    source_git_commit: c831c40f80e4115856364586643b6312a7a1bca5
+    source_config_path: configs/missingness-propagation/12_exp110_lgb_kitopl_no_te_missingness_augmented.yaml
+    source_config_sha256: aca4c1895659d773504888cb5784a72c5cb3594ac8da57c8bf4d2a49d2ab9b35
+    evidence_artifact_path: model_training_diagnostics.json
+    evidence_artifact_sha256: 81292ab7deb67e280eb1f7318048b8b682bf47377295b75dce5c32b3f3a1b847
   training_length_evidence:
     status: confirmed
     model_family: lightgbm
@@ -3386,15 +3386,15 @@ members:
       median: 8295.0
       scaled: 10368.75
       budget: 10369
-- config: exp131_lookup_bivariate_plr5
-  config_path: configs/exp131_lookup_bivariate_plr5.yaml
+- config: mpv1_exp131_lookup_bivariate_plr5_missingness_augmented
+  config_path: configs/missingness-propagation/22_exp131_lookup_bivariate_plr5_missingness_augmented.yaml
   lineage:
-    source_run_id: 54acd002d3c04ec3a74c09871e83da50
-    source_git_commit: 58719c6b86c8d62a027760ff367892eaed5a141f
-    source_config_path: configs/exp131_lookup_bivariate_plr5.yaml
-    source_config_sha256: d344102b44330a9e89a15e330f90694e19652575595ec5bb8dbb03beaa91b5b2
+    source_run_id: 9b847a787b25429f872f6eadb7497659
+    source_git_commit: b9be8aaba1a5c307084fab9c678312bdab536959
+    source_config_path: configs/missingness-propagation/22_exp131_lookup_bivariate_plr5_missingness_augmented.yaml
+    source_config_sha256: 45c5c7e26788d30bf69df8c1b022acc63359289c7ac3e13bc2944a8220dd6772
     evidence_artifact_path: model_training_diagnostics.json
-    evidence_artifact_sha256: 4cd034ea446ab565748f93051d11696805ba03c18bd53f5a0996d37055fba831
+    evidence_artifact_sha256: 4a93e8c15cdcc66f44e354cd52f9f20154e36130ad6a7387f233d0b3d60c22f1
   training_length_evidence:
     status: confirmed
     model_family: lookup_transformer
@@ -6708,3 +6708,157 @@ members:
       median: 19999.0
       scaled: 24998.75
       budget: 24999
+- config: exp209_issue505_lgb_lr_onehot_init
+  config_path: configs/exp209_issue505_lgb_lr_onehot_init.yaml
+  lineage:
+    source_run_id: 8b4111a9a93147caa6b9012e49456474
+    source_git_commit: 74984a0a958cbaa39373c1805a332341f5a8fc36
+    source_config_path: configs/exp209_issue505_lgb_lr_onehot_init.yaml
+    source_config_sha256: 9d5d8d3f2c15b6e5631d746a7c3a9317263f02f00a9e8d06b355525c753a7964
+    evidence_artifact_path: model_training_diagnostics.json
+    evidence_artifact_sha256: 6e82238de3cd112c07505419383c3a3d08a594ed52e8d953cd1adcf20f054b16
+  training_length_evidence:
+    status: confirmed
+    model_family: lightgbm
+    converter: one_based_count
+    observations:
+    - seed: 42
+      outer_fold: 0
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1357
+      raw_meaning: one_based_count
+      observed_training_length: 1357
+    - seed: 42
+      outer_fold: 1
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1747
+      raw_meaning: one_based_count
+      observed_training_length: 1747
+    - seed: 42
+      outer_fold: 2
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1095
+      raw_meaning: one_based_count
+      observed_training_length: 1095
+    - seed: 42
+      outer_fold: 3
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1655
+      raw_meaning: one_based_count
+      observed_training_length: 1655
+    - seed: 42
+      outer_fold: 4
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1853
+      raw_meaning: one_based_count
+      observed_training_length: 1853
+    - seed: 43
+      outer_fold: 0
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1622
+      raw_meaning: one_based_count
+      observed_training_length: 1622
+    - seed: 43
+      outer_fold: 1
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1614
+      raw_meaning: one_based_count
+      observed_training_length: 1614
+    - seed: 43
+      outer_fold: 2
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1195
+      raw_meaning: one_based_count
+      observed_training_length: 1195
+    - seed: 43
+      outer_fold: 3
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1634
+      raw_meaning: one_based_count
+      observed_training_length: 1634
+    - seed: 43
+      outer_fold: 4
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1437
+      raw_meaning: one_based_count
+      observed_training_length: 1437
+    - seed: 44
+      outer_fold: 0
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1583
+      raw_meaning: one_based_count
+      observed_training_length: 1583
+    - seed: 44
+      outer_fold: 1
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1753
+      raw_meaning: one_based_count
+      observed_training_length: 1753
+    - seed: 44
+      outer_fold: 2
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1382
+      raw_meaning: one_based_count
+      observed_training_length: 1382
+    - seed: 44
+      outer_fold: 3
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 1535
+      raw_meaning: one_based_count
+      observed_training_length: 1535
+    - seed: 44
+      outer_fold: 4
+      inner_member: null
+      raw_field: best_iteration_
+      raw_value: 2081
+      raw_meaning: one_based_count
+      observed_training_length: 2081
+  refit_budget_derivation:
+    statistic: median
+    multiplier: 1.25
+    rounding: half_up
+    seeds:
+    - seed: 42
+      observed_lengths:
+      - 1357
+      - 1747
+      - 1095
+      - 1655
+      - 1853
+      median: 1655.0
+      scaled: 2068.75
+      budget: 2069
+    - seed: 43
+      observed_lengths:
+      - 1622
+      - 1614
+      - 1195
+      - 1634
+      - 1437
+      median: 1614.0
+      scaled: 2017.5
+      budget: 2018
+    - seed: 44
+      observed_lengths:
+      - 1583
+      - 1753
+      - 1382
+      - 1535
+      - 2081
+      median: 1583.0
+      scaled: 1978.75
+      budget: 1979

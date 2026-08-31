@@ -1,18 +1,22 @@
 {
   "current_duplicate_violations": [
     {
-      "eligible_resolvers": [],
+      "eligible_resolvers": [
+        "exp131_lookup_bivariate_plr5"
+      ],
       "left": "exp131_lookup_bivariate_plr5",
-      "reachable_resolution": false,
+      "reachable_resolution": true,
       "resolver_slots": [
         "exp131_lookup_bivariate_plr5",
         "exp157_lookup_muon_initavg8"
       ],
       "resolver_status": {
         "exp131_lookup_bivariate_plr5": {
-          "complete": false,
-          "forward_eligible": false,
-          "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다"
+          "augmented_oof_auc": 0.9694062694182052,
+          "complete": true,
+          "forward_eligible": true,
+          "reason": null,
+          "threshold": 0.9593676105620947
         },
         "exp157_lookup_muon_initavg8": {
           "complete": false,
@@ -20,6 +24,13 @@
           "reason": "비용 검토 뒤 GPU 선별 대상에서 제외"
         }
       },
+      "resolving_moves": [
+        {
+          "member": "exp131_lookup_bivariate_plr5",
+          "reaches_valid_full_oof_pool": true,
+          "violations_after": []
+        }
+      ],
       "right": "exp157_lookup_muon_initavg8",
       "spearman": 0.9981438822480148,
       "threshold": 0.998
@@ -163,14 +174,18 @@
       "reason": "비용 검토 뒤 GPU 선별 대상에서 제외"
     },
     "exp085_contextual_spline_m0": {
-      "complete": false,
-      "forward_eligible": false,
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다"
+      "augmented_oof_auc": 0.9683130514344046,
+      "complete": true,
+      "forward_eligible": true,
+      "reason": null,
+      "threshold": 0.9593676105620947
     },
     "exp106_lookup_fixed24_train_test_preprocessing": {
-      "complete": false,
-      "forward_eligible": false,
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다"
+      "augmented_oof_auc": 0.9688856307854026,
+      "complete": true,
+      "forward_eligible": true,
+      "reason": null,
+      "threshold": 0.9593676105620947
     },
     "exp110_lgb_kitopl_no_te": {
       "augmented_oof_auc": 0.9677639450957627,
@@ -180,9 +195,11 @@
       "threshold": 0.9593676105620947
     },
     "exp111_xgb_depth8_no_te": {
-      "complete": false,
-      "forward_eligible": false,
-      "reason": "중앙 반입 출처 커밋 7000df00329b3e0d71fc0dcf7bbd1be293144b69이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다"
+      "augmented_oof_auc": 0.9655900748804596,
+      "complete": true,
+      "forward_eligible": true,
+      "reason": null,
+      "threshold": 0.9593676105620947
     },
     "exp113_tab_cnn_m0": {
       "complete": false,
@@ -190,9 +207,11 @@
       "reason": "TabCNN 계열 사전 제외"
     },
     "exp131_lookup_bivariate_plr5": {
-      "complete": false,
-      "forward_eligible": false,
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다"
+      "augmented_oof_auc": 0.9694062694182052,
+      "complete": true,
+      "forward_eligible": true,
+      "reason": null,
+      "threshold": 0.9593676105620947
     },
     "exp131_tab_cnn_oof_target_mean": {
       "complete": false,
@@ -215,9 +234,11 @@
       "reason": "비용 검토 뒤 GPU 선별 대상에서 제외"
     },
     "exp135_xgb_hpo_trial30": {
-      "complete": false,
-      "forward_eligible": false,
-      "reason": "중앙 반입 출처 커밋 7000df00329b3e0d71fc0dcf7bbd1be293144b69이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다"
+      "augmented_oof_auc": 0.9685052719765284,
+      "complete": true,
+      "forward_eligible": true,
+      "reason": null,
+      "threshold": 0.9593676105620947
     },
     "exp136_realmlp_muon_recon_widths": {
       "complete": false,
@@ -225,14 +246,18 @@
       "reason": "비용 검토 뒤 GPU 선별 대상에서 제외"
     },
     "exp137_tabm_recon_widths": {
-      "complete": false,
-      "forward_eligible": false,
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다"
+      "augmented_oof_auc": 0.9683260723504309,
+      "complete": true,
+      "forward_eligible": true,
+      "reason": null,
+      "threshold": 0.9593676105620947
     },
     "exp139_realmlp_reference_qnormal_train_test": {
-      "complete": false,
-      "forward_eligible": false,
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다"
+      "augmented_oof_auc": 0.9681423913218554,
+      "complete": true,
+      "forward_eligible": true,
+      "reason": null,
+      "threshold": 0.9593676105620947
     },
     "exp140_realmlp_orig_cdf_diff": {
       "complete": false,
@@ -273,37 +298,12 @@
       "threshold": 0.9593676105620947
     }
   },
-  "input_bundle_sha256": "942821c80551bcad0ddd0be23e63e56bfab6e4de4f2e5b222ca3422a6085de09",
+  "input_bundle_sha256": "54a1fab1b1408791a04b5c415b9c2c4edff9d972eb6c7571ee5671ff828e280d",
   "precommit_sha256": "0e8944b2e29f5bf8100a4132c5a7352c341a1789612ca3bceb79ab2bdc0dc611",
-  "preflight_sha256": "e8fd6188212b858c9c522c8da014c4330c933b9b86d83fb7835515deff016e10",
-  "proof": "원자 교체는 자기 자리의 예측만 바꾼다. 현재 중복 위반의 두 자리 가운데 검색 이동 자격이 있는 완결 결측 증강판이 하나도 없으므로 모든 도달 가능한 상태가 같은 중복 위반을 보존한다. 따라서 전체 OOF 제안 풀 중복 불변식을 만족하는 도달 가능한 상태가 없다.",
-  "reachable_valid_proposal": false,
-  "recorded_at_utc": "2026-08-30T08:02:28+00:00",
+  "preflight_sha256": "aae096fa319f8c43d90a225d4e3effa50ad19c2f4f9d7e908caf0350bc732ad6",
+  "proof": "이슈 511에서 유효 판정된 exp131 교정 결측 증강판은 현재 exp131과 exp157의 기존 중복 위반을 해소하면서 새 위반을 만들지 않는다. 따라서 현재 풀을 점수 기준점으로 두고 첫 채택 이동부터 전체 OOF 중복 불변식을 만족하는 정확 검색을 시작할 수 있다.",
+  "reachable_valid_proposal": true,
+  "recorded_at_utc": "2026-08-30T09:22:30+00:00",
   "schema": "missingness-propagation-batch-v1/preflight/1",
-  "unresolved_duplicate_violations": [
-    {
-      "eligible_resolvers": [],
-      "left": "exp131_lookup_bivariate_plr5",
-      "reachable_resolution": false,
-      "resolver_slots": [
-        "exp131_lookup_bivariate_plr5",
-        "exp157_lookup_muon_initavg8"
-      ],
-      "resolver_status": {
-        "exp131_lookup_bivariate_plr5": {
-          "complete": false,
-          "forward_eligible": false,
-          "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다"
-        },
-        "exp157_lookup_muon_initavg8": {
-          "complete": false,
-          "forward_eligible": false,
-          "reason": "비용 검토 뒤 GPU 선별 대상에서 제외"
-        }
-      },
-      "right": "exp157_lookup_muon_initavg8",
-      "spearman": 0.9981438822480148,
-      "threshold": 0.998
-    }
-  ]
+  "unresolved_duplicate_violations": []
 }

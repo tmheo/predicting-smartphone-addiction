@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -57,3 +58,45 @@ def test_refit_readiness_validates_the_plan_without_training(monkeypatch):
     assert result["schema"].endswith("/1")
     assert result["model_training_executed"] is False
     assert result["members"][0]["planned_budgets"] == {"42": 15}
+
+
+def test_verify_only_does_not_revalidate_the_replaced_frozen_ledgers(
+    monkeypatch, tmp_path: Path
+):
+    precommit = {"precommit_sha256": "precommit-sha"}
+    calls = []
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            str(SCRIPT),
+            "--verify-only",
+            "--output-root",
+            str(tmp_path),
+        ],
+    )
+    monkeypatch.setattr(JUDGE, "_load_json", lambda path: precommit)
+    monkeypatch.setattr(
+        JUDGE,
+        "verify_self_hash",
+        lambda payload, field: calls.append(("self_hash", payload, field)),
+    )
+    monkeypatch.setattr(
+        JUDGE,
+        "_verify",
+        lambda output_root, payload: calls.append(("verify", output_root, payload)),
+    )
+    monkeypatch.setattr(
+        JUDGE,
+        "validate_precommit",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("공식화 뒤 현재 장부를 동결 전 해시로 다시 검사했다.")
+        ),
+    )
+
+    JUDGE.main()
+
+    assert calls == [
+        ("self_hash", precommit, "precommit_sha256"),
+        ("verify", tmp_path.resolve(), precommit),
+    ]

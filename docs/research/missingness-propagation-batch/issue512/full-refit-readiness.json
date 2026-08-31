@@ -1,0 +1,76 @@
+{
+  "deferred_to_follow_up": "production full-data refit and prediction generation",
+  "full_refit_readiness_sha256": "e1fb052594d0a25479838025990a750380d72a4575c8bfdfd7bfc7bd18dc61a8",
+  "members": [
+    {
+      "config": "mpv1_exp035_lattice_te_missingness_augmented",
+      "config_path": "configs/missingness-propagation/07_exp035_lattice_te_missingness_augmented.yaml",
+      "member_entry_sha256": "ed2647ad001feea26bb444b7c894bda3af2b3c6422d21a0b4795c411f0737c7c",
+      "planned_budgets": {
+        "42": 258,
+        "43": 239,
+        "44": 255
+      }
+    },
+    {
+      "config": "mpv1_exp058_logreg_onehot_missingness_augmented",
+      "config_path": "configs/missingness-propagation/08_exp058_logreg_onehot_missingness_augmented.yaml",
+      "member_entry_sha256": "d14085e599351ee1fe8b77506a10f8db0f207a375b7d40a538aa48b1efc03529",
+      "planned_budgets": {
+        "42": null
+      }
+    },
+    {
+      "config": "mpv1_exp070_cat_exact_cats_missingness_augmented",
+      "config_path": "configs/missingness-propagation/10_exp070_cat_exact_cats_missingness_augmented.yaml",
+      "member_entry_sha256": "6b700439156830b3996a72276360bb4c2fd6232235072a5271c9ed040b6c8eb5",
+      "planned_budgets": {
+        "42": 5021,
+        "43": 4960,
+        "44": 5268
+      }
+    },
+    {
+      "config": "mpv1_exp110_lgb_kitopl_no_te_missingness_augmented",
+      "config_path": "configs/missingness-propagation/12_exp110_lgb_kitopl_no_te_missingness_augmented.yaml",
+      "member_entry_sha256": "bdee5c036a6debf8d325ab007f015810d37c8d8f3bf3aa1427b80f153baa4755",
+      "planned_budgets": {
+        "42": 5774,
+        "43": 5655,
+        "44": 6043
+      }
+    },
+    {
+      "config": "mpv1_exp131_lookup_bivariate_plr5_missingness_augmented",
+      "config_path": "configs/missingness-propagation/22_exp131_lookup_bivariate_plr5_missingness_augmented.yaml",
+      "member_entry_sha256": "7a6f2ef2c279aeed614c397d74fae9ae329412d291b758ff5f341bbf0be4451a",
+      "planned_budgets": {
+        "42": 15,
+        "43": 15,
+        "44": 15
+      }
+    }
+  ],
+  "model_training_executed": false,
+  "passed": true,
+  "proposal_pool_sha256": "40947563a00cab8212498c7e339517e387979b14c6477c6ce8e196036e02044c",
+  "recorded_at_utc": "2026-08-30T09:22:30+00:00",
+  "schema": "missingness-propagation-batch-v1/full-refit-readiness/1",
+  "scope_correction": {
+    "decision": "replace_issue512_model_training_with_static_readiness_validation",
+    "reason": "issue 512 selects and formalizes the OOF proposal pool; model training belongs to the follow-up production path"
+  },
+  "selected_members": [
+    "mpv1_exp035_lattice_te_missingness_augmented",
+    "mpv1_exp058_logreg_onehot_missingness_augmented",
+    "mpv1_exp070_cat_exact_cats_missingness_augmented",
+    "mpv1_exp110_lgb_kitopl_no_te_missingness_augmented",
+    "mpv1_exp131_lookup_bivariate_plr5_missingness_augmented"
+  ],
+  "selection_evidence_sha256": "a1e09244d1f8c814ec94d48c9f10551fe6906ba5c6fc9ec949c01f2bf2db8b28",
+  "validation_scope": [
+    "proposal_pool_and_refit_plan_hash_match",
+    "full_refit_plan_schema_and_lineage",
+    "selected_replacements_present_in_refit_plan"
+  ]
+}

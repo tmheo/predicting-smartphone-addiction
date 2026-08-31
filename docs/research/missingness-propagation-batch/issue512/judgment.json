@@ -1,70 +1,139 @@
 {
   "collection": {
-    "complete_pair_count": 17,
-    "incomplete_pair_count": 17,
-    "source_commit_mismatch_count": 7,
+    "accepted_correction_count": 7,
+    "complete_pair_count": 24,
+    "incomplete_pair_count": 10,
     "state_count": 34
   },
   "conditional_gate": {
-    "passed": false,
-    "status": "not_run"
+    "delta": 4.415298240634247e-05,
+    "passed": true,
+    "sha256": "87d5d0aa900a05ded721d3d27b22cb728266d83e876504b28eae8b1c5e926e89",
+    "status": "completed"
   },
   "direct_nested_gate": {
-    "passed": false,
-    "status": "not_run"
+    "delta": 4.688661361140767e-05,
+    "passed": true,
+    "sha256": "51f93addc0d35d34e9c96fbc4e34d426f3bd5ecd114a13ae5870f9b8eca9af12",
+    "status": "completed"
   },
-  "full_refit_rehearsal": {
-    "passed": false,
-    "status": "not_run"
+  "full_refit_readiness": {
+    "model_training_executed": false,
+    "passed": true,
+    "sha256": "e1fb052594d0a25479838025990a750380d72a4575c8bfdfd7bfc7bd18dc61a8",
+    "status": "completed"
   },
-  "input_bundle_sha256": "942821c80551bcad0ddd0be23e63e56bfab6e4de4f2e5b222ca3422a6085de09",
+  "input_bundle_sha256": "54a1fab1b1408791a04b5c415b9c2c4edff9d972eb6c7571ee5671ff828e280d",
   "issue": {
     "number": 512,
     "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/512"
   },
-  "judgment_sha256": "b2390ea543aee999fad9198a85f54739413d7f0416ecf7d2007fa4d7deb292ae",
+  "judgment_sha256": "eb69ddf211dbd3c9242fb6e4ea63349c7c5173af2c421cb814c29621635b430a",
   "map": {
     "number": 506,
     "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/506"
   },
   "official_ledgers": {
     "candidate_pool": {
-      "after_sha256": "c513443b6d1cc8af348dc06f8c547ed2728a659261cf7d78dc4e17a27ca668d9",
+      "after_sha256": "40947563a00cab8212498c7e339517e387979b14c6477c6ce8e196036e02044c",
       "before_sha256": "c513443b6d1cc8af348dc06f8c547ed2728a659261cf7d78dc4e17a27ca668d9",
-      "changed": false,
+      "changed": true,
       "path": "artifacts/pool.yaml"
     },
     "full_refit_plan": {
-      "after_sha256": "b40c091ee2998f90c1916eeb8498b210176f01040a15f80b578df01c53f65770",
+      "after_sha256": "89edf321b1821f1de645799f2353705c461065a275263375d5479e3edd6b006c",
       "before_sha256": "b40c091ee2998f90c1916eeb8498b210176f01040a15f80b578df01c53f65770",
-      "changed": false,
+      "changed": true,
       "path": "artifacts/full-refit-plan.yaml"
     }
   },
   "precommit_sha256": "0e8944b2e29f5bf8100a4132c5a7352c341a1789612ca3bceb79ab2bdc0dc611",
-  "preflight_sha256": "e8fd6188212b858c9c522c8da014c4330c933b9b86d83fb7835515deff016e10",
-  "recorded_at_utc": "2026-08-30T08:02:28+00:00",
+  "preflight_sha256": "aae096fa319f8c43d90a225d4e3effa50ad19c2f4f9d7e908caf0350bc732ad6",
+  "recorded_at_utc": "2026-08-30T09:22:30+00:00",
   "runtime": {
-    "git_commit": "b129461d22eeb4f213ac66981fdb4125b7855545",
+    "git_commit": "23cf8b2119060a9fffc4db659998ef135a5f475f",
     "git_worktree_clean": true,
     "script": {
       "path": "scripts/judge_issue512_missingness_propagation_batch.py",
-      "sha256": "b5cfc53cc02f5420352d59e296684155f26714450a1f3d8c1ce8be86b8b7ce2c"
+      "sha256": "191f31698ab55bc491110674fa39c8977ff6a3a8269ef57e568b497a3f377c1d"
     }
   },
-  "schema": "missingness-propagation-batch-v1/judgment/1",
+  "schema": "missingness-propagation-batch-v1/judgment/3",
+  "scope_correction": {
+    "decision": "issue512_performs_static_refit_readiness_validation_only",
+    "deferred_work": "production full-data refit and prediction generation",
+    "model_training_executed": false
+  },
   "search": {
-    "evaluated_state_count": 0,
+    "evaluated_state_count": 1658,
+    "full_oof_auc": 0.9698828758140019,
     "partial_result_adopted": false,
-    "reason": "원자 교체는 자기 자리의 예측만 바꾼다. 현재 중복 위반의 두 자리 가운데 검색 이동 자격이 있는 완결 결측 증강판이 하나도 없으므로 모든 도달 가능한 상태가 같은 중복 위반을 보존한다. 따라서 전체 OOF 제안 풀 중복 불변식을 만족하는 도달 가능한 상태가 없다.",
-    "reason_code": "proposal_duplicate_invariant_unreachable",
-    "status": "not_started"
+    "selected_ordinals": [
+      7,
+      8,
+      10,
+      12,
+      22
+    ],
+    "selected_replacements": [
+      "exp035_lattice_te",
+      "exp058_logreg_onehot",
+      "exp070_cat_exact_cats",
+      "exp110_lgb_kitopl_no_te",
+      "exp131_lookup_bivariate_plr5"
+    ],
+    "sha256": "e4bf476f51a7e105a1e809633460d8d6ff32c3bdf81c8c2ab745fd89735b5021",
+    "status": "completed"
   },
   "verdict": {
-    "formalized": false,
-    "proposal_pool": null,
+    "failure_reason_codes": [],
+    "formalized": true,
+    "proposal_pool": [
+      "exp006_te_drop_gaming",
+      "exp011_resid_pair",
+      "exp022_orig_knn",
+      "exp023_orig_proxy_residual",
+      "exp025_constrained_impute",
+      "exp032_recon_orig_mean_top3",
+      "mpv1_exp035_lattice_te_missingness_augmented",
+      "mpv1_exp058_logreg_onehot_missingness_augmented",
+      "exp059_lookup_transformer",
+      "mpv1_exp070_cat_exact_cats_missingness_augmented",
+      "exp067_tabpfn3",
+      "exp081_lookup_fold_initialization_avg3",
+      "mpv1_exp110_lgb_kitopl_no_te_missingness_augmented",
+      "exp111_xgb_depth8_no_te",
+      "exp071_cat_exact_no_te",
+      "exp106_lookup_fixed24_train_test_preprocessing",
+      "exp113_tab_cnn_m0",
+      "exp085_contextual_spline_m0",
+      "exp027_recon_ce",
+      "exp048_lgb_orig_cdf_diff",
+      "exp134_realmlp_muon",
+      "exp135_xgb_hpo_trial30",
+      "mpv1_exp131_lookup_bivariate_plr5_missingness_augmented",
+      "exp136_realmlp_muon_recon_widths",
+      "exp137_tabm_recon_widths",
+      "exp133_scalar_token_transformer_oof_te",
+      "exp131_tab_cnn_oof_target_mean",
+      "exp132_tab_cnn_epochs100",
+      "exp139_realmlp_reference_qnormal_train_test",
+      "exp140_realmlp_orig_cdf_diff",
+      "exp157_lookup_muon_initavg8",
+      "exp168_issue413_lgb_no_te_fixed20",
+      "exp197_issue419_lgb_recon_ce_fixed20",
+      "exp183_issue419_cat_exact_fixed10",
+      "exp208_issue500_ag25_missingness_augmented",
+      "exp209_issue505_lgb_lr_onehot_init"
+    ],
     "public_score_used": false,
-    "selected_replacements": [],
-    "status": "keep_current_ledgers"
+    "selected_replacements": [
+      "exp035_lattice_te",
+      "exp058_logreg_onehot",
+      "exp070_cat_exact_cats",
+      "exp110_lgb_kitopl_no_te",
+      "exp131_lookup_bivariate_plr5"
+    ],
+    "status": "formalize_proposal_ledgers"
   }
 }

@@ -4,49 +4,49 @@
       "batch_status": "complete",
       "member": "exp006_te_drop_gaming",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "complete",
       "member": "exp011_resid_pair",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "complete",
       "member": "exp022_orig_knn",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "complete",
       "member": "exp023_orig_proxy_residual",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "complete",
       "member": "exp025_constrained_impute",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "complete",
       "member": "exp032_recon_orig_mean_top3",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "complete",
       "member": "exp035_lattice_te",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "complete",
       "member": "exp058_logreg_onehot",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "incomplete",
@@ -58,7 +58,7 @@
       "batch_status": "complete",
       "member": "exp070_cat_exact_cats",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "incomplete",
@@ -70,25 +70,25 @@
       "batch_status": "complete",
       "member": "exp110_lgb_kitopl_no_te",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
-      "batch_status": "incomplete",
+      "batch_status": "complete",
       "member": "exp111_xgb_depth8_no_te",
-      "reason": "중앙 반입 출처 커밋 7000df00329b3e0d71fc0dcf7bbd1be293144b69이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "source_status": "completed_after_execution_correction"
+      "reason": null,
+      "source_status": "issue511_xgb_diagnostic_fix"
     },
     {
       "batch_status": "complete",
       "member": "exp071_cat_exact_no_te",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
-      "batch_status": "incomplete",
+      "batch_status": "complete",
       "member": "exp106_lookup_fixed24_train_test_preprocessing",
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "source_status": "completed_after_execution_correction"
+      "reason": null,
+      "source_status": "issue511_neural_parent_balanced_correction"
     },
     {
       "batch_status": "incomplete",
@@ -97,22 +97,22 @@
       "source_status": "not_completed"
     },
     {
-      "batch_status": "incomplete",
+      "batch_status": "complete",
       "member": "exp085_contextual_spline_m0",
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "source_status": "completed_after_execution_correction"
+      "reason": null,
+      "source_status": "issue511_neural_parent_balanced_correction"
     },
     {
       "batch_status": "complete",
       "member": "exp027_recon_ce",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "complete",
       "member": "exp048_lgb_orig_cdf_diff",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "incomplete",
@@ -121,16 +121,16 @@
       "source_status": "not_completed"
     },
     {
-      "batch_status": "incomplete",
+      "batch_status": "complete",
       "member": "exp135_xgb_hpo_trial30",
-      "reason": "중앙 반입 출처 커밋 7000df00329b3e0d71fc0dcf7bbd1be293144b69이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "source_status": "completed_after_execution_correction"
+      "reason": null,
+      "source_status": "issue511_xgb_diagnostic_fix"
     },
     {
-      "batch_status": "incomplete",
+      "batch_status": "complete",
       "member": "exp131_lookup_bivariate_plr5",
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "source_status": "completed_after_execution_correction"
+      "reason": null,
+      "source_status": "issue511_neural_parent_balanced_correction"
     },
     {
       "batch_status": "incomplete",
@@ -139,10 +139,10 @@
       "source_status": "not_completed"
     },
     {
-      "batch_status": "incomplete",
+      "batch_status": "complete",
       "member": "exp137_tabm_recon_widths",
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "source_status": "completed_after_execution_correction"
+      "reason": null,
+      "source_status": "issue511_neural_parent_balanced_correction"
     },
     {
       "batch_status": "incomplete",
@@ -163,10 +163,10 @@
       "source_status": "not_completed"
     },
     {
-      "batch_status": "incomplete",
+      "batch_status": "complete",
       "member": "exp139_realmlp_reference_qnormal_train_test",
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "source_status": "completed_after_execution_correction"
+      "reason": null,
+      "source_status": "issue511_neural_parent_balanced_correction"
     },
     {
       "batch_status": "incomplete",
@@ -184,25 +184,25 @@
       "batch_status": "complete",
       "member": "exp168_issue413_lgb_no_te_fixed20",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "complete",
       "member": "exp197_issue419_lgb_recon_ce_fixed20",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "complete",
       "member": "exp183_issue419_cat_exact_fixed10",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     },
     {
       "batch_status": "complete",
       "member": "exp209_issue505_lgb_lr_onehot_init",
       "reason": null,
-      "source_status": "completed"
+      "source_status": "precommitted_execution_source"
     }
   ],
   "collection": [
@@ -244,6 +244,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -282,6 +287,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -327,6 +337,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -365,6 +380,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -410,6 +430,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -448,6 +473,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -493,6 +523,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -531,6 +566,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -576,6 +616,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -614,6 +659,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -659,6 +709,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -697,6 +752,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -742,6 +802,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -780,6 +845,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -825,6 +895,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -863,6 +938,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -913,6 +993,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -951,6 +1036,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -1001,6 +1091,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -1039,6 +1134,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -1047,9 +1147,97 @@
       "status": "complete"
     },
     {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T11:19:12+00:00",
+          "config_sha256": "38a1e4e0d0b7e5efacc8e06dfe657ce0db1ea49a7f1fa547840ae5fb627ea496",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "4f318faf24ff9f6e39f5e98de14d9def7ebdfd13542f116e4b3f56c8803ac0d6",
+          "experiment": "mpv1_exp111_xgb_depth8_no_te_tripled",
+          "git_commit": "7000df00329b3e0d71fc0dcf7bbd1be293144b69",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9646583320672218,
+          "oof_prediction_sha256": "9e642a6918a1e1366ead23ea594e6c1c3f28bf9d73c84de5528a8269d051e2cc",
+          "oof_sha256": "08934ddf2e07701b87a30f6e1daab41caaf5ad1cd432998a71207d0bd49f26a0",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "ccab5cf432bb4da9b841251dfb93c013",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_xgb_diagnostic_fix",
+            "source_commit": "7000df00329b3e0d71fc0dcf7bbd1be293144b69",
+            "validation_contract": "issue511-confirmed-xgb-diagnostic-fix"
+          },
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T11:19:19+00:00",
+          "config_sha256": "cc0a075744fd4964bdc2048759cd423c8c1af573364f3667ece15f392e4fba9d",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "8d6fecfda88586d87b8c69fa8abf4b4b0eccd6b99ccce285d492a11403d528d0",
+          "experiment": "mpv1_exp111_xgb_depth8_no_te_missingness_augmented",
+          "git_commit": "7000df00329b3e0d71fc0dcf7bbd1be293144b69",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9655900748804596,
+          "oof_prediction_sha256": "a9f515175d5da136550fd3c470ffcc23c460c3a94c2ed9976cb7b21424ae33af",
+          "oof_sha256": "10099bdadb4d6b715bb6fcf7a3d232cb90d881552dab89cf6d157d21b22e8ed0",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "53b1699cffdd48fa8b5268899bede34c",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_xgb_diagnostic_fix",
+            "source_commit": "7000df00329b3e0d71fc0dcf7bbd1be293144b69",
+            "validation_contract": "issue511-confirmed-xgb-diagnostic-fix"
+          },
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.0009317428132377126,
       "member": "exp111_xgb_depth8_no_te",
-      "reason": "중앙 반입 출처 커밋 7000df00329b3e0d71fc0dcf7bbd1be293144b69이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "status": "incomplete"
+      "status": "complete"
     },
     {
       "arms": [
@@ -1089,6 +1277,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -1127,6 +1320,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -1135,9 +1333,97 @@
       "status": "complete"
     },
     {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-30T03:43:49+00:00",
+          "config_sha256": "d955b046c14dfc19c9364b1bc1aa35787dcda6b6c1ac93e45f6e8f3a9f1cf0dd",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "bbbbac1e8101e9259f57c16f45a2bfe3955762b8c4ed942c5ff4e58bd4e96fce",
+          "experiment": "mpv1_exp106_lookup_fixed24_train_test_preprocessing_tripled",
+          "git_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9678089143769522,
+          "oof_prediction_sha256": "95eb9d8c36d64d963e77de4fdf98e66324985f9cf9eeda8161df11de81a7196a",
+          "oof_sha256": "775cb2e5658ed758479dfc3310cf366c39a7022e2d11b6938a47d2d1b3b20231",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "efa3ab1e3a95f3107f9a810ce151c4aa98581563e2db33ea2927adc9ff3aad97",
+          "run_id": "a1e26156491d4a239d460c4423996bdb",
+          "runtime_class": "gpu_16_plus_gib",
+          "runtime_environment_sha256": "70b5814efe4c36477d8cf1ce371c232aa5dadbc411a13b104943029109c968d6",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_neural_parent_balanced_correction",
+            "source_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+            "validation_contract": "paired-parent-balanced-exposure-v2"
+          },
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-30T03:43:52+00:00",
+          "config_sha256": "82ea09472151bd3dfe2ebe02f72ca7eb2b5163830ccaa8b24a05cf609ca7ea0a",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "7c846eebc38259f6793af0c9409116a4f557f1102f3703d59a1b575581ce7a33",
+          "experiment": "mpv1_exp106_lookup_fixed24_train_test_preprocessing_missingness_augmented",
+          "git_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9688856307854026,
+          "oof_prediction_sha256": "a3b68440f36fe57f8d56ed97ee874f3560980e94ce55f540d8138407e95025a8",
+          "oof_sha256": "8b832db908a811c0cfe44f223fbda766a8a6fd354bf4fd94f9b52bdbea2786ba",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "961832d5531afd1dfc0b99fdb9546da356a37b3349284966c430b8954c5efd53",
+          "run_id": "23b474bbad6f45e481e201b22fa602f2",
+          "runtime_class": "gpu_16_plus_gib",
+          "runtime_environment_sha256": "70b5814efe4c36477d8cf1ce371c232aa5dadbc411a13b104943029109c968d6",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_neural_parent_balanced_correction",
+            "source_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+            "validation_contract": "paired-parent-balanced-exposure-v2"
+          },
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.0010767164084504177,
       "member": "exp106_lookup_fixed24_train_test_preprocessing",
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "status": "incomplete"
+      "status": "complete"
     },
     {
       "member": "exp113_tab_cnn_m0",
@@ -1145,9 +1431,97 @@
       "status": "incomplete"
     },
     {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-30T05:34:07+00:00",
+          "config_sha256": "ffd9e29cc6e2b0dae850859122cb8afa1a313aae9fbbbe58993cf1cd2ef37220",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "3bc8732238202067a24d8d4465396c12cdabb409b5a99f2be97df9f2559cfb0a",
+          "experiment": "mpv1_exp085_contextual_spline_m0_tripled",
+          "git_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9681562676806031,
+          "oof_prediction_sha256": "f4054a1d329f806985acebce7f7508a0d92c5a3fec74feed63dc4345f638e207",
+          "oof_sha256": "3170772135ea73fe2804d73fd75d5b435030c0eeb77c61c01701e915ba008417",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "f0041b3cde8b3f0bab13d8a4e504a4ca630a7fb6cfd0305e3bd791d4d740d571",
+          "run_id": "17001b45e8a44c35aa72c9eab0a08293",
+          "runtime_class": "gpu_16_plus_gib",
+          "runtime_environment_sha256": "84161870807d65ffa7bf303546f06dc82e49a086e68574049f22853ab55f3f93",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_neural_parent_balanced_correction",
+            "source_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+            "validation_contract": "paired-parent-balanced-exposure-v2"
+          },
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-30T05:34:10+00:00",
+          "config_sha256": "3d1d3ced1d27f820259b57d97fce82520603b461e4096e03b942564f63a8e146",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "647f8921a044c9b88de315ccb6d08fc32950654815694fdd8d1c210eed754b93",
+          "experiment": "mpv1_exp085_contextual_spline_m0_missingness_augmented",
+          "git_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9683130514344046,
+          "oof_prediction_sha256": "ac35c4fa148d8da103d5b7c10bf2ded55a28fef4f8210c9dce9e1f9b27758e75",
+          "oof_sha256": "772f69a6b20c7ebb65961dbd1af25a6a74ccacd0fba728f66bebc1a2e76139ae",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "ae2a9134e43501e9a079aaf831a9db3c235ee2ad2e9d87a9c8896a579e48182c",
+          "run_id": "e18005f1342d442a9f0aa432d8ed0280",
+          "runtime_class": "gpu_16_plus_gib",
+          "runtime_environment_sha256": "84161870807d65ffa7bf303546f06dc82e49a086e68574049f22853ab55f3f93",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_neural_parent_balanced_correction",
+            "source_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+            "validation_contract": "paired-parent-balanced-exposure-v2"
+          },
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.00015678375380145937,
       "member": "exp085_contextual_spline_m0",
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "status": "incomplete"
+      "status": "complete"
     },
     {
       "arms": [
@@ -1187,6 +1561,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -1225,6 +1604,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -1270,6 +1654,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -1308,6 +1697,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -1321,14 +1715,190 @@
       "status": "incomplete"
     },
     {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-29T12:50:40+00:00",
+          "config_sha256": "e08be956b816c617fbf05abb30f1a73d7ab2d2796acedfecc47470a847ee4e2e",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "9315facdc5b2c943f311f92aea77bc8c06dd66619220fef6ce5b447dcedd8cd4",
+          "experiment": "mpv1_exp135_xgb_hpo_trial30_tripled",
+          "git_commit": "7000df00329b3e0d71fc0dcf7bbd1be293144b69",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9682973364725846,
+          "oof_prediction_sha256": "fc4e74bbeb0d2c7adea53adde41e14c7ddec347a8cabe423bad878ec41082f6e",
+          "oof_sha256": "bfca225a4fb52e6e2e9957f128be6f9d3c63850dbe2eae292aa19b38593729d8",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "e9511ec02bc39b85005991e3e06ea4e618abb4438ed6b29d42c40f96fa311fd7",
+          "run_id": "25bfea63e32941219a4eb850fa49be69",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_xgb_diagnostic_fix",
+            "source_commit": "7000df00329b3e0d71fc0dcf7bbd1be293144b69",
+            "validation_contract": "issue511-confirmed-xgb-diagnostic-fix"
+          },
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-29T12:50:48+00:00",
+          "config_sha256": "718ab1313cbd4440711aea0c41959f9837937d405dfdbca9a48dd41e8ae7ba1d",
+          "container_image_digest": "cbfa8ce813778535351ccb63b23c5654a0b7ea457c92d37023f402e4ac301ae1",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "c4300b8bff68a4b9c20bfe1eebadd595877323572debb5cef9776a7efa87c7cb",
+          "experiment": "mpv1_exp135_xgb_hpo_trial30_missingness_augmented",
+          "git_commit": "7000df00329b3e0d71fc0dcf7bbd1be293144b69",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9685052719765284,
+          "oof_prediction_sha256": "2644a77962a1eac0a059431c59d606c9e8a49337434c618b4b30a9035f82d00f",
+          "oof_sha256": "ec7df25b8ee558e2c84367b9e6a599cdc2d679da1302154e9969868afc21c6e7",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "local",
+          "required_diagnostics_sha256": "0b62625242dfd393ecf31bea7e9a4b2e3b25a46e487e2a31a848d138d18c4c81",
+          "run_id": "b731e5f297db44a093a42709f9280605",
+          "runtime_class": "cpu",
+          "runtime_environment_sha256": null,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_xgb_diagnostic_fix",
+            "source_commit": "7000df00329b3e0d71fc0dcf7bbd1be293144b69",
+            "validation_contract": "issue511-confirmed-xgb-diagnostic-fix"
+          },
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 0.00020793550394371252,
       "member": "exp135_xgb_hpo_trial30",
-      "reason": "중앙 반입 출처 커밋 7000df00329b3e0d71fc0dcf7bbd1be293144b69이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "status": "incomplete"
+      "status": "complete"
     },
     {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-30T06:10:01+00:00",
+          "config_sha256": "901c02f70ae8a47929e3a816194474093e43e64cf083cef2f01b72a896900fa1",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "68c813e2f19a4ab97d0ab08e2f3a7504805243c3959d3bec11b9235f4fdafef9",
+          "experiment": "mpv1_exp131_lookup_bivariate_plr5_tripled",
+          "git_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9693371781339913,
+          "oof_prediction_sha256": "9cd621f5ecfa44c21141b662d3180b788e6c7405285a8c4ab596f50d9eb33c5c",
+          "oof_sha256": "2226be654251d7afb36d3b10ec4108dbacd779cd3fbf0d188cb18f1650579878",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "efa3ab1e3a95f3107f9a810ce151c4aa98581563e2db33ea2927adc9ff3aad97",
+          "run_id": "856923ca55a24706a8d3430e660f75d1",
+          "runtime_class": "gpu_16_plus_gib",
+          "runtime_environment_sha256": "f7c44bb1b6c62991b70e450ddd574ea8c2e537994cc92d3c3e7ebd8dddd2511d",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_neural_parent_balanced_correction",
+            "source_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+            "validation_contract": "paired-parent-balanced-exposure-v2"
+          },
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-30T06:10:04+00:00",
+          "config_sha256": "45c5c7e26788d30bf69df8c1b022acc63359289c7ac3e13bc2944a8220dd6772",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "14eab5bb5316945e4397a7249cd959d17669e957331c9611e15c4a53dd53b6a8",
+          "experiment": "mpv1_exp131_lookup_bivariate_plr5_missingness_augmented",
+          "git_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9694062694182052,
+          "oof_prediction_sha256": "9a61fec5950c334a5fdb7fe02835ec8b988330413a657c6032068a9a332ffd50",
+          "oof_sha256": "83c48589a825b21d5806b64837ffa2f5a5ef58a9b3a429d9e01ec76ced002b2d",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "961832d5531afd1dfc0b99fdb9546da356a37b3349284966c430b8954c5efd53",
+          "run_id": "9b847a787b25429f872f6eadb7497659",
+          "runtime_class": "gpu_16_plus_gib",
+          "runtime_environment_sha256": "f7c44bb1b6c62991b70e450ddd574ea8c2e537994cc92d3c3e7ebd8dddd2511d",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_neural_parent_balanced_correction",
+            "source_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+            "validation_contract": "paired-parent-balanced-exposure-v2"
+          },
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": 6.909128421384025e-05,
       "member": "exp131_lookup_bivariate_plr5",
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "status": "incomplete"
+      "status": "complete"
     },
     {
       "member": "exp136_realmlp_muon_recon_widths",
@@ -1336,9 +1906,97 @@
       "status": "incomplete"
     },
     {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-30T07:31:51+00:00",
+          "config_sha256": "11f0b498fb3b89cc7ed618e9be139ad18a4b9fc6b140108cf9e7d4166a47a530",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "cb8228218ec94ef31a00939a7b854802e4b30cafb482d2a75201cee4ff94855d",
+          "experiment": "mpv1_exp137_tabm_recon_widths_tripled",
+          "git_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9683928038498724,
+          "oof_prediction_sha256": "15d83b6c82e7e7ecb79926bf34d36812e32f750cb78baab8970e7e981a46ddc0",
+          "oof_sha256": "525405947b7a583d047e9674246cf2b1e092ad8ff89cd292fc3fd7261842b22c",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "1361a303aa5848bab623b8a95a1a84df5e929df0d7412fbd1f3d76495c1bb0c6",
+          "run_id": "a41e5a86c4fe45b49b1e206643cc1e7d",
+          "runtime_class": "gpu_16_plus_gib",
+          "runtime_environment_sha256": "74c3b37eb4d6d67ed3a5bbfadd475faf11c6e2cc3beb87371ea703695d1bba13",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_neural_parent_balanced_correction",
+            "source_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+            "validation_contract": "paired-parent-balanced-exposure-v2"
+          },
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-30T07:31:55+00:00",
+          "config_sha256": "397a513e77fc213decc00a3fdc8e4b57bd3d29467bbe957f108f64e33a2b00bf",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "d36ea2d8ea49413d30fbbd754646a4f73498fd6ff8a5239d80e3be4fae50250a",
+          "experiment": "mpv1_exp137_tabm_recon_widths_missingness_augmented",
+          "git_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9683260723504309,
+          "oof_prediction_sha256": "99da275a8a66df78f4ba04c78e551eaf31392a69e860793a5dfc76d881b03ae2",
+          "oof_sha256": "93fabb222d628e0e4d46df9568a4b17a97bbaf621a78c58f9074f0ba87ffb0c3",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "3e8776c63b4fb8ba94c63457bdaeaa0746066d66228ee7866acffa37775e6165",
+          "run_id": "367f2c4297c04debb3c1ae9e4606c90a",
+          "runtime_class": "gpu_16_plus_gib",
+          "runtime_environment_sha256": "74c3b37eb4d6d67ed3a5bbfadd475faf11c6e2cc3beb87371ea703695d1bba13",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_neural_parent_balanced_correction",
+            "source_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+            "validation_contract": "paired-parent-balanced-exposure-v2"
+          },
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": -6.673149944147472e-05,
       "member": "exp137_tabm_recon_widths",
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "status": "incomplete"
+      "status": "complete"
     },
     {
       "member": "exp133_scalar_token_transformer_oof_te",
@@ -1356,9 +2014,97 @@
       "status": "incomplete"
     },
     {
+      "arms": [
+        {
+          "arm": "tripled",
+          "central_imported_at_utc": "2026-08-30T05:54:37+00:00",
+          "config_sha256": "9e50d9e5f25c1c88ec6fa2af1b67713708615af35ddb8e907b2270355d15594a",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "1a0edde1ec6a8f6b21054c5b3779725dd1314c884eef0b9bb1f464e6aa3eb8e0",
+          "experiment": "mpv1_exp139_realmlp_reference_qnormal_train_test_tripled",
+          "git_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9685463700115083,
+          "oof_prediction_sha256": "909d9698566e9d899e660808ec40799715a81a698c04fb9a70d78396ea5907c1",
+          "oof_sha256": "1c14a9fcbf24487aaf6e3a7d81c2c1d2056eed12e14ef4700649d91f57171e7e",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "a98a61423ebb54efe2713f2dbc7c24e985e6d555e4e95123dd8b0b72a744bff6",
+          "run_id": "44c0553c555e4e9b806fa8428922dcf8",
+          "runtime_class": "gpu_16_plus_gib",
+          "runtime_environment_sha256": "d3783668e2782d824c24d7f75e9559cebc48d93d566353bdce90eaa8a42ac41d",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_neural_parent_balanced_correction",
+            "source_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+            "validation_contract": "paired-parent-balanced-exposure-v2"
+          },
+          "status": "FINISHED"
+        },
+        {
+          "arm": "missingness_augmented",
+          "central_imported_at_utc": "2026-08-30T05:54:41+00:00",
+          "config_sha256": "8ffc77aead4f948d9e340f89fe519bb1bbbc0f48cd40e929e6aa307ac45d4ec9",
+          "container_image_digest": "nvcr.io/nvidia/pytorch@sha256:a411b86de9ac003ce5db43894ea7920718512bc02c51a521157c0899aac75631",
+          "dependency_lock_sha256": "27527bf7a3094af0c9fa85613216f097a9d18b4cf75ab4c5b4c73b2ad3af25b4",
+          "execution_record_bundle_sha256": "056486da6d24070ebe6a097384b32243cdaf01deff4ce86d6a338ed46a2a418e",
+          "experiment": "mpv1_exp139_realmlp_reference_qnormal_train_test_missingness_augmented",
+          "git_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+          "git_dirty": false,
+          "input_sha256": {
+            "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+            "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+            "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+          },
+          "integrity_verdict": "pass",
+          "oof_auc": 0.9681423913218554,
+          "oof_prediction_sha256": "ac104cbc4a89a460ac6c13a026f2e822c56117bfd0871a52470acd0e846fa494",
+          "oof_sha256": "75bab1b6218741eaa4fc49d6dd93d856f4cdbf3a1023d10c47f48f9219071895",
+          "outer_folds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "provider": "vast",
+          "required_diagnostics_sha256": "2a3eedda3d9b770fa9560f9b04b67575f294270d6ba52e4e6602302ae8160465",
+          "run_id": "3e740473d43b4532bec9a0a6aaf927db",
+          "runtime_class": "gpu_16_plus_gib",
+          "runtime_environment_sha256": "d3783668e2782d824c24d7f75e9559cebc48d93d566353bdce90eaa8a42ac41d",
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "source_contract": {
+            "kind": "issue511_neural_parent_balanced_correction",
+            "source_commit": "b9be8aaba1a5c307084fab9c678312bdab536959",
+            "validation_contract": "paired-parent-balanced-exposure-v2"
+          },
+          "status": "FINISHED"
+        }
+      ],
+      "direct_oof_delta": -0.0004039786896529174,
       "member": "exp139_realmlp_reference_qnormal_train_test",
-      "reason": "중앙 반입 출처 커밋 b9be8aaba1a5c307084fab9c678312bdab536959이 사전 기록 출처 c831c40f80e4115856364586643b6312a7a1bca5와 다르다",
-      "status": "incomplete"
+      "status": "complete"
     },
     {
       "member": "exp140_realmlp_orig_cdf_diff",
@@ -1408,6 +2154,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -1446,6 +2197,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -1491,6 +2247,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -1529,6 +2290,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -1574,6 +2340,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -1612,6 +2383,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -1657,6 +2433,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         },
         {
@@ -1695,6 +2476,11 @@
             43,
             44
           ],
+          "source_contract": {
+            "kind": "precommitted_execution_source",
+            "source_commit": "c831c40f80e4115856364586643b6312a7a1bca5",
+            "validation_contract": null
+          },
           "status": "FINISHED"
         }
       ],
@@ -1714,15 +2500,22 @@
     "exp058_logreg_onehot",
     "exp070_cat_exact_cats",
     "exp110_lgb_kitopl_no_te",
+    "exp111_xgb_depth8_no_te",
     "exp071_cat_exact_no_te",
+    "exp106_lookup_fixed24_train_test_preprocessing",
+    "exp085_contextual_spline_m0",
     "exp027_recon_ce",
     "exp048_lgb_orig_cdf_diff",
+    "exp135_xgb_hpo_trial30",
+    "exp131_lookup_bivariate_plr5",
+    "exp137_tabm_recon_widths",
+    "exp139_realmlp_reference_qnormal_train_test",
     "exp168_issue413_lgb_no_te_fixed20",
     "exp197_issue419_lgb_recon_ce_fixed20",
     "exp183_issue419_cat_exact_fixed10",
     "exp209_issue505_lgb_lr_onehot_init"
   ],
-  "input_bundle_sha256": "942821c80551bcad0ddd0be23e63e56bfab6e4de4f2e5b222ca3422a6085de09",
+  "input_bundle_sha256": "54a1fab1b1408791a04b5c415b9c2c4edff9d972eb6c7571ee5671ff828e280d",
   "issue": {
     "number": 512,
     "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/512"
@@ -1732,7 +2525,7 @@
     "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/506"
   },
   "precommit_sha256": "0e8944b2e29f5bf8100a4132c5a7352c341a1789612ca3bceb79ab2bdc0dc611",
-  "recorded_at_utc": "2026-08-30T08:02:28+00:00",
+  "recorded_at_utc": "2026-08-30T09:22:30+00:00",
   "schema": "missingness-propagation-batch-v1/input/1",
   "source_confirmation": {
     "path": "artifacts/issue511-missingness-propagation-confirmation.json",

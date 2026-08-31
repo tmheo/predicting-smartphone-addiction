@@ -19,8 +19,8 @@ members:
   oof_auc: 0.9674010717025592
   seeds: 42,43,44
   entered_at: '2026-08-11'
-  reason: '이슈 #46: 새 champion exp011_resid_pair의 3시드 평균본. 구 champion과 스피어만 0.99584로
-    중복 아님, 표준 평가 앙상블 기여 +0.00066'
+  reason: '이슈 #46: 새 champion exp011_resid_pair의 3시드 평균본. 구 champion과 스피어만 0.99584로 중복 아님, 표준 평가 앙상블 기여
+    +0.00066'
   evidence:
     champion_run_id: e21d19af37bb461db5dc1a59b66411a6
     champion_oof_auc: 0.9674010717025592
@@ -35,8 +35,7 @@ members:
   oof_auc: 0.9673310988424522
   seeds: 42,43,44
   entered_at: '2026-08-11'
-  reason: '이슈 #54: 원본 프록시 최근접 라벨 계열. champion 교체는 스크리닝 미달이나 스피어만 0.99739로 중복 아님, 표준
-    평가 앙상블 기여 +0.00018'
+  reason: '이슈 #54: 원본 프록시 최근접 라벨 계열. champion 교체는 스크리닝 미달이나 스피어만 0.99739로 중복 아님, 표준 평가 앙상블 기여 +0.00018'
   evidence:
     champion_run_id: e21d19af37bb461db5dc1a59b66411a6
     champion_oof_auc: 0.9674010717025592
@@ -66,8 +65,8 @@ members:
   oof_auc: 0.9675746898110065
   seeds: 42,43,44
   entered_at: '2026-08-20'
-  reason: '이슈 281: 깨끗한 짝비교에서 폭 3열 포함판이 exp026보다 3시드 +0.00002705, 시드 2/3, fold 4/5로
-    실신호를 확인해 같은 계열 구성원 품질 개선판으로 교체'
+  reason: '이슈 281: 깨끗한 짝비교에서 폭 3열 포함판이 exp026보다 3시드 +0.00002705, 시드 2/3, fold 4/5로 실신호를 확인해 같은 계열 구성원
+    품질 개선판으로 교체'
   evidence:
     champion_run_id: 7124425b5b51421dbbeba597229554da
     champion_oof_auc: 0.9692840450124712
@@ -82,9 +81,8 @@ members:
   oof_auc: 0.9676472210375413
   seeds: 42,43,44
   entered_at: '2026-08-12'
-  reason: '이슈 #78: 원본 prior 상위 3열(m=20)의 exp026 베이스 재구성. champion 교체는 +0.0000996으로
-    문턱 미달 기각(3/3 시드, 5/5 fold 개선), 최근접 exp026과 스피어만 0.99790으로 중복 아님, 표준 평가 앙상블 기여
-    +0.00009'
+  reason: '이슈 #78: 원본 prior 상위 3열(m=20)의 exp026 베이스 재구성. champion 교체는 +0.0000996으로 문턱 미달 기각(3/3 시드, 5/5
+    fold 개선), 최근접 exp026과 스피어만 0.99790으로 중복 아님, 표준 평가 앙상블 기여 +0.00009'
   evidence:
     champion_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
     champion_oof_auc: 0.9675476423592995
@@ -94,45 +92,52 @@ members:
     ensemble_auc_with: 0.9677517186433671
     ensemble_auc_without: 0.9676591285688336
     contribution: 9.259007453343848e-05
-- run_id: c62a9ad334bf486cb46d738474ccd767
-  config: exp035_lattice_te
-  oof_auc: 0.9672897196399213
+- run_id: f525ee26f7e54d4b96f515c858e39e99
+  config: mpv1_exp035_lattice_te_missingness_augmented
+  oof_auc: 0.9674748763300264
   seeds: 42,43,44
-  entered_at: '2026-08-12'
-  reason: '이슈 #75: 전 쌍 격자 TE 블록. champion 교체는 스크리닝 미달(-0.00037)이나 스피어만 0.99412로 풀
-    내 최저 중복, 표준 평가 앙상블 기여 +0.00008'
+  entered_at: '2026-08-30'
+  reason: '이슈 512: 교정된 24짝의 결정적 최대 상승 검색과 동결 OOF 조건부 절차 및 직접 중첩 관문을 통과한 원자 교체'
   evidence:
-    champion_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
-    champion_oof_auc: 0.9675476423592995
-    floor_margin: 0.00974207728062182
-    nearest_run_id: 62f57ea7478f4de4b4fecdfb4baa3a35
-    nearest_spearman: 0.9941216333051414
-    ensemble_auc_with: 0.967876902064954
-    ensemble_auc_without: 0.96779600305279
-    contribution: 8.089901216401518e-05
-- run_id: e2b76edd9d204290810e39a7457c4c48
-  config: exp058_logreg_onehot
-  oof_auc: 0.9596583963715687
+    champion_run_id: 6911a461866b43dc9556553eba6783b7
+    champion_oof_auc: 0.9693676105620948
+    floor_margin: 0.008107265767931637
+    nearest_run_id: 9804689a5e3642e586abb972b522f3d4
+    nearest_spearman: 0.9932682908708257
+    ensemble_auc_with: 0.9698828758140019
+    ensemble_auc_without: 0.9698630907705971
+    contribution: 1.9785043404829672e-05
+  judgment:
+    judgment_id: issue512-missingness-propagation-batch-selection
+    contract_version: missingness-propagation-batch-v1
+    path: docs/research/missingness-propagation-batch/issue512/selection-evidence.json
+    sha256: a1e09244d1f8c814ec94d48c9f10551fe6906ba5c6fc9ec949c01f2bf2db8b28
+- run_id: 90aed4413e4b48e7a56f92fa9ecd5285
+  config: mpv1_exp058_logreg_onehot_missingness_augmented
+  oof_auc: 0.9596153717027877
   seeds: 42,43,44
-  entered_at: '2026-08-13'
-  reason: '이슈 #56: 정확값 one-hot 로지스틱 회귀. 단독 OOF 0.95966으로 진입 하한 상회, 최근접 스피어만 0.97042로
-    풀 내 최저 중복(새 오차 계열), 표준 평가 앙상블 기여 +0.00002'
+  entered_at: '2026-08-30'
+  reason: '이슈 512: 교정된 24짝의 결정적 최대 상승 검색과 동결 OOF 조건부 절차 및 직접 중첩 관문을 통과한 원자 교체'
   evidence:
-    champion_run_id: 3d5239b07c6e475baa7dde03fb0b99bc
-    champion_oof_auc: 0.968542903240823
-    floor_margin: 0.0011154931307456595
-    nearest_run_id: 3d5239b07c6e475baa7dde03fb0b99bc
-    nearest_spearman: 0.970421463174947
-    ensemble_auc_with: 0.9681324114087981
-    ensemble_auc_without: 0.9681168962972342
-    contribution: 1.551511156394625e-05
+    champion_run_id: 6911a461866b43dc9556553eba6783b7
+    champion_oof_auc: 0.9693676105620948
+    floor_margin: 0.00024776114069291477
+    nearest_run_id: 8b4111a9a93147caa6b9012e49456474
+    nearest_spearman: 0.9772262383848676
+    ensemble_auc_with: 0.9698828758140019
+    ensemble_auc_without: 0.9698780708625658
+    contribution: 4.804951436065963e-06
+  judgment:
+    judgment_id: issue512-missingness-propagation-batch-selection
+    contract_version: missingness-propagation-batch-v1
+    path: docs/research/missingness-propagation-batch/issue512/selection-evidence.json
+    sha256: a1e09244d1f8c814ec94d48c9f10551fe6906ba5c6fc9ec949c01f2bf2db8b28
 - run_id: b951fac51b6b44298f7fdb0b543caba6
   config: exp059_lookup_transformer
   oof_auc: 0.9689221785328946
   seeds: 42,43,44
   entered_at: '2026-08-14'
-  reason: '이슈 #58: 신경망 계열 첫 구성원. 풀 내 최근접 스피어만 0.98149(exp045)로 최저 수준 중복, 표준 평가 앙상블
-    기여로 진입'
+  reason: '이슈 #58: 신경망 계열 첫 구성원. 풀 내 최근접 스피어만 0.98149(exp045)로 최저 수준 중복, 표준 평가 앙상블 기여로 진입'
   evidence:
     champion_run_id: b951fac51b6b44298f7fdb0b543caba6
     champion_oof_auc: 0.9689221785328946
@@ -142,22 +147,26 @@ members:
     ensemble_auc_with: 0.9683856530124514
     ensemble_auc_without: 0.9681324114087981
     contribution: 0.00025324160365325366
-- run_id: 6238d8c58beb42ee8102209ded92516e
-  config: exp070_cat_exact_cats
-  oof_auc: 0.9685793468869544
+- run_id: 4fd10d9fc1324583a023552acc2cf77f
+  config: mpv1_exp070_cat_exact_cats_missingness_augmented
+  oof_auc: 0.9687455117591307
   seeds: 42,43,44
-  entered_at: '2026-08-15'
-  reason: '이슈 #107: 수치 정확값 범주 복제(CTR1) CatBoost. 3시드 +0.00004로 exp057과 스피어만 0.99959
-    중복 교체, 표준 평가 앙상블 기여 +0.00009'
+  entered_at: '2026-08-30'
+  reason: '이슈 512: 교정된 24짝의 결정적 최대 상승 검색과 동결 OOF 조건부 절차 및 직접 중첩 관문을 통과한 원자 교체'
   evidence:
-    champion_run_id: b951fac51b6b44298f7fdb0b543caba6
-    champion_oof_auc: 0.9689221785328946
-    floor_margin: 0.00965716835405972
-    nearest_run_id: 3d5239b07c6e475baa7dde03fb0b99bc
-    nearest_spearman: 0.9995943818108376
-    ensemble_auc_with: 0.968472626439248
-    ensemble_auc_without: 0.9683825832579194
-    contribution: 9.00431813286584e-05
+    champion_run_id: 6911a461866b43dc9556553eba6783b7
+    champion_oof_auc: 0.9693676105620948
+    floor_margin: 0.009377901197035965
+    nearest_run_id: e46d1ca38e0746209e049970d3dd2ab6
+    nearest_spearman: 0.9965692168284077
+    ensemble_auc_with: 0.9698828758140019
+    ensemble_auc_without: 0.9698741881837282
+    contribution: 8.687630273729319e-06
+  judgment:
+    judgment_id: issue512-missingness-propagation-batch-selection
+    contract_version: missingness-propagation-batch-v1
+    path: docs/research/missingness-propagation-batch/issue512/selection-evidence.json
+    sha256: a1e09244d1f8c814ec94d48c9f10551fe6906ba5c6fc9ec949c01f2bf2db8b28
 - run_id: 85b09132aae543aab16e69dea5906a30
   config: exp067_tabpfn3
   oof_auc: 0.9672432266679856
@@ -178,8 +187,8 @@ members:
   oof_auc: 0.9691957618114269
   seeds: 42,43,44
   entered_at: '2026-08-15'
-  reason: '이슈 #127: Lookup-Transformer fold 내 초기화 3개 평균. champion 교체 문턱에 0.00000208
-    미달했으나 3/3 시드·5/5 fold 개선, 최근접 exp059와 스피어만 0.99142로 중복 아님, 표준 평가 앙상블 기여 +0.00017'
+  reason: '이슈 #127: Lookup-Transformer fold 내 초기화 3개 평균. champion 교체 문턱에 0.00000208 미달했으나 3/3 시드·5/5 fold
+    개선, 최근접 exp059와 스피어만 0.99142로 중복 아님, 표준 평가 앙상블 기여 +0.00017'
   evidence:
     champion_run_id: 2bd55026ae63430aa774bce20a359b4a
     champion_oof_auc: 0.9690978395195489
@@ -189,29 +198,33 @@ members:
     ensemble_auc_with: 0.9686675325224675
     ensemble_auc_without: 0.9685009893536075
     contribution: 0.00016654316886000053
-- run_id: ae829ae3d886402ab100a8e966c3131a
-  config: exp110_lgb_kitopl_no_te
-  oof_auc: 0.9673323106299934
+- run_id: 9c51438d9842439881ed151ba66b0c86
+  config: mpv1_exp110_lgb_kitopl_no_te_missingness_augmented
+  oof_auc: 0.9677639450957627
   seeds: 42,43,44
-  entered_at: '2026-08-18'
-  reason: '이슈 #183: 공개 스택 no-TE 뷰 LightGBM 판(exp074에서 TE 제거). 3시드 OOF 0.96733, 최근접
-    exp074 스피어만 0.99307, 표준 평가 앙상블 기여 +0.00007'
+  entered_at: '2026-08-30'
+  reason: '이슈 512: 교정된 24짝의 결정적 최대 상승 검색과 동결 OOF 조건부 절차 및 직접 중첩 관문을 통과한 원자 교체'
   evidence:
-    champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
-    champion_oof_auc: 0.9691957618114269
-    floor_margin: 0.008136548818566514
-    nearest_run_id: 446a90bedd2a4d8bafad56f308b2b999
-    nearest_spearman: 0.9930675784936236
-    ensemble_auc_with: 0.9687467202432362
-    ensemble_auc_without: 0.9686779787020444
-    contribution: 6.874154119174136e-05
+    champion_run_id: 6911a461866b43dc9556553eba6783b7
+    champion_oof_auc: 0.9693676105620948
+    floor_margin: 0.008396334533667948
+    nearest_run_id: 2142b26c2d304307bb0c2717b803d643
+    nearest_spearman: 0.9964196470816576
+    ensemble_auc_with: 0.9698828758140019
+    ensemble_auc_without: 0.9698704627606144
+    contribution: 1.2413053387505535e-05
+  judgment:
+    judgment_id: issue512-missingness-propagation-batch-selection
+    contract_version: missingness-propagation-batch-v1
+    path: docs/research/missingness-propagation-batch/issue512/selection-evidence.json
+    sha256: a1e09244d1f8c814ec94d48c9f10551fe6906ba5c6fc9ec949c01f2bf2db8b28
 - run_id: 3cbc2ccce9eb46458d884006a33e516e
   config: exp111_xgb_depth8_no_te
   oof_auc: 0.9648262948660623
   seeds: 42,43,44
   entered_at: '2026-08-18'
-  reason: '이슈 #183: 공개 스택 no-TE 뷰 XGBoost 판(exp045에서 TE 제거). 3시드 OOF 0.96483, 최근접
-    exp110 스피어만 0.99498, 표준 평가 앙상블 기여 +0.00003'
+  reason: '이슈 #183: 공개 스택 no-TE 뷰 XGBoost 판(exp045에서 TE 제거). 3시드 OOF 0.96483, 최근접 exp110 스피어만 0.99498,
+    표준 평가 앙상블 기여 +0.00003'
   evidence:
     champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
     champion_oof_auc: 0.9691957618114269
@@ -226,8 +239,8 @@ members:
   oof_auc: 0.9681599406445471
   seeds: 42,43,44
   entered_at: '2026-08-18'
-  reason: '이슈 #183: 공개 스택 no-TE 뷰 CatBoost 판(exp070에서 TE 제거, 이슈 #107의 exp071 재사용).
-    3시드 OOF 0.96816, 최근접 exp070 스피어만 0.99543, 표준 평가 앙상블 기여 +0.00003'
+  reason: '이슈 #183: 공개 스택 no-TE 뷰 CatBoost 판(exp070에서 TE 제거, 이슈 #107의 exp071 재사용). 3시드 OOF 0.96816, 최근접
+    exp070 스피어만 0.99543, 표준 평가 앙상블 기여 +0.00003'
   evidence:
     champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
     champion_oof_auc: 0.9691957618114269
@@ -242,8 +255,8 @@ members:
   oof_auc: 0.9678698020933406
   seeds: 42,43,44
   entered_at: '2026-08-18'
-  reason: '이슈 #179: 공개 스택의 독립 전처리 고정 스케줄 Lookup 2호를 자체 재현했다. 최근접 exp059와 스피어만 0.98289로
-    중복이 아니며 표준 평가 앙상블 기여 +0.00014, 20구성원 최고 nested OOF는 19구성원 대비 +0.00009253 개선됐다.'
+  reason: '이슈 #179: 공개 스택의 독립 전처리 고정 스케줄 Lookup 2호를 자체 재현했다. 최근접 exp059와 스피어만 0.98289로 중복이 아니며 표준 평가 앙상블
+    기여 +0.00014, 20구성원 최고 nested OOF는 19구성원 대비 +0.00009253 개선됐다.'
   evidence:
     champion_run_id: d55d1cd49c194eb8bf7b5128e548df81
     champion_oof_auc: 0.9691957618114269
@@ -303,8 +316,8 @@ members:
   oof_auc: 0.9676097182368125
   seeds: 42,43,44
   entered_at: '2026-08-20'
-  reason: '이슈 283: CDF 차이 5열 묶음이 깨끗한 짝비교에서 exp026보다 3시드 +0.00006208, 시드 3/3, fold
-    5/5로 실신호이며 최근접 스피어만 0.99770으로 중복 문턱 아래'
+  reason: '이슈 283: CDF 차이 5열 묶음이 깨끗한 짝비교에서 exp026보다 3시드 +0.00006208, 시드 3/3, fold 5/5로 실신호이며 최근접 스피어만
+    0.99770으로 중복 문턱 아래'
   evidence:
     champion_run_id: 7124425b5b51421dbbeba597229554da
     champion_oof_auc: 0.9692840450124712
@@ -319,8 +332,8 @@ members:
   oof_auc: 0.9684260631310234
   seeds: 42,43,44
   entered_at: '2026-08-20'
-  reason: '이슈 280: exp124의 Muon 혼성 optimizer판. 3시드 평균 OOF +0.0001037, 시드 3/3·fold
-    5/5 개선, 최근접 exp124와 스피어만 0.98695로 중복이 아니어서 원본과 공존'
+  reason: '이슈 280: exp124의 Muon 혼성 optimizer판. 3시드 평균 OOF +0.0001037, 시드 3/3·fold 5/5 개선, 최근접 exp124와
+    스피어만 0.98695로 중복이 아니어서 원본과 공존'
   evidence:
     champion_run_id: 7124425b5b51421dbbeba597229554da
     champion_oof_auc: 0.9692840450124712
@@ -345,28 +358,33 @@ members:
     ensemble_auc_with: 0.9690250363253543
     ensemble_auc_without: 0.969026124992675
     contribution: -1.088667320736647e-06
-- run_id: 54acd002d3c04ec3a74c09871e83da50
-  config: exp131_lookup_bivariate_plr5
-  oof_auc: 0.9693397329635609
+- run_id: 9b847a787b25429f872f6eadb7497659
+  config: mpv1_exp131_lookup_bivariate_plr5_missingness_augmented
+  oof_auc: 0.9694062694182052
   seeds: 42,43,44
-  entered_at: '2026-08-20'
-  reason: '이슈 267: exp127에 수면·화면 이변수 조성 5열을 더한 새 champion. 3시드 +0.0000557로 교체 확정'
+  entered_at: '2026-08-30'
+  reason: '이슈 512: 교정된 24짝의 결정적 최대 상승 검색과 동결 OOF 조건부 절차 및 직접 중첩 관문을 통과한 원자 교체'
   evidence:
-    champion_run_id: 54acd002d3c04ec3a74c09871e83da50
-    champion_oof_auc: 0.9693397329635609
-    floor_margin: 0.010000000000000009
-    nearest_run_id: 7124425b5b51421dbbeba597229554da
-    nearest_spearman: 0.9979172593290473
-    ensemble_auc_with: 0.9691178229365589
-    ensemble_auc_without: 0.9690554221704453
-    contribution: 6.240076611363499e-05
+    champion_run_id: 6911a461866b43dc9556553eba6783b7
+    champion_oof_auc: 0.9693676105620948
+    floor_margin: 0.010038658856110438
+    nearest_run_id: bb7be9baf1b64888818600d7e0b5927b
+    nearest_spearman: 0.9960042499878539
+    ensemble_auc_with: 0.9698828758140019
+    ensemble_auc_without: 0.9698793365707046
+    contribution: 3.53924329732358e-06
+  judgment:
+    judgment_id: issue512-missingness-propagation-batch-selection
+    contract_version: missingness-propagation-batch-v1
+    path: docs/research/missingness-propagation-batch/issue512/selection-evidence.json
+    sha256: a1e09244d1f8c814ec94d48c9f10551fe6906ba5c6fc9ec949c01f2bf2db8b28
 - run_id: bd2bd1154e6343f68b364714e2fedcc4
   config: exp136_realmlp_muon_recon_widths
   oof_auc: 0.9684765044445613
   seeds: 42,43,44
   entered_at: '2026-08-20'
-  reason: '판정 issue302-exp136-realmlp-widths-confirm: exp134 직접 짝비교 3시드 +0.00005044,
-    시드 3/3·분할 5/5 실신호, 최근접 상관 0.99721로 중복 아님, 고정 nested 포함 기여 +0.00000183·외부 분할 4/5'
+  reason: '판정 issue302-exp136-realmlp-widths-confirm: exp134 직접 짝비교 3시드 +0.00005044, 시드 3/3·분할 5/5 실신호,
+    최근접 상관 0.99721로 중복 아님, 고정 nested 포함 기여 +0.00000183·외부 분할 4/5'
   evidence:
     champion_run_id: 7124425b5b51421dbbeba597229554da
     champion_oof_auc: 0.9692840450124712
@@ -381,9 +399,8 @@ members:
   oof_auc: 0.9683846688118484
   seeds: 42,43,44
   entered_at: '2026-08-20'
-  reason: '판정 issue294-exp137-tabm-widths-confirm: exp065 직접 짝비교 3시드 +0.00005855,
-    시드 3/3·분할 5/5 실신호, 중복 상관 0.99956에서 OOF 개선 교체, 고정 nested 포함 기여 +0.00000285·외부 분할
-    3/5'
+  reason: '판정 issue294-exp137-tabm-widths-confirm: exp065 직접 짝비교 3시드 +0.00005855, 시드 3/3·분할 5/5 실신호, 중복
+    상관 0.99956에서 OOF 개선 교체, 고정 nested 포함 기여 +0.00000285·외부 분할 3/5'
   evidence:
     champion_run_id: 7124425b5b51421dbbeba597229554da
     champion_oof_auc: 0.9692840450124712
@@ -398,8 +415,7 @@ members:
   oof_auc: 0.9678155177269718
   seeds: 42,43,44
   entered_at: '2026-08-21'
-  reason: '이슈 309 후속: 3시드 OOF 0.96781552, 최근접 exp067 스피어만 0.97018로 중복 아님, 표준 순위 평균
-    기여 +0.00000413'
+  reason: '이슈 309 후속: 3시드 OOF 0.96781552, 최근접 exp067 스피어만 0.97018로 중복 아님, 표준 순위 평균 기여 +0.00000413'
   evidence:
     champion_run_id: 54acd002d3c04ec3a74c09871e83da50
     champion_oof_auc: 0.9693397329635609
@@ -444,8 +460,8 @@ members:
   oof_auc: 0.9685456290878953
   seeds: 42,43,44
   entered_at: '2026-08-21'
-  reason: '판정 issue331-realmlp-reference-qnormal-confirm: exp138 대비 3시드 +0.00000461,
-    시드 3/3·분할 3/5, 최근접 상관 0.99736으로 중복 아님, 고정 nested 포함 기여 +0.00000699·외부 분할 4/5'
+  reason: '판정 issue331-realmlp-reference-qnormal-confirm: exp138 대비 3시드 +0.00000461, 시드 3/3·분할 3/5, 최근접
+    상관 0.99736으로 중복 아님, 고정 nested 포함 기여 +0.00000699·외부 분할 4/5'
   evidence:
     champion_run_id: 54acd002d3c04ec3a74c09871e83da50
     champion_oof_auc: 0.9693397329635609
@@ -515,8 +531,7 @@ members:
   oof_auc: 0.9654566561049915
   seeds: 42,43,44
   entered_at: '2026-08-26'
-  reason: 이슈 419의 고정 반복 수 변형 완전 중첩 선택(issue419-bulk-selection-2)에서 바깥 분할 5/5 선택, 단독
-    진입 판정 전체 OOF 차이 +0.000022993334
+  reason: 이슈 419의 고정 반복 수 변형 완전 중첩 선택(issue419-bulk-selection-2)에서 바깥 분할 5/5 선택, 단독 진입 판정 전체 OOF 차이 +0.000022993334
   evidence:
     champion_run_id: 6911a461866b43dc9556553eba6783b7
     champion_oof_auc: 0.9693676105620948
@@ -536,8 +551,7 @@ members:
   oof_auc: 0.9667978844962996
   seeds: 42,43,44
   entered_at: '2026-08-26'
-  reason: 이슈 419의 고정 반복 수 변형 완전 중첩 선택(issue419-bulk-selection-3)에서 바깥 분할 3/5 선택, 단독
-    진입 판정 전체 OOF 차이 +0.000004649979
+  reason: 이슈 419의 고정 반복 수 변형 완전 중첩 선택(issue419-bulk-selection-3)에서 바깥 분할 3/5 선택, 단독 진입 판정 전체 OOF 차이 +0.000004649979
   evidence:
     champion_run_id: 6911a461866b43dc9556553eba6783b7
     champion_oof_auc: 0.9693676105620948
@@ -557,8 +571,7 @@ members:
   oof_auc: 0.9688375116147219
   seeds: 42,43,44
   entered_at: '2026-08-28'
-  reason: '이슈 503: 일반 포함 nested OOF +0.000021787808, exp117 원자 교체 +0.000019363665,
-    분할 5/5의 경계 기여로 지속 등록'
+  reason: '이슈 503: 일반 포함 nested OOF +0.000021787808, exp117 원자 교체 +0.000019363665, 분할 5/5의 경계 기여로 지속 등록'
   evidence:
     champion_run_id: 6911a461866b43dc9556553eba6783b7
     champion_oof_auc: 0.9693676105620948
@@ -578,9 +591,9 @@ members:
   oof_auc: 0.968104144497054
   seeds: 42,43,44
   entered_at: '2026-08-29'
-  reason: '이슈 #505: exp110에 정확값 one-hot L2 로지스틱 회귀의 내부 OOF 로짓(nested_logistic_onehot,
-    내부 10분할, C=100)을 초기 점수로만 더한 판. 3시드 OOF 0.96810(exp110 대비 +0.00077), 최근접 exp135
-    스피어만 0.99189, candidate-pool-v2 핵심 결합 3개 포함 nested +0.0000060(경계 기여, 분할 4/5)'
+  reason: '이슈 #505: exp110에 정확값 one-hot L2 로지스틱 회귀의 내부 OOF 로짓(nested_logistic_onehot, 내부 10분할, C=100)을
+    초기 점수로만 더한 판. 3시드 OOF 0.96810(exp110 대비 +0.00077), 최근접 exp135 스피어만 0.99189, candidate-pool-v2 핵심 결합
+    3개 포함 nested +0.0000060(경계 기여, 분할 4/5)'
   evidence:
     champion_run_id: 6911a461866b43dc9556553eba6783b7
     champion_oof_auc: 0.9693676105620948

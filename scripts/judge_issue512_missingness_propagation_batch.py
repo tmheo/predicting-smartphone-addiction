@@ -1878,9 +1878,10 @@ def _report(
         lines.append(
             "이슈 512에서는 모델 학습과 시험 예측 생성을 실행하지 않았으며 실제 전체 자료 재학습은 후속 생산 단계로 넘겼다."
         )
+        lines.append("")
         lines.extend(
             [
-                f"- `{member['config']}`: 계획 예산 `{member['planned_budgets']}`, 항목 해시 `{member['member_entry_sha256']}`"
+                f"- `{member['config']}`: 계획 예산 `{json.dumps(member['planned_budgets'], ensure_ascii=False, sort_keys=True)}`, 항목 해시 `{member['member_entry_sha256']}`"
                 for member in refit_readiness["members"]
             ]
         )
@@ -2059,15 +2060,16 @@ def main() -> None:
     args = _args()
     output_root = args.output_root.resolve()
     precommit = _load_json(PRECOMMIT_PATH)
+    if args.verify_only:
+        verify_self_hash(precommit, "precommit_sha256")
+        _verify(output_root, precommit)
+        print(f"verified {output_root}")
+        return
     validate_precommit(
         precommit,
         REPO_ROOT,
         allow_contract_module_correction=True,
     )
-    if args.verify_only:
-        _verify(output_root, precommit)
-        print(f"verified {output_root}")
-        return
 
     runtime = _runtime_identity()
     recorded_at_utc = (
