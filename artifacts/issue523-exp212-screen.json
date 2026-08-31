@@ -1,0 +1,374 @@
+{
+  "schema_version": 1,
+  "contract_version": "initial-score-paired-v1",
+  "frozen_contract": {
+    "path": "artifacts/issue520-initial-score-extension-precommit.json",
+    "precommit_sha256": "f3a5983d3473d40b320327384c0e15d3592617b9a6c3d1237f15e429a374ad94",
+    "pair_key": "lightgbm_fixed20",
+    "pair_manifest_sha256": "8d87d0a73022798d8fc935f09cf05fae04712636a465446fa587f19d091c3365",
+    "initial_score_coordinate_sha256": "5ceef1c830d6e68c754ff918af682c2b3657d57e8599e71087b4b0d868a64a02",
+    "folds_sha256": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+  },
+  "execution_identity": {
+    "git_commit": "bf0fd22fd1fe541fd969e7526161da61b68887d0",
+    "git_dirty": false,
+    "same_commit_within_pair": true,
+    "input_sha256": {
+      "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+      "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+      "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+    }
+  },
+  "baseline": {
+    "run_id": "8167aad909e04d8abb467ad901d8ff2e",
+    "experiment": "exp168_issue413_lgb_no_te_fixed20",
+    "seeds": [
+      42
+    ],
+    "auc_oof": 0.9650097959208153,
+    "seed_aucs": {
+      "42": 0.9650097959208153
+    },
+    "fold_aucs": {
+      "0": 0.9642062634180162,
+      "1": 0.964762649171564,
+      "2": 0.9651147322977752,
+      "3": 0.9659603147468165,
+      "4": 0.9650145045129621
+    },
+    "git_commit": "bf0fd22fd1fe541fd969e7526161da61b68887d0",
+    "git_dirty": false,
+    "input_sha256": {
+      "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+      "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+      "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+    },
+    "runtime_identity": {
+      "provider": "kaggle",
+      "runtime_class": "kaggle-cpu-standard-v1"
+    }
+  },
+  "candidate": {
+    "run_id": "4056c5f1dc52495a88f6a89aefe64908",
+    "experiment": "exp212_issue520_lgb_fixed20_lr_onehot_init",
+    "seeds": [
+      42
+    ],
+    "auc_oof": 0.9679572766833211,
+    "seed_aucs": {
+      "42": 0.9679572766833211
+    },
+    "fold_aucs": {
+      "0": 0.9672203131366359,
+      "1": 0.9680188024384244,
+      "2": 0.9681674547178175,
+      "3": 0.9685641371814087,
+      "4": 0.9678273957022933
+    },
+    "git_commit": "bf0fd22fd1fe541fd969e7526161da61b68887d0",
+    "git_dirty": false,
+    "input_sha256": {
+      "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+      "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+      "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+    },
+    "runtime_identity": {
+      "provider": "kaggle",
+      "runtime_class": "kaggle-cpu-standard-v1"
+    }
+  },
+  "seed42_pairwise": {
+    "baseline_auc": 0.9650097959208153,
+    "candidate_auc": 0.9679572766833211,
+    "delta": 0.0029474807625058386,
+    "baseline_fold_aucs": {
+      "0": 0.9642062634180162,
+      "1": 0.964762649171564,
+      "2": 0.9651147322977752,
+      "3": 0.9659603147468165,
+      "4": 0.9650145045129621
+    },
+    "candidate_fold_aucs": {
+      "0": 0.9672203131366359,
+      "1": 0.9680188024384244,
+      "2": 0.9681674547178175,
+      "3": 0.9685641371814087,
+      "4": 0.9678273957022933
+    },
+    "fold_deltas": {
+      "0": 0.003014049718619738,
+      "1": 0.003256153266860462,
+      "2": 0.0030527224200422864,
+      "3": 0.002603822434592118,
+      "4": 0.002812891189331146
+    },
+    "fold_wins": 5,
+    "fold_total": 5,
+    "spearman_baseline_candidate": 0.9825035989621193,
+    "passed": true
+  },
+  "baseline_reproduction": {
+    "status": "recorded",
+    "recorded": {
+      "run_id": "2142b26c2d304307bb0c2717b803d643",
+      "experiment": "exp168_issue413_lgb_no_te_fixed20",
+      "seeds": [
+        42,
+        43,
+        44
+      ],
+      "auc_oof": 0.9650884319322799,
+      "seed_aucs": {
+        "42": 0.9650097959208153,
+        "43": 0.964979913887746,
+        "44": 0.9650178810064242
+      },
+      "fold_aucs": {
+        "0": 0.9643063119037034,
+        "1": 0.9648127735067871,
+        "2": 0.9652071321526317,
+        "3": 0.9660334458672333,
+        "4": 0.9650898914616252
+      },
+      "git_commit": "a899c3d33cf1dd92262b23d89dae10cd0f7890b2",
+      "git_dirty": false,
+      "input_sha256": {
+        "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+        "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+        "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+      },
+      "runtime_identity": {
+        "provider": "kaggle",
+        "runtime_class": "not_recorded",
+        "record_complete": false
+      }
+    },
+    "recorded_seed42_auc": 0.9650097959208153,
+    "local_seed42_auc": 0.9650097959208153,
+    "local_minus_recorded": 0.0,
+    "spearman_local_recorded": 1.0,
+    "max_abs_pred_diff": 0.0,
+    "recorded_seed42_oof_sha256": "6f609ab076d4a9533297c46817c82fd8b8a5dc600a9e8c656fca1beef0b82224"
+  },
+  "first_stage": {
+    "artifact_sha256": "f639a73ef392b43ba82de85dd4353d068f5ea1b286a062933467f3e238ec6971",
+    "schema_version": 1,
+    "kind": "nested_logistic_onehot",
+    "entry_count": 5,
+    "by_seed": {
+      "42": {
+        "outer_folds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "inner_oof_auc": [
+          0.959640074158795,
+          0.9594748379810123,
+          0.9592811284458506,
+          0.9593102573687544,
+          0.9595461155853271
+        ],
+        "validation_first_stage_auc": [
+          0.9590474567794414,
+          0.9595314535423802,
+          0.9600266586220303,
+          0.9602714132862911,
+          0.9592817457594841
+        ],
+        "training_logit_range": [
+          [
+            -11.978730436590215,
+            13.815509557935018
+          ],
+          [
+            -12.30353981627591,
+            13.815509557935018
+          ],
+          [
+            -10.538070837116656,
+            13.815509557935018
+          ],
+          [
+            -11.291330671758086,
+            13.815509557935018
+          ],
+          [
+            -12.170361357671917,
+            13.815509557935018
+          ]
+        ],
+        "validation_logit_range": [
+          [
+            -10.439420373794542,
+            13.815509557935018
+          ],
+          [
+            -9.66266010308593,
+            13.815509557935018
+          ],
+          [
+            -11.532050715371135,
+            13.815509557935018
+          ],
+          [
+            -9.640408302301985,
+            13.815509557935018
+          ],
+          [
+            -9.595063848767687,
+            13.815509557935018
+          ]
+        ],
+        "test_logit_range": [
+          [
+            -11.41693656774351,
+            13.815509557935018
+          ],
+          [
+            -10.444784526850487,
+            13.815509557935018
+          ],
+          [
+            -10.389977397901951,
+            13.815509557935018
+          ],
+          [
+            -10.554861103200075,
+            13.815509557935018
+          ],
+          [
+            -10.22793717915712,
+            13.815509557935018
+          ]
+        ],
+        "full_fit_iterations": [
+          226,
+          180,
+          160,
+          173,
+          184
+        ],
+        "inner_fit_iterations_max": [
+          208,
+          207,
+          191,
+          212,
+          207
+        ],
+        "n_features": [
+          5413,
+          5414,
+          5412,
+          5412,
+          5412
+        ],
+        "coordinate_sha256": [
+          "242bbce586bf17d63528c7fe9bdcce4cbcfddc0e1946e38ef73ece1248be8592",
+          "73b74027e019cd293c43d42456b3969ccb0b3fb6cfc1ab18988269b6b7866bf7",
+          "3567330b8e4f7a9226ee4dfdcb2a0e04f40122723eedf2add202457eefe6a95d",
+          "ec307d250f294d836d29a3c02b1f8c201a5686525f7243c919703697fc9526ce",
+          "f3a77ea43eef9863b80399d84eafbfd735e73eeb087370acf3015453b339681b"
+        ]
+      }
+    }
+  },
+  "entry_and_duplicate": {
+    "candidate_prediction_basis": "seed42",
+    "champion": {
+      "config": "exp156_lookup_bivariate_plr5_initavg8",
+      "run_id": "6911a461866b43dc9556553eba6783b7",
+      "auc_oof": 0.9693676105620948
+    },
+    "entry_floor_margin": 0.01,
+    "entry_floor": 0.9593676105620947,
+    "candidate_entry_auc": 0.9679572766833211,
+    "entry_floor_passed": true,
+    "duplicate_spearman_threshold": 0.998,
+    "nearest_pool_member": {
+      "config": "exp209_issue505_lgb_lr_onehot_init",
+      "run_id": "8b4111a9a93147caa6b9012e49456474",
+      "lineage_group": "issue505",
+      "spearman_seed_average": 0.9984268362152411,
+      "spearman_seed42": 0.9984268362152411
+    },
+    "nearest_is_duplicate": true,
+    "nearest_is_atomic_replacement_lineage": true,
+    "top5": [
+      {
+        "config": "exp209_issue505_lgb_lr_onehot_init",
+        "run_id": "8b4111a9a93147caa6b9012e49456474",
+        "lineage_group": "issue505",
+        "spearman_seed_average": 0.9984268362152411,
+        "spearman_seed42": 0.9984268362152411
+      },
+      {
+        "config": "exp135_xgb_hpo_trial30",
+        "run_id": "119b9c4e44674d38a6f758b65a68593e",
+        "lineage_group": null,
+        "spearman_seed_average": 0.9912982095045253,
+        "spearman_seed42": 0.9912982095045253
+      },
+      {
+        "config": "exp208_issue500_ag25_missingness_augmented",
+        "run_id": "e46d1ca38e0746209e049970d3dd2ab6",
+        "lineage_group": "exp117_ag25_gbm_r21",
+        "spearman_seed_average": 0.9911813684989639,
+        "spearman_seed42": 0.9911813684989639
+      },
+      {
+        "config": "mpv1_exp070_cat_exact_cats_missingness_augmented",
+        "run_id": "4fd10d9fc1324583a023552acc2cf77f",
+        "lineage_group": null,
+        "spearman_seed_average": 0.9894672127564207,
+        "spearman_seed42": 0.9894672127564207
+      },
+      {
+        "config": "exp027_recon_ce",
+        "run_id": "e4e81bdce7df4a72bf250ef842fd8781",
+        "lineage_group": null,
+        "spearman_seed_average": 0.9894512455670021,
+        "spearman_seed42": 0.9894512455670021
+      }
+    ],
+    "pool_member_count": 36
+  },
+  "preliminary_route": {
+    "route": "atomic_replacement",
+    "eligible_for_pool_judgment": true,
+    "reason": "최근접 구성원이 중복 문턱 이상의 초기 점수 계보다.",
+    "replacement_target_run_id": "8b4111a9a93147caa6b9012e49456474"
+  },
+  "candidate_pool_v2": {
+    "status": "pending",
+    "reference_contribution_positive": null,
+    "record": null
+  },
+  "decision": {
+    "state": "screen_passed",
+    "next_action": "run_confirm_seeds_42_43_44",
+    "reason": "최근접 구성원이 중복 문턱 이상의 초기 점수 계보다."
+  },
+  "artifact_hashes": {
+    "baseline": {
+      "exp168_issue413_lgb_no_te_fixed20.yaml": "9d55c1dc8579031ad6a598c7fec8bc19fd7e073566979292ea73fcab539526a1",
+      "oof.parquet": "6f609ab076d4a9533297c46817c82fd8b8a5dc600a9e8c656fca1beef0b82224",
+      "test_pred.parquet": "71d72c5de641137a01aaa25e72c9d5f82ec64fefd2f9edb21c1c3c0375d65bcb",
+      "submission.csv": "1628fd604942004d6e9826c05869f8761483cd407843f202cd75f6a961be9387",
+      "oof_seed_42.parquet": "6f609ab076d4a9533297c46817c82fd8b8a5dc600a9e8c656fca1beef0b82224"
+    },
+    "candidate": {
+      "exp212_issue520_lgb_fixed20_lr_onehot_init.yaml": "f7bb014d0ebc69627cc9601fd483ac1eac6f4ff7f9849ccc9bee01511b5d7add",
+      "oof.parquet": "6c2a135c743ebc8a242486805bb317a1da05ce069845b2ee259e7a4e3e19105a",
+      "test_pred.parquet": "94294e0703d0fa7ef2d3629bcf3bda9d3a79d064f6bd5865ec0ff0f24e7d6e36",
+      "submission.csv": "2760f12efa521cc2128280b5c8faef5695aded71f350e37b4e16967c00399622",
+      "oof_seed_42.parquet": "6c2a135c743ebc8a242486805bb317a1da05ce069845b2ee259e7a4e3e19105a",
+      "initial_score_evidence.json": "f639a73ef392b43ba82de85dd4353d068f5ea1b286a062933467f3e238ec6971"
+    }
+  },
+  "public_score_used": false,
+  "final_rank_used": false,
+  "record_sha256": "8ae8a50b9d192617e24ca8a72a3f1abb90a225d4ad19d106d829e191cca8766a"
+}

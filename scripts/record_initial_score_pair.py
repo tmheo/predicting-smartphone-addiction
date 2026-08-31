@@ -200,6 +200,7 @@ def _run_identity(
     frozen: Mapping[str, Any],
     *,
     initial_score_required: bool,
+    require_complete_runtime_identity: bool = True,
 ) -> tuple[Any, dict[str, Any]]:
     facts = load_run_facts(run_id, store)
     meta = store.facts_of(run_id)
@@ -233,14 +234,22 @@ def _run_identity(
     _require(all(input_hashes.values()), f"실행 {run_id}의 필수 입력 해시가 빠졌다.")
     provider = meta.tags.get("remote.provider")
     runtime_class = meta.tags.get("remote.runtime_class")
-    _require(
-        (provider is None) == (runtime_class is None),
-        f"실행 {run_id}의 원격 공급자와 실행 환경 등급 기록이 비대칭이다.",
-    )
-    runtime_identity = {
-        "provider": provider or "local",
-        "runtime_class": runtime_class or "local",
-    }
+    runtime_record_complete = (provider is None) == (runtime_class is None)
+    if require_complete_runtime_identity:
+        _require(
+            runtime_record_complete,
+            f"실행 {run_id}의 원격 공급자와 실행 환경 등급 기록이 비대칭이다.",
+        )
+        runtime_identity = {
+            "provider": provider or "local",
+            "runtime_class": runtime_class or "local",
+        }
+    else:
+        runtime_identity = {
+            "provider": provider or ("not_recorded" if runtime_class else "local"),
+            "runtime_class": runtime_class or ("not_recorded" if provider else "local"),
+            "record_complete": runtime_record_complete,
+        }
     return facts, {
         "run_id": run_id,
         "experiment": facts.experiment,
@@ -368,6 +377,7 @@ def _baseline_reproduction(
         recorded_run_id,
         baseline_frozen,
         initial_score_required=False,
+        require_complete_runtime_identity=False,
     )
     _require(42 in recorded_facts.seed_aucs, "기록된 기준 실행에 seed 42 OOF가 없다.")
     recorded = _seed_oof(store, recorded_run_id, 42).reindex(local.index)
