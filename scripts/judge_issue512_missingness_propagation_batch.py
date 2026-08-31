@@ -4,6 +4,8 @@
 변경 불가 입력 묶음으로 만든다.
 현재 공식 풀의 중복 위반을 허용된 원자 교체로 해소할 수 없는 경우에는 검색과
 후속 관문을 시작하지 않고 두 공식 장부 유지 판정을 기록한다.
+제안이 두 OOF 관문을 통과하면 제안 풀과 재학습 계획의 정적 준비 상태만 검증하며,
+모델 학습과 시험 예측 생성은 후속 생산 단계로 넘긴다.
 """
 
 from __future__ import annotations
@@ -24,7 +26,6 @@ import yaml
 from sklearn.metrics import roc_auc_score
 
 from pipeline import ensemble as ensemble_module
-from pipeline import refit as refit_module
 from pipeline.data import ID, TARGET, file_sha256
 from pipeline.ledger import Pool
 from pipeline.missingness_propagation_batch import (
@@ -63,7 +64,7 @@ SCORE_CACHE_NAME = "search-score-cache.json"
 CONDITIONAL_NAME = "conditional-gate.json"
 DIRECT_NAME = "direct-nested-gate.json"
 SELECTION_NAME = "selection-evidence.json"
-REFIT_REHEARSAL_NAME = "full-refit-rehearsal.json"
+REFIT_READINESS_NAME = "full-refit-readiness.json"
 JUDGMENT_NAME = "judgment.json"
 REPORT_NAME = "report.md"
 MANIFEST_NAME = "manifest.sha256"
@@ -1558,9 +1559,8 @@ def _structured_refit_plan_member(
     }
 
 
-def _refit_rehearsal(
+def _refit_readiness(
     *,
-    source_root: Path,
     precommit: dict[str, Any],
     search: dict[str, Any],
     selection: dict[str, Any],
@@ -1579,18 +1579,17 @@ def _refit_rehearsal(
         for pair in precommit["pairs"]
         if int(pair["ordinal"]) in selected_ordinals
     }
-    results: list[dict[str, Any]] = []
-    with tempfile.TemporaryDirectory(prefix="issue512-refit-rehearsal-") as directory:
+    members: list[dict[str, Any]] = []
+    with tempfile.TemporaryDirectory(prefix="issue512-refit-readiness-") as directory:
         root = Path(directory)
         pool_path = root / "pool.yaml"
         plan_path = root / "full-refit-plan.yaml"
-        output = root / "predictions"
         _write_yaml(pool_path, proposal_pool)
         _write_yaml(plan_path, proposal_plan)
         proposal_pool_sha256 = file_sha256(pool_path)
         _require(
             proposal_plan["source_pool_sha256"] == proposal_pool_sha256,
-            "재학습 예행 계획이 다른 후보 풀 해시를 가리킨다.",
+            "재학습 준비 계획이 다른 후보 풀 해시를 가리킨다.",
         )
         executable = RefitPlan.load(plan_path).validate_for_refit(
             store=store,
@@ -1600,68 +1599,42 @@ def _refit_rehearsal(
         for member in executable.members:
             if member.config not in selected_names:
                 continue
-            seed = next(iter(member.budgets))
-            prediction_path = refit_module.rehearse_member(
-                executable,
-                member,
-                output,
-                seed=seed,
-                data_root=source_root,
-            )
-            record_path = prediction_path.with_suffix(".json")
-            record = _load_json(record_path)
-            frame = pd.read_parquet(prediction_path)
-            _require(list(frame.columns) == [ID, "pred"], f"{member.config}: 시험 예측 열이 다르다.")
-            prediction = frame["pred"].to_numpy(dtype=np.float64)
-            _require(np.isfinite(prediction).all(), f"{member.config}: 시험 예측이 유한하지 않다.")
-            _require(
-                record["prediction_sha256"] == prediction_array_sha256(prediction),
-                f"{member.config}: 재학습 예행 예측 해시가 다르다.",
-            )
-            _require(
-                record["training_rows"]["coordinate_scope"] == "full_data"
-                and record["training_rows"]["assertions"]["replicas_excluded_from_state_fit"],
-                f"{member.config}: 전체 자료 학습 행 상태 경계가 다르다.",
-            )
-            planned_budget = member.budgets[seed]
-            expected_rehearsal_budget = None if planned_budget is None else 1
-            _require(
-                record.get("execution_mode") == "full_data_rehearsal"
-                and record.get("planned_training_budget") == planned_budget
-                and record.get("training_budget") == expected_rehearsal_budget,
-                f"{member.config}: 짧은 재학습 예행 예산이 다르다.",
-            )
-            results.append(
+            members.append(
                 {
                     "config": member.config,
-                    "seed": seed,
-                    "planned_training_budget": planned_budget,
-                    "rehearsal_training_budget": expected_rehearsal_budget,
-                    "rehearsal_budget_rule": record["rehearsal_budget_rule"],
+                    "config_path": str(member.config_path),
+                    "planned_budgets": {
+                        str(seed): budget for seed, budget in member.budgets.items()
+                    },
                     "member_entry_sha256": member.entry_sha256,
-                    "record_sha256": file_sha256(record_path),
-                    "prediction_sha256": record["prediction_sha256"],
-                    "prediction_rows": len(frame),
-                    "training_row_count": record["training_rows"]["training_row_count"],
-                    "state_fit_row_count": record["training_rows"]["state_fit_row_count"],
-                    "passed": True,
                 }
             )
     _require(
-        {result["config"] for result in results} == selected_names,
-        "새 결측 증강 구성원 전체의 재학습 예행이 끝나지 않았다.",
+        {member["config"] for member in members} == selected_names,
+        "새 결측 증강 구성원 전체가 검증된 재학습 계획에 들어 있지 않다.",
     )
     return self_hashed_payload(
         {
-            "schema": "missingness-propagation-batch-v1/full-refit-rehearsal/2",
+            "schema": "missingness-propagation-batch-v1/full-refit-readiness/1",
             "recorded_at_utc": recorded_at_utc,
             "selection_evidence_sha256": selection["selection_evidence_sha256"],
             "proposal_pool_sha256": proposal_plan["source_pool_sha256"],
             "selected_members": sorted(selected_names),
-            "results": results,
-            "passed": all(result["passed"] for result in results),
+            "members": members,
+            "validation_scope": [
+                "proposal_pool_and_refit_plan_hash_match",
+                "full_refit_plan_schema_and_lineage",
+                "selected_replacements_present_in_refit_plan",
+            ],
+            "model_training_executed": False,
+            "deferred_to_follow_up": "production full-data refit and prediction generation",
+            "scope_correction": {
+                "decision": "replace_issue512_model_training_with_static_readiness_validation",
+                "reason": "issue 512 selects and formalizes the OOF proposal pool; model training belongs to the follow-up production path",
+            },
+            "passed": True,
         },
-        "full_refit_rehearsal_sha256",
+        "full_refit_readiness_sha256",
     )
 
 
@@ -1700,7 +1673,7 @@ def _judgment(
     conditional: dict[str, Any],
     direct: dict[str, Any],
     selection: dict[str, Any] | None,
-    refit_rehearsal: dict[str, Any] | None,
+    refit_readiness: dict[str, Any] | None,
     runtime: dict[str, Any],
     recorded_at_utc: str,
     pool_before_sha256: str,
@@ -1708,11 +1681,15 @@ def _judgment(
 ) -> dict[str, Any]:
     _require(preflight["reachable_valid_proposal"], "유효 제안 풀에 도달할 수 없다.")
     gates_passed = bool(conditional["passed"] and direct["passed"])
-    refit_passed = bool(refit_rehearsal and refit_rehearsal["passed"])
-    formalized = gates_passed and refit_passed
+    readiness_passed = bool(refit_readiness and refit_readiness["passed"])
+    formalized = gates_passed and readiness_passed
     _require(
         (selection is not None) == gates_passed,
         "채택 관문 결과와 선택 근거 존재 여부가 다르다.",
+    )
+    _require(
+        (refit_readiness is not None) == gates_passed,
+        "채택 관문 결과와 재학습 준비 상태 존재 여부가 다르다.",
     )
     pool_after_sha256 = file_sha256(POOL_PATH)
     refit_after_sha256 = file_sha256(REFIT_PLAN_PATH)
@@ -1733,15 +1710,20 @@ def _judgment(
         failure_reasons.append("conditional_gate_not_strictly_positive")
     if not direct["passed"]:
         failure_reasons.append("direct_nested_gate_not_strictly_positive")
-    if gates_passed and not refit_passed:
-        failure_reasons.append("full_refit_rehearsal_not_passed")
+    if gates_passed and not readiness_passed:
+        failure_reasons.append("full_refit_readiness_not_passed")
     payload = self_hashed_payload(
         {
-            "schema": "missingness-propagation-batch-v1/judgment/2",
+            "schema": "missingness-propagation-batch-v1/judgment/3",
             "recorded_at_utc": recorded_at_utc,
             "issue": {"number": 512, "url": ISSUE_URL},
             "map": {"number": 506, "url": MAP_URL},
             "runtime": runtime,
+            "scope_correction": {
+                "decision": "issue512_performs_static_refit_readiness_validation_only",
+                "model_training_executed": False,
+                "deferred_work": "production full-data refit and prediction generation",
+            },
             "precommit_sha256": precommit["precommit_sha256"],
             "input_bundle_sha256": bundle["input_bundle_sha256"],
             "preflight_sha256": preflight["preflight_sha256"],
@@ -1772,13 +1754,14 @@ def _judgment(
                 "delta": direct["best_strategy_delta"],
                 "passed": direct["passed"],
             },
-            "full_refit_rehearsal": (
+            "full_refit_readiness": (
                 {
                     "status": "completed",
-                    "sha256": refit_rehearsal["full_refit_rehearsal_sha256"],
-                    "passed": refit_rehearsal["passed"],
+                    "sha256": refit_readiness["full_refit_readiness_sha256"],
+                    "passed": refit_readiness["passed"],
+                    "model_training_executed": False,
                 }
-                if refit_rehearsal is not None
+                if refit_readiness is not None
                 else {"status": "not_run", "passed": False}
             ),
             "verdict": {
@@ -1820,7 +1803,7 @@ def _report(
     conditional: dict[str, Any],
     direct: dict[str, Any],
     selection: dict[str, Any] | None,
-    refit_rehearsal: dict[str, Any] | None,
+    refit_readiness: dict[str, Any] | None,
     judgment: dict[str, Any],
 ) -> str:
     corrected = [
@@ -1848,7 +1831,7 @@ def _report(
         "## 결론",
         "",
         (
-            "교정 실행을 포함한 정확 검색의 제안이 두 OOF 관문과 전체 자료 재학습 예행을 모두 통과해 후보 풀과 전체 자료 재학습 계획을 함께 바꿨다."
+            "교정 실행을 포함한 정확 검색의 제안이 두 OOF 관문과 재학습 계획의 정적 준비 상태 검증을 통과해 후보 풀과 전체 자료 재학습 계획을 함께 바꿨다."
             if formalized
             else "교정 실행을 포함한 정확 검색은 유효 제안 풀을 만들었지만 필수 후속 관문 가운데 하나 이상을 통과하지 못해 후보 풀과 전체 자료 재학습 계획을 유지했다."
         ),
@@ -1883,22 +1866,22 @@ def _report(
         f"현재 풀의 최선 방식은 `{direct['current']['best_strategy']}`, 제안 풀의 최선 방식은 `{direct['proposal']['best_strategy']}`다.",
         f"직접 중첩 비교의 바깥 분할 승수는 `{direct['diagnostics']['outer_fold_wins']}/5`다.",
         "",
-        "## 전체 자료 재학습 예행",
+        "## 재학습 준비 상태",
         "",
     ]
-    if refit_rehearsal is None:
-        lines.append("두 OOF 관문을 모두 통과하지 못해 전체 자료 재학습 예행은 시작하지 않았다.")
+    if refit_readiness is None:
+        lines.append("두 OOF 관문을 모두 통과하지 못해 재학습 계획의 준비 상태를 만들지 않았다.")
     else:
         lines.append(
-            f"새로 선택된 결측 증강판 {len(refit_rehearsal['results'])}개의 전체 자료 좌표에서 원본 행에만 피처 상태를 맞추고 원본과 복제본 세 블록을 사용해 첫 시드의 짧은 호환성 예행을 실행했다."
+            f"새로 선택된 결측 증강판 {len(refit_readiness['members'])}개가 제안 풀과 같은 해시의 검증된 재학습 계획에 포함되는지 정적으로 확인했다."
         )
         lines.append(
-            f"반복형 모형은 최종 재학습 예산을 실행하지 않고 한 학습 단위로 제한했으며, 모든 계보 기록과 시험 예측 해시 검증을 통과한 예행 여부는 `{str(refit_rehearsal['passed']).lower()}`다."
+            "이슈 512에서는 모델 학습과 시험 예측 생성을 실행하지 않았으며 실제 전체 자료 재학습은 후속 생산 단계로 넘겼다."
         )
         lines.extend(
             [
-                f"- `{result['config']}`: 시드 `{result['seed']}`, 계획 예산 `{result['planned_training_budget']}`, 예행 예산 `{result['rehearsal_training_budget']}`, 시험 예측 `{result['prediction_rows']}`행"
-                for result in refit_rehearsal["results"]
+                f"- `{member['config']}`: 계획 예산 `{member['planned_budgets']}`, 항목 해시 `{member['member_entry_sha256']}`"
+                for member in refit_readiness["members"]
             ]
         )
     lines.extend(
@@ -1928,8 +1911,8 @@ def _report(
                 else []
             ),
             *(
-                [f"- 전체 자료 재학습 예행: `{REFIT_REHEARSAL_NAME}` (`{refit_rehearsal['full_refit_rehearsal_sha256']}`)"]
-                if refit_rehearsal is not None
+                [f"- 재학습 준비 상태: `{REFIT_READINESS_NAME}` (`{refit_readiness['full_refit_readiness_sha256']}`)"]
+                if refit_readiness is not None
                 else []
             ),
             f"- 최종 판정: `{JUDGMENT_NAME}` (`{judgment['judgment_sha256']}`)",
@@ -1963,9 +1946,9 @@ def _verify(output_root: Path, precommit: dict[str, Any]) -> None:
         if (output_root / SELECTION_NAME).is_file()
         else None
     )
-    refit_rehearsal = (
-        _load_json(output_root / REFIT_REHEARSAL_NAME)
-        if (output_root / REFIT_REHEARSAL_NAME).is_file()
+    refit_readiness = (
+        _load_json(output_root / REFIT_READINESS_NAME)
+        if (output_root / REFIT_READINESS_NAME).is_file()
         else None
     )
     validate_input_bundle(
@@ -1980,8 +1963,8 @@ def _verify(output_root: Path, precommit: dict[str, Any]) -> None:
     verify_self_hash(direct, "direct_nested_gate_sha256")
     if selection is not None:
         verify_self_hash(selection, "selection_evidence_sha256")
-    if refit_rehearsal is not None:
-        verify_self_hash(refit_rehearsal, "full_refit_rehearsal_sha256")
+    if refit_readiness is not None:
+        verify_self_hash(refit_readiness, "full_refit_readiness_sha256")
     verify_self_hash(judgment, "judgment_sha256")
     _require(
         preflight["input_bundle_sha256"] == bundle["input_bundle_sha256"],
@@ -2006,6 +1989,10 @@ def _verify(output_root: Path, precommit: dict[str, Any]) -> None:
         (selection is not None) == gates_passed,
         "채택 관문과 선택 근거 존재 여부가 다르다.",
     )
+    _require(
+        (refit_readiness is not None) == gates_passed,
+        "채택 관문과 재학습 준비 상태 존재 여부가 다르다.",
+    )
     if selection is not None:
         _require(
             selection["search_sha256"] == search["search_sha256"]
@@ -2015,12 +2002,16 @@ def _verify(output_root: Path, precommit: dict[str, Any]) -> None:
             == direct["direct_nested_gate_sha256"],
             "선택 근거가 다른 검색 또는 관문을 가리킨다.",
         )
-    if refit_rehearsal is not None:
+    if refit_readiness is not None:
         _require(
             selection is not None
-            and refit_rehearsal["selection_evidence_sha256"]
+            and refit_readiness["selection_evidence_sha256"]
             == selection["selection_evidence_sha256"],
-            "전체 자료 재학습 예행이 다른 선택 근거를 가리킨다.",
+            "재학습 준비 상태가 다른 선택 근거를 가리킨다.",
+        )
+        _require(
+            not refit_readiness["model_training_executed"],
+            "이슈 512 재학습 준비 상태에서 모델 학습을 실행했다.",
         )
     _require(
         judgment["preflight_sha256"] == preflight["preflight_sha256"]
@@ -2028,7 +2019,12 @@ def _verify(output_root: Path, precommit: dict[str, Any]) -> None:
         and judgment["conditional_gate"]["sha256"]
         == conditional["conditional_gate_sha256"]
         and judgment["direct_nested_gate"]["sha256"]
-        == direct["direct_nested_gate_sha256"],
+        == direct["direct_nested_gate_sha256"]
+        and (
+            refit_readiness is None
+            or judgment["full_refit_readiness"]["sha256"]
+            == refit_readiness["full_refit_readiness_sha256"]
+        ),
         "최종 판정이 다른 입력, 검색 또는 관문을 가리킨다.",
     )
     for ledger in judgment["official_ledgers"].values():
@@ -2151,7 +2147,7 @@ def main() -> None:
     pool_before_sha256 = file_sha256(POOL_PATH)
     refit_before_sha256 = file_sha256(REFIT_PLAN_PATH)
     selection = None
-    refit_rehearsal = None
+    refit_readiness = None
     if conditional["passed"] and direct["passed"]:
         selection = _selection_evidence(
             precommit=precommit,
@@ -2187,8 +2183,7 @@ def main() -> None:
             store=store,
             proposal_pool_sha256=proposal_pool_sha256,
         )
-        refit_rehearsal = _refit_rehearsal(
-            source_root=source_root,
+        refit_readiness = _refit_readiness(
             precommit=precommit,
             search=search,
             selection=selection,
@@ -2197,7 +2192,7 @@ def main() -> None:
             store=store,
             recorded_at_utc=recorded_at_utc,
         )
-        if refit_rehearsal["passed"]:
+        if refit_readiness["passed"]:
             _formalize_ledgers(
                 proposal_pool=proposal_pool,
                 proposal_plan=proposal_plan,
@@ -2210,7 +2205,7 @@ def main() -> None:
         conditional=conditional,
         direct=direct,
         selection=selection,
-        refit_rehearsal=refit_rehearsal,
+        refit_readiness=refit_readiness,
         runtime=runtime,
         recorded_at_utc=recorded_at_utc,
         pool_before_sha256=pool_before_sha256,
@@ -2223,12 +2218,16 @@ def main() -> None:
     (output_root / SCORE_CACHE_NAME).write_bytes(score_cache_path.read_bytes())
     _write_json(output_root / CONDITIONAL_NAME, conditional)
     _write_json(output_root / DIRECT_NAME, direct)
-    for optional_name in (SELECTION_NAME, REFIT_REHEARSAL_NAME):
+    for optional_name in (
+        SELECTION_NAME,
+        REFIT_READINESS_NAME,
+        "full-refit-rehearsal.json",
+    ):
         (output_root / optional_name).unlink(missing_ok=True)
     if selection is not None:
         _write_json(output_root / SELECTION_NAME, selection)
-    if refit_rehearsal is not None:
-        _write_json(output_root / REFIT_REHEARSAL_NAME, refit_rehearsal)
+    if refit_readiness is not None:
+        _write_json(output_root / REFIT_READINESS_NAME, refit_readiness)
     _write_json(output_root / JUDGMENT_NAME, judgment)
     (output_root / REPORT_NAME).write_text(
         _report(
@@ -2238,7 +2237,7 @@ def main() -> None:
             conditional,
             direct,
             selection,
-            refit_rehearsal,
+            refit_readiness,
             judgment,
         ),
         encoding="utf-8",
