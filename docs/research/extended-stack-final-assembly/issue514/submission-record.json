@@ -1,0 +1,75 @@
+{
+  "schema": "issue514-final-submission-record/1",
+  "issue": 514,
+  "git_commit": "43045c1fabce9f35ebf86c4edf7900a4253f30fe",
+  "full_refit": {
+    "scope": "entire_training_dataset",
+    "member_count": 36,
+    "reused_unchanged_members": 29,
+    "newly_trained_members": 7,
+    "pool_sha256": "40947563a00cab8212498c7e339517e387979b14c6477c6ce8e196036e02044c",
+    "plan_sha256": "89edf321b1821f1de645799f2353705c461065a275263375d5479e3edd6b006c",
+    "manifest_sha256": "6d109f4e20f4929a26af11eedb13c8748f9ea31a1bbcb42092e5709d3aa42553"
+  },
+  "assembly": {
+    "fresh_process_count": 2,
+    "byte_identical": true,
+    "manifest_sha256": "7f3179e577748dda1ea5b36a498d07a7a01a9b120f8e00e64a10099502e51495",
+    "checksum_file_sha256": "e324b3f333868a12952b0bfc803e37f1be61fce6703b5c8aa06095ab353b165d"
+  },
+  "candidates": {
+    "pool36_full": {
+      "member_count": 36,
+      "strategy": "shrunk_rank_logit_logistic",
+      "selected_lambda": 1.0,
+      "nested_oof_auc": 0.9698828758140019,
+      "submission_path": "artifacts/submissions/issue514-pool36-full.csv",
+      "submission_sha256": "5c41f1b8a3780e034fc79fcdaff055924737ef8ce390c289d09b3920aeed6f67",
+      "mlflow_run_id": "223055f44dc9427da588a141bc3b1ca3",
+      "kaggle_submission_ref": 55907601,
+      "public_auc": 0.97101
+    },
+    "extended314_own_full": {
+      "member_count": 314,
+      "own_member_count": 36,
+      "external_member_count": 278,
+      "strategy": "c_selected_shrunk_rank_logit_logistic",
+      "selected_c": 0.03,
+      "selected_lambda": 1.0,
+      "nested_oof_auc": 0.9703843058098193,
+      "submission_path": "artifacts/submissions/issue514-extended314-own-full.csv",
+      "submission_sha256": "cbb0419a8b34b54ed11ece481d5927da3d98f2aa574839756eb8e965d3ecceaf",
+      "mlflow_run_id": "3279e114ef444cfeaff4232bc401d7b4",
+      "kaggle_submission_ref": 55907610,
+      "public_auc": 0.97135
+    }
+  },
+  "comparison_to_issue489_extended313": {
+    "kaggle_submission_ref": 55844886,
+    "nested_oof_auc": 0.9703608940404231,
+    "public_auc": 0.97135,
+    "issue514_oof_delta": 0.0000234117693961311,
+    "public_auc_delta": 0.0,
+    "test_prediction_spearman": 0.9993173362920516,
+    "absolute_rank_change_mean": 2168.7611,
+    "absolute_rank_change_median": 1433.0,
+    "absolute_rank_change_p95": 6938.95,
+    "absolute_rank_change_max": 27618.0,
+    "row_count": 296302,
+    "public_improvement_observed": false
+  },
+  "vast": {
+    "provider": "vastai",
+    "instance_id": 49338841,
+    "offer_id": 48328452,
+    "gpu": "RTX A4000 x4",
+    "used_gpus": 3,
+    "hourly_total_usd": 0.4377777777777778,
+    "credit_delta_usd": 0.393844836990070,
+    "successful_result_archive_sha256": "a574cf92a7452f3a7f9b3bb297b0c8806d26b928afd5396f0d93ef6183c3625c",
+    "failed_result_archive_sha256": "a4e3f5b7ba8bac10953d7217c43137973899062d704908b679258932dbd9da81",
+    "remaining_instances": 0,
+    "remaining_volumes": 0
+  },
+  "public_score_used_for_selection": false
+}
