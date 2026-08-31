@@ -1,0 +1,258 @@
+{
+  "schema_version": 1,
+  "contract_version": "initial-score-paired-v1",
+  "frozen_at_utc": "2026-08-31T06:09:49Z",
+  "issue": {
+    "number": 520,
+    "title": "세 후보 설정과 짝비교 판정 기록 형식을 결과 전에 동결한다",
+    "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/520"
+  },
+  "map": {
+    "number": 517,
+    "title": "지도: 목표 평균 인코딩이 없는 트리 구성원에 정확값 선형 OOF 로짓 초기 점수를 확장한다",
+    "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/517"
+  },
+  "source_commit_before_freeze": "abf475de9bef0ab4424bbbd0c261ec1095a69ce4",
+  "prediction_values_read_while_freezing": false,
+  "inputs": {
+    "folds": {
+      "path": "artifacts/folds.parquet",
+      "sha256": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+      "role": "고정 바깥쪽 5분할과 행 순서"
+    },
+    "candidate_pool_at_freeze": {
+      "path": "artifacts/pool.yaml",
+      "sha256": "40947563a00cab8212498c7e339517e387979b14c6477c6ce8e196036e02044c"
+    },
+    "champion_at_freeze": {
+      "path": "artifacts/champion.yaml",
+      "sha256": "aa012114107c06532cf51c0fa9c741f5949146428cf266cf4bedded783d20e09"
+    }
+  },
+  "initial_score_coordinate": {
+    "value": {
+      "config": {
+        "kind": "nested_logistic_onehot",
+        "params": {
+          "cols": [
+            "age",
+            "gender",
+            "daily_screen_time_hours",
+            "social_media_hours",
+            "gaming_hours",
+            "work_study_hours",
+            "sleep_hours",
+            "notifications_per_day",
+            "app_opens_per_day",
+            "weekend_screen_time",
+            "stress_level",
+            "academic_work_impact"
+          ],
+          "categorical": [
+            "gender",
+            "stress_level",
+            "academic_work_impact"
+          ],
+          "C": 100.0,
+          "max_iter": 3000,
+          "onehot_max_card": 5000,
+          "inner_splits": 10,
+          "clip": 1e-06
+        }
+      },
+      "effective_logistic_defaults": {
+        "penalty": "l2",
+        "solver": "lbfgs"
+      },
+      "input_scope": "raw 12 columns only",
+      "excluded_inputs": [
+        "placebo_noise",
+        "categorical_copies outputs",
+        "xgb_impute_aux outputs",
+        "constrained_impute_aux outputs",
+        "all other feature-provider outputs"
+      ],
+      "tree_input_includes_logistic_prediction": false
+    },
+    "sha256": "5ceef1c830d6e68c754ff918af682c2b3657d57e8599e71087b4b0d868a64a02"
+  },
+  "execution_order": [
+    "catboost",
+    "xgboost",
+    "lightgbm_fixed20"
+  ],
+  "pairs": [
+    {
+      "ordinal": 1,
+      "key": "catboost",
+      "model_kind": "catboost",
+      "baseline": {
+        "name": "exp071_cat_exact_no_te",
+        "path": "configs/exp071_cat_exact_no_te.yaml",
+        "sha256": "888484ca2434466cf48e2a03a0260cfa994de7dabfb47c8bd10a93961d39b616",
+        "semantic_sha256": "3b8a948c94827394b7b08269e95873e7235264ec23babf04570e15b9a9d38192"
+      },
+      "candidate": {
+        "name": "exp210_issue520_cat_lr_onehot_init",
+        "path": "configs/exp210_issue520_cat_lr_onehot_init.yaml",
+        "sha256": "13393e0b3c79c4151ce29e0b9cd3de35be0bc4389b5a66b737542d9d09a325db",
+        "semantic_sha256": "4e89361198004b9e546f4f5bd172be68bb2b9798817b4b0f8f904bd2bd32af36"
+      },
+      "allowed_semantic_difference": [
+        {
+          "operation": "replace",
+          "path": "/name"
+        },
+        {
+          "operation": "add",
+          "path": "/initial_score"
+        }
+      ],
+      "common_config_semantic_sha256": "591a0ab430742c99352f698f90e4ebc8eb6f9df761a98c7f7a690be1bfd31039"
+    },
+    {
+      "ordinal": 2,
+      "key": "xgboost",
+      "model_kind": "xgboost",
+      "baseline": {
+        "name": "exp111_xgb_depth8_no_te",
+        "path": "configs/exp111_xgb_depth8_no_te.yaml",
+        "sha256": "b6adfccb792cd02f8e360f7ae5bd6328fd4d417ae14e8d2beb3bb893674e8bc3",
+        "semantic_sha256": "3e32f7eb20e5d039afc871e9ef8540d2ad21d37811c09d052bc7fbadf4501743"
+      },
+      "candidate": {
+        "name": "exp211_issue520_xgb_lr_onehot_init",
+        "path": "configs/exp211_issue520_xgb_lr_onehot_init.yaml",
+        "sha256": "468002d7567fb86c3fba41e9c2adb4cd41cc454358182eec19504ec10d5d60d0",
+        "semantic_sha256": "76d3a79a80eea29b5810f816a20cac5d6055841f7b7785a7f7d2c8f3f59e56c8"
+      },
+      "allowed_semantic_difference": [
+        {
+          "operation": "replace",
+          "path": "/name"
+        },
+        {
+          "operation": "add",
+          "path": "/initial_score"
+        }
+      ],
+      "common_config_semantic_sha256": "8155d4fcce1f42291d6a3780862d93b6b163497ac376d204e9f844688fed5fb0"
+    },
+    {
+      "ordinal": 3,
+      "key": "lightgbm_fixed20",
+      "model_kind": "lightgbm",
+      "baseline": {
+        "name": "exp168_issue413_lgb_no_te_fixed20",
+        "path": "configs/exp168_issue413_lgb_no_te_fixed20.yaml",
+        "sha256": "9d55c1dc8579031ad6a598c7fec8bc19fd7e073566979292ea73fcab539526a1",
+        "semantic_sha256": "d3d53b504d217557165ae91d956f5759697d740c3117fcaa4d8c9f03d8aaade7"
+      },
+      "candidate": {
+        "name": "exp212_issue520_lgb_fixed20_lr_onehot_init",
+        "path": "configs/exp212_issue520_lgb_fixed20_lr_onehot_init.yaml",
+        "sha256": "f7bb014d0ebc69627cc9601fd483ac1eac6f4ff7f9849ccc9bee01511b5d7add",
+        "semantic_sha256": "74ea6436ba3514b8a547de5b7439e4c75f1217846c84bf252ce2c97051be486c"
+      },
+      "allowed_semantic_difference": [
+        {
+          "operation": "replace",
+          "path": "/name"
+        },
+        {
+          "operation": "add",
+          "path": "/initial_score"
+        }
+      ],
+      "common_config_semantic_sha256": "61b62e9dc71f0bab5579cbc8727622b5efe99efd0294b1ce44741078e1be82b3"
+    }
+  ],
+  "pair_manifest_sha256": "8d87d0a73022798d8fc935f09cf05fae04712636a465446fa587f19d091c3365",
+  "execution_contract": {
+    "screen_seed": 42,
+    "confirmation_seeds": [
+      42,
+      43,
+      44
+    ],
+    "outer_folds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "same_commit_within_pair": true,
+    "same_provider_and_runtime_class_within_pair": true,
+    "clean_git_state": true,
+    "input_hashes_must_match_within_pair": [
+      "train",
+      "test",
+      "folds"
+    ],
+    "candidate_config_artifact_must_match_frozen_sha256": true,
+    "baseline_config_artifact_must_match_frozen_sha256": true,
+    "catboost_local_cpu_timeout_seconds": 10800,
+    "formal_candidate_training_in_this_ticket": false
+  },
+  "judgment_contract": {
+    "entry_floor_margin": 0.01,
+    "duplicate_spearman_threshold": 0.998,
+    "general_admission": {
+      "required": [
+        "seed42_candidate_minus_baseline_auc > 0",
+        "candidate_auc >= champion_auc - entry_floor_margin",
+        "nearest_pool_member_spearman < duplicate_spearman_threshold",
+        "candidate-pool-v2 core-combiner admission delta > 0"
+      ],
+      "action": "candidate-pool-v2 admission"
+    },
+    "atomic_replacement": {
+      "trigger": [
+        "nearest_pool_member_spearman >= duplicate_spearman_threshold",
+        "nearest member is exp209_issue505_lgb_lr_onehot_init or has lineage group issue505 or issue517-initial-score-extension"
+      ],
+      "required": [
+        "seed42_candidate_minus_baseline_auc > 0",
+        "candidate_auc >= champion_auc - entry_floor_margin",
+        "candidate-pool-v2 core-combiner replacement delta > 0"
+      ],
+      "action": "replace exactly the nearest lineage member"
+    },
+    "candidate_pool_contract_version": "candidate-pool-v2",
+    "candidate_pool_combiner_scope": "core",
+    "serial_registration": true,
+    "public_score_used": false,
+    "final_rank_used": false,
+    "result_driven_coordinate_changes_allowed": false
+  },
+  "result_record_contract": {
+    "script": "scripts/record_initial_score_pair.py",
+    "schema_version": 1,
+    "required_sections": [
+      "frozen_contract",
+      "execution_identity",
+      "baseline",
+      "candidate",
+      "seed42_pairwise",
+      "baseline_reproduction",
+      "first_stage",
+      "entry_and_duplicate",
+      "candidate_pool_v2",
+      "decision",
+      "artifact_hashes",
+      "record_sha256"
+    ]
+  },
+  "code": {
+    "freeze_script": {
+      "path": "scripts/freeze_issue520_initial_score_candidates.py",
+      "sha256": "4fac86240574fb3d7dd7cf19413fd630b5dfebb2c2a347b6af0252ce64362eec"
+    },
+    "pair_recorder": {
+      "path": "scripts/record_initial_score_pair.py",
+      "sha256": "4548b73cbe4f27c9c075deeeee77f4b3decf03f992f1ca101be75066034c6b46"
+    }
+  },
+  "precommit_sha256": "f3a5983d3473d40b320327384c0e15d3592617b9a6c3d1237f15e429a374ad94"
+}

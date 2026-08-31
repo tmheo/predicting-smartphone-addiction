@@ -1,0 +1,79 @@
+# 규약: 실험 하나 = 설정 파일 하나. 파일 이름이 곧 실험 이름의 접두어.
+# 이슈 #520: exp168_issue413_lgb_no_te_fixed20의 자료, 피처 계획, LightGBM 설정과
+# 빈 fit 블록을 그대로 두고 정확값 one-hot L2 로지스틱 회귀의 내부 OOF 로짓 초기
+# 점수만 더한다. 고정 반복 수 913은 다시 고르지 않는다.
+# 초기 점수 입력은 raw 12열이며 constrained_impute_aux 출력과 플라시보 잡음 열은
+# 포함하지 않는다.
+# 로지스틱 좌표는 C=100, L2, lbfgs, max_iter=3000, onehot_max_card=5000,
+# inner_splits=10, clip=1e-6으로 결과 확인 전에 고정했다.
+
+name: exp212_issue520_lgb_fixed20_lr_onehot_init
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+
+features:
+  base: raw
+  categorical: [gender, stress_level, academic_work_impact]
+  providers:
+    - kind: derived
+      names: [other_screen, screen_slack]
+    - kind: constrained_impute_aux
+      widths: false
+      cols:
+        [
+          age,
+          daily_screen_time_hours,
+          social_media_hours,
+          gaming_hours,
+          work_study_hours,
+          sleep_hours,
+          notifications_per_day,
+          app_opens_per_day,
+          weekend_screen_time,
+        ]
+
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.03172214617330919
+    num_leaves: 45
+    min_child_samples: 229
+    n_estimators: 913
+    max_bin: 1023
+    colsample_bytree: 0.4654152088234655
+    subsample: 0.9225106784455195
+    subsample_freq: 1
+    reg_lambda: 0.9179636700368584
+    force_row_wise: true
+  fit: {}
+
+initial_score:
+  kind: nested_logistic_onehot
+  params:
+    cols:
+      [
+        age,
+        gender,
+        daily_screen_time_hours,
+        social_media_hours,
+        gaming_hours,
+        work_study_hours,
+        sleep_hours,
+        notifications_per_day,
+        app_opens_per_day,
+        weekend_screen_time,
+        stress_level,
+        academic_work_impact,
+      ]
+    categorical: [gender, stress_level, academic_work_impact]
+    C: 100.0
+    max_iter: 3000
+    onehot_max_card: 5000
+    inner_splits: 10
+    clip: 1.0e-6
