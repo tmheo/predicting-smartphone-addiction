@@ -1,0 +1,346 @@
+{
+ "schema": "extended-stack-pool-reassembly/1",
+ "precommit_sha256": "505bc6af98e86609b2d5d3263182125211ddd000eb07a881af16934f14530341",
+ "sealed_fold": 4,
+ "strategy": "c_selected_shrunk_rank_logit_logistic",
+ "member_count": 314,
+ "rows": 138273,
+ "auc": 0.9701340913545267,
+ "selected_c": 0.03,
+ "selected_lambda": 1.0,
+ "selected_inner_auc": 0.9704191814670787,
+ "selection_aucs": [
+  {
+   "c": 0.001,
+   "lambda": 0.25,
+   "auc": 0.9687452649343218
+  },
+  {
+   "c": 0.001,
+   "lambda": 0.5,
+   "auc": 0.9695264535569756
+  },
+  {
+   "c": 0.001,
+   "lambda": 0.75,
+   "auc": 0.97001492802671
+  },
+  {
+   "c": 0.001,
+   "lambda": 1.0,
+   "auc": 0.9702238119260085
+  },
+  {
+   "c": 0.003,
+   "lambda": 0.25,
+   "auc": 0.9688118781173423
+  },
+  {
+   "c": 0.003,
+   "lambda": 0.5,
+   "auc": 0.9696341167622842
+  },
+  {
+   "c": 0.003,
+   "lambda": 0.75,
+   "auc": 0.9701385602242292
+  },
+  {
+   "c": 0.003,
+   "lambda": 1.0,
+   "auc": 0.9703396663177095
+  },
+  {
+   "c": 0.01,
+   "lambda": 0.25,
+   "auc": 0.9688742445656128
+  },
+  {
+   "c": 0.01,
+   "lambda": 0.5,
+   "auc": 0.9697286156869005
+  },
+  {
+   "c": 0.01,
+   "lambda": 0.75,
+   "auc": 0.9702358965743338
+  },
+  {
+   "c": 0.01,
+   "lambda": 1.0,
+   "auc": 0.9704120479504506
+  },
+  {
+   "c": 0.03,
+   "lambda": 0.25,
+   "auc": 0.9689028561038174
+  },
+  {
+   "c": 0.03,
+   "lambda": 0.5,
+   "auc": 0.9697675405697406
+  },
+  {
+   "c": 0.03,
+   "lambda": 0.75,
+   "auc": 0.9702675450884866
+  },
+  {
+   "c": 0.03,
+   "lambda": 1.0,
+   "auc": 0.9704191814670787
+  },
+  {
+   "c": 0.1,
+   "lambda": 0.25,
+   "auc": 0.9689203251655452
+  },
+  {
+   "c": 0.1,
+   "lambda": 0.5,
+   "auc": 0.9697892829433461
+  },
+  {
+   "c": 0.1,
+   "lambda": 0.75,
+   "auc": 0.9702806983482338
+  },
+  {
+   "c": 0.1,
+   "lambda": 1.0,
+   "auc": 0.9704119908635422
+  },
+  {
+   "c": 0.3,
+   "lambda": 0.25,
+   "auc": 0.9689255157451078
+  },
+  {
+   "c": 0.3,
+   "lambda": 0.5,
+   "auc": 0.9697942317994959
+  },
+  {
+   "c": 0.3,
+   "lambda": 0.75,
+   "auc": 0.9702804693345868
+  },
+  {
+   "c": 0.3,
+   "lambda": 1.0,
+   "auc": 0.9704020191761242
+  },
+  {
+   "c": 1.0,
+   "lambda": 0.25,
+   "auc": 0.9689288944496315
+  },
+  {
+   "c": 1.0,
+   "lambda": 0.5,
+   "auc": 0.9697979327992605
+  },
+  {
+   "c": 1.0,
+   "lambda": 0.75,
+   "auc": 0.9702818867073744
+  },
+  {
+   "c": 1.0,
+   "lambda": 1.0,
+   "auc": 0.9703981271175779
+  }
+ ],
+ "inner_fits": [
+  {
+   "held_fold": 0,
+   "c": 0.001,
+   "iterations": 82,
+   "coefficient_l2_norm": 0.7755453337153867
+  },
+  {
+   "held_fold": 0,
+   "c": 0.003,
+   "iterations": 105,
+   "coefficient_l2_norm": 1.205975780382086
+  },
+  {
+   "held_fold": 0,
+   "c": 0.01,
+   "iterations": 146,
+   "coefficient_l2_norm": 1.8664427578565264
+  },
+  {
+   "held_fold": 0,
+   "c": 0.03,
+   "iterations": 173,
+   "coefficient_l2_norm": 2.429593558646145
+  },
+  {
+   "held_fold": 0,
+   "c": 0.1,
+   "iterations": 190,
+   "coefficient_l2_norm": 2.527433790245372
+  },
+  {
+   "held_fold": 0,
+   "c": 0.3,
+   "iterations": 207,
+   "coefficient_l2_norm": 2.89799008268055
+  },
+  {
+   "held_fold": 0,
+   "c": 1.0,
+   "iterations": 247,
+   "coefficient_l2_norm": 3.25649371572566
+  },
+  {
+   "held_fold": 1,
+   "c": 0.001,
+   "iterations": 70,
+   "coefficient_l2_norm": 0.754796690114021
+  },
+  {
+   "held_fold": 1,
+   "c": 0.003,
+   "iterations": 102,
+   "coefficient_l2_norm": 1.1473210613725247
+  },
+  {
+   "held_fold": 1,
+   "c": 0.01,
+   "iterations": 131,
+   "coefficient_l2_norm": 1.766318069843427
+  },
+  {
+   "held_fold": 1,
+   "c": 0.03,
+   "iterations": 185,
+   "coefficient_l2_norm": 2.3079738192700106
+  },
+  {
+   "held_fold": 1,
+   "c": 0.1,
+   "iterations": 213,
+   "coefficient_l2_norm": 2.7922695617875237
+  },
+  {
+   "held_fold": 1,
+   "c": 0.3,
+   "iterations": 230,
+   "coefficient_l2_norm": 3.048646844206563
+  },
+  {
+   "held_fold": 1,
+   "c": 1.0,
+   "iterations": 203,
+   "coefficient_l2_norm": 3.1443079415299797
+  },
+  {
+   "held_fold": 2,
+   "c": 0.001,
+   "iterations": 75,
+   "coefficient_l2_norm": 0.7838347487232206
+  },
+  {
+   "held_fold": 2,
+   "c": 0.003,
+   "iterations": 124,
+   "coefficient_l2_norm": 1.230166051716944
+  },
+  {
+   "held_fold": 2,
+   "c": 0.01,
+   "iterations": 122,
+   "coefficient_l2_norm": 1.7763826936539284
+  },
+  {
+   "held_fold": 2,
+   "c": 0.03,
+   "iterations": 148,
+   "coefficient_l2_norm": 2.3483406499589767
+  },
+  {
+   "held_fold": 2,
+   "c": 0.1,
+   "iterations": 207,
+   "coefficient_l2_norm": 2.7912885340659455
+  },
+  {
+   "held_fold": 2,
+   "c": 0.3,
+   "iterations": 242,
+   "coefficient_l2_norm": 3.184227066314642
+  },
+  {
+   "held_fold": 2,
+   "c": 1.0,
+   "iterations": 214,
+   "coefficient_l2_norm": 3.1760407435618845
+  },
+  {
+   "held_fold": 3,
+   "c": 0.001,
+   "iterations": 85,
+   "coefficient_l2_norm": 0.7820561075276566
+  },
+  {
+   "held_fold": 3,
+   "c": 0.003,
+   "iterations": 95,
+   "coefficient_l2_norm": 1.1438391433184254
+  },
+  {
+   "held_fold": 3,
+   "c": 0.01,
+   "iterations": 102,
+   "coefficient_l2_norm": 1.791925775829542
+  },
+  {
+   "held_fold": 3,
+   "c": 0.03,
+   "iterations": 143,
+   "coefficient_l2_norm": 2.3803150920134057
+  },
+  {
+   "held_fold": 3,
+   "c": 0.1,
+   "iterations": 207,
+   "coefficient_l2_norm": 2.8770661343931376
+  },
+  {
+   "held_fold": 3,
+   "c": 0.3,
+   "iterations": 181,
+   "coefficient_l2_norm": 3.111630266726557
+  },
+  {
+   "held_fold": 3,
+   "c": 1.0,
+   "iterations": 186,
+   "coefficient_l2_norm": 2.9818663820384503
+  }
+ ],
+ "final_iterations": 143,
+ "final_coefficient_l2_norm": 2.4755377533512064,
+ "prediction_sha256": "d1e7cf81d67e7e037a796065f8f232bec0f1d26d9c8996e4d4f0bdf7e471b514",
+ "elapsed_seconds": 684.5689442080329,
+ "peak_rss_bytes": 10685759488,
+ "environment": {
+  "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "cpu_count": 14,
+  "memory_total_bytes": 51539607552,
+  "python": "3.13.13",
+  "numpy": "2.5.2",
+  "pandas": "3.0.5",
+  "sklearn": "1.9.0",
+  "threads": {
+   "OMP_NUM_THREADS": "4",
+   "OPENBLAS_NUM_THREADS": "4",
+   "MKL_NUM_THREADS": "4",
+   "VECLIB_MAXIMUM_THREADS": "4"
+  }
+ },
+ "finished_at": "2026-08-31T02:36:58Z"
+}

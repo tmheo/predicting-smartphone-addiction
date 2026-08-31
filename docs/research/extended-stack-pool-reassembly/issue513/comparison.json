@@ -1,0 +1,151 @@
+{
+ "schema": "extended-stack-pool-reassembly/1",
+ "issue": 513,
+ "precommit_sha256": "505bc6af98e86609b2d5d3263182125211ddd000eb07a881af16934f14530341",
+ "baseline_reference_check": {
+  "ensemble_code_matches_issue489": true,
+  "runtime_lock_matches_issue489": true,
+  "composition_matches_issue489": true,
+  "strategy_matches_current_submission": true,
+  "nested_reference_matches_current_submission": true,
+  "current_submission_run_matches": true
+ },
+ "baseline": {
+  "submission_run_id": "30b6f97c30904995a79e476f02decf8f",
+  "member_count": 313,
+  "strategy": "c_selected_shrunk_rank_logit_logistic",
+  "nested_auc": 0.9703608940404231,
+  "fold_aucs": {
+   "0": 0.969772226318673,
+   "1": 0.9705318909410028,
+   "2": 0.9704121756348354,
+   "3": 0.9709798514028032,
+   "4": 0.9701083233300447
+  },
+  "prediction_sha256": "7a6171b36294933842a732fba5836bb12713677aeabf76ac9e4bffb62176191b"
+ },
+ "reassembled": {
+  "member_count": 314,
+  "strategy": "c_selected_shrunk_rank_logit_logistic",
+  "nested_auc": 0.9703843058098193,
+  "fold_aucs": {
+   "0": 0.9697850148010051,
+   "1": 0.9705601887945755,
+   "2": 0.9704303417039273,
+   "3": 0.9710118898443254,
+   "4": 0.9701340913545267
+  },
+  "fold_selected_c": {
+   "0": 0.03,
+   "1": 0.03,
+   "2": 0.03,
+   "3": 0.03,
+   "4": 0.03
+  },
+  "fold_selected_lambda": {
+   "0": 1.0,
+   "1": 1.0,
+   "2": 1.0,
+   "3": 1.0,
+   "4": 1.0
+  },
+  "prediction_sha256": "fc6a8a3208957fc0dc4fa883535a3e3df3be5ec79676719a5be4b0d2bcbc02c8"
+ },
+ "delta_vs_current_submission": 2.34117693961311e-05,
+ "delta_minus_gate": 3.4117693961310974e-06,
+ "fold_deltas": {
+  "0": 1.27884823321045e-05,
+  "1": 2.8297853572722964e-05,
+  "2": 1.8166069091885007e-05,
+  "3": 3.2038441522219685e-05,
+  "4": 2.576802448195359e-05
+ },
+ "folds_positive": 5,
+ "gate_delta_passes": true,
+ "gate_folds_passes": true,
+ "passes_gate": true,
+ "verdict": "통과: 재조립 팔이 최종 두 번째 제출 교체 후보가 된다.",
+ "per_fold": [
+  {
+   "fold": 0,
+   "baseline_auc": 0.969772226318673,
+   "reassembled_auc": 0.9697850148010051,
+   "delta": 1.27884823321045e-05,
+   "baseline_selected_c": 0.03,
+   "reassembled_selected_c": 0.03,
+   "baseline_selected_lambda": 1.0,
+   "reassembled_selected_lambda": 1.0,
+   "reassembled_selected_inner_auc": 0.970511845773578,
+   "reassembled_final_iterations": 207,
+   "reassembled_final_coefficient_l2_norm": 2.452758695306198,
+   "elapsed_seconds": 823.5980791250477,
+   "peak_rss_bytes": 9057927168
+  },
+  {
+   "fold": 1,
+   "baseline_auc": 0.9705318909410028,
+   "reassembled_auc": 0.9705601887945755,
+   "delta": 2.8297853572722964e-05,
+   "baseline_selected_c": 0.03,
+   "reassembled_selected_c": 0.03,
+   "baseline_selected_lambda": 1.0,
+   "reassembled_selected_lambda": 1.0,
+   "reassembled_selected_inner_auc": 0.9703184640766802,
+   "reassembled_final_iterations": 199,
+   "reassembled_final_coefficient_l2_norm": 2.508220135662349,
+   "elapsed_seconds": 824.3386162919924,
+   "peak_rss_bytes": 9311305728
+  },
+  {
+   "fold": 2,
+   "baseline_auc": 0.9704121756348354,
+   "reassembled_auc": 0.9704303417039273,
+   "delta": 1.8166069091885007e-05,
+   "baseline_selected_c": 0.03,
+   "reassembled_selected_c": 0.03,
+   "baseline_selected_lambda": 1.0,
+   "reassembled_selected_lambda": 1.0,
+   "reassembled_selected_inner_auc": 0.9703517242628048,
+   "reassembled_final_iterations": 170,
+   "reassembled_final_coefficient_l2_norm": 2.4617483101444795,
+   "elapsed_seconds": 817.2604415839887,
+   "peak_rss_bytes": 10414866432
+  },
+  {
+   "fold": 3,
+   "baseline_auc": 0.9709798514028032,
+   "reassembled_auc": 0.9710118898443254,
+   "delta": 3.2038441522219685e-05,
+   "baseline_selected_c": 0.01,
+   "reassembled_selected_c": 0.03,
+   "baseline_selected_lambda": 1.0,
+   "reassembled_selected_lambda": 1.0,
+   "reassembled_selected_inner_auc": 0.9701950639401012,
+   "reassembled_final_iterations": 183,
+   "reassembled_final_coefficient_l2_norm": 2.4193847152753154,
+   "elapsed_seconds": 678.589291540964,
+   "peak_rss_bytes": 14686814208
+  },
+  {
+   "fold": 4,
+   "baseline_auc": 0.9701083233300447,
+   "reassembled_auc": 0.9701340913545267,
+   "delta": 2.576802448195359e-05,
+   "baseline_selected_c": 0.03,
+   "reassembled_selected_c": 0.03,
+   "baseline_selected_lambda": 1.0,
+   "reassembled_selected_lambda": 1.0,
+   "reassembled_selected_inner_auc": 0.9704191814670787,
+   "reassembled_final_iterations": 143,
+   "reassembled_final_coefficient_l2_norm": 2.4755377533512064,
+   "elapsed_seconds": 684.5689442080329,
+   "peak_rss_bytes": 10685759488
+  }
+ ],
+ "rows_scored": 691369,
+ "elapsed_seconds_total": 3828.3553727500257,
+ "peak_rss_bytes_max": 14686814208,
+ "public_score_used": false,
+ "submission_assembled": false,
+ "compared_at": "2026-08-31T02:37:16Z"
+}
