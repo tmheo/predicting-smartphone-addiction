@@ -1,0 +1,23 @@
+{
+ "schema": "extended-stack-ext327/1",
+ "issue": 526,
+ "precommit_sha256": "891a864292a83b75593b2f1116e023a39a091372b7bec9ce7b392da4d1bea88e",
+ "comparison_sha256": "8101349bdc173f13723efce35b2ca9edd9877c2de6dba07cde237e2ae79b785b",
+ "member_count": 327,
+ "strategy": "c_selected_shrunk_rank_logit_logistic",
+ "selected_c": 0.03,
+ "selected_lambda": 1.0,
+ "nested_oof_auc": 0.9703889677646016,
+ "delta_vs_comparison_arm": 4.661954782325672e-06,
+ "folds_positive": 3,
+ "passes_gate": false,
+ "full_refit_dir": "/Users/taemyungheo/.codex/worktrees/72f6/predicting-smartphone-addiction/run-logs/issue514/full-refit",
+ "full_refit_manifest_sha256": "6d109f4e20f4929a26af11eedb13c8748f9ea31a1bbcb42092e5709d3aa42553",
+ "test_composition_sha256": "ba6a3ce99335daa8239fba0f5173ff641041bd600e4ed1c4c1a5fe8d8165dc34",
+ "in_sample_oof_auc": 0.9705616868564358,
+ "submission": {
+  "path": "artifacts/submissions/issue526-ext327.csv",
+  "sha256": "a790687342c52b2ddfc426e894a0dee1bcabac821f269685f3b6958c3dc3220d"
+ },
+ "assembled_at": "2026-08-31T16:37:22Z"
+}

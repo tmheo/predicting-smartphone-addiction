@@ -1,0 +1,16 @@
+{
+ "schema": "extended-stack-ext327/1",
+ "precommit_sha256": "891a864292a83b75593b2f1116e023a39a091372b7bec9ce7b392da4d1bea88e",
+ "sealed_fold": 3,
+ "member_count": 327,
+ "rows": 138274,
+ "auc": 0.9710251611550418,
+ "selected_c": 0.03,
+ "selected_lambda": 1.0,
+ "final_iterations": 180,
+ "final_coefficient_l2_norm": 2.3463485204936854,
+ "prediction_sha256": "4ec0b93976e0452faa95d67bd64760c43f288775e30409b8582faa0421ec46b3",
+ "elapsed_seconds": 806.5946932920488,
+ "peak_rss_bytes": 12141264896,
+ "finished_at": "2026-08-31T16:20:02Z"
+}
