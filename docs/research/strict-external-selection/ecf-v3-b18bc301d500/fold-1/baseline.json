@@ -1,0 +1,17 @@
+{
+ "schema": "strict-external-selection/2",
+ "candidate_set_id": "ecf-v3-b18bc301d500",
+ "precommit_sha256": "4e1ae18d579f6d52b0618129525230baff620ace46690f2562f6d0ceb165300c",
+ "sealed_fold": 1,
+ "member_count": 313,
+ "composition_sha256": "28680c46db7d7c6301c75e81da346f5fbb01ef5ef359989b34e27795bca4c562",
+ "strategy": "c_selected_shrunk_rank_logit_logistic",
+ "lambda": 1.0,
+ "c": 0.03,
+ "auc": 0.9705318909410028,
+ "reference_auc": 0.9705318909410028,
+ "delta_vs_reference": 0.0,
+ "prediction_sha256": "f3eee2a423ee942d6721987e83f68d9e106c3259457cab25a20b7bcf60d1add2",
+ "elapsed_seconds": 795.7359849170316,
+ "finished_at": "2026-08-31T12:38:01Z"
+}

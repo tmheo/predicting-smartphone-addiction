@@ -1,0 +1,570 @@
+{
+ "schema": "strict-external-selection/2",
+ "candidate_set_id": "ecf-v3-b18bc301d500",
+ "precommit_sha256": "4e1ae18d579f6d52b0618129525230baff620ace46690f2562f6d0ceb165300c",
+ "rehearsal": false,
+ "outer_folds": [
+  0,
+  1,
+  2,
+  3,
+  4
+ ],
+ "complete": true,
+ "gate": {
+  "delta_required": 2e-05,
+  "folds_required_positive": 5,
+  "comparison": "구성의 봉인 분할 예측 5개를 원래 행 순서로 이어붙인 AUC에서 비교 팔 313의 같은 값을 뺀 차이, 분할별 차이는 같은 봉인 분할 예측끼리",
+  "public_score_used": false
+ },
+ "noise_floor": 5.7e-06,
+ "selection_rules": {
+  "self_check": "시작 조건(비교 팔 자기 검사): 313의 봉인 분할 예측 5개를 고정 결합기로 다시 만들어 이어붙인 AUC와 분할별 AUC가 #489 규제 강도 선택판(30b6f97c) 기준값과 잡음 바닥 5.7e-06 안에서 맞아야 하며, 실패하면 전체가 판정 불가다. 이 봉인 예측이 분할별 비교의 기준이다.",
+  "gate": "313 대비 이어붙인 nested AUC 차이 +2e-05 이상이고 바깥 분할 5곳의 차이가 모두 엄격히 양수인 구성만 통과.",
+  "pick": "통과 구성이 여럿이면 nested 최고. 최고와의 차이가 잡음 바닥 5.7e-06 안이면 그 가운데 구성원 수가 가장 적은 구성, 구성원 수까지 같으면 사다리 순서가 앞선 구성.",
+  "none": "통과 구성이 없으면 현재 두 장(e88f706e + 30b6f97c) 유지가 완결된 결론.",
+  "weighted": "가중 OOF AUC는 진단값이며 판정에 쓰지 않는다.",
+  "fixed": "사다리 구성, 선택 규칙, 문턱은 결과 확인 전에 고정하고 결과를 본 뒤 더하거나 빼지 않는다.",
+  "public_score": "공개 점수는 어느 단계에도 쓰지 않는다."
+ },
+ "exact_duplicates": [
+  {
+   "order": 1,
+   "member_id": "nb_zhukov:cat_base",
+   "pair_sha256": "ce0efc575d7b2ba918ed0046d29e1ff2ad22cb2c465412a57c217759d54b4b96",
+   "matches_column": "ext_nb_zhukov:cat_base"
+  },
+  {
+   "order": 2,
+   "member_id": "nb_zhukov:lgb02",
+   "pair_sha256": "966f988ba097508f291356c049903b27e31a560b768238e12172621531419197",
+   "matches_column": "ext_nb_zhukov:lgb02"
+  },
+  {
+   "order": 3,
+   "member_id": "nb_zhukov:xgb_base",
+   "pair_sha256": "2303df4128785ac3f417f0cc3258f04d2e3643a9c3735c53798192228a6732a3",
+   "matches_column": "ext_nb_zhukov:xgb_base"
+  },
+  {
+   "order": 4,
+   "member_id": "nb_reda_lgbm:lgbm",
+   "pair_sha256": "ac29bdd21023f2dc401b4354d3f7900a02d2b1dfdc5aacf0809adc58b21ebe1a",
+   "matches_column": "ext_nb_reda_lgbm:lgbm"
+  },
+  {
+   "order": 5,
+   "member_id": "nb_reda_hgb:hgb",
+   "pair_sha256": "a7a46658f0c4fe1e530881f872610ba2920fd07ac8feecade52df9a4a5fe1739",
+   "matches_column": "ext_nb_reda_hgb:hgb"
+  },
+  {
+   "order": 6,
+   "member_id": "nb_yekenot:trompt",
+   "pair_sha256": "93411f087c5c7e3a7071fa1d63ca2779455c0ab29709cd0ed8ffc092e0b7eb3c",
+   "matches_column": "ext_nb_yekenot:trompt"
+  },
+  {
+   "order": 7,
+   "member_id": "nb_mohan_realmlp:realmlp",
+   "pair_sha256": "5245ad2a78dcb5982153ccbfde5a14fd53eaf6c0ff98faac3ffcae294e7f625d",
+   "matches_column": "ext_nb_mohan_realmlp:realmlp"
+  },
+  {
+   "order": 8,
+   "member_id": "nb_lopure:linear_svm",
+   "pair_sha256": "2900eb8774c78852b7c38d442027f0bbbce8a1e3b949a0ab394bcaa59295adcb",
+   "matches_column": "ext_nb_lopure:linear_svm"
+  },
+  {
+   "order": 9,
+   "member_id": "nb_lopure:poly_svm",
+   "pair_sha256": "953e2da3c591335868bf5d8d665307a0b578c7e153ae6ad448dd8d360711c350",
+   "matches_column": "ext_nb_lopure:poly_svm"
+  },
+  {
+   "order": 10,
+   "member_id": "nb_lopure:rbf_svm",
+   "pair_sha256": "557a0da96cccaa7d336e1b75fbec0bb9049e6e8227924903ae421c13baaa24b2",
+   "matches_column": "ext_nb_lopure:rbf_svm"
+  },
+  {
+   "order": 11,
+   "member_id": "nb_shaman_baseline:lr",
+   "pair_sha256": "e439bd0d7c03aad70bc027fcf66e5fb9036b0f826d13f127ea205a3fd6cb15dc",
+   "matches_column": "ext_nb_shaman_baseline:lr"
+  }
+ ],
+ "ladder_candidate_count": 13,
+ "self_check": {
+  "reference_nested_auc": 0.9703608940404231,
+  "baseline_concatenated_auc": 0.9703608940404231,
+  "delta": 0.0,
+  "baseline_fold_aucs": {
+   "0": 0.969772226318673,
+   "1": 0.9705318909410028,
+   "2": 0.9704121756348354,
+   "3": 0.9709798514028032,
+   "4": 0.9701083233300447
+  },
+  "baseline_fold_lambdas": {
+   "0": 1.0,
+   "1": 1.0,
+   "2": 1.0,
+   "3": 1.0,
+   "4": 1.0
+  },
+  "baseline_fold_cs": {
+   "0": 0.03,
+   "1": 0.03,
+   "2": 0.03,
+   "3": 0.01,
+   "4": 0.03
+  },
+  "reference_run_id": "30b6f97c30904995a79e476f02decf8f",
+  "fold_deltas_vs_reference": {
+   "0": 0.0,
+   "1": 0.0,
+   "2": 0.0,
+   "3": 0.0,
+   "4": 0.0
+  },
+  "tolerance": 5.7e-06,
+  "passes": true
+ },
+ "comparison_arm_auc": 0.9703608940404231,
+ "configs": [
+  {
+   "index": 0,
+   "name": "ext313_strict_all",
+   "kind": "full",
+   "description": "313 + 정확 중복을 뺀 사다리 후보 13개 전부",
+   "member_count": 326,
+   "candidate_member_ids": [
+    "beicicc/s6e8-fold-safe-tabnet:tabnet",
+    "beicicc/s6e8-fold-safe-realmlp:realmlp",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb",
+    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_rf",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_logreg",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_knn",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_mbsgd",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:torch_mlp"
+   ],
+   "removed_member_ids": [],
+   "nested_auc": 0.9703723610222659,
+   "weighted_oof_auc": 0.9712379215653885,
+   "fold_aucs": {
+    "0": 0.9697895700825658,
+    "1": 0.9705414581993907,
+    "2": 0.9704156290122068,
+    "3": 0.9709998485661926,
+    "4": 0.9701152966304075
+   },
+   "fold_lambdas": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   },
+   "fold_cs": {
+    "0": 0.03,
+    "1": 0.01,
+    "2": 0.01,
+    "3": 0.01,
+    "4": 0.01
+   },
+   "delta_vs_313": 1.1466981842733759e-05,
+   "delta_minus_gate": -8.533018157266243e-06,
+   "delta_within_noise_floor": false,
+   "weighted_delta_vs_313_reference": 1.0654360271922236e-05,
+   "fold_deltas_vs_313": {
+    "0": 1.734376389284087e-05,
+    "1": 9.567258387965794e-06,
+    "2": 3.4533773713985028e-06,
+    "3": 1.9997163389406936e-05,
+    "4": 6.973300362811408e-06
+   },
+   "folds_positive": 5,
+   "passes_gate": false,
+   "elapsed_seconds": 4223.212022958032
+  },
+  {
+   "index": 1,
+   "name": "ablate_source_beicicc",
+   "kind": "ablate_source",
+   "description": "전체 구성에서 출처 `beicicc`의 후보 제외",
+   "member_count": 324,
+   "candidate_member_ids": [
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb",
+    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_rf",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_logreg",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_knn",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_mbsgd",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:torch_mlp"
+   ],
+   "removed_member_ids": [
+    "beicicc/s6e8-fold-safe-tabnet:tabnet",
+    "beicicc/s6e8-fold-safe-realmlp:realmlp"
+   ],
+   "nested_auc": 0.9703684994021973,
+   "weighted_oof_auc": 0.971234834060135,
+   "fold_aucs": {
+    "0": 0.969784932088418,
+    "1": 0.9705392450033868,
+    "2": 0.970417781569228,
+    "3": 0.9709858810489149,
+    "4": 0.9701146547132953
+   },
+   "fold_lambdas": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   },
+   "fold_cs": {
+    "0": 0.01,
+    "1": 0.03,
+    "2": 0.03,
+    "3": 0.01,
+    "4": 0.03
+   },
+   "delta_vs_313": 7.605361774132291e-06,
+   "delta_minus_gate": -1.239463822586771e-05,
+   "delta_within_noise_floor": false,
+   "weighted_delta_vs_313_reference": 7.566855018459329e-06,
+   "fold_deltas_vs_313": {
+    "0": 1.2705769744991713e-05,
+    "1": 7.354062384057336e-06,
+    "2": 5.605934392582945e-06,
+    "3": 6.029646111738174e-06,
+    "4": 6.331383250568479e-06
+   },
+   "folds_positive": 5,
+   "passes_gate": false,
+   "elapsed_seconds": 3952.0260522080353
+  },
+  {
+   "index": 2,
+   "name": "ablate_source_busyaprime",
+   "kind": "ablate_source",
+   "description": "전체 구성에서 출처 `busyaprime`의 후보 제외",
+   "member_count": 323,
+   "candidate_member_ids": [
+    "beicicc/s6e8-fold-safe-tabnet:tabnet",
+    "beicicc/s6e8-fold-safe-realmlp:realmlp",
+    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_rf",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_logreg",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_knn",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_mbsgd",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:torch_mlp"
+   ],
+   "removed_member_ids": [
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb"
+   ],
+   "nested_auc": 0.9703713316797812,
+   "weighted_oof_auc": 0.9712374125662587,
+   "fold_aucs": {
+    "0": 0.9697828706167304,
+    "1": 0.9705451069408481,
+    "2": 0.9704186099636971,
+    "3": 0.970999184835739,
+    "4": 0.970110883386829
+   },
+   "fold_lambdas": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   },
+   "fold_cs": {
+    "0": 0.03,
+    "1": 0.03,
+    "2": 0.03,
+    "3": 0.01,
+    "4": 0.03
+   },
+   "delta_vs_313": 1.0437639358040762e-05,
+   "delta_minus_gate": -9.56236064195924e-06,
+   "delta_within_noise_floor": false,
+   "weighted_delta_vs_313_reference": 1.0145361142188669e-05,
+   "fold_deltas_vs_313": {
+    "0": 1.064429805741618e-05,
+    "1": 1.3215999845272997e-05,
+    "2": 6.434328861715244e-06,
+    "3": 1.933343293580858e-05,
+    "4": 2.5600567843397926e-06
+   },
+   "folds_positive": 5,
+   "passes_gate": false,
+   "elapsed_seconds": 4008.392008042021
+  },
+  {
+   "index": 3,
+   "name": "ablate_source_ravi20076",
+   "kind": "ablate_source",
+   "description": "전체 구성에서 출처 `ravi20076`의 후보 제외",
+   "member_count": 323,
+   "candidate_member_ids": [
+    "beicicc/s6e8-fold-safe-tabnet:tabnet",
+    "beicicc/s6e8-fold-safe-realmlp:realmlp",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_rf",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_logreg",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_knn",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_mbsgd",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:torch_mlp"
+   ],
+   "removed_member_ids": [
+    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C"
+   ],
+   "nested_auc": 0.9703587729910506,
+   "weighted_oof_auc": 0.9712243601896507,
+   "fold_aucs": {
+    "0": 0.9697707930566959,
+    "1": 0.9705259475595525,
+    "2": 0.9704179693217264,
+    "3": 0.9709779939216676,
+    "4": 0.9701011584694366
+   },
+   "fold_lambdas": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   },
+   "fold_cs": {
+    "0": 0.03,
+    "1": 0.01,
+    "2": 0.03,
+    "3": 0.01,
+    "4": 0.03
+   },
+   "delta_vs_313": -2.1210493725831725e-06,
+   "delta_minus_gate": -2.2121049372583174e-05,
+   "delta_within_noise_floor": true,
+   "weighted_delta_vs_313_reference": -2.9070154657917513e-06,
+   "fold_deltas_vs_313": {
+    "0": -1.4332619771018074e-06,
+    "1": -5.943381450324026e-06,
+    "2": 5.793686891020222e-06,
+    "3": -1.8574811355698273e-06,
+    "4": -7.164860608144252e-06
+   },
+   "folds_positive": 1,
+   "passes_gate": false,
+   "elapsed_seconds": 3976.2294033329817
+  },
+  {
+   "index": 4,
+   "name": "ablate_source_sometimessubodh",
+   "kind": "ablate_source",
+   "description": "전체 구성에서 출처 `sometimessubodh`의 후보 제외",
+   "member_count": 321,
+   "candidate_member_ids": [
+    "beicicc/s6e8-fold-safe-tabnet:tabnet",
+    "beicicc/s6e8-fold-safe-realmlp:realmlp",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb",
+    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C"
+   ],
+   "removed_member_ids": [
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_rf",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_logreg",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_knn",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_mbsgd",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:torch_mlp"
+   ],
+   "nested_auc": 0.9703717185014603,
+   "weighted_oof_auc": 0.9712379894296599,
+   "fold_aucs": {
+    "0": 0.9697833658773746,
+    "1": 0.97053217916646,
+    "2": 0.9704222949870561,
+    "3": 0.9710094932090562,
+    "4": 0.9701112566121541
+   },
+   "fold_lambdas": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   },
+   "fold_cs": {
+    "0": 0.03,
+    "1": 0.03,
+    "2": 0.03,
+    "3": 0.03,
+    "4": 0.03
+   },
+   "delta_vs_313": 1.0824461037173272e-05,
+   "delta_minus_gate": -9.17553896282673e-06,
+   "delta_within_noise_floor": false,
+   "weighted_delta_vs_313_reference": 1.0722224543346925e-05,
+   "fold_deltas_vs_313": {
+    "0": 1.1139558701578345e-05,
+    "1": 2.8822545716788994e-07,
+    "2": 1.0119352220727684e-05,
+    "3": 2.9641806252977965e-05,
+    "4": 2.933282109429669e-06
+   },
+   "folds_positive": 5,
+   "passes_gate": false,
+   "elapsed_seconds": 3914.553585415997
+  },
+  {
+   "index": 5,
+   "name": "ablate_caveat_float32_storage",
+   "kind": "ablate_caveat",
+   "description": "전체 구성에서 주의 사항 부류 `float32_storage`의 후보 제외",
+   "member_count": 321,
+   "candidate_member_ids": [
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_rf",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_logreg",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_knn",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_mbsgd",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:torch_mlp"
+   ],
+   "removed_member_ids": [
+    "beicicc/s6e8-fold-safe-tabnet:tabnet",
+    "beicicc/s6e8-fold-safe-realmlp:realmlp",
+    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C"
+   ],
+   "nested_auc": 0.9703620591739105,
+   "weighted_oof_auc": 0.9712285364024141,
+   "fold_aucs": {
+    "0": 0.9697806376305982,
+    "1": 0.970537903587902,
+    "2": 0.9704088344015238,
+    "3": 0.9709821407146848,
+    "4": 0.9701007768712797
+   },
+   "fold_lambdas": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   },
+   "fold_cs": {
+    "0": 0.03,
+    "1": 0.03,
+    "2": 0.03,
+    "3": 0.01,
+    "4": 0.03
+   },
+   "delta_vs_313": 1.1651334873574726e-06,
+   "delta_minus_gate": -1.883486651264253e-05,
+   "delta_within_noise_floor": true,
+   "weighted_delta_vs_313_reference": 1.2691972975931165e-06,
+   "fold_deltas_vs_313": {
+    "0": 8.411311925193843e-06,
+    "1": 6.012646899256069e-06,
+    "2": -3.3412333115823145e-06,
+    "3": 2.289311881620293e-06,
+    "4": -7.5464587649953785e-06
+   },
+   "folds_positive": 3,
+   "passes_gate": false,
+   "elapsed_seconds": 3906.5700165409944
+  },
+  {
+   "index": 6,
+   "name": "ablate_caveat_near_duplicate_cluster",
+   "kind": "ablate_caveat",
+   "description": "전체 구성에서 주의 사항 부류 `near_duplicate_cluster`의 후보 제외",
+   "member_count": 322,
+   "candidate_member_ids": [
+    "beicicc/s6e8-fold-safe-tabnet:tabnet",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:hgb",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:xgb",
+    "ravi20076/playgrounds6e8-public-baseline-v1:CB1C",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_rf",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_logreg",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_knn",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:cuml_mbsgd",
+    "sometimessubodh/stacking-9-models-smartphone-addiction-prediction:torch_mlp"
+   ],
+   "removed_member_ids": [
+    "beicicc/s6e8-fold-safe-realmlp:realmlp",
+    "busyaprime/s6e8-tabular-baseline-that-autodetects-the-task:lgb",
+    "ravi20076/playgrounds6e8-public-baseline-v1:XGB1C",
+    "ravi20076/playgrounds6e8-public-baseline-v1:LGBM1C"
+   ],
+   "nested_auc": 0.9703755445499694,
+   "weighted_oof_auc": 0.9712412140366055,
+   "fold_aucs": {
+    "0": 0.969784404351666,
+    "1": 0.9705472419912177,
+    "2": 0.9704212590499607,
+    "3": 0.9710115691427608,
+    "4": 0.9701132455403139
+   },
+   "fold_lambdas": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   },
+   "fold_cs": {
+    "0": 0.03,
+    "1": 0.03,
+    "2": 0.03,
+    "3": 0.03,
+    "4": 0.03
+   },
+   "delta_vs_313": 1.4650509546298984e-05,
+   "delta_minus_gate": -5.349490453701017e-06,
+   "delta_within_noise_floor": false,
+   "weighted_delta_vs_313_reference": 1.3946831488920175e-05,
+   "fold_deltas_vs_313": {
+    "0": 1.2178032993026555e-05,
+    "1": 1.5351050214884587e-05,
+    "2": 9.083415125288319e-06,
+    "3": 3.171773995758187e-05,
+    "4": 4.922210269153737e-06
+   },
+   "folds_positive": 5,
+   "passes_gate": false,
+   "elapsed_seconds": 3048.5733989580185
+  }
+ ],
+ "passing_configs": [],
+ "selection": null,
+ "selected_config": null,
+ "verdict": "미달: 현재 두 장(e88f706e + 30b6f97c) 유지",
+ "rows_scored": 691369,
+ "compared_at": "2026-08-31T15:46:40Z"
+}
