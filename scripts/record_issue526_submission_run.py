@@ -98,7 +98,7 @@ def main() -> None:
             client.set_tag(run_id, key, value)
         client.log_metric(run_id, "auc_oof", float(manifest["nested_oof_auc"]))
         client.log_metric(run_id, "auc_oof_insample", float(manifest["in_sample_oof_auc"]))
-        client.log_metric(run_id, "auc_public", float(args.public_auc))
+        client.log_metric(run_id, "public_auc", float(args.public_auc))
         for fold, auc in comparison["ext327"]["fold_aucs"].items():
             client.log_metric(run_id, f"auc_fold_{fold}", float(auc))
         with tempfile.TemporaryDirectory() as staging:
