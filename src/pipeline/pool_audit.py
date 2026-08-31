@@ -20,7 +20,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -32,6 +31,7 @@ import yaml
 from sklearn.metrics import roc_auc_score
 
 from .data import ID, TARGET, file_sha256
+from .identity import array_identity
 from .judgment import CONFIRM_SEEDS, DUPLICATE_SPEARMAN
 from .ledger import Pool, PoolMember
 from .runs import TRACKING_URI
@@ -147,8 +147,7 @@ class PoolAudit:
 
 def prediction_array_sha256(pred: pd.Series | np.ndarray) -> str:
     """정렬 검증 뒤의 float64 예측 배열 자체를 SHA-256으로 식별한다."""
-    values = np.ascontiguousarray(np.asarray(pred, dtype="<f8"))
-    return hashlib.sha256(values.tobytes(order="C")).hexdigest()
+    return array_identity(pred)
 
 
 def _same_values(actual: pd.Series, expected: pd.Series) -> bool:

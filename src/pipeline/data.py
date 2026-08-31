@@ -6,10 +6,11 @@ scripts/make_folds.py가 한 번 만들어 커밋한 artifacts/folds.parquet을 
 
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 
 import pandas as pd
+
+from .identity import file_identity
 
 TARGET = "addicted_label"
 ID = "id"
@@ -25,11 +26,7 @@ def labels(index: pd.Index, train_path: Path = TRAIN_PATH) -> pd.Series:
 
 def file_sha256(path: Path) -> str:
     """입력 파일 계보 기록용 해시. 실행마다 태그로 남긴다."""
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
+    return file_identity(path)
 
 
 def load_csv(path: Path) -> pd.DataFrame:
