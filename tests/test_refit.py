@@ -21,7 +21,7 @@ import copy
 import json
 import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import numpy as np
@@ -513,6 +513,29 @@ def test_run_member_can_fit_seeds_independently_before_finalizing(
     assert (final.parent / "manifest.json").is_file()
     averaged = pd.read_parquet(final)
     assert averaged["pred"].to_numpy() == pytest.approx([0.43, 0.43])
+
+
+def test_rehearse_member_caps_iterative_budget_without_changing_the_plan(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    base_plan = executable_plan_of_one(tmp_path, "shrunk_rank_logit_logistic")
+    member = replace(base_plan.members[0], budgets={42: 14})
+    plan = replace(base_plan, members=(member,))
+    fits = stub_training(monkeypatch)
+
+    result = refit.rehearse_member(
+        plan,
+        member,
+        tmp_path / "out",
+        seed=42,
+    )
+
+    assert fits == [(42, 1)]
+    assert plan.member("fake").budgets[42] == 14
+    record = json.loads(result.with_suffix(".json").read_text())
+    assert record["execution_mode"] == "full_data_rehearsal"
+    assert record["planned_training_budget"] == 14
+    assert record["training_budget"] == 1
 
 
 def test_run_member_refits_on_full_data_missingness_replicas(

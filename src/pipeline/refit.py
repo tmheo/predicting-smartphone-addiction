@@ -339,6 +339,55 @@ def run_member(
     return averaged_path
 
 
+def rehearse_member(
+    plan: ExecutableRefitPlan,
+    member: ExecutableRefitMember,
+    output: Path,
+    *,
+    seed: int,
+    data_root: Path | None = None,
+) -> Path:
+    """전체 자료 실행 경로를 반복형 모형 한 단위로만 짧게 확인한다.
+
+    이 함수는 최종 재학습 산출물을 만들지 않는다.
+    검증된 계획의 첫 시드 하나와 실제 전체 자료 및 결측 복제 행을 사용하되,
+    반복형 모형의 실행 예산은 한 단위로 고정한다.
+    반복 수가 없는 모형은 원래의 `None` 예산을 유지한다.
+    """
+    if plan.member(member.config) != member:
+        raise ValueError("재학습 예행 구성원이 검증된 계획의 항목과 다르다.")
+    if seed != next(iter(member.budgets)):
+        raise ValueError("재학습 예행은 검증된 계획의 첫 시드만 사용한다.")
+    if isinstance(member.derivation, TrajectoryStateBudgetDerivation):
+        raise NotImplementedError(
+            "정확 시점 재학습 구성원은 짧은 예행을 지원하지 않는다."
+        )
+
+    planned_budget = member.budgets[seed]
+    effective_budget = None if planned_budget is None else 1
+    rehearsal_member = replace(member, budgets={seed: effective_budget})
+    prediction_path = run_member(
+        plan,
+        rehearsal_member,
+        output,
+        seeds=(seed,),
+        finalize=False,
+        data_root=data_root,
+    )
+    record_path = prediction_path.with_suffix(".json")
+    record = json.loads(record_path.read_text())
+    record.update(
+        {
+            "execution_mode": "full_data_rehearsal",
+            "planned_training_budget": planned_budget,
+            "training_budget": effective_budget,
+            "rehearsal_budget_rule": "one_iteration_or_non_iterative",
+        }
+    )
+    _atomic_json(record, record_path)
+    return prediction_path
+
+
 def _ledger_context(plan: ExecutableRefitPlan) -> dict:
     """산출물이 어느 장부에서 나왔는지 적는 맥락. 기록만 하고 맞춰 보지는 않는다.
 

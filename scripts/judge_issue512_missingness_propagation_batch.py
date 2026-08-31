@@ -1601,12 +1601,11 @@ def _refit_rehearsal(
             if member.config not in selected_names:
                 continue
             seed = next(iter(member.budgets))
-            prediction_path = refit_module.run_member(
+            prediction_path = refit_module.rehearse_member(
                 executable,
                 member,
                 output,
-                seeds=(seed,),
-                finalize=False,
+                seed=seed,
                 data_root=source_root,
             )
             record_path = prediction_path.with_suffix(".json")
@@ -1624,11 +1623,21 @@ def _refit_rehearsal(
                 and record["training_rows"]["assertions"]["replicas_excluded_from_state_fit"],
                 f"{member.config}: 전체 자료 학습 행 상태 경계가 다르다.",
             )
+            planned_budget = member.budgets[seed]
+            expected_rehearsal_budget = None if planned_budget is None else 1
+            _require(
+                record.get("execution_mode") == "full_data_rehearsal"
+                and record.get("planned_training_budget") == planned_budget
+                and record.get("training_budget") == expected_rehearsal_budget,
+                f"{member.config}: 짧은 재학습 예행 예산이 다르다.",
+            )
             results.append(
                 {
                     "config": member.config,
                     "seed": seed,
-                    "training_budget": member.budgets[seed],
+                    "planned_training_budget": planned_budget,
+                    "rehearsal_training_budget": expected_rehearsal_budget,
+                    "rehearsal_budget_rule": record["rehearsal_budget_rule"],
                     "member_entry_sha256": member.entry_sha256,
                     "record_sha256": file_sha256(record_path),
                     "prediction_sha256": record["prediction_sha256"],
@@ -1644,7 +1653,7 @@ def _refit_rehearsal(
     )
     return self_hashed_payload(
         {
-            "schema": "missingness-propagation-batch-v1/full-refit-rehearsal/1",
+            "schema": "missingness-propagation-batch-v1/full-refit-rehearsal/2",
             "recorded_at_utc": recorded_at_utc,
             "selection_evidence_sha256": selection["selection_evidence_sha256"],
             "proposal_pool_sha256": proposal_plan["source_pool_sha256"],
@@ -1881,14 +1890,14 @@ def _report(
         lines.append("두 OOF 관문을 모두 통과하지 못해 전체 자료 재학습 예행은 시작하지 않았다.")
     else:
         lines.append(
-            f"새로 선택된 결측 증강판 {len(refit_rehearsal['results'])}개의 전체 자료 좌표에서 원본 행에만 피처 상태를 맞추고 원본과 복제본 세 블록으로 한 시드씩 재학습했다."
+            f"새로 선택된 결측 증강판 {len(refit_rehearsal['results'])}개의 전체 자료 좌표에서 원본 행에만 피처 상태를 맞추고 원본과 복제본 세 블록을 사용해 첫 시드의 짧은 호환성 예행을 실행했다."
         )
         lines.append(
-            f"모든 계보 기록과 시험 예측 해시 검증을 통과했으며 예행 통과 여부는 `{str(refit_rehearsal['passed']).lower()}`다."
+            f"반복형 모형은 최종 재학습 예산을 실행하지 않고 한 학습 단위로 제한했으며, 모든 계보 기록과 시험 예측 해시 검증을 통과한 예행 여부는 `{str(refit_rehearsal['passed']).lower()}`다."
         )
         lines.extend(
             [
-                f"- `{result['config']}`: 시드 `{result['seed']}`, 예산 `{result['training_budget']}`, 시험 예측 `{result['prediction_rows']}`행"
+                f"- `{result['config']}`: 시드 `{result['seed']}`, 계획 예산 `{result['planned_training_budget']}`, 예행 예산 `{result['rehearsal_training_budget']}`, 시험 예측 `{result['prediction_rows']}`행"
                 for result in refit_rehearsal["results"]
             ]
         )
