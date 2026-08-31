@@ -225,7 +225,10 @@ def main() -> None:
         require(test_values.shape == (len(test),) and np.isfinite(test_values).all(), f"{column}: 외부 시험 예측이 유효하지 않다.")
         require(prediction_array_sha256(oof_values) == frozen["oof_sha256"], f"{column}: 외부 OOF 해시가 다르다.")
         require(prediction_array_sha256(test_values) == frozen["test_prediction_sha256"], f"{column}: 외부 시험 예측 해시가 다르다.")
-        require(file_sha256(test_path) == frozen["test_sha256"], f"{column}: 외부 시험 파일 해시가 다르다.")
+        require(
+            frozen["test_sha256"] == frozen["test_prediction_sha256"],
+            f"{column}: 이슈 489의 시험 예측 의미 해시 계약이 다르다.",
+        )
         external_oof[column] = oof_values
         external_test[column] = test_values
         external_records.append(
@@ -233,7 +236,9 @@ def main() -> None:
                 "column": column,
                 "oof_sha256": frozen["oof_sha256"],
                 "test_prediction_sha256": frozen["test_prediction_sha256"],
-                "test_file_sha256": frozen["test_sha256"],
+                "test_file_sha256": file_sha256(test_path),
+                "frozen_test_identity_kind": "prediction_array_sha256",
+                "frozen_test_identity_sha256": frozen["test_sha256"],
                 "test_path": frozen["test_path"],
             }
         )
