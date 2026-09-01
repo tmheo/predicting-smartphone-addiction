@@ -1,5 +1,32 @@
-이 문서는 대표 화면 시제품에서 기술 근거 부록의 정보 밀도와 원본 연결 방식을 검토하기 위한 부분 초안이다.
-전체 35개 화면 제작 때 A부터 I까지의 고정 구획을 모두 채운다.
+이 문서는 35개 발표 화면의 핵심 수치와 기술 정의를 원본 기록으로 연결하는 단일 기술 근거 부록이다.
+화면 제작이 완료된 구획부터 A부터 I까지의 고정 구조에 맞춰 채운다.
+
+## A. 공식 결과와 자료 범위
+
+### 자료 범위
+
+| 항목 | 값 | 원본 |
+|---|---:|---|
+| 원시 입력 | 12개 생활 습관 변수 | [첫 기준 실행 설정](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp001_lgbm_baseline.yaml) |
+| 학습 행 | 691,369행 | [발표용 성적과 실험 계보 근거](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/presentation-score-evidence.md) |
+| 예측 행 | 296,302행 | [최종 조립 실행 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/report.md) |
+| 목표값 | 이진 목표값 `addicted_label` | [첫 기준 실행 설정](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp001_lgbm_baseline.yaml) |
+
+식별자와 목표값은 12개 예측 입력에 포함하지 않는다.
+발표 화면에서는 행 수를 각각 약 69만 건과 약 30만 건으로 줄여 말한다.
+
+### 화면 32의 공식 결과
+
+| 항목 | 값 | 원본 |
+|---|---:|---|
+| 최종 주 제출 식별자 | `55907610` | [제출 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/submission-record.json) |
+| Public 점수 | `0.97135` | [최종 조립 실행 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/report.md) |
+| Private 점수 | `0.97109` | [최종 해법 복원](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-our-final-solution.md) |
+| 최종 순위 | 14위 | [최종 해법 복원](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-our-final-solution.md) |
+
+Kaggle 공식 순위표와 제출 목록은 2026-09-01에 다시 조회했다.
+마지막 업로드인 327열 제출 `55920131`은 Private 점수 `0.97108`이므로 최종 14위 성적을 만든 제출이 아니다.
+313열 C 선택판과 최종 314열 판의 Public 점수는 모두 `0.97135`이고 Private 점수도 표시 단위에서 모두 `0.97109`다.
 
 ## B. 점수와 검증 경계
 
@@ -62,6 +89,21 @@
 
 ## H. 최종 314개 예측 열
 
+### 화면 30의 결합 내부 점수 계보
+
+| 단계 | 구성 | nested OOF AUC | 원본 |
+|---|---|---:|---|
+| 자체 출발점 | 자체 35열 | `0.9698106` | [엄격 외부 후보 사다리 계약](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/adr/0006-strict-external-candidate-ladder.md) |
+| 기존 외부 예측 포함 | 자체 35열과 외부 207열, 합계 242열 | `0.9702876097776773` | [확장 사다리 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-ladder-2.md) |
+| 해로운 120열 제외 | 자체 35열과 외부 278열, 합계 313열 | `0.9703509` | [확장 사다리 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-ladder-2.md) |
+| 결합 규제 내부 선택 | 같은 313열과 C 선택 결합 | `0.9703608940404231` | [최종 해법 복원](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-our-final-solution.md) |
+| 최종 재조립 | 자체 36열과 외부 278열, 합계 314열 | `0.9703843058098193` | [314열 재조립 판정](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-pool-reassembly/issue513/report.md) |
+
+화면 30의 `+0.00057`은 첫 단계 표시값 `0.96981`과 마지막 단계 표시값 `0.97038`의 시간순 차이다.
+중간에 자체 풀, 외부 예측 범위와 결합 설정이 함께 바뀌었으므로 한 변경의 직접 효과로 해석하지 않는다.
+
+### 화면 31의 최종 조립 입력
+
 | 항목 | 값 | 원본 |
 |---|---:|---|
 | 자체 전체 자료 재학습 예측 | 36열 | [최종 조립 실행 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/report.md) |
@@ -71,5 +113,35 @@
 | 전체 자료 재학습 실행 식별자 | `3279e114ef444cfeaff4232bc401d7b4` | [최종 조립 실행 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/report.md) |
 | 최종 제출 식별자 | `55907610` | [제출 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/submission-record.json) |
 
+외부 278열 가운데 라이선스가 unknown 또는 other로 분류된 64열은 결합 입력으로만 사용하고 재배포하지 않는 사용 한정 구성원이다.
 최종 자체 예측 파일의 SHA-256은 `5c41f1b8a3780e034fc79fcdaff055924737ef8ce390c289d09b3920aeed6f67`이다.
 최종 314열 예측 파일의 SHA-256은 `cbb0419a8b34b54ed11ece481d5927da3d98f2aa574839756eb8e965d3ecceaf`이다.
+
+## I. 1등과의 비교 및 다음 원칙
+
+### 화면 33에서 확인된 사실과 비교 한계
+
+| 항목 | 확인된 값 또는 사실 | 근거 수준 |
+|---|---|---|
+| 우리 최고 자체 단일 구성 | OOF AUC `0.9694062694182052` | 저장된 후보 풀과 판정 기록으로 재현 가능 |
+| 1등 글의 RealMLP | 바깥쪽 예측 AUC `0.970706453` | 1등 글의 그림에서 확인되지만 전체 검증 명세는 미공개 |
+| 1등 최종 결합 | 449개 모델 표시 | 구성원 장부, 선택 기준과 결합식은 미공개 |
+| 1등 공식 결과 | Private 점수 `0.97176`, 최종 1위 | 공식 최종 순위표에서 확인 |
+| 우리 공식 결과 | Private 점수 `0.97109`, 최종 14위 | 공식 최종 순위표와 제출 목록에서 확인 |
+
+우리 단일 구성의 OOF AUC와 1등 RealMLP의 바깥쪽 예측 AUC는 분할표, 전처리 경계와 선택 이력이 같다고 확인할 수 없어 직접 차이를 계산하지 않는다.
+1등 RealMLP의 최종 Private 점수와 449개 결합의 구성원 선택 및 가중치도 공개되지 않았다.
+따라서 우승권과의 남은 차이를 더 강한 단일 모델을 더 빨리 찾는 탐색 역량으로 보는 것은 확인된 사실에서 도출한 회고 해석이며 검증된 인과 결론이 아니다.
+
+- 1등 원문과 재현 가능성 판정: [1등 해법 원문 조사](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-first-place-writeup.md)
+- 우리 단일 구성과 점수 계보: [발표용 성적과 실험 계보 근거](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/presentation-score-evidence.md)
+
+### 화면 34의 다음 대회 권고
+
+1. 서로 다른 작동 원리의 강한 단일 모델 후보를 대회 초반부터 넓게 탐색한다.
+2. 결과를 보기 전에 고정한 fold와 중단 관문으로 작은 근거에서 확장 여부를 결정한다.
+3. 혼자 잘하는가와 함께할 때 돕는가를 나눠 검수한 뒤 서로 다른 오차만 조립한다.
+
+이 권고는 더 많은 실험을 무조건 수행하자는 뜻이 아니다.
+더 이른 탐색, 더 빠른 중단과 기존 검수 원칙의 유지를 함께 요구한다.
+구체적인 후보 범위와 자원 배분은 다음 대회의 자료와 제약을 확인한 뒤 별도 결정한다.

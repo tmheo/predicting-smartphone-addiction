@@ -1,0 +1,40 @@
+<mxfile host="Electron" version="28.1.2">
+<diagram id="screen-01-official-result" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="공식 대회 결과" style="text;html=1;fontStyle=1;fontSize=26;align=left;fontColor=#0f172a;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="300" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="Public 점수" style="swimlane;startSize=48;fillColor=#fffbeb;strokeColor=#b45309;fontColor=#92400e;fontStyle=1;fontSize=22;html=1;" vertex="1" parent="1">
+      <mxGeometry x="80" y="130" width="330" height="300" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f59e0b;strokeColor=#b45309;strokeWidth=3;" vertex="1" parent="3">
+      <mxGeometry x="115" y="80" width="100" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="5" value="0.97135" style="text;html=1;fontStyle=1;fontSize=34;align=center;fontColor=#92400e;" vertex="1" parent="3">
+      <mxGeometry x="65" y="195" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="6" value="Private 점수" style="swimlane;startSize=48;fillColor=#f5f3ff;strokeColor=#7c3aed;fontColor=#4c1d95;fontStyle=1;fontSize=22;html=1;" vertex="1" parent="1">
+      <mxGeometry x="490" y="130" width="330" height="300" as="geometry"/>
+    </mxCell>
+    <mxCell id="7" value="★" style="text;html=1;fontStyle=1;fontSize=90;align=center;fontColor=#7c3aed;" vertex="1" parent="6">
+      <mxGeometry x="95" y="55" width="140" height="135" as="geometry"/>
+    </mxCell>
+    <mxCell id="8" value="0.97109" style="text;html=1;fontStyle=1;fontSize=34;align=center;fontColor=#4c1d95;" vertex="1" parent="6">
+      <mxGeometry x="65" y="195" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="9" value="최종 순위" style="swimlane;startSize=48;fillColor=#ede9fe;strokeColor=#7c3aed;fontColor=#4c1d95;fontStyle=1;fontSize=22;html=1;" vertex="1" parent="1">
+      <mxGeometry x="900" y="130" width="330" height="300" as="geometry"/>
+    </mxCell>
+    <mxCell id="10" value="14위" style="text;html=1;fontStyle=1;fontSize=64;align=center;fontColor=#4c1d95;" vertex="1" parent="9">
+      <mxGeometry x="65" y="105" width="200" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="11" value="같은 제출 55907610의 서로 다른 공식 채점 표본 · 내부 nested OOF와 연결하거나 차이를 개선량으로 계산하지 않음" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontColor=#334155;fontSize=20;align=center;" vertex="1" parent="1">
+      <mxGeometry x="160" y="500" width="990" height="90" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>

@@ -1,0 +1,43 @@
+<mxfile host="Electron" version="28.1.2">
+<diagram id="screen-30-internal-assembly-score" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="결합 내부 점수 · nested OOF AUC" style="text;html=1;fontStyle=1;fontSize=24;align=left;fontColor=#0f172a;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="460" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="확대 눈금 0.9695 - 0.9705" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1;fontSize=22;align=left;verticalAlign=top;spacingTop=18;spacingLeft=22;fillColor=#f8fafc;strokeColor=#cbd5e1;" vertex="1" parent="1">
+      <mxGeometry x="80" y="120" width="1160" height="380" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="" style="rounded=0;fillColor=#64748b;strokeColor=#64748b;html=1;" vertex="1" parent="1">
+      <mxGeometry x="180" y="320" width="940" height="4" as="geometry"/>
+    </mxCell>
+    <mxCell id="5" value="0.9695" style="text;html=1;fontSize=18;align=center;" vertex="1" parent="1">
+      <mxGeometry x="130" y="350" width="120" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="6" value="0.9705" style="text;html=1;fontSize=18;align=center;" vertex="1" parent="1">
+      <mxGeometry x="1060" y="350" width="120" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="7" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;strokeWidth=3;" vertex="1" parent="1">
+      <mxGeometry x="440" y="290" width="60" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="8" value="자체 35개 결합&#xa;0.96981" style="text;html=1;fontSize=22;fontStyle=1;align=center;fontColor=#115e59;" vertex="1" parent="1">
+      <mxGeometry x="350" y="395" width="240" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="9" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;strokeWidth=3;" vertex="1" parent="1">
+      <mxGeometry x="980" y="290" width="60" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="10" value="최종 314개 예측 열&#xa;0.97038" style="text;html=1;fontSize=22;fontStyle=1;align=center;fontColor=#115e59;" vertex="1" parent="1">
+      <mxGeometry x="890" y="395" width="240" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="11" value="시간순 차이 +0.00057" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontColor=#115e59;fontStyle=1;fontSize=24;" vertex="1" parent="1">
+      <mxGeometry x="610" y="190" width="300" height="64" as="geometry"/>
+    </mxCell>
+    <mxCell id="12" value="출발점과 도착점 사이에 자체 풀 변경, 외부 예측 검수와 결합 설정 선택이 함께 있음 · 한 변경의 직접 효과가 아님" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7ed;strokeColor=#c2410c;fontColor=#9a3412;fontSize=19;align=center;" vertex="1" parent="1">
+      <mxGeometry x="190" y="540" width="940" height="80" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>
