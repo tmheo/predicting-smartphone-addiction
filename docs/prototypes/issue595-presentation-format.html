@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>대표 화면 표현 형식 시제품</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #14213d;
+      --muted: #62708a;
+      --paper: #f3f0e8;
+      --panel: #ffffff;
+      --line: #d6d9df;
+      --blue: #2563eb;
+      --teal: #0f766e;
+      --amber: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    }
+    button, select { font: inherit; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(12px);
+    }
+    .topbar strong { margin-right: auto; }
+    .source {
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+    }
+    main { min-height: calc(100vh - 58px); }
+    .screen-title { letter-spacing: -.04em; }
+    .claim { line-height: 1.55; }
+    .visual img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .visual { background: #fff; }
+    .section-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .copy { line-height: 1.65; }
+    .copy p { margin: 8px 0; }
+    .copy ul { margin: 8px 0; padding-left: 20px; }
+    .copy a { color: var(--blue); }
+    .alt { color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .variant-a .stage {
+      height: calc(100vh - 58px);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 0;
+      background: #101827;
+    }
+    .variant-a .slide {
+      padding: 30px 44px 78px;
+      color: #fff;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 14px;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .variant-a .screen-title { margin: 0; max-width: 1100px; font-size: clamp(32px, 3.6vw, 54px); line-height: 1.08; }
+    .variant-a .claim { margin: 0; color: #cdd8ec; font-size: clamp(18px, 1.7vw, 24px); }
+    .variant-a .visual { min-height: 280px; border-radius: 18px; overflow: hidden; }
+    .variant-a .alt { color: #aebbd2; }
+    .variant-a .rail {
+      padding: 40px 28px 100px;
+      border-left: 1px solid #2e3a51;
+      background: #f8fafc;
+      overflow: auto;
+    }
+    .variant-a .rail section + section { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }
+    .variant-b .stage {
+      min-height: calc(100vh - 58px);
+      padding: 34px 40px 110px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(340px, .65fr);
+      grid-template-rows: auto minmax(430px, 1fr);
+      gap: 24px;
+      background: #e9eef5;
+    }
+    .variant-b .heading {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 20px;
+      align-items: end;
+    }
+    .variant-b .kicker { color: var(--blue); font-size: 32px; font-weight: 900; }
+    .variant-b .screen-title { margin: 0; font-size: clamp(34px, 4vw, 58px); line-height: 1.1; }
+    .variant-b .visual { padding: 20px; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 16px 40px rgba(20,33,61,.12); }
+    .variant-b .evidence { padding: 28px; border-top: 8px solid var(--teal); background: #fff; }
+    .variant-b .claim { margin: 0 0 24px; font-size: 24px; font-weight: 750; }
+    .variant-b .evidence section + section { margin-top: 22px; }
+    .variant-c main { padding: 42px 20px 120px; background: #fffdf8; }
+    .variant-c .stage { max-width: 860px; margin: 0 auto; }
+    .variant-c .heading { border-left: 6px solid var(--amber); padding-left: 20px; }
+    .variant-c .kicker { color: var(--amber); font-weight: 900; }
+    .variant-c .screen-title { margin: 10px 0 14px; font-size: clamp(34px, 5vw, 54px); line-height: 1.12; }
+    .variant-c .claim { font-family: Georgia, "Nanum Myeongjo", serif; font-size: 25px; }
+    .variant-c .visual { margin: 32px 0 16px; padding: 18px; border-block: 1px solid #b8ad9b; }
+    .variant-c .reading-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 30px; }
+    .variant-c .reading-grid section { padding-top: 16px; border-top: 2px solid var(--ink); }
+    .switcher {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      z-index: 30;
+      display: grid;
+      grid-template-columns: 44px minmax(230px, auto) 44px;
+      align-items: center;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 999px;
+      background: #111827;
+      box-shadow: 0 12px 38px rgba(0,0,0,.28);
+      overflow: hidden;
+    }
+    .switcher button { height: 44px; color: inherit; border: 0; background: transparent; cursor: pointer; }
+    .switcher button:hover { background: #26324a; }
+    .switcher span { padding: 0 18px; text-align: center; font-weight: 800; }
+    .error { max-width: 720px; margin: 80px auto; padding: 28px; background: #fff; border: 1px solid #b91c1c; }
+    @media (max-width: 900px) {
+      .topbar { flex-wrap: wrap; }
+      .source { width: 100%; }
+      .variant-a .stage, .variant-b .stage { display: block; }
+      .variant-a .rail, .variant-b .evidence { border-left: 0; }
+      .variant-b .visual { min-height: 360px; margin: 22px 0; }
+      .variant-c .reading-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <strong>대표 화면 표현 형식 시제품</strong>
+    <label for="screen">화면</label>
+    <select id="screen"></select>
+    <span class="source">원본: ../presentation/s6e8-retrospective-presentation.md</span>
+  </header>
+  <main id="app"></main>
+  <nav class="switcher" aria-label="표현안 전환">
+    <button id="prev" aria-label="이전 표현안">←</button>
+    <span id="variant-label"></span>
+    <button id="next" aria-label="다음 표현안">→</button>
+  </nav>
+  <script>
+    const sourcePath = "../presentation/s6e8-retrospective-presentation.md";
+    const variants = {
+      A: "발표 우선",
+      B: "근거 나란히",
+      C: "읽기 문서"
+    };
+    const state = {
+      variant: new URLSearchParams(location.search).get("variant") || "A",
+      screen: new URLSearchParams(location.search).get("screen") || "08",
+      screens: []
+    };
+    if (!variants[state.variant]) state.variant = "A";
+
+    const escapeHtml = value => value.replace(/[&<>"']/g, char => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[char]);
+
+    function inline(markdown) {
+      let value = escapeHtml(markdown.trim());
+      value = value.replace(/`([^`]+)`/g, "<code>$1</code>");
+      value = value.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+      return value;
+    }
+
+    function prose(markdown) {
+      const lines = markdown.trim().split("\n").filter(Boolean);
+      let html = "";
+      let listOpen = false;
+      for (const line of lines) {
+        if (line.startsWith("- ")) {
+          if (!listOpen) { html += "<ul>"; listOpen = true; }
+          html += `<li>${inline(line.slice(2))}</li>`;
+        } else {
+          if (listOpen) { html += "</ul>"; listOpen = false; }
+          html += `<p>${inline(line)}</p>`;
+        }
+      }
+      if (listOpen) html += "</ul>";
+      return html;
+    }
+
+    function parse(markdown) {
+      const blocks = markdown.split(/^## 화면 /m).slice(1);
+      return blocks.map(block => {
+        const firstBreak = block.indexOf("\n");
+        const heading = block.slice(0, firstBreak).trim();
+        const number = heading.slice(0, 2);
+        const title = heading.replace(/^\d+\.\s*/, "");
+        const rest = block.slice(firstBreak + 1);
+        const notesAt = rest.indexOf("### 발표자 메모");
+        const supplementAt = rest.indexOf("### Confluence 보충 설명");
+        const audience = rest.slice(0, notesAt).trim();
+        const notes = rest.slice(notesAt + "### 발표자 메모".length, supplementAt).trim();
+        const supplement = rest.slice(supplementAt + "### Confluence 보충 설명".length).trim();
+        const imageMatch = audience.match(/!\[([^\]]+)\]\(([^)]+)\)/);
+        const beforeImage = audience.slice(0, imageMatch.index).trim();
+        const afterImage = audience.slice(imageMatch.index + imageMatch[0].length).trim();
+        return {
+          number,
+          title,
+          claim: beforeImage,
+          imageAlt: imageMatch[1],
+          image: `../presentation/${imageMatch[2]}`,
+          alt: afterImage,
+          notes,
+          supplement
+        };
+      });
+    }
+
+    function setUrl() {
+      const url = new URL(location.href);
+      url.searchParams.set("variant", state.variant);
+      url.searchParams.set("screen", state.screen);
+      history.replaceState(null, "", url);
+    }
+
+    function render() {
+      const screen = state.screens.find(item => item.number === state.screen) || state.screens[0];
+      state.screen = screen.number;
+      document.body.className = `variant-${state.variant.toLowerCase()}`;
+      document.getElementById("variant-label").textContent = `${state.variant} | ${variants[state.variant]}`;
+      const sharedVisual = `<div class="visual"><img src="${screen.image}" alt="${escapeHtml(screen.imageAlt)}"></div>`;
+      const heading = `<div class="heading"><div class="kicker">화면 ${screen.number}</div><h1 class="screen-title">${escapeHtml(screen.title)}</h1></div>`;
+      const alt = `<p class="alt">${inline(screen.alt)}</p>`;
+      const notes = `<section><div class="section-label">발표자 메모</div><div class="copy">${prose(screen.notes)}</div></section>`;
+      const supplement = `<section><div class="section-label">Confluence 보충 설명과 근거</div><div class="copy">${prose(screen.supplement)}</div></section>`;
+      const claim = `<p class="claim">${inline(screen.claim)}</p>`;
+
+      if (state.variant === "A") {
+        document.getElementById("app").innerHTML = `<div class="stage"><article class="slide">${heading}${claim}${sharedVisual}${alt}</article><aside class="rail">${notes}${supplement}</aside></div>`;
+      } else if (state.variant === "B") {
+        document.getElementById("app").innerHTML = `<div class="stage">${heading}${sharedVisual}<aside class="evidence">${claim}${notes}${supplement}${alt}</aside></div>`;
+      } else {
+        document.getElementById("app").innerHTML = `<article class="stage">${heading}${claim}${sharedVisual}${alt}<div class="reading-grid">${notes}${supplement}</div></article>`;
+      }
+      document.getElementById("screen").value = state.screen;
+      setUrl();
+    }
+
+    function cycle(delta) {
+      const keys = Object.keys(variants);
+      const index = keys.indexOf(state.variant);
+      state.variant = keys[(index + delta + keys.length) % keys.length];
+      render();
+    }
+
+    async function start() {
+      try {
+        const response = await fetch(sourcePath);
+        if (!response.ok) throw new Error(`원본을 읽지 못했습니다: ${response.status}`);
+        state.screens = parse(await response.text());
+        const select = document.getElementById("screen");
+        select.innerHTML = state.screens.map(screen => `<option value="${screen.number}">${screen.number} | ${escapeHtml(screen.title)}</option>`).join("");
+        select.addEventListener("change", event => { state.screen = event.target.value; render(); });
+        document.getElementById("prev").addEventListener("click", () => cycle(-1));
+        document.getElementById("next").addEventListener("click", () => cycle(1));
+        window.addEventListener("keydown", event => {
+          if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
+          if (event.key === "ArrowLeft") cycle(-1);
+          if (event.key === "ArrowRight") cycle(1);
+        });
+        render();
+      } catch (error) {
+        document.getElementById("app").innerHTML = `<div class="error"><h1>시제품을 열 수 없습니다</h1><p>${escapeHtml(error.message)}</p><p>저장소 루트에서 <code>python3 -m http.server 4173 --directory docs</code>를 실행해 주세요.</p></div>`;
+      }
+    }
+
+    start();
+  </script>
+</body>
+</html>

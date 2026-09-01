@@ -1,0 +1,36 @@
+<mxfile host="Electron" version="28.1.2">
+<diagram id="screen-23-stop-table" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="실험" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#1e293b;fontColor=#ffffff;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="280" height="60" as="geometry"/></mxCell>
+    <mxCell id="3" value="점추정 또는 진입 결과" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#1e293b;fontColor=#ffffff;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="320" y="40" width="260" height="60" as="geometry"/></mxCell>
+    <mxCell id="4" value="반복 근거" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#1e293b;fontColor=#ffffff;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="580" y="40" width="200" height="60" as="geometry"/></mxCell>
+    <mxCell id="5" value="사전 관문" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#1e293b;fontColor=#ffffff;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="780" y="40" width="220" height="60" as="geometry"/></mxCell>
+    <mxCell id="6" value="결론" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#1e293b;fontColor=#ffffff;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="1000" y="40" width="220" height="60" as="geometry"/></mxCell>
+    <mxCell id="7" value="Lookup 설정 17개" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;fontStyle=1;fontSize=18;align=left;spacingLeft=16;" vertex="1" parent="1"><mxGeometry x="40" y="100" width="280" height="100" as="geometry"/></mxCell>
+    <mxCell id="8" value="17개 모두 기준 미달" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="320" y="100" width="260" height="100" as="geometry"/></mxCell>
+    <mxCell id="9" value="fold 0&#xa;난수 42" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="580" y="100" width="200" height="100" as="geometry"/></mxCell>
+    <mxCell id="10" value="진입 진단" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="780" y="100" width="220" height="100" as="geometry"/></mxCell>
+    <mxCell id="11" value="■ 중단" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#b91c1c;fontColor=#991b1b;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="1000" y="100" width="220" height="100" as="geometry"/></mxCell>
+    <mxCell id="12" value="새 신경망 네 종류" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;fontStyle=1;fontSize=18;align=left;spacingLeft=16;" vertex="1" parent="1"><mxGeometry x="40" y="200" width="280" height="100" as="geometry"/></mxCell>
+    <mxCell id="13" value="4종 모두 기준 미달" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="320" y="200" width="260" height="100" as="geometry"/></mxCell>
+    <mxCell id="14" value="fold 0" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="580" y="200" width="200" height="100" as="geometry"/></mxCell>
+    <mxCell id="15" value="진입 하한" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="780" y="200" width="220" height="100" as="geometry"/></mxCell>
+    <mxCell id="16" value="■ 중단" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#b91c1c;fontColor=#991b1b;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="1000" y="200" width="220" height="100" as="geometry"/></mxCell>
+    <mxCell id="17" value="외부 예측 120개 계열" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;fontStyle=1;fontSize=18;align=left;spacingLeft=16;" vertex="1" parent="1"><mxGeometry x="40" y="300" width="280" height="100" as="geometry"/></mxCell>
+    <mxCell id="18" value="한계 기여 -0.000057" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="320" y="300" width="260" height="100" as="geometry"/></mxCell>
+    <mxCell id="19" value="전체 결합 판정" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="580" y="300" width="200" height="100" as="geometry"/></mxCell>
+    <mxCell id="20" value="양의 결합 기여" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="780" y="300" width="220" height="100" as="geometry"/></mxCell>
+    <mxCell id="21" value="▲ 미채택" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;fontColor=#92400e;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="1000" y="300" width="220" height="100" as="geometry"/></mxCell>
+    <mxCell id="22" value="327열 결합" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;fontStyle=1;fontSize=18;align=left;spacingLeft=16;" vertex="1" parent="1"><mxGeometry x="40" y="400" width="280" height="100" as="geometry"/></mxCell>
+    <mxCell id="23" value="AUC 차이 +0.0000047" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="320" y="400" width="260" height="100" as="geometry"/></mxCell>
+    <mxCell id="24" value="바깥 fold 3/5 양수" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="580" y="400" width="200" height="100" as="geometry"/></mxCell>
+    <mxCell id="25" value="교체 문턱과 반복 근거" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="780" y="400" width="220" height="100" as="geometry"/></mxCell>
+    <mxCell id="26" value="▲ 미채택" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;fontColor=#92400e;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="1000" y="400" width="220" height="100" as="geometry"/></mxCell>
+    <mxCell id="27" value="같은 판단 절차가 성공과 실패를 가릅니다. 결론에만 상태색을 씁니다." style="text;html=1;fontSize=20;fontStyle=1;align=center;fontColor=#475569;" vertex="1" parent="1"><mxGeometry x="220" y="550" width="820" height="50" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>
