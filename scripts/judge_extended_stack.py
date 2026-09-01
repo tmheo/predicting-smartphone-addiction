@@ -67,7 +67,8 @@ from pipeline.judgment import (
     MISSINGNESS_TEST_PATH,
     missingness_reweighting,
 )
-from pipeline.ledger import Pool
+from pipeline.member_sources import manifest_members
+from pipeline.members import HASH_VERIFIED, MemberSource, load_members
 from pipeline.runs import MlflowRunStore
 
 ISSUE = 455
@@ -78,6 +79,7 @@ PARTS_DIR = OUT_DIR / "parts"
 CACHE_DIR = OUT_DIR / "cache"
 LOG_DIR = OUT_DIR / "logs"
 EVIDENCE_PATH = Path("docs/research/extended-stack-ladder-2.json")
+OWN_MANIFEST_PATH = Path("docs/research/extended-stack-submission-2-manifest.json")
 
 N_TRAIN = 691369
 LEDGER_VERSION = 2
@@ -375,10 +377,21 @@ def prepare(fold_of: pd.Series, y: pd.Series) -> None:
 
 
 def load_own(fold_of: pd.Series) -> pd.DataFrame:
-    pool = Pool.load()
-    members = [(member.config, member.run_id) for member in pool.members]
-    assert len(members) == 35, f"후보 풀 {len(members)}구성원"
-    return ensemble.member_matrix(members, MlflowRunStore(), fold_of.index)
+    """사다리에 동결된 자체 35개를 #457 manifest에서 구성원 행렬 module로 적재한다. (#532)
+
+    풀 장부는 #500·#505처럼 판정 뒤에도 원자 교체·증원되는 가변 장부라 읽지 않는다.
+    열 순서는 manifest 동결 순서이고, 구성원마다 시험 예측 해시 대조(hash-verified)를 요구한다.
+    """
+    source = manifest_members(OWN_MANIFEST_PATH)
+    own = tuple(spec for spec in source.members if spec.origin == "own")
+    assert len(own) == 35, f"manifest 자체 구성원 {len(own)}개"
+    matrix = load_members(
+        MemberSource(name=f"{source.name}#own", members=own),
+        fold_of.index,
+        MlflowRunStore(),
+    )
+    matrix.require(HASH_VERIFIED)
+    return matrix.oof_frame()
 
 
 def build_matrix(name: str, fold_of: pd.Series) -> pd.DataFrame:
