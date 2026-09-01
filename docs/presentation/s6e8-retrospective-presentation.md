@@ -323,7 +323,7 @@ Public 점수나 Private 점수의 차이가 아니며, 전체 점추정의 부�
 
 ## 화면 16. 사전에 고정한 관문을 통과해 채택했습니다
 
-missingness augmentation은 후보와 판정 절차를 결과 전에 고정한 뒤 두 관문을 통과해 채택됐습니다.
+결측 증강은 후보와 판정 절차를 결과 전에 고정한 뒤 두 관문을 통과해 채택됐습니다.
 
 ![nested OOF AUC 차이 +0.0000469, 바깥 fold 5/5 양수, 결과 전에 고정한 두 관문 통과를 차례로 확인한 뒤 초록 원 채택에 도달하는 네 열 판정표](assets/screen-16-precommitted-gates.png)
 
@@ -331,13 +331,13 @@ missingness augmentation은 후보와 판정 절차를 결과 전에 고정한 �
 
 ### 발표자 메모
 
-- missingness augmentation은 학습 자료의 관측값 일부를 추가로 가린 복제본을 보여 주어 값이 비어도 견디게 한 방법입니다.
+- 결측 증강은 학습 자료의 관측값 일부를 추가로 가린 복제본을 보여 주어 값이 비어도 견디게 한 방법입니다.
 - Public 점수가 아니라 선택과 평가를 분리한 두 OOF 관문을 모두 통과했기 때문에 채택했습니다.
 
 ### Confluence 보충 설명
 
 결과 확인 전에 완결된 비교 짝과 후보 교체 단위, 중복 제한, 검색 절차와 두 채택 관문을 고정했다.
-완결된 24개 비교 짝으로 1,658개 상태를 정확 채점한 뒤 원본 구성 다섯 자리를 missingness augmentation 적용판으로 바꿨다.
+완결된 24개 비교 짝으로 1,658개 상태를 정확 채점한 뒤 원본 구성 다섯 자리를 결측 증강판으로 바꿨다.
 동결 OOF 조건부 절차 차이 `+0.000044152982`와 직접 nested OOF 차이 `+0.000046886614`가 모두 관문을 통과했다.
 
 근거: [결측 증강 전파 일괄 판정](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/missingness-propagation-batch/issue512/report.md), [교정 종결 기록](https://github.com/tmheo/predicting-smartphone-addiction/issues/512#issuecomment-5472767484)
