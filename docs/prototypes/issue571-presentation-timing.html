@@ -115,7 +115,7 @@
     .b-close { margin-top: 24px; padding: 24px; border-left: 4px solid #fb923c; background: #182234; }
     .b-close p { margin: 8px 0 0; color: #aab4c5; }
 
-    /* C: 질문을 따라 걷는 진행 지도 */
+    /* C: 합의한 시간 배분과 자연스러운 장 제목 */
     #variant-c { background: #edf5f0; }
     .c-layout { display: grid; grid-template-columns: minmax(260px, 33vw) 1fr; min-height: 100vh; }
     .c-aside { position: sticky; top: 0; height: 100vh; padding: 72px 42px; color: #fff; background: #153d32; }
@@ -237,40 +237,41 @@
   <main id="variant-c" class="variant">
     <div class="c-layout">
       <aside class="c-aside">
-        <p class="eyebrow">C / 질문 중심 진행 지도</p>
-        <h1>매 장마다<br>한 질문만.</h1>
-        <p>모형 이름보다 의사결정 질문을 기억하게 만든다. 실험 실행 체계가 발표의 중심축으로 가장 또렷하게 남는 안이다.</p>
+        <p class="eyebrow">C / 합의안</p>
+        <h1>14위 결과와<br>다음에 바꿀 점</h1>
+        <p>A안의 안정적인 시간 배분에 C안의 명확한 장 제목을 합쳤다. 제목만 읽어도 각 구간에서 다룰 내용이 보이게 했다.</p>
         <div class="question-list">
-          <div class="question-pill">무엇을 예측했나?</div>
-          <div class="question-pill">좋아 보이는 결과를 믿어도 되나?</div>
-          <div class="question-pill">어디서 실행해도 같은 결과인가?</div>
-          <div class="question-pill">혼자 잘하나, 함께할 때 돕나?</div>
-          <div class="question-pill">무엇이 1위와의 차이를 만들었나?</div>
+          <div class="question-pill">대회 문제와 평가 방식</div>
+          <div class="question-pill">실험 결과를 믿는 방법</div>
+          <div class="question-pill">여러 환경에서 같은 방식으로 실행하기</div>
+          <div class="question-pill">단일 모델 성능과 ensemble 기여</div>
+          <div class="question-pill">최종 결과와 다음에 바꿀 점</div>
         </div>
       </aside>
       <section class="c-main">
         <div class="c-half">
           <div class="c-half-title"><h2>전반</h2><span class="minutes">45분</span></div>
           <div class="route">
-            <article class="stop"><div class="stop-time">시간<span class="minutes">0-5</span></div><div><span class="act-tag a1"><i class="act-dot"></i>1막</span><h3>결승선은 14위였다</h3><p>질문: 비밀 모형 없이 이 결과에 어떻게 도달했나?</p><p class="transition"><strong>전환:</strong> 먼저 우리가 풀어야 했던 문제를 한 문장으로 줄인다.</p></div></article>
-            <article class="stop"><div class="stop-time">시간<span class="minutes">5-12</span></div><div><span class="act-tag a2"><i class="act-dot"></i>2막</span><h3>무엇을 예측했나?</h3><p>12개 생활 습관으로 약 30만 명의 위험 순서를 정한다.</p><p class="transition"><strong>전환:</strong> 좋은 순서의 기준을 청중에게 묻는다.</p></div></article>
-            <article class="stop interaction"><div class="stop-time">시간<span class="minutes">12-17</span></div><div><span class="act-tag">참여 1</span><h3>어느 순서가 더 유용한가?</h3><p>ROC AUC의 직관과 0.5부터 1.0까지의 전체 눈금.</p><p class="transition"><strong>회수:</strong> 작은 차이를 믿으려면 답을 미리 보지 않아야 한다.</p></div></article>
-            <article class="stop"><div class="stop-time">시간<span class="minutes">17-25</span></div><div><span class="act-tag a3"><i class="act-dot"></i>3막</span><h3>무엇을 보기 전에 고정했나?</h3><p>가설, 분할, 비교 팔, 채택 문턱을 먼저 정한 원칙.</p><p class="transition"><strong>전환:</strong> 실제 경계 사례로 원칙을 시험한다.</p></div></article>
-            <article class="stop"><div class="stop-time">시간<span class="minutes">25-33</span></div><div><span class="act-tag a3"><i class="act-dot"></i>3막</span><h3>한 점수보다 무엇을 더 봤나?</h3><p>바깥 분할 승수, 잡음 바닥, 중첩 평가를 검수대 비유로 묶는다.</p><p class="transition"><strong>전환:</strong> 청중이 마지막 채택 결정을 내린다.</p></div></article>
-            <article class="stop interaction"><div class="stop-time">시간<span class="minutes">33-38</span></div><div><span class="act-tag">참여 2</span><h3>작은 상승을 받아들일까?</h3><p>결측 증강 또는 327열 사례 중 하나만 사용한다.</p><p class="transition"><strong>회수:</strong> 같은 판정이 여러 실행 환경에서도 유지돼야 한다.</p></div></article>
-            <article class="stop"><div class="stop-time">시간<span class="minutes">38-45</span></div><div><span class="act-tag a3"><i class="act-dot"></i>3막</span><h3>어디서 실행해도 어떻게 믿었나?</h3><p>하나의 레시피, 여러 주방, 하나의 검수대와 실행 기록 묶음.</p><p class="transition"><strong>막끝:</strong> 원칙이 준비됐으니 후반에는 실제 탐색을 달린다.</p></div></article>
+            <article class="stop"><div class="stop-time">시간<span class="minutes">0-5</span></div><div><span class="act-tag a1"><i class="act-dot"></i>1막</span><h3>14위 결과와 오늘 이야기</h3><p>비공개 점수 0.97109와 최종 14위를 먼저 보여 준다.</p><p class="transition"><strong>전환:</strong> "결과를 먼저 봤으니, 이제 어떤 문제였는지부터 짚어보겠습니다."</p></div></article>
+            <article class="stop"><div class="stop-time">시간<span class="minutes">5-11</span></div><div><span class="act-tag a2"><i class="act-dot"></i>2막</span><h3>대회 문제와 평가 방식</h3><p>12개 생활 습관 변수로 약 30만 명의 스마트폰 중독 위험 순서를 예측했다.</p><p class="transition"><strong>전환:</strong> "정답을 몇 개 맞혔느냐보다 위험한 사람을 얼마나 앞에 놓았느냐가 중요합니다."</p></div></article>
+            <article class="stop interaction"><div class="stop-time">시간<span class="minutes">11-16</span></div><div><span class="act-tag">참여 1</span><h3>ROC AUC가 평가하는 순서</h3><p>간단한 두 예측 순서를 보여 주고 어느 쪽이 더 나은지 고르게 한다.</p><p class="transition"><strong>전환:</strong> "평가 기준을 알았으니, 같은 데이터를 모델에 어떻게 보여 줬는지 보겠습니다."</p></div></article>
+            <article class="stop"><div class="stop-time">시간<span class="minutes">16-23</span></div><div><span class="act-tag a3"><i class="act-dot"></i>3막</span><h3>같은 숫자를 수치와 범주로 함께 사용하기</h3><p>숫자의 크기와 정확한 값 정보를 함께 사용한 실험을 설명한다.</p><p class="transition"><strong>전환:</strong> "한 번 점수가 올랐다고 바로 좋은 방법이라고 결론 내리지는 않았습니다."</p></div></article>
+            <article class="stop"><div class="stop-time">시간<span class="minutes">23-32</span></div><div><span class="act-tag a3"><i class="act-dot"></i>3막</span><h3>실험 결과를 믿기 위한 검증 방법</h3><p>fold, OOF AUC와 nested OOF는 처음 한 번만 짧게 설명한다.</p><p class="transition"><strong>전환:</strong> "실제로 이 기준을 적용하면 어떤 결정을 내리는지 직접 골라보겠습니다."</p></div></article>
+            <article class="stop interaction"><div class="stop-time">시간<span class="minutes">32-37</span></div><div><span class="act-tag">참여 2</span><h3>missingness augmentation 결과 판단하기</h3><p>점수 차이, 다섯 fold의 결과와 채택 기준을 차례로 보여 준다.</p><p class="transition"><strong>전환:</strong> "이 판단을 한 컴퓨터에서만 할 수 있었다면 수백 번의 실험을 이어가기 어려웠을 겁니다."</p></div></article>
+            <article class="stop"><div class="stop-time">시간<span class="minutes">37-42</span></div><div><span class="act-tag a3"><i class="act-dot"></i>3막</span><h3>하나의 레시피, 여러 주방, 하나의 검수대</h3><p>로컬, Kaggle, Vast.ai와 Runpod에서 같은 방식으로 실행하고 로컬에서 결과를 다시 검사했다.</p><p class="transition"><strong>휴식 전:</strong> "후반에서는 실제로 잘된 실험과 실패한 실험, 마지막 조합을 보겠습니다."</p></div></article>
+            <article class="stop"><div class="stop-time">시간<span class="minutes">42-45</span></div><div><span class="act-tag">예비 시간</span><h3>전반 예비 시간</h3><p>청중 참여나 설명이 길어졌을 때 사용한다. 시간이 남으면 fold와 OOF AUC의 차이를 한 번 더 설명한다.</p></div></article>
           </div>
         </div>
-        <div class="c-break">휴식 10분 / 다섯 질문 가운데 앞의 세 질문에 답한 상태</div>
+        <div class="c-break">휴식 10분 / 무엇을 예측했는가, 어떻게 평가했는가, 실험 결과를 어떻게 믿었는가</div>
         <div class="c-half">
           <div class="c-half-title"><h2>후반</h2><span class="minutes">45분</span></div>
           <div class="route">
-            <article class="stop"><div class="stop-time">시간<span class="minutes">45-55</span></div><div><span class="act-tag a4"><i class="act-dot"></i>4막</span><h3>어떤 실험이 다음 문을 열었나?</h3><p>두 관점 표현, 자료형 복원, 다르게 틀리는 예측의 성공을 묶는다.</p><p class="transition"><strong>전환:</strong> 성공보다 더 많이 쌓인 중단 기록으로 이동한다.</p></div></article>
-            <article class="stop"><div class="stop-time">시간<span class="minutes">55-64</span></div><div><span class="act-tag a4"><i class="act-dot"></i>4막</span><h3>무엇을 빨리 멈췄나?</h3><p>설정 17개, 새 신경망 4종, 약한 공개 예측 120개의 서로 다른 중단 이유.</p><p class="transition"><strong>전환:</strong> 탐색량이 늘어 주방도 늘고 우선순위도 바뀐다.</p></div></article>
-            <article class="stop"><div class="stop-time">시간<span class="minutes">64-72</span></div><div><span class="act-tag a4"><i class="act-dot"></i>4막</span><h3>운영 결정을 어떻게 갱신했나?</h3><p>Runpod 우선에서 Vast.ai 우선으로, 장애 때 다시 Runpod으로 전환한 실제 사건.</p><p class="transition"><strong>전환:</strong> 많은 결과를 마지막 팀으로 고르는 기준.</p></div></article>
-            <article class="stop"><div class="stop-time">시간<span class="minutes">72-80</span></div><div><span class="act-tag a5"><i class="act-dot"></i>5막</span><h3>혼자 잘하나, 함께할 때 돕나?</h3><p>서로 다르게 틀리는 예측만 남기는 결합 원칙.</p><p class="transition"><strong>전환:</strong> 이 질문이 최종 314열을 만든다.</p></div></article>
-            <article class="stop"><div class="stop-time">시간<span class="minutes">80-85</span></div><div><span class="act-tag a5"><i class="act-dot"></i>5막</span><h3>무엇이 14위를 만들었나?</h3><p>자체 36개와 공개 278개, 내부 점수와 공식 결과를 분리해 제시한다.</p><p class="transition"><strong>전환:</strong> 이제 1위와의 남은 차이를 정직하게 말한다.</p></div></article>
-            <article class="stop"><div class="stop-time">시간<span class="minutes">85-90</span></div><div><span class="act-tag a5"><i class="act-dot"></i>5막</span><h3>다음에는 무엇을 더 잘해야 하나?</h3><p>더 강한 단일 모형을 더 빨리 찾는 탐색 역량과 다섯 운영 원칙.</p><p class="transition"><strong>끝맺음:</strong> 작은 실험을 검증하고 조립하는 체계가 남았다.</p></div></article>
+            <article class="stop"><div class="stop-time">시간<span class="minutes">45-57</span></div><div><span class="act-tag a4"><i class="act-dot"></i>4막</span><h3>잘된 실험과 일찍 중단한 실험</h3><p>수치와 범주를 함께 사용한 사례와 RealMLP의 자료형 문제를 고친 사례, 설정 17개와 새 신경망 네 종류를 중단한 사례를 다룬다.</p><p class="transition"><strong>전환:</strong> "실험 수가 늘면서 어떤 컴퓨터에서 어떻게 실행할지도 중요한 문제가 됐습니다."</p></div></article>
+            <article class="stop"><div class="stop-time">시간<span class="minutes">57-66</span></div><div><span class="act-tag a4"><i class="act-dot"></i>4막</span><h3>로컬, Kaggle, Vast.ai와 Runpod을 나눠 쓴 이유</h3><p>각 실행 환경의 역할과 Runpod 우선에서 Vast.ai 우선으로 바뀐 과정을 설명한다.</p><p class="transition"><strong>전환:</strong> "이렇게 모은 예측을 전부 마지막 조합에 넣은 것은 아닙니다."</p></div></article>
+            <article class="stop"><div class="stop-time">시간<span class="minutes">66-73</span></div><div><span class="act-tag a5"><i class="act-dot"></i>5막</span><h3>단일 모델 성능과 ensemble 기여는 다르다</h3><p>단독 점수가 높은 모델과 다른 모델의 실수를 보완하는 모델이 항상 같지는 않았다.</p><p class="transition"><strong>전환:</strong> "이 기준으로 마지막 조합에 남길 예측을 하나씩 골랐습니다."</p></div></article>
+            <article class="stop"><div class="stop-time">시간<span class="minutes">73-80</span></div><div><span class="act-tag a5"><i class="act-dot"></i>5막</span><h3>314개 예측 열을 고른 과정과 최종 14위</h3><p>자체 예측 36개와 공개 예측 278개, 약한 공개 예측 120개를 뺀 결정과 327개 예측 열을 채택하지 않은 결정을 보여 준다.</p><p class="transition"><strong>전환:</strong> "이 실행 체계가 14위를 만드는 데는 충분했지만, 1위와의 차이도 분명했습니다."</p></div></article>
+            <article class="stop"><div class="stop-time">시간<span class="minutes">80-87</span></div><div><span class="act-tag a5"><i class="act-dot"></i>5막</span><h3>1위와의 차이, 다음에는 바꿀 점</h3><p>더 강한 단일 모델 후보를 더 빨리 찾는 탐색 능력이 부족했다고 설명하고 유지할 원칙과 바꿀 점을 구분한다.</p><p class="transition"><strong>마지막:</strong> "14위는 비밀 모델 하나가 만든 결과가 아니라, 작은 실험을 같은 기준으로 검증하고 필요한 예측만 조합한 결과였습니다."</p></div></article>
+            <article class="stop"><div class="stop-time">시간<span class="minutes">87-90</span></div><div><span class="act-tag">예비 시간</span><h3>후반 예비 시간</h3><p>설명이 길어졌을 때 사용한다. 시간이 남으면 1위 해법과 비교한 내용을 한 가지 더 보여 준다.</p></div></article>
           </div>
         </div>
       </section>
@@ -287,7 +288,7 @@
     const variants = [
       { key: 'A', name: '이해를 쌓는 계단' },
       { key: 'B', name: '성공과 실패의 교차' },
-      { key: 'C', name: '질문 중심 진행 지도' },
+      { key: 'C', name: '합의안' },
     ];
 
     function currentIndex() {
