@@ -12,12 +12,12 @@ Routine issue completion, commits, merges, and pushes to the main branch proceed
 ### Issue tracker
 
 Issues are tracked as GitHub Issues on `tmheo/predicting-smartphone-addiction`, operated via the `gh` CLI.
-See `docs/agents/issue-tracker.md`.
+See `../kagglekit/docs/agents/issue-tracker.md` (kagglekit sibling checkout).
 
 ### Triage labels
 
 The five canonical triage labels are used as-is: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.
-See `docs/agents/triage-labels.md`.
+See `../kagglekit/docs/agents/triage-labels.md` (kagglekit sibling checkout).
 
 ### Discussion incremental updates
 
@@ -27,7 +27,7 @@ See `docs/agents/discussion-update.md`.
 ### Kaggle public notebook licensing
 
 Kaggle public notebook source is released under the Apache License 2.0.
-When reviewing, adapting, or reusing a public notebook, follow the license and provenance procedure in `docs/agents/kaggle-public-notebook-licensing.md`.
+When reviewing, adapting, or reusing a public notebook, follow the license and provenance procedure in `../kagglekit/docs/agents/kaggle-public-notebook-licensing.md` (kagglekit sibling checkout).
 Verify licenses for input datasets, pretrained models, packages, and external assets separately.
 
 ### Strict external candidate freeze and nested selection
@@ -38,23 +38,24 @@ See `docs/agents/strict-external-selection-run.md`.
 ### Domain docs
 
 Single-context layout: one `CONTEXT.md` and `docs/adr/` at the repo root.
-See `docs/agents/domain.md`.
+Generic judgment, record, and remote-operations terms have moved to the kagglekit `CONTEXT.md`; this repo's `CONTEXT.md` keeps competition-specific terms only.
+See `../kagglekit/docs/agents/domain.md` (kagglekit sibling checkout).
 
 ### Remote GPU file transfer
 
-The company security software on the local Mac blocks `scp` file reads even when ordinary SSH commands work.
-For Runpod and Vast.ai, never use `scp`, `sftp`, or browser upload as the normal file-transfer path.
-Use the SSH standard-stream procedure with SHA-256 verification described in `docs/agents/remote-gpu-transfer.md`.
+The canonical laptop-to-remote transfer path is SSH standard streams with SHA-256 verification; it works in every environment, including corporate laptops where `scp` is blocked.
+Tool and agent procedures always use the canonical path with no per-environment branching, even on machines where `scp` happens to work.
+See `../kagglekit/docs/agents/remote-gpu-transfer.md` (kagglekit sibling checkout).
 
 ### Vast.ai resource control
 
-Use the credential, lifecycle, cleanup, and evidence rules in `docs/agents/vast-resource-control.md`.
-The accepted baseline is recorded in `docs/agents/vast-control-acceptance-2026-08-15.md`.
+Use the credential, lifecycle, cleanup, and evidence rules in `../kagglekit/docs/agents/vast-resource-control.md` (kagglekit sibling checkout).
+The accepted baseline is recorded in `../kagglekit/docs/agents/vast-control-acceptance-2026-08-15.md`.
 
 ### Remote execution provider selection
 
 For S6E8 external GPU runs, Vast.ai is the primary execution environment and Runpod is the fallback execution environment.
-If the user does not name a provider, start with Vast.ai and follow `docs/agents/vast-resource-control.md` before creating any paid resource.
+If the user does not name a provider, start with Vast.ai and follow `../kagglekit/docs/agents/vast-resource-control.md` before creating any paid resource.
 Use Runpod only when the switch conditions in that document are met.
 
 For CPU-only improvement-judgment runs, use available local CPU, Kaggle CPU and Vast.ai CPU capacity in parallel when this shortens wall-clock time.

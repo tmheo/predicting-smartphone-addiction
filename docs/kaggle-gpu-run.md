@@ -3,7 +3,7 @@
 이 문서는 Kaggle CPU의 정식 개선 판정 실행과 과거 Kaggle GPU 실행의 재현, 사용자가 명시적으로 요청한 GPU 호환성 진단에 사용하는 절차다.
 [Vast.ai 중심 원격 실험 운영 전환](https://github.com/tmheo/predicting-smartphone-addiction/issues/123) 이후 S6E8 외부 GPU 실행의 주 실행 환경은 Vast.ai이고 예비 실행 환경은 Runpod이다.
 GPU가 필요하다는 이유만으로 이 경로를 자동 선택하지 않는다.
-GPU를 쓰지 않는 실행은 `docs/agents/vast-resource-control.md`의 Kaggle CPU 무결성 관문을 모두 통과하면 정식 개선 판정에 포함할 수 있다.
+GPU를 쓰지 않는 실행은 kagglekit 형제 체크아웃의 `docs/agents/vast-resource-control.md`의 Kaggle CPU 무결성 관문을 모두 통과하면 정식 개선 판정에 포함할 수 있다.
 현재 공급자 선택, 짝비교 배치와 전환 규칙은 그 문서를 따른다.
 
 Kaggle에서 실행한 결과를 실행 기록 묶음으로 로컬에 반입하는 기술 절차는 아래에 보존한다.

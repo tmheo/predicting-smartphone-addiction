@@ -110,7 +110,7 @@ scripts/verify_remote_image_python.sh \
 ```
 
 로컬에서 대상 구조나 공급자 전용 이미지를 실행할 수 없는 경우에만 원격 SSH 인증 직후 입력 전송 전에 같은 검사를 수행한다.
-자세한 실패 처리와 운영체제 패키지 준비 규칙은 `docs/agents/remote-gpu-transfer.md`를 따른다.
+자세한 실패 처리와 운영체제 패키지 준비 규칙은 kagglekit 형제 체크아웃의 `docs/agents/remote-gpu-transfer.md`를 따른다.
 
 Vast.ai와 Runpod에서 모형 명령을 실행할 때는 시스템 Python에 pip 패키지를 설치하지 않고 공통 실행 명령을 사용한다.
 입력 전송 묶음에는 `pyproject.toml`, `uv.lock`, `src/`, `scripts/run_remote_python.sh`와 `scripts/record_remote_python.py`를 함께 넣는다.
