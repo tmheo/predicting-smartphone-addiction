@@ -1,6 +1,6 @@
-이 문서는 발표 본문 화면에서 정확한 실행 기록과 원본 근거로 이동하는 단일 기술 근거 부록이다.
-A부터 I까지 아홉 구획은 화면에서 생략한 기술 정의, 실행 식별자, 설정, 해시, 분할별 진단값, 라이선스 한계와 원본 링크를 맡는다.
-상세 내용을 다시 복제하기보다 각 사실을 기계 판독 기록, 실행 산출물, 저장소 근거 문서와 종결 결정으로 추적할 수 있게 연결한다.
+이 문서는 발표 본문 각 화면에서 정확한 실행 기록과 원본 근거를 찾아갈 수 있도록 만든 단일 기술 근거 부록입니다.
+A부터 I까지 아홉 구획에는 화면에서 생략한 기술 정의, 실행 식별자, 설정, 해시, 분할별 진단값, 라이선스 한계와 원본 링크를 담았습니다.
+상세 내용을 되풀이하지 않고 각 사실을 기계 판독 기록, 실행 산출물, 저장소 근거 문서와 종결 결정까지 추적할 수 있도록 연결합니다.
 
 ## A. 공식 결과와 자료 범위
 
@@ -15,11 +15,11 @@ A부터 I까지 아홉 구획은 화면에서 생략한 기술 정의, 실행 �
 | 전체 자료 재학습 실행 식별자 | `3279e114ef444cfeaff4232bc401d7b4` | [제출 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/submission-record.json) |
 | 실행 소스 커밋 | `43045c1fabce9f35ebf86c4edf7900a4253f30fe` | [제출 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/submission-record.json) |
 
-제출 파일은 `artifacts/submissions/issue514-extended314-own-full.csv`이며 SHA-256은 `cbb0419a8b34b54ed11ece481d5927da3d98f2aa574839756eb8e965d3ecceaf`다.
-Public 점수와 Private 점수는 같은 제출을 서로 다른 시험 표본에서 채점한 값이므로 두 값의 차이를 개별 실험의 효과로 해석하지 않는다.
-Kaggle 공식 순위표와 제출 목록은 2026-09-01에 다시 조회했다.
-마지막 업로드인 327열 제출 `55920131`은 Private 점수 `0.97108`이므로 최종 14위 성적을 만든 제출이 아니다.
-313열 C 선택판과 최종 314열 판의 Public 점수는 모두 `0.97135`이고 Private 점수도 표시 단위에서 모두 `0.97109`다.
+제출 파일은 `artifacts/submissions/issue514-extended314-own-full.csv`이며 SHA-256은 `cbb0419a8b34b54ed11ece481d5927da3d98f2aa574839756eb8e965d3ecceaf`입니다.
+Public 점수와 Private 점수는 같은 제출을 서로 다른 시험 표본에서 채점한 값이므로 두 값의 차이를 개별 실험의 효과로 해석하지 않습니다.
+Kaggle 공식 순위표와 제출 목록은 2026-09-01에 다시 조회했습니다.
+마지막 업로드인 327열 제출 `55920131`은 Private 점수 `0.97108`이므로 최종 14위 성적을 만든 제출이 아닙니다.
+313열 C 선택판과 최종 314열 판의 Public 점수는 모두 `0.97135`이고 Private 점수도 표시 단위에서 모두 `0.97109`입니다.
 
 ### 자료 범위
 
@@ -41,15 +41,15 @@ Kaggle 공식 순위표와 제출 목록은 2026-09-01에 다시 조회했다.
 | 수치 9개 | `age`, `daily_screen_time_hours`, `social_media_hours`, `gaming_hours`, `work_study_hours`, `sleep_hours`, `notifications_per_day`, `app_opens_per_day`, `weekend_screen_time` |
 | 범주 3개 | `gender`, `stress_level`, `academic_work_impact` |
 
-화면 03의 위험도는 대회 목표값의 순서를 만들기 위한 예측이며 개인의 실제 중독 여부를 진단하는 임상 값이 아니다.
+화면 03의 위험도는 대회 목표값의 순서를 만들기 위한 예측이며 개인의 실제 중독 여부를 진단하는 임상 값이 아닙니다.
 
 ## B. 점수와 검증 경계
 
 ### 화면 04부터 06의 ROC AUC와 교육용 예시
 
-이진 목표값의 ROC AUC는 임의로 고른 양성 한 행이 음성 한 행보다 높은 예측값을 받을 확률로 해석할 수 있다.
-예측값이 같으면 그 쌍은 절반을 맞힌 것으로 계산한다.
-실제 실행은 `src/pipeline/cv.py`의 `score_predictions`에서 scikit-learn `roc_auc_score`로 전체 OOF를 재채점한다.
+이진 목표값의 ROC AUC는 임의로 고른 양성 한 행이 음성 한 행보다 높은 예측값을 받을 확률로 해석할 수 있습니다.
+예측값이 같으면 그 쌍은 절반을 맞힌 것으로 계산합니다.
+실제 실행은 `src/pipeline/cv.py`의 `score_predictions`에서 scikit-learn `roc_auc_score`로 전체 OOF를 재채점합니다.
 
 | 중독-비중독 쌍 | A 순서 | B 순서 |
 |---|---|---|
@@ -59,8 +59,8 @@ Kaggle 공식 순위표와 제출 목록은 2026-09-01에 다시 조회했다.
 | 다와 라 | 올바름 | 올바름 |
 | 합계 | `3/4` | `4/4` |
 
-이 표는 설명을 위해 만든 네 사람 예시이며 실제 대회 행이나 실제 모델 점수가 아니다.
-동점이 없는 이 예시만 놓고 보면 A의 쌍 순서 비율은 `0.75`, B는 `1.0`이다.
+이 표는 설명을 위해 만든 네 사람 예시이며 실제 대회 행이나 실제 모델 점수가 아닙니다.
+동점이 없는 이 예시만 놓고 보면 A의 쌍 순서 비율은 `0.75`, B는 `1.0`입니다.
 
 - 점수 구현: [`src/pipeline/cv.py`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/src/pipeline/cv.py)
 - 설명 장면 결정: [비전문가용 핵심 개념 설명 장면](https://github.com/tmheo/predicting-smartphone-addiction/issues/570#issuecomment-5488821634)
@@ -68,11 +68,11 @@ Kaggle 공식 순위표와 제출 목록은 2026-09-01에 다시 조회했다.
 
 ### 화면 08에서 처음 설명하는 OOF AUC
 
-고정 분할은 `StratifiedKFold(n_splits=5, shuffle=True, random_state=42)`로 한 번 만들고 커밋한 `artifacts/folds.parquet`이다.
-파일 SHA-256은 `5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4`다.
-고정한 다섯 fold를 차례로 검증 부분으로 사용한다.
-각 학습 행은 자기 목표값으로 학습하지 않은 모델에서 예측 하나를 받고, 다섯 예측 조각을 원래 행 순서로 이어 OOF를 만든다.
-OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
+고정 분할은 `StratifiedKFold(n_splits=5, shuffle=True, random_state=42)`로 한 번 만든 뒤 `artifacts/folds.parquet`에 저장해 커밋했습니다.
+파일 SHA-256은 `5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4`입니다.
+고정한 다섯 fold를 차례로 검증 대상으로 사용합니다.
+각 학습 행은 자기 목표값으로 학습하지 않은 모델에서 예측 하나를 받고 다섯 예측 조각을 원래 행 순서로 이어 OOF를 만듭니다.
+OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값입니다.
 
 | 점수 | 입력과 선택 경계 | 해석 한계 |
 |---|---|---|
@@ -87,11 +87,11 @@ OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
 
 ### 화면 12의 nested OOF 경계
 
-결합 입력은 구성원별 float64 OOF 열, 고정 fold와 목표값이며 세 입력은 같은 식별자 인덱스와 같은 행 순서를 가져야 한다.
-바깥 fold 하나를 봉인하고 나머지 네 fold의 OOF에서 결합기와 내부 설정을 고른다.
-선택한 결합기를 봉인한 fold에 적용해 예측을 만들고, 다섯 바깥 fold의 예측을 원래 행 순서로 이어 nested OOF를 만든다.
-최종 시험 예측은 판정이 끝난 뒤 전체 OOF와 전체 목표값에 결합기를 한 번 다시 맞추고, 같은 열 순서의 시험 예측 행렬에 적용한다.
-외부 구성원 상류의 OOF 생성 절차가 모두 공개된 것은 아니므로 이 중첩 경계가 외부 예측 생성 단계의 모든 선택 편향까지 제거하지는 않는다.
+결합 입력에는 구성원별 float64 OOF 열, 고정 fold와 목표값을 사용하며 세 입력은 식별자 인덱스와 행 순서가 같아야 합니다.
+바깥 fold 하나를 봉인하고 나머지 네 fold의 OOF에서 결합기와 내부 설정을 고릅니다.
+선택한 결합기를 봉인한 fold에 적용해 예측을 만들고 다섯 바깥 fold의 예측을 원래 행 순서로 이어 nested OOF를 만듭니다.
+최종 시험 예측은 판정이 끝난 뒤 전체 OOF와 전체 목표값에 결합기를 한 번 다시 맞추고 같은 열 순서의 시험 예측 행렬에 적용합니다.
+외부 구성원 상류의 OOF 생성 절차가 모두 공개된 것은 아니므로 이 중첩 경계가 외부 예측 생성 단계의 모든 선택 편향까지 제거하지는 않습니다.
 
 - 계약: [`docs/adr/0001-experiment-adoption-contract.md`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/adr/0001-experiment-adoption-contract.md)
 - 바깥 fold 평가와 전체 조립 구현: [`src/pipeline/ensemble.py`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/src/pipeline/ensemble.py)
@@ -99,20 +99,20 @@ OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
 
 ## C. 같은 값을 표현한 실험
 
-화면 07부터 09는 같은 수치 열을 표현하는 방식을 바꾼 사전 고정 직접 비교다.
-세 실행은 같은 자료 분할, 같은 LightGBM 주요 설정과 난수 42를 사용했고 표현 방식만 바꿨다.
+화면 07부터 09는 같은 수치 열의 표현 방식만 바꾼 사전 고정 직접 비교입니다.
+세 실행은 같은 자료 분할, 같은 LightGBM 주요 설정과 난수 42를 사용했고 표현 방식만 바꿨습니다.
 
 | 표현 | 실행 식별자 | 일반 OOF AUC | 비교 기준과 차이 | 판정 |
 |---|---|---:|---:|---|
 | 수치 유지 | `ce66e16b12fd43b4bc95fdcf2972555c` | `0.962759` | 비교 기준 | 기준 |
 | 12개 입력을 전부 범주로 처리 | `73d5cac128eb4b429c348aefdc42dc86` | `0.958586` | 화면 표시 `-0.00417` | 중단 |
-| 수치 유지와 정확값 범주 복제 병행 | `77217687c0514dab9f693fd4aa50c741` | `0.966046` | 화면 표시 `+0.00329` | 채택 |
+| 수치 유지와 같은 값의 범주 복제 병행 | `77217687c0514dab9f693fd4aa50c741` | `0.966046` | 화면 표시 `+0.00329` | 채택 |
 
-전부 범주로 처리한 실행은 숫자의 정확값 묶기 신호를 얻는 대신 수치의 순서 정보를 버렸다.
-수치 유지와 범주 복제를 병행한 실행은 원래 수치 아홉 개를 남기고 같은 값의 범주 복제 아홉 개를 추가했다.
-세 실행에는 같은 플라시보 피처가 포함되어 있어 이 피처는 비교군 사이의 차이가 아니다.
+전부 범주로 처리한 실행은 같은 값끼리 묶는 신호를 얻는 대신 수치의 순서 정보를 버렸습니다.
+수치 유지와 범주 복제를 병행한 실행은 원래 수치 아홉 개를 남기고 같은 값의 범주 복제 아홉 개를 추가했습니다.
+세 실행에는 같은 플라시보 피처가 포함되어 있어 이 피처는 비교군 사이의 차이가 아닙니다.
 
-범주 복제 대상은 `age`, `daily_screen_time_hours`, `social_media_hours`, `gaming_hours`, `work_study_hours`, `sleep_hours`, `notifications_per_day`, `app_opens_per_day`, `weekend_screen_time`이다.
+범주 복제 대상은 `age`, `daily_screen_time_hours`, `social_media_hours`, `gaming_hours`, `work_study_hours`, `sleep_hours`, `notifications_per_day`, `app_opens_per_day`, `weekend_screen_time`입니다.
 
 | 설정 | 고정한 차이 | 설정 파일 SHA-256 |
 |---|---|---|
@@ -120,8 +120,8 @@ OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
 | `exp002_all_categorical` | 원시 입력 12개를 모두 범주로 처리 | `029d4eb7c018e4a4ec737bad8439f5822ed9222054788df73c75137ff0a63074` |
 | `exp003_categorical_copies` | 수치 9개 유지, 같은 값의 범주 복제 9개 추가 | `73eaa6fc4dde479c4f8c951ad5f47cfb94667476b432ee3403d0cba9e2cb2def` |
 
-세 설정은 LightGBM의 `objective=binary`, `metric=auc`, `learning_rate=0.05`, `num_leaves=255`, `n_estimators=10000`, `early_stopping_rounds=200`, 난수 42를 공유한다.
-공유 분할 SHA-256은 B 구획에 기록한 값과 같다.
+세 설정은 LightGBM의 `objective=binary`, `metric=auc`, `learning_rate=0.05`, `num_leaves=255`, `n_estimators=10000`, `early_stopping_rounds=200`, 난수 42를 공유합니다.
+공유 분할 SHA-256은 B 구획에 기록한 값과 같습니다.
 
 - 비교 기준 설정: [`configs/exp001_lgbm_baseline.yaml`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp001_lgbm_baseline.yaml)
 - 전부 범주화 설정: [`configs/exp002_all_categorical.yaml`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp002_all_categorical.yaml)
@@ -132,10 +132,11 @@ OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
 
 ### 증강과 상태 계산 경계
 
-결측 증강판은 바깥 학습 fold의 원본 행에 관측 셀을 확률 `0.25`로 독립 결측 처리한 복제본 두 개를 더한 세 배 학습 행 구성이다.
-기존 결측은 그대로 유지하고 복제본은 부모 행의 fold 관계와 목표값을 물려받는다.
-피처 제공자와 모형 내부 전처리 상태는 원본 부모 행에서만 맞춘 뒤 복제본에 적용하므로 복제본이 상태 계산 범위를 넓히지 않는다.
-짝비교의 학습 노출량은 원본과 증강판이 같은 난수, fold, 부모 행 순서와 학습률 일정 위치에서 끝나도록 고정했다.
+결측 증강판은 바깥 학습 fold의 원본 행에 복제본 두 개를 더해 학습 행을 세 배로 구성합니다.
+각 복제본에서는 관측 셀을 확률 `0.25`로 독립 결측 처리합니다.
+기존 결측은 그대로 유지하고 복제본은 부모 행의 fold 관계와 목표값을 물려받습니다.
+피처 제공자와 모델 내부 전처리 상태는 원본 부모 행에서만 맞춘 뒤 복제본에 적용하므로 복제본이 상태 계산 범위를 넓히지 않습니다.
+짝비교에서는 원본과 증강판이 같은 난수, fold, 부모 행 순서와 학습률 일정 위치에서 끝나도록 학습 노출량을 고정했습니다.
 
 - 대표 설정: [`configs/missingness-propagation/07_exp035_lattice_te_missingness_augmented.yaml`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/missingness-propagation/07_exp035_lattice_te_missingness_augmented.yaml)
 - 학습 길이 근거: [`artifacts/issue510-paired-training-lengths.json`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/artifacts/issue510-paired-training-lengths.json)
@@ -153,8 +154,8 @@ OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
 | 결과를 본 뒤 고른 부분 결과 | 없음 |
 | 판정에 사용한 Public 점수 | 없음 |
 
-정확 검색은 풀 전체 중복 불변식을 지키면서 원본 자리와 결측 증강판을 상호 배타인 한 자리로 취급했다.
-직접 짝비교의 부호는 후보의 검색 입력 포함이나 최종 교체를 단독으로 결정하지 않았다.
+정확 검색은 풀 전체의 중복 불변식을 지키면서 원본 자리와 결측 증강판을 서로 배타적인 한 자리로 취급했습니다.
+직접 짝비교에서 차이의 부호만으로 후보의 검색 입력 포함 여부나 최종 교체를 결정하지 않았습니다.
 
 | 선택 번호 | 원본 자리 | 선택한 결측 증강판 | 전체 자료 재학습 시드별 예산 | 구성원 항목 SHA-256 |
 |---:|---|---|---|---|
@@ -171,7 +172,7 @@ OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
 | 동결 OOF 조건부 절차 | 별도 기록 | 별도 기록 | `+0.00004415298240634247` | 통과 |
 | 최선 방식끼리의 직접 nested OOF | `0.9698359892003905` | `0.9698828758140019` | `+0.00004688661361140767` | 통과, 바깥 fold `5/5` 양수 |
 
-두 풀의 직접 비교에서 선택된 결합 방식은 모두 `shrunk_rank_logit_logistic`이다.
+두 풀의 직접 비교에서 선택된 결합 방식은 모두 `shrunk_rank_logit_logistic`입니다.
 
 | 바깥 fold | 현재 풀 AUC | 제안 풀 AUC | 차이 |
 |---:|---:|---:|---:|
@@ -194,8 +195,9 @@ OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
 | 재학습 준비 상태 | `e1fb052594d0a25479838025990a750380d72a4575c8bfdfd7bfc7bd18dc61a8` |
 | 최종 판정 | `eb69ddf211dbd3c9242fb6e4ea63349c7c5173af2c421cb814c29621635b430a` |
 
-판정은 깨끗한 소스 커밋 `23cf8b2119060a9fffc4db659998ef135a5f475f`에서 실행했다.
-이 회차는 재학습 계획의 정적 준비 상태만 확인했으며 실제 전체 자료 재학습과 시험 예측 생성은 H 구획의 최종 생산 단계에서 수행했다.
+판정은 깨끗한 소스 커밋 `23cf8b2119060a9fffc4db659998ef135a5f475f`에서 실행했습니다.
+이 회차에서는 재학습 계획의 정적 준비 상태만 확인했습니다.
+실제 전체 자료 재학습과 시험 예측 생성은 H 구획의 최종 생산 단계에서 수행했습니다.
 
 - 판정 보고: [`docs/research/missingness-propagation-batch/issue512/report.md`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/missingness-propagation-batch/issue512/report.md)
 - 기계 판독 요약: [`judgment.json`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/missingness-propagation-batch/issue512/judgment.json)
@@ -214,36 +216,36 @@ OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
 
 ### 공통 실행과 중앙 검수
 
-1. 결과를 보기 전에 설정, 실행 단계, 난수, 분할, 소스 커밋, 입력 파일과 의존성 잠금 내용을 고정한다.
-2. 어느 환경이든 별도 학습 반복문을 만들지 않고 같은 `pipeline.run <config> --stage <screen|confirm>`을 실행한다.
-3. 실행 기록, 예측, 지표와 진단을 실행 저장소에 남긴다.
-4. 원격 실행은 manifest를 포함한 ZIP 실행 기록 묶음을 내보낸다.
-5. 원격과 로컬에서 묶음 SHA-256이 같은지 확인한다.
-6. 로컬 반입은 입력 해시, 커밋 존재, 커밋 시점 설정과 묶음 설정의 일치, 깨끗한 코드 상태를 검사한다.
-7. 난수별 OOF 평균과 주장 지표를 로컬 입력으로 다시 채점하고 통과한 실행만 정상 실행으로 재생한다.
-8. 판정 뒤 원격 계산 자원과 저장 공간을 삭제하고 과금이 멈췄는지 다시 확인한다.
+1. 결과를 보기 전에 설정, 실행 단계, 난수, 분할, 소스 커밋, 입력 파일과 의존성 잠금 내용을 고정합니다.
+2. 어느 환경이든 별도 학습 반복문을 만들지 않고 같은 `pipeline.run <config> --stage <screen|confirm>`을 실행합니다.
+3. 실행 기록, 예측, 지표와 진단을 실행 저장소에 남깁니다.
+4. 원격 실행은 manifest를 포함한 ZIP 실행 기록 묶음을 내보냅니다.
+5. 원격과 로컬에서 묶음 SHA-256이 같은지 확인합니다.
+6. 로컬 반입은 입력 해시, 커밋 존재, 커밋 시점 설정과 묶음 설정의 일치, 깨끗한 코드 상태를 검사합니다.
+7. 난수별 OOF 평균과 주장 지표를 로컬 입력으로 다시 채점하고 통과한 실행만 정상 실행으로 재생합니다.
+8. 판정 뒤 원격 계산 자원과 저장 공간을 삭제하고 과금이 멈췄는지 다시 확인합니다.
 
-한 비교 짝의 대조군과 후보군은 같은 공급자와 같은 실행 환경 등급에서 완결해야 한다.
-서로 다른 공급자에서 끝낸 두 팔이나 실패 뒤 남은 일부 결과를 이어 붙이지 않는다.
+한 비교 짝의 대조군과 후보군은 같은 공급자와 같은 실행 환경 등급에서 모두 끝내야 합니다.
+서로 다른 공급자에서 끝낸 두 팔이나 실패 뒤 남은 일부 결과를 이어 붙이지 않습니다.
 
 ### 실제 전환과 비용 범위
 
 | 사건 | 확인된 값 | 판단 범위 |
 |---|---:|---|
-| Runpod 초기 선별 | 모형 실행 26분 24초, `$0.24` | 초기 공급자 실제 비교 |
-| Vast.ai 초기 선별 | 모형 실행 31분 45초, `$0.12` | 초기 공급자 실제 비교 |
+| Runpod 초기 선별 | 모델 실행 26분 24초, `$0.24` | 초기 공급자 실제 비교 |
+| Vast.ai 초기 선별 | 모델 실행 31분 45초, `$0.12` | 초기 공급자 실제 비교 |
 | Vast.ai 실패 뒤 Runpod 전환 | Vast.ai `$0.089`, Runpod `$3.91` | 정해 둔 예비 환경 전환이 실제로 작동 |
 | Kaggle CPU 5개와 Vast.ai CPU 13개 | Vast.ai `$1.801`, 18개 실행과 270개 진단 반입 통과 | 비교 짝을 쪼개지 않은 CPU 병렬 처리 |
 | 최종 신경망 전체 자료 재학습 | Vast.ai GPU 3장, `$0.393844836990070` | 마지막에 바뀐 신경망 한 구성의 세 난수 작업만 포함 |
 
-초기 결정은 Runpod 우선이었고 실제 비용, 재고와 운영 경험이 쌓인 뒤 Vast.ai 우선으로 바뀌었다.
-최종 전환 조건은 적합한 Vast.ai 매물 확보 실패, 서로 다른 두 호스트의 SSH 및 사전 검사 실패, 공급 환경 장애 또는 독립 종료 설정 불가였다.
-프로그램 오류, 자료 오류, 설정 불일치와 GPU 메모리 부족은 공급자 전환 사유가 아니었다.
+처음에는 Runpod을 우선했지만 실제 비용과 재고 운영 경험이 쌓인 뒤 Vast.ai 우선으로 바뀌었습니다.
+최종 전환 조건은 적합한 Vast.ai 매물 확보 실패, 서로 다른 두 호스트의 SSH 및 사전 검사 실패, 공급 환경 장애 또는 독립 종료 설정 불가였습니다.
+프로그램 오류, 자료 오류, 설정 불일치와 GPU 메모리 부족은 공급자 전환 사유가 아니었습니다.
 
-최종 전체 자료 재학습의 첫 입력 묶음은 macOS Python 3.13의 `pathlib._local`이 들어간 pickle 때문에 원격 Python 3.12에서 학습 전에 실패했다.
-실패 결과 압축 파일 SHA-256은 `a4e3f5b7ba8bac10953d7217c43137973899062d704908b679258932dbd9da81`다.
-경로를 문자열로 바꾼 두 번째 결과 압축 파일 SHA-256은 `a574cf92a7452f3a7f9b3bb297b0c8806d26b928afd5396f0d93ef6183c3625c`이고 원격과 로컬 값이 일치했다.
-결과 회수와 로컬 검수 뒤 활성 Vast.ai 인스턴스와 별도 저장 공간은 모두 0개였다.
+최종 전체 자료 재학습의 첫 입력 묶음은 macOS Python 3.13의 `pathlib._local`이 들어간 pickle 때문에 원격 Python 3.12에서 학습 전에 실패했습니다.
+실패 결과 압축 파일 SHA-256은 `a4e3f5b7ba8bac10953d7217c43137973899062d704908b679258932dbd9da81`입니다.
+경로를 문자열로 바꾼 두 번째 결과 압축 파일 SHA-256은 `a574cf92a7452f3a7f9b3bb297b0c8806d26b928afd5396f0d93ef6183c3625c`이고 원격과 로컬 값이 일치했습니다.
+결과 회수와 로컬 검수 뒤 활성 Vast.ai 인스턴스와 별도 저장 공간은 모두 0개였습니다.
 
 - 역할과 전환 근거: [`docs/research/presentation-environment-evidence.md`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/presentation-environment-evidence.md)
 - 실행 기록 묶음 반입 구현: [`src/pipeline/bundle.py`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/src/pipeline/bundle.py)
@@ -273,7 +275,7 @@ OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
 
 ### Lookup-Transformer 설정 17개
 
-기준은 `exp067_lookup_xgb_impute_comps5`의 fold 0, 난수 42 AUC `0.968294911389327`이다.
+기준은 `exp067_lookup_xgb_impute_comps5`의 fold 0, 난수 42 AUC `0.968294911389327`입니다.
 
 | 설정 축 | 구성 | 기준 대비 범위 | 결과 |
 |---|---|---:|---|
@@ -281,9 +283,9 @@ OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
 | 학습률 일정 | `exp091`부터 `exp095`, 고정 momentum OneCycle, cosine, 선형, 상수, 검증 기반 감소 | `-0.0000074166`부터 `-0.0000437297` | 기존 OneCycle 유지 |
 | 최적화 알고리즘 | `exp096`부터 `exp103`, AdamW, RAdam, NAdam과 세 학습률 | `-0.0000356111`부터 `-0.0018451317` | 기존 AdamW 유지 |
 
-모든 설정 파일은 [`configs/`](https://github.com/tmheo/predicting-smartphone-addiction/tree/main/configs) 아래 `exp087`부터 `exp103`까지 고정돼 있다.
-전체 5분할과 세 난수로 승격한 후보는 없었다.
-원 판정은 [Lookup-Transformer 제한 탐색 판정](https://github.com/tmheo/predicting-smartphone-addiction/issues/160#issuecomment-5308772959)에 각 설정의 정확한 fold 0 AUC와 진단값을 기록한다.
+모든 설정 파일은 [`configs/`](https://github.com/tmheo/predicting-smartphone-addiction/tree/main/configs) 아래 `exp087`부터 `exp103`까지 고정돼 있습니다.
+전체 5분할과 세 난수로 승격한 후보는 없었습니다.
+각 설정의 정확한 fold 0 AUC와 진단값은 [Lookup-Transformer 제한 탐색 판정](https://github.com/tmheo/predicting-smartphone-addiction/issues/160#issuecomment-5308772959)에 기록돼 있습니다.
 
 ### 새 신경망 네 종류
 
@@ -294,17 +296,17 @@ OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
 | AMFormer | `exp085_amformer` | `0.7250206215` | `-0.2435079275` | 없음 | `b62899e5db6a45340df4ee63a9621acebacbb22c4ca9e64e5a67a88775b6038a` | [진단 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/amformer-entry-diagnostic.md) |
 | Trompt | `exp086_trompt` | `0.9401445165` | `-0.0283840326` | 5분할 예상 `39.73`시간이 `24`시간 한도 초과 | `413f45e5a28e1c5b4ba7630ac111689972a3001a600f661c04cb18744d48dd1c` | [진단 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/trompt-entry-diagnostic.md) |
 
-네 진입 진단은 같은 fold 0, 난수 42 champion AUC `0.9685285491`과 승격 하한 `0.9585285491`을 사용했다.
-설정 파일 SHA-256은 TabR-S `a8553bb03d2b610fd1f2dddbbd5acd91470c3ea45c882b0cd4581c1cac414050`, TabICLv2 `e02a7f23173cc826c2f134b9e6854242279880c8378fbb4aedd89cf6cf4d1ca5`, AMFormer `deb768fb068a61108e350f4134288897846aa3117a7aa5bec2e279193f5c68ba`, Trompt `7aaea8039520e43b06ef2646d1dc8a7cbf6fb557309196f0c8c4cf602d7e1baf`다.
-모두 행 수, 순서, 유한성 및 학습 자료 경계 검사를 통과했지만 성능 하한을 통과하지 못해 5분할과 세 난수 확정 실행으로 넓히지 않았다.
+네 진입 진단은 같은 fold 0, 난수 42 champion AUC `0.9685285491`과 승격 하한 `0.9585285491`을 사용했습니다.
+설정 파일 SHA-256은 TabR-S `a8553bb03d2b610fd1f2dddbbd5acd91470c3ea45c882b0cd4581c1cac414050`, TabICLv2 `e02a7f23173cc826c2f134b9e6854242279880c8378fbb4aedd89cf6cf4d1ca5`, AMFormer `deb768fb068a61108e350f4134288897846aa3117a7aa5bec2e279193f5c68ba`, Trompt `7aaea8039520e43b06ef2646d1dc8a7cbf6fb557309196f0c8c4cf602d7e1baf`입니다.
+모두 행 수, 순서, 유한성 및 학습 자료 경계 검사를 통과했지만 성능 하한을 넘지 못해 5분할과 세 난수 확정 실행으로 이어가지 않았습니다.
 
 ### 외부 120열과 327열 미채택
 
-약한 고전 확률 모형 120열을 포함한 433열 결합은 242열 기준보다 `+0.0000063`, 바깥 fold `3/5` 양수에 그쳤다.
-120열을 제외한 313열 결합은 같은 기준보다 `+0.0000633`, 바깥 fold `5/5` 양수였으므로 120열 계열의 한계 기여는 `-0.000057`이다.
+약한 고전 확률 모델 120열을 포함한 433열 결합은 242열 기준보다 `+0.0000063`, 바깥 fold `3/5` 양수에 그쳤습니다.
+120열을 제외한 313열 결합은 같은 기준보다 `+0.0000633`, 바깥 fold `5/5` 양수였으므로 120열 계열의 한계 기여는 `-0.000057`입니다.
 
-327열 결합은 314열 기준 `0.9703843058098193`보다 `+0.0000046619547824` 높은 `0.9703889677646016`이었지만 요구 차이 `+0.00002`보다 작았다.
-바깥 fold도 3개만 양수였고 예측 배열 SHA-256은 `c4d13d390371a261b0e41a96521a27667d4927fc6b1eb6c2a6c2f487e65b4264`다.
+327열 결합은 314열 기준 `0.9703843058098193`보다 `+0.0000046619547824` 높은 `0.9703889677646016`이었지만 요구 차이 `+0.00002`보다 작았습니다.
+바깥 fold도 3개만 양수였고 예측 배열 SHA-256은 `c4d13d390371a261b0e41a96521a27667d4927fc6b1eb6c2a6c2f487e65b4264`입니다.
 
 - 약한 외부 예측 120개 계열: [`docs/research/extended-stack-ladder-2.md`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-ladder-2.md)
 - 327열 결합: [`docs/research/extended-stack-ext327/issue526/comparison.json`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-ext327/issue526/comparison.json)
@@ -313,9 +315,9 @@ OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
 
 ### 작동 원리와 실행 설정
 
-Lookup-Transformer는 각 열의 정확한 값을 학습 fold 전용 어휘에서 조회하는 표현과, 수치의 부드러운 추세를 나타내는 PLR 표현을 Transformer에서 함께 섞는다.
-검증과 시험에만 있는 정확값은 결측 식별자와 다른 미등록 식별자로 보낸다.
-이 설명은 나무 계열과 다른 예측 표현을 사용했다는 작동 원리이며, 특정 행이 왜 틀렸는지에 대한 인과 설명은 아니다.
+Lookup-Transformer는 각 열의 정확한 값을 학습 fold 전용 어휘에서 조회하는 표현과, 수치의 부드러운 추세를 나타내는 PLR 표현을 Transformer에서 함께 섞습니다.
+검증 자료와 시험 자료에만 나타나는 값은 결측 식별자와 다른 미등록 식별자로 보냅니다.
+이 설명은 tree-based model과 다른 예측 표현을 사용했다는 작동 원리이며 특정 행이 왜 틀렸는지에 대한 인과 설명은 아닙니다.
 
 | 항목 | 값 |
 |---|---|
@@ -324,7 +326,7 @@ Lookup-Transformer는 각 열의 정확한 값을 학습 fold 전용 어휘에�
 | 실행 식별자 | `b951fac51b6b44298f7fdb0b543caba6` |
 | 구현 커밋 | `dbeb5fe` |
 | 검증 | 고정 5분할, 난수 42, 43, 44 평균 |
-| 주요 구조 | 폭 128, 4층, 8개 머리, 정확값 조회와 PLR 표현 |
+| 주요 구조 | 폭 128, 4층, 8개 머리, 정확한 값 조회와 PLR 표현 |
 | 학습 주요값 | 32 epoch, batch 2,048, AdamW, OneCycle, 최고 학습률 `2e-3`, EMA와 값 dropout |
 | 어휘와 분위 적합 범위 | 각 바깥 학습 fold만 사용 |
 
@@ -343,20 +345,20 @@ Lookup-Transformer는 각 열의 정확한 값을 학습 fold 전용 어휘에�
 
 ### 함께할 때 돕는가
 
-두 예측의 스피어만 순위 상관은 같은 행의 위험 순서가 얼마나 비슷한지 재는 중복 지표다.
-순위 상관이 낮다는 사실만으로 좋은 구성원은 아니며 단독 성능, 중복 관문과 실제 결합 기여를 함께 통과해야 한다.
+두 예측의 스피어만 순위 상관은 같은 행의 위험 순서가 얼마나 비슷한지 재는 중복 지표입니다.
+순위 상관이 낮다는 사실만으로 좋은 구성원은 아니며 단독 성능, 중복 관문과 실제 결합 기여를 함께 통과해야 합니다.
 
 | 측정값 | 값 | 판정 |
 |---|---:|---|
 | 최근접 구성 | `exp045_xgb_depth8` | 비교 대상 |
 | 최근접 스피어만 순위 상관 | `0.9814932318570025` | 중복 기준 `0.998`보다 낮음 |
-| 풀 전체 순위 상관 범위 | `0.952`부터 `0.981` | 나무 계열과 다른 순서 |
+| 풀 전체 순위 상관 범위 | `0.952`부터 `0.981` | tree-based model과 다른 순서 |
 | 풀 전체 잔차 상관 범위 | `0.915`부터 `0.981` | 오차 중복 보조 진단 |
 | 표준 평가 결합 | 표시값 `0.96813`에서 `0.96839` | 상승 |
 | 정확한 한계 기여 | `+0.00025324160365325366` | 후보 풀 진입 |
 
-화면 28의 두 줄 오차 표식은 이 판정을 설명하기 위한 교육용 예시이며 실제 행별 오차 측정값이 아니다.
-실제 채택 근거는 전체 OOF 순위 상관, 잔차 상관과 결합 전후 AUC다.
+화면 28의 두 줄 오차 표식은 이 판정을 설명하기 위한 교육용 예시이며 실제 행별 오차 측정값이 아닙니다.
+실제 채택 근거는 전체 OOF 순위 상관, 잔차 상관과 결합 전후 AUC입니다.
 
 - 원 판정: [Lookup-Transformer의 다양성 기여 결정](https://github.com/tmheo/predicting-smartphone-addiction/issues/58#issuecomment-5287565965)
 - 후보 풀 장부: [`artifacts/pool.yaml`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/artifacts/pool.yaml)
@@ -374,8 +376,8 @@ Lookup-Transformer는 각 열의 정확한 값을 학습 fold 전용 어휘에�
 | 결합 규제 내부 선택 | 같은 313열과 C 선택 결합 | `0.9703608940404231` | [최종 해법 복원](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-our-final-solution.md) |
 | 최종 재조립 | 자체 36열과 외부 278열, 합계 314열 | `0.9703843058098193` | [314열 재조립 판정](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-pool-reassembly/issue513/report.md) |
 
-화면 30의 `+0.00057`은 첫 단계 표시값 `0.96981`과 마지막 단계 표시값 `0.97038`의 시간순 차이다.
-중간에 자체 풀, 외부 예측 범위와 결합 설정이 함께 바뀌었으므로 한 변경의 직접 효과로 해석하지 않는다.
+화면 30의 `+0.00057`은 첫 단계 표시값 `0.96981`과 마지막 단계 표시값 `0.97038`의 시간순 차입니다.
+중간에 자체 풀, 외부 예측 범위와 결합 설정이 함께 바뀌었으므로 한 변경의 직접 효과로 해석하지 않습니다.
 
 ### 화면 31의 최종 조립 입력
 
@@ -390,8 +392,8 @@ Lookup-Transformer는 각 열의 정확한 값을 학습 fold 전용 어휘에�
 
 ### 313열과 314열의 직접 판정
 
-비교 팔은 자체 35열과 외부 278열의 313열 C 선택 결합이고, 재조립 팔은 D 구획에서 확정한 자체 36열과 같은 외부 278열의 314열 결합이다.
-교체 문턱은 nested OOF 차이 `+0.00002` 이상과 바깥 fold `5/5` 양수로 결과 확인 전에 고정했다.
+비교 팔은 자체 35열과 외부 278열의 313열 C 선택 결합이고 재조립 팔은 D 구획에서 확정한 자체 36열과 같은 외부 278열의 314열 결합입니다.
+교체 문턱은 nested OOF 차이 `+0.00002` 이상과 바깥 fold `5/5` 양수로 결과 확인 전에 고정했습니다.
 
 | 바깥 fold | 313열 AUC | 314열 AUC | 차이 | 313열 C | 314열 C | 수축 계수 |
 |---:|---:|---:|---:|---:|---:|---:|
@@ -401,16 +403,16 @@ Lookup-Transformer는 각 열의 정확한 값을 학습 fold 전용 어휘에�
 | 3 | `0.9709798514` | `0.9710118898` | `+0.0000320384` | `0.01` | `0.03` | `1.0` |
 | 4 | `0.9701083233` | `0.9701340914` | `+0.0000257680` | `0.03` | `0.03` | `1.0` |
 
-전체 nested OOF 차이는 `+0.0000234117693961311`이고 바깥 fold 다섯 곳이 모두 양수여서 두 관문을 통과했다.
-비교 팔 구성 해시는 `28680c46db7d7c6301c75e81da346f5fbb01ef5ef359989b34e27795bca4c562`이고 재조립 팔 구성 해시는 `e3208ed93ee2912699aa0a0a02839479489faf69ec65f9dd3b0dd8f82823035e`다.
-재조립 팔 nested 예측 SHA-256은 `fc6a8a3208957fc0dc4fa883535a3e3df3be5ec79676719a5be4b0d2bcbc02c8`다.
+전체 nested OOF 차이는 `+0.0000234117693961311`이고 바깥 fold 다섯 곳이 모두 양수여서 두 관문을 통과했습니다.
+비교 팔 구성 해시는 `28680c46db7d7c6301c75e81da346f5fbb01ef5ef359989b34e27795bca4c562`이고 재조립 팔 구성 해시는 `e3208ed93ee2912699aa0a0a02839479489faf69ec65f9dd3b0dd8f82823035e`입니다.
+재조립 팔 nested 예측 SHA-256은 `fc6a8a3208957fc0dc4fa883535a3e3df3be5ec79676719a5be4b0d2bcbc02c8`입니다.
 
 - 판정 보고: [`docs/research/extended-stack-pool-reassembly/issue513/report.md`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-pool-reassembly/issue513/report.md)
 
 ### 최종 결합 설정
 
-각 예측 열의 원시 확률에서 경험적 순위와 로짓을 함께 만들고 표준화한 뒤 L2 로지스틱 회귀를 맞춘다.
-메타 예측의 순위와 단순 구성원 순위 평균 사이의 수축 계수 `lambda`와 로지스틱 규제 강도 `C`는 각 바깥 학습 부분 안에서 분할 하나 제외 방식으로 함께 고른다.
+각 예측 열의 원시 확률에서 경험적 순위와 로짓을 함께 만들고 표준화한 뒤 L2 로지스틱 회귀를 맞춥니다.
+메타 예측의 순위와 단순 구성원 순위 평균 사이의 수축 계수 `lambda`와 로지스틱 규제 강도 `C`는 각 바깥 학습 부분 안에서 분할 하나 제외 방식으로 함께 고릅니다.
 
 | 항목 | 값 |
 |---|---|
@@ -423,14 +425,14 @@ Lookup-Transformer는 각 열의 정확한 값을 학습 fold 전용 어휘에�
 | 최종 적합 입력 | 전체 314열 OOF와 전체 목표값 |
 | 최종 추론 입력 | 같은 열 순서의 314열 시험 예측 |
 
-수축 계수가 `1.0`이므로 최종 예측에는 단순 순위 평균이 섞이지 않고 규제한 메타 로지스틱 예측의 순위가 사용됐다.
-로지스틱 계수는 음수도 허용되므로 비음수 평균 결합이 아니다.
-구현은 [`CSelectedShrunkRankLogitCombiner`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/src/pipeline/ensemble.py)와 [`full_fit_predictions`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/src/pipeline/ensemble.py)에 있다.
+수축 계수가 `1.0`이므로 최종 예측에는 단순 순위 평균이 섞이지 않고 규제한 메타 로지스틱 예측의 순위가 사용됐습니다.
+로지스틱 계수는 음수도 허용되므로 비음수 평균 결합이 아닙니다.
+구현은 [`CSelectedShrunkRankLogitCombiner`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/src/pipeline/ensemble.py)와 [`full_fit_predictions`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/src/pipeline/ensemble.py)에 있습니다.
 
 ### 전체 자료 재학습과 결정적 조립
 
-최종 자체 풀 36열 가운데 항목이 바뀌지 않은 29열은 이미 검증한 전체 자료 예측을 구성원 항목 해시로 확인해 재사용했다.
-새로 들어오거나 교체된 다음 7열만 학습 자료 전체로 다시 적합했다.
+최종 자체 풀 36열 가운데 항목이 바뀌지 않은 29열은 이미 검증한 전체 자료 예측을 구성원 항목 해시로 확인해 재사용했습니다.
+새로 들어오거나 교체된 다음 7열만 학습 자료 전체로 다시 적합했습니다.
 
 - `mpv1_exp035_lattice_te_missingness_augmented`
 - `mpv1_exp058_logreg_onehot_missingness_augmented`
@@ -440,8 +442,8 @@ Lookup-Transformer는 각 열의 정확한 값을 학습 fold 전용 어휘에�
 - `exp208_issue500_ag25_missingness_augmented`
 - `exp209_issue505_lgb_lr_onehot_init`
 
-자체 36열 실행 식별자는 `223055f44dc9427da588a141bc3b1ca3`이고 최종 314열 실행 식별자는 `3279e114ef444cfeaff4232bc401d7b4`다.
-신경망인 `mpv1_exp131_lookup_bivariate_plr5_missingness_augmented`의 난수 42, 43, 44만 Vast.ai GPU 세 장에서 학습했고 나머지 새 구성은 로컬에서 학습했다.
+자체 36열 실행 식별자는 `223055f44dc9427da588a141bc3b1ca3`이고 최종 314열 실행 식별자는 `3279e114ef444cfeaff4232bc401d7b4`입니다.
+신경망인 `mpv1_exp131_lookup_bivariate_plr5_missingness_augmented`의 난수 42, 43, 44만 Vast.ai GPU 세 장에서 학습했고 나머지 새 구성은 로컬에서 학습했습니다.
 
 | 고정 기록 또는 산출물 | SHA-256 |
 |---|---|
@@ -453,8 +455,8 @@ Lookup-Transformer는 각 열의 정확한 값을 학습 fold 전용 어휘에�
 | 자체 36열 제출 파일 | `5c41f1b8a3780e034fc79fcdaff055924737ef8ce390c289d09b3920aeed6f67` |
 | 최종 314열 제출 파일 | `cbb0419a8b34b54ed11ece481d5927da3d98f2aa574839756eb8e965d3ecceaf` |
 
-조립은 서로 다른 새 과정과 새 출력 폴더에서 두 번 실행했고 두 CSV, 전체 조립 manifest와 체크섬 파일이 바이트 단위로 같았다.
-최종 314열 제출은 296,302행, `id`와 `addicted_label` 두 열, 유한한 `[0, 1]` 값, 동률 없음과 시험 자료 ID 순서 일치를 통과했다.
+조립은 서로 다른 새 과정과 새 출력 폴더에서 두 번 실행했고 두 CSV, 전체 조립 manifest와 체크섬 파일이 바이트 단위로 같았습니다.
+최종 314열 제출은 296,302행, `id`와 `addicted_label` 두 열, 유한한 `[0, 1]` 값, 동률 없음과 시험 자료 ID 순서 일치를 통과했습니다.
 
 - 최종 조립 실행 기록: [`docs/research/extended-stack-final-assembly/issue514/report.md`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/report.md)
 - 기계 판독 제출 기록: [`submission-record.json`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/submission-record.json)
@@ -462,8 +464,8 @@ Lookup-Transformer는 각 열의 정확한 값을 학습 fold 전용 어휘에�
 
 ### 외부 278열의 무결성과 라이선스 한계
 
-외부 278열은 우리가 다시 학습한 278개 모형이 아니라 공개 OOF와 시험 예측 쌍이다.
-저장소가 확인한 범위는 구성원 이름, 출처, 행 수와 순서, OOF 및 시험 예측 의미 해시, 재채점 AUC, 분할 근거 종류, 사용 조건과 주의 사항이다.
+외부 278열은 우리가 다시 학습한 278개 모델이 아니라 공개 OOF와 시험 예측 쌍입니다.
+저장소가 확인한 범위는 구성원 이름, 출처, 행 수와 순서, OOF 및 시험 예측 의미 해시, 재채점 AUC, 분할 근거 종류, 사용 조건과 주의 사항입니다.
 
 | 분할 근거 | 열 수 |
 |---|---:|
@@ -481,9 +483,9 @@ Lookup-Transformer는 각 열의 정확한 값을 학습 fold 전용 어휘에�
 | unknown | 61 | 결합 입력 전용, 배열 재배포 금지 |
 | other | 3 | 결합 입력 전용, 배열 재배포 금지 |
 
-unknown과 other를 합친 64열은 사용 한정 구성원이다.
-이 배열은 저장소에 커밋하거나 독립 해법 묶음에 첨부하지 않으며 조립 입력으로만 사용한다.
-외부 배열의 완전 재현은 Kaggle 공개 자료의 장기 보존, 고정 노트북 판본과 일부 저자 서술에 의존하므로 자체 36열보다 근거가 약하다.
+unknown과 other를 합친 64열은 사용 한정 구성원입니다.
+이 배열은 저장소에 커밋하거나 독립 해법 묶음에 첨부하지 않으며 조립 입력으로만 사용합니다.
+외부 배열의 완전 재현은 Kaggle 공개 자료의 장기 보존, 고정 노트북 판본과 일부 저자 서술에 의존하므로 자체 36열보다 근거가 약합니다.
 
 - 외부 구성원과 해시 장부: [`docs/research/external-member-ledger.md`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/external-member-ledger.md)
 - 증분 공개 후보 감사: [`docs/research/external-member-ledger-v3.md`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/external-member-ledger-v3.md)
@@ -500,9 +502,9 @@ unknown과 other를 합친 64열은 사용 한정 구성원이다.
 | `3279e114` | `55907610` | 자체 36열 전체 자료 재학습과 외부 278열, 합계 314열 | `0.9703843` | `0.97135` | `0.97109` | 예 |
 | `0e423c9a` | `55920131` | 314열과 엄격 외부 후보 13열, 합계 327열 | `0.9703890` | `0.97133` | `0.97108` | 아니요, 기록용 제출 |
 
-313열 C 선택판과 최종 314열 판의 Public 및 Private 점수는 표시 단위에서 같다.
-314열 갱신이 내부 판정 관문을 통과했다는 사실과 Kaggle 점수가 표시 단위에서 오르지 않았다는 사실을 함께 유지한다.
-전체 제출 계보와 원본 링크는 [`docs/research/s6e8-our-final-solution.md`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-our-final-solution.md)에 있다.
+313열 C 선택판과 최종 314열 판의 Public 및 Private 점수는 표시 단위에서 같습니다.
+314열 갱신이 내부 판정 관문을 통과했다는 사실과 Kaggle 점수가 표시 단위에서 오르지 않았다는 사실을 함께 유지합니다.
+전체 제출 계보와 원본 링크는 [`docs/research/s6e8-our-final-solution.md`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-our-final-solution.md)에 있습니다.
 
 ## I. 1등과의 비교 및 다음 원칙
 
@@ -516,19 +518,19 @@ unknown과 other를 합친 64열은 사용 한정 구성원이다.
 | 1등 공식 결과 | Private 점수 `0.97176`, 최종 1위 | 공식 최종 순위표에서 확인 |
 | 우리 공식 결과 | Private 점수 `0.97109`, 최종 14위 | 공식 최종 순위표와 제출 목록에서 확인 |
 
-우리 단일 구성의 OOF AUC와 1등 RealMLP의 바깥쪽 예측 AUC는 분할표, 전처리 경계와 선택 이력이 같다고 확인할 수 없어 직접 차이를 계산하지 않는다.
-1등 RealMLP의 최종 Private 점수와 449개 결합의 구성원 선택 및 가중치도 공개되지 않았다.
-따라서 우승권과의 남은 차이를 더 강한 단일 모델을 더 빨리 찾는 탐색 역량으로 보는 것은 확인된 사실에서 도출한 회고 해석이며 검증된 인과 결론이 아니다.
+우리 단일 구성의 OOF AUC와 1등 RealMLP의 바깥쪽 예측 AUC는 분할표, 전처리 경계와 선택 이력이 같다고 확인할 수 없어 직접 차이를 계산하지 않습니다.
+1등 RealMLP의 최종 Private 점수와 449개 결합의 구성원 선택 및 가중치도 공개되지 않았습니다.
+따라서 우승권과의 남은 차이를 더 강한 단일 모델을 더 빨리 찾는 탐색 역량으로 보는 것은 확인된 사실에서 도출한 회고 해석이며 검증된 인과 결론이 아닙니다.
 
 - 1등 원문과 재현 가능성 판정: [1등 해법 원문 조사](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-first-place-writeup.md)
 - 우리 단일 구성과 점수 계보: [발표용 성적과 실험 계보 근거](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/presentation-score-evidence.md)
 
 ### 화면 34의 다음 대회 권고
 
-1. 서로 다른 작동 원리의 강한 단일 모델 후보를 대회 초반부터 넓게 탐색한다.
-2. 결과를 보기 전에 고정한 fold와 중단 관문으로 작은 근거에서 확장 여부를 결정한다.
-3. 혼자 잘하는가와 함께할 때 돕는가를 나눠 검수한 뒤 서로 다른 오차만 조립한다.
+1. 서로 다른 작동 원리의 강한 단일 모델 후보를 대회 초반부터 넓게 탐색합니다.
+2. 결과를 보기 전에 고정한 fold와 중단 관문으로 작은 근거에서 확장 여부를 결정합니다.
+3. 혼자 잘하는가와 함께할 때 돕는가를 나눠 검수한 뒤 서로 다른 오차만 조립합니다.
 
-이 권고는 더 많은 실험을 무조건 수행하자는 뜻이 아니다.
-더 이른 탐색, 더 빠른 중단과 기존 검수 원칙의 유지를 함께 요구한다.
-구체적인 후보 범위와 자원 배분은 다음 대회의 자료와 제약을 확인한 뒤 별도 결정한다.
+이 권고는 더 많은 실험을 무조건 수행하자는 뜻이 아닙니다.
+더 이른 탐색, 더 빠른 중단과 기존 검수 원칙의 유지를 함께 요구합니다.
+구체적인 후보 범위와 자원 배분은 다음 대회의 자료와 제약을 확인한 뒤 별도 결정합니다.
