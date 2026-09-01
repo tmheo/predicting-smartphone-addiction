@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>화면 단위 이야기 흐름 시제품</title>
+  <style>
+    :root {
+      --ink: #16211f;
+      --muted: #5b6865;
+      --paper: #f3f0e8;
+      --panel: #fffdf8;
+      --line: #d6d0c3;
+      --blue: #2067c7;
+      --teal: #168a82;
+      --amber: #d58a13;
+      --purple: #7a4ec2;
+      --green: #2f8b57;
+      --red: #c9534f;
+      --yellow: #c89b21;
+      --shadow: 0 18px 50px rgba(31, 42, 38, .12);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 16% 0%, rgba(32, 103, 199, .09), transparent 30rem),
+        radial-gradient(circle at 100% 20%, rgba(22, 138, 130, .08), transparent 26rem),
+        var(--paper);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    }
+
+    button, a { font: inherit; }
+    a { color: inherit; }
+    .prototype-note {
+      position: fixed;
+      z-index: 30;
+      top: 14px;
+      right: 16px;
+      padding: 7px 11px;
+      border: 1px solid rgba(201, 83, 79, .35);
+      border-radius: 999px;
+      color: #8b3532;
+      background: rgba(255, 253, 248, .94);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .03em;
+    }
+
+    .view { min-height: 100vh; padding: 48px 28px 110px; }
+    .eyebrow {
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 980px; margin-bottom: 12px; font-size: clamp(32px, 5vw, 72px); line-height: 1.04; letter-spacing: -.055em; }
+    .lede { max-width: 900px; color: var(--muted); font-size: 17px; line-height: 1.7; }
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255, 253, 248, .75);
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--blue); }
+
+    /* Variant A: one-screen rehearsal */
+    .rehearsal {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+      gap: 26px;
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+    .rehearsal-nav {
+      position: sticky;
+      top: 36px;
+      align-self: start;
+      max-height: calc(100vh - 150px);
+      overflow: auto;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(255, 253, 248, .85);
+      backdrop-filter: blur(12px);
+    }
+    .rehearsal-nav h2 { margin-bottom: 6px; font-size: 19px; }
+    .screen-index {
+      width: 100%;
+      margin: 4px 0;
+      padding: 9px 10px;
+      border: 0;
+      border-radius: 10px;
+      color: var(--muted);
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+    .screen-index:hover, .screen-index.active { color: var(--ink); background: #e8e4d9; }
+    .screen-index.active { box-shadow: inset 3px 0 0 var(--teal); }
+    .screen-index strong { display: block; margin-bottom: 2px; color: inherit; font-size: 12px; }
+    .screen-index span { display: block; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+    .rehearsal-stage { min-width: 0; }
+    .rehearsal-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .screen-controls { display: flex; gap: 8px; }
+    .screen-controls button {
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--ink);
+      background: var(--panel);
+      cursor: pointer;
+    }
+    .slide-frame {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      min-height: 460px;
+      overflow: hidden;
+      padding: clamp(28px, 4vw, 70px);
+      border: 1px solid #c8c1b3;
+      border-radius: 28px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .slide-frame::after {
+      position: absolute;
+      right: -90px;
+      bottom: -160px;
+      width: 390px;
+      height: 390px;
+      border: 62px solid rgba(22, 138, 130, .07);
+      border-radius: 50%;
+      content: "";
+    }
+    .slide-top { display: flex; justify-content: space-between; gap: 18px; color: var(--muted); font-size: 13px; font-weight: 750; }
+    .slide-title { max-width: 920px; margin: 12% 0 22px; font-size: clamp(34px, 5vw, 76px); line-height: 1.05; letter-spacing: -.055em; }
+    .visual-placeholder {
+      display: inline-flex;
+      max-width: 82%;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      border-left: 5px solid var(--teal);
+      color: var(--muted);
+      background: #eef4f0;
+      font-size: clamp(14px, 1.5vw, 19px);
+      line-height: 1.45;
+    }
+    .slide-marker { position: absolute; left: clamp(28px, 4vw, 70px); bottom: clamp(24px, 3vw, 48px); display: flex; gap: 8px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+    .detail-card { padding: 19px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255, 253, 248, .8); }
+    .detail-card h3 { margin-bottom: 7px; color: var(--muted); font-size: 12px; letter-spacing: .06em; }
+    .detail-card p { margin-bottom: 0; line-height: 1.6; }
+    .bridge { grid-column: 1 / -1; border-color: rgba(213, 138, 19, .45); background: #fff8e9; }
+
+    /* Variant B: matrix */
+    .matrix-shell { max-width: 1700px; margin: 0 auto; }
+    .matrix-head { margin-bottom: 28px; }
+    .matrix-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .matrix {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(255, 253, 248, .86);
+      box-shadow: var(--shadow);
+    }
+    .matrix table { width: 100%; min-width: 1250px; border-collapse: collapse; }
+    .matrix th { position: sticky; z-index: 3; top: 0; padding: 15px 13px; color: white; background: #22332f; text-align: left; font-size: 12px; }
+    .matrix td { padding: 14px 13px; border-top: 1px solid var(--line); vertical-align: top; font-size: 13px; line-height: 1.5; }
+    .matrix tr:hover td { background: #f7f3e9; }
+    .matrix .n { width: 52px; color: var(--muted); font-weight: 850; }
+    .matrix .time { width: 82px; color: var(--teal); font-weight: 850; white-space: nowrap; }
+    .matrix .claim { width: 23%; font-weight: 800; }
+    .matrix .act-row td { padding: 10px 13px; color: white; background: #49635c; font-weight: 850; letter-spacing: .04em; }
+    .matrix .participation td { background: #fff7df; }
+    .matrix .break td { background: #e9f2ef; }
+
+    /* Variant C: five-act wall */
+    .wall-shell { max-width: 1800px; margin: 0 auto; }
+    .wall-head { margin-bottom: 30px; }
+    .act-wall { display: grid; gap: 30px; }
+    .act-lane { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 18px; align-items: start; }
+    .act-label { position: sticky; top: 32px; padding: 20px; border-radius: 18px; color: white; background: #2d4740; }
+    .act-label strong { display: block; margin-bottom: 6px; font-size: 24px; }
+    .act-label span { display: block; color: rgba(255,255,255,.75); font-size: 13px; line-height: 1.5; }
+    .act-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+    .story-card { min-height: 250px; padding: 17px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); box-shadow: 0 8px 24px rgba(31, 42, 38, .07); }
+    .story-card.participation { border: 2px solid var(--yellow); background: #fff9e8; }
+    .story-card.break { border: 2px dashed var(--teal); background: #edf6f3; }
+    .story-card-top { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 16px; color: var(--muted); font-size: 11px; font-weight: 850; }
+    .story-card h3 { margin-bottom: 11px; font-size: 18px; line-height: 1.25; }
+    .story-visual { min-height: 64px; margin-bottom: 14px; padding: 10px; border-radius: 10px; color: #3a5c54; background: #eef4f0; font-size: 12px; line-height: 1.45; }
+    .story-bridge { padding-top: 11px; border-top: 1px solid var(--line); color: #8a6216; font-size: 12px; line-height: 1.45; }
+
+    .switcher {
+      position: fixed;
+      z-index: 40;
+      left: 50%;
+      bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 999px;
+      color: white;
+      background: rgba(18, 27, 25, .94);
+      box-shadow: 0 15px 45px rgba(0, 0, 0, .28);
+      transform: translateX(-50%);
+      backdrop-filter: blur(14px);
+    }
+    .switcher button {
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 50%;
+      color: white;
+      background: rgba(255, 255, 255, .09);
+      cursor: pointer;
+    }
+    .switcher-label { min-width: 220px; text-align: center; font-size: 13px; font-weight: 800; }
+
+    @media (max-width: 900px) {
+      .view { padding: 34px 16px 100px; }
+      .rehearsal { display: block; }
+      .rehearsal-nav { position: static; max-height: 210px; margin-bottom: 18px; }
+      .slide-frame { min-height: 420px; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .bridge { grid-column: auto; }
+      .act-lane { grid-template-columns: 1fr; }
+      .act-label { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 세 가지 화면 흐름 검토 방식, ?variant=A|B|C로 전환하는 버리는 시제품. -->
+  <div class="prototype-note">버리는 시제품 · 실제 발표 화면 아님</div>
+  <main id="app"></main>
+  <nav class="switcher" aria-label="시제품 보기 전환">
+    <button id="prevVariant" type="button" aria-label="이전 보기">←</button>
+    <div class="switcher-label" id="variantLabel"></div>
+    <button id="nextVariant" type="button" aria-label="다음 보기">→</button>
+  </nav>
+
+  <script>
+    const sources = {
+      score: { title: "발표에 쓸 성적과 실험 계보의 근거를 고정한다", url: "https://github.com/tmheo/predicting-smartphone-addiction/issues/568" },
+      environment: { title: "실행 환경별 역할과 전환 사건의 근거를 고정한다", url: "https://github.com/tmheo/predicting-smartphone-addiction/issues/565" },
+      timing: { title: "90분 본문의 장별 시간과 장면 전환을 정한다", url: "https://github.com/tmheo/predicting-smartphone-addiction/issues/571" },
+      concepts: { title: "비전문가용 핵심 개념 설명 장면을 설계한다", url: "https://github.com/tmheo/predicting-smartphone-addiction/issues/570" },
+      visual: { title: "차트와 다이어그램의 시각 문법을 정한다", url: "https://github.com/tmheo/predicting-smartphone-addiction/issues/569" },
+      language: { title: "비전문가 발표의 기술 용어와 표기 원칙을 정한다", url: "https://github.com/tmheo/predicting-smartphone-addiction/issues/579" }
+    };
+
+    const acts = [
+      { id: 1, title: "결승선", range: "0-5분", purpose: "알려진 14위를 출발점으로 삼고 오늘 이야기의 중심 메시지를 건다." },
+      { id: 2, title: "문제 이해", range: "5-23분", purpose: "무엇을 예측했고 어떤 표현이 유효했는지 비전문가의 언어로 맞춘다." },
+      { id: 3, title: "믿을 수 있는 실험 만들기", range: "23-45분", purpose: "좋아 보이는 숫자와 믿고 채택할 결과의 차이를 경험하게 한다." },
+      { id: 4, title: "탐색과 확장", range: "45-73분", purpose: "성공과 중단, 여러 실행 장소, 서로 다른 오차를 하나의 운영 원칙으로 묶는다." },
+      { id: 5, title: "조립과 교훈", range: "73-90분", purpose: "314개 예측 열의 조립, 공식 결과, 남은 차이와 다음 원칙을 회수한다." }
+    ];
+
+    const screens = [
+      {
+        act: 1, time: "0:00", duration: "2분", type: "opening",
+        claim: "Private 0.97109, 최종 14위에서 시작합니다",
+        visual: "결승선 한가운데 14위. 오른쪽 가장자리에는 Public 0.97135와 Private 0.97109를 서로 다른 표식으로 둔다.",
+        note: "14위를 반전처럼 숨기지 않는다. 청중이 이미 아는 결과를 출발점으로 삼고, 오늘은 그 결과가 만들어진 방식을 설명한다고 약속한다.",
+        bridge: "같은 12개 변수로 어떻게 여기까지 왔을까요?",
+        boundary: "공식 결과", source: "score"
+      },
+      {
+        act: 1, time: "2:00", duration: "3분", type: "thesis",
+        claim: "비밀 모델 하나가 아니라 검증 가능한 작은 실험을 조립한 결과였습니다",
+        visual: "작은 실험, 서로 다르게 틀리는 예측, 실험 실행 체계의 세 조각이 14위로 모이는 길 지도.",
+        note: "오늘 이야기의 중심 메시지를 먼저 말한다. 후반까지 되풀이할 세 축을 청중에게 길 안내판처럼 건넨다.",
+        bridge: "먼저 우리가 풀었던 문제와 점수부터 같은 그림으로 맞추겠습니다.",
+        boundary: "중심 메시지", source: "timing"
+      },
+      {
+        act: 2, time: "5:00", duration: "3분", type: "concept",
+        claim: "12개 생활 습관 변수로 스마트폰 중독 위험의 순서를 예측했습니다",
+        visual: "한 사람의 12개 입력이 위험도 막대로 바뀌고, 여러 사람이 위험도 순서로 놓이는 한 방향 자료 흐름.",
+        note: "정답을 맞히는 한 문턱보다 사람들의 위험 순서를 만드는 문제였다는 데 초점을 둔다.",
+        bridge: "그렇다면 좋은 순서인지 무엇으로 판단했을까요?",
+        boundary: "대회 문제", source: "concepts"
+      },
+      {
+        act: 2, time: "8:00", duration: "3분", type: "concept",
+        claim: "ROC AUC는 정답 문턱 하나가 아니라 순서 전체를 봅니다",
+        visual: "0.5부터 1.0까지의 작은 기준 막대와 네 사람의 두 위험 순서. 0.5는 무작위, 1.0은 완전한 순서로 짧게 표시.",
+        note: "정의는 아직 완성하지 않는다. 기준 막대로 전체 맥락만 주고 바로 청중의 판단을 요청한다.",
+        bridge: "두 예측 순서 가운데 어느 쪽이 더 낫다고 느껴지나요?",
+        boundary: "ROC AUC 첫 등장", source: "concepts"
+      },
+      {
+        act: 2, time: "11:00", duration: "2분", type: "participation",
+        claim: "청중 참여 1: A와 B 가운데 더 좋은 위험 순서를 고릅니다",
+        visual: "실제 중독 여부가 표시된 네 사람과 위험 순서 A, B. 정답 수치는 아직 가린다.",
+        note: "손들기나 빠른 구두 투표로 선택만 받는다. 계산을 요구하지 않고 순서를 보는 감각을 먼저 끌어낸다.",
+        bridge: "왜 B가 더 낫다고 느꼈는지 네 쌍으로 확인해 보겠습니다.",
+        boundary: "청중 참여", source: "concepts"
+      },
+      {
+        act: 2, time: "13:00", duration: "3분", type: "participation",
+        claim: "B는 네 쌍 모두에서 중독 한 명을 더 위에 놓았습니다",
+        visual: "중독 한 명과 비중독 한 명의 네 쌍을 순차 공개. A는 3쌍, B는 4쌍을 올바르게 놓는다.",
+        note: "ROC AUC를 임의로 고른 중독 한 명에게 비중독 한 명보다 높은 위험도를 준 비율로 설명한다.",
+        bridge: "평가 기준을 알았으니, 같은 숫자를 모델에게 어떻게 보여 줬는지 보겠습니다.",
+        boundary: "ROC AUC 설명", source: "concepts"
+      },
+      {
+        act: 2, time: "16:00", duration: "2.5분", type: "representation",
+        claim: "같은 숫자에도 크기와 정확한 값이라는 두 관점이 있습니다",
+        visual: "하나의 숫자를 연속 눈금으로 보는 렌즈와 정확값 범주로 보는 렌즈를 나란히 둔다.",
+        note: "12개 변수를 늘린 것이 아니라 같은 변수를 다른 관점으로 표현했다는 경계를 분명히 한다.",
+        bridge: "둘 중 하나를 고르는 대신 함께 보여 주면 어땠을까요?",
+        boundary: "표현 방식", source: "score"
+      },
+      {
+        act: 2, time: "18:30", duration: "2.5분", type: "evidence",
+        claim: "수치와 정확값 범주를 함께 쓰자 단일 구성 OOF AUC가 +0.00329 올랐습니다",
+        visual: "일반 OOF 파랑 원만 쓰는 확대 눈금 전후 비교. 화면 안에 확대 눈금, 축 양끝, AUC 차이 +0.00329를 적는다.",
+        note: "이 수치는 단일 구성 내부 비교임을 말한다. Public이나 Private 점수와 한 선으로 잇지 않는다.",
+        bridge: "그렇다면 모든 숫자를 범주로만 바꾸면 더 좋아질까요?",
+        boundary: "단일 구성 내부", source: "score"
+      },
+      {
+        act: 2, time: "21:00", duration: "2분", type: "evidence",
+        claim: "전부 범주로만 쓰자 오히려 AUC 차이 -0.00417이었습니다",
+        visual: "수치만, 범주만, 둘 다의 세 렌즈. 범주만 행에는 빨강 네모와 중단을 함께 표시.",
+        note: "성공과 실패를 한 원칙으로 회수한다. 정답은 표현 하나가 아니라 서로 보완하는 관점이었다.",
+        bridge: "하지만 숫자가 올랐다는 사실만으로 실험을 믿어도 될까요?",
+        boundary: "단일 구성 내부", source: "score"
+      },
+      {
+        act: 3, time: "23:00", duration: "2분", type: "validation",
+        claim: "모든 실험은 결과를 보기 전에 고정한 같은 다섯 fold에서 비교했습니다",
+        visual: "자료를 다섯 묶음으로 나눈 뒤 자물쇠가 닫히는 흐름. 각 묶음은 같은 크기와 고정된 번호를 가진다.",
+        note: "fold는 결과를 보기 전에 자료를 같은 다섯 묶음으로 나눴고 그 묶음 하나라고 처음 설명한다.",
+        bridge: "각 행이 자기 정답을 보지 않은 예측을 받게 하려면 어떻게 해야 할까요?",
+        boundary: "검증 절차", source: "language"
+      },
+      {
+        act: 3, time: "25:00", duration: "2분", type: "validation",
+        claim: "OOF는 자기 정답으로 학습하지 않은 모델이 각 행에 남긴 예측입니다",
+        visual: "다섯 fold 가운데 하나씩 검증으로 비우고 네 묶음에서 학습한 예측을 원래 행 순서로 이어 붙인다.",
+        note: "예측값 OOF와 이를 ROC AUC로 채점한 OOF AUC를 구분한다.",
+        bridge: "예측을 합치는 규칙까지 같은 자료에서 고르면 여전히 답을 엿볼 수 있습니다.",
+        boundary: "OOF", source: "concepts"
+      },
+      {
+        act: 3, time: "27:00", duration: "3분", type: "validation",
+        claim: "nested OOF는 바깥 fold를 봉인한 채 안쪽 fold에서 조합을 고릅니다",
+        visual: "다섯 검사실 가운데 한 곳을 봉인하고 나머지 네 곳에서 조합을 고른 뒤 봉인을 열어 평가하는 장면.",
+        note: "다섯 검사실 비유는 이 화면에서만 한 번 쓴다. 실제 바깥 fold와 안쪽 fold 흐름으로 곧바로 되돌아온다.",
+        bridge: "이제 혼자 잘하는 예측과 팀에 도움이 되는 예측을 따로 물을 수 있습니다.",
+        boundary: "nested OOF", source: "concepts"
+      },
+      {
+        act: 3, time: "30:00", duration: "2분", type: "validation",
+        claim: "개인전 점수와 ensemble에 들어왔을 때의 기여는 다른 질문입니다",
+        visual: "혼자 잘하는가와 함께할 때 돕는가라는 두 검수대. 일반 OOF 파랑 원과 중첩 OOF 청록 네모를 분리한다.",
+        note: "ensemble은 여러 예측을 합치되 혼자 점수가 높은지와 전체 결과를 높이는지를 따로 보는 것이라고 처음 설명한다.",
+        bridge: "그 판단 절차를 실제 결과 하나에 적용해 보겠습니다.",
+        boundary: "ensemble 첫 등장", source: "concepts"
+      },
+      {
+        act: 3, time: "32:00", duration: "1.5분", type: "participation",
+        claim: "청중 참여 2: nested OOF AUC 차이 +0.0000469만 보고 결정합니다",
+        visual: "청록 네모의 +0.0000469와 채택, 중단, 근거 더 보기 세 선택. 잡음 바닥과 반복 근거는 아직 가린다.",
+        note: "첫 답은 근거 더 보기다. 이 숫자가 작아서가 아니라 선택과 평가 절차의 근거가 아직 없기 때문이다.",
+        bridge: "한 번의 전체 숫자 외에 어떤 근거가 더 필요할까요?",
+        boundary: "청중 참여", source: "concepts"
+      },
+      {
+        act: 3, time: "33:30", duration: "1.5분", type: "participation",
+        claim: "바깥 fold 다섯 곳에서 모두 같은 방향이었습니다",
+        visual: "청록 네모 다섯 개를 한 줄로 공개하고 각 fold의 방향이 모두 양수임을 표시. 정확한 긴 소수는 메모로 뺀다.",
+        note: "반복 근거를 공개하되 아직 결론을 재촉하지 않는다. 결과를 보기 전에 정한 관문이 있었는지 다시 묻는다.",
+        bridge: "이 반복 결과를 보기 전에 채택 조건도 정해 두었을까요?",
+        boundary: "반복 근거", source: "concepts"
+      },
+      {
+        act: 3, time: "35:00", duration: "2분", type: "participation",
+        claim: "사전에 고정한 관문을 통과했기 때문에 missingness augmentation을 채택했습니다",
+        visual: "점추정, 5/5 반복 근거, 사전 관문, 초록 원 채택의 네 열. 색은 마지막 결론에만 쓴다.",
+        note: "missingness augmentation은 관측값 일부를 추가로 가린 복제본으로 값이 비어도 견디게 한 방법이라고 한 문장으로 설명한다.",
+        bridge: "같은 판단을 여러 실행 장소에서 반복하려면 공통 레시피와 검수대가 필요했습니다.",
+        boundary: "nested OOF 판정", source: "concepts"
+      },
+      {
+        act: 3, time: "37:00", duration: "2.5분", type: "system",
+        claim: "하나의 레시피, 여러 주방, 하나의 검수대로 실험을 확장했습니다",
+        visual: "같은 레시피에서 로컬, Kaggle, Vast.ai, Runpod 주방으로 갈라졌다가 로컬 검수대로 돌아오는 방사형 그림.",
+        note: "이 비유는 실험 실행 체계를 처음 소개하는 이 화면에서만 쓴다. 장소보다 같은 명세와 중앙 검수를 강조한다.",
+        bridge: "다른 주방에서 나온 결과가 정말 같은 실험인지 어떻게 확인했을까요?",
+        boundary: "실험 실행 체계", source: "environment"
+      },
+      {
+        act: 3, time: "39:30", duration: "2.5분", type: "system",
+        claim: "모든 결과는 실행 기록 묶음으로 로컬에 돌아와 다시 검수됐습니다",
+        visual: "설정 고정, 실행, 실행 기록 묶음, SHA-256 대조, 로컬 재채점, 판정, 보관의 한 방향 흐름.",
+        note: "각 실행 장소에서 로컬로 향하는 화살표에 실행 기록 묶음을 적는다. 환경 자체에는 성공색을 쓰지 않는다.",
+        bridge: "전반에서는 무엇을 예측했고, 어떻게 평가했고, 결과를 어떻게 믿었는지 보았습니다.",
+        boundary: "중앙 검수", source: "environment"
+      },
+      {
+        act: 3, time: "42:00", duration: "3분", type: "break",
+        claim: "휴식: 문제, 평가, 신뢰의 세 질문을 화면에 남깁니다",
+        visual: "무엇을 예측했는가, 어떻게 평가했는가, 실험 결과를 어떻게 믿었는가의 세 문장과 후반 예고.",
+        note: "설명은 멈추고 화면만 남긴다. 후반에는 잘된 실험과 중단한 실험, 실행 장소의 변화, 최종 조립을 다룬다고 예고한다.",
+        bridge: "후반 첫 질문은 어떤 실험을 남기고 무엇을 일찍 멈췄는가입니다.",
+        boundary: "휴식 화면", source: "timing"
+      },
+      {
+        act: 4, time: "45:00", duration: "2분", type: "evidence",
+        claim: "후반은 성공과 실패를 같은 판정표에서 시작합니다",
+        visual: "실험 이름, 점추정, 반복 근거, 사전 관문, 결론의 다섯 열. 사례는 아직 흐리게 두고 표 읽는 법만 보여 준다.",
+        note: "성공은 자랑 목록, 실패는 시행착오 목록으로 떼지 않는다. 둘 다 운영 원칙을 만든 증거로 다룬다.",
+        bridge: "가장 큰 상승은 새 모델이 아니라 자료형 결함을 고친 데서 나왔습니다.",
+        boundary: "성공과 실패", source: "visual"
+      },
+      {
+        act: 4, time: "47:00", duration: "3분", type: "evidence",
+        claim: "RealMLP의 자료형 결함을 고치자 단일 구성 OOF AUC가 +0.00461 올랐습니다",
+        visual: "잘못된 자료형과 바로잡은 자료형의 전후 비교, 일반 OOF 파랑 원의 확대 눈금, 초록 원 채택.",
+        note: "새로운 복잡성을 더한 성과가 아니라 입력 의미를 구현과 맞춘 성과였다는 점을 강조한다.",
+        bridge: "다른 성공들도 복잡한 비법보다 서로 다른 관점을 보존한 결과였습니다.",
+        boundary: "단일 구성 내부", source: "score"
+      },
+      {
+        act: 4, time: "50:00", duration: "3분", type: "evidence",
+        claim: "남긴 실험은 같은 값의 다른 관점과 서로 다른 오차를 보탰습니다",
+        visual: "수치와 정확값 범주, Lookup-Transformer의 다른 오차, missingness augmentation의 세 행을 채택 원칙에 연결.",
+        note: "각 사례의 상세 설정 대신 무엇이 달랐고 어떤 검수 문턱을 통과했는지만 남긴다.",
+        bridge: "반대로 새로워 보여도 반복 근거와 팀 기여가 없으면 멈췄습니다.",
+        boundary: "채택 사례", source: "score"
+      },
+      {
+        act: 4, time: "53:00", duration: "4분", type: "evidence",
+        claim: "17개 설정, 새 신경망 네 종류, 외부 예측 120개를 근거가 약할 때 멈췄습니다",
+        visual: "Lookup-Transformer 설정 17개 전부 1차 미달, 신경망 네 종류 조기 중단, 120개 외부 예측 한계 기여 -0.000057, 327열 미채택을 중단표로 배치.",
+        note: "실패를 비용 낭비로만 말하지 않는다. 1차 관문, 반복 근거, 전체 기여라는 중단 규칙을 얻었다고 회수한다.",
+        bridge: "많은 실험을 같은 규칙으로 빨리 거르려면 실행 장소의 역할도 바뀌어야 했습니다.",
+        boundary: "중단 사례", source: "score"
+      },
+      {
+        act: 4, time: "57:00", duration: "3분", type: "system",
+        claim: "실행 장소는 달라도 판정은 로컬의 한 검수대로 모였습니다",
+        visual: "가운데 로컬 검수대, 둘레의 로컬 CPU, Kaggle CPU, Kaggle GPU, Vast.ai, Runpod. 들어오는 화살표마다 실행 기록 묶음 표시.",
+        note: "장소 이름을 나열하지 않고 역할을 붙인다. 로컬은 개발과 소규모 실행뿐 아니라 반입, 재채점, 판정과 최종 조립을 맡았다.",
+        bridge: "이 역할 분담은 처음부터 고정돼 있지 않았습니다.",
+        boundary: "실행 장소 역할", source: "environment"
+      },
+      {
+        act: 4, time: "60:00", duration: "3분", type: "system",
+        claim: "비용과 운영 경험에 따라 주 실행 장소와 예비 장소를 바꿨습니다",
+        visual: "초반 Kaggle GPU 정식 실행에서 후반 호환성 확인과 진단으로 바뀐 시간선. Runpod 우선에서 Vast.ai 우선으로 바뀌고, Vast.ai SSH 실패 때 Runpod으로 전환한 사건 표시.",
+        note: "실행 장소의 역할 변화와 실제 전환 사건을 분리해서 말한다. 공급자 실패도 운영 규칙을 시험한 사례로 연결한다.",
+        bridge: "확장은 많이 쓰는 것이 아니라, 실패해도 바꿀 수 있고 끝나면 비용을 멈추는 것이었습니다.",
+        boundary: "환경 전환", source: "environment"
+      },
+      {
+        act: 4, time: "63:00", duration: "3분", type: "system",
+        claim: "$0.39는 대회 전체가 아니라 최종 Vast.ai 재학습 작업 비용입니다",
+        visual: "비용 범위를 괄호로 묶은 영수증 카드와 학습 완료, 결과 회수, 자원 삭제, 과금 0의 종료 흐름.",
+        note: "작은 비용을 전체 대회 비용처럼 과장하지 않는다. 비용 범위와 원격 자원 정리까지가 한 작업임을 화면 안에서 제한한다.",
+        bridge: "이 체계가 빨리 만든 예측을 모두 남긴 것은 아닙니다. 팀에 실제로 도움이 되는지가 마지막 문턱이었습니다.",
+        boundary: "최종 Vast.ai 작업", source: "environment"
+      },
+      {
+        act: 4, time: "66:00", duration: "2.5분", type: "ensemble",
+        claim: "혼자 잘하는가와 함께할 때 돕는가를 두 번 시험했습니다",
+        visual: "왼쪽 일반 OOF의 개인전 검수, 오른쪽 nested OOF의 팀 기여 검수. 파랑 원과 청록 네모를 한 선으로 잇지 않는다.",
+        note: "전반의 질문을 사례 판단으로 회수한다. 단독 점수가 낮아도 전체 결과를 높이면 남길 수 있다.",
+        bridge: "팀 기여를 만드는 핵심은 점수보다 오차가 얼마나 다른가였습니다.",
+        boundary: "이중 시험", source: "visual"
+      },
+      {
+        act: 4, time: "68:30", duration: "2.5분", type: "ensemble",
+        claim: "같은 점수라도 틀린 행이 다르면 함께할 이유가 생깁니다",
+        visual: "같은 행이 같은 위치를 갖는 두 줄 오차 표식. 겹치는 오차와 서로 다른 오차를 정확한 위치로 보여 주고 Venn 그림은 쓰지 않는다.",
+        note: "다양성을 막연한 모델 종류가 아니라 서로 다르게 틀리는 예측으로 설명한다.",
+        bridge: "Lookup-Transformer가 남은 이유도 혼자 최고여서가 아니었습니다.",
+        boundary: "오차 다양성", source: "visual"
+      },
+      {
+        act: 4, time: "71:00", duration: "2분", type: "ensemble",
+        claim: "Lookup-Transformer는 낮은 중복과 양의 결합 기여로 자리를 얻었습니다",
+        visual: "개인전 점수와 팀 기여의 두 검수 도장, 다른 오차 행이 최종 후보 풀로 들어가는 짧은 흐름.",
+        note: "모델 구조를 깊게 설명하지 않는다. 정확값 조회와 부드러운 수치 추세를 함께 봐 나무 모델과 다른 오차를 냈다는 정도만 말한다.",
+        bridge: "이 원칙으로 남긴 예측을 마지막에는 어떻게 조립했을까요?",
+        boundary: "결합 기여", source: "score"
+      },
+      {
+        act: 5, time: "73:00", duration: "2.5분", type: "assembly",
+        claim: "자체 35개 결합 0.96981에서 최종 314개 예측 열 0.97038까지 갔습니다",
+        visual: "결합 내부 점수 패널 하나에서 청록 네모 두 개를 확대 눈금으로 비교. 314개 모델이 아니라 314개 예측 열이라고 화면에 적는다.",
+        note: "이 둘만 같은 결합 내부 측정 경계에서 비교한다. 긴 소수와 실행 식별자는 발표자 메모로 뺀다.",
+        bridge: "314개를 모두 같은 값으로 취급하지 않고, 답을 미리 보지 않은 평가로 조합을 골랐습니다.",
+        boundary: "결합 내부", source: "score"
+      },
+      {
+        act: 5, time: "75:30", duration: "2분", type: "assembly",
+        claim: "314개 예측 열은 출처가 다른 예측값을 검수해 남긴 조립 재료입니다",
+        visual: "자체 예측과 외부 예측 후보가 nested OOF 검수대를 통과해 314열 조립판으로 들어오는 깔때기. 모델 314개 표기는 금지.",
+        note: "예측 열, 모델, 실행의 의미 경계를 지킨다. 약한 외부 예측도 자동으로 다양성 기여를 만들지는 않았다고 짚는다.",
+        bridge: "내부 검증에서 고른 조합이 공식 성적에서는 어디에 도착했을까요?",
+        boundary: "314개 예측 열", source: "language"
+      },
+      {
+        act: 5, time: "77:30", duration: "2.5분", type: "result",
+        claim: "공식 결과는 Public 0.97135, Private 0.97109, 최종 14위였습니다",
+        visual: "Public 호박 마름모와 Private 보라 별을 공식 결과 패널에만 배치. 내부 OOF 패널과 선으로 잇지 않는다.",
+        note: "처음 화면의 14위로 돌아온다. 내부 검증 점수와 대회 점수를 같은 상승 계보처럼 보이지 않게 한다.",
+        bridge: "그렇다면 14위와 우승권 사이에 남은 차이는 무엇이었을까요?",
+        boundary: "공식 결과", source: "score"
+      },
+      {
+        act: 5, time: "80:00", duration: "2.5분", type: "lesson",
+        claim: "남은 차이는 더 강한 단일 모델을 더 빨리 찾는 탐색 역량이었습니다",
+        visual: "현재 강점인 검증과 조립의 넓은 기반 위에 더 높은 단일 모델 탐색 탑을 세우는 그림.",
+        note: "실험 실행 체계를 실패로 평가하지 않는다. 체계는 조립을 강하게 했고, 다음 과제는 그 체계를 더 넓고 이른 탐색에 쓰는 것이다.",
+        bridge: "다음 도전에서는 무엇을 앞당기고 무엇을 그대로 지켜야 할까요?",
+        boundary: "우승권과의 차이", source: "timing"
+      },
+      {
+        act: 5, time: "82:30", duration: "2.5분", type: "lesson",
+        claim: "다음에는 넓은 단일 모델 탐색을 일찍 열고 검수 원칙은 그대로 지킵니다",
+        visual: "초반 넓은 탐색, 중반 고정 fold와 중단 관문, 후반 서로 다른 오차 조립의 다음 대회 시간선.",
+        note: "더 많은 실험을 무조건 한다고 말하지 않는다. 더 강한 단일 후보를 일찍 찾고 작은 근거로 빨리 중단하는 구조로 구체화한다.",
+        bridge: "이번 대회에서 다음 대회로 가져갈 세 문장만 남기겠습니다.",
+        boundary: "다음 운영 원칙", source: "timing"
+      },
+      {
+        act: 5, time: "85:00", duration: "2분", type: "closing",
+        claim: "작게 검증하고, 다르게 틀리는 예측을 모으고, 같은 검수대로 조립합니다",
+        visual: "전반의 세 조각이 다시 모여 14위 결승선과 다음 탐색 방향으로 이어지는 닫힌 고리.",
+        note: "중심 메시지를 같은 세 축으로 회수한다. 87분에 본문을 끝내고 남은 3분은 예비 시간으로 둔 뒤 질의응답으로 넘어간다.",
+        bridge: "여러분의 일에서는 어떤 결정을 결과 확인 전에 고정하면 더 믿을 수 있을까요?",
+        boundary: "본문 결론", source: "timing"
+      }
+    ];
+
+    const variants = [
+      { key: "A", name: "한 화면씩 리허설" },
+      { key: "B", name: "네 층 이야기 대조표" },
+      { key: "C", name: "5막 전체 흐름 벽" }
+    ];
+
+    const app = document.getElementById("app");
+    const params = new URLSearchParams(window.location.search);
+    let currentVariant = variants.some(v => v.key === params.get("variant")) ? params.get("variant") : "A";
+    let currentScreen = Math.min(Math.max(Number(params.get("screen")) || 1, 1), screens.length) - 1;
+
+    function esc(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function sourceLink(screen) {
+      const source = sources[screen.source];
+      return `<a href="${source.url}" target="_blank" rel="noreferrer">${esc(source.title)}</a>`;
+    }
+
+    function classFor(screen) {
+      if (screen.type === "participation") return "participation";
+      if (screen.type === "break") return "break";
+      return "";
+    }
+
+    function setUrl() {
+      const next = new URLSearchParams(window.location.search);
+      next.set("variant", currentVariant);
+      if (currentVariant === "A") next.set("screen", String(currentScreen + 1));
+      else next.delete("screen");
+      history.replaceState({}, "", `${window.location.pathname}?${next.toString()}`);
+    }
+
+    function renderA() {
+      const screen = screens[currentScreen];
+      const act = acts.find(a => a.id === screen.act);
+      app.innerHTML = `
+        <section class="view rehearsal">
+          <aside class="rehearsal-nav">
+            <div class="eyebrow">Variant A</div>
+            <h2>한 화면씩 리허설</h2>
+            <p class="lede" style="font-size:13px">화면 하나의 주장과 다음 화면으로 넘기는 질문이 말로 이어지는지 봅니다.</p>
+            ${screens.map((item, index) => `
+              <button class="screen-index ${index === currentScreen ? "active" : ""}" data-screen="${index}">
+                <strong>${String(index + 1).padStart(2, "0")} · ${esc(item.time)} · ${esc(acts[item.act - 1].title)}</strong>
+                <span>${esc(item.claim)}</span>
+              </button>`).join("")}
+          </aside>
+          <div class="rehearsal-stage">
+            <div class="rehearsal-head">
+              <div>
+                <div class="eyebrow">화면 ${currentScreen + 1} / ${screens.length}</div>
+                <strong>${esc(act.title)} · ${esc(screen.time)}부터 ${esc(screen.duration)}</strong>
+              </div>
+              <div class="screen-controls">
+                <button id="prevScreen" type="button">이전 화면</button>
+                <button id="nextScreen" type="button">다음 화면</button>
+              </div>
+            </div>
+            <article class="slide-frame">
+              <div class="slide-top">
+                <span>${esc(act.title)}</span>
+                <span>${esc(screen.time)} · ${esc(screen.boundary)}</span>
+              </div>
+              <h1 class="slide-title">${esc(screen.claim)}</h1>
+              <div class="visual-placeholder"><strong>시각 자료</strong><span>${esc(screen.visual)}</span></div>
+              <div class="slide-marker">
+                <span class="meta-pill"><span class="dot"></span>${esc(screen.boundary)}</span>
+                ${screen.type === "participation" ? '<span class="meta-pill">청중 참여</span>' : ""}
+              </div>
+            </article>
+            <div class="detail-grid">
+              <div class="detail-card"><h3>발표자 요점</h3><p>${esc(screen.note)}</p></div>
+              <div class="detail-card"><h3>근거 결정</h3><p>${sourceLink(screen)}</p></div>
+              <div class="detail-card bridge"><h3>다음 화면으로 넘기는 질문 또는 문장</h3><p>${esc(screen.bridge)}</p></div>
+            </div>
+          </div>
+        </section>`;
+
+      document.querySelectorAll("[data-screen]").forEach(button => {
+        button.addEventListener("click", () => {
+          currentScreen = Number(button.dataset.screen);
+          setUrl();
+          render();
+        });
+      });
+      document.getElementById("prevScreen").addEventListener("click", () => changeScreen(-1));
+      document.getElementById("nextScreen").addEventListener("click", () => changeScreen(1));
+    }
+
+    function renderB() {
+      const rows = [];
+      let lastAct = null;
+      screens.forEach((screen, index) => {
+        if (lastAct !== screen.act) {
+          const act = acts[screen.act - 1];
+          rows.push(`<tr class="act-row"><td colspan="7">${act.id}막 · ${esc(act.title)} · ${esc(act.range)} · ${esc(act.purpose)}</td></tr>`);
+          lastAct = screen.act;
+        }
+        rows.push(`
+          <tr class="${classFor(screen)}">
+            <td class="n">${String(index + 1).padStart(2, "0")}</td>
+            <td class="time">${esc(screen.time)}<br>${esc(screen.duration)}</td>
+            <td class="claim">${esc(screen.claim)}</td>
+            <td>${esc(screen.visual)}</td>
+            <td>${esc(screen.note)}</td>
+            <td>${esc(screen.bridge)}</td>
+            <td>${sourceLink(screen)}</td>
+          </tr>`);
+      });
+      app.innerHTML = `
+        <section class="view matrix-shell">
+          <header class="matrix-head">
+            <div class="eyebrow">Variant B</div>
+            <h1>네 층 이야기 대조표</h1>
+            <p class="lede">35개 화면에서 핵심 주장, 시각 자료, 발표자 요점, 다음 화면으로 넘기는 질문이 빠짐없이 맞물리는지 한꺼번에 검사합니다.</p>
+            <div class="matrix-legend">
+              <span class="meta-pill">노랑: 청중 참여</span>
+              <span class="meta-pill">청록: 휴식 화면</span>
+              <span class="meta-pill">근거 결정은 이름으로 연결</span>
+            </div>
+          </header>
+          <div class="matrix">
+            <table>
+              <thead><tr><th>화면</th><th>시간</th><th>핵심 주장</th><th>시각 자료</th><th>발표자 요점</th><th>다음 화면으로 넘기기</th><th>근거 결정</th></tr></thead>
+              <tbody>${rows.join("")}</tbody>
+            </table>
+          </div>
+        </section>`;
+    }
+
+    function renderC() {
+      app.innerHTML = `
+        <section class="view wall-shell">
+          <header class="wall-head">
+            <div class="eyebrow">Variant C</div>
+            <h1>5막 전체 흐름 벽</h1>
+            <p class="lede">개별 화면의 문구보다 막마다 질문이 어떻게 바뀌고, 참여 장면과 휴식이 어느 호흡에 놓이는지 봅니다.</p>
+          </header>
+          <div class="act-wall">
+            ${acts.map(act => `
+              <section class="act-lane">
+                <div class="act-label">
+                  <span>${act.id}막 · ${esc(act.range)}</span>
+                  <strong>${esc(act.title)}</strong>
+                  <span>${esc(act.purpose)}</span>
+                </div>
+                <div class="act-cards">
+                  ${screens.map((screen, index) => ({ screen, index })).filter(item => item.screen.act === act.id).map(({ screen, index }) => `
+                    <article class="story-card ${classFor(screen)}">
+                      <div class="story-card-top"><span>${String(index + 1).padStart(2, "0")}</span><span>${esc(screen.time)} · ${esc(screen.duration)}</span></div>
+                      <h3>${esc(screen.claim)}</h3>
+                      <div class="story-visual"><strong>시각 자료</strong><br>${esc(screen.visual)}</div>
+                      <div class="story-bridge"><strong>다음</strong><br>${esc(screen.bridge)}</div>
+                    </article>`).join("")}
+                </div>
+              </section>`).join("")}
+          </div>
+        </section>`;
+    }
+
+    function render() {
+      if (currentVariant === "A") renderA();
+      if (currentVariant === "B") renderB();
+      if (currentVariant === "C") renderC();
+      document.getElementById("variantLabel").textContent = `${currentVariant} · ${variants.find(v => v.key === currentVariant).name}`;
+    }
+
+    function changeVariant(delta) {
+      const index = variants.findIndex(v => v.key === currentVariant);
+      currentVariant = variants[(index + delta + variants.length) % variants.length].key;
+      setUrl();
+      render();
+    }
+
+    function changeScreen(delta) {
+      currentScreen = (currentScreen + delta + screens.length) % screens.length;
+      setUrl();
+      render();
+    }
+
+    document.getElementById("prevVariant").addEventListener("click", () => changeVariant(-1));
+    document.getElementById("nextVariant").addEventListener("click", () => changeVariant(1));
+    document.addEventListener("keydown", event => {
+      const target = event.target;
+      if (target instanceof Element && target.matches("input, textarea, [contenteditable]")) return;
+      if (event.key === "ArrowLeft") changeVariant(-1);
+      if (event.key === "ArrowRight") changeVariant(1);
+      if (currentVariant === "A" && event.key.toLowerCase() === "j") changeScreen(1);
+      if (currentVariant === "A" && event.key.toLowerCase() === "k") changeScreen(-1);
+    });
+
+    render();
+  </script>
+</body>
+</html>
