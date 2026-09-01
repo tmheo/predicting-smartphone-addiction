@@ -1,0 +1,22 @@
+<mxfile host="Electron" version="28.1.2">
+<diagram id="screen-01-official-result" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="공식 최종 결과" style="text;html=1;fontStyle=1;fontSize=24;align=left;fontColor=#475569;" vertex="1" parent="1"><mxGeometry x="60" y="40" width="260" height="40" as="geometry"/></mxCell>
+    <mxCell id="3" value="14위" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;strokeWidth=3;fontColor=#4c1d95;fontStyle=1;fontSize=64;" vertex="1" parent="1"><mxGeometry x="60" y="120" width="420" height="260" as="geometry"/></mxCell>
+    <mxCell id="4" value="Taemyung Heo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c4b5fd;fontColor=#4c1d95;fontStyle=1;fontSize=27;" vertex="1" parent="1"><mxGeometry x="100" y="420" width="340" height="80" as="geometry"/></mxCell>
+    <mxCell id="5" value="순위를 정한 공식 비공개 점수" style="text;html=1;fontSize=18;align=center;fontColor=#64748b;" vertex="1" parent="1"><mxGeometry x="90" y="520" width="360" height="40" as="geometry"/></mxCell>
+    <mxCell id="6" value="같은 제출, 서로 다른 채점 표본" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;fontStyle=1;fontSize=23;align=left;spacingLeft=24;" vertex="1" parent="1"><mxGeometry x="590" y="80" width="650" height="80" as="geometry"/></mxCell>
+    <mxCell id="7" value="" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f59e0b;strokeColor=#b45309;strokeWidth=3;" vertex="1" parent="1"><mxGeometry x="650" y="235" width="74" height="74" as="geometry"/></mxCell>
+    <mxCell id="8" value="Public 점수&#xa;0.97135" style="text;html=1;fontStyle=1;fontSize=30;align=left;" vertex="1" parent="1"><mxGeometry x="770" y="225" width="300" height="90" as="geometry"/></mxCell>
+    <mxCell id="9" value="대회 진행 중 공개된 채점 부분" style="text;html=1;fontSize=18;align=left;fontColor=#64748b;" vertex="1" parent="1"><mxGeometry x="770" y="310" width="370" height="40" as="geometry"/></mxCell>
+    <mxCell id="10" value="★" style="text;html=1;fontStyle=1;fontSize=66;align=center;fontColor=#7c3aed;" vertex="1" parent="1"><mxGeometry x="635" y="410" width="100" height="90" as="geometry"/></mxCell>
+    <mxCell id="11" value="Private 점수&#xa;0.97109" style="text;html=1;fontStyle=1;fontSize=30;align=left;" vertex="1" parent="1"><mxGeometry x="770" y="405" width="320" height="90" as="geometry"/></mxCell>
+    <mxCell id="12" value="대회 종료 뒤 최종 순위를 정한 채점 부분" style="text;html=1;fontSize=18;align=left;fontColor=#64748b;" vertex="1" parent="1"><mxGeometry x="770" y="495" width="420" height="40" as="geometry"/></mxCell>
+    <mxCell id="13" value="내부 검증 점수와 이어 붙이지 않습니다" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7ed;strokeColor=#c2410c;fontColor=#9a3412;fontStyle=1;fontSize=20;" vertex="1" parent="1"><mxGeometry x="650" y="585" width="500" height="70" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>

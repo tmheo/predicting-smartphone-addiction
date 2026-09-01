@@ -1,7 +1,161 @@
-이 문서는 35개 화면 전체 제작에 앞서 문장 밀도, 정보 위계, 발표자 메모, Confluence 보충 설명과 시각 자료 표현을 검토하기 위한 대표 화면 시제품이다.
-화면 08, 12, 21, 23, 24, 31, 35를 실제 원본 경로와 최종 자산 경로에 먼저 작성했다.
+이 문서는 `A 발표 우선` 형식으로 작성하는 35개 화면의 발표 원본이다.
+현재 화면 01부터 09까지와 형식 검토에 사용한 대표 화면 12, 21, 23, 24, 31, 35를 완성했다.
 
 [기술 정의와 근거 찾아보기](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
+## 화면 01. Private 0.97109, 최종 14위에서 시작합니다
+
+공식 Private 점수 `0.97109`로 최종 14위였고, 오늘은 성적보다 이 결과를 만든 방식을 되짚습니다.
+
+![공식 최종 결과 14위와 같은 제출의 Public 점수 0.97135, Private 점수 0.97109를 호박 마름모와 보라 별로 분리한 결과 패널](assets/screen-01-official-result.png)
+
+시각 자료 대체 설명: 공식 최종 결과는 14위이며, 같은 제출의 Public 점수 `0.97135`와 최종 순위를 정한 Private 점수 `0.97109`가 서로 다른 표식과 설명으로 나뉘어 있다.
+
+### 발표자 메모
+
+- `0.97109`는 대회 종료 뒤 최종 순위를 정한 Private 점수이고, `0.97135`는 같은 제출의 Public 점수입니다.
+- 두 점수를 내부 검증 점수와 이어 붙이지 않고, 다음 화면에서는 같은 12개 변수에서 이 결과를 만든 세 축을 소개합니다.
+
+### Confluence 보충 설명
+
+Public 점수와 Private 점수는 같은 제출을 서로 다른 시험 표본에서 채점한 결과다.
+두 값의 차이로 개별 실험의 개선량이나 일반화 효과를 역산하지 않는다.
+
+근거: [발표용 성적과 실험 계보 근거](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/presentation-score-evidence.md), [최종 조립 실행 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/report.md)
+
+부록: [A. 공식 결과와 자료 범위](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
+## 화면 02. 검증 가능한 작은 실험을 조립한 결과였습니다
+
+14위는 비밀 모델 하나가 아니라 작은 실험, 서로 다른 오차와 공통 검수 절차를 조립한 결과였습니다.
+
+![검증 가능한 작은 실험, 서로 다르게 틀리는 예측, 실험 실행 체계라는 세 길이 Private 0.97109와 14위 결과로 모이는 지도](assets/screen-02-three-part-route.png)
+
+시각 자료 대체 설명: 작은 변화를 비교하고, 함께할 때 보완하는 예측을 남기며, 여러 실행 장소의 결과를 한 검수대로 모은 세 축이 최종 14위 결과로 합쳐진다.
+
+### 발표자 메모
+
+- 실험 실행 체계는 같은 실험 명세를 여러 실행 장소에서 돌리고 결과를 로컬의 같은 검수 절차로 모으는 전체 구조라고 처음 설명합니다.
+- 이 세 축을 전후반의 길 안내판으로 사용하고, 하나의 모델이나 한 번의 큰 실험이 결과를 만들었다고 말하지 않습니다.
+
+### Confluence 보충 설명
+
+작은 실험은 화면 07부터 23, 서로 다른 오차는 화면 13부터 31, 공통 검수 절차는 화면 17부터 31에서 실제 사례로 이어진다.
+세 축은 최종 결과를 사후에 설명하는 회고 구조이며 하나의 비밀 모델을 가리키지 않는다.
+
+근거: [우리 최종 해법과 제출 계보 복원](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-our-final-solution.md), [발표용 실행 환경과 전환 사건 근거](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/presentation-environment-evidence.md)
+
+부록: [E. 실험 실행 체계, G. 서로 다른 오차와 Lookup-Transformer, H. 최종 314개 예측 열](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
+## 화면 03. 12개 생활 습관 변수로 중독 위험의 순서를 예측했습니다
+
+식별자와 목표값을 뺀 12개 생활 습관 변수로 사람들의 스마트폰 중독 위험 순서를 예측했습니다.
+
+![한 사람의 12개 생활 습관 변수가 0부터 1 사이의 중독 위험도 하나로 바뀌고 여러 사람이 위험도가 높은 순서로 놓이는 흐름](assets/screen-03-risk-order.png)
+
+시각 자료 대체 설명: 한 사람의 나이, 화면 사용, 수면과 알림 등 12개 입력이 위험도 하나로 바뀌며, 모든 사람의 위험도를 정렬해 높은 사람부터 낮은 사람까지 순서를 만든다.
+
+### 발표자 메모
+
+- 자료 규모를 묻는 질문이 나오면 학습 자료는 약 69만 건, 예측 자료는 약 30만 건이라고 말합니다.
+- 이 값은 대회 목표값의 순서를 위한 예측이며 개인을 진단하거나 실제 임상 위험을 판정한 결과라고 말하지 않습니다.
+
+### Confluence 보충 설명
+
+학습 자료는 `691,369`행, 시험 자료는 `296,302`행이며 이진 목표값은 `addicted_label`이다.
+12개 입력 열의 정확한 이름과 자료 범위는 기술 근거 부록 A에서 확인할 수 있다.
+
+근거: [첫 기준 실행 설정](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp001_lgbm_baseline.yaml), [첫 기준 실행 종결 기록](https://github.com/tmheo/predicting-smartphone-addiction/issues/18#issuecomment-5239693077)
+
+부록: [A. 공식 결과와 자료 범위](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
+## 화면 04. ROC AUC는 순서 전체를 봅니다
+
+ROC AUC는 임의로 고른 중독 한 명에게 비중독 한 명보다 높은 위험도를 준 비율입니다.
+
+![0.5 무작위 순서부터 1.0 완전한 순서까지의 기준 막대와 중독 한 명 및 비중독 한 명의 위험도를 비교해 올바른 순서 비율을 구하는 흐름](assets/screen-04-roc-auc.png)
+
+시각 자료 대체 설명: 중독 한 명과 비중독 한 명을 짝지어 누가 더 높은 위험도를 받았는지 모든 가능한 쌍에서 확인하며, 그 가운데 올바른 순서의 비율이 ROC AUC가 된다.
+
+### 발표자 메모
+
+- `0.5`는 무작위 순서, `1.0`은 완전한 순서라는 전체 맥락을 먼저 보여 줍니다.
+- ROC AUC는 정답 문턱 하나의 정확도가 아니라 위험 순서 전체를 평가하는 값이라고 설명합니다.
+
+### Confluence 보충 설명
+
+이 설명은 ROC 곡선 아래 넓이와 같은 값을 주는 이진 목표값의 쌍 순서 해석이다.
+동점 처리와 실제 점수 계산 위치는 기술 근거 부록 B에서 원본으로 연결한다.
+
+근거: [비전문가 발표의 기술 용어와 표기 원칙](https://github.com/tmheo/predicting-smartphone-addiction/issues/579#issuecomment-5489318781), [발표용 성적과 실험 계보 근거](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/presentation-score-evidence.md)
+
+부록: [B. 점수와 검증 경계](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
+## 화면 05. 청중 참여 1에서 더 좋은 위험 순서를 고릅니다
+
+실제 중독 여부를 본 뒤 A와 B 가운데 더 좋은 위험 순서를 직접 골라 봅니다.
+
+![중독인 사람 가와 다, 비중독인 사람 나와 라를 위험도가 높은 순서로 배열한 A와 B를 답이나 점수 없이 나란히 보여 주는 투표 화면](assets/screen-05-risk-order-vote.png)
+
+시각 자료 대체 설명: A는 가, 나, 다, 라 순서이고 B는 가, 다, 나, 라 순서이며, 청중에게 어느 위험 순서가 더 좋은지 손들어 선택하게 한다.
+
+### 발표자 메모
+
+- 손들기나 짧은 구두 투표로 선택만 받고 점수 계산은 요구하지 않습니다.
+- 답을 먼저 말하지 않고 한두 명에게 선택 이유를 물은 뒤 다음 화면에서 같은 위치를 유지한 채 결과를 공개합니다.
+
+### Confluence 보충 설명
+
+네 사람과 두 순서는 ROC AUC의 작동 원리를 설명하기 위한 교육용 예시이며 실제 대회 행에서 뽑은 표본이 아니다.
+중독 두 명과 비중독 두 명이므로 비교할 수 있는 쌍은 모두 네 개다.
+
+근거: [비전문가용 핵심 개념 설명 장면](https://github.com/tmheo/predicting-smartphone-addiction/issues/570#issuecomment-5488821634)
+
+부록: [B. 점수와 검증 경계의 교육용 네 사람 예시](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
+## 화면 06. B는 네 쌍 모두에서 중독 한 명을 더 위에 놓았습니다
+
+교육용 예시에서 A는 네 쌍 중 세 쌍, B는 네 쌍 모두를 올바른 순서로 놓았습니다.
+
+![앞 화면과 같은 위치의 A와 B 위험 순서 아래에 A는 동그라미 세 개와 가위표 한 개 및 네 쌍 중 3쌍, B는 동그라미 네 개 및 네 쌍 중 4쌍이라고 공개한 결과](assets/screen-06-risk-order-answer.png)
+
+시각 자료 대체 설명: A 순서는 중독-비중독 네 쌍 가운데 세 쌍을 올바르게 놓았고, B 순서는 네 쌍 모두를 올바르게 놓아 B가 더 좋은 위험 순서다.
+
+### 발표자 메모
+
+- 앞 화면의 선택을 회수하고 B가 더 좋은 이유를 네 쌍의 순서로만 설명합니다.
+- 교육용 네 사람의 계산을 실제 대회 점수라고 말하지 않고, ROC AUC가 순서 전체를 본다는 뜻만 반복합니다.
+
+### Confluence 보충 설명
+
+동점이 없는 이 교육용 예시에서 A의 쌍 순서 비율은 `3/4`, B는 `4/4`다.
+실제 대회 ROC AUC는 학습 자료 전체의 양성 및 음성 행 쌍에 같은 원리를 적용해 계산한다.
+
+근거: [비전문가용 핵심 개념 설명 장면](https://github.com/tmheo/predicting-smartphone-addiction/issues/570#issuecomment-5488821634)
+
+부록: [B. 점수와 검증 경계의 교육용 쌍 계산표](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
+## 화면 07. 같은 숫자에도 두 관점이 있습니다
+
+같은 수치 열을 연속적인 크기와 정확한 값 범주라는 두 정보 관점으로 함께 볼 수 있습니다.
+
+![예시 값 7.5시간이 순서와 거리를 보는 연속적인 크기 렌즈와 같은 값끼리 묶는 정확한 값 범주 렌즈로 갈라지는 그림](assets/screen-07-two-views.png)
+
+시각 자료 대체 설명: 같은 `7.5시간`을 `7.4 < 7.5 < 7.6`처럼 순서와 거리로 볼 수도 있고, `[7.5시간]`이라는 정확한 값 이름표로 볼 수도 있다.
+
+### 발표자 메모
+
+- 새 입력 변수를 수집한 것이 아니라 같은 숫자를 두 방식으로 모델에 보여 준 실험이라고 설명합니다.
+- 범주 표현은 같은 값끼리 묶는 신호를 주고, 수치 표현은 순서와 거리 정보를 보존한다고 구분합니다.
+
+### Confluence 보충 설명
+
+전체 12개 입력 가운데 원래 수치 열 아홉 개를 그대로 유지하면서 같은 값의 범주 복제 열 아홉 개를 추가했다.
+대상 열과 두 설정의 정확한 차이는 기술 근거 부록 C에서 확인할 수 있다.
+
+근거: [정확값 범주 실험 설정](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp003_categorical_copies.yaml), [수치와 범주 복제 판정](https://github.com/tmheo/predicting-smartphone-addiction/issues/31#issuecomment-5242350228)
+
+부록: [C. 같은 값을 표현한 실험](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
 
 ## 화면 08. 두 관점을 함께 쓰자 OOF AUC가 +0.00329 올랐습니다
 
@@ -22,6 +176,30 @@
 비교 기준 `0.96276`은 이 짝비교의 기준 실행이며 첫 기준 실행을 소개할 때 쓰는 `0.96270`과 같은 값으로 줄이지 않는다.
 
 근거: [전 피처 범주형 challenger 실험: 실행과 판정](https://github.com/tmheo/predicting-smartphone-addiction/issues/31#issuecomment-5242350228)
+
+부록: [C. 같은 값을 표현한 실험](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
+## 화면 09. 전부 범주로만 쓰자 AUC 차이 -0.00417이었습니다
+
+숫자의 순서 정보를 버리고 전부 범주로만 쓰자 같은 비교 기준보다 OOF AUC가 `-0.00417` 낮아졌습니다.
+
+![같은 자료 분할과 LightGBM에서 수치만 0.96276, 전부 범주로만 0.95859, 수치와 정확값 범주 병행 0.96605를 세 행으로 비교하고 전부 범주 행에 AUC 차이 -0.00417과 중단을 표시한 표](assets/screen-09-categorical-only.png)
+
+시각 자료 대체 설명: 수치만 쓴 비교 기준의 일반 OOF AUC는 `0.96276`, 전부 범주로만 쓴 값은 `0.95859`, 두 관점을 함께 쓴 값은 `0.96605`이며 전부 범주 변형은 `-0.00417`로 중단했다.
+
+### 발표자 메모
+
+- 범주 표현 자체가 나쁜 것이 아니라 수치의 순서 정보를 모두 없앤 것이 손실이었다고 제한합니다.
+- 정답은 한 표현을 고르는 것이 아니라 보완하는 두 관점을 함께 보존하는 것이었다고 회수합니다.
+
+### Confluence 보충 설명
+
+전부 범주화와 수치 유지 및 범주 복제는 결과를 보기 전에 같은 이슈에서 고정한 두 직접 비교였다.
+두 변형은 같은 자료 분할, 같은 LightGBM 설정과 같은 난수 42를 사용했다.
+
+근거: [전부 범주화 설정](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp002_all_categorical.yaml), [수치와 범주 복제 판정](https://github.com/tmheo/predicting-smartphone-addiction/issues/31#issuecomment-5242350228)
+
+부록: [C. 같은 값을 표현한 실험](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
 
 ## 화면 12. nested OOF는 바깥 fold를 봉인합니다
 
