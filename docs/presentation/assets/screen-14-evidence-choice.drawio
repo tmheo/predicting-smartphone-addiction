@@ -1,0 +1,17 @@
+<mxfile host="Electron" version="30.3.6">
+<diagram id="screen-14-evidence-choice" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="지금 보이는 근거" style="text;html=1;fontStyle=1;fontSize=26;align=center;fontColor=#334155;" vertex="1" parent="1"><mxGeometry x="500" y="35" width="440" height="50" as="geometry"/></mxCell>
+    <mxCell id="3" value="nested OOF AUC 차이&#xa;+0.0000469" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontStyle=1;fontSize=34;" vertex="1" parent="1"><mxGeometry x="470" y="120" width="500" height="170" as="geometry"/></mxCell>
+    <mxCell id="4" value="이것만 보고 무엇을 고르시겠습니까?" style="text;html=1;fontStyle=1;fontSize=30;align=center;fontColor=#0f172a;" vertex="1" parent="1"><mxGeometry x="320" y="355" width="800" height="60" as="geometry"/></mxCell>
+    <mxCell id="5" value="채택" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;strokeWidth=2;fontStyle=1;fontSize=29;" vertex="1" parent="1"><mxGeometry x="160" y="485" width="300" height="110" as="geometry"/></mxCell>
+    <mxCell id="6" value="중단" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;strokeWidth=2;fontStyle=1;fontSize=29;" vertex="1" parent="1"><mxGeometry x="570" y="485" width="300" height="110" as="geometry"/></mxCell>
+    <mxCell id="7" value="근거 더 보기" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;strokeWidth=2;fontStyle=1;fontSize=29;" vertex="1" parent="1"><mxGeometry x="980" y="485" width="300" height="110" as="geometry"/></mxCell>
+    <mxCell id="8" value="후보 · 문턱 · 반복 근거는 아직 가림" style="text;html=1;fontStyle=1;fontSize=22;align=center;fontColor=#64748b;" vertex="1" parent="1"><mxGeometry x="420" y="670" width="600" height="50" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>

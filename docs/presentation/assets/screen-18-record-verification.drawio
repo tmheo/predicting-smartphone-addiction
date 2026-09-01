@@ -1,0 +1,27 @@
+<mxfile host="Electron" version="30.3.6">
+<diagram id="screen-18-record-verification" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="모든 원격 결과가 거친 여덟 단계" style="text;html=1;fontStyle=1;fontSize=28;align=center;fontColor=#334155;" vertex="1" parent="1"><mxGeometry x="420" y="50" width="600" height="50" as="geometry"/></mxCell>
+    <mxCell id="3" value="1&#xa;설정과 입력&#xa;고정" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontStyle=1;fontSize=19;" vertex="1" parent="1"><mxGeometry x="20" y="260" width="145" height="130" as="geometry"/></mxCell>
+    <mxCell id="4" value="2&#xa;실행 장소&#xa;배정" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontStyle=1;fontSize=19;" vertex="1" parent="1"><mxGeometry x="190" y="260" width="145" height="130" as="geometry"/></mxCell>
+    <mxCell id="5" value="3&#xa;공통 명령&#xa;실행" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontStyle=1;fontSize=19;" vertex="1" parent="1"><mxGeometry x="360" y="260" width="145" height="130" as="geometry"/></mxCell>
+    <mxCell id="6" value="4&#xa;실행 기록&#xa;묶음" style="shape=mxgraph.flowchart.document;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="530" y="260" width="145" height="130" as="geometry"/></mxCell>
+    <mxCell id="7" value="5&#xa;SHA-256&#xa;대조" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontColor=#1e3a8a;fontStyle=1;fontSize=19;" vertex="1" parent="1"><mxGeometry x="700" y="260" width="145" height="130" as="geometry"/></mxCell>
+    <mxCell id="8" value="6&#xa;입력 경계&#xa;확인" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontColor=#1e3a8a;fontStyle=1;fontSize=19;" vertex="1" parent="1"><mxGeometry x="870" y="260" width="145" height="130" as="geometry"/></mxCell>
+    <mxCell id="9" value="7&#xa;OOF&#xa;재채점" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontColor=#1e3a8a;fontStyle=1;fontSize=19;" vertex="1" parent="1"><mxGeometry x="1040" y="260" width="145" height="130" as="geometry"/></mxCell>
+    <mxCell id="10" value="8&#xa;판정 · 보관&#xa;자원 정리" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontColor=#1e3a8a;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="1210" y="260" width="145" height="130" as="geometry"/></mxCell>
+    <mxCell id="11" value="검사를 통과한 결과만 판정에 사용" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#2563eb;strokeWidth=3;fontColor=#1e3a8a;fontStyle=1;fontSize=30;" vertex="1" parent="1"><mxGeometry x="330" y="570" width="780" height="120" as="geometry"/></mxCell>
+    <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;" edge="1" source="3" target="4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;" edge="1" source="4" target="5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;" edge="1" source="5" target="6" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="6" target="7" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="7" target="8" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="8" target="9" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e7" value="통과" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;fontSize=15;" edge="1" source="9" target="10" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>

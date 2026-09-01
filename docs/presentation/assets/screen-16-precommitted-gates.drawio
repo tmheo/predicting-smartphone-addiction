@@ -1,0 +1,24 @@
+<mxfile host="Electron" version="30.3.6">
+<diagram id="screen-16-precommitted-gates" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="missingness augmentation 판정" style="text;html=1;fontStyle=1;fontSize=28;align=center;fontColor=#334155;" vertex="1" parent="1"><mxGeometry x="420" y="35" width="600" height="50" as="geometry"/></mxCell>
+    <mxCell id="3" value="점추정" style="text;html=1;fontStyle=1;fontSize=23;align=center;fontColor=#475569;" vertex="1" parent="1"><mxGeometry x="60" y="125" width="250" height="45" as="geometry"/></mxCell>
+    <mxCell id="4" value="nested OOF&#xa;AUC 차이 +0.0000469" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontStyle=1;fontSize=23;" vertex="1" parent="1"><mxGeometry x="60" y="190" width="250" height="170" as="geometry"/></mxCell>
+    <mxCell id="5" value="반복 근거" style="text;html=1;fontStyle=1;fontSize=23;align=center;fontColor=#475569;" vertex="1" parent="1"><mxGeometry x="390" y="125" width="250" height="45" as="geometry"/></mxCell>
+    <mxCell id="6" value="바깥 fold&#xa;5/5 양수" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontColor=#115e59;fontStyle=1;fontSize=28;" vertex="1" parent="1"><mxGeometry x="390" y="190" width="250" height="170" as="geometry"/></mxCell>
+    <mxCell id="7" value="사전 관문" style="text;html=1;fontStyle=1;fontSize=23;align=center;fontColor=#475569;" vertex="1" parent="1"><mxGeometry x="720" y="125" width="250" height="45" as="geometry"/></mxCell>
+    <mxCell id="8" value="결과 전에 고정한&#xa;두 OOF 관문&#xa;모두 통과" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;fontColor=#92400e;fontStyle=1;fontSize=24;" vertex="1" parent="1"><mxGeometry x="720" y="190" width="250" height="170" as="geometry"/></mxCell>
+    <mxCell id="9" value="결론" style="text;html=1;fontStyle=1;fontSize=23;align=center;fontColor=#475569;" vertex="1" parent="1"><mxGeometry x="1050" y="125" width="250" height="45" as="geometry"/></mxCell>
+    <mxCell id="10" value="채택" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#15803d;strokeWidth=3;fontColor=#14532d;fontStyle=1;fontSize=34;" vertex="1" parent="1"><mxGeometry x="1085" y="205" width="180" height="150" as="geometry"/></mxCell>
+    <mxCell id="11" value="원본 구성 다섯 자리를 missingness augmentation 적용판으로 교체" style="text;html=1;fontStyle=1;fontSize=25;align=center;fontColor=#334155;" vertex="1" parent="1"><mxGeometry x="260" y="570" width="920" height="60" as="geometry"/></mxCell>
+    <mxCell id="12" value="Public 점수는 판정에 사용하지 않음" style="text;html=1;fontSize=21;align=center;fontColor=#64748b;" vertex="1" parent="1"><mxGeometry x="460" y="660" width="520" height="45" as="geometry"/></mxCell>
+    <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=3;" edge="1" source="4" target="6" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=3;" edge="1" source="6" target="8" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e3" value="통과" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#15803d;strokeWidth=3;fontSize=18;" edge="1" source="8" target="10" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>

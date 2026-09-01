@@ -1,0 +1,19 @@
+<mxfile host="Electron" version="30.3.6">
+<diagram id="screen-15-five-fold-wins" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="같은 제안 풀의 직접 nested OOF" style="text;html=1;fontStyle=1;fontSize=27;align=center;fontColor=#334155;" vertex="1" parent="1"><mxGeometry x="390" y="35" width="660" height="50" as="geometry"/></mxCell>
+    <mxCell id="3" value="전체&#xa;+0.0000469" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontStyle=1;fontSize=27;" vertex="1" parent="1"><mxGeometry x="70" y="180" width="240" height="150" as="geometry"/></mxCell>
+    <mxCell id="4" value="fold 1&#xa;+" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontColor=#115e59;fontStyle=1;fontSize=27;" vertex="1" parent="1"><mxGeometry x="400" y="205" width="150" height="100" as="geometry"/></mxCell>
+    <mxCell id="5" value="fold 2&#xa;+" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontColor=#115e59;fontStyle=1;fontSize=27;" vertex="1" parent="1"><mxGeometry x="590" y="205" width="150" height="100" as="geometry"/></mxCell>
+    <mxCell id="6" value="fold 3&#xa;+" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontColor=#115e59;fontStyle=1;fontSize=27;" vertex="1" parent="1"><mxGeometry x="780" y="205" width="150" height="100" as="geometry"/></mxCell>
+    <mxCell id="7" value="fold 4&#xa;+" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontColor=#115e59;fontStyle=1;fontSize=27;" vertex="1" parent="1"><mxGeometry x="970" y="205" width="150" height="100" as="geometry"/></mxCell>
+    <mxCell id="8" value="fold 5&#xa;+" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontColor=#115e59;fontStyle=1;fontSize=27;" vertex="1" parent="1"><mxGeometry x="1160" y="205" width="150" height="100" as="geometry"/></mxCell>
+    <mxCell id="9" value="바깥 fold 5/5 양수" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdfa;strokeColor=#0f766e;strokeWidth=3;fontColor=#115e59;fontStyle=1;fontSize=34;" vertex="1" parent="1"><mxGeometry x="350" y="430" width="740" height="130" as="geometry"/></mxCell>
+    <mxCell id="10" value="방향은 반복됐지만 채택 관문은 아직 확인 전" style="text;html=1;fontStyle=1;fontSize=23;align=center;fontColor=#64748b;" vertex="1" parent="1"><mxGeometry x="330" y="650" width="780" height="50" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>

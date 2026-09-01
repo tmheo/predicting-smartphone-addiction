@@ -1,0 +1,20 @@
+<mxfile host="Electron" version="30.3.6">
+<diagram id="screen-13-individual-team" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="같은 후보를 서로 다른 두 질문으로 검수" style="text;html=1;fontStyle=1;fontSize=27;align=center;fontColor=#334155;" vertex="1" parent="1"><mxGeometry x="370" y="35" width="700" height="50" as="geometry"/></mxCell>
+    <mxCell id="3" value="혼자 잘하는가" style="swimlane;startSize=68;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontColor=#1e3a8a;fontStyle=1;fontSize=27;" vertex="1" parent="1"><mxGeometry x="80" y="130" width="560" height="430" as="geometry"/></mxCell>
+    <mxCell id="4" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2563eb;strokeColor=#1d4ed8;strokeWidth=3;" vertex="1" parent="3"><mxGeometry x="225" y="105" width="110" height="110" as="geometry"/></mxCell>
+    <mxCell id="5" value="일반 OOF AUC" style="text;html=1;fontStyle=1;fontSize=30;align=center;fontColor=#1e3a8a;" vertex="1" parent="3"><mxGeometry x="110" y="245" width="340" height="55" as="geometry"/></mxCell>
+    <mxCell id="6" value="후보 하나의 단독 점수" style="text;html=1;fontSize=22;align=center;fontColor=#475569;" vertex="1" parent="3"><mxGeometry x="110" y="315" width="340" height="45" as="geometry"/></mxCell>
+    <mxCell id="7" value="함께할 때 돕는가" style="swimlane;startSize=68;html=1;fillColor=#f0fdfa;strokeColor=#0f766e;fontColor=#115e59;fontStyle=1;fontSize=27;" vertex="1" parent="1"><mxGeometry x="800" y="130" width="560" height="430" as="geometry"/></mxCell>
+    <mxCell id="8" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;strokeWidth=3;" vertex="1" parent="7"><mxGeometry x="225" y="105" width="110" height="110" as="geometry"/></mxCell>
+    <mxCell id="9" value="nested OOF AUC 차이" style="text;html=1;fontStyle=1;fontSize=30;align=center;fontColor=#115e59;" vertex="1" parent="7"><mxGeometry x="75" y="245" width="410" height="55" as="geometry"/></mxCell>
+    <mxCell id="10" value="기존 예측에 더한 뒤의 팀 기여" style="text;html=1;fontSize=22;align=center;fontColor=#475569;" vertex="1" parent="7"><mxGeometry x="75" y="315" width="410" height="45" as="geometry"/></mxCell>
+    <mxCell id="11" value="개인전 점수와 팀에 들어왔을 때의 기여는 다른 질문입니다" style="text;html=1;fontStyle=1;fontSize=26;align=center;fontColor=#334155;" vertex="1" parent="1"><mxGeometry x="240" y="650" width="960" height="55" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>
