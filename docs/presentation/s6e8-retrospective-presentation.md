@@ -241,6 +241,8 @@ ROC AUC는 임의로 고른 중독 한 명에게 비중독 한 명보다 높은 
 
 근거: [차트와 다이어그램의 시각 문법](https://github.com/tmheo/predicting-smartphone-addiction/issues/569#issuecomment-5489136191), [발표 제작 장부의 공통 판정표](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/presentation/s6e8-retrospective-production-ledger.md#화면-20-성공과-실패를-같은-판정표에서-시작합니다)
 
+부록: [F. 성공과 중단 사례](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
 ## 화면 21. RealMLP 자료형 결함 수정이 +0.00461을 만들었습니다
 
 가장 큰 단일 구성 상승은 새 복잡성을 더한 것이 아니라 입력 값의 의미와 구현을 맞춘 결과였습니다.
@@ -260,6 +262,8 @@ ROC AUC는 임의로 고른 중독 한 명에게 비중독 한 명보다 높은 
 결함판과 수정판은 이 차이 외의 설정을 고정했고 같은 실행 환경 등급에서 난수 42, 43, 44를 짝지어 비교했다.
 
 근거: [exp124 설정](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp124_realmlp_dtype_fix.yaml), [자료형 정합 복원 판정](https://github.com/tmheo/predicting-smartphone-addiction/issues/243#issuecomment-5343200265)
+
+부록: [F. 성공과 중단 사례](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
 
 ## 화면 22. 남긴 실험은 서로 다른 관점과 오차를 보탰습니다
 
@@ -281,6 +285,8 @@ ROC AUC는 임의로 고른 중독 한 명에게 비중독 한 명보다 높은 
 
 근거: [수치와 정확값 범주 직접 비교](https://github.com/tmheo/predicting-smartphone-addiction/issues/31#issuecomment-5242350228), [Lookup-Transformer 판정](https://github.com/tmheo/predicting-smartphone-addiction/issues/58#issuecomment-5287565965), [결측 증강 일괄 판정](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/missingness-propagation-batch/issue512/report.md)
 
+부록: [C. 같은 값을 표현한 실험, D. 결측 증강 판정, G. 서로 다른 오차와 Lookup-Transformer](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
 ## 화면 23. 근거가 약한 탐색은 일찍 멈췄습니다
 
 후보 수나 새로움이 아니라 미리 정한 1차 기준, 반복 근거와 전체 결합 기여로 탐색을 중단했습니다.
@@ -301,6 +307,8 @@ Lookup-Transformer 설정 17개는 학습률, 학습률 일정과 최적화 알�
 
 근거: [Lookup-Transformer 제한 탐색 판정](https://github.com/tmheo/predicting-smartphone-addiction/issues/160#issuecomment-5308772959), [확장 사다리 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-ladder-2.md), [327열 판정 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-ext327/issue526/comparison.json)
 
+부록: [F. 성공과 중단 사례](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
 ## 화면 24. 실행 장소가 달라도 판정은 한 검수대로 모였습니다
 
 실행 장소마다 역할은 달랐지만 정식 판정은 모두 로컬의 같은 반입과 재채점 절차를 통과했습니다.
@@ -320,6 +328,8 @@ Lookup-Transformer 설정 17개는 학습률, 학습률 일정과 최적화 알�
 서로 다른 공급자에서 완결된 비교 짝은 각각 같은 계약을 통과한 뒤에만 한 판정 입력에 함께 넣었으며, 한쪽 실행끼리 이어 붙이지 않았다.
 
 근거: [발표용 실행 환경과 전환 사건 근거](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/presentation-environment-evidence.md)
+
+부록: [E. 실험 실행 체계](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
 
 ## 화면 25. 비용과 운영 경험에 따라 실행 장소를 바꿨습니다
 
@@ -342,6 +352,8 @@ Lookup-Transformer 설정 17개는 학습률, 학습률 일정과 최적화 알�
 
 근거: [발표용 실행 환경과 전환 사건](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/presentation-environment-evidence.md), [Vast.ai 실패 뒤 Runpod 복구 기록](https://github.com/tmheo/predicting-smartphone-addiction/issues/108#issuecomment-5303015536)
 
+부록: [E. 실험 실행 체계](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
 ## 화면 26. $0.39는 최종 Vast.ai 재학습 작업 비용입니다
 
 약 `$0.39`는 대회 전체 비용이 아니라 마지막에 바뀐 신경망 하나의 전체 자료 재학습 작업 비용입니다.
@@ -361,6 +373,8 @@ Lookup-Transformer 설정 17개는 학습률, 학습률 일정과 최적화 알�
 앞선 검증과 실패, CPU 실행, 로컬 전력과 사람 시간은 포함하지 않으며 결과 회수와 로컬 재검증 뒤 활성 계산 자원과 별도 저장 공간이 각각 0개임을 확인했다.
 
 근거: [발표용 실행 환경과 비용 범위](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/presentation-environment-evidence.md#6-마지막-제출에서는-필요한-신경망-하나만-vastai에서-다시-학습했다), [최종 조립 실행 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/report.md)
+
+부록: [E. 실험 실행 체계](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
 
 ## 화면 27. 혼자 잘하는가와 함께할 때 돕는가를 두 번 시험했습니다
 
@@ -382,6 +396,8 @@ Lookup-Transformer의 실제 값은 다음 두 화면과 원 판정에서 이어
 
 근거: [실험 채택 판정 계약](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/adr/0001-experiment-adoption-contract.md), [Lookup-Transformer 판정](https://github.com/tmheo/predicting-smartphone-addiction/issues/58#issuecomment-5287565965)
 
+부록: [G. 서로 다른 오차와 Lookup-Transformer](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
 ## 화면 28. 틀린 행이 다르면 함께할 이유가 생깁니다
 
 같은 단독 점수라도 서로 다른 행에서 순서를 틀리면 두 예측을 합칠 이유가 생길 수 있습니다.
@@ -402,6 +418,8 @@ Lookup-Transformer의 실제 다양성은 행 그림이 아니라 후보 풀의 
 
 근거: [오차 겹침 시각 문법](https://github.com/tmheo/predicting-smartphone-addiction/issues/569#issuecomment-5489136191), [Lookup-Transformer 판정](https://github.com/tmheo/predicting-smartphone-addiction/issues/58#issuecomment-5287565965)
 
+부록: [G. 서로 다른 오차와 Lookup-Transformer](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
+
 ## 화면 29. Lookup-Transformer는 결합 기여로 자리를 얻었습니다
 
 Lookup-Transformer는 낮은 중복과 양의 결합 기여를 함께 보여 후보 풀에 들어갔습니다.
@@ -421,6 +439,8 @@ Lookup-Transformer는 낮은 중복과 양의 결합 기여를 함께 보여 후
 표준 평가 결합은 표시값 기준 `0.96813`에서 `0.96839`로 높아졌고 정확한 한계 기여는 `+0.00025`였다.
 
 근거: [Lookup-Transformer 판정](https://github.com/tmheo/predicting-smartphone-addiction/issues/58#issuecomment-5287565965), [발표용 성적과 실험 계보 근거](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/presentation-score-evidence.md#2-다르게-틀리는-구성의-가치)
+
+부록: [G. 서로 다른 오차와 Lookup-Transformer](https://lgucorp.atlassian.net/wiki/spaces/~7120202a66323266d44ee697a3e30c7a270829/pages/1501596455)
 
 ## 화면 31. 314개 예측 열은 검수해 남긴 조립 재료입니다
 
