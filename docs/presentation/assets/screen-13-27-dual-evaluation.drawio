@@ -1,0 +1,21 @@
+<mxfile host="Electron" version="28.1.2">
+<diagram id="screen-13-27-dual-evaluation" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="개인전 검수" style="swimlane;startSize=54;fillColor=#eff6ff;strokeColor=#2563eb;fontColor=#1e3a8a;fontStyle=1;fontSize=24;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="70" width="500" height="400" as="geometry"/></mxCell>
+    <mxCell id="3" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2563eb;strokeColor=#1d4ed8;strokeWidth=3;" vertex="1" parent="2"><mxGeometry x="210" y="85" width="80" height="80" as="geometry"/></mxCell>
+    <mxCell id="4" value="일반 OOF" style="text;html=1;fontSize=24;fontStyle=1;align=center;fontColor=#1e3a8a;" vertex="1" parent="2"><mxGeometry x="150" y="175" width="200" height="50" as="geometry"/></mxCell>
+    <mxCell id="5" value="혼자 얼마나 잘하는가" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2563eb;fontStyle=1;fontSize=22;" vertex="1" parent="2"><mxGeometry x="100" y="250" width="300" height="80" as="geometry"/></mxCell>
+    <mxCell id="6" value="단일 구성의 예측을 고정 fold에서 평가" style="text;html=1;fontSize=17;align=center;fontColor=#475569;" vertex="1" parent="2"><mxGeometry x="95" y="335" width="310" height="45" as="geometry"/></mxCell>
+    <mxCell id="7" value="팀 기여 검수" style="swimlane;startSize=54;fillColor=#f0fdfa;strokeColor=#0f766e;fontColor=#134e4a;fontStyle=1;fontSize=24;html=1;" vertex="1" parent="1"><mxGeometry x="660" y="70" width="500" height="400" as="geometry"/></mxCell>
+    <mxCell id="8" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;strokeWidth=3;" vertex="1" parent="7"><mxGeometry x="210" y="85" width="80" height="80" as="geometry"/></mxCell>
+    <mxCell id="9" value="nested OOF" style="text;html=1;fontSize=24;fontStyle=1;align=center;fontColor=#134e4a;" vertex="1" parent="7"><mxGeometry x="150" y="175" width="200" height="50" as="geometry"/></mxCell>
+    <mxCell id="10" value="함께할 때 얼마나 돕는가" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0f766e;fontStyle=1;fontSize=22;" vertex="1" parent="7"><mxGeometry x="100" y="250" width="300" height="80" as="geometry"/></mxCell>
+    <mxCell id="11" value="봉인한 바깥 fold에서 결합 전후를 평가" style="text;html=1;fontSize=17;align=center;fontColor=#475569;" vertex="1" parent="7"><mxGeometry x="95" y="335" width="310" height="45" as="geometry"/></mxCell>
+    <mxCell id="12" value="두 결과는 서로 대신하지 않고 따로 기록합니다." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontColor=#334155;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="300" y="520" width="640" height="80" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>

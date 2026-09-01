@@ -1,46 +1,72 @@
-이 문서는 35개 발표 화면의 핵심 수치와 기술 정의를 원본 기록으로 연결하는 단일 기술 근거 부록이다.
-화면 제작이 완료된 구획부터 A부터 I까지의 고정 구조에 맞춰 채운다.
+이 문서는 발표 본문 화면에서 정확한 실행 기록과 원본 근거로 이동하는 단일 기술 근거 부록이다.
+현재 화면 01부터 09와 화면 30부터 35에 대응하는 A부터 C, H와 I를 완성했고, 대표 화면 시제품에서 먼저 작성한 E와 F를 함께 유지한다.
 
 ## A. 공식 결과와 자료 범위
+
+### 공식 결과와 제출
+
+| 항목 | 값 | 원본 |
+|---|---:|---|
+| 최종 순위 | 14위 | [최종 해법 복원](https://github.com/tmheo/predicting-smartphone-addiction/issues/547#issuecomment-5487179345) |
+| Public 점수 | `0.97135` | [최종 조립 실행 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/report.md) |
+| Private 점수 | `0.97109` | [최종 해법 복원](https://github.com/tmheo/predicting-smartphone-addiction/issues/547#issuecomment-5487179345) |
+| Kaggle 제출 식별자 | `55907610` | [제출 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/submission-record.json) |
+| 전체 자료 재학습 실행 식별자 | `3279e114ef444cfeaff4232bc401d7b4` | [제출 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/submission-record.json) |
+
+제출 파일은 `artifacts/submissions/issue514-extended314-own-full.csv`이며 SHA-256은 `cbb0419a8b34b54ed11ece481d5927da3d98f2aa574839756eb8e965d3ecceaf`다.
+Public 점수와 Private 점수는 같은 제출을 서로 다른 시험 표본에서 채점한 값이므로 두 값의 차이를 개별 실험의 효과로 해석하지 않는다.
+Kaggle 공식 순위표와 제출 목록은 2026-09-01에 다시 조회했다.
+마지막 업로드인 327열 제출 `55920131`은 Private 점수 `0.97108`이므로 최종 14위 성적을 만든 제출이 아니다.
+313열 C 선택판과 최종 314열 판의 Public 점수는 모두 `0.97135`이고 Private 점수도 표시 단위에서 모두 `0.97109`다.
 
 ### 자료 범위
 
 | 항목 | 값 | 원본 |
 |---|---:|---|
-| 원시 입력 | 12개 생활 습관 변수 | [첫 기준 실행 설정](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp001_lgbm_baseline.yaml) |
-| 학습 행 | 691,369행 | [발표용 성적과 실험 계보 근거](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/presentation-score-evidence.md) |
-| 예측 행 | 296,302행 | [최종 조립 실행 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/report.md) |
-| 목표값 | 이진 목표값 `addicted_label` | [첫 기준 실행 설정](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp001_lgbm_baseline.yaml) |
+| 학습 행 | `691,369` | [첫 기준 실행 종결 기록](https://github.com/tmheo/predicting-smartphone-addiction/issues/18#issuecomment-5239693077) |
+| 시험 행 | `296,302` | [최종 조립 실행 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/report.md) |
+| 입력 | 식별자와 목표값을 제외한 12개 열 | [첫 기준 실행 설정](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp001_lgbm_baseline.yaml) |
+| 목표값 | 이진 열 `addicted_label` | [자료 계약](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/src/pipeline/data.py) |
 
-식별자와 목표값은 12개 예측 입력에 포함하지 않는다.
-발표 화면에서는 행 수를 각각 약 69만 건과 약 30만 건으로 줄여 말한다.
+| 종류 | 입력 열 |
+|---|---|
+| 수치 9개 | `age`, `daily_screen_time_hours`, `social_media_hours`, `gaming_hours`, `work_study_hours`, `sleep_hours`, `notifications_per_day`, `app_opens_per_day`, `weekend_screen_time` |
+| 범주 3개 | `gender`, `stress_level`, `academic_work_impact` |
 
-### 화면 32의 공식 결과
-
-| 항목 | 값 | 원본 |
-|---|---:|---|
-| 최종 주 제출 식별자 | `55907610` | [제출 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/submission-record.json) |
-| Public 점수 | `0.97135` | [최종 조립 실행 기록](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/extended-stack-final-assembly/issue514/report.md) |
-| Private 점수 | `0.97109` | [최종 해법 복원](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-our-final-solution.md) |
-| 최종 순위 | 14위 | [최종 해법 복원](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-our-final-solution.md) |
-
-Kaggle 공식 순위표와 제출 목록은 2026-09-01에 다시 조회했다.
-마지막 업로드인 327열 제출 `55920131`은 Private 점수 `0.97108`이므로 최종 14위 성적을 만든 제출이 아니다.
-313열 C 선택판과 최종 314열 판의 Public 점수는 모두 `0.97135`이고 Private 점수도 표시 단위에서 모두 `0.97109`다.
+화면 03의 위험도는 대회 목표값의 순서를 만들기 위한 예측이며 개인의 실제 중독 여부를 진단하는 임상 값이 아니다.
 
 ## B. 점수와 검증 경계
 
-### 화면 08의 직접 비교
+### 화면 04부터 06의 ROC AUC와 교육용 예시
 
-| 항목 | 비교 기준 | 후보 | 차이 |
-|---|---:|---:|---:|
-| OOF AUC | `0.962759` | `0.966046` | 표시값 `+0.00329` |
+이진 목표값의 ROC AUC는 임의로 고른 양성 한 행이 음성 한 행보다 높은 예측값을 받을 확률로 해석할 수 있다.
+예측값이 같으면 그 쌍은 절반을 맞힌 것으로 계산한다.
+실제 실행은 `src/pipeline/cv.py`의 `score_predictions`에서 scikit-learn `roc_auc_score`로 전체 OOF를 재채점한다.
 
-- 비교 기준 실행 식별자: `ce66e16b12fd43b4bc95fdcf2972555c`
-- 후보 실행 식별자: `77217687c0514dab9f693fd4aa50c741`
-- 기준 설정: [`configs/exp001_lgbm_baseline.yaml`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp001_lgbm_baseline.yaml)
-- 후보 설정: [`configs/exp003_categorical_copies.yaml`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp003_categorical_copies.yaml)
-- 원 판정: [전 피처 범주형 challenger 실험: 실행과 판정](https://github.com/tmheo/predicting-smartphone-addiction/issues/31#issuecomment-5242350228)
+| 중독-비중독 쌍 | A 순서 | B 순서 |
+|---|---|---|
+| 가와 나 | 올바름 | 올바름 |
+| 가와 라 | 올바름 | 올바름 |
+| 다와 나 | 틀림 | 올바름 |
+| 다와 라 | 올바름 | 올바름 |
+| 합계 | `3/4` | `4/4` |
+
+이 표는 설명을 위해 만든 네 사람 예시이며 실제 대회 행이나 실제 모델 점수가 아니다.
+동점이 없는 이 예시만 놓고 보면 A의 쌍 순서 비율은 `0.75`, B는 `1.0`이다.
+
+- 점수 구현: [`src/pipeline/cv.py`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/src/pipeline/cv.py)
+- 설명 장면 결정: [비전문가용 핵심 개념 설명 장면](https://github.com/tmheo/predicting-smartphone-addiction/issues/570#issuecomment-5488821634)
+- 용어 결정: [비전문가 발표의 기술 용어와 표기 원칙](https://github.com/tmheo/predicting-smartphone-addiction/issues/579#issuecomment-5489318781)
+
+### 화면 08에서 처음 설명하는 OOF AUC
+
+고정한 다섯 fold를 차례로 검증 부분으로 사용한다.
+각 학습 행은 자기 목표값으로 학습하지 않은 모델에서 예측 하나를 받고, 다섯 예측 조각을 원래 행 순서로 이어 OOF를 만든다.
+OOF AUC는 이 OOF 예측 전체를 ROC AUC로 채점한 값이다.
+
+- 분할 생성: [`scripts/make_folds.py`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/scripts/make_folds.py)
+- OOF 생성과 채점: [`src/pipeline/cv.py`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/src/pipeline/cv.py)
+- 판정 계약: [`docs/adr/0001-experiment-adoption-contract.md`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/adr/0001-experiment-adoption-contract.md)
 
 ### 화면 12의 nested OOF 경계
 
@@ -50,6 +76,28 @@ Kaggle 공식 순위표와 제출 목록은 2026-09-01에 다시 조회했다.
 - 계약: [`docs/adr/0001-experiment-adoption-contract.md`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/adr/0001-experiment-adoption-contract.md)
 - 구현: [`src/pipeline/ensemble.py`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/src/pipeline/ensemble.py)
 - 분할 생성: [`scripts/make_folds.py`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/scripts/make_folds.py)
+
+## C. 같은 값을 표현한 실험
+
+화면 07부터 09는 같은 수치 열을 표현하는 방식을 바꾼 사전 고정 직접 비교다.
+세 실행은 같은 자료 분할, 같은 LightGBM 주요 설정과 난수 42를 사용했고 표현 방식만 바꿨다.
+
+| 표현 | 실행 식별자 | 일반 OOF AUC | 비교 기준과 차이 | 판정 |
+|---|---|---:|---:|---|
+| 수치 유지 | `ce66e16b12fd43b4bc95fdcf2972555c` | `0.962759` | 비교 기준 | 기준 |
+| 12개 입력을 전부 범주로 처리 | `73d5cac128eb4b429c348aefdc42dc86` | `0.958586` | 화면 표시 `-0.00417` | 중단 |
+| 수치 유지와 정확값 범주 복제 병행 | `77217687c0514dab9f693fd4aa50c741` | `0.966046` | 화면 표시 `+0.00329` | 채택 |
+
+전부 범주로 처리한 실행은 숫자의 정확값 묶기 신호를 얻는 대신 수치의 순서 정보를 버렸다.
+수치 유지와 범주 복제를 병행한 실행은 원래 수치 아홉 개를 남기고 같은 값의 범주 복제 아홉 개를 추가했다.
+세 실행에는 같은 플라시보 피처가 포함되어 있어 이 피처는 비교군 사이의 차이가 아니다.
+
+범주 복제 대상은 `age`, `daily_screen_time_hours`, `social_media_hours`, `gaming_hours`, `work_study_hours`, `sleep_hours`, `notifications_per_day`, `app_opens_per_day`, `weekend_screen_time`이다.
+
+- 비교 기준 설정: [`configs/exp001_lgbm_baseline.yaml`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp001_lgbm_baseline.yaml)
+- 전부 범주화 설정: [`configs/exp002_all_categorical.yaml`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp002_all_categorical.yaml)
+- 수치 유지와 범주 복제 설정: [`configs/exp003_categorical_copies.yaml`](https://github.com/tmheo/predicting-smartphone-addiction/blob/main/configs/exp003_categorical_copies.yaml)
+- 원 판정: [전 피처 범주형 challenger 실험: 실행과 판정](https://github.com/tmheo/predicting-smartphone-addiction/issues/31#issuecomment-5242350228)
 
 ## E. 실험 실행 체계
 
