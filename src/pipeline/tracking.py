@@ -47,7 +47,6 @@ from .initial_score import EVIDENCE_NAME as INITIAL_SCORE_EVIDENCE_NAME
 from .initial_score import EVIDENCE_SCHEMA_VERSION as INITIAL_SCORE_EVIDENCE_SCHEMA_VERSION
 from .fold_fit_reuse import SCHEMA_VERSION as FOLD_FIT_REUSE_SCHEMA_VERSION
 from .fold_fit_reuse import canonical_json_bytes
-from .judgment import mean_gain_of, placebo_gain_of
 from .recovery import EVIDENCE_NAME, recovery_evidence
 from .training_rows import (
     EVIDENCE_NAME as TRAINING_ROW_EVIDENCE_NAME,
@@ -58,6 +57,24 @@ from .training_rows import (
 from .runs import TRACKING_URI
 
 EXPERIMENT_NAME = "predicting-smartphone-addiction"
+
+# 표준 metric 키의 정본. 산문 규약(위 docstring)만 보고 키를 유추하다 표준 키 대신
+# auc_public을 기록해 Kaggle 점수가 조용히 누락된 사고(커밋 15e9d1f)의 재발 방지다. (#549)
+# 의미 해석(파싱, 판정)은 judgment 소관이고, 여기는 키 철자만 소유한다.
+METRIC_OOF_AUC = "auc_oof"
+METRIC_PUBLIC_AUC = "public_auc"
+METRIC_FOLD_AUC_PREFIX = "auc_fold_"
+METRIC_SEED_AUC_PREFIX = "auc_oof_seed_"
+
+
+def metric_fold_auc(fold: int) -> str:
+    """fold별 AUC(시드 평균본) metric 키."""
+    return f"{METRIC_FOLD_AUC_PREFIX}{fold}"
+
+
+def metric_seed_auc(seed: int) -> str:
+    """시드별 OOF AUC metric 키. 확정 재검증의 시드별 비교 근거다. (ADR 0001)"""
+    return f"{METRIC_SEED_AUC_PREFIX}{seed}"
 
 
 def _sqlite_database_path(tracking_uri: str) -> Path | None:
@@ -352,6 +369,8 @@ def warn_below_placebo(importance: pd.DataFrame) -> None:
 
     이 경고는 판정이 아니라 관찰이다. 채택 판정은 pipeline.compare가 새 피처에만 묻는다.
     """
+    from .judgment import mean_gain_of, placebo_gain_of  # 순환을 막는 지역 import.
+
     mean_gain = mean_gain_of(importance)
     placebo_gain = placebo_gain_of(mean_gain)
     if placebo_gain is None:

@@ -38,7 +38,7 @@ import pandas as pd
 
 from .data import ID, TARGET, file_sha256
 from .runs import TRACKING_URI, MlflowRunStore, RunStoreError
-from .tracking import mlflow_client
+from .tracking import METRIC_OOF_AUC, METRIC_PUBLIC_AUC, mlflow_client
 
 COMPETITION = "playground-series-s6e8"
 SCORE_POLL_SECONDS = 5
@@ -209,9 +209,11 @@ def record_existing_submission(
             client.log_param(run_id, key, value)
         for key, value in {**reserved_tags, **(tags or {})}.items():
             client.set_tag(run_id, key, value)
-        client.log_metric(run_id, "public_auc", float(submission.public_score))
-        if "auc_oof" in source_run.data.metrics:
-            client.log_metric(run_id, "source_auc_oof", source_run.data.metrics["auc_oof"])
+        client.log_metric(run_id, METRIC_PUBLIC_AUC, float(submission.public_score))
+        if METRIC_OOF_AUC in source_run.data.metrics:
+            client.log_metric(
+                run_id, "source_auc_oof", source_run.data.metrics[METRIC_OOF_AUC]
+            )
         with tempfile.TemporaryDirectory() as tmp:
             tmp_dir = Path(tmp)
             shutil.copyfile(submission_path, tmp_dir / "submission.csv")
@@ -355,15 +357,15 @@ def main() -> None:
     if meta.tags.get("git_dirty") == "True":
         sys.exit("제출 거부: git_dirty=True로 기록된 run이다. 우회 옵션은 없다. 커밋 후 재실행할 것.")
 
-    already_scored = "public_auc" in meta.metrics
+    already_scored = METRIC_PUBLIC_AUC in meta.metrics
     already_submitted = "submitted_at" in meta.tags
     if already_scored and not args.force:
         sys.exit(
-            f"제출 거부: 이 run에는 이미 public_auc={meta.metrics['public_auc']}가 있다. "
+            f"제출 거부: 이 run에는 이미 public_auc={meta.metrics[METRIC_PUBLIC_AUC]}가 있다. "
             "재제출하려면 --force."
         )
 
-    auc_oof = meta.metrics["auc_oof"]
+    auc_oof = meta.metrics[METRIC_OOF_AUC]
     message = submission_message(
         meta.run_name, args.run_id, meta.tags["git_commit"], auc_oof
     )
@@ -388,7 +390,7 @@ def main() -> None:
         store.annotate(args.run_id, tags={"submitted_at": submitted_at})
 
     public_score = fetch_public_score(api, message)
-    store.annotate(args.run_id, metrics={"public_auc": float(public_score)})
+    store.annotate(args.run_id, metrics={METRIC_PUBLIC_AUC: float(public_score)})
     print(f"public_auc={public_score} (oof_auc={auc_oof:.5f}) → run에 기록 완료.")
 
 

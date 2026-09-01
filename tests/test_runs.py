@@ -7,6 +7,8 @@
 - annotate는 뒤늦은 태그·지표를 남기고, facts_of가 이를 반영한다.
 - artifact_bytes_of는 이름 있는 산출물을 원본 바이트로 읽고, artifact_sha256_of는
   그 내용의 SHA-256을 돌려준다.
+- record_run은 이미 끝난 작업을 새 실행 하나로 기록하고 새 run_id를 돌려준다.
+  같은 신원 태그의 실패하지 않은 실행이 이미 있으면 DuplicateRun. (#549)
 - 없는 run은 RunNotFound, 있는 run의 없는 산출물은 ArtifactNotFound.
 """
 
@@ -20,9 +22,11 @@ import yaml
 
 from pipeline.runs import (
     ArtifactNotFound,
+    DuplicateRun,
     InMemoryRunStore,
     MlflowRunStore,
     RunNotFound,
+    RunRecord,
     RunStoreError,
     sha256_of,
 )
@@ -237,3 +241,123 @@ def test_missing_artifact_raises_artifact_not_found(stores):
     for op in (store.artifact_bytes_of, store.artifact_sha256_of):
         with pytest.raises(ArtifactNotFound):
             op(empty, DIAGNOSTICS_NAME)
+
+
+# record_run 계약. (#549)
+
+RECORD_EXPERIMENT = "contract-test"
+MANIFEST_BYTES = b'{"member_count": 3}\n'
+
+
+def record_of(tmp_path: Path, **overrides) -> RunRecord:
+    root = tmp_path / "record"
+    root.mkdir(exist_ok=True)
+    manifest = root / "assembly-manifest.json"
+    manifest.write_bytes(MANIFEST_BYTES)
+    submission = root / "submission.csv"
+    submission.write_text("id,addicted_label\n1,0.5\n")
+    base = dict(
+        run_name="ensemble_recorded",
+        experiment_name=RECORD_EXPERIMENT,
+        params={"experiment": "ensemble_recorded", "stage": "final_submission_candidate"},
+        metrics={"auc_oof": 0.97, "public_auc": 0.971},
+        tags={"source.issue": "549", "candidate.key": "ext1"},
+        artifact_paths=(manifest, submission),
+        identity_tag_keys=("source.issue", "candidate.key"),
+    )
+    base.update(overrides)
+    return RunRecord(**base)
+
+
+def test_record_run_records_facts_and_artifacts(stores, tmp_path):
+    store, _, _ = stores
+    record = record_of(tmp_path)
+
+    run_id = store.record_run(record)
+
+    meta = store.facts_of(run_id)
+    assert meta.run_name == record.run_name
+    assert meta.params == record.params
+    assert meta.metrics == record.metrics
+    assert record.tags.items() <= meta.tags.items()
+    assert meta.status == "FINISHED"
+    assert store.artifact_bytes_of(run_id, "assembly-manifest.json") == MANIFEST_BYTES
+    assert store.artifact_sha256_of(run_id, "assembly-manifest.json") == sha256_of(
+        MANIFEST_BYTES
+    )
+    assert store.submission_path_of(run_id).read_text().startswith("id,addicted_label")
+
+
+def test_record_run_refuses_a_duplicate_identity(stores, tmp_path):
+    store, _, _ = stores
+    first = store.record_run(record_of(tmp_path))
+
+    with pytest.raises(DuplicateRun) as caught:
+        store.record_run(record_of(tmp_path))
+
+    assert caught.value.run_id == first
+
+
+def test_record_run_ignores_failed_runs_when_detecting_duplicates(stores, tmp_path):
+    store, _, _ = stores
+    store.record_run(record_of(tmp_path, status="FAILED"))
+
+    run_id = store.record_run(record_of(tmp_path))
+
+    assert store.facts_of(run_id).status == "FINISHED"
+
+
+def test_record_run_scopes_duplicates_to_the_experiment(stores, tmp_path):
+    store, _, _ = stores
+    store.record_run(record_of(tmp_path, artifact_paths=()))
+
+    other = store.record_run(
+        record_of(
+            tmp_path, artifact_paths=(), experiment_name="contract-test-other"
+        )
+    )
+
+    assert store.facts_of(other).status == "FINISHED"
+
+
+def test_record_run_without_identity_tags_always_creates_a_new_run(stores, tmp_path):
+    store, _, _ = stores
+    first = store.record_run(record_of(tmp_path, identity_tag_keys=()))
+    second = store.record_run(record_of(tmp_path, identity_tag_keys=()))
+    assert first != second
+
+
+def test_record_run_validates_before_writing(stores, tmp_path):
+    store, _, _ = stores
+
+    with pytest.raises(RunStoreError):
+        store.record_run(record_of(tmp_path, status="RUNNING"))
+    with pytest.raises(RunStoreError):
+        store.record_run(record_of(tmp_path, identity_tag_keys=("no.such.tag",)))
+    with pytest.raises(RunStoreError):
+        store.record_run(
+            record_of(tmp_path, artifact_paths=(tmp_path / "record" / "absent.json",))
+        )
+    with pytest.raises(RunStoreError):
+        store.record_run(
+            record_of(
+                tmp_path,
+                tags={"source.issue": "54'9", "candidate.key": "ext1"},
+            )
+        )
+
+    other_dir = tmp_path / "record-duplicate-name"
+    other_dir.mkdir()
+    clashing = other_dir / "submission.csv"
+    clashing.write_text("id,addicted_label\n2,0.4\n")
+    with pytest.raises(RunStoreError):
+        store.record_run(
+            record_of(
+                tmp_path,
+                artifact_paths=(tmp_path / "record" / "submission.csv", clashing),
+            )
+        )
+
+    # 전부 기록 전 검증에서 거부됐으므로 신원 태그는 아직 비어 있다.
+    run_id = store.record_run(record_of(tmp_path))
+    assert store.facts_of(run_id).status == "FINISHED"
