@@ -1,0 +1,24 @@
+{
+  "finished_at": "2026-09-01T02:24:31Z",
+  "grade": "hash-identity",
+  "matches": true,
+  "parent_sealed_sha256": "dfbabe3a89d25a88e3c2a920020cb4698f97f4e54d4aa793bdff1f0f76170716",
+  "schema": "judgment-round-pilot/selfcheck/1",
+  "sealed_sha256": "f698d813189797ba0f8cef341edd32a1fdbee5968fc550d59d819f7302357420",
+  "source": "이슈 513 원 회차와 같은 등급이며 기대 해시는 이슈 513 precommit에서 왔다.",
+  "verified_caches": {
+    "reassembled-314": "d0348c8815d8b10dd849fb87526082a40d02b551b536e5ee08254848892d76d7"
+  },
+  "verified_inputs": {
+    "docs/research/extended-stack-pool-reassembly/issue513/comparison.json": "65c7f84bb72af1ef18bf811e951583f8b40b2a343fca4ecf781dfdaf993374c2",
+    "docs/research/extended-stack-pool-reassembly/issue513/precommit.json": "91207768e15b34f77d61dc07ef25f7ae0fc83dab2bee884eee28ce36ba4f38f8",
+    "docs/research/extended-stack-pool-reassembly/issue513/reassembled/fold-0/reassembled.json": "a02db2ab6dd5630206dfe56aedb3db46ce45e6b1480cb09913f7851ed5db60b4",
+    "docs/research/extended-stack-pool-reassembly/issue513/reassembled/fold-1/reassembled.json": "e7cbf3110ed1aa7e95a18890a1679aed260bc7e93b593321be7fd77c0890ccbf",
+    "docs/research/extended-stack-pool-reassembly/issue513/reassembled/fold-2/reassembled.json": "fc2a381766297a0f551d3841536ce792019a2470f03d5da7e94ea921cb65e1a4",
+    "docs/research/extended-stack-pool-reassembly/issue513/reassembled/fold-3/reassembled.json": "cb176869cebd212198ba7b3ec66e15e912979f9bf10b8a472cb7f565c93fc467",
+    "docs/research/extended-stack-pool-reassembly/issue513/reassembled/fold-4/reassembled.json": "90fd218912304f479838fc369b0f6e45b0c3d7b74e8800f266a690612c4644e9",
+    "docs/research/extended-stack-submission-2-manifest.json": "3d9a205c810150e7851731b687549fc2b94a2e98fb965b62883fbb4048538711",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c"
+  }
+}
