@@ -1,4 +1,4 @@
-"""MLflow 실행 저장소 초기화의 동시 접근 회귀 검사."""
+"""MLflow 실행 저장소 초기화의 동시 접근 회귀 검사와 metric 키 상수의 규약 일치. (#549)"""
 
 from __future__ import annotations
 
@@ -72,3 +72,38 @@ def test_sqlite_lock_does_not_mask_backend_os_error(tmp_path, monkeypatch) -> No
 
     with pytest.raises(OSError, match="backend failure"):
         tracking.mlflow_client(f"sqlite:///{tmp_path / 'fresh.db'}")
+
+
+def test_metric_key_constants_match_the_recorded_convention() -> None:
+    """상수가 기존 기록 키와 어긋나면 과거 실행 전체를 못 읽게 되므로 철자를 고정한다."""
+    assert tracking.METRIC_OOF_AUC == "auc_oof"
+    assert tracking.METRIC_PUBLIC_AUC == "public_auc"
+    assert tracking.metric_fold_auc(0) == "auc_fold_0"
+    assert tracking.metric_seed_auc(42) == "auc_oof_seed_42"
+
+
+def test_cv_scoring_records_keys_built_from_the_constants() -> None:
+    import numpy as np
+    import pandas as pd
+
+    from pipeline.cv import score_predictions
+
+    y = pd.Series([0, 1, 0, 1])
+    folds = pd.Series([0, 0, 1, 1])
+    pred = np.array([0.1, 0.9, 0.2, 0.8])
+
+    keys = set(score_predictions(y, folds, pred))
+
+    assert keys == {
+        tracking.METRIC_OOF_AUC,
+        tracking.metric_fold_auc(0),
+        tracking.metric_fold_auc(1),
+    }
+
+
+def test_judgment_delegates_metric_key_spelling_to_tracking() -> None:
+    from pipeline import judgment
+
+    assert judgment.seed_auc_metric(43) == tracking.metric_seed_auc(43)
+    assert judgment.seed_aucs_of({tracking.metric_seed_auc(42): 0.9}) == {42: 0.9}
+    assert judgment.fold_aucs_of({tracking.metric_fold_auc(3): 0.8}) == {3: 0.8}

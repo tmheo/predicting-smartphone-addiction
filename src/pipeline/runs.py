@@ -14,7 +14,12 @@ interface 규약:
 - attach_artifact는 완료된 실행에 뒤늦게 산출물 하나를 붙인다. annotate가 태그·지표에
   대해 하는 일을 산출물에 대해 한다. 당시 실행이 남기지 않은 근거를 원본 자료에서
   복원해 그 실행에 붙일 때만 쓰며(이슈 #374), 이미 있는 이름을 덮어쓰지 않는다.
+- record_run은 이미 끝난 작업(조립본·제출 등)을 새 실행 하나로 기록하고 새 run_id를
+  돌려준다(이슈 #549). 실험 조회·생성, 신원 태그 기반 중복 탐지, 산출물 업로드,
+  종료 처리의 예외 방어를 implementation이 숨긴다. 같은 신원 태그의 실패하지 않은
+  실행이 이미 있으면 DuplicateRun을 던지고, 그 run_id를 예외에 실어 준다.
 - 실행 중 기록(생성·진행·종료)은 observe.RunObserver의 소관이고 이 module이 아니다.
+  record_run은 진행 중 실행을 만드는 통로가 아니라 완료 사실의 일괄 기록이다.
 - 오류 모드: 없는 run은 RunNotFound, 있는 run의 없는 산출물은 ArtifactNotFound.
   둘 다 RunStoreError의 하위이므로 CLI는 RunStoreError 하나만 잡아 sys.exit로 번역한다.
 """
@@ -50,6 +55,59 @@ class RunNotFound(RunStoreError):
 
 class ArtifactNotFound(RunStoreError):
     pass
+
+
+class DuplicateRun(RunStoreError):
+    """같은 신원 태그의 실패하지 않은 실행이 이미 있다. run_id가 그 실행을 가리킨다."""
+
+    def __init__(self, message: str, run_id: str) -> None:
+        super().__init__(message)
+        self.run_id = run_id
+
+
+# record_run이 받아들이는 종료 상태. MLflow의 종단 상태와 같다.
+TERMINAL_STATUSES = ("FINISHED", "FAILED", "KILLED")
+
+
+@dataclass(frozen=True)
+class RunRecord:
+    """이미 끝난 작업 하나의 기록 원형. record_run이 이대로 새 실행을 만든다.
+
+    identity_tag_keys는 tags 가운데 이 실행의 신원을 이루는 키들이다(예: source.issue,
+    candidate.key). 비워 두면 중복 탐지 없이 항상 새 실행을 만든다.
+    """
+
+    run_name: str
+    experiment_name: str
+    params: dict[str, str] = field(default_factory=dict)
+    metrics: dict[str, float] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
+    artifact_paths: tuple[Path, ...] = ()
+    status: str = "FINISHED"
+    identity_tag_keys: tuple[str, ...] = ()
+
+
+def _validated_identity(record: RunRecord) -> dict[str, str]:
+    """기록 전 검증을 마친 신원 태그(키→값)를 돌려준다. 계약은 adapter 공통이다."""
+    if record.status not in TERMINAL_STATUSES:
+        raise RunStoreError(
+            f"record_run의 종료 상태는 {TERMINAL_STATUSES} 중 하나여야 한다: {record.status}"
+        )
+    missing = [key for key in record.identity_tag_keys if key not in record.tags]
+    if missing:
+        raise RunStoreError(f"신원 태그 키가 tags에 없다: {missing}")
+    identity = {key: record.tags[key] for key in record.identity_tag_keys}
+    for key, value in identity.items():
+        if any(ch in f"{key}{value}" for ch in "'`\""):
+            raise RunStoreError(f"신원 태그에 따옴표·backtick을 둘 수 없다: {key}={value}")
+    names = [path.name for path in record.artifact_paths]
+    duplicated = sorted({name for name in names if names.count(name) > 1})
+    if duplicated:
+        raise RunStoreError(f"산출물 파일 이름이 겹친다: {duplicated}")
+    absent = [str(path) for path in record.artifact_paths if not path.is_file()]
+    if absent:
+        raise RunStoreError(f"산출물 파일이 없다: {absent}")
+    return identity
 
 
 @dataclass(frozen=True)
@@ -104,6 +162,14 @@ class RunStore(Protocol):
         metrics: dict[str, float] | None = None,
     ) -> None:
         """완료된 실행에 뒤늦은 주석(태그·지표)을 남긴다."""
+        ...
+
+    def record_run(self, record: RunRecord) -> str:
+        """이미 끝난 작업을 새 실행 하나로 기록하고 새 run_id를 돌려준다.
+
+        같은 신원 태그의 실패하지 않은 실행이 이미 있으면 DuplicateRun.
+        idempotent 재실행이 필요한 caller는 그 예외의 run_id로 기존 실행을 검증한다.
+        """
         ...
 
 
@@ -204,6 +270,58 @@ class MlflowRunStore:
         for key, value in (metrics or {}).items():
             self._client.log_metric(run_id, key, float(value))
 
+    def _experiment_id(self, name: str) -> str:
+        """실험 id를 조회하고 없으면 만든다. 동시 생성 경쟁은 재조회로 흡수한다."""
+        from mlflow.exceptions import MlflowException
+
+        experiment = self._client.get_experiment_by_name(name)
+        if experiment is not None:
+            return experiment.experiment_id
+        try:
+            return self._client.create_experiment(name)
+        except MlflowException:
+            experiment = self._client.get_experiment_by_name(name)
+            if experiment is not None:
+                return experiment.experiment_id
+            raise
+
+    def record_run(self, record: RunRecord) -> str:
+        identity = _validated_identity(record)
+        experiment_id = self._experiment_id(record.experiment_name)
+        if identity:
+            clauses = " AND ".join(
+                f"tags.`{key}` = '{value}'" for key, value in identity.items()
+            )
+            existing = [
+                run
+                for run in self._client.search_runs(
+                    [experiment_id], filter_string=clauses, max_results=100
+                )
+                if run.info.status != "FAILED"
+            ]
+            if existing:
+                raise DuplicateRun(
+                    f"신원 태그 {identity}의 실패하지 않은 실행이 이미 있다: "
+                    f"{existing[0].info.run_id}",
+                    run_id=existing[0].info.run_id,
+                )
+        run = self._client.create_run(experiment_id, run_name=record.run_name)
+        run_id = run.info.run_id
+        try:
+            for key, value in record.params.items():
+                self._client.log_param(run_id, key, value)
+            for key, value in record.tags.items():
+                self._client.set_tag(run_id, key, value)
+            for key, value in record.metrics.items():
+                self._client.log_metric(run_id, key, float(value))
+            for path in record.artifact_paths:
+                self._client.log_artifact(run_id, str(path))
+            self._client.set_terminated(run_id, status=record.status)
+        except Exception:
+            self._client.set_terminated(run_id, status="FAILED")
+            raise
+        return run_id
+
 
 @dataclass
 class _StoredRun:
@@ -217,6 +335,7 @@ class _StoredRun:
     submission_path: Path | None
     artifacts: dict[str, bytes]
     status: str
+    experiment_name: str = ""
 
 
 @dataclass
@@ -315,3 +434,49 @@ class InMemoryRunStore:
         run = self._run(run_id)
         run.tags.update(tags or {})
         run.metrics.update({k: float(v) for k, v in (metrics or {}).items()})
+
+    def record_run(self, record: RunRecord) -> str:
+        identity = _validated_identity(record)
+        if identity:
+            for run_id, run in self._runs.items():
+                if run.status == "FAILED":
+                    continue
+                if run.experiment_name != record.experiment_name:
+                    continue
+                if all(run.tags.get(k) == v for k, v in identity.items()):
+                    raise DuplicateRun(
+                        f"신원 태그 {identity}의 실패하지 않은 실행이 이미 있다: {run_id}",
+                        run_id=run_id,
+                    )
+        # MlflowRunStore가 이름 규약으로 해석하는 산출물을 같은 규약으로 비춘다.
+        oof = importance = None
+        submission_path = None
+        artifacts: dict[str, bytes] = {}
+        for path in record.artifact_paths:
+            artifacts[path.name] = path.read_bytes()
+            if path.name == "oof.parquet":
+                oof = pd.read_parquet(path)
+            elif path.name == "feature_importance.parquet":
+                importance = pd.read_parquet(path)
+            elif path.name == "submission.csv":
+                submission_path = path
+        yamls = [p for p in record.artifact_paths if p.suffix in (".yaml", ".yml")]
+        config = yaml.safe_load(yamls[0].read_text()) if len(yamls) == 1 else None
+        serial = len(self._runs) + 1
+        while f"recorded-{serial}" in self._runs:
+            serial += 1
+        run_id = f"recorded-{serial}"
+        self._runs[run_id] = _StoredRun(
+            run_name=record.run_name,
+            params=dict(record.params),
+            metrics={k: float(v) for k, v in record.metrics.items()},
+            tags=dict(record.tags),
+            oof=oof,
+            importance=importance,
+            config=config,
+            submission_path=submission_path,
+            artifacts=artifacts,
+            status=record.status,
+            experiment_name=record.experiment_name,
+        )
+        return run_id

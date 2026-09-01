@@ -330,8 +330,8 @@ Lookup-Transformer의 각 fold에서 결측은 아니지만 해당 학습 fold�
 _Avoid_: UNK, 미관측값
 
 **실행 저장소**:
-완료된 실험 실행의 사실(params·metrics·tags)과 산출물을 읽고, 뒤늦은 주석(태그·지표 추가)을 남기는 유일한 통로.
-MLflow는 이 저장소의 adapter 하나일 뿐이며, 기록 규약의 의미 해석(metric 이름 파싱 등)은 판정 쪽 소관이다.
+완료된 실험 실행의 사실(params·metrics·tags)과 산출물을 읽고, 뒤늦은 주석(태그·지표 추가)을 남기고, 이미 끝난 작업(조립본·제출)을 새 실행 하나로 기록하는 유일한 통로.
+MLflow는 이 저장소의 adapter 하나일 뿐이며, 기록 규약의 의미 해석(metric 이름 파싱 등)은 판정 쪽 소관이고 키 철자의 정본은 기록 규약(tracking)의 상수다.
 _Avoid_: run store, MLflow 래퍼
 
 **실행 기록 묶음**:

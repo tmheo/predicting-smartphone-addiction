@@ -65,6 +65,7 @@ compare --adopt와 pool --admit이 같은 검사를 공유하고, submit도 같�
 있는 시그니처지만 대회 막판이라 전환하지 않았다(설계 호환만 확보, 지도 #91).
 
 metric 이름 규약(auc_oof_seed_*, auc_fold_*)의 의미 해석도 이 module 소관이다.
+키 철자의 정본은 기록 규약(tracking)의 상수이고, 여기는 그것을 import해 해석만 한다(#549).
 실행 저장소(runs)는 기록 원형을 그대로 돌려주고, 여기의 파싱 helper가 해석한다.
 판정의 기준이 되는 장부(champion·후보 풀)의 원본과 YAML 해석은 ledger module
 소관이며(#96), 판정 함수는 그 타입을 읽기만 한다.
@@ -94,6 +95,7 @@ from .ensemble import (
 from .features import PLACEBO
 from .ledger import POOL_PATH, Champion, Pool
 from .runs import RunStore, RunStoreError
+from .tracking import METRIC_FOLD_AUC_PREFIX, METRIC_SEED_AUC_PREFIX, metric_seed_auc
 from .training_state_manifest import (
     MANIFEST_NAME as TRAINING_STATE_MANIFEST_NAME,
     RUN_KIND as TRAINING_STATE_RUN_KIND,
@@ -124,12 +126,9 @@ class JudgmentError(Exception):
     """판정 불가: 증거 부족이나 전제 위반. CLI가 sys.exit로 번역한다."""
 
 
-_SEED_AUC_PREFIX = "auc_oof_seed_"
-_FOLD_AUC_PREFIX = "auc_fold_"
-
-
 def seed_auc_metric(seed: int) -> str:
-    return f"{_SEED_AUC_PREFIX}{seed}"
+    """tracking.metric_seed_auc 위임. 키 철자의 정본은 기록 규약이다. (#549)"""
+    return metric_seed_auc(seed)
 
 
 def _suffixed_ints(metrics: dict[str, float], prefix: str) -> dict[int, float]:
@@ -140,12 +139,12 @@ def _suffixed_ints(metrics: dict[str, float], prefix: str) -> dict[int, float]:
 
 def seed_aucs_of(metrics: dict[str, float]) -> dict[int, float]:
     """auc_oof_seed_<seed> metric들을 시드별 OOF AUC로 해석한다. 구 버전 실행에는 없다."""
-    return _suffixed_ints(metrics, _SEED_AUC_PREFIX)
+    return _suffixed_ints(metrics, METRIC_SEED_AUC_PREFIX)
 
 
 def fold_aucs_of(metrics: dict[str, float]) -> dict[int, float]:
     """auc_fold_<fold> metric들을 fold별 AUC로 해석한다(시드 평균본 기준)."""
-    return _suffixed_ints(metrics, _FOLD_AUC_PREFIX)
+    return _suffixed_ints(metrics, METRIC_FOLD_AUC_PREFIX)
 
 
 @dataclass(frozen=True)
