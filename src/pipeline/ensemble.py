@@ -68,6 +68,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
 
 from .data import ID, TARGET, TRAIN_PATH, file_sha256, labels
+from .identity import array_identity
 from .ledger import CHAMPION_PATH, Champion, Pool
 from .runs import TRACKING_URI, MlflowRunStore, RunStore, RunStoreError
 
@@ -92,6 +93,9 @@ class FittedCombiner(Protocol):
     def summary(self) -> dict[str, float]:
         """구성원 이름 → 가중치(무학습 전략은 선택 여부에 해당하는 값)."""
         ...
+
+    # 선택 규약: diagnostics() -> dict[str, float]를 제공하면 evaluate_outer_fold가
+    # FoldOutcome.diagnostics로 모은다(selected_lambda·selected_c 등, 지도 #539 결정).
 
 
 class Combiner(Protocol):
@@ -723,6 +727,14 @@ class FittedShrunkRankLogit:
             for member in self.members
         }
 
+    def diagnostics(self) -> dict[str, float]:
+        """판정 기록이 요구해 온 수축 결합 진단(#489 선례의 λ·최종 적합)."""
+        return {
+            "selected_lambda": float(self.shrinkage_lambda),
+            "final_iterations": float(np.max(self.meta.model.n_iter_)),
+            "final_coefficient_l2_norm": float(np.linalg.norm(self.meta.model.coef_[0])),
+        }
+
 
 class ShrunkRankLogitCombiner:
     """학습 메타를 균등 순위 평균으로 수축하는 볼록 결합. (#223)
@@ -807,6 +819,9 @@ class FittedCSelectedShrunkRankLogit(FittedShrunkRankLogit):
     inner_fits: tuple[InnerLogisticFit, ...]
     final_iterations: int
     final_coefficient_l2_norm: float
+
+    def diagnostics(self) -> dict[str, float]:
+        return {**super().diagnostics(), "selected_c": float(self.c)}
 
 
 class CSelectedShrunkRankLogitCombiner:
@@ -1359,11 +1374,18 @@ def select_combiners(
 
 @dataclass(frozen=True)
 class FoldOutcome:
-    """outer fold 하나의 채점 결과와 그 fold에서 학습된 전략의 summary."""
+    """outer fold 하나 채점의 기계 판독 산출물. (#540)
+
+    판정 스크립트가 분할 하나를 봉인 채점할 때 JSON으로 남겨 온 항목(AUC, 예측,
+    예측 신원, 결합기 진단)을 evaluate_outer_fold가 직접 만들어 준다.
+    """
 
     fold: int
     auc: float
-    summary: dict[str, float]
+    summary: dict[str, float]  # 구성원 이름 → 가중치(FittedCombiner.summary 규약).
+    prediction: pd.Series  # outer fold 행의 결합 예측. preds의 행 순서를 따른다.
+    prediction_identity: str  # pipeline.identity.array_identity(prediction).
+    diagnostics: dict[str, float]  # 결합기 소유 진단. 제공하지 않는 전략은 빈 dict.
 
 
 @dataclass(frozen=True)
@@ -1396,6 +1418,55 @@ class NestedEvaluationReport:
     default_excluded: tuple[str, ...]
 
 
+def evaluate_outer_fold(
+    combiner: Combiner,
+    preds: pd.DataFrame,
+    fold_of: pd.Series,
+    y: pd.Series,
+    fold: int,
+) -> FoldOutcome:
+    """분할 하나 채점: 나머지 fold의 OOF로 fit하고 fold만 predict해 잰다. (#540)
+
+    "evaluate_nested의 분할 하나와 같게 채점한다"는 계약의 정본이다. 판정 스크립트가
+    분할 하나씩 subprocess로 돌릴 때 이 함수를 부르면 산문 불변식이 같은 함수
+    호출이라는 사실이 된다.
+
+    행 순서 규약을 이 함수가 소유한다: preds·fold_of·y는 같은 id 인덱스를 같은
+    순서로 가져야 한다. 등록 결합기는 순위 변환 때문에 행 순서에 민감하므로(#486)
+    어긋난 입력은 조용히 다른 점수를 내는 대신 여기서 거부한다.
+
+    결합기 진단은 Fitted가 diagnostics()를 제공할 때만 모은다(결합기 소유 dict,
+    지도 #539 결정). summary()와 달리 선택 사항이다.
+    """
+    for name, index in (("fold_of", fold_of.index), ("y", y.index)):
+        if not preds.index.equals(index):
+            raise ValueError(
+                f"preds와 {name}의 행 순서(id 인덱스)가 다르다. "
+                "등록 결합기는 행 순서에 민감하므로 정렬해 다시 건넨다."
+            )
+    inner = (fold_of != fold).to_numpy()
+    outer = (fold_of == fold).to_numpy()
+    if not outer.any():
+        raise ValueError(f"fold {int(fold)}에 배정된 행이 없다.")
+    preds = preds.astype(np.float64)  # 결합 전략에는 float64 원시 예측만 건넨다.
+    try:
+        fitted = combiner.fit(preds[inner], y[inner])
+    except CombinerConvergenceError as exc:
+        raise CombinerConvergenceError(
+            f"outer fold {int(fold)}에서 미수렴: {exc}"
+        ) from exc
+    values = np.asarray(fitted.predict(preds[outer]), dtype=np.float64)
+    diagnostics_of = getattr(fitted, "diagnostics", None)
+    return FoldOutcome(
+        fold=int(fold),
+        auc=float(roc_auc_score(y[outer].to_numpy(), values)),
+        summary=fitted.summary(),
+        prediction=pd.Series(values, index=preds.index[outer], name="prediction"),
+        prediction_identity=array_identity(values),
+        diagnostics=dict(diagnostics_of()) if diagnostics_of is not None else {},
+    )
+
+
 def evaluate_nested(
     combiner: Combiner,
     preds: pd.DataFrame,
@@ -1403,7 +1474,7 @@ def evaluate_nested(
     y: pd.Series,
     reweighting: MissingnessReweighting | None = None,
 ) -> NestedEvaluation:
-    """outer fold 루프: 나머지 fold의 OOF로 fit하고 fold k만 predict해 합쳐 채점한다.
+    """outer fold 루프: evaluate_outer_fold를 fold 오름차순으로 돌려 합쳐 채점한다.
 
     reweighting을 건네면 같은 nested 예측을 test 결측 패턴 구성비로 한 번 더 채점해
     가중 OOF를 함께 남긴다. nested_auc는 그대로다(#383, 추가 눈금).
@@ -1413,23 +1484,9 @@ def evaluate_nested(
     nested = np.full(len(preds), np.nan)
     outcomes = []
     for fold in sorted(fold_of.unique()):
-        inner = (fold_of != fold).to_numpy()
-        outer = (fold_of == fold).to_numpy()
-        try:
-            fitted = combiner.fit(preds[inner], y[inner])
-        except CombinerConvergenceError as exc:
-            raise CombinerConvergenceError(
-                f"outer fold {int(fold)}에서 미수렴: {exc}"
-            ) from exc
-        prediction = np.asarray(fitted.predict(preds[outer]), dtype=np.float64)
-        nested[outer] = prediction
-        outcomes.append(
-            FoldOutcome(
-                fold=int(fold),
-                auc=float(roc_auc_score(y[outer].to_numpy(), prediction)),
-                summary=fitted.summary(),
-            )
-        )
+        outcome = evaluate_outer_fold(combiner, preds, fold_of, y, int(fold))
+        nested[(fold_of == fold).to_numpy()] = outcome.prediction.to_numpy()
+        outcomes.append(outcome)
     assert not np.isnan(nested).any(), "fold 배정이 전 행을 덮지 않는다."
     prediction = pd.Series(nested, index=preds.index, name="prediction")
     weighted = None

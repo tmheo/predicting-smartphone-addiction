@@ -25,6 +25,7 @@ from pipeline.ensemble import (
     PRECISION_COMBINER_NAMES,
     BaggedGreedyRankMeanCombiner,
     CombinerConvergenceError,
+    CSelectedShrunkRankLogitCombiner,
     EmpiricalCDFTransformer,
     FailedStrategyEvaluation,
     GreedyRankMeanCombiner,
@@ -44,6 +45,7 @@ from pipeline.ensemble import (
     XGBoostRankLogitCombiner,
     combiner_for_context,
     evaluate_nested,
+    evaluate_outer_fold,
     full_fit_predictions,
     member_matrix,
     member_stats,
@@ -57,6 +59,7 @@ from pipeline.ensemble import (
     write_evaluation_artifact,
     write_strategy_oof,
 )
+from pipeline.identity import array_identity
 from pipeline.judgment import MissingnessReweighting, rank_ensemble_auc
 from pipeline.runs import InMemoryRunStore
 
@@ -621,6 +624,99 @@ def test_evaluate_nested_excludes_outer_fold_from_fit():
         assert outcome.auc == pytest.approx(
             roc_auc_score(y[mask].to_numpy(), preds["exp_0"][mask].to_numpy())
         )
+
+
+def _pre_refactor_nested(combiner, preds, fold_of, y):
+    """#540 재정의 전 evaluate_nested의 루프를 그대로 옮긴 대조 구현(동등성 시험 전용)."""
+    preds = preds.astype(np.float64)
+    nested = np.full(len(preds), np.nan)
+    fold_aucs, summaries = {}, {}
+    for fold in sorted(fold_of.unique()):
+        inner = (fold_of != fold).to_numpy()
+        outer = (fold_of == fold).to_numpy()
+        fitted = combiner.fit(preds[inner], y[inner])
+        prediction = np.asarray(fitted.predict(preds[outer]), dtype=np.float64)
+        nested[outer] = prediction
+        fold_aucs[int(fold)] = float(roc_auc_score(y[outer].to_numpy(), prediction))
+        summaries[int(fold)] = fitted.summary()
+    return nested, float(roc_auc_score(y.to_numpy(), nested)), fold_aucs, summaries
+
+
+def test_evaluate_nested_reproduces_pre_refactor_loop_bitwise():
+    preds = make_preds(members=5)
+    y = make_labels()
+    fold_of = pd.Series(np.arange(N) % 5, index=make_index())
+    combiner = COMBINER_REGISTRY["rank_logit_logistic"]
+    expected, expected_auc, expected_fold_aucs, expected_summaries = (
+        _pre_refactor_nested(combiner, preds, fold_of, y)
+    )
+    evaluation = evaluate_nested(combiner, preds, fold_of, y)
+    assert np.array_equal(evaluation.prediction.to_numpy(), expected)
+    assert evaluation.nested_auc == expected_auc
+    assert {o.fold: o.auc for o in evaluation.folds} == expected_fold_aucs
+    assert {o.fold: o.summary for o in evaluation.folds} == expected_summaries
+
+
+def test_evaluate_outer_fold_is_deterministic_and_owns_outputs():
+    preds = make_preds(members=4)
+    y = make_labels()
+    fold_of = pd.Series(np.arange(N) % 5, index=make_index())
+    combiner = COMBINER_REGISTRY["rank_logit_logistic"]
+    first = evaluate_outer_fold(combiner, preds, fold_of, y, 2)
+    second = evaluate_outer_fold(combiner, preds, fold_of, y, 2)
+    outer = (fold_of == 2).to_numpy()
+    assert first.fold == 2
+    assert first.prediction.index.equals(preds.index[outer])
+    assert first.auc == roc_auc_score(y[outer].to_numpy(), first.prediction.to_numpy())
+    assert first.prediction_identity == array_identity(first.prediction)
+    assert np.array_equal(first.prediction.to_numpy(), second.prediction.to_numpy())
+    assert first.prediction_identity == second.prediction_identity
+
+
+def test_evaluate_outer_fold_rejects_misaligned_row_order():
+    preds = make_preds()
+    y = make_labels()
+    fold_of = pd.Series(np.arange(N) % 5, index=make_index())
+    with pytest.raises(ValueError, match="행 순서"):
+        evaluate_outer_fold(RankMeanCombiner(), preds.iloc[::-1], fold_of, y, 0)
+    with pytest.raises(ValueError, match="행 순서"):
+        evaluate_outer_fold(RankMeanCombiner(), preds, fold_of, y.iloc[::-1], 0)
+
+
+def test_evaluate_outer_fold_rejects_fold_without_rows():
+    preds = make_preds()
+    y = make_labels()
+    fold_of = pd.Series(np.arange(N) % 5, index=make_index())
+    with pytest.raises(ValueError, match="배정된 행이 없다"):
+        evaluate_outer_fold(RankMeanCombiner(), preds, fold_of, y, 9)
+
+
+def test_evaluate_outer_fold_collects_combiner_owned_diagnostics():
+    preds = make_preds(members=4)
+    y = make_labels()
+    fold_of = pd.Series(np.arange(N) % 5, index=make_index())
+    plain = evaluate_outer_fold(RankMeanCombiner(), preds, fold_of, y, 0)
+    assert plain.diagnostics == {}
+    shrunk = evaluate_outer_fold(
+        ShrunkRankLogitCombiner(fold_of=fold_of), preds, fold_of, y, 0
+    )
+    assert set(shrunk.diagnostics) == {
+        "selected_lambda",
+        "final_iterations",
+        "final_coefficient_l2_norm",
+    }
+    assert shrunk.diagnostics["selected_lambda"] in SHRINKAGE_LAMBDA_GRID
+    c_selected = evaluate_outer_fold(
+        CSelectedShrunkRankLogitCombiner(
+            fold_of=fold_of, c_grid=(0.1, 1.0), lambda_grid=(0.0, 1.0)
+        ),
+        preds,
+        fold_of,
+        y,
+        0,
+    )
+    assert c_selected.diagnostics["selected_c"] in (0.1, 1.0)
+    assert c_selected.diagnostics["selected_lambda"] in (0.0, 1.0)
 
 
 def test_member_stats_aggregates_selection_and_mean_weight():
