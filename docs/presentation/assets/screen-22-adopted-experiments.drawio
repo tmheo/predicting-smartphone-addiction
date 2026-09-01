@@ -1,0 +1,31 @@
+<mxfile host="Electron" version="28.1.2">
+<diagram id="screen-22-adopted-experiments" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="실험" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#1e293b;fontColor=#ffffff;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="280" height="60" as="geometry"/></mxCell>
+    <mxCell id="3" value="점추정 또는 진입 결과" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#1e293b;fontColor=#ffffff;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="320" y="40" width="260" height="60" as="geometry"/></mxCell>
+    <mxCell id="4" value="반복 근거" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#1e293b;fontColor=#ffffff;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="580" y="40" width="200" height="60" as="geometry"/></mxCell>
+    <mxCell id="5" value="사전 관문" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#1e293b;fontColor=#ffffff;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="780" y="40" width="220" height="60" as="geometry"/></mxCell>
+    <mxCell id="6" value="결론" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#1e293b;fontColor=#ffffff;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="1000" y="40" width="220" height="60" as="geometry"/></mxCell>
+    <mxCell id="7" value="수치 + 정확값 범주" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;fontStyle=1;fontSize=18;align=left;spacingLeft=16;" vertex="1" parent="1"><mxGeometry x="40" y="100" width="280" height="120" as="geometry"/></mxCell>
+    <mxCell id="8" value="일반 OOF&#xa;+0.00329" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="320" y="100" width="260" height="120" as="geometry"/></mxCell>
+    <mxCell id="9" value="같은 분할과 설정" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="580" y="100" width="200" height="120" as="geometry"/></mxCell>
+    <mxCell id="10" value="같은 조건 직접 비교" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="780" y="100" width="220" height="120" as="geometry"/></mxCell>
+    <mxCell id="11" value="○ 채택" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#15803d;fontColor=#14532d;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="1000" y="100" width="220" height="120" as="geometry"/></mxCell>
+    <mxCell id="12" value="Lookup-Transformer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;fontStyle=1;fontSize=18;align=left;spacingLeft=16;" vertex="1" parent="1"><mxGeometry x="40" y="220" width="280" height="120" as="geometry"/></mxCell>
+    <mxCell id="13" value="일반 OOF +0.00038&#xa;결합 +0.00025" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=17;" vertex="1" parent="1"><mxGeometry x="320" y="220" width="260" height="120" as="geometry"/></mxCell>
+    <mxCell id="14" value="단일 점수와 결합 기여" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=17;" vertex="1" parent="1"><mxGeometry x="580" y="220" width="200" height="120" as="geometry"/></mxCell>
+    <mxCell id="15" value="낮은 중복과 양의 기여" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=17;" vertex="1" parent="1"><mxGeometry x="780" y="220" width="220" height="120" as="geometry"/></mxCell>
+    <mxCell id="16" value="○ 채택" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#15803d;fontColor=#14532d;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="1000" y="220" width="220" height="120" as="geometry"/></mxCell>
+    <mxCell id="17" value="결측 증강" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;fontStyle=1;fontSize=18;align=left;spacingLeft=16;" vertex="1" parent="1"><mxGeometry x="40" y="340" width="280" height="120" as="geometry"/></mxCell>
+    <mxCell id="18" value="nested OOF&#xa;+0.0000469" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="320" y="340" width="260" height="120" as="geometry"/></mxCell>
+    <mxCell id="19" value="바깥 fold 5/5 양수" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=17;" vertex="1" parent="1"><mxGeometry x="580" y="340" width="200" height="120" as="geometry"/></mxCell>
+    <mxCell id="20" value="두 OOF 관문" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="780" y="340" width="220" height="120" as="geometry"/></mxCell>
+    <mxCell id="21" value="○ 채택" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#15803d;fontColor=#14532d;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="1000" y="340" width="220" height="120" as="geometry"/></mxCell>
+    <mxCell id="22" value="다른 정보 관점 · 다른 오차 · 결측 견고성" style="text;html=1;fontSize=22;fontStyle=1;align=center;fontColor=#475569;" vertex="1" parent="1"><mxGeometry x="260" y="510" width="740" height="50" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>

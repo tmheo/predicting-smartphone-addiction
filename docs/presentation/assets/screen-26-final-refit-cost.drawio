@@ -1,0 +1,24 @@
+<mxfile host="Electron" version="28.1.2">
+<diagram id="screen-26-final-refit-cost" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="최종 Vast.ai 재학습 작업" style="swimlane;startSize=54;fillColor=#f8fafc;strokeColor=#64748b;fontColor=#1e293b;fontStyle=1;fontSize=22;html=1;" vertex="1" parent="1"><mxGeometry x="40" y="50" width="350" height="450" as="geometry"/></mxCell>
+    <mxCell id="3" value="$0.39" style="text;html=1;fontSize=46;fontStyle=1;align=center;fontColor=#1e3a8a;" vertex="1" parent="2"><mxGeometry x="50" y="95" width="250" height="70" as="geometry"/></mxCell>
+    <mxCell id="4" value="정확한 잔액 차이&#xa;$0.393844836990070" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontColor=#1e3a8a;fontSize=17;" vertex="1" parent="2"><mxGeometry x="45" y="175" width="260" height="80" as="geometry"/></mxCell>
+    <mxCell id="5" value="Lookup-Transformer 1개&#xa;난수 42 · 43 · 44&#xa;실제 GPU 3장" style="text;html=1;fontSize=19;fontStyle=1;align=center;fontColor=#334155;" vertex="1" parent="2"><mxGeometry x="45" y="280" width="260" height="100" as="geometry"/></mxCell>
+    <mxCell id="6" value="학습 완료" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2563eb;fontStyle=1;fontSize=19;" vertex="1" parent="1"><mxGeometry x="450" y="190" width="140" height="70" as="geometry"/></mxCell>
+    <mxCell id="7" value="결과 회수" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2563eb;fontStyle=1;fontSize=19;" vertex="1" parent="1"><mxGeometry x="630" y="190" width="140" height="70" as="geometry"/></mxCell>
+    <mxCell id="8" value="로컬 재검증" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2563eb;fontStyle=1;fontSize=19;" vertex="1" parent="1"><mxGeometry x="810" y="190" width="150" height="70" as="geometry"/></mxCell>
+    <mxCell id="9" value="자원 삭제" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2563eb;fontStyle=1;fontSize=19;" vertex="1" parent="1"><mxGeometry x="1000" y="190" width="140" height="70" as="geometry"/></mxCell>
+    <mxCell id="10" value="계산 자원 0&#xa;별도 저장 공간 0" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#15803d;fontColor=#14532d;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="970" y="340" width="200" height="110" as="geometry"/></mxCell>
+    <mxCell id="11" value="포함하지 않음: 앞선 검증 · 실패 · CPU 실행 · 로컬 전력 · 사람 시간" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7ed;strokeColor=#b45309;fontColor=#92400e;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="470" y="500" width="670" height="75" as="geometry"/></mxCell>
+    <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="6" target="7" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="7" target="8" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="8" target="9" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e4" value="과금 중지" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#15803d;strokeWidth=3;fontSize=16;" edge="1" source="9" target="10" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>
