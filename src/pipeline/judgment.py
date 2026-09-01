@@ -64,6 +64,17 @@ git_dirty가 아니고, 커밋된 folds와 sha256이 일치해야 한다. (#14 �
 compare --adopt와 pool --admit이 같은 검사를 공유하고, submit도 같은 함수를 쓸 수
 있는 시그니처지만 대회 막판이라 전환하지 않았다(설계 호환만 확보, 지도 #91).
 
+스택 교체 판정(최종 제출 스택의 팔 대 팔 비교)도 이 module 소관이다(#551).
+
+- 게이트는 두 개다: 이어붙인 nested AUC의 개선 폭이 문턱(delta_required, 기본
+  AUC_THRESHOLD) 이상이고, 양수 fold delta 수가 요구 수(folds_required_positive)
+  이상이어야 한다. fold 승수 비교는 >=로 통일한다.
+- "판정 불가"는 예외가 아니라 StackVerdict의 상태다. CLI 번역이 필요한 소비자는
+  require_decidable()로 JudgmentError를 얻어 종료 메시지로 옮긴다.
+- StackVerdict.to_record()가 comparison 기록의 JSON 키 이름을 소유한다. 동결된
+  판정 스크립트 5곳의 인라인 게이트는 불변이고, 소비자는 pipeline.round와 신규
+  스펙 스크립트다(지도 #550).
+
 metric 이름 규약(auc_oof_seed_*, auc_fold_*)의 의미 해석도 이 module 소관이다.
 키 철자의 정본은 기록 규약(tracking)의 상수이고, 여기는 그것을 import해 해석만 한다(#549).
 실행 저장소(runs)는 기록 원형을 그대로 돌려주고, 여기의 파싱 helper가 해석한다.
@@ -1265,4 +1276,142 @@ def check_adoption_eligibility(
         committed_folds_sha256=committed_folds_sha256,
         folds_ok=folds_ok,
         ok=seeds_ok and not git_dirty and folds_ok,
+    )
+
+
+STACK_VERDICT_PASS = "pass"
+STACK_VERDICT_FAIL = "fail"
+STACK_VERDICT_UNDECIDABLE = "undecidable"
+
+
+@dataclass(frozen=True)
+class FoldScores:
+    """비교 팔 하나의 증거: 분할별 AUC와 이어붙인 nested AUC.
+
+    fold_aucs의 키는 outer fold 번호이고, 기록과 비교는 오름차순 규약을 따른다.
+    """
+
+    nested_auc: float
+    fold_aucs: dict[int, float]
+
+
+@dataclass(frozen=True)
+class StackGate:
+    """스택 교체 게이트: delta 문턱과 양수 fold 요구 수.
+
+    delta_required는 AUC_THRESHOLD를 재사용한다(사본 금지, 지도 #550).
+    fold 승수 비교는 >=다: 요구 수를 5 미만으로 낮춰도 5/5 결과는 통과로 남는다.
+    """
+
+    delta_required: float = AUC_THRESHOLD
+    folds_required_positive: int = 5
+
+
+@dataclass(frozen=True)
+class StackVerdict:
+    """스택 교체 판정 결과: 통과·미달·판정 불가 세 상태를 하나의 값 객체로.
+
+    판정 불가(undecidable)는 증거 결함으로 게이트를 계산할 수 없는 상태이며,
+    그때 delta 계열 필드는 None이다.
+    """
+
+    status: str  # STACK_VERDICT_{PASS,FAIL,UNDECIDABLE} 중 하나.
+    gate: StackGate
+    undecidable_reason: str | None = None
+    delta: float | None = None  # candidate − reference의 nested AUC.
+    fold_deltas: dict[int, float] = field(default_factory=dict)
+    folds_positive: int | None = None
+    gate_delta_passes: bool | None = None
+    gate_folds_passes: bool | None = None
+
+    @property
+    def passes_gate(self) -> bool:
+        return self.status == STACK_VERDICT_PASS
+
+    def require_decidable(self) -> None:
+        """판정 불가면 JudgmentError로 승격한다. CLI 번역은 compare.py 관례."""
+        if self.status == STACK_VERDICT_UNDECIDABLE:
+            raise JudgmentError(f"판정 불가: {self.undecidable_reason}")
+
+    def to_record(self) -> dict[str, object]:
+        """comparison 기록에 들어가는 JSON 키 이름의 정본.
+
+        개선 폭 키는 delta 하나다(기존 기록의 delta_vs_comparison_arm·
+        delta_vs_current_submission 난립을 여기로 수렴). fold 키는 문자열
+        오름차순으로 기록한다.
+        """
+        return {
+            "status": self.status,
+            "undecidable_reason": self.undecidable_reason,
+            "delta": self.delta,
+            "delta_minus_gate": (
+                None if self.delta is None else self.delta - self.gate.delta_required
+            ),
+            "fold_deltas": {
+                str(fold): self.fold_deltas[fold] for fold in sorted(self.fold_deltas)
+            },
+            "folds_positive": self.folds_positive,
+            "gate": {
+                "delta_required": self.gate.delta_required,
+                "folds_required_positive": self.gate.folds_required_positive,
+            },
+            "gate_delta_passes": self.gate_delta_passes,
+            "gate_folds_passes": self.gate_folds_passes,
+            "passes_gate": self.passes_gate,
+        }
+
+
+def _stack_undecidable_reason(
+    candidate: FoldScores, reference: FoldScores
+) -> str | None:
+    if not candidate.fold_aucs or not reference.fold_aucs:
+        return "분할별 AUC가 비어 있다."
+    if set(candidate.fold_aucs) != set(reference.fold_aucs):
+        return (
+            "분할 구성이 어긋난다: "
+            f"candidate={sorted(candidate.fold_aucs)}, "
+            f"reference={sorted(reference.fold_aucs)}"
+        )
+    values = [
+        candidate.nested_auc,
+        reference.nested_auc,
+        *candidate.fold_aucs.values(),
+        *reference.fold_aucs.values(),
+    ]
+    if any(math.isnan(value) for value in values):
+        return "AUC에 NaN이 있다."
+    return None
+
+
+def judge_stack_replacement(
+    candidate: FoldScores, reference: FoldScores, gate: StackGate
+) -> StackVerdict:
+    """스택 교체 판정 정본: delta >= 문턱 그리고 양수 fold 수 >= 요구 수.
+
+    judge_ensemble은 전략 간 상대 비교(fold_wins가 기준 대비 부호가 아님)라 이
+    용도를 대신하지 못한다. 증거가 비거나 분할 구성이 어긋나면 판정 불가 상태를
+    돌려준다.
+    """
+    reason = _stack_undecidable_reason(candidate, reference)
+    if reason is not None:
+        return StackVerdict(
+            status=STACK_VERDICT_UNDECIDABLE, gate=gate, undecidable_reason=reason
+        )
+    fold_deltas = {
+        fold: candidate.fold_aucs[fold] - reference.fold_aucs[fold]
+        for fold in sorted(reference.fold_aucs)
+    }
+    folds_positive = sum(1 for value in fold_deltas.values() if value > 0.0)
+    delta = candidate.nested_auc - reference.nested_auc
+    gate_delta = delta >= gate.delta_required
+    gate_folds = folds_positive >= gate.folds_required_positive
+    status = STACK_VERDICT_PASS if gate_delta and gate_folds else STACK_VERDICT_FAIL
+    return StackVerdict(
+        status=status,
+        gate=gate,
+        delta=delta,
+        fold_deltas=fold_deltas,
+        folds_positive=folds_positive,
+        gate_delta_passes=gate_delta,
+        gate_folds_passes=gate_folds,
     )
