@@ -832,7 +832,8 @@ class CSelectedShrunkRankLogitCombiner:
     모든 (C, λ) 조합의 이어붙인 AUC에서 최대 하나를 고르고, 정확히 같으면 더 작은 C,
     같은 C 안에서는 더 작은 λ를 고른다. 선택한 C로 outer 학습 fold 전체에 다시 맞춘다.
     C 격자가 (1.0,)이면 등록 결합기 shrunk_rank_logit_logistic과 같은 계산이다.
-    등록하지 않으며 선택 절차 대조 판정에서만 쓴다.
+    COMBINER_REGISTRY에는 등록하지 않아 기본 평가 범위 밖이지만,
+    combiner_for_context가 이름으로 결합한다(판정 회차 #552).
     """
 
     name = "c_selected_shrunk_rank_logit_logistic"
@@ -1336,7 +1337,13 @@ def combiner_for_context(
     fold_of: pd.Series,
     band_of: pd.Series,
 ) -> Combiner:
-    """행 문맥이 필요한 등록 결합 전략을 현재 평가 입력에 묶어 돌려준다."""
+    """행 문맥이 필요한 등록 결합 전략을 현재 평가 입력에 묶어 돌려준다.
+
+    c_selected_shrunk_rank_logit_logistic은 COMBINER_REGISTRY 밖(기본 평가 범위
+    제외)이지만 판정 회차가 이름으로 결합해야 하므로 여기서만 해석한다(#552).
+    """
+    if name == CSelectedShrunkRankLogitCombiner.name:
+        return CSelectedShrunkRankLogitCombiner(fold_of=fold_of)
     if name not in COMBINER_REGISTRY:
         raise ValueError(f"결합 전략 없음: {name}")
     if name == "shrunk_rank_logit_logistic":
