@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" role="img" aria-labelledby="title desc">
+  <title id="title">목표값 비율과 수치형 피처의 단순 상관관계</title>
+  <desc id="desc">학습 데이터의 목표값 1은 70.9퍼센트, 0은 29.1퍼센트입니다. 수치형 피처 가운데 하루 화면 사용 시간, 주말 화면 사용 시간, 소셜 미디어 사용 시간이 목표값과 가장 큰 양의 상관관계를 보입니다.</desc>
+  <rect width="1200" height="640" fill="#ffffff"/>
+
+  <text x="52" y="54" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="30" font-weight="700">데이터를 처음 열었을 때 확인한 기본 정보</text>
+  <text x="52" y="86" fill="#44546f" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="16">학습 데이터 691,369행의 기본 데이터 탐색(EDA)</text>
+
+  <line x1="558" y1="124" x2="558" y2="574" stroke="#dfe1e6" stroke-width="2"/>
+
+  <text x="52" y="144" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="22" font-weight="700">목표값 비율</text>
+  <text x="52" y="173" fill="#44546f" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15">addicted_label은 0과 1로 구성됩니다</text>
+
+  <rect x="52" y="206" width="450" height="66" fill="#44546f"/>
+  <rect x="52" y="206" width="319" height="66" fill="#00875a"/>
+  <text x="211" y="247" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="19" font-weight="700">1 · 70.9%</text>
+  <text x="437" y="247" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="19" font-weight="700">0 · 29.1%</text>
+
+  <text x="52" y="310" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="18" font-weight="700">490,474행</text>
+  <text x="52" y="336" fill="#44546f" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15">목표값 1</text>
+  <text x="300" y="310" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="18" font-weight="700">200,895행</text>
+  <text x="300" y="336" fill="#44546f" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15">목표값 0</text>
+
+  <rect x="52" y="388" width="450" height="112" fill="#f7f8f9"/>
+  <text x="72" y="425" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="17" font-weight="700">모든 피처에 결측값이 있습니다</text>
+  <text x="72" y="456" fill="#44546f" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15">학습 데이터의 피처별 결측 비율은 4.2%에서 19.4%입니다.</text>
+  <text x="72" y="482" fill="#44546f" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15">결측값을 어떻게 다룰지도 모델 성능에 영향을 줍니다.</text>
+
+  <text x="604" y="144" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="22" font-weight="700">목표값과의 단순 상관관계</text>
+  <text x="604" y="173" fill="#44546f" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15">상관계수가 큰 수치형 피처 6개</text>
+
+  <line x1="816" y1="194" x2="816" y2="530" stroke="#dfe1e6" stroke-width="1"/>
+  <line x1="908" y1="194" x2="908" y2="530" stroke="#dfe1e6" stroke-width="1"/>
+  <line x1="1000" y1="194" x2="1000" y2="530" stroke="#dfe1e6" stroke-width="1"/>
+  <line x1="1092" y1="194" x2="1092" y2="530" stroke="#dfe1e6" stroke-width="1"/>
+
+  <text x="604" y="226" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15">하루 화면 사용 시간</text>
+  <rect x="816" y="208" width="299" height="24" fill="#0c66e4"/>
+  <text x="1160" y="226" text-anchor="end" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15" font-weight="700">0.611</text>
+
+  <text x="604" y="280" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15">주말 화면 사용 시간</text>
+  <rect x="816" y="262" width="288" height="24" fill="#0c66e4"/>
+  <text x="1160" y="280" text-anchor="end" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15" font-weight="700">0.590</text>
+
+  <text x="604" y="334" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15">소셜 미디어 사용 시간</text>
+  <rect x="816" y="316" width="260" height="24" fill="#0c66e4"/>
+  <text x="1160" y="334" text-anchor="end" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15" font-weight="700">0.532</text>
+
+  <text x="604" y="388" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15">업무·학습 시간</text>
+  <rect x="816" y="370" width="123" height="24" fill="#0c66e4"/>
+  <text x="1160" y="388" text-anchor="end" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15" font-weight="700">0.251</text>
+
+  <text x="604" y="442" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15">게임 시간</text>
+  <rect x="816" y="424" width="100" height="24" fill="#0c66e4"/>
+  <text x="1160" y="442" text-anchor="end" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15" font-weight="700">0.205</text>
+
+  <text x="604" y="496" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15">하루 앱을 연 횟수</text>
+  <rect x="816" y="478" width="31" height="24" fill="#0c66e4"/>
+  <text x="1160" y="496" text-anchor="end" fill="#172b4d" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15" font-weight="700">0.063</text>
+
+  <text x="816" y="553" text-anchor="middle" fill="#44546f" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13">0.0</text>
+  <text x="908" y="553" text-anchor="middle" fill="#44546f" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13">0.2</text>
+  <text x="1000" y="553" text-anchor="middle" fill="#44546f" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13">0.4</text>
+  <text x="1092" y="553" text-anchor="middle" fill="#44546f" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13">0.6</text>
+
+  <text x="604" y="604" fill="#44546f" font-family="-apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="14">상관계수는 첫 관찰일 뿐, 인과관계나 최종 피처 중요도를 뜻하지 않습니다.</text>
+</svg>
