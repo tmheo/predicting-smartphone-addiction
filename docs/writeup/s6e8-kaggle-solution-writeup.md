@@ -9,13 +9,11 @@ Facts come from `docs/research/s6e8-our-final-solution.md`, the technical eviden
 
 | Field | Value |
 | --- | --- |
-| Title (80 max) | 14th Place Solution - 278 Shared OOF Sets + 36 Own Models, Sealed-Fold Gated |
+| Title (80 max) | 14th Place - 278 Shared OOF Sets + 36 Own Models, Every Choice Judged on a Sealed Fold |
 | Subtitle (140 max) | Own models alone: Private 0.97063. Stacking 278 OOF/test pairs shared by other Kagglers, judged on a sealed fold, reached 0.97109. |
 | Tags (2-5) | Ensembling, Tabular, Tabular Classification, Feature Engineering, Neural Networks (Kaggle's own tag names, same set the 7th place write-up used) |
-| Project links | GitHub repository `https://github.com/tmheo/predicting-smartphone-addiction` |
-| Project links | Final solution reconstruction `https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-our-final-solution.md` |
-| Project links | External member ledger `https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/external-member-ledger.md` |
-| Project links | Experiment adoption contract (ADR-0001) `https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/adr/0001-experiment-adoption-contract.md` |
+| Project links | none (the repository is not linked from the write-up, user decision 2026-09-02) |
+| Files | none |
 | Card and thumbnail (560 x 280) | `assets/writeup-thumbnail.png` |
 | Media gallery | `assets/writeup-score-progression.png`, `assets/writeup-nested-oof.png` |
 
@@ -36,7 +34,7 @@ Final selections:
 
 | Slot | What it was | Nested OOF | Public | Private |
 | --- | --- | ---: | ---: | ---: |
-| Safety | 35 own models only | 0.96981 | 0.97099 | 0.97063 |
+| Safety | 35 own models only, 5:1 CV/full-refit blend | 0.96981 | 0.97099 | 0.97063 |
 | Primary | 36 own + 278 shared, logistic stack | 0.97038 | 0.97135 | 0.97109 |
 
 ![Score progression from the first LightGBM baseline to the final stack](assets/writeup-score-progression.png)
@@ -329,9 +327,9 @@ Wide stacking judgments were memory bound: 400-column jobs took 10-16 GB each, f
 
 Most of the repetitive work went to coding agents (Claude Code and Codex): reading prior write-ups and notebooks, turning a question into a GitHub issue with the adoption criteria written down before anything ran, implementing, running, recording.
 I decided what to test and what to adopt.
-That loop handled 606 issues, 92 pull requests and 964 commits, and it is the reason the shared-prediction ledger could be checked at the level of individual notebooks.
+That loop handled 519 issues, 93 pull requests and 974 commits (counted on 2026-09-02, re-count before posting), and it is the reason the shared-prediction ledger could be checked at the level of individual notebooks.
 The working conventions behind that loop are not mine.
-One map of issues per big question, grilling and domain-modeling sessions before anything is built, a `CONTEXT.md` glossary and ADRs for decisions all come from Matt Pocock's agent skills (github.com/mattpocock/skills), installed as-is and pointed at this repository.
+One map of issues per big question, grilling and domain-modeling sessions before anything is built, a `CONTEXT.md` glossary and ADRs for decisions all come from Matt Pocock's agent skills (github.com/mattpocock/skills), installed as-is and pointed at my repository.
 
 ![Loop between the human, the coding agents, and the shared GitHub issues, research notes and MLflow records](assets/writeup-agent-loop.png)
 
@@ -354,5 +352,3 @@ One map of issues per big question, grilling and domain-modeling sessions before
 - Matt Pocock for the agent skills (github.com/mattpocock/skills) that gave the coding agents their working conventions: issue maps, grilling, domain modeling, `CONTEXT.md` and ADRs.
 
 If I have missed anyone whose predictions are in the table above, tell me in the comments and I will add you.
-
-Code, configs, ADRs, the external member ledger and the full decision history are in the repository linked below.
