@@ -55,7 +55,7 @@ Final selections:
 
 Everything below is a Kaggle dataset or a notebook output published by its owner during the competition.
 Counts are the number of OOF/test pairs from that source that made it into the final stack.
-Licence is what the owner declared on the dataset page; notebook outputs carry no licence field, so they are marked unknown.
+Licence is what the owner declared on the dataset page; notebook outputs carry no licence field, and a few datasets declared none, so those are marked unknown.
 The prediction arrays from unknown or other licences were used only as combiner inputs and are not redistributed anywhere.
 
 | Owner | Source | Licence | Columns |
@@ -98,7 +98,7 @@ The prediction arrays from unknown or other licences were used only as combiner 
 Totals by licence: CC0 203, CC BY 4.0 6, Apache 2.0 5, unknown 61, other 3.
 
 Some of these libraries are themselves re-runs of other people's work, and those authors deserve credit too.
-szymonkapiski's 47-model library includes 5-fold re-trainings of tamerlanomralinov's Lookup-Transformer and of notebooks by donmarch14, factualexplorer, mohankrishnathalla, omidbaghchehsaraei and ryota517.
+szymonkapiski's 47-model library includes a 5-fold re-training of tamerlanomralinov's Lookup-Transformer and re-runs of notebooks by donmarch14, factualexplorer, mohankrishnathalla, omidbaghchehsaraei and ryota517.
 paiky1995's library is also built on tamerlanomralinov's architecture.
 My own Lookup-Transformer members are a port of the same notebook.
 
@@ -195,7 +195,7 @@ XGBoost-based: per-column XGBoost imputers fit on the training fold, plus compos
 **Target encoding.**
 Exact-value target encoding, fit with an inner split inside each training fold, in half the pool.
 One config used a lattice of pairwise exact-value target means.
-The placebo gate earned its keep here: a batch of nine composition features passed the AUC gate as a group, but four had lower gain than the placebo and were cut before confirmation.
+The placebo gate earned its keep on the composition features over the imputed matrix: twelve of them passed the AUC gate as a group (+0.00019), but seven had lower gain than the placebo, and only the five that beat it went into the champion.
 
 **Original dataset proxies.**
 Five configs used the public `Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv` as a proxy for the generator's source: nearest-neighbour features, prior means, class-conditional CDF differences, and a first-stage prediction trained on it.
@@ -232,7 +232,7 @@ Values seen only in validation or test map to a per-column UNK id, distinct from
 4 layers, width 128, 8 heads, CLS head.
 32 epochs, batch 2,048, OneCycle with peak LR 2e-3, EMA, value dropout.
 The best variants used Muon instead of AdamW, averaged several initializations per fold, and added five PLR-only composition tokens on the imputed screen-time columns.
-The first version scored 0.96892 against a champion of 0.96854, its nearest pool member by Spearman was an XGBoost at 0.98149, and adding it gave +0.00025 to the ensemble.
+The first version scored 0.96892 against a champion of 0.96854, its highest Spearman correlation with any pool member was 0.98149 (an XGBoost), and adding it gave +0.00025 to the ensemble.
 Seventeen learning-rate, schedule and optimizer variants after that all lost on fold 0.
 
 **The RealMLP dtype bug.**
@@ -345,12 +345,12 @@ One map of issues per big question, grilling and domain-modeling sessions before
 
 ## Thanks
 
-- @tamerlanomralinov for the Lookup-Transformer notebook. My five strongest own members are ports of it.
-- @szymonkapiski, @boltuzamaki, @adarsh1077, @hboyang, @paiky1995, @dariushafshar and @mohankrishnathalla for publishing OOF libraries with matching test predictions. Those libraries are most of the 278 columns.
-- @beicicc, @raykkretzschmar and @masayakawamata for artifact datasets with fold vectors or published code, which made the fold check possible without guessing.
-- @najiama, @omidbaghchehsaraei, @rv1922, @zhukovoleksiy, @yaminh, @sidhaarthshree, @danushkumarv, @lopure, @yadoy666, @dynamo14324, @shamanthakreddymallu, @redamountassir, @lucymlai32, @kodaifukuda0311, @harwindersingh766, @yekenot and @kava1 for notebooks whose outputs became members.
+- @tamerlanomralinov for the Lookup-Transformer notebook. My four strongest own members are ports of it.
+- @szymonkapiski, @boltuzamaki, @adarsh1077, @hboyang, @paiky1995, @dariushafshar and @mohankrishnathalla for publishing OOF libraries with matching test predictions. Those libraries are most of the 278 columns, and @najiama's five models reached me through the first of them.
+- @beicicc and @raykkretzschmar for artifact datasets with fold vectors or published code, which made the fold check possible without guessing, and @masayakawamata for the `s6e8-catstr-aug16` dataset.
+- @omidbaghchehsaraei, @rv1922, @zhukovoleksiy, @yaminh, @sidhaarthshree, @danushkumarv, @lopure, @yadoy666, @dynamo14324, @shamanthakreddymallu, @redamountassir, @lucymlai32, @kodaifukuda0311, @harwindersingh766, @yekenot and @kava1 for notebooks whose outputs became members.
 - @cdeotte for the starter notebooks and for the discussion threads that set the baseline everyone measured against.
-- @ryota517 for framing the screen-time budget constraint in the discussion, and @kitopl for the `max_bin` finding that one of my LightGBM configs is named after.
+- @ryota517 for framing the screen-time budget constraint in the discussion, and @kitopl for the EDA LightGBM notebook whose settings bundle one of my LightGBM configs is named after.
 - Matt Pocock for the agent skills (github.com/mattpocock/skills) that gave the coding agents their working conventions: issue maps, grilling, domain modeling, `CONTEXT.md` and ADRs.
 
 If I have missed anyone whose predictions are in the table above, tell me in the comments and I will add you.
