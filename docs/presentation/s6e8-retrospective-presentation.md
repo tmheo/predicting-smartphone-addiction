@@ -134,7 +134,7 @@ OOF AUC `0.96270`을 출발점으로 정한 뒤, 같은 검증 방식에서 그�
 얼마 안 가 OOF만으로는 부족해졌습니다.
 어떤 예측을 앙상블에 넣고 어떻게 합칠지를 OOF 점수를 보면서 고르면, 그 선택 자체가 정답을 엿본 셈이 됩니다.
 
-![다섯 fold 가운데 하나를 봉인하고, 나머지 네 fold에서 앙상블에 넣을 예측과 합치는 방식을 고른 뒤 봉인한 fold에서 평가해 다섯 결과를 nested OOF로 잇는 흐름](assets/retrospective-nested-oof.png)
+![모델마다 이미 만들어 둔 5-fold OOF 예측 표에서 fold 3 열을 봉인하고, 나머지 네 fold 행으로 앙상블에 넣을 모델과 가중치를 정한 뒤 fold 3 행에 적용하는 과정을 다섯 번 반복해 nested OOF AUC를 얻는 흐름](assets/retrospective-nested-oof.png)
 
 앙상블을 평가할 때는 fold 하나를 봉인해 두고, 나머지 네 fold에서만 어떤 예측을 넣고 어떻게 합칠지 정했습니다.
 그다음 봉인한 fold에서 한 번만 점수를 확인했습니다.
