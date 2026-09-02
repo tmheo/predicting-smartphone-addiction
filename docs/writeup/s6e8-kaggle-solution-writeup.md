@@ -16,6 +16,7 @@ Facts come from `docs/research/s6e8-our-final-solution.md`, the technical eviden
 | Files | none |
 | Card and thumbnail (560 x 280) | `assets/writeup-thumbnail.png` |
 | Media gallery | none (emptied after publishing, user decision 2026-09-02; the gallery renders as a carousel above the body and duplicated the figures already in the Content) |
+| DOI | https://doi.org/10.34740/kaggle/w/112553 (generated 2026-09-02 after publishing, user decision; short URL https://www.kaggle.com/w/112553) |
 
 The figures under `assets/` are English versions of the Korean retrospective figures.
 Each PNG has a `.drawio` source next to it; edit the source and re-export rather than editing the PNG.
@@ -29,6 +30,9 @@ Each `assets/*.png` path is replaced by the URL that the editor's `Insert Image`
 Tables, inline code, nested list continuation lines and `@handle` mentions rendered as expected; the mentions become user links.
 The card thumbnail is cropped from the same 560 x 280 PNG, with the square thumbnail crop moved to the left edge so the title text stays visible.
 The media gallery was first filled with the score progression and nested OOF figures, then emptied on the same day: it renders as a carousel with thumbnail boxes above the body, which the 1st place write-up does not use, and the same figures already sit in the Content.
+The DOI was generated from the Edit screen after publishing (the button is disabled on a draft) and required agreeing to keep the write-up persistently available and to send author metadata to DataCite.
+The page now shows a Citation section with the DOI and a BibTeX or APA entry.
+No separate announcement topic was posted in the discussion; the write-up already appears in the discussion list.
 
 ## Content
 
