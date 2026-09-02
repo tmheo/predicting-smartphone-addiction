@@ -258,6 +258,91 @@
     }
     .support-grid figure { margin: 0; }
     .support-grid p { font-size: 17px; }
+    .official-result {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(9, 30, 66, 0.1);
+    }
+    .leaderboard-window {
+      position: relative;
+      min-height: 520px;
+      overflow: hidden;
+      border-right: 1px solid var(--line);
+      background: var(--soft);
+    }
+    .leaderboard-window img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 210%;
+      max-width: none;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      transform: translate(-1%, -6%);
+    }
+    .score-explainer {
+      display: flex;
+      flex-direction: column;
+      padding: 30px 30px 26px;
+    }
+    .score-explainer h3 {
+      margin-bottom: 12px;
+      font-size: 24px;
+      letter-spacing: -0.02em;
+    }
+    .score-block {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 14px;
+      padding: 20px 0;
+      border-top: 1px solid var(--line);
+    }
+    .score-share {
+      font-size: 28px;
+      font-weight: 850;
+      line-height: 1.2;
+      letter-spacing: -0.04em;
+    }
+    .score-block.public .score-share { color: #a15c00; }
+    .score-block.private .score-share { color: var(--purple); }
+    .score-block strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+    .score-block p,
+    .score-reason p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .score-reason {
+      margin-top: auto;
+      padding: 18px 20px;
+      border-left: 4px solid var(--green);
+      background: #eefcf7;
+    }
+    .score-reason strong {
+      display: block;
+      margin-bottom: 5px;
+      color: #075c3f;
+      font-size: 15px;
+    }
+    .official-result figcaption {
+      grid-column: 1 / -1;
+      max-width: none;
+      margin: 0;
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+      background: var(--soft);
+    }
     .closing {
       margin-top: 84px;
       padding: 36px 38px;
@@ -316,6 +401,11 @@
       .experiment-path::before { top: 18px; right: auto; bottom: 18px; left: 18px; width: 3px; height: auto; }
       .experiment-path li { padding: 0 0 0 54px; text-align: left; }
       .experiment-path li::before { left: 0; transform: none; }
+      .official-result { grid-template-columns: 1fr; }
+      .leaderboard-window { min-height: 360px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .leaderboard-window img { width: 190%; transform: translate(-1%, -7%); }
+      .score-explainer { padding: 26px 22px 22px; }
+      .official-result figcaption { grid-column: auto; }
       .act { min-height: 0; }
       p, .dek { font-size: 17px; }
     }
@@ -340,7 +430,7 @@
 
       <figure>
         <img src="issue603-assets/score-progression.drawio.png" alt="단일 구성 OOF AUC가 0.96270에서 0.96941로, 결합의 중첩 OOF AUC가 0.96981에서 0.97038로 높아진 대표 이정표와 별도로 표시한 Public 0.97135, Private 0.97109, 최종 14위">
-        <figcaption>파란 선과 초록 선은 각각 같은 평가 방식의 대표 이정표만 시간순으로 이었습니다. Public과 Private 점수는 다른 자료를 채점한 값이므로 선에 붙이지 않았습니다. 작은 점수 차이가 보이도록 세로축 전체 범위가 아니라 각 점수가 모인 구간만 표시했습니다.</figcaption>
+        <figcaption>파란 선과 초록 선은 각각 같은 평가 방식의 대표 이정표만 시간순으로 이었습니다. 내부 검증 점수는 학습 데이터로 계산한 실험용 점수이고, Public과 Private 점수는 테스트 데이터로 계산한 공식 대회 점수이므로 그래프에서 구분해 표시했습니다. 작은 점수 차이가 보이도록 세로축 전체 범위가 아니라 각 점수가 모인 구간만 표시했습니다.</figcaption>
       </figure>
 
       <h2>출발점은 OOF AUC 0.96270이었습니다</h2>
@@ -408,9 +498,32 @@
       <p>자체 예측 35개를 합친 중첩 OOF AUC 0.96981에서 출발해 검증한 공개 예측을 더했고, 도움이 되지 않은 120개는 다시 뺐습니다. 마지막에는 자체 모델에서 만든 예측 36개와 공개된 예측 278개를 합쳐 내부 결합 점수 0.97038을 만들었습니다.</p>
       <p>여기서 314개는 서로 완전히 다른 모델 314개를 뜻하지 않습니다. 같은 모델 계열에서 설정을 바꿔 얻은 결과와 공개된 예측도 각각 하나의 예측 결과로 셌습니다.</p>
 
-      <figure>
-        <img src="issue603-assets/result.png" alt="Public 점수 0.97135와 Private 점수 0.97109를 분리해 보여 주는 최종 14위 결과">
-        <figcaption>최종 제출은 Public 0.97135, Private 0.97109로 14위를 기록했습니다. 두 공식 점수는 내부 검증선의 다음 점이 아니라 대회 결과를 확인하는 별도 표식입니다.</figcaption>
+      <figure class="official-result">
+        <div class="leaderboard-window">
+          <img src="issue603-assets/final-leaderboard.png" alt="Kaggle 최종 순위표에서 14위에 오른 Taemyung Heo의 실제 순위 화면">
+        </div>
+        <div class="score-explainer">
+          <h3>Public과 Private 점수는 이렇게 계산됩니다</h3>
+          <div class="score-block public">
+            <span class="score-share">20%</span>
+            <div>
+              <strong>Public 점수 0.97135</strong>
+              <p>대회가 진행되는 동안 테스트 데이터의 20%로 계산해 공개합니다.</p>
+            </div>
+          </div>
+          <div class="score-block private">
+            <span class="score-share">80%</span>
+            <div>
+              <strong>Private 점수 0.97109</strong>
+              <p>대회가 끝난 뒤 나머지 80%로 계산하며, 이 점수로 최종 순위가 정해집니다.</p>
+            </div>
+          </div>
+          <aside class="score-reason">
+            <strong>왜 나눠서 채점하나요?</strong>
+            <p>대회 중 공개된 일부 데이터의 점수에만 맞춘 모델이 아니라, 처음 보는 데이터에서도 성능을 유지하는지 확인하기 위해서입니다. 즉, 모델의 일반화 성능을 확인하는 장치입니다.</p>
+          </aside>
+        </div>
+        <figcaption>대회 중에는 Public 0.97135가 공개됐고, 종료 후 Private 0.97109를 기준으로 최종 14위가 정해졌습니다.</figcaption>
       </figure>
 
       <section class="closing">
