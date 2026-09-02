@@ -13,12 +13,6 @@
         <mxCell id="4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F7F8F9;strokeColor=#DFE1E6;strokeWidth=2;fontFamily=Apple SD Gothic Neo;fontSize=22;fontStyle=1;fontColor=#172B4D;align=left;spacingLeft=24;verticalAlign=top;spacingTop=18;" value="단일 구성의 내부 점수 · OOF AUC 누적 최고" vertex="1">
           <mxGeometry height="385" width="1520" x="40" y="135" as="geometry" />
         </mxCell>
-        <mxCell id="5" parent="1" style="text;html=1;align=right;verticalAlign=middle;fontFamily=Apple SD Gothic Neo;fontSize=15;fontColor=#626F86;" value="세로축 시작 0.9620" vertex="1">
-          <mxGeometry height="25" width="125" x="45" y="420" as="geometry" />
-        </mxCell>
-        <mxCell id="6" parent="1" style="text;html=1;align=right;verticalAlign=middle;fontFamily=Apple SD Gothic Neo;fontSize=15;fontColor=#626F86;" value="세로축 끝 0.9700" vertex="1">
-          <mxGeometry height="25" width="100" x="70" y="242" as="geometry" />
-        </mxCell>
         <mxCell id="7" parent="1" style="shape=line;strokeColor=#B3B9C4;strokeWidth=2;" vertex="1">
           <mxGeometry height="180" x="180" y="265" as="geometry" />
         </mxCell>
@@ -69,12 +63,6 @@
         </mxCell>
         <mxCell id="24" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F7F8F9;strokeColor=#DFE1E6;strokeWidth=2;fontFamily=Apple SD Gothic Neo;fontSize=22;fontStyle=1;fontColor=#172B4D;align=left;spacingLeft=24;verticalAlign=top;spacingTop=18;" value="앙상블의 내부 점수 · nested OOF AUC" vertex="1">
           <mxGeometry height="445" width="1030" x="40" y="545" as="geometry" />
-        </mxCell>
-        <mxCell id="25" parent="1" style="text;html=1;align=right;verticalAlign=middle;whiteSpace=wrap;fontFamily=Apple SD Gothic Neo;fontSize=15;fontColor=#626F86;" value="세로축 시작&lt;br&gt;0.96975" vertex="1">
-          <mxGeometry height="42" width="110" x="42" y="842" as="geometry" />
-        </mxCell>
-        <mxCell id="26" parent="1" style="text;html=1;align=right;verticalAlign=middle;whiteSpace=wrap;fontFamily=Apple SD Gothic Neo;fontSize=15;fontColor=#626F86;" value="세로축 끝&lt;br&gt;0.97045" vertex="1">
-          <mxGeometry height="42" width="110" x="42" y="660" as="geometry" />
         </mxCell>
         <mxCell id="27" parent="1" style="shape=line;strokeColor=#B3B9C4;strokeWidth=2;" vertex="1">
           <mxGeometry height="175" x="160" y="690" as="geometry" />
