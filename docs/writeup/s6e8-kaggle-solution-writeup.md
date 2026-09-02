@@ -15,7 +15,7 @@ Facts come from `docs/research/s6e8-our-final-solution.md`, the technical eviden
 | Project links | none (the repository is not linked from the write-up, user decision 2026-09-02) |
 | Files | none |
 | Card and thumbnail (560 x 280) | `assets/writeup-thumbnail.png` |
-| Media gallery | `assets/writeup-score-progression.png`, `assets/writeup-nested-oof.png` |
+| Media gallery | none (emptied after publishing, user decision 2026-09-02; the gallery renders as a carousel above the body and duplicated the figures already in the Content) |
 
 The figures under `assets/` are English versions of the Korean retrospective figures.
 Each PNG has a `.drawio` source next to it; edit the source and re-export rather than editing the PNG.
@@ -28,7 +28,7 @@ The sentences of each paragraph and list item are joined onto one line before pa
 Each `assets/*.png` path is replaced by the URL that the editor's `Insert Image` upload returns.
 Tables, inline code, nested list continuation lines and `@handle` mentions rendered as expected; the mentions become user links.
 The card thumbnail is cropped from the same 560 x 280 PNG, with the square thumbnail crop moved to the left edge so the title text stays visible.
-The media gallery holds the score progression and nested OOF figures with their captions as image titles.
+The media gallery was first filled with the score progression and nested OOF figures, then emptied on the same day: it renders as a carousel with thumbnail boxes above the body, which the 1st place write-up does not use, and the same figures already sit in the Content.
 
 ## Content
 
