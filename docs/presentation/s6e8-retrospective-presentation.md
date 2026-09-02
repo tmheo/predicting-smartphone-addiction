@@ -108,7 +108,7 @@ OOF AUC `0.96270`을 출발점으로 정한 뒤, 같은 검증 방식에서 그�
 1. LightGBM 베이스라인 - 원본 피처 12개로 OOF AUC `0.96270`
 2. 피처 엔지니어링 - 수치형과 카테고리형 변환, 잔차, 결측값 보완
 3. 트리 모델 확장 - LightGBM에 이어 XGBoost와 CatBoost
-4. NN 모델 확장 - Lookup-Transformer, TabM, RealMLP, TabCNN, TabPFN-3
+4. NN 모델 확장 - Lookup-Transformer, TabM, RealMLP, TabCNN, Scalar Token Transformer, Contextual Spline Transformer, TabPFN-3
 5. 앙상블 - 서로 다르게 틀리는 예측을 골라 함께 사용
 
 앞 단계를 버리고 다음 단계로 갈아탄 것은 아닙니다.
@@ -247,7 +247,7 @@ fold 3을 봉인한 경우로 순서를 적으면 이렇습니다.
 피처 엔지니어링이 자리를 잡은 뒤에는 모델의 폭을 넓혔습니다.
 LightGBM에 이어 XGBoost와 CatBoost를 같은 다섯 fold에서 비교했고, 단독 점수가 비슷해도 서로 다르게 틀리는 예측이면 앙상블 후보로 남겼습니다.
 
-신경망은 Lookup-Transformer, TabM, RealMLP, TabCNN, TabPFN-3까지 시도했습니다.
+신경망은 Lookup-Transformer, TabM, RealMLP, TabCNN, Scalar Token Transformer, Contextual Spline Transformer, TabPFN-3까지 시도했고, 이 일곱 계열이 모두 최종 앙상블 후보에 들어갔습니다.
 이 가운데 Lookup-Transformer는 같은 값끼리 묶어 조회하는 표와 연속 수치의 부드러운 추세를 함께 쓰는 구조여서, 트리 모델과는 다른 자리에서 틀렸습니다.
 처음 만든 판의 OOF AUC는 `0.96892`로 당시 최고보다 `+0.00038` 높았고, 기존 앙상블에 더했을 때도 `+0.00025`만큼 도움이 됐습니다.
 가장 비슷한 기존 예측과의 순위 상관도 `0.98149`로 중복 기준 `0.998`보다 낮아서 후보로 남겼습니다.
