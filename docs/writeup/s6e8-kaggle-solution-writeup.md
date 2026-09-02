@@ -327,7 +327,7 @@ Wide stacking judgments were memory bound: 400-column jobs took 10-16 GB each, f
 
 Most of the repetitive work went to coding agents (Claude Code and Codex): reading prior write-ups and notebooks, turning a question into a GitHub issue with the adoption criteria written down before anything ran, implementing, running, recording.
 I decided what to test and what to adopt.
-That loop handled 519 issues, 93 pull requests and 974 commits (counted on 2026-09-02, re-count before posting), and it is the reason the shared-prediction ledger could be checked at the level of individual notebooks.
+That loop is the reason the shared-prediction ledger could be checked at the level of individual notebooks.
 The working conventions behind that loop are not mine.
 One map of issues per big question, grilling and domain-modeling sessions before anything is built, a `CONTEXT.md` glossary and ADRs for decisions all come from Matt Pocock's agent skills (github.com/mattpocock/skills), installed as-is and pointed at my repository.
 
