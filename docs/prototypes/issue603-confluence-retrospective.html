@@ -124,6 +124,86 @@
       background: var(--soft);
       font-size: 16px;
     }
+    .experiment-journey {
+      margin: 34px 0 46px;
+      padding: 28px 28px 24px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(9, 30, 66, 0.07);
+    }
+    .experiment-journey h3 { margin-bottom: 4px; }
+    .experiment-journey > p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .experiment-path {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin: 26px 0 0;
+      padding: 0;
+      counter-reset: experiment-step;
+      list-style: none;
+    }
+    .experiment-path::before {
+      position: absolute;
+      top: 18px;
+      right: 9%;
+      left: 9%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--blue), var(--purple), var(--green));
+      content: "";
+    }
+    .experiment-path li {
+      position: relative;
+      min-width: 0;
+      padding: 50px 8px 0;
+      counter-increment: experiment-step;
+      text-align: center;
+    }
+    .experiment-path li::before {
+      position: absolute;
+      z-index: 1;
+      top: 0;
+      left: 50%;
+      display: grid;
+      width: 38px;
+      height: 38px;
+      border: 4px solid #fff;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 0 0 2px var(--blue);
+      content: counter(experiment-step);
+      font-size: 15px;
+      font-weight: 800;
+      place-items: center;
+      transform: translateX(-50%);
+    }
+    .experiment-path li:nth-child(3)::before { background: var(--green); box-shadow: 0 0 0 2px var(--green); }
+    .experiment-path li:nth-child(4)::before { background: var(--purple); box-shadow: 0 0 0 2px var(--purple); }
+    .experiment-path li:nth-child(5)::before { background: #9a6700; box-shadow: 0 0 0 2px #9a6700; }
+    .experiment-path strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 16px;
+      line-height: 1.35;
+    }
+    .experiment-path span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: keep-all;
+    }
+    .path-note {
+      margin-top: 22px !important;
+      padding-top: 17px;
+      border-top: 1px solid var(--line);
+    }
     .turning-point {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
@@ -232,6 +312,10 @@
       .result-strip, .support-grid, .acts { grid-template-columns: 1fr; }
       .turning-point { grid-template-columns: 1fr; }
       .turning-point .arrow { transform: rotate(90deg); }
+      .experiment-path { grid-template-columns: 1fr; gap: 20px; }
+      .experiment-path::before { top: 18px; right: auto; bottom: 18px; left: 18px; width: 3px; height: auto; }
+      .experiment-path li { padding: 0 0 0 54px; text-align: left; }
+      .experiment-path li::before { left: 0; transform: none; }
       .act { min-height: 0; }
       p, .dek { font-size: 17px; }
     }
@@ -251,7 +335,7 @@
       <section class="result-strip" aria-label="최종 결과 요약">
         <div><small>최종 순위</small><strong>14위</strong></div>
         <div><small>Private 점수</small><strong>0.97109</strong></div>
-        <div><small>최종 결합</small><strong>자체 예측 36개 + 공개 예측 278개</strong></div>
+        <div><small>최종 앙상블</small><strong>자체 예측 36개 + 공개 예측 278개</strong></div>
       </section>
 
       <figure>
@@ -260,7 +344,21 @@
       </figure>
 
       <h2>출발점은 OOF AUC 0.96270이었습니다</h2>
-      <p>첫 기준 실행은 12개 원본 피처를 그대로 사용했습니다. 점수 자체보다 중요한 목적은 이후 실험이 돌아올 비교 기준을 하나 세우는 일이었습니다.</p>
+      <p>첫 모델은 12개 원본 피처를 그대로 사용한 LightGBM(LGB) 베이스라인 모델이었습니다. OOF AUC 0.96270을 출발점으로 정한 뒤, 같은 검증 방식에서 현재 가장 좋은 결과와 비교하며 피처와 모델을 하나씩 바꿔 갔습니다.</p>
+
+      <section class="experiment-journey" aria-labelledby="experiment-journey-title">
+        <h3 id="experiment-journey-title">베이스라인에서 최종 앙상블까지 탐색 범위를 넓혔습니다</h3>
+        <p>모델만 바꾼 것이 아니라, 같은 피처를 표현하는 방법부터 여러 예측을 앙상블하는 방법까지 차례로 실험했습니다.</p>
+        <ol class="experiment-path">
+          <li><strong>LightGBM 베이스라인</strong><span>원본 피처 12개<br>OOF AUC 0.96270</span></li>
+          <li><strong>피처 엔지니어링</strong><span>수치형과 카테고리형<br>잔차와 결측값 보완</span></li>
+          <li><strong>트리 모델 확장</strong><span>LightGBM에서<br>XGBoost·CatBoost로 확장</span></li>
+          <li><strong>NN 모델 확장</strong><span>Lookup-Transformer, TabM, RealMLP, TabCNN, TabPFN-3</span></li>
+          <li><strong>앙상블</strong><span>서로 다르게 틀리는 예측을 골라 함께 사용</span></li>
+        </ol>
+        <p class="path-note">이 순서는 앞선 모델을 버리고 다음 모델로 교체했다는 뜻이 아닙니다. 이전 예측을 남겨 둔 채 새 피처와 모델을 비교했고, 단독 점수가 높거나 기존 예측의 약점을 보완한 결과를 최종 앙상블 후보로 모았습니다.</p>
+      </section>
+
       <p>처음 크게 오른 순간은 복잡한 모델을 새로 추가했을 때가 아니었습니다. 같은 피처를 수치형으로 유지하면서 카테고리 형식으로도 함께 보여 주자, 내부 단일 구성 점수가 0.96605로 올랐습니다.</p>
       <p>반대로 숫자를 모두 카테고리형 피처로만 바꾸자 AUC 차이가 -0.00417이었습니다. 점수가 오른 실험만 보면 계속 성공한 것처럼 보입니다. 실제로는 점수가 떨어지거나 기준에 못 미친 여러 실험 결과를 보고, 같은 방향의 시도를 멈추거나 다음 실험을 정했습니다.</p>
 
@@ -326,7 +424,7 @@
         <div class="act"><small>1막 · 8분</small><strong>결과와 오늘 이야기</strong></div>
         <div class="act"><small>2막 · 12분</small><strong>문제와 평가 기준</strong></div>
         <div class="act"><small>3막 · 20분</small><strong>믿을 수 있는 실험 만들기</strong></div>
-        <div class="act"><small>4막 · 30분</small><strong>탐색이 커지며 바뀐 일하는 방식</strong></div>
+        <div class="act"><small>4막 · 30분</small><strong>피처 엔지니어링과 모델 확장</strong></div>
         <div class="act"><small>5막 · 20분</small><strong>조립, 최종 결과와 남은 교훈</strong></div>
       </div>
     </section>
