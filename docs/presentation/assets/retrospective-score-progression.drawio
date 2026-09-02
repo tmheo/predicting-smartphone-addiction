@@ -55,7 +55,7 @@
         <mxCell id="21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#FFF7F5;strokeColor=#E2483D;fontFamily=Apple SD Gothic Neo;fontSize=15;fontColor=#5D1F1A;" value="모두 카테고리형으로 변경&lt;br&gt;&lt;b&gt;AUC 차이 -0.00417 · 중단&lt;/b&gt;" vertex="1">
           <mxGeometry height="46" width="270" x="370" y="458" as="geometry" />
         </mxCell>
-        <mxCell id="22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#FFF7E6;strokeColor=#E2A100;fontFamily=Apple SD Gothic Neo;fontSize=15;fontColor=#5F3811;" value="설정 17개&lt;br&gt;&lt;b&gt;모두 1차 기준 미달&lt;/b&gt;" vertex="1">
+        <mxCell id="22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#FFF7E6;strokeColor=#E2A100;fontFamily=Apple SD Gothic Neo;fontSize=15;fontColor=#5F3811;" value="모델 설정 17개&lt;br&gt;&lt;b&gt;모두 fold 0 기준 미달&lt;/b&gt;" vertex="1">
           <mxGeometry height="46" width="255" x="750" y="458" as="geometry" />
         </mxCell>
         <mxCell id="23" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#E9F2FF;strokeColor=#0C66E4;fontFamily=Apple SD Gothic Neo;fontSize=15;fontColor=#09326C;" value="RealMLP 자료형 수정&lt;br&gt;&lt;b&gt;AUC 차이 +0.00461&lt;/b&gt;" vertex="1">
