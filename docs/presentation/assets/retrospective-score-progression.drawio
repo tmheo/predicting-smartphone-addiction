@@ -124,9 +124,6 @@
         <mxCell id="47" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=14;fillColor=#172B4D;strokeColor=#172B4D;fontFamily=Apple SD Gothic Neo;fontSize=28;fontStyle=1;fontColor=#FFFFFF;" value="최종 14위" vertex="1">
           <mxGeometry height="70" width="300" x="1180" y="865" as="geometry" />
         </mxCell>
-        <mxCell id="48" parent="1" style="text;html=1;align=right;verticalAlign=middle;whiteSpace=wrap;fontFamily=Apple SD Gothic Neo;fontSize=14;fontColor=#626F86;" value="진행선은 판단 근거가 아니라 대회 여정을 보여 주는 이야기 장치입니다." vertex="1">
-          <mxGeometry height="28" width="570" x="980" y="1000" as="geometry" />
-        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
