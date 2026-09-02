@@ -11,7 +11,7 @@ Facts come from `docs/research/s6e8-our-final-solution.md`, the technical eviden
 | --- | --- |
 | Title (80 max) | 14th Place Solution - 278 Shared OOF Sets + 36 Own Models, Sealed-Fold Gated |
 | Subtitle (140 max) | Own models alone: Private 0.97063. Stacking 278 OOF/test pairs shared by other Kagglers, judged on a sealed fold, reached 0.97109. |
-| Tags (2-5) | tabular, ensembling, binary classification, neural networks, gradient boosting |
+| Tags (2-5) | Ensembling, Tabular, Tabular Classification, Feature Engineering, Neural Networks (Kaggle's own tag names, same set the 7th place write-up used) |
 | Project links | GitHub repository `https://github.com/tmheo/predicting-smartphone-addiction` |
 | Project links | Final solution reconstruction `https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-our-final-solution.md` |
 | Project links | External member ledger `https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/external-member-ledger.md` |
@@ -31,6 +31,13 @@ The final submission that scored 0.97109 is a stack of 36 of my models and 278 p
 The full credit list is in the section "Who the 278 columns came from", and I would ask anyone reusing this approach to keep that list with it.
 
 What I can claim as my own is the procedure: how the shared predictions were checked before they were allowed in, how every ensemble decision was judged on a sealed fold, and the 36 models that gave the stack something the shared sets did not have.
+
+Final selections:
+
+| Slot | What it was | Nested OOF | Public | Private |
+| --- | --- | ---: | ---: | ---: |
+| Safety | 35 own models only | 0.96981 | 0.97099 | 0.97063 |
+| Primary | 36 own + 278 shared, logistic stack | 0.97038 | 0.97135 | 0.97109 |
 
 ![Score progression from the first LightGBM baseline to the final stack](assets/writeup-score-progression.png)
 
@@ -53,40 +60,40 @@ The prediction arrays from unknown or other licences were used only as combiner 
 
 | Owner | Source | Licence | Columns |
 | --- | --- | --- | ---: |
-| szymonkapiski | `s6e8-oof-library-47-models` | CC0-1.0 | 65 |
-| szymonkapiski | `s6e8-50-weakest-oof-models` | CC0-1.0 | 50 |
-| boltuzamaki | `s6e8-oof-prediction-library` | CC0-1.0 | 44 |
-| adarsh1077 | `s6e8-adarsh-oof-library` | CC0-1.0 | 22 |
-| hboyang | `s6e8-150-fusion-local-members` | unknown | 11 |
-| hboyang | `s6e8-catstrall-member` | CC0-1.0 | 6 |
-| paiky1995 | `s6e8-oof-library-11-members` | CC0-1.0 | 6 |
-| omidbaghchehsaraei | 6 notebooks: FT-Transformer, CNN, TabTransformer, fastai, XGBoost v2, CatBoost | unknown | 6 |
-| najiama | 5 models republished inside `szymonkapiski/s6e8-oof-library-47-models` | unknown | 5 |
-| raykkretzschmar | `s6e8-fm-lattice-blend-members` | Apache-2.0 | 5 |
-| beicicc | 5 `*-artifacts` datasets: lookup-transformer, second-seed lookup, exact-value CatBoost, RealMLP two-seed, fixed900 identity-digit LightGBM | CC-BY-4.0 | 6 |
-| beicicc | `s6e8-fixed1500-xgb-identity-digit-artifacts`, `s6e8-fixed1500-xgb-screen-relation-artifacts` | CC0-1.0 | 3 |
-| beicicc | `s6e8-fixed900-structural-lgbm-artifacts`, `s6e8-fixed4000-catboost-screen-relation-artifacts` | other | 3 |
-| rv1922 | notebook `smartphone-addiction` | unknown | 4 |
-| mohankrishnathalla | `s6e8-cat-mlp-oof`, `s6e8-lgb-dart-oof`, `s6e8-xgb-oof` | CC0-1.0 | 3 |
-| mohankrishnathalla | notebooks `s6e8-realmlp-oof-saver`, `s6e8-tabm-oof-saver` | unknown | 2 |
-| dariushafshar | `s6e8-golem-oof-library` | CC0-1.0 | 3 |
-| dariushafshar | notebook `0-97184-leader-xgb-feature-ablation` | unknown | 1 |
-| zhukovoleksiy | notebook `ps6e8-eda-feature-engineering-pipeline` | unknown | 3 |
-| yaminh | notebook `smartphone-addiction-prediction-strong-eda-cv-eble` | unknown | 3 |
-| sidhaarthshree | notebook `lightgbm-ensemble-based-on-eda` | unknown | 3 |
-| danushkumarv | notebook `smartphone-addiction-gbm-rank-blend-nb01` | unknown | 3 |
-| lopure | notebook `hdviz-pca-parallel-with-linear-svm` | unknown | 3 |
-| cdeotte | notebooks `simple-xgb-starter`, `simple-cat-starter`, `simple-nn-starter` | unknown | 3 |
-| yadoy666 | notebook `predicting-smartphone-addiction` | unknown | 2 |
-| dynamo14324 | notebook `smartphone-addiction-championship-v11` | unknown | 2 |
-| shamanthakreddymallu | notebook `s6e8-baseline` | unknown | 2 |
-| redamountassir | notebooks `s6e8-lgbm-lb-0-96965`, `s6e8-histgradientboosting-lb-0-96945` | unknown | 2 |
-| lucymlai32 | notebooks `phase-2-xgboost-and-model-blending`, `smartphone-addiction-prediction` | unknown | 2 |
-| kodaifukuda0311 | notebook `s6e8-how-to-achieve-0-97-with-realmlp-only` | unknown | 1 |
-| masayakawamata | `s6e8-catstr-aug16` | CC0-1.0 | 1 |
-| harwindersingh766 | notebook `ps-s6e8-xgboost-te-lb-0-96548` | unknown | 1 |
-| yekenot | notebook `ps-s6-e8-trompt-pytorch-frame` | unknown | 1 |
-| kava1 | notebook `predicting-smartphone-addiction-resnet-fe` | unknown | 1 |
+| @szymonkapiski | `s6e8-oof-library-47-models` | CC0-1.0 | 65 |
+| @szymonkapiski | `s6e8-50-weakest-oof-models` | CC0-1.0 | 50 |
+| @boltuzamaki | `s6e8-oof-prediction-library` | CC0-1.0 | 44 |
+| @adarsh1077 | `s6e8-adarsh-oof-library` | CC0-1.0 | 22 |
+| @hboyang | `s6e8-150-fusion-local-members` | unknown | 11 |
+| @hboyang | `s6e8-catstrall-member` | CC0-1.0 | 6 |
+| @paiky1995 | `s6e8-oof-library-11-members` | CC0-1.0 | 6 |
+| @omidbaghchehsaraei | 6 notebooks: FT-Transformer, CNN, TabTransformer, fastai, XGBoost v2, CatBoost | unknown | 6 |
+| @najiama | 5 models republished inside `szymonkapiski/s6e8-oof-library-47-models` | unknown | 5 |
+| @raykkretzschmar | `s6e8-fm-lattice-blend-members` | Apache-2.0 | 5 |
+| @beicicc | 5 `*-artifacts` datasets: lookup-transformer, second-seed lookup, exact-value CatBoost, RealMLP two-seed, fixed900 identity-digit LightGBM | CC-BY-4.0 | 6 |
+| @beicicc | `s6e8-fixed1500-xgb-identity-digit-artifacts`, `s6e8-fixed1500-xgb-screen-relation-artifacts` | CC0-1.0 | 3 |
+| @beicicc | `s6e8-fixed900-structural-lgbm-artifacts`, `s6e8-fixed4000-catboost-screen-relation-artifacts` | other | 3 |
+| @rv1922 | notebook `smartphone-addiction` | unknown | 4 |
+| @mohankrishnathalla | `s6e8-cat-mlp-oof`, `s6e8-lgb-dart-oof`, `s6e8-xgb-oof` | CC0-1.0 | 3 |
+| @mohankrishnathalla | notebooks `s6e8-realmlp-oof-saver`, `s6e8-tabm-oof-saver` | unknown | 2 |
+| @dariushafshar | `s6e8-golem-oof-library` | CC0-1.0 | 3 |
+| @dariushafshar | notebook `0-97184-leader-xgb-feature-ablation` | unknown | 1 |
+| @zhukovoleksiy | notebook `ps6e8-eda-feature-engineering-pipeline` | unknown | 3 |
+| @yaminh | notebook `smartphone-addiction-prediction-strong-eda-cv-eble` | unknown | 3 |
+| @sidhaarthshree | notebook `lightgbm-ensemble-based-on-eda` | unknown | 3 |
+| @danushkumarv | notebook `smartphone-addiction-gbm-rank-blend-nb01` | unknown | 3 |
+| @lopure | notebook `hdviz-pca-parallel-with-linear-svm` | unknown | 3 |
+| @cdeotte | notebooks `simple-xgb-starter`, `simple-cat-starter`, `simple-nn-starter` | unknown | 3 |
+| @yadoy666 | notebook `predicting-smartphone-addiction` | unknown | 2 |
+| @dynamo14324 | notebook `smartphone-addiction-championship-v11` | unknown | 2 |
+| @shamanthakreddymallu | notebook `s6e8-baseline` | unknown | 2 |
+| @redamountassir | notebooks `s6e8-lgbm-lb-0-96965`, `s6e8-histgradientboosting-lb-0-96945` | unknown | 2 |
+| @lucymlai32 | notebooks `phase-2-xgboost-and-model-blending`, `smartphone-addiction-prediction` | unknown | 2 |
+| @kodaifukuda0311 | notebook `s6e8-how-to-achieve-0-97-with-realmlp-only` | unknown | 1 |
+| @masayakawamata | `s6e8-catstr-aug16` | CC0-1.0 | 1 |
+| @harwindersingh766 | notebook `ps-s6e8-xgboost-te-lb-0-96548` | unknown | 1 |
+| @yekenot | notebook `ps-s6-e8-trompt-pytorch-frame` | unknown | 1 |
+| @kava1 | notebook `predicting-smartphone-addiction-resnet-fe` | unknown | 1 |
 
 Totals by licence: CC0 203, CC BY 4.0 6, Apache 2.0 5, unknown 61, other 3.
 
@@ -333,5 +340,16 @@ That loop handled 606 issues, 92 pull requests and 964 commits, and it is the re
 - Judge "good alone" and "helps together" separately. The second one is what the leaderboard pays for.
 - Verify that a config does what it says. The biggest own-model gain was a dtype bug.
 - Next time: search wider across model families with different inductive biases in the first week, and tune the leader less.
+
+## Thanks
+
+- @tamerlanomralinov for the Lookup-Transformer notebook. My five strongest own members are ports of it.
+- @szymonkapiski, @boltuzamaki, @adarsh1077, @hboyang, @paiky1995, @dariushafshar and @mohankrishnathalla for publishing OOF libraries with matching test predictions. Those libraries are most of the 278 columns.
+- @beicicc, @raykkretzschmar and @masayakawamata for artifact datasets with fold vectors or published code, which made the fold check possible without guessing.
+- @najiama, @omidbaghchehsaraei, @rv1922, @zhukovoleksiy, @yaminh, @sidhaarthshree, @danushkumarv, @lopure, @yadoy666, @dynamo14324, @shamanthakreddymallu, @redamountassir, @lucymlai32, @kodaifukuda0311, @harwindersingh766, @yekenot and @kava1 for notebooks whose outputs became members.
+- @cdeotte for the starter notebooks and for the discussion threads that set the baseline everyone measured against.
+- @ryota517 for framing the screen-time budget constraint in the discussion, and @kitopl for the `max_bin` finding that one of my LightGBM configs is named after.
+
+If I have missed anyone whose predictions are in the table above, tell me in the comments and I will add you.
 
 Code, configs, ADRs, the external member ledger and the full decision history are in the repository linked below.
