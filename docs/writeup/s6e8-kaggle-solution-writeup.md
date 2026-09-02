@@ -9,7 +9,7 @@ Facts come from `docs/research/s6e8-our-final-solution.md`, the technical eviden
 
 | Field | Value |
 | --- | --- |
-| Title (80 max) | 14th Place - 278 Shared OOF Sets + 36 Own Models, Every Choice Judged on a Sealed Fold |
+| Title (80 max) | 14th Place - 278 Shared OOF Sets + 36 Own Models, All Judged on a Sealed Fold |
 | Subtitle (140 max) | Own models alone: Private 0.97063. Stacking 278 OOF/test pairs shared by other Kagglers, judged on a sealed fold, reached 0.97109. |
 | Tags (2-5) | Ensembling, Tabular, Tabular Classification, Feature Engineering, Neural Networks (Kaggle's own tag names, same set the 7th place write-up used) |
 | Project links | none (the repository is not linked from the write-up, user decision 2026-09-02) |
