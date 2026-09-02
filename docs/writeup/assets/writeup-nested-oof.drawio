@@ -1,0 +1,104 @@
+<mxfile host="Electron" version="28.1.2">
+<diagram id="writeup-nested-oof" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="Seal fold 3 of every model&#39;s existing OOF predictions, then choose the ensemble on the rest" style="text;html=1;fontStyle=1;fontSize=24;align=left;" vertex="1" parent="1">
+      <mxGeometry x="40" y="20" width="1000" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="h1" value="fold 1" style="text;html=1;fontStyle=1;fontSize=18;align=center;" vertex="1" parent="1">
+      <mxGeometry x="260" y="80" width="130" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h2" value="fold 2" style="text;html=1;fontStyle=1;fontSize=18;align=center;" vertex="1" parent="1">
+      <mxGeometry x="410" y="80" width="130" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h3" value="fold 3 sealed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+      <mxGeometry x="555" y="76" width="140" height="38" as="geometry"/>
+    </mxCell>
+    <mxCell id="h4" value="fold 4" style="text;html=1;fontStyle=1;fontSize=18;align=center;" vertex="1" parent="1">
+      <mxGeometry x="710" y="80" width="130" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h5" value="fold 5" style="text;html=1;fontStyle=1;fontSize=18;align=center;" vertex="1" parent="1">
+      <mxGeometry x="860" y="80" width="130" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1" value="LightGBM" style="text;html=1;fontStyle=1;fontSize=18;align=right;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="124" width="200" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2" value="XGBoost" style="text;html=1;fontStyle=1;fontSize=18;align=right;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="180" width="200" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3" value="CatBoost" style="text;html=1;fontStyle=1;fontSize=18;align=right;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="236" width="200" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4" value="Lookup-Transformer" style="text;html=1;fontStyle=1;fontSize=18;align=right;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="292" width="200" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5" value="… N models" style="text;html=1;fontStyle=1;fontSize=18;align=right;verticalAlign=middle;fontColor=#475569;" vertex="1" parent="1">
+      <mxGeometry x="40" y="348" width="200" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="c11" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="260" y="124" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c12" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="410" y="124" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c13" value="OOF" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontSize=16;" vertex="1" parent="1"><mxGeometry x="560" y="124" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c14" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="710" y="124" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c15" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="860" y="124" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c21" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="260" y="180" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c22" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="410" y="180" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c23" value="OOF" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontSize=16;" vertex="1" parent="1"><mxGeometry x="560" y="180" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c24" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="710" y="180" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c25" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="860" y="180" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c31" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="260" y="236" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c32" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="410" y="236" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c33" value="OOF" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontSize=16;" vertex="1" parent="1"><mxGeometry x="560" y="236" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c34" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="710" y="236" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c35" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="860" y="236" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c41" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="260" y="292" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c42" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="410" y="292" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c43" value="OOF" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontSize=16;" vertex="1" parent="1"><mxGeometry x="560" y="292" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c44" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="710" y="292" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c45" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="860" y="292" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c51" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;dashed=1;" vertex="1" parent="1"><mxGeometry x="260" y="348" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c52" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;dashed=1;" vertex="1" parent="1"><mxGeometry x="410" y="348" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c53" value="OOF" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontSize=16;dashed=1;" vertex="1" parent="1"><mxGeometry x="560" y="348" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c54" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;dashed=1;" vertex="1" parent="1"><mxGeometry x="710" y="348" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="c55" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;dashed=1;" vertex="1" parent="1"><mxGeometry x="860" y="348" width="130" height="44" as="geometry"/></mxCell>
+    <mxCell id="note1" value="OOF predictions made once per model on the fixed 5 folds (nothing is retrained)" style="text;html=1;fontSize=16;fontColor=#475569;align=left;" vertex="1" parent="1">
+      <mxGeometry x="260" y="400" width="740" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="lblA" value="used for selection" style="text;html=1;fontStyle=1;fontSize=16;fontColor=#2563eb;align=center;" vertex="1" parent="1">
+      <mxGeometry x="260" y="430" width="280" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="lblC" value="used for scoring only" style="text;html=1;fontStyle=1;fontSize=16;fontColor=#0f766e;align=center;" vertex="1" parent="1">
+      <mxGeometry x="535" y="430" width="180" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="lblB" value="used for selection" style="text;html=1;fontStyle=1;fontSize=16;fontColor=#2563eb;align=center;" vertex="1" parent="1">
+      <mxGeometry x="710" y="430" width="280" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="boxA" value="OOF predictions of N models&#xa;and labels on folds 1, 2, 4, 5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+      <mxGeometry x="40" y="500" width="340" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="boxB" value="Choose which models to include&#xa;and fit the combiner weights" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+      <mxGeometry x="470" y="500" width="300" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="boxC" value="Apply to the fold 3 OOF rows&#xa;→ fold 3 ensemble prediction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+      <mxGeometry x="860" y="500" width="300" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="eAB" value="select" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;fontSize=16;" edge="1" source="boxA" target="boxB" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="eBC" value="apply" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#0f766e;strokeWidth=2;fontSize=16;" edge="1" source="boxB" target="boxC" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="rep" value="Repeat with each of folds 1 to 5 sealed" style="text;html=1;fontStyle=1;fontSize=18;align=left;" vertex="1" parent="1">
+      <mxGeometry x="40" y="630" width="500" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1" value="Ensemble prediction&#xa;fold 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontSize=15;" vertex="1" parent="1"><mxGeometry x="40" y="670" width="130" height="56" as="geometry"/></mxCell>
+    <mxCell id="p2" value="Ensemble prediction&#xa;fold 2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontSize=15;" vertex="1" parent="1"><mxGeometry x="190" y="670" width="130" height="56" as="geometry"/></mxCell>
+    <mxCell id="p3" value="Ensemble prediction&#xa;fold 3" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontStyle=1;fontSize=15;" vertex="1" parent="1"><mxGeometry x="340" y="670" width="130" height="56" as="geometry"/></mxCell>
+    <mxCell id="p4" value="Ensemble prediction&#xa;fold 4" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontSize=15;" vertex="1" parent="1"><mxGeometry x="490" y="670" width="130" height="56" as="geometry"/></mxCell>
+    <mxCell id="p5" value="Ensemble prediction&#xa;fold 5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontSize=15;" vertex="1" parent="1"><mxGeometry x="640" y="670" width="130" height="56" as="geometry"/></mxCell>
+    <mxCell id="result" value="Concatenate the five pieces and score&#xa;= nested OOF AUC" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+      <mxGeometry x="860" y="655" width="300" height="86" as="geometry"/>
+    </mxCell>
+    <mxCell id="eCp3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#0f766e;strokeWidth=2;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="boxC" target="p3" parent="1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1010" y="620"/><mxPoint x="405" y="620"/></Array></mxGeometry></mxCell>
+    <mxCell id="eP5R" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#0f766e;strokeWidth=2;" edge="1" source="p5" target="result" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>

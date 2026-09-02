@@ -1,0 +1,44 @@
+<mxfile host="Electron" version="28.1.2">
+<diagram id="writeup-agent-loop" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="The human chose the questions and the adoptions; coding agents ran the research, implementation, experiments and records" style="text;html=1;fontStyle=1;fontSize=24;align=left;" vertex="1" parent="1">
+      <mxGeometry x="40" y="20" width="1320" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="human" value="Human&#xa;decide what to test · decide what to adopt · final approval" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;fontStyle=1;fontSize=19;" vertex="1" parent="1">
+      <mxGeometry x="380" y="90" width="640" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="band" value="Claude Code · Codex run the four steps below" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+      <mxGeometry x="40" y="220" width="440" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1" value="① Research&#xa;&#xa;12 top write-ups from earlier episodes&#xa;14 technical articles&#xa;every discussion post and comment&#xa;267 public notebooks, 37 read closely" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="300" width="300" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2" value="② Question to issue&#xa;&#xa;606 GitHub issues&#xa;big questions split into 45 maps&#xa;adoption criteria fixed in the issue&#xa;before any result is seen" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="380" y="300" width="300" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="p3" value="③ Implement and run&#xa;&#xa;92 PRs, 964 commits&#xa;455 experiments with the same command&#xa;on local, Kaggle, Vast.ai and Runpod" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="720" y="300" width="300" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="p4" value="④ Record and judge&#xa;&#xa;455 MLflow run records&#xa;adopt/stop evidence written to the issue&#xa;9 decision records (ADR)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="1060" y="300" width="300" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="p1" target="p2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="p2" target="p3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e34" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="p3" target="p4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e41" value="next question" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;fontSize=16;exitX=0.5;exitY=1;entryX=0.5;entryY=1;" edge="1" source="p4" target="p1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1210" y="510"/><mxPoint x="190" y="510"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="eh2" value="question" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#b45309;strokeWidth=2;fontSize=16;exitX=0.3;exitY=1;entryX=0.5;entryY=0;" edge="1" source="human" target="p2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e4h" value="adoption decision" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#b45309;strokeWidth=2;fontSize=16;exitX=0.5;exitY=0;entryX=0.9;entryY=1;" edge="1" source="p4" target="human" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="shared" value="Shared knowledge, read and written by both the human and the agents&#xa;GitHub issues and judgment comments · 177 research notes · MLflow records · glossary (CONTEXT.md)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontStyle=1;fontSize=17;" vertex="1" parent="1">
+      <mxGeometry x="40" y="560" width="1320" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="es1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;startArrow=classic;dashed=1;strokeColor=#2563eb;strokeWidth=2;exitX=0.2;exitY=1;entryX=0.05;entryY=0;" edge="1" source="p1" target="shared" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="es4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;startArrow=classic;dashed=1;strokeColor=#2563eb;strokeWidth=2;exitX=0.8;exitY=1;entryX=0.95;entryY=0;" edge="1" source="p4" target="shared" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>

@@ -16,11 +16,11 @@ Facts come from `docs/research/s6e8-our-final-solution.md`, the technical eviden
 | Project links | Final solution reconstruction `https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/s6e8-our-final-solution.md` |
 | Project links | External member ledger `https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/research/external-member-ledger.md` |
 | Project links | Experiment adoption contract (ADR-0001) `https://github.com/tmheo/predicting-smartphone-addiction/blob/main/docs/adr/0001-experiment-adoption-contract.md` |
-| Card and thumbnail (560 x 280) | `assets/writeup-thumbnail.png` (to be made in #609) |
+| Card and thumbnail (560 x 280) | `assets/writeup-thumbnail.png` |
 | Media gallery | `assets/writeup-score-progression.png`, `assets/writeup-nested-oof.png` |
 
-Figures referenced below do not exist yet.
-They are English versions of the Korean retrospective figures and are produced in #609.
+The figures under `assets/` are English versions of the Korean retrospective figures.
+Each PNG has a `.drawio` source next to it; edit the source and re-export rather than editing the PNG.
 
 ## Content
 

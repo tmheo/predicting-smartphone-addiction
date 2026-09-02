@@ -1,0 +1,31 @@
+<mxfile host="Electron">
+  <diagram id="writeup-thumbnail" name="writeup-thumbnail">
+    <mxGraphModel grid="0" page="0" pageWidth="560" pageHeight="280" background="#FFFFFF" adaptiveColors="auto">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#172B4D;strokeColor=none;" value="" vertex="1">
+          <mxGeometry height="280" width="560" x="0" y="0" as="geometry" />
+        </mxCell>
+        <mxCell id="kicker" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Helvetica;fontSize=15;fontColor=#9FADBC;" value="Playground S6E8 · Predicting Smartphone Addiction" vertex="1">
+          <mxGeometry height="26" width="520" x="28" y="22" as="geometry" />
+        </mxCell>
+        <mxCell id="headline" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Helvetica;fontSize=30;fontStyle=1;fontColor=#FFFFFF;" value="14th place: 36 own models&lt;br&gt;+ 278 shared OOF sets" vertex="1">
+          <mxGeometry height="80" width="520" x="28" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="sub" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=#DCE3EA;" value="Every ensemble decision judged on a sealed fold (nested OOF)" vertex="1">
+          <mxGeometry height="26" width="520" x="28" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="own" parent="1" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#253858;strokeColor=none;fontFamily=Helvetica;fontSize=14;fontColor=#DCE3EA;align=center;" value="Own models only&lt;br&gt;&lt;b style=&quot;font-size:22px;color:#FFFFFF&quot;&gt;Private 0.97063&lt;/b&gt;" vertex="1">
+          <mxGeometry height="64" width="200" x="28" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=26;fontColor=#9FADBC;" value="→" vertex="1">
+          <mxGeometry height="64" width="40" x="236" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="stack" parent="1" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#00875A;strokeColor=none;fontFamily=Helvetica;fontSize=14;fontColor=#E3FCEF;align=center;" value="Stack with shared predictions&lt;br&gt;&lt;b style=&quot;font-size:22px;color:#FFFFFF&quot;&gt;Private 0.97109&lt;/b&gt;" vertex="1">
+          <mxGeometry height="64" width="248" x="284" y="186" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
