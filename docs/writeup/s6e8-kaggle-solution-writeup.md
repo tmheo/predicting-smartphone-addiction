@@ -23,12 +23,12 @@ Each PNG has a `.drawio` source next to it; edit the source and re-export rather
 ## Content
 
 Congratulations to the winners, and thank you to everyone who published OOF and test predictions during this competition.
-I want to be direct about one thing up front: my own models did not get me to 14th place.
+My own models did not get me to 14th place.
 My best own-only submission scored Private 0.97063.
 The final submission that scored 0.97109 is a stack of 36 of my models and 278 prediction sets that other participants shared as Kaggle datasets and notebook outputs.
 The full credit list is in the section "Who the 278 columns came from", and I would ask anyone reusing this approach to keep that list with it.
 
-What I can claim as my own is the procedure: how the shared predictions were checked before they were allowed in, how every ensemble decision was judged on a sealed fold, and the 36 models that gave the stack something the shared sets did not have.
+What is mine is the procedure: the checks a shared prediction had to pass before it could enter, the sealed-fold judgment behind every ensemble decision, and the 36 models that gave the stack something the shared sets did not have.
 
 Final selections:
 
@@ -54,7 +54,7 @@ Final selections:
 Everything below is a Kaggle dataset or a notebook output published by its owner during the competition.
 Counts are the number of OOF/test pairs from that source that made it into the final stack.
 Licence is what the owner declared on the dataset page; notebook outputs carry no licence field, and a few datasets declared none, so those are marked unknown.
-The prediction arrays from unknown or other licences were used only as combiner inputs and are not redistributed anywhere.
+I used the arrays from unknown or other licences only as combiner inputs and do not redistribute them anywhere.
 
 | Owner | Source | Licence | Columns |
 | --- | --- | --- | ---: |
@@ -100,8 +100,7 @@ szymonkapiski's 47-model library includes a 5-fold re-training of tamerlanomrali
 paiky1995's library is also built on tamerlanomralinov's architecture.
 My own Lookup-Transformer members are a port of the same notebook.
 
-How much did the shared columns matter?
-Own 35 members alone: nested OOF 0.96981, Private 0.97063.
+For scale, own 35 members alone: nested OOF 0.96981, Private 0.97063.
 The same 35 plus the first 207 shared columns: nested OOF 0.97029, Private 0.97106.
 That one step is larger than everything I did on my own models after the first two weeks.
 
@@ -109,7 +108,7 @@ That one step is larger than everything I did on my own models after the first t
 
 ### Fixed folds, OOF, gates
 
-Folds were made once and committed as a parquet file.
+I made the folds once and committed them as a parquet file.
 Everything that touches the target (target encoding, imputation models, vocabularies and rank-gauss quantiles for the transformers) is fit inside the training part of each fold.
 All numbers below are OOF AUC on those folds, averaged over seeds 42, 43, 44, unless stated otherwise.
 
@@ -135,23 +134,20 @@ So every ensemble judgment used a sealed fold.
 4. Repeat for k = 1..5, concatenate in the original row order, score ROC AUC.
 
 No model is retrained in this loop and there is no inner re-splitting, so it is not a full double CV.
-It removes the optimism of selecting the ensemble on the rows you score, and nothing more.
+It only removes the optimism of selecting the ensemble on the rows you score.
 
-Every candidate answered two separate questions.
-Is it good alone (its own OOF AUC)?
-Does it help together (nested OOF delta when added to the current pool)?
-A weaker model stayed when it was wrong on different rows than the pool.
-A stronger one was dropped when it was wrong on the same rows.
+Each candidate had to answer two questions: is it good alone (its own OOF AUC), and does it help together (nested OOF delta when added to the current pool)?
+A weaker model stayed if it was wrong on different rows than the pool, and a stronger one was dropped if it was wrong on the same rows.
 Duplicate rule: Spearman rank correlation above 0.998 with any existing member.
 
 ### Adoption gate
 
-A pool change was adopted only if both held, fixed before looking at the result.
+I adopted a pool change only if both conditions below held, and both were fixed before I looked at the result.
 
 - Nested OOF delta above a threshold (+0.00002 for late pool changes).
 - Sealed-fold delta positive in at least 3/5 folds early on, 5/5 for the final pool.
 
-Two examples.
+Two examples:
 Replacing five own members with missingness-augmented versions: +0.0000469, positive on 5/5, adopted.
 Widening the final stack from 314 to 327 columns: +0.0000047, positive on 3/5, rejected.
 I submitted the 327 version anyway for the record and it scored Private 0.97108 against 0.97109 for the 314 version.
@@ -172,7 +168,7 @@ Counting feature providers across the final 36 configs: derived features 30, con
 **Exact-value categorical copies.**
 Keeping the 9 numeric columns and adding 9 categorical copies (same value = same category) moved LightGBM from 0.96276 to 0.96605.
 Converting everything to categorical and dropping the numeric columns went to 0.95859.
-Order and distance had to stay, and the exact-value view had to be added next to them, not instead of them.
+The model needed order and distance as well as the exact-value view, so the categorical copies had to sit next to the numeric columns rather than replace them.
 
 | Representation | OOF AUC | Delta |
 | --- | ---: | ---: |
@@ -197,12 +193,12 @@ The placebo gate earned its keep on the composition features over the imputed ma
 
 **Original dataset proxies.**
 Five configs used the public `Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv` as a proxy for the generator's source: nearest-neighbour features, prior means, class-conditional CDF differences, and a first-stage prediction trained on it.
-Modest alone, wrong on different rows.
+They were modest on their own but wrong on different rows than the rest of the pool.
 
 **Missingness augmentation.**
 Six of the final 36 members trained on 3x rows: the original training fold plus two copies where each observed cell was masked with probability 0.25.
 Existing NaNs stay NaN, copies inherit fold and label, all preprocessing state is fit on the original rows only.
-A version that copied empirical row-level mask patterns from train and test instead of independent masking did not pass the gate, so the value was mask diversity, not realism.
+A version that copied empirical row-level mask patterns from train and test instead of independent masking did not pass the gate, so the gain came from mask diversity rather than from realistic missing patterns.
 
 ### Model families
 
@@ -221,7 +217,7 @@ A version that copied empirical row-level mask patterns from train and test inst
 | One-hot exact-value logistic regression | 1 | 0.95962 |
 
 The best LightGBM member is a config from an AutoGluon-style hyperparameter portfolio trained on missingness-augmented rows.
-The one-hot logistic regression at 0.9596 stayed because it was the most different member in the pool, and its OOF logit also served as the init score for one LightGBM member.
+The one-hot logistic regression at 0.9596 stayed because it was the most different member in the pool, and its OOF logit was also the init score for one LightGBM member.
 
 **Lookup-Transformer.**
 A port of tamerlanomralinov's public notebook, with vocabulary and rank-gauss quantiles fit on the training fold only.
@@ -253,10 +249,10 @@ Every shared OOF/test pair went through the same ledger before it could be a can
 - Re-scored AUC on the labels within 1e-5 of the AUC the author declared.
 - Deduplicated by a hash of the prediction arrays; near-duplicates flagged by Spearman.
 - Fold evidence recorded per member: author statement 152, published code 98, sibling code by the same author 13, an included fold vector matching ours 12, none 3.
-- Code reviewed where available. Two members were excluded for target-mean leakage at code level.
+- Code reviewed where available. I excluded two members for target-mean leakage found in their code.
 - Licence and caveats recorded per member.
 
-Then the candidates were judged as a ladder with the nested rule.
+I then judged the candidates as a ladder with the nested rule.
 The whole 433-column set gave +0.0000063 over the 242-column stack, positive on only 3/5 folds.
 The same set without one family of 120 weak classical probabilistic models gave +0.0000633 on 5/5.
 That is how the 278 was chosen: width helped only when the new columns carried something the pool did not already have.
@@ -321,7 +317,7 @@ The same `pipeline.run <config>` runs on a laptop, on Kaggle CPU/GPU, on Vast.ai
 
 Remote runs come back as a bundle (config, predictions, metrics, diagnostics) with a SHA-256.
 On import the laptop checks the input hashes, that the commit exists and contains that config, that the tree was clean, and re-scores the OOF against local labels before the run is accepted into MLflow (455 runs by the end).
-Instances and volumes are deleted right after import.
+I deleted instances and volumes right after each import.
 Vast.ai was the primary GPU provider with Runpod as fallback; the final refit of the one changed neural member was 3 seeds on 3 GPUs for about $0.39.
 Wide stacking judgments were memory bound: 400-column jobs took 10-16 GB each, five in parallel rebooted the laptop, three became the cap.
 
