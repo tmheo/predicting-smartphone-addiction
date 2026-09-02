@@ -7,7 +7,7 @@
     <mxCell id="title" value="사람이 질문과 채택을 정하고, 코딩 에이전트가 조사·구현·실험·기록을 돌렸습니다" style="text;html=1;fontStyle=1;fontSize=24;align=left;" vertex="1" parent="1">
       <mxGeometry x="40" y="20" width="1200" height="50" as="geometry"/>
     </mxCell>
-    <mxCell id="human" value="사람value="사람&#xa;무엇을 검증할지 정하기 · 결과를 채택할지 결정 · 최종 승인" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;fontStyle=1;fontSize=19;" vertex="1" parent="1">
+    <mxCell id="human" value="사람&#xa;무엇을 검증할지 정하기 · 결과를 채택할지 결정 · 최종 승인" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;fontStyle=1;fontSize=19;" vertex="1" parent="1">
       <mxGeometry x="400" y="90" width="600" height="80" as="geometry"/>
     </mxCell>
     <mxCell id="band" value="Claude Code · Codex가 아래 네 단계를 수행" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;fontStyle=1;fontSize=18;" vertex="1" parent="1">
