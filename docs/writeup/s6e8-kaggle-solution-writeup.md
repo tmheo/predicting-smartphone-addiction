@@ -20,6 +20,16 @@ Facts come from `docs/research/s6e8-our-final-solution.md`, the technical eviden
 The figures under `assets/` are English versions of the Korean retrospective figures.
 Each PNG has a `.drawio` source next to it; edit the source and re-export rather than editing the PNG.
 
+## Publishing notes
+
+Published on 2026-09-02 at https://www.kaggle.com/competitions/playground-series-s6e8/writeups/14th-place-278-shared-oof-sets-36-own-models.
+The Content field is a plain markdown textarea with a Preview toggle, so the markdown under `Content` is pasted as-is with two changes.
+The sentences of each paragraph and list item are joined onto one line before pasting, because the one-sentence-per-line layout of this file is not needed there.
+Each `assets/*.png` path is replaced by the URL that the editor's `Insert Image` upload returns.
+Tables, inline code, nested list continuation lines and `@handle` mentions rendered as expected; the mentions become user links.
+The card thumbnail is cropped from the same 560 x 280 PNG, with the square thumbnail crop moved to the left edge so the title text stays visible.
+The media gallery holds the score progression and nested OOF figures with their captions as image titles.
+
 ## Content
 
 Congratulations to the winners, and thank you to everyone who published OOF and test predictions during this competition.
