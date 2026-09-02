@@ -330,6 +330,8 @@ Wide stacking judgments were memory bound: 400-column jobs took 10-16 GB each, f
 Most of the repetitive work went to coding agents (Claude Code and Codex): reading prior write-ups and notebooks, turning a question into a GitHub issue with the adoption criteria written down before anything ran, implementing, running, recording.
 I decided what to test and what to adopt.
 That loop handled 606 issues, 92 pull requests and 964 commits, and it is the reason the shared-prediction ledger could be checked at the level of individual notebooks.
+The working conventions behind that loop are not mine.
+One map of issues per big question, grilling and domain-modeling sessions before anything is built, a `CONTEXT.md` glossary and ADRs for decisions all come from Matt Pocock's agent skills (github.com/mattpocock/skills), installed as-is and pointed at this repository.
 
 ![Loop between the human, the coding agents, and the shared GitHub issues, research notes and MLflow records](assets/writeup-agent-loop.png)
 
@@ -349,6 +351,7 @@ That loop handled 606 issues, 92 pull requests and 964 commits, and it is the re
 - @najiama, @omidbaghchehsaraei, @rv1922, @zhukovoleksiy, @yaminh, @sidhaarthshree, @danushkumarv, @lopure, @yadoy666, @dynamo14324, @shamanthakreddymallu, @redamountassir, @lucymlai32, @kodaifukuda0311, @harwindersingh766, @yekenot and @kava1 for notebooks whose outputs became members.
 - @cdeotte for the starter notebooks and for the discussion threads that set the baseline everyone measured against.
 - @ryota517 for framing the screen-time budget constraint in the discussion, and @kitopl for the `max_bin` finding that one of my LightGBM configs is named after.
+- Matt Pocock for the agent skills (github.com/mattpocock/skills) that gave the coding agents their working conventions: issue maps, grilling, domain modeling, `CONTEXT.md` and ADRs.
 
 If I have missed anyone whose predictions are in the table above, tell me in the comments and I will add you.
 
