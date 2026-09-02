@@ -1,0 +1,44 @@
+<mxfile host="Electron" version="28.1.2">
+<diagram id="retrospective-agent-loop" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="사람이 질문과 채택을 정하고, 코딩 에이전트가 조사·구현·실험·기록을 돌렸습니다" style="text;html=1;fontStyle=1;fontSize=24;align=left;" vertex="1" parent="1">
+      <mxGeometry x="40" y="20" width="1200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="human" value="저&#xa;무엇을 검증할지 정하기 · 결과를 채택할지 결정 · 최종 승인" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;fontStyle=1;fontSize=19;" vertex="1" parent="1">
+      <mxGeometry x="400" y="90" width="600" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="band" value="Claude Code · Codex가 아래 네 단계를 수행" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+      <mxGeometry x="40" y="220" width="440" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1" value="① 조사&#xa;&#xa;이전 대회 상위 후기 12건&#xa;기술 글 14건&#xa;Discussion 전체 글과 댓글&#xa;공개 Code 267개, 37개는 정독" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="300" width="300" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2" value="② 질문을 이슈로&#xa;&#xa;GitHub 이슈 606개&#xa;큰 질문은 지도 45개로 쪼갬&#xa;결과를 보기 전에&#xa;판정 기준을 이슈에 고정" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="380" y="300" width="300" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="p3" value="③ 구현과 실험&#xa;&#xa;PR 92개, 커밋 964개&#xa;로컬 · Kaggle · Vast.ai · Runpod에서&#xa;같은 명령으로 실험 455개" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="720" y="300" width="300" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="p4" value="④ 기록과 판정&#xa;&#xa;MLflow 실험 기록 455개&#xa;채택·중단 근거를 이슈에 기록&#xa;결정 문서(ADR) 9건" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="1060" y="300" width="300" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="p1" target="p2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="p2" target="p3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e34" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="p3" target="p4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e41" value="다음 질문으로" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;fontSize=16;exitX=0.5;exitY=1;entryX=0.5;entryY=1;" edge="1" source="p4" target="p1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1210" y="510"/><mxPoint x="190" y="510"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="eh2" value="질문" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#b45309;strokeWidth=2;fontSize=16;exitX=0.3;exitY=1;entryX=0.5;entryY=0;" edge="1" source="human" target="p2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e4h" value="채택 판단" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#b45309;strokeWidth=2;fontSize=16;exitX=0.5;exitY=0;entryX=0.9;entryY=1;" edge="1" source="p4" target="human" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="shared" value="공유 지식: 사람과 에이전트가 함께 읽고 씁니다&#xa;GitHub 이슈와 판정 댓글 · 조사 문서 177건 · MLflow 기록 · 용어 사전(CONTEXT.md)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontStyle=1;fontSize=17;" vertex="1" parent="1">
+      <mxGeometry x="40" y="560" width="1320" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="es1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;startArrow=classic;dashed=1;strokeColor=#2563eb;strokeWidth=2;exitX=0.2;exitY=1;entryX=0.05;entryY=0;" edge="1" source="p1" target="shared" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="es4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;startArrow=classic;dashed=1;strokeColor=#2563eb;strokeWidth=2;exitX=0.8;exitY=1;entryX=0.95;entryY=0;" edge="1" source="p4" target="shared" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>

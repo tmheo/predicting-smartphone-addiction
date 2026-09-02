@@ -1,0 +1,45 @@
+<mxfile host="Electron" version="28.1.2">
+<diagram id="retrospective-experiment-pipeline" name="Page-1">
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="실험 명세 하나를 커밋해 두면 어느 장소에서든 같은 명령으로 실험하고 같은 검수를 거칩니다" style="text;html=1;fontStyle=1;fontSize=24;align=left;" vertex="1" parent="1">
+      <mxGeometry x="40" y="20" width="1500" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="spec" value="실험 명세 (git에 커밋)&#xa;&#xa;설정 파일 하나&#xa;고정 fold와 시드&#xa;잠근 의존성 판본&#xa;소스 커밋 SHA" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;fontStyle=1;fontSize=17;" vertex="1" parent="1">
+      <mxGeometry x="40" y="90" width="300" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="hSend" value="보내기" style="text;html=1;fontStyle=1;fontSize=17;align=center;fontColor=#475569;" vertex="1" parent="1"><mxGeometry x="300" y="250" width="320" height="30" as="geometry"/></mxCell>
+    <mxCell id="hRun" value="어디서든 같은 네 단계" style="text;html=1;fontStyle=1;fontSize=17;align=center;fontColor=#2563eb;" vertex="1" parent="1"><mxGeometry x="640" y="250" width="380" height="30" as="geometry"/></mxCell>
+    <mxCell id="hBack" value="가져오기" style="text;html=1;fontStyle=1;fontSize=17;align=center;fontColor=#475569;" vertex="1" parent="1"><mxGeometry x="1040" y="250" width="260" height="30" as="geometry"/></mxCell>
+    <mxCell id="l1" value="Kaggle&#xa;CPU · GPU" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="40" y="300" width="220" height="120" as="geometry"/></mxCell>
+    <mxCell id="l2" value="Vast.ai · Runpod&#xa;빌린 GPU" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="40" y="480" width="220" height="120" as="geometry"/></mxCell>
+    <mxCell id="l3" value="로컬 CPU&#xa;노트북" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontStyle=1;fontSize=18;" vertex="1" parent="1"><mxGeometry x="40" y="660" width="220" height="120" as="geometry"/></mxCell>
+    <mxCell id="s1" value="커밋 SHA, 설정 파일 이름, 단계만 적은&#xa;작은 스크립트를 kaggle kernels push" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=15;" vertex="1" parent="1"><mxGeometry x="300" y="300" width="320" height="120" as="geometry"/></mxCell>
+    <mxCell id="s2" value="vastai 명령줄 도구로 매물 검색과 인스턴스 생성&#xa;SSH 표준 스트림으로 입력 전송, SHA-256 대조&#xa;독립 종료 예약 등록" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=15;" vertex="1" parent="1"><mxGeometry x="300" y="480" width="320" height="120" as="geometry"/></mxCell>
+    <mxCell id="s3" value="바로 실행" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=15;" vertex="1" parent="1"><mxGeometry x="300" y="660" width="320" height="120" as="geometry"/></mxCell>
+    <mxCell id="r1" value="git clone 뒤 커밋 SHA 체크아웃&#xa;uv sync --frozen (의존성 잠금 그대로)&#xa;python -m pipeline.run 설정 --stage screen|confirm&#xa;python -m pipeline.bundle export → 실험 기록 묶음" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=15;" vertex="1" parent="1"><mxGeometry x="640" y="300" width="380" height="120" as="geometry"/></mxCell>
+    <mxCell id="r2" value="git clone 뒤 커밋 SHA 체크아웃&#xa;uv sync --frozen (의존성 잠금 그대로)&#xa;python -m pipeline.run 설정 --stage screen|confirm&#xa;python -m pipeline.bundle export → 실험 기록 묶음" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=15;" vertex="1" parent="1"><mxGeometry x="640" y="480" width="380" height="120" as="geometry"/></mxCell>
+    <mxCell id="r3" value="같은 커밋, 같은 의존성 잠금에서&#xa;python -m pipeline.run 설정 --stage screen|confirm&#xa;결과는 바로 로컬 MLflow에 기록" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=15;" vertex="1" parent="1"><mxGeometry x="640" y="660" width="380" height="120" as="geometry"/></mxCell>
+    <mxCell id="b1" value="kaggle kernels output으로&#xa;묶음 zip 내려받기" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=15;" vertex="1" parent="1"><mxGeometry x="1040" y="300" width="260" height="120" as="geometry"/></mxCell>
+    <mxCell id="b2" value="SSH 표준 스트림으로 묶음 회수&#xa;SHA-256 대조&#xa;인스턴스와 저장 공간 삭제&#xa;과금 중지 확인" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=15;" vertex="1" parent="1"><mxGeometry x="1040" y="480" width="260" height="120" as="geometry"/></mxCell>
+    <mxCell id="check" value="로컬 검수대&#xa;pipeline.bundle import&#xa;&#xa;입력 데이터 해시 일치&#xa;그 커밋에 그 설정이 있는지&#xa;코드 상태가 깨끗한지&#xa;OOF를 다시 채점해 점수 일치&#xa;&#xa;통과한 실험만 MLflow에&#xa;정상 실험으로 등록&#xa;→ 비교 · 판정 · 앙상블" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontStyle=1;fontSize=16;" vertex="1" parent="1"><mxGeometry x="1340" y="300" width="240" height="480" as="geometry"/></mxCell>
+    <mxCell id="e_spec1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#b45309;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="spec" target="l1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_l1l2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#b45309;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="l1" target="l2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_l2l3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#b45309;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="l2" target="l3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e1a" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;" edge="1" source="l1" target="s1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e1b" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="s1" target="r1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e1c" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="r1" target="b1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e1d" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#0f766e;strokeWidth=2;" edge="1" source="b1" target="check" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e2a" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;" edge="1" source="l2" target="s2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e2b" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="s2" target="r2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e2c" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="r2" target="b2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e2d" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#0f766e;strokeWidth=2;" edge="1" source="b2" target="check" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e3a" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;" edge="1" source="l3" target="s3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e3b" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;" edge="1" source="s3" target="r3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e3c" value="같은 비교와 판정" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#0f766e;strokeWidth=2;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.9;" edge="1" source="r3" target="check" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+</diagram>
+</mxfile>
