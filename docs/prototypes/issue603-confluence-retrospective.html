@@ -99,6 +99,7 @@
       font-size: 26px;
       line-height: 1.25;
     }
+    .result-strip div:last-child strong { font-size: 20px; }
     figure { margin: 38px 0; }
     figure img {
       display: block;
@@ -250,7 +251,7 @@
       <section class="result-strip" aria-label="최종 결과 요약">
         <div><small>최종 순위</small><strong>14위</strong></div>
         <div><small>Private 점수</small><strong>0.97109</strong></div>
-        <div><small>최종 결합 입력</small><strong>314개 예측 열</strong></div>
+        <div><small>최종 결합</small><strong>자체 예측 36개 + 공개 예측 278개</strong></div>
       </section>
 
       <figure>
@@ -303,7 +304,8 @@
 
       <h2>마지막에는 한 점보다 서로 다른 오답을 모았습니다</h2>
       <p>단일 구성의 최고점이 0.96941에 이른 뒤에는 혼자 높은 점수를 내는지만 보지 않았습니다. 기존 예측과 다르게 틀리는지, 함께 넣었을 때 봉인한 자료에서도 실제로 도움이 되는지를 따로 확인했습니다.</p>
-      <p>자체 예측 35개를 합친 중첩 OOF AUC 0.96981에서 출발해 검증한 공개 예측을 더했고, 도움이 되지 않은 120개는 다시 뺐습니다. 마지막에는 자체 예측 36개와 공개 예측 278개를 합친 314개 예측 열로 내부 결합 점수 0.97038을 만들었습니다.</p>
+      <p>자체 예측 35개를 합친 중첩 OOF AUC 0.96981에서 출발해 검증한 공개 예측을 더했고, 도움이 되지 않은 120개는 다시 뺐습니다. 마지막에는 자체 모형에서 만든 예측 36개와 공개된 예측 278개를 합쳐 내부 결합 점수 0.97038을 만들었습니다.</p>
+      <p>여기서 314개는 서로 완전히 다른 모델 314개를 뜻하지 않습니다. 같은 모델 계열에서 설정을 바꿔 얻은 결과와 공개된 예측도 각각 하나의 예측 결과로 셌습니다.</p>
 
       <figure>
         <img src="issue603-assets/result.png" alt="Public 점수 0.97135와 Private 점수 0.97109를 분리해 보여 주는 최종 14위 결과">
