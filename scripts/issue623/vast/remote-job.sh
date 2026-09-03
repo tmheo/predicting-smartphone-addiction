@@ -225,7 +225,7 @@ run_in_own_group() {
 }
 
 if run_in_own_group "$LOG_ROOT/python-preflight.log" \
-  timeout --foreground --signal=TERM --kill-after=30s 1800s \
+  timeout --foreground --signal=TERM --kill-after=30s 5400s \
   "$PROJECT/scripts/run_remote_python.sh" \
     --system-python python3 \
     --project "$PROJECT" \
@@ -312,7 +312,7 @@ if [[ $PREFLIGHT_RC -eq 0 ]]; then
       finalize_args+=(--experiment "${EXPERIMENTS[$index]}=$LOG_ROOT/pipeline-${EXPERIMENTS[$index]}.log")
     done
     if run_in_own_group "$LOG_ROOT/bundle-export.log" \
-      timeout --foreground --signal=TERM --kill-after=30s 1800s \
+      timeout --foreground --signal=TERM --kill-after=30s 5400s \
       "$VENV/bin/python" "$INPUT_ROOT/remote-finalize.py" \
         --results "$RESULT_ROOT" \
         --job-id "$JOB_ID" \

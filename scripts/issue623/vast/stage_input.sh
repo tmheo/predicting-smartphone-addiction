@@ -1,7 +1,8 @@
 #!/bin/sh
 # 이슈 #623 원격 실행 입력 묶음을 만든다.
 # 저장소는 실행 커밋(main 끝)의 얕은 독립 복제본(.git 포함)이고, 파일별 해시 목록은 .git/을 제외한다.
-# 사용법: sh scripts/issue623/vast/stage_input.sh <main 체크아웃> <출력 디렉터리>
+# 사용법: sh scripts/issue623/vast/stage_input.sh <main 체크아웃> <출력 디렉터리> [가지 이름]
+# 가지 이름을 주면 그 가지 끝 커밋을 실행 커밋으로 쓴다(기본은 현재 가지). 실행 커밋을 고정한 채 제어 스크립트만 고칠 때 쓴다.
 set -eu
 
 SOURCE=$(CDPATH= cd -- "$1" && pwd -P)
@@ -9,8 +10,8 @@ RUN_ROOT=$2
 JOB_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 STAGING="$RUN_ROOT/input"
 ARCHIVE="$RUN_ROOT/issue623-vast-input-v1.tar.gz"
-BRANCH=$(git -C "$SOURCE" rev-parse --abbrev-ref HEAD)
-EXPECTED_COMMIT=$(git -C "$SOURCE" rev-parse HEAD)
+BRANCH=${3:-$(git -C "$SOURCE" rev-parse --abbrev-ref HEAD)}
+EXPECTED_COMMIT=$(git -C "$SOURCE" rev-parse "refs/heads/$BRANCH")
 test "$BRANCH" != HEAD
 
 mkdir -p "$RUN_ROOT"
