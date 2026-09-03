@@ -224,7 +224,10 @@ A3의 확인 제출은 Public 점수를 얻기 위한 것이므로 공개 순위
 ## kagglekit 반영 인계
 
 반영은 두 단계다.
-첫 단계는 위 운영 원칙 통합판 19개를 kagglekit 문서에 옮기는 일이며, 이 보고서 직후 별도 이슈로 발주한다.
+첫 단계는 위 운영 원칙 통합판 19개를 kagglekit 문서에 옮기는 일이며, [이슈 618](https://github.com/tmheo/predicting-smartphone-addiction/issues/618)로 발주해 [지도 627](https://github.com/tmheo/predicting-smartphone-addiction/issues/627)에서 2026-09-03에 반영을 마쳤다.
+반영 결과는 kagglekit 커밋 [c7a38d4](https://github.com/tmheo/kagglekit/commit/c7a38d4)의 [대회 운영 원칙](https://github.com/tmheo/kagglekit/blob/main/docs/agents/competition-operating-principles.md), [ADR 0008](https://github.com/tmheo/kagglekit/blob/main/docs/adr/0008-surrogate-screening-order-and-upgrade-seat.md), `CONTEXT.md` 용어 8개, `scaffold/AGENTS.md` 첫날 계약 10번부터 16번이다.
+원칙 11과 14는 지표와 자료 형태에 무관한 문장으로 옮기고 S6E8 확정값은 괄호 예시로 두었으며, 무작위 대조군은 풀 밖 검증 후보 모집단에서 기본 20회로 정의했다.
+이 저장소 `CONTEXT.md`의 대리 스크리닝 정의는 대회 기록으로 그대로 두고, 탈락 표현의 지위만 kagglekit 정의를 참조하는 한 줄을 더했다.
 둘째 단계는 축 조합식 후보 생성기와 보조 진단(무작위 대조군, 부트스트랩 구간) 도구이며, 재현 실험이 실제 이득을 보인 뒤에 결정한다.
 
 ## 반사실적 질문에 답할 수 있는 범위
