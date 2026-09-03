@@ -19,7 +19,12 @@ from sklearn.metrics import roc_auc_score
 
 from pipeline.data import ID, TARGET
 from pipeline.identity import array_identity, pair_identity
-from pipeline.member_sources import freeze_spec_members, manifest_members, pool_members
+from pipeline.member_sources import (
+    freeze_spec_members,
+    manifest_members,
+    pool_members,
+    reproduction_pool_members,
+)
 from pipeline.members import (
     AUC_VERIFIED,
     HASH_VERIFIED,
@@ -318,6 +323,40 @@ def test_pool_adapter_is_identity_only():
     member = source.members[0]
     assert member.member_id == "exp001" and member.run_id == "r1"
     assert member.verification == IDENTITY_ONLY and member.expected_auc == 0.9
+
+
+def test_reproduction_pool_adapter_reads_order_and_ladder_stage(tmp_path):
+    spec = {
+        "inputs": {"train": {"rows": 4}},
+        "members": [
+            {"config": "cdv2_a_raw4", "run_id": "r1", "order": 1,
+             "oof": {"array_sha256": "a" * 64, "auc": 0.9}},
+            {"config": "cdv2_a_cats_te", "run_id": "r2", "order": 2,
+             "oof": {"array_sha256": "b" * 64, "auc": 0.8}},
+        ],
+        "ladder": [
+            {"stage": "raw4", "member_count": 1, "members": ["cdv2_a_raw4"]},
+            {"stage": "cats_te", "member_count": 2, "members": ["cdv2_a_raw4", "cdv2_a_cats_te"]},
+        ],
+    }
+    path = tmp_path / "rpf.json"
+    path.write_text(json.dumps(spec))
+    source = reproduction_pool_members(path)
+    assert source.train_rows == 4 and [m.member_id for m in source.members] == ["cdv2_a_raw4", "cdv2_a_cats_te"]
+    first = source.members[0]
+    assert first.origin == "reproduction" and first.verification == HASH_VERIFIED
+    assert first.run_id == "r1" and first.oof_path is None and first.test_path is None
+    assert first.oof_sha256 == "a" * 64 and first.expected_auc == 0.9
+
+    rung = reproduction_pool_members(path, stage="raw4")
+    assert [m.member_id for m in rung.members] == ["cdv2_a_raw4"] and rung.name.endswith("#ladder/raw4")
+    with pytest.raises(MemberSourceInvalid):
+        reproduction_pool_members(path, stage="ratio_round")
+
+    spec["members"][1]["order"] = 3
+    path.write_text(json.dumps(spec))
+    with pytest.raises(MemberSourceInvalid):
+        reproduction_pool_members(path)
 
 
 # ---------------------------------------------------------------------------
