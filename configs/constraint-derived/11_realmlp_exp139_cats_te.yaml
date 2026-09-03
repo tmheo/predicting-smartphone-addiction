@@ -1,0 +1,113 @@
+# 이슈 #621 초안: 제약 파생 4열 승격 사다리(cdv1). 기준 설정은 exp139_realmlp_reference_qnormal_train_test이며 기준의 제공자와 모형 설정은 바꾸지 않는다.
+# 2단계: 1단계 위에 4열의 범주 복제와 정확값 TE를 더한다.
+# 명세: docs/research/constraint-derived-ladder-spec.md. 구현 전(#622)이라 아직 설정 파싱을 통과하지 않는다.
+name: cdv1_realmlp_cats_te
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+features:
+  base: raw
+  categorical:
+  - gender
+  - stress_level
+  - academic_work_impact
+  providers:
+  - kind: derived
+    names:
+    - fake_daily
+    - fake_social
+    - fake_work
+    - fake_game
+  - kind: constrained_impute_aux
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+    emit:
+    - gaming_hours_recon_width
+    - social_media_hours_recon_width
+    - work_study_hours_recon_width
+  - kind: target_encoding
+    inner_folds: 10
+    cols:
+    - fake_daily
+    - fake_social
+    - fake_work
+    - fake_game
+    - placebo_noise
+model:
+  kind: realmlp
+  params:
+    optimizer: muon
+    n_ens: 8
+    embed_dim: 8
+    onehot_thresh: 8
+    hidden_dims:
+    - 512
+    - 512
+    - 512
+    dropout: 0.06
+    p_drop_sched: expm4t
+    pbld_hidden_dim: 20
+    pbld_out_dim: 5
+    pbld_freq_scale: 5.0
+    pbld_lr_factor: 0.093
+    lr: 0.01
+    mom: 0.9
+    sq_mom: 0.98
+    lr_sched: flat_cos
+    flat_ratio: 0.3
+    first_layer_lr_factor: 1.0
+    first_layer_wd_factor: 0.1
+    lr_scale_mult: 10.0
+    lr_bias_mult: 0.1
+    weight_decay: 0.013
+    wd_scale_mult: 0.1
+    wd_bias_mult: 0.5
+    ema_decay: 0.997875
+    grad_clip: 1.2
+    ls_eps: 0.04
+    ls_eps_sched: cos
+    tfms:
+    - median_center
+    - robust_scale
+    fixed_epochs: 4
+    schedule_epochs: 8
+    batch_size: 256
+    eval_batch_size: 10240
+    n_init_avg: 2
+    init_seed_stride: 1000
+    inner_folds: 5
+    perm_sample: 8192
+    perm_repeats: 1
+    reference_qnormal_columns:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+    - fake_daily
+    - fake_social
+    - fake_work
+    - fake_game
+    preprocessing_scope: train_test
+    device: cuda
+    verbosity: 1
+    extra_raw_numeric_columns:
+    - fake_daily
+    - fake_social
+    - fake_work
+    - fake_game
+  fit: {}

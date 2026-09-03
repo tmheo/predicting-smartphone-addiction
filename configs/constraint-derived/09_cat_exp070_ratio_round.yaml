@@ -1,0 +1,154 @@
+# 이슈 #621 초안: 제약 파생 4열 승격 사다리(cdv1). 기준 설정은 exp070_cat_exact_cats이며 기준의 제공자와 모형 설정은 바꾸지 않는다.
+# 3단계: 2단계 위에 비율 7열, 자리수 표현 32열, 반올림 키 TE를 더한다.
+# 명세: docs/research/constraint-derived-ladder-spec.md. 구현 전(#622)이라 아직 설정 파싱을 통과하지 않는다.
+name: cdv1_cat_ratio_round
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+features:
+  base: raw
+  categorical:
+  - gender
+  - stress_level
+  - academic_work_impact
+  providers:
+  - kind: categorical_copies
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+    derived:
+    - fake_daily
+    - fake_social
+    - fake_work
+    - fake_game
+  - kind: derived
+    names:
+    - other_screen
+    - screen_slack
+    - fake_daily
+    - fake_social
+    - fake_work
+    - fake_game
+    - fake_daily_share_screen
+    - fake_social_share_screen
+    - fake_work_share_screen
+    - fake_game_share_screen
+    - social_share_fake_daily
+    - gaming_share_fake_daily
+    - work_share_fake_daily
+    - fake_daily_round0
+    - fake_daily_absdiff_round0
+    - fake_daily_is_round0
+    - fake_daily_round1
+    - fake_daily_absdiff_round1
+    - fake_daily_is_round1
+    - fake_daily_tenths
+    - fake_daily_hundredths
+    - fake_social_round0
+    - fake_social_absdiff_round0
+    - fake_social_is_round0
+    - fake_social_round1
+    - fake_social_absdiff_round1
+    - fake_social_is_round1
+    - fake_social_tenths
+    - fake_social_hundredths
+    - fake_work_round0
+    - fake_work_absdiff_round0
+    - fake_work_is_round0
+    - fake_work_round1
+    - fake_work_absdiff_round1
+    - fake_work_is_round1
+    - fake_work_tenths
+    - fake_work_hundredths
+    - fake_game_round0
+    - fake_game_absdiff_round0
+    - fake_game_is_round0
+    - fake_game_round1
+    - fake_game_absdiff_round1
+    - fake_game_is_round1
+    - fake_game_tenths
+    - fake_game_hundredths
+  - kind: target_encoding
+    inner_folds: 10
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+    - fake_daily
+    - fake_social
+    - fake_work
+    - fake_game
+    - placebo_noise
+  - kind: constrained_impute_aux
+    widths: false
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+  - kind: xgb_impute_aux
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+    emit:
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - weekend_screen_time
+    compositions:
+    - social_frac
+    - work_frac
+    - leisure_frac
+    - resid_frac
+    - week_total
+    cat_cols:
+    - gender
+    - stress_level
+    - academic_work_impact
+  - kind: target_encoding
+    inner_folds: 10
+    key_digits: 1
+    suffix: _te_r1
+    cols:
+    - fake_daily
+    - fake_social
+    - fake_work
+    - fake_game
+    - placebo_noise
+model:
+  kind: catboost
+  params:
+    iterations: 10000
+    depth: 6
+    learning_rate: 0.05
+    eval_metric: AUC
+    max_ctr_complexity: 1
+  fit:
+    early_stopping_rounds: 200
