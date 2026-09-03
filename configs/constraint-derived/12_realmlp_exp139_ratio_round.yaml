@@ -147,10 +147,6 @@ model:
     - notifications_per_day
     - app_opens_per_day
     - weekend_screen_time
-    - fake_daily
-    - fake_social
-    - fake_work
-    - fake_game
     preprocessing_scope: train_test
     device: cuda
     verbosity: 1

@@ -70,7 +70,9 @@ RealMLP adapter는 raw 범주 3열이 아닌 범주형 입력을 거부한다(`r
 따라서 `<col>_cat` 복제 열을 RealMLP에 줄 수 없다.
 RealMLP에서 "범주 복제"에 해당하는 것은 adapter가 raw 수치 9열에 하는 처리다.
 중앙값 대체, 결측 지시자 `_miss_<col>`, 정확값 임베딩 `<col>_cat_`, 그리고 설정에 따른 분위-정규 좌표다(`realmlp.py` 211~233행, 285~300행).
-2단계 RealMLP 설정은 모형 인자 `extra_raw_numeric_columns: [fake_daily, fake_social, fake_work, fake_game]`로 4열을 그 처리에 넣고, `reference_qnormal_columns`에도 4열을 더한다.
+2단계 RealMLP 설정은 모형 인자 `extra_raw_numeric_columns: [fake_daily, fake_social, fake_work, fake_game]`로 4열을 중앙값 대체, 결측 지시자, 정확값 임베딩 처리에 넣는다.
+`reference_qnormal_columns`에는 4열을 더하지 않는다.
+adapter가 그 인자를 원시 수치 9열 그대로의 순서로 고정하고 있고(`realmlp.py` 1135~1140행, #331 계약), 4열은 65~69%의 행에서만 정의돼 결측 행의 좌표가 0으로 채워지므로 첫 회차에서는 그 계약을 건드리지 않는다.
 분위 구간 `BIN_CONFIG`는 daily와 social에 고정돼 있고 구간 제공자는 이 회차 범위 밖이므로 4열에 구간은 만들지 않는다.
 정확값 TE 열은 수치 열이므로 RealMLP에 통과 입력으로 들어간다.
 
@@ -162,18 +164,28 @@ RealMLP 기준 설정 `exp139`는 `target_encoding`을 쓰지 않으므로 2단�
   `DERIVED_REGISTRY`에 없는 이름은 적재 시점에 거부하고, `columns()`는 `cols`와 `derived`의 순서대로 `<col>_cat`을 낸다.
 - RealMLP adapter에 `extra_raw_numeric_columns: list[str] = []` 인자를 더한다.
   `_FoldFeatureEngineer`가 `RAW_NUMERICAL + extra_raw_numeric_columns`에 중앙값 대체, `_miss_`, `_cat_` 처리를 하고 `BIN_CONFIG`는 건드리지 않는다.
-  `reference_qnormal_columns`는 이미 임의 열을 받으므로 바꿀 것이 없다.
+  `reference_qnormal_columns`의 원시 9열 고정 검사는 그대로 둔다.
 - 단위 시험은 제약 복원 열과 같은 수준으로 둔다.
   4열의 결측 규약과 격자 반올림, `categorical_copies`의 `derived` 복제, RealMLP의 추가 열 처리가 대상이다.
 - 완료 조건은 12개 설정의 `pipeline.run` 설정 파싱과 fold 0 스모크 통과다.
 
-## 사용자가 정할 항목
+## 확정 사항(2026-09-03)
 
-1. LightGBM과 CatBoost의 기준을 원본 행 부모(`exp117`, `exp070`)로 두는 데 동의하는지.
-   동의하지 않으면 증강 판을 기준으로 두되 `paired_training_length` 없이 조기 종료로 돌리는 방식(`exp208`이 쓰는 방식)으로 기준과 후보를 맞춘다.
-2. 3단계의 비율을 7열로 두는지, 분모가 daily인 앞 4열만 두는지.
-3. 3단계의 자리수 표현을 8종으로 두는지, `round1` 세 열만 두는지.
-4. RealMLP 2단계에서 4열을 `reference_qnormal_columns`에 더하는지.
-   더하지 않으면 정확값 임베딩과 결측 지시자만 붙는다.
-5. XGBoost 기준 `exp135`는 raw 범주 복제가 없으므로 2단계에서 4열만 범주 복제를 갖는다.
-   이것을 사다리 규칙대로 두는지, XGBoost 2단계에서 범주 복제를 빼고 TE만 두는지.
+사용자는 1번에 동의했고 2~5번은 제안대로 정하라고 했다.
+확정과 근거는 다음이다.
+
+1. LightGBM과 CatBoost의 기준은 원본 행 부모 `exp117`과 `exp070`이다.
+   사용자가 동의했다.
+2. 3단계 비율은 7열 전부다.
+   뒤 세 열(`fake_daily` 분모)은 관측 성분 합 안의 구성비라서 daily 분모 비율과 다른 정규화이고 저장소에 같은 정의가 없다.
+   첫 회차는 변환 목록의 폭을 재는 팔이므로 줄이지 않는다.
+3. 3단계 자리수 표현은 8종 전부다.
+   원시 열이 0.01 격자에 있고 0.1 격자와 정수가 각각 10%와 1%라서 `round0`과 `round1` 계열이 모두 정보를 갖는다.
+   `tenths`와 `hundredths`는 자료 생성기의 자릿수 흔적을 보는 열이며 원시 9열에 붙였던 것과 같은 규약이다.
+   항등이 되는 `round2` 계열만 뺀다.
+4. RealMLP 2단계에서 4열을 `reference_qnormal_columns`에 더하지 않는다.
+   adapter가 그 인자를 원시 9열 순서로 고정하고 있어 더하려면 #331 계약을 풀어야 하고, 4열은 결측 행이 많아 좌표 0 채움이 늘어난다.
+   `extra_raw_numeric_columns`의 정확값 임베딩과 결측 지시자가 2단계의 본체다.
+5. XGBoost 2단계는 사다리 규칙대로 4열만 범주 복제를 갖는다.
+   XGBoost adapter는 category dtype을 `enable_categorical`로 그대로 학습하므로(`model.py` 902행) 1,100~1,300개 정확값의 분할 기반 범주 처리가 그대로 붙는다.
+   raw 9열의 범주 복제를 함께 넣으면 기준과 후보의 차이가 4열 밖으로 번져 사다리의 짝비교가 흐려진다.
