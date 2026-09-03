@@ -855,10 +855,33 @@ def _resolve_lightgbm_params(params: dict, feature_names: list[str]) -> dict:
     return resolved
 
 
+def _xgboost_categorical_frame(X: pd.DataFrame) -> pd.DataFrame:
+    """XGBoost native 범주 학습이 받는 형태로 범주 열을 맞춘다.
+
+    XGBoost는 범주 색인이 문자열이나 정수여야 한다고 요구한다. 정확값 범주 복제 열
+    (<col>_cat)은 범주가 부동소수라 그대로 넘기면 거부되므로, 코드 배정은 그대로 둔 채
+    범주 이름만 문자열로 바꾼다. 범주 집합은 train/test 합집합으로 고정돼 있어 학습과
+    예측이 같은 이름을 받는다. (#622)
+    """
+    converted: dict[str, pd.Series] = {}
+    for column in X.columns:
+        dtype = X[column].dtype
+        if isinstance(dtype, pd.CategoricalDtype) and pd.api.types.is_float_dtype(
+            dtype.categories
+        ):
+            converted[column] = X[column].cat.rename_categories(
+                [repr(float(value)) for value in dtype.categories]
+            )
+    if not converted:
+        return X
+    return X.assign(**converted)
+
+
 class XGBoostAdapter:
     """XGBoost 이진 분류 adapter. (#59)
 
     범주형은 category dtype 그대로 native 학습한다(enable_categorical).
+    범주가 부동소수인 열은 범주 이름만 문자열로 바꿔 넘긴다(_xgboost_categorical_frame).
     importance는 LightGBM gain과 같은 축척인 total_gain을 쓴다.
     """
 
@@ -890,6 +913,8 @@ class XGBoostAdapter:
         score_tr, score_va = _validate_initial_score_pair(
             initial_score_tr, initial_score_va, len(X_tr), len(X_va)
         )
+        X_tr = _xgboost_categorical_frame(X_tr)
+        X_va = _xgboost_categorical_frame(X_va)
         self._uses_initial_score = score_tr is not None
         early_stopping = (
             {}
@@ -943,6 +968,7 @@ class XGBoostAdapter:
             if initial_score is None
             else _validate_initial_score(initial_score, len(X), "학습")
         )
+        X = _xgboost_categorical_frame(X)
         self._uses_initial_score = score is not None
         params = dict(self._params)
         params["n_estimators"] = training_budget
@@ -963,6 +989,7 @@ class XGBoostAdapter:
         return self._predict(X, initial_score)
 
     def _predict(self, X: pd.DataFrame, initial_score: pd.Series | None) -> np.ndarray:
+        X = _xgboost_categorical_frame(X)
         if not self._uses_initial_score:
             if initial_score is not None:
                 raise ValueError(

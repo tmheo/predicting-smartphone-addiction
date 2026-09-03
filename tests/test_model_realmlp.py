@@ -406,6 +406,80 @@ def test_realmlp_numeric_category_mapping_keeps_fit_dtype():
     assert transformed_train["daily_screen_time_hours"].dtype == np.float32
 
 
+def test_realmlp_extra_raw_numeric_columns_get_raw_numeric_treatment():
+    """추가 수치 열은 원시 9열과 같은 중앙값 대체·결측 지시자·정확값 임베딩을 받는다. (#619)"""
+    from pipeline.realmlp import RAW_NUMERICAL, _FoldFeatureEngineer
+
+    X, _ = _data(120)
+    X["fake_daily"] = (
+        X["social_media_hours"] + X["gaming_hours"] + X["work_study_hours"]
+    ).round(2)
+    X["extra_passthrough"] = X["age"] * 2.0
+    train = X.iloc[:90].copy()
+    validation = X.iloc[90:].copy()
+
+    control = _FoldFeatureEngineer()
+    control.fit(train)
+    engineer = _FoldFeatureEngineer(extra_raw_numeric_columns=["fake_daily"])
+    transformed = engineer.fit_transform(train)
+    transformed_validation = engineer.transform(validation)
+
+    assert engineer.raw_numeric == RAW_NUMERICAL + ["fake_daily"]
+    assert engineer.passthrough_numeric == ["placebo_noise", "extra_passthrough"]
+    assert "_miss_fake_daily" in transformed.columns
+    assert "fake_daily_cat_" in transformed.columns
+    assert "fake_daily_cat_" in engineer.output_cat_cols
+    assert "_miss_extra_passthrough" not in transformed.columns
+    assert "extra_passthrough_cat_" not in transformed.columns
+    assert len(engineer.output_cat_cols) == len(control.output_cat_cols) + 2
+    # 결측 행은 지시자 1과 학습 부분 중앙값 대체를 받는다. social 결측 행은 fake_daily도 결측이다.
+    missing_rows = train["fake_daily"].isna().to_numpy()
+    assert missing_rows.any()
+    assert (transformed["_miss_fake_daily"].to_numpy()[missing_rows] == 1).all()
+    assert np.allclose(
+        transformed["fake_daily"].to_numpy()[missing_rows], engineer.medians["fake_daily"]
+    )
+    # 정확값 임베딩 어휘는 학습 부분 값(결측은 중앙값 대체 뒤)이고 검증의 어휘 밖 값만 unknown(0)이다.
+    median = engineer.medians["fake_daily"]
+    fitted = train["fake_daily"].fillna(median)
+    seen = validation["fake_daily"].fillna(median).isin(set(fitted.tolist())).to_numpy()
+    codes = transformed_validation["fake_daily_cat_"].to_numpy()
+    assert (codes[seen] != 0).all()
+    assert (codes[~seen] == 0).all()
+    # 분위 구간은 원시 두 열에 고정돼 있어 추가 열로 늘지 않는다.
+    assert list(engineer.bin_estimators) == list(control.bin_estimators)
+    assert not any(name.startswith("fake_daily") for name in engineer.bin_estimators)
+
+
+def test_realmlp_extra_raw_numeric_columns_contract_and_fit():
+    from pipeline.realmlp import RealMLPFold, _FoldFeatureEngineer
+
+    with pytest.raises(ValueError, match="원시 입력 열과 겹친다"):
+        _FoldFeatureEngineer(extra_raw_numeric_columns=["age"])
+    with pytest.raises(ValueError, match="원시 입력 열과 겹친다"):
+        RealMLPFold({**SMALL_PARAMS, "extra_raw_numeric_columns": ["gender"]}, SEED)
+    with pytest.raises(ValueError, match="중복"):
+        RealMLPFold(
+            {**SMALL_PARAMS, "extra_raw_numeric_columns": ["fake_daily", "fake_daily"]},
+            SEED,
+        )
+
+    X, y = _data(120)
+    X["fake_daily"] = (
+        X["social_media_hours"] + X["gaming_hours"] + X["work_study_hours"]
+    ).round(2)
+    adapter = _adapter(extra_raw_numeric_columns=["fake_daily"])
+    prediction = adapter.fit(X.iloc[:90], y.iloc[:90], X.iloc[90:], y.iloc[90:])
+    assert prediction.shape == (30,)
+    assert np.isfinite(prediction).all()
+    diagnostics = model_mod.collect_training_diagnostics(adapter)
+    assert diagnostics["extra_raw_numeric_columns"] == ["fake_daily"]
+    # 추가 열이 없는 선언에서 입력에 그 열이 없으면 fit 시점에 거부한다.
+    missing = _adapter(extra_raw_numeric_columns=["fake_social"])
+    with pytest.raises(ValueError, match="RealMLP 원문 입력 열이 없다"):
+        missing.fit(X.iloc[:90], y.iloc[:90], X.iloc[90:], y.iloc[90:])
+
+
 def test_realmlp_adapter_contract_and_diagnostics():
     import os
 

@@ -89,6 +89,15 @@ SCREEN_RELATION_RATIOS: dict[str, tuple[str, str]] = {
 }
 
 
+# 파생 함수의 입력 원천. raw 열 이름이면 그 열을, 계산 함수면 그 결과를 읽는다.
+# 제약 파생 4열(#619)처럼 raw 열이 아닌 값 위에 비율과 자리수 표현을 얹을 때 쓴다.
+Source = str | Callable[[pd.DataFrame], pd.Series]
+
+
+def _read(df: pd.DataFrame, source: Source) -> pd.Series:
+    return df[source] if isinstance(source, str) else source(df)
+
+
 def _difference(left: str, right: str) -> Callable[[pd.DataFrame], pd.Series]:
     def f(df: pd.DataFrame) -> pd.Series:
         return df[left] - df[right]
@@ -96,10 +105,10 @@ def _difference(left: str, right: str) -> Callable[[pd.DataFrame], pd.Series]:
     return f
 
 
-def _guarded_ratio(numerator: str, denominator: str) -> Callable[[pd.DataFrame], pd.Series]:
+def _guarded_ratio(numerator: Source, denominator: Source) -> Callable[[pd.DataFrame], pd.Series]:
     def f(df: pd.DataFrame) -> pd.Series:
-        num = df[numerator]
-        den = df[denominator]
+        num = _read(df, numerator)
+        den = _read(df, denominator)
         defined = np.isfinite(num) & np.isfinite(den) & (den > 0)
         return (num / den).where(defined)
 
@@ -240,32 +249,34 @@ DIGIT_IDENTITY_SUFFIXES = [
 ]
 
 
-def _rounded(col: str, decimals: int) -> Callable[[pd.DataFrame], pd.Series]:
+def _rounded(col: Source, decimals: int) -> Callable[[pd.DataFrame], pd.Series]:
     def f(df: pd.DataFrame) -> pd.Series:
-        return np.round(df[col], decimals)
+        return np.round(_read(df, col), decimals)
 
     return f
 
 
-def _absdiff_rounded(col: str, decimals: int) -> Callable[[pd.DataFrame], pd.Series]:
+def _absdiff_rounded(col: Source, decimals: int) -> Callable[[pd.DataFrame], pd.Series]:
     def f(df: pd.DataFrame) -> pd.Series:
-        return (df[col] - np.round(df[col], decimals)).abs()
+        values = _read(df, col)
+        return (values - np.round(values, decimals)).abs()
 
     return f
 
 
-def _is_rounded(col: str, decimals: int) -> Callable[[pd.DataFrame], pd.Series]:
+def _is_rounded(col: Source, decimals: int) -> Callable[[pd.DataFrame], pd.Series]:
     def f(df: pd.DataFrame) -> pd.Series:
+        values = _read(df, col)
         # 2.9*10=28.999… 같은 부동소수 오차가 자리 판정을 깨지 않게 소수 6자리에서 끊는다.
-        scaled = np.round(df[col] * 10**decimals, 6)
-        return (scaled % 1 == 0).astype(float).where(df[col].notna())
+        scaled = np.round(values * 10**decimals, 6)
+        return (scaled % 1 == 0).astype(float).where(values.notna())
 
     return f
 
 
-def _decimal_digit(col: str, place: int) -> Callable[[pd.DataFrame], pd.Series]:
+def _decimal_digit(col: Source, place: int) -> Callable[[pd.DataFrame], pd.Series]:
     def f(df: pd.DataFrame) -> pd.Series:
-        return np.floor(np.round(df[col] * 10**place, 6) % 10)
+        return np.floor(np.round(_read(df, col) * 10**place, 6) % 10)
 
     return f
 
@@ -286,6 +297,85 @@ def _digit_identity_registry() -> dict[str, Callable[[pd.DataFrame], pd.Series]]
 DIGIT_IDENTITY_NAMES = [
     f"{col}_{suffix}" for col in DIGIT_IDENTITY_COLS for suffix in DIGIT_IDENTITY_SUFFIXES
 ]
+
+
+# 제약 파생 4열 블록(#619, 2위 해법의 fake_* 재현). 화면 시간 합계 제약에서 성분 하나를
+# 뺀 나머지 셋을 더하거나 daily에서 둘을 빼 만든다. 성분 하나라도 결측이면 결측이다
+# (sgw_sum은 결측을 0으로 보고 더하고, screen_slack은 어느 성분이 결측이냐에 따라 뜻이
+# 바뀌므로 둘 다 재사용하지 않는다). 원시 열이 0.01 격자에 있어 차이도 그 격자에 있어야
+# 하는데 부동소수 뺄셈이 격자를 벗어난 값을 만들어 정확값 키를 깨뜨리므로 소수 둘째
+# 자리에서 반올림한다. 비율 7열과 자리수 32열은 이 4열 위에 기존 규약을 그대로 얹는다.
+CONSTRAINT_DERIVED_COLS = ["fake_daily", "fake_social", "fake_work", "fake_game"]
+CONSTRAINT_DERIVED_DECIMALS = 2
+
+
+def _fake_daily(df: pd.DataFrame) -> pd.Series:
+    return np.round(df[SCREEN_PARTS].sum(axis=1, skipna=False), CONSTRAINT_DERIVED_DECIMALS)
+
+
+def _fake_component(excluded_part: str) -> Callable[[pd.DataFrame], pd.Series]:
+    """daily에서 excluded_part를 뺀 두 성분을 빼 남는 값. 그 성분과 other의 합을 복원한다."""
+    others = [part for part in SCREEN_PARTS if part != excluded_part]
+
+    def f(df: pd.DataFrame) -> pd.Series:
+        return np.round(
+            df[SCREEN_TOTAL] - df[others].sum(axis=1, skipna=False),
+            CONSTRAINT_DERIVED_DECIMALS,
+        )
+
+    return f
+
+
+CONSTRAINT_DERIVED_SOURCES: dict[str, Callable[[pd.DataFrame], pd.Series]] = {
+    "fake_daily": _fake_daily,
+    "fake_social": _fake_component("social_media_hours"),
+    "fake_work": _fake_component("work_study_hours"),
+    "fake_game": _fake_component("gaming_hours"),
+}
+# 비율 7열: 앞 넷은 4열을 daily 분모 위에, 뒤 셋은 fake_daily를 daily와 같은 분모 지위에 둔다.
+CONSTRAINT_DERIVED_RATIOS: dict[str, tuple[Source, Source]] = {
+    "fake_daily_share_screen": (_fake_daily, SCREEN_TOTAL),
+    "fake_social_share_screen": (CONSTRAINT_DERIVED_SOURCES["fake_social"], SCREEN_TOTAL),
+    "fake_work_share_screen": (CONSTRAINT_DERIVED_SOURCES["fake_work"], SCREEN_TOTAL),
+    "fake_game_share_screen": (CONSTRAINT_DERIVED_SOURCES["fake_game"], SCREEN_TOTAL),
+    "social_share_fake_daily": ("social_media_hours", _fake_daily),
+    "gaming_share_fake_daily": ("gaming_hours", _fake_daily),
+    "work_share_fake_daily": ("work_study_hours", _fake_daily),
+}
+# 자리수 8종: 0.01 격자에서 항등이 되는 round2·absdiff_round2만 정체성 블록에서 뺀다.
+CONSTRAINT_DERIVED_DIGIT_SUFFIXES = [
+    "round0",
+    "absdiff_round0",
+    "is_round0",
+    "round1",
+    "absdiff_round1",
+    "is_round1",
+    "tenths",
+    "hundredths",
+]
+
+
+def _constraint_derived_digit_registry() -> dict[str, Callable[[pd.DataFrame], pd.Series]]:
+    registry: dict[str, Callable[[pd.DataFrame], pd.Series]] = {}
+    for col, source in CONSTRAINT_DERIVED_SOURCES.items():
+        for decimals in (0, 1):
+            registry[f"{col}_round{decimals}"] = _rounded(source, decimals)
+            registry[f"{col}_absdiff_round{decimals}"] = _absdiff_rounded(source, decimals)
+            registry[f"{col}_is_round{decimals}"] = _is_rounded(source, decimals)
+        registry[f"{col}_tenths"] = _decimal_digit(source, 1)
+        registry[f"{col}_hundredths"] = _decimal_digit(source, 2)
+    return registry
+
+
+CONSTRAINT_DERIVED_NAMES = (
+    CONSTRAINT_DERIVED_COLS
+    + list(CONSTRAINT_DERIVED_RATIOS)
+    + [
+        f"{col}_{suffix}"
+        for col in CONSTRAINT_DERIVED_COLS
+        for suffix in CONSTRAINT_DERIVED_DIGIT_SUFFIXES
+    ]
+)
 
 
 # name -> 파생 컬럼 계산 함수. 타깃을 쓰지 않는 행 단위 결정적 파생만 등록한다.
@@ -318,6 +408,10 @@ DERIVED_REGISTRY: dict[str, Callable[[pd.DataFrame], pd.Series]] = {
     "screen_x_stress": _times_stress(SCREEN_TOTAL),
     "social_x_stress": _times_stress("social_media_hours"),
     "sleep_x_stress": _times_stress("sleep_hours"),
+    # #619 제약 파생 4열 + 비율 7열 + 자리수 32열.
+    **CONSTRAINT_DERIVED_SOURCES,
+    **{name: _guarded_ratio(n, d) for name, (n, d) in CONSTRAINT_DERIVED_RATIOS.items()},
+    **_constraint_derived_digit_registry(),
 }
 
 
@@ -376,24 +470,47 @@ class CategoricalCopies:
 
     train/test 값 합집합으로 카테고리를 고정해야 해서(코드 배정 어긋남 방지) dataset-wide다.
     (#31 변형 b)
+    derived는 DERIVED_REGISTRY의 파생 열을 같은 방식으로 복제한다. 파생은 row-wise 단계라
+    이 단계에서는 아직 열로 없으므로 train과 test에 각각 파생 함수를 적용한 뒤 합집합
+    범주를 만든다. 등록된 파생은 행 단위 결정적 함수라 여기서 계산해도 누출이 없다. (#619)
     """
 
     uses_target = False
 
-    def __init__(self, cols: list[str]) -> None:
+    def __init__(self, cols: list[str], derived: list[str] | None = None) -> None:
         self.cols = list(cols)
+        self.derived = list(derived or [])
+        unknown = [name for name in self.derived if name not in DERIVED_REGISTRY]
+        if unknown:
+            raise ValueError(
+                f"등록되지 않은 파생 이름 {unknown}. 등록: {', '.join(sorted(DERIVED_REGISTRY))}"
+            )
+        sources = self.cols + self.derived
+        if not sources:
+            raise ValueError("cols와 derived가 모두 비었다. 복제할 열을 하나 이상 선언할 것.")
+        if len(set(sources)) != len(sources):
+            raise ValueError(f"cols와 derived에 중복 열이 있다: {sources}")
 
     def columns(self) -> list[str]:
-        return [f"{col}_cat" for col in self.cols]
+        return [f"{col}_cat" for col in self.cols + self.derived]
+
+    def source_values(self, df: pd.DataFrame, column: str) -> pd.Series:
+        """복제 열 <col>_cat의 원천 값. raw 열은 그대로 읽고 파생 열은 등록 함수로 계산한다."""
+        source = column.removesuffix("_cat")
+        if source in self.derived:
+            return DERIVED_REGISTRY[source](df)
+        if source in self.cols:
+            return df[source]
+        raise KeyError(f"{column}은 이 제공자가 선언한 복제 열이 아니다.")
 
     def compute(
         self, train: pd.DataFrame, test: pd.DataFrame
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
         new_train: dict[str, pd.Categorical] = {}
         new_test: dict[str, pd.Categorical] = {}
-        for col in self.cols:
-            new_train[f"{col}_cat"], new_test[f"{col}_cat"] = union_categorical(
-                train[col], test[col]
+        for column in self.columns():
+            new_train[column], new_test[column] = union_categorical(
+                self.source_values(train, column), self.source_values(test, column)
             )
         return (
             pd.DataFrame(new_train, index=train.index),

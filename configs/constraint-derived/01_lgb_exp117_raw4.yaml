@@ -1,0 +1,96 @@
+# 이슈 #621 명세: 제약 파생 4열 승격 사다리(cdv1). 기준 설정은 exp117_ag25_gbm_r21이며 기준의 제공자와 모형 설정은 바꾸지 않는다.
+# 1단계: 제약 파생 4열을 원시 열과 같은 지위의 수치 입력으로 더한다.
+# 명세: docs/research/constraint-derived-ladder-spec.md. 파생 4열과 범주 복제·RealMLP 인자는 #622가 구현했다.
+name: cdv1_lgb_raw4
+data:
+  train: data/train.csv
+  test: data/test.csv
+  sample_submission: data/sample_submission.csv
+  folds: artifacts/folds.parquet
+features:
+  base: raw
+  categorical:
+  - gender
+  - stress_level
+  - academic_work_impact
+  providers:
+  - kind: derived
+    names:
+    - other_screen
+    - screen_slack
+    - fake_daily
+    - fake_social
+    - fake_work
+    - fake_game
+  - kind: target_encoding
+    inner_folds: 10
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+    - placebo_noise
+  - kind: constrained_impute_aux
+    widths: false
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+  - kind: xgb_impute_aux
+    cols:
+    - age
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - sleep_hours
+    - notifications_per_day
+    - app_opens_per_day
+    - weekend_screen_time
+    emit:
+    - daily_screen_time_hours
+    - social_media_hours
+    - gaming_hours
+    - work_study_hours
+    - weekend_screen_time
+    compositions:
+    - social_frac
+    - work_frac
+    - leisure_frac
+    - resid_frac
+    - week_total
+    cat_cols:
+    - gender
+    - stress_level
+    - academic_work_impact
+model:
+  kind: lightgbm
+  params:
+    objective: binary
+    metric: auc
+    n_estimators: 20000
+    bagging_fraction: 0.7218730663234
+    bagging_freq: 1
+    cat_l2: 0.0296205152578
+    cat_smooth: 0.0010255271303
+    extra_trees: false
+    feature_fraction: 0.4557131604374
+    lambda_l1: 0.5219704038237
+    lambda_l2: 0.1070959487853
+    learning_rate: 0.0055891584996
+    max_cat_to_onehot: 71
+    min_data_in_leaf: 50
+    min_data_per_group: 10
+    num_leaves: 30
+  fit:
+    early_stopping_rounds: 200
