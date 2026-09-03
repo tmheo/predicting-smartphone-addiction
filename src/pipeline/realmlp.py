@@ -110,6 +110,9 @@ _DEFAULTS = {
     "perm_sample": 8192,
     "perm_repeats": 1,
     "reference_qnormal_columns": [],
+    # 원시 수치 9열과 같은 처리(중앙값 대체, 결측 지시자, 정확값 임베딩)를 받을 추가 수치 열.
+    # 분위 구간(BIN_CONFIG)과 기준 집합 값 좌표는 원시 열에 고정돼 있어 영향을 받지 않는다. (#619)
+    "extra_raw_numeric_columns": [],
     "preprocessing_scope": "fold_train",
     "device": "cuda",
     "verbosity": 1,
@@ -161,7 +164,18 @@ class _FoldFeatureEngineer:
         self,
         reference_qnormal_columns: list[str] | None = None,
         reference_seed: int = 42,
+        extra_raw_numeric_columns: list[str] | None = None,
     ) -> None:
+        self.extra_raw_numeric_columns = list(extra_raw_numeric_columns or [])
+        overlap = sorted(
+            set(self.extra_raw_numeric_columns) & set(RAW_NUMERICAL + RAW_CATEGORICAL)
+        )
+        if overlap:
+            raise ValueError(f"RealMLP 추가 수치 열이 원시 입력 열과 겹친다: {overlap}")
+        if len(set(self.extra_raw_numeric_columns)) != len(self.extra_raw_numeric_columns):
+            raise ValueError("RealMLP 추가 수치 열에 중복이 있다.")
+        # 원시 수치 9열과 같은 처리를 받는 열. 추가 열은 선언 순서대로 뒤에 붙는다.
+        self.raw_numeric = RAW_NUMERICAL + self.extra_raw_numeric_columns
         self.reference_qnormal_columns = list(reference_qnormal_columns or [])
         self.reference_qnormal_output_columns = [
             f"{column}{REFERENCE_QNORMAL_SUFFIX}"
@@ -177,7 +191,7 @@ class _FoldFeatureEngineer:
         frame: pd.DataFrame,
         reference_frame: pd.DataFrame | None = None,
     ) -> _FoldFeatureEngineer:
-        missing = sorted(set(RAW_CATEGORICAL + RAW_NUMERICAL) - set(frame.columns))
+        missing = sorted(set(RAW_CATEGORICAL + self.raw_numeric) - set(frame.columns))
         if missing:
             raise ValueError(f"RealMLP 원문 입력 열이 없다: {missing}")
         collisions = sorted(
@@ -199,11 +213,11 @@ class _FoldFeatureEngineer:
         self.passthrough_numeric = [
             column
             for column in self.input_columns
-            if column not in RAW_CATEGORICAL + RAW_NUMERICAL
+            if column not in RAW_CATEGORICAL + self.raw_numeric
         ]
         self.medians = {
             column: float(pd.to_numeric(frame[column], errors="coerce").median())
-            for column in RAW_NUMERICAL + self.passthrough_numeric
+            for column in self.raw_numeric + self.passthrough_numeric
         }
         if not all(np.isfinite(value) for value in self.medians.values()):
             raise ValueError("RealMLP 학습 부분에서 중앙값을 정할 수 없는 수치 열이 있다.")
@@ -220,7 +234,7 @@ class _FoldFeatureEngineer:
             self.category_dims_by_name[column] = len(vocabulary) + 1
             self.mapped_category_columns.append(column)
 
-        for column in RAW_NUMERICAL:
+        for column in self.raw_numeric:
             values = pd.to_numeric(frame[column], errors="coerce").fillna(
                 self.medians[column]
             )
@@ -281,8 +295,8 @@ class _FoldFeatureEngineer:
                 self.reference_qnormal_estimators[column] = estimator
                 self.reference_qnormal_fit_rows[column] = len(values)
 
-        missing_columns = [f"_miss_{column}" for column in RAW_NUMERICAL]
-        numeric_category_columns = [f"{column}_cat_" for column in RAW_NUMERICAL]
+        missing_columns = [f"_miss_{column}" for column in self.raw_numeric]
+        numeric_category_columns = [f"{column}_cat_" for column in self.raw_numeric]
         bin_columns = list(self.bin_estimators)
         self.output_cat_cols = sorted(
             RAW_CATEGORICAL
@@ -309,7 +323,7 @@ class _FoldFeatureEngineer:
         if list(frame.columns) != self.input_columns:
             raise AssertionError("RealMLP 입력 열이 학습 때와 다르다.")
         output = frame.copy()
-        for column in RAW_NUMERICAL:
+        for column in self.raw_numeric:
             values = pd.to_numeric(output[column], errors="coerce")
             output[f"_miss_{column}"] = values.isna().astype("int32")
         for column, estimator in self.reference_qnormal_estimators.items():
@@ -328,7 +342,7 @@ class _FoldFeatureEngineer:
             output[column] = (
                 values.map(self.category_maps[column]).fillna(0).astype("int32")
             )
-        for column in RAW_NUMERICAL + self.passthrough_numeric:
+        for column in self.raw_numeric + self.passthrough_numeric:
             output[column] = (
                 pd.to_numeric(output[column], errors="coerce")
                 .replace([np.inf, -np.inf], np.nan)
@@ -336,7 +350,7 @@ class _FoldFeatureEngineer:
             )
         # 어휘와 bin 경계는 fit의 float64 값으로 만들어졌으므로, float32 형
         # 변환은 매핑과 bin 변환이 끝난 뒤에 해야 정확값 범주가 살아남는다. (#243)
-        for column in RAW_NUMERICAL:
+        for column in self.raw_numeric:
             name = f"{column}_cat_"
             output[name] = (
                 output[column]
@@ -349,7 +363,7 @@ class _FoldFeatureEngineer:
                 estimator.transform(output[[column]]).ravel().astype("int32")
             )
         for column in (
-            RAW_NUMERICAL
+            self.raw_numeric
             + self.passthrough_numeric
             + self.reference_qnormal_output_columns
         ):
@@ -1059,6 +1073,9 @@ class RealMLPFold:
         self.config["reference_qnormal_columns"] = list(
             self.config["reference_qnormal_columns"]
         )
+        self.config["extra_raw_numeric_columns"] = list(
+            self.config["extra_raw_numeric_columns"]
+        )
         self.seed = seed
         self._validate_config()
         self.device = str(self.config["device"])
@@ -1138,6 +1155,18 @@ class RealMLPFold:
                 "realmlp reference_qnormal_columns는 원시 수치 9열을 순서대로 "
                 f"선언해야 한다: {RAW_NUMERICAL}"
             )
+        extra = self.config["extra_raw_numeric_columns"]
+        if any(not isinstance(column, str) or not column for column in extra):
+            raise ValueError(
+                f"realmlp extra_raw_numeric_columns는 열 이름 목록이어야 한다: {extra!r}"
+            )
+        overlap = sorted(set(extra) & set(RAW_NUMERICAL + RAW_CATEGORICAL))
+        if overlap:
+            raise ValueError(
+                f"realmlp extra_raw_numeric_columns가 원시 입력 열과 겹친다: {overlap}"
+            )
+        if len(set(extra)) != len(extra):
+            raise ValueError(f"realmlp extra_raw_numeric_columns에 중복이 있다: {extra}")
         scope = str(self.config["preprocessing_scope"])
         if scope not in {"fold_train", "train_test"}:
             raise ValueError(
@@ -1219,7 +1248,11 @@ class RealMLPFold:
                 reference_frame = pd.concat(
                     list(self._dataset_reference), ignore_index=True
                 )
-        self.engineer = _FoldFeatureEngineer(reference_columns, self.seed)
+        self.engineer = _FoldFeatureEngineer(
+            reference_columns,
+            self.seed,
+            extra_raw_numeric_columns=self.config["extra_raw_numeric_columns"],
+        )
         self.engineer.fit(state_X, reference_frame)
         train = self.engineer.transform(X_train)
         state_train = train.iloc[:parent_rows].copy()
@@ -1413,6 +1446,7 @@ class RealMLPFold:
             "pytabkit_estimator_used": False,
             "optimizer": self.config["optimizer"],
             "preprocessing_scope": self.config["preprocessing_scope"],
+            "extra_raw_numeric_columns": list(self.engineer.extra_raw_numeric_columns),
             "reference_qnormal_columns": list(
                 self.engineer.reference_qnormal_output_columns
             ),
@@ -1590,6 +1624,7 @@ class RealMLPFold:
             "pytabkit_estimator_used": False,
             "optimizer": self.config["optimizer"],
             "preprocessing_scope": self.config["preprocessing_scope"],
+            "extra_raw_numeric_columns": list(self.engineer.extra_raw_numeric_columns),
             "reference_qnormal_columns": list(
                 self.engineer.reference_qnormal_output_columns
             ),

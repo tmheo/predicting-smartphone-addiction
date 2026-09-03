@@ -458,6 +458,34 @@ def test_xgboost_adapter_smoke():
     assert 0.0 <= diagnostics["best_score"] <= 1.0
 
 
+def test_xgboost_accepts_float_category_copies():
+    """정확값 범주 복제 열(범주가 부동소수)을 native 범주로 학습하고 예측한다. (#622)"""
+    cfg = ModelConfig(
+        kind="xgboost",
+        params={
+            "n_estimators": 20,
+            "max_depth": 3,
+            "learning_rate": 0.1,
+            "tree_method": "hist",
+            "eval_metric": "auc",
+        },
+        fit={"early_stopping_rounds": 5},
+    )
+    X, y = _smoke_data()
+    rng = np.random.default_rng(2)
+    values = pd.Series(rng.choice([0.5, 1.25, 7.5, np.nan], size=len(X)))
+    X["v_cat"] = pd.Categorical(values, categories=[0.5, 1.25, 7.5])
+    adapter = model_mod.create(cfg, seed=SEED)
+    _assert_adapter_contract(adapter, X, y, supports_initial_score=True)
+    # 범주 이름만 문자열이 되고 코드 배정과 피처 이름·순서는 그대로다.
+    converted = model_mod._xgboost_categorical_frame(X)
+    assert list(converted.columns) == list(X.columns)
+    assert list(converted["v_cat"].cat.categories) == ["0.5", "1.25", "7.5"]
+    assert np.array_equal(converted["v_cat"].cat.codes, X["v_cat"].cat.codes)
+    assert converted["c"].dtype == X["c"].dtype
+    assert list(adapter._model.feature_names_in_) == list(X.columns)
+
+
 def test_xgboost_paired_fixed_fit_reports_fixed_training_schedule():
     cfg = ModelConfig(
         kind="xgboost",

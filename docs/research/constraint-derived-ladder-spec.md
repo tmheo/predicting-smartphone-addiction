@@ -189,3 +189,63 @@ RealMLP 기준 설정 `exp139`는 `target_encoding`을 쓰지 않으므로 2단�
 5. XGBoost 2단계는 사다리 규칙대로 4열만 범주 복제를 갖는다.
    XGBoost adapter는 category dtype을 `enable_categorical`로 그대로 학습하므로(`model.py` 902행) 1,100~1,300개 정확값의 분할 기반 범주 처리가 그대로 붙는다.
    raw 9열의 범주 복제를 함께 넣으면 기준과 후보의 차이가 4열 밖으로 번져 사다리의 짝비교가 흐려진다.
+
+## 구현 결과(#622, 2026-09-03)
+
+코드 변경은 명세의 세 곳에 XGBoost adapter 한 곳이 더해져 네 곳이다.
+
+- `src/pipeline/features.py`: `DERIVED_REGISTRY`에 `CONSTRAINT_DERIVED_NAMES` 43개(4열, 비율 7열, 자리수 32열)를 등록했다.
+  비율과 자리수 함수는 raw 열 이름 대신 계산 함수도 원천으로 받도록 `_guarded_ratio`, `_rounded`, `_absdiff_rounded`, `_is_rounded`, `_decimal_digit`를 일반화했다.
+- `src/pipeline/features.py`: `CategoricalCopies`에 `derived` 인자를 더했다.
+  등록되지 않은 이름, 빈 선언, 중복은 적재 시점에 거부하고 산출 순서는 `cols` 뒤에 `derived`다.
+  복제 학습 행 경로(`plan.recompute_training_row_dataset_wide`)는 제공자의 `source_values`로 원천을 읽어 파생 복제도 다시 만든다.
+- `src/pipeline/realmlp.py`: `extra_raw_numeric_columns` 인자를 더했다.
+  `_FoldFeatureEngineer`가 원시 9열과 추가 열에 같은 중앙값 대체, `_miss_`, `_cat_` 처리를 하고 `BIN_CONFIG`와 `reference_qnormal_columns`의 원시 9열 고정은 그대로다.
+  학습 진단에 `extra_raw_numeric_columns`를 기록한다.
+- `src/pipeline/model.py`: XGBoost adapter가 범주가 부동소수인 범주 열을 거부하던 문제를 고쳤다.
+  XGBoost는 범주 색인이 문자열이나 정수여야 해서 정확값 복제 열(`<col>_cat`)을 그대로 넘기면 `Category index from DataFrame has floating point dtype`로 실패한다.
+  코드 배정은 그대로 두고 범주 이름만 문자열로 바꿔 넘긴다.
+  기존 XGBoost 설정은 범주 복제를 쓴 적이 없어 이 경로가 처음 열렸다.
+
+단위 시험은 `tests/test_features_constraint_derived.py`(4열 결측·격자 규약, 비율, 자리수, `derived` 복제, 피처 계획 연결)와 `tests/test_model_realmlp.py`(추가 열 처리와 계약), `tests/test_model.py`(XGBoost 부동소수 범주)에 있다.
+설정 12개는 전부 `pipeline.run --plan`의 설정 파싱을 통과한다.
+
+### fold 0 스모크
+
+스모크 도구는 `scripts/smoke_constraint_derived_fold0.py`다.
+정식 경로와 같은 피처 계획과 adapter로 fold 0, seed 42를 한 번 돌리고, 단계가 선언한 새 열이 행렬에 있는지와 4열의 결측·격자 규약을 확인한다.
+나무 3계열은 전체 자료로 돌렸고(로컬 CPU, 계열당 4 스레드), RealMLP는 로컬에 CUDA가 없어 행 표본과 `device: cpu`로 연결만 확인했다.
+RealMLP의 fold 0 AUC는 표본이 작아 읽지 않으며, 전체 자료 fold 0은 #623의 Vast.ai 첫 실행이 겸한다.
+
+| 설정 | fold 0 AUC | 열 수 | 학습 시간 | 비고 |
+| --- | --- | --- | --- | --- |
+| `cdv1_lgb_raw4` | 0.9679376 | 42 | 595초 | |
+| `cdv1_lgb_cats_te` | 0.9656973 | 50 | 194초 | |
+| `cdv1_lgb_ratio_round` | 0.9658636 | 94 | 317초 | |
+| `cdv1_xgb_raw4` | 0.9675503 | 32 | 427초 | |
+| `cdv1_xgb_cats_te` | 0.9629219 | 40 | 149초 | |
+| `cdv1_xgb_ratio_round` | 0.9635759 | 84 | 324초 | |
+| `cdv1_cat_raw4` | 0.9677501 | 51 | 376초 | |
+| `cdv1_cat_cats_te` | 0.9677148 | 59 | 486초 | |
+| `cdv1_cat_ratio_round` | 0.9676290 | 103 | 594초 | |
+| `cdv1_realmlp_raw4` | (연결만) | 20 | 1226초 | 2,500행, cpu 1 스레드 |
+| `cdv1_realmlp_cats_te` | (연결만) | 25 | 1319초 | 2,500행, cpu 1 스레드, `fake_*_cat_` 임베딩 4개 확인 |
+| `cdv1_realmlp_ratio_round` | (연결만) | 69 | 3076초 | 6,000행, cpu 1 스레드, `fake_*_cat_` 임베딩 4개 확인 |
+
+4열의 정의 행 비율은 `fake_daily` 65.35%, `fake_social` 68.47%, `fake_work` 65.27%, `fake_game` 67.73%이고 정확값 수는 1,145~1,308개다.
+관측값 전부가 0.01 격자에 있고 음수는 없다.
+
+### 스모크에서 드러난 관찰(판정 아님)
+
+LightGBM과 XGBoost는 2단계에서 fold 0 AUC가 크게 떨어진다.
+LightGBM은 raw4 대비 -0.0022, XGBoost는 -0.0046이며 champion fold 0의 시드 폭 0.0000446보다 두 자릿수 크다.
+CatBoost는 -0.00004로 잡음 안이다.
+
+원인을 가르기 위해 2단계에서 `categorical_copies`만 뺀 진단 설정(정확값 TE 4열만 추가)을 fold 0에서 한 번 더 돌렸다.
+XGBoost는 0.9675237로 raw4와 같은 수준이다.
+LightGBM도 0.9679622로 raw4와 같은 수준이라 두 계열 모두 하락은 정확값 범주 복제 4열이 만든다.
+두 계열의 기준 설정은 고카디널리티 범주가 없는 상태에서 튜닝됐고(`max_cat_to_onehot: 71`, `cat_smooth: 0.001`, XGBoost는 `max_cat_threshold` 기본값), 1,100~1,300개 정확값 범주를 분할 기반으로 다루면 과적합한다.
+CatBoost는 ordered target statistics로 같은 열을 다루므로 영향이 없다.
+
+지도의 확정 사항대로 단일 모형 결과는 기록만 하고 판정에 쓰지 않으며 세 단계 12개 설정은 그대로 #623으로 넘긴다.
+다만 LightGBM과 XGBoost의 2·3단계는 범주 복제 대신 정확값 TE만 두는 변형이 사다리의 뜻(변환 표현의 폭)에 더 맞을 수 있어, 그 판단은 #623 발주 전에 사용자가 정할 항목으로 지도에 올린다.

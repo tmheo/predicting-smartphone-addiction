@@ -1,6 +1,6 @@
-# 이슈 #621 초안: 제약 파생 4열 승격 사다리(cdv1). 기준 설정은 exp135_xgb_hpo_trial30이며 기준의 제공자와 모형 설정은 바꾸지 않는다.
+# 이슈 #621 명세: 제약 파생 4열 승격 사다리(cdv1). 기준 설정은 exp135_xgb_hpo_trial30이며 기준의 제공자와 모형 설정은 바꾸지 않는다.
 # 2단계: 1단계 위에 4열의 범주 복제와 정확값 TE를 더한다.
-# 명세: docs/research/constraint-derived-ladder-spec.md. 구현 전(#622)이라 아직 설정 파싱을 통과하지 않는다.
+# 명세: docs/research/constraint-derived-ladder-spec.md. 파생 4열과 범주 복제·RealMLP 인자는 #622가 구현했다.
 name: cdv1_xgb_cats_te
 data:
   train: data/train.csv

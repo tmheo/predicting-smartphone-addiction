@@ -1,6 +1,6 @@
-# 이슈 #621 초안: 제약 파생 4열 승격 사다리(cdv1). 기준 설정은 exp070_cat_exact_cats이며 기준의 제공자와 모형 설정은 바꾸지 않는다.
+# 이슈 #621 명세: 제약 파생 4열 승격 사다리(cdv1). 기준 설정은 exp070_cat_exact_cats이며 기준의 제공자와 모형 설정은 바꾸지 않는다.
 # 3단계: 2단계 위에 비율 7열, 자리수 표현 32열, 반올림 키 TE를 더한다.
-# 명세: docs/research/constraint-derived-ladder-spec.md. 구현 전(#622)이라 아직 설정 파싱을 통과하지 않는다.
+# 명세: docs/research/constraint-derived-ladder-spec.md. 파생 4열과 범주 복제·RealMLP 인자는 #622가 구현했다.
 name: cdv1_cat_ratio_round
 data:
   train: data/train.csv

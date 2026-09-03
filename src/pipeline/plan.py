@@ -746,9 +746,9 @@ class FeaturePlan:
             for column in provider.columns():
                 reference = test[column]
                 if isinstance(reference.dtype, pd.CategoricalDtype):
-                    source_column = column.removesuffix("_cat")
                     out[column] = pd.Categorical(
-                        out[source_column], categories=reference.cat.categories
+                        provider.source_values(out, column),
+                        categories=reference.cat.categories,
                     )
                 else:
                     out[column] = new_training[column]
