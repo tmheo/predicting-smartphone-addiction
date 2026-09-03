@@ -390,3 +390,62 @@ CatBoost는 ordered target statistics로 같은 열을 다루므로 영향이 �
 - 3회차 결과 회수는 손으로 했다.
   노트북이 잠든 사이 제어 스크립트가 SSH 조회 실패 경로로 빠졌고 그 정리 절차는 결과 회수 전에 인스턴스를 지우므로, 강제 종료한 뒤 완료 표식(종료 코드 0)을 확인하고 SHA-256 검증으로 회수해 인스턴스 삭제와 종료 예약 제거까지 수동으로 마쳤다.
   다음 원격 실행 스크립트는 실패 경로에서도 완료 표식이 있으면 결과부터 회수하고, 제어는 잠들지 않는 기계에서 돌린다.
+
+## 결합 판정 준비(#632, 2026-09-04)
+
+[#620](https://github.com/tmheo/predicting-smartphone-addiction/issues/620)의 조사대로 기존 판정 도구의 진입점은 바꾸지 않고, 재현 구성원을 `JudgmentRound`에 넣기 위한 최소 구현을 했다.
+코드는 commit `c921ca0`, 동결 명세는 commit `b375b9d`에 있다.
+
+### 재현 전용 풀 동결 명세
+
+- 생성기 `scripts/freeze_reproduction_pool.py`가 `docs/research/reproduction-pool-freeze/rpf-v1-6fa08f3da327.json`(schema `reproduction-pool-freeze/1`, spec_sha256 `13302eb32e7bdcc553acf15df514d6f60e51de484efddb614f893ecaa647cf2a`)을 만들었다.
+- 재현 구성원은 위 3시드 학습 결과의 설정 12개 전부이며, 순서는 사다리 단계(raw4, cats_te, ratio_round) 오름차순, 단계 안에서는 LightGBM, XGBoost, CatBoost, RealMLP 순이다.
+  누적 사다리 3단계(4개, 8개, 12개)는 이 순서의 앞 부분집합이다.
+- 구성원마다 main MLflow 반입 run, 출처 run, 실행 커밋 `01d6cf3`, 설정 산출물과 커밋 파일의 일치, 입력 해시, OOF·시험 예측의 배열 해시와 예측 쌍 해시, 시드별·분할별 AUC를 담는다.
+  감사는 세 시드 평균 일치, 재채점 AUC 일치(1e-9), 식별자 순서와 분할 배정 일치, 유한성을 검사한다.
+- 계열별 기준 재실행 4개는 재현 구성원이 아니라 `baseline_reruns` 근거 기록으로만 남긴다.
+  exp117과 exp070은 현재 풀에 결측 증강판(`mpv1_*`)으로만 남아 있어 풀 구성원 대응은 있으면 적고 없으면 비운다.
+- 기준 팔 값도 같은 파일에 동결했다.
+  자체 36개(`reference_arms.own36`)는 풀 진입 순서의 36개와 OOF 해시(이슈 513 precommit의 자체 구성원과 일치 확인), 이슈 514 최종 확정 실행 MLflow `223055f4`의 근거 산출물 `pool36_full-oof-evidence.json`에서 가져온 nested `0.9698828758140019`와 분할별 AUC, 결합기 `shrunk_rank_logit_logistic`이다.
+  314 확장(`reference_arms.ext314`)은 이슈 513 재조립 판정의 구성 해시, nested `0.9703843058098193`, 분할별 AUC와 예측 해시, 봉인 분할 5개 기록의 파일 해시, 결합기 `c_selected_shrunk_rank_logit_logistic`이다.
+- `judgment_rules`에 평가 팔 구성, 결합기, 게이트, 통과 구성이 여럿일 때의 제안 규칙(nested AUC 최고, 동률이면 구성원이 적은 쪽)을 결과 확인 전에 적었다.
+
+### member source adapter와 회차 스펙
+
+- `pipeline.member_sources.reproduction_pool_members(path, stage=None)`가 명세의 구성원을 동결 순서대로 `run_id + RunStore` 출처, OOF 해시 대조의 hash-verified `MemberSpec`으로 읽는다.
+  `stage`를 주면 누적 사다리 단계의 부분집합만 남긴다.
+  시험 예측은 선언하지 않는다(판정 전용이며 조립은 #625에서 명세의 시험 해시로 한다).
+- 회차 스펙 두 개는 파일럿 `scripts/round_issue553_pilot.py`를 본떴다.
+  `scripts/round_issue624_own36.py`(회차 id `reproduction-pool-own36/issue624`)와 `scripts/round_issue624_ext314.py`(회차 id `reproduction-pool-ext314/issue624`)이며 계약판은 둘 다 `reproduction-pool-judgment`다.
+  평가 팔은 기준 팔 구성원 뒤에 사다리 단계의 재현 구성원을 이은 `*-raw4`, `*-cats-te`, `*-ratio-round` 3개다.
+- 자기 검사 등급은 자체 36개가 전 분할 재현(36열이라 분할당 50초 안팎, 예측 해시는 기록에 없어 AUC 동일성만 대조), 314 확장이 봉인 분할 0 재현(분할당 14분 안팎, AUC와 예측 해시 대조)이다.
+- `scripts/round_members_smoke.py <스펙 스크립트> [--replay-fold k]`가 run-logs를 건드리지 않고 팔 전부를 hash-verified로 적재하고, 옵션으로 기준 팔 분할 하나를 재현해 자기 검사 기대값과 대조한다.
+
+### 스모크 결과
+
+스모크는 `run-logs/`를 건드리지 않고 팔 전부를 hash-verified로 적재한 뒤 자체 36개 기준 팔의 분할 0을 재현했다(2026-09-04, 커밋 `b375b9d`).
+
+| 회차 | 팔 | 구성원 | 검증 수준 | 구성 해시(앞 16자리) | 적재 시간 |
+| --- | --- | ---: | --- | --- | ---: |
+| own36 | pool36-current | 36 | hash-verified | `aa9371454a86c97f` | 5초 |
+| own36 | own36-raw4 | 40 | hash-verified | `e9f8d2756e9aa870` | 5초 |
+| own36 | own36-cats-te | 44 | hash-verified | `2293308a31d6aed4` | 6초 |
+| own36 | own36-ratio-round | 48 | hash-verified | `dcc70204b5ec40d7` | 6초 |
+| ext314 | reassembled-314 | 314 | hash-verified | `e3208ed93ee29126` | 36초 |
+| ext314 | ext314-raw4 | 318 | hash-verified | `27103823ae115455` | 36초 |
+| ext314 | ext314-cats-te | 322 | hash-verified | `5413bec4a10b121c` | 34초 |
+| ext314 | ext314-ratio-round | 326 | hash-verified | `cadc041574b96833` | 35초 |
+
+- 314 기준 팔의 구성 해시 `e3208ed9…`는 이슈 513 precommit의 `composition_sha256`과 같다.
+- 자체 36개 기준 팔 분할 0 재현은 AUC `0.9693299877411192`로 MLflow `223055f4`의 분할 0 metric과 비트 단위로 같았다(49초).
+  precommit 전 별도 확인에서 분할 1도 `0.9699927220915519`로 같았으므로 전 분할 재현 등급이 이 코드 상태에서 성립한다.
+- 어댑터 단위 시험 `tests/test_members.py::test_reproduction_pool_adapter_reads_order_and_ladder_stage`가 순서 검사, 사다리 단계 부분집합, 검증 수준 선언을 고정한다.
+
+### #624가 시작 전에 확인할 것
+
+- 자체 36개 기준의 결합기와 기준값 출처는 위 기본값(`shrunk_rank_logit_logistic`, MLflow `223055f4`)으로 명세에 넣었다.
+  314 기준과 결합기를 맞추려면 36개 기준값을 `c_selected_shrunk_rank_logit_logistic`으로 새로 재야 하므로 명세를 다시 만들어야 한다.
+- `precommit`은 커밋된 코드 상태에서만 시작하고 재개 검사가 git commit을 대조하므로, 두 회차가 도는 동안 main에 커밋하거나 pull하지 않는다.
+- 314 확장 회차의 사다리 팔 3개는 분할당 14분 안팎이라 5분할 3팔에 자기 검사 1분할을 더해 동시 3개로 두 시간 안팎이다.
+  자체 36개 회차는 전체가 20분 안이다.
+- 실행 순서는 각 스펙 스크립트 docstring에 있다(smoke → precommit → run → compare → report → publish).
