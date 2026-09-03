@@ -46,7 +46,7 @@ from pipeline.plan import FeaturePlan, prepare_fold_fit_input  # noqa: E402
 SEED = 42
 VALID_FOLD = 0
 STAGE = "screen"
-EXPERIMENT_PREFIX = "cdv1_"
+EXPERIMENT_PREFIX = "cdv2_"
 LADDER_SUFFIXES = ("raw4", "cats_te", "ratio_round")
 
 

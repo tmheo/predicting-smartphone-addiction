@@ -1,7 +1,7 @@
-# 이슈 #621 명세: 제약 파생 4열 승격 사다리(cdv1). 기준 설정은 exp139_realmlp_reference_qnormal_train_test이며 기준의 제공자와 모형 설정은 바꾸지 않는다.
+# 이슈 #621 명세: 제약 파생 4열 승격 사다리(cdv2). 기준 설정은 exp139_realmlp_reference_qnormal_train_test이며 기준의 제공자와 모형 설정은 바꾸지 않는다.
 # 3단계: 2단계 위에 비율 7열, 자리수 표현 32열, 반올림 키 TE를 더한다.
 # 명세: docs/research/constraint-derived-ladder-spec.md. 파생 4열과 범주 복제·RealMLP 인자는 #622가 구현했다.
-name: cdv1_realmlp_ratio_round
+name: cdv2_realmlp_ratio_round
 data:
   train: data/train.csv
   test: data/test.csv

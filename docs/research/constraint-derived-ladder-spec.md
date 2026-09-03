@@ -12,7 +12,8 @@
 - 4열은 성분이 모두 관측된 행에서만 정의하고 소수 둘째 자리에서 반올림한다.
   원시 열이 0.01 격자에 있어 차이도 0.01 격자에 있어야 하는데, 부동소수 뺄셈은 60%의 행에서 격자를 벗어난 값을 만들어 정확값 키를 깨뜨린다.
 - 세 단계 사다리는 계열마다 같은 제공자 목록을 쓴다.
-  1단계는 4열 원시 추가, 2단계는 그 위에 범주 복제와 정확값 TE, 3단계는 그 위에 비율 7열과 자리수 표현 8종이다.
+  1단계는 4열 원시 추가, 2단계는 그 위에 계열 고유의 정확값 키 표현과 정확값 TE, 3단계는 그 위에 비율 7열과 자리수 표현 8종이다.
+  2단계의 계열 고유 표현은 CatBoost가 범주 복제, RealMLP가 정확값 임베딩이고 LightGBM과 XGBoost는 고유 표현 없이 정확값 TE만 둔다(#634 결정, 판본 `cdv2`).
 - 기준 4개는 원본 행 계열 최고 설정을 그대로 다시 돌린다.
   LightGBM `exp117_ag25_gbm_r21`, XGBoost `exp135_xgb_hpo_trial30`, CatBoost `exp070_cat_exact_cats`, RealMLP `exp139_realmlp_reference_qnormal_train_test`다.
 - 코드 변경은 세 곳이다.
@@ -50,8 +51,24 @@
 | 단계 | 이름 접미 | 더하는 제공자 | 새 열 수 |
 | --- | --- | --- | --- |
 | 1 | `raw4` | `derived`에 `fake_daily, fake_social, fake_work, fake_game` | 4 |
-| 2 | `cats_te` | `categorical_copies`의 `derived` 인자로 4열의 `<col>_cat`, `target_encoding`의 cols에 4열 추가 | 8 |
+| 2 | `cats_te` | 계열 고유의 정확값 키 표현(아래 표)과 `target_encoding`의 cols에 4열 추가 | 계열별 4~8 |
 | 3 | `ratio_round` | `derived`에 비율 7열과 자리수 32열, `key_digits: 1`인 `target_encoding`(`_te_r1`) 4열 | 43 |
+
+### 2단계의 계열별 정확값 키 표현(#634)
+
+2단계 접미 `cats_te`는 "계열이 정확값 키를 다루는 고유 표현 + 정확값 TE 4열"이라는 사다리 단의 이름이다.
+고유 표현은 계열마다 다르며 첫 회차(`cdv2`)의 구성은 다음과 같다.
+
+| 계열 | 고유 표현 | 2단계 새 열 수 |
+| --- | --- | --- |
+| CatBoost | `categorical_copies`의 `derived` 인자로 4열의 `<col>_cat`(ordered target statistics) | 8 |
+| RealMLP | `extra_raw_numeric_columns`의 정확값 임베딩 `<col>_cat_`과 결측 지시자 | 4(+adapter 내부 열) |
+| LightGBM | 없음. 정확값 TE 4열만 | 4 |
+| XGBoost | 없음. 정확값 TE 4열만 | 4 |
+
+LightGBM과 XGBoost에 고유 표현을 두지 않는 근거는 아래 "스모크에서 드러난 관찰" 절과 "#634 결정" 절에 있다.
+두 계열의 기준 설정은 고카디널리티 범주 없이 튜닝돼 범주 규제가 사실상 없고(`cat_smooth` 0.001, `min_data_per_group` 10, XGBoost는 `max_cat_threshold` 기본값), 지도가 기준 모형 설정 불변을 정했으므로 1,100~1,300개 정확값 범주를 분할 기반으로 넘기면 재는 것은 표현의 폭이 아니라 튜닝 불일치다.
+이 절의 결정 전(`cdv1`)에는 두 계열도 CatBoost와 같은 범주 복제를 두었다.
 
 ### 2단계의 제공자 순서 문제와 해결
 
@@ -135,25 +152,28 @@ RealMLP 기준 설정 `exp139`는 `target_encoding`을 쓰지 않으므로 2단�
   `configs/missingness-propagation/`처럼 회차 하나의 설정 묶음을 하위 디렉터리에 두는 선례를 따른다.
 - 파일 이름은 `<순번>_<계열>_<기준 설정 번호>_<단계 접미>.yaml`이다.
   순번은 계열 순서(lgb, xgb, cat, realmlp)와 단계 순서로 01부터 12까지다.
-- 실험 이름은 `cdv1_<계열>_<단계 접미>`다.
-  `cdv1`은 constraint-derived 판본 1이다.
+- 실험 이름은 `cdv2_<계열>_<단계 접미>`다.
+  `cdv2`는 constraint-derived 판본 2다.
   판본 번호는 4열 정의나 사다리 구성이 바뀔 때 올린다.
-- 실행 기록의 `config` 값은 실험 이름이므로 재현 전용 풀 명세(#632)는 `cdv1_` 접두로 재현 구성원을 가려낼 수 있다.
+  판본 1(`cdv1`)은 LightGBM·XGBoost 2·3단계에 범주 복제 4열을 둔 구성이었고 fold 0 스모크만 돌렸으며 3시드 실행 기록은 없다.
+  #634 결정으로 두 계열의 범주 복제를 빼면서 사다리 구성이 바뀌어 12개 전부 `cdv2`로 올렸다.
+  스모크 표의 `cdv1_` 이름은 그때의 구성을 가리키므로 그대로 둔다.
+- 실행 기록의 `config` 값은 실험 이름이므로 재현 전용 풀 명세(#632)는 `cdv2_` 접두로 재현 구성원을 가려낼 수 있다.
 
 | 순번 | 파일 | 실험 이름 |
 | --- | --- | --- |
-| 01 | `01_lgb_exp117_raw4.yaml` | `cdv1_lgb_raw4` |
-| 02 | `02_lgb_exp117_cats_te.yaml` | `cdv1_lgb_cats_te` |
-| 03 | `03_lgb_exp117_ratio_round.yaml` | `cdv1_lgb_ratio_round` |
-| 04 | `04_xgb_exp135_raw4.yaml` | `cdv1_xgb_raw4` |
-| 05 | `05_xgb_exp135_cats_te.yaml` | `cdv1_xgb_cats_te` |
-| 06 | `06_xgb_exp135_ratio_round.yaml` | `cdv1_xgb_ratio_round` |
-| 07 | `07_cat_exp070_raw4.yaml` | `cdv1_cat_raw4` |
-| 08 | `08_cat_exp070_cats_te.yaml` | `cdv1_cat_cats_te` |
-| 09 | `09_cat_exp070_ratio_round.yaml` | `cdv1_cat_ratio_round` |
-| 10 | `10_realmlp_exp139_raw4.yaml` | `cdv1_realmlp_raw4` |
-| 11 | `11_realmlp_exp139_cats_te.yaml` | `cdv1_realmlp_cats_te` |
-| 12 | `12_realmlp_exp139_ratio_round.yaml` | `cdv1_realmlp_ratio_round` |
+| 01 | `01_lgb_exp117_raw4.yaml` | `cdv2_lgb_raw4` |
+| 02 | `02_lgb_exp117_cats_te.yaml` | `cdv2_lgb_cats_te` |
+| 03 | `03_lgb_exp117_ratio_round.yaml` | `cdv2_lgb_ratio_round` |
+| 04 | `04_xgb_exp135_raw4.yaml` | `cdv2_xgb_raw4` |
+| 05 | `05_xgb_exp135_cats_te.yaml` | `cdv2_xgb_cats_te` |
+| 06 | `06_xgb_exp135_ratio_round.yaml` | `cdv2_xgb_ratio_round` |
+| 07 | `07_cat_exp070_raw4.yaml` | `cdv2_cat_raw4` |
+| 08 | `08_cat_exp070_cats_te.yaml` | `cdv2_cat_cats_te` |
+| 09 | `09_cat_exp070_ratio_round.yaml` | `cdv2_cat_ratio_round` |
+| 10 | `10_realmlp_exp139_raw4.yaml` | `cdv2_realmlp_raw4` |
+| 11 | `11_realmlp_exp139_cats_te.yaml` | `cdv2_realmlp_cats_te` |
+| 12 | `12_realmlp_exp139_ratio_round.yaml` | `cdv2_realmlp_ratio_round` |
 
 ## #622가 구현할 것
 
@@ -186,9 +206,10 @@ RealMLP 기준 설정 `exp139`는 `target_encoding`을 쓰지 않으므로 2단�
 4. RealMLP 2단계에서 4열을 `reference_qnormal_columns`에 더하지 않는다.
    adapter가 그 인자를 원시 9열 순서로 고정하고 있어 더하려면 #331 계약을 풀어야 하고, 4열은 결측 행이 많아 좌표 0 채움이 늘어난다.
    `extra_raw_numeric_columns`의 정확값 임베딩과 결측 지시자가 2단계의 본체다.
-5. XGBoost 2단계는 사다리 규칙대로 4열만 범주 복제를 갖는다.
+5. XGBoost 2단계는 `cdv1`에서 사다리 규칙대로 4열만 범주 복제를 가졌다.
    XGBoost adapter는 category dtype을 `enable_categorical`로 그대로 학습하므로(`model.py` 902행) 1,100~1,300개 정확값의 분할 기반 범주 처리가 그대로 붙는다.
    raw 9열의 범주 복제를 함께 넣으면 기준과 후보의 차이가 4열 밖으로 번져 사다리의 짝비교가 흐려진다.
+   `cdv2`에서는 #634 결정으로 LightGBM과 함께 범주 복제를 빼고 정확값 TE 4열만 둔다.
 
 ## 구현 결과(#622, 2026-09-03)
 
@@ -216,6 +237,9 @@ RealMLP 기준 설정 `exp139`는 `target_encoding`을 쓰지 않으므로 2단�
 정식 경로와 같은 피처 계획과 adapter로 fold 0, seed 42를 한 번 돌리고, 단계가 선언한 새 열이 행렬에 있는지와 4열의 결측·격자 규약을 확인한다.
 나무 3계열은 전체 자료로 돌렸고(로컬 CPU, 계열당 4 스레드), RealMLP는 로컬에 CUDA가 없어 행 표본과 `device: cpu`로 연결만 확인했다.
 RealMLP의 fold 0 AUC는 표본이 작아 읽지 않으며, 전체 자료 fold 0은 #623의 Vast.ai 첫 실행이 겸한다.
+
+아래 표의 `cdv1_` 이름은 LightGBM·XGBoost 2·3단계에 범주 복제 4열을 둔 판본 1의 구성이다.
+#634 결정 뒤의 `cdv2`는 그 4열을 빼며 다른 계열과 1단계는 판본 1과 같다.
 
 | 설정 | fold 0 AUC | 열 수 | 학습 시간 | 비고 |
 | --- | --- | --- | --- | --- |
@@ -248,4 +272,23 @@ LightGBM도 0.9679622로 raw4와 같은 수준이라 두 계열 모두 하락은
 CatBoost는 ordered target statistics로 같은 열을 다루므로 영향이 없다.
 
 지도의 확정 사항대로 단일 모형 결과는 기록만 하고 판정에 쓰지 않으며 세 단계 12개 설정은 그대로 #623으로 넘긴다.
-다만 LightGBM과 XGBoost의 2·3단계는 범주 복제 대신 정확값 TE만 두는 변형이 사다리의 뜻(변환 표현의 폭)에 더 맞을 수 있어, 그 판단은 #623 발주 전에 사용자가 정할 항목으로 지도에 올린다.
+다만 LightGBM과 XGBoost의 2·3단계는 범주 복제 대신 정확값 TE만 두는 변형이 사다리의 뜻(변환 표현의 폭)에 더 맞을 수 있어, 그 판단은 #623 발주 전에 사용자가 정할 항목으로 지도에 올렸다(#634).
+
+### #634 결정(2026-09-03)
+
+사용자가 다음을 확정했다.
+
+- LightGBM과 XGBoost의 2·3단계(`02`, `03`, `05`, `06`)는 `categorical_copies`를 빼고 정확값 TE 4열만 둔다.
+  3단계는 누적이라 함께 바뀌고 반올림 키 TE(`_te_r1`)는 그대로다.
+  두 팔을 다 돌리는 선택(16개)은 예산은 들지만(14코어 로컬에서 나무 실행 12개 약 8시간 대 16개 약 11시간) 얻는 것이 fold 0에서 이미 본 하락의 3시드 확인뿐이라 택하지 않았다.
+- 2단계 접미 `cats_te`는 유지한다.
+  RealMLP 2단계도 범주 열 없이 같은 접미를 쓰므로 접미는 "계열 고유의 정확값 키 표현 + 정확값 TE"라는 사다리 단의 이름이다.
+  계열별 표현은 위 "2단계의 계열별 정확값 키 표현" 표에 둔다.
+- 사다리 구성이 바뀌므로 12개 전부 판본을 `cdv2`로 올린다.
+  3시드 실행 기록이 없어 비용은 이름 12개뿐이고, 스모크 표의 `cdv1_` 이름과 실행 판이 이름으로 갈린다.
+- 범주 복제 4열의 fold 0 하락은 이 절의 진단 기록으로만 남긴다.
+  LightGBM·XGBoost의 고카디널리티 범주 규제 재튜닝(`min_data_per_group`, `cat_smooth`, `max_cat_threshold`)은 지도 #619의 기준 모형 설정 불변 확정과 어긋나므로 지도 범위 밖이다.
+  초기 LightGBM `exp003_categorical_copies`(원시 9열 범주 복제, 기본 규제)가 champion 계보였던 점은 LightGBM이 고카디널리티 복제를 원래 못 다루는 것이 아니라 기준 파라미터의 문제임을 뒷받침한다.
+  결과가 이득으로 확정되면 "규제 재튜닝 후 복제 표현 재시험"을 새 지도 후보로 적는다.
+
+설정 12개는 `cdv2` 이름과 위 구성으로 `pipeline.run --plan` 설정 파싱을 통과했다.
