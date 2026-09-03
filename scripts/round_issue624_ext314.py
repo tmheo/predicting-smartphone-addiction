@@ -37,7 +37,7 @@ from pipeline.round import (
     SelfCheckSpec,
 )
 
-FREEZE_SPEC = Path("docs/research/reproduction-pool-freeze/rpf-v1-PLACEHOLDER.json")
+FREEZE_SPEC = Path("docs/research/reproduction-pool-freeze/rpf-v1-6fa08f3da327.json")
 FREEZE = json.loads(FREEZE_SPEC.read_text(encoding="utf-8"))
 REFERENCE = FREEZE["reference_arms"]["ext314"]
 PRECOMMIT_PATH = Path(REFERENCE["values_source"]["precommit"]["path"])

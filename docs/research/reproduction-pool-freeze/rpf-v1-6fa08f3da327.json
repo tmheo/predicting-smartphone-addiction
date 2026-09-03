@@ -1,0 +1,1320 @@
+{
+ "schema": "reproduction-pool-freeze/1",
+ "contract": {
+  "map": {
+   "number": 619,
+   "title": "지도: 2위 제약 파생 4열 승격을 우리 파이프라인에서 재현해 중첩 결합 이득을 확정한다",
+   "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/619"
+  },
+  "ticket": {
+   "number": 632,
+   "title": "재현 풀 동결 명세와 member source adapter를 구현해 두 기준 회차 스펙을 준비한다",
+   "url": "https://github.com/tmheo/predicting-smartphone-addiction/issues/632"
+  },
+  "training_issue": "https://github.com/tmheo/predicting-smartphone-addiction/issues/623"
+ },
+ "selection_policy": [
+  "재현 구성원은 이슈 623에서 3시드(42, 43, 44)·고정 5분할 confirm 단계로 학습해 main MLflow에 반입한 제약 파생 사다리 설정 12개 전부다.",
+  "단일 모형 짝비교 결과(RealMLP만 이득, 나무 3계열 무이득)는 읽거나 제외 근거로 쓰지 않는다(지도 619 확정: 단일 탈락 설정도 결합 구성원으로 넣는다).",
+  "구성원 순서는 사다리 단계(raw4, cats_te, ratio_round) 오름차순, 단계 안에서는 계열(LightGBM, XGBoost, CatBoost, RealMLP) 순이며 결과 확인 뒤 바꾸지 않는다.",
+  "누적 사다리 3단계(raw4 4개, cats_te 8개, ratio_round 12개)는 구성원 순서의 앞 부분집합이다.",
+  "계열별 기준 재실행 4개는 현재 풀 구성원의 재실행이므로 재현 구성원에 넣지 않고 근거 기록으로만 남긴다.",
+  "자체 36개 기준 팔은 artifacts/pool.yaml의 36개를 진입 순서 그대로 두고, 기준값은 이슈 514 최종 확정 실행(MLflow 223055f4)의 nested OOF 근거 산출물에서 가져온다.",
+  "314 확장 기준 팔은 이슈 513 재조립 판정의 314 구성과 기준값을 그대로 가져온다.",
+  "대회 기록(artifacts/pool.yaml, 314 확장 스택, 재학습 장부)은 바꾸지 않는다.",
+  "예측 배열은 저장소에 복사하거나 커밋하지 않는다."
+ ],
+ "judgment_rules": [
+  "평가 팔은 기준 팔 구성원 뒤에 재현 구성원을 사다리 단계 순서로 이은 누적 3구성이다.",
+  "결합기는 기준 팔마다 기준값을 만든 결합기를 그대로 쓴다(자체 36개는 shrunk_rank_logit_logistic, 314 확장은 c_selected_shrunk_rank_logit_logistic).",
+  "게이트는 현행 등록 문턱(nested AUC 차이 +0.00002 이상, 바깥 분할 5개 전부 양수)이다.",
+  "통과 구성이 여럿이면 nested AUC가 가장 높은 구성을 제안하고, 같으면 구성원이 적은 쪽을 고른다.",
+  "두 기준 팔의 판정이 갈리면 해석 규칙을 결과 확인 뒤 사용자와 정한다(지도 619 미지정 항목).",
+  "결과를 본 뒤 문턱, 사다리 구성, 구성원 순서를 바꾸지 않는다."
+ ],
+ "generator": {
+  "path": "scripts/freeze_reproduction_pool.py",
+  "sha256": "47b1856f705fc65adc75ddda7c23de34bfe8a8da1fb4dfbbcfbfe3c2323720b0",
+  "git_commit": "c921ca00265c033bb9d96c12f881cdc685ed38d5",
+  "git_dirty": false,
+  "committed_content_matches": true
+ },
+ "inputs": {
+  "train": {
+   "path": "data/train.csv",
+   "sha256": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+   "rows": 691369,
+   "id_sha256": "a0c49502b9d043d854539e0f18a324a28d30608994e5fc98d863cca9486a1182"
+  },
+  "test": {
+   "path": "data/test.csv",
+   "sha256": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+   "rows": 296302,
+   "id_sha256": "e21918e18e73ad88d4fd8dd08592269348d108807f7e2bffd1af520c0f4d4b5c"
+  },
+  "folds": {
+   "path": "artifacts/folds.parquet",
+   "sha256": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4",
+   "rows": 691369,
+   "outer_folds": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "assignment_sha256": "ec282b0968059676ddabf23be7ef84268f897f406bef981c07861a9c6f6d0a77"
+  },
+  "pool": {
+   "path": "artifacts/pool.yaml",
+   "sha256": "40947563a00cab8212498c7e339517e387979b14c6477c6ce8e196036e02044c",
+   "member_count": 36
+  },
+  "run_store": {
+   "tracking_uri": "sqlite:///mlflow.db",
+   "experiment_name": "predicting-smartphone-addiction",
+   "experiment_id": "1",
+   "database_file_sha256_omitted": "실행 저장소는 계속 추가되므로 파일 전체 해시 대신 실행별 변경 불가 기록을 고정한다."
+  }
+ },
+ "run_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+ "member_count": 12,
+ "members": [
+  {
+   "config": "cdv2_lgb_raw4",
+   "family": "lightgbm",
+   "run_id": "7386da78ae014813b95d552956c8e836",
+   "source_run_id": "fe673dabfaeb4fde9fdc7c762052e4bb",
+   "import_bundle_sha256": "223760e0bacf726e1c298005e633af78c68ab0551b203716332a1d8d20712fd3",
+   "provider": "local",
+   "remote_job_id": null,
+   "started_at": "2026-09-03T16:17:21.222Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "01_lgb_exp117_raw4.yaml",
+    "sha256": "3cd3b827d9888d69ef116805f776a44a4a6bdd32970b7d9fcb50a8bcd8545f2f",
+    "committed_path": "configs/constraint-derived/01_lgb_exp117_raw4.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "2e635d704226c09ff09bb598d49808aa8bb99b04b83407d32878b61ee8ca5969",
+    "auc": 0.9686860217919007,
+    "seed_aucs": {
+     "42": 0.9686030667639027,
+     "43": 0.9686051601780807,
+     "44": 0.9686211445957316
+    },
+    "fold_aucs": {
+     "0": 0.9680369400909218,
+     "1": 0.9688081971614255,
+     "2": 0.9687995158918542,
+     "3": 0.9693161252637528,
+     "4": 0.9684697205462769
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "1c18623d20a2a721caa8a76f510137e8b79f383105b5ef6a1c0a8d25bb5be827"
+   },
+   "prediction_pair_sha256": "ee84450f312e732e6ec6ad0ed6667dda18fd989977e921843a57274e2e028be3",
+   "stage": "raw4",
+   "order": 1
+  },
+  {
+   "config": "cdv2_xgb_raw4",
+   "family": "xgboost",
+   "run_id": "4d16bada5d064ac0b1fd439d018b716e",
+   "source_run_id": "d640eb7b44fc40a2ab75252288e3f0a3",
+   "import_bundle_sha256": "5fdfa9bc8ac9249bb9743ad5831b69f388190517520d1425a82531ed9112adce",
+   "provider": "local",
+   "remote_job_id": null,
+   "started_at": "2026-09-03T16:17:30.629Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "04_xgb_exp135_raw4.yaml",
+    "sha256": "da706e0827b0dc2d3f5106cb687df558f3b22a5865b0fa94305ce799ecac7ce0",
+    "committed_path": "configs/constraint-derived/04_xgb_exp135_raw4.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "b46c47b4ec9809af9e5982c01136651db0fd4182971a70b06c546d694ea6291f",
+    "auc": 0.968332052584159,
+    "seed_aucs": {
+     "42": 0.9682178709688913,
+     "43": 0.9682418697755794,
+     "44": 0.9682256153692855
+    },
+    "fold_aucs": {
+     "0": 0.9676695727696087,
+     "1": 0.9684091363303761,
+     "2": 0.9685122076312864,
+     "3": 0.9689668078079582,
+     "4": 0.968104504722958
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "b341723e82509bc58654e3bb9a355a713c023502f821032355ae3eb91025034a"
+   },
+   "prediction_pair_sha256": "b58211a6fb8e8b4147a655c591a2234dab29dbd3621ec4045cdd5440372240d1",
+   "stage": "raw4",
+   "order": 2
+  },
+  {
+   "config": "cdv2_cat_raw4",
+   "family": "catboost",
+   "run_id": "890860609db543fe8e2312cf40275ff5",
+   "source_run_id": "77680e55158740d4bc768fca90bd319d",
+   "import_bundle_sha256": "8ef2ac6c4e6726e11bac228aa6c12fe8a645a4890ceb16048c82b6bfe789c50f",
+   "provider": "local",
+   "remote_job_id": null,
+   "started_at": "2026-09-03T16:17:39.918Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "07_cat_exp070_raw4.yaml",
+    "sha256": "d03d5077cebbdf736dd8ccdc97cc8da5475eb0869820792680e75188ee814e56",
+    "committed_path": "configs/constraint-derived/07_cat_exp070_raw4.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "8b4003ddf89cb9356f9a88dd6d7773fd823daf6bf39c9aeb0ef6becdfa16e79d",
+    "auc": 0.9685743332862485,
+    "seed_aucs": {
+     "42": 0.9683772749359344,
+     "43": 0.9683989899165767,
+     "44": 0.9684001021037515
+    },
+    "fold_aucs": {
+     "0": 0.96794896840411,
+     "1": 0.9687989295458763,
+     "2": 0.9686469591216544,
+     "3": 0.9691738649420494,
+     "4": 0.968304893738632
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "2f7ed21aa203e714c0aba8a9ed4030e16ddcdfc8e0c7919b3bea2fcf9983bc84"
+   },
+   "prediction_pair_sha256": "a35bc86264bea5b264860db1a3d3de9faadffe946fa2b36a23df540d0326d21e",
+   "stage": "raw4",
+   "order": 3
+  },
+  {
+   "config": "cdv2_realmlp_raw4",
+   "family": "realmlp",
+   "run_id": "9f3af7ffb2de449ba2cc86d7250ab47c",
+   "source_run_id": "bff0385877f740c2a36989ba734d819d",
+   "import_bundle_sha256": "33ac8a25d51ea9117c3c45e83667146464b2b27b821d831e2f2dc4dd1d141d9b",
+   "provider": "vast",
+   "remote_job_id": "issue623-realmlp-ladder-v1",
+   "started_at": "2026-09-03T11:34:58.364Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "10_realmlp_exp139_raw4.yaml",
+    "sha256": "2f75088492b3b8a22fc7be41b23569083a1e2c6b365dcd178c589d18a16e0762",
+    "committed_path": "configs/constraint-derived/10_realmlp_exp139_raw4.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "e29aa6df790876910caf94319cd74746bdef65c6e0453d45621da13d5b051b86",
+    "auc": 0.9688287155799937,
+    "seed_aucs": {
+     "42": 0.9687411188593014,
+     "43": 0.9687363066058003,
+     "44": 0.9687174470115696
+    },
+    "fold_aucs": {
+     "0": 0.9682011129052173,
+     "1": 0.9688906452458521,
+     "2": 0.9689874841786962,
+     "3": 0.9694133224486613,
+     "4": 0.968658184873268
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "888a6d4e53a22c5c9af31ed9f18351b0bf01e8799843ae9a75e49e2c8669c512"
+   },
+   "prediction_pair_sha256": "d70e13d62665970a51017960f0493ac69f0ca4652b1b81d12eaee6753e4a7e0b",
+   "stage": "raw4",
+   "order": 4
+  },
+  {
+   "config": "cdv2_lgb_cats_te",
+   "family": "lightgbm",
+   "run_id": "800c976f19214f8ba7b3cb577a9f3b6b",
+   "source_run_id": "ea76bc31df3141d3b0958fffc0cdd3f0",
+   "import_bundle_sha256": "d4a6bd274d7a42f5a0fa2d5a1de03a49e4dbeb6333671e5584cdd75b732aed07",
+   "provider": "local",
+   "remote_job_id": null,
+   "started_at": "2026-09-03T16:17:23.607Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "02_lgb_exp117_cats_te.yaml",
+    "sha256": "a7bbf676041ad26f875f2b04c33ac37e5ae0e20024d769d7694ef73aff26d6cd",
+    "committed_path": "configs/constraint-derived/02_lgb_exp117_cats_te.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "1087b29d489eb30f2aaecbb7306939a3a4c8bd2603336958f3e5dc7942ffbf21",
+    "auc": 0.9686697325752077,
+    "seed_aucs": {
+     "42": 0.9685619743665836,
+     "43": 0.9685991894740801,
+     "44": 0.9686073289775778
+    },
+    "fold_aucs": {
+     "0": 0.968033196965776,
+     "1": 0.9688029091376821,
+     "2": 0.9687768841042177,
+     "3": 0.9692903427862186,
+     "4": 0.9684478702459581
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "a0f5e2673d01569dcb6631768ac41a3edb6743393371203651cb9d318e8e61b6"
+   },
+   "prediction_pair_sha256": "d866a5c0d0064a5362a5c1eeafc0a20127e7c5d00b4bbf9dccd824488ceb7f28",
+   "stage": "cats_te",
+   "order": 5
+  },
+  {
+   "config": "cdv2_xgb_cats_te",
+   "family": "xgboost",
+   "run_id": "02d896484e8341d681406ba76c049907",
+   "source_run_id": "20abb19b34154212afc0f05fa25a5902",
+   "import_bundle_sha256": "4eb001e786e771af9a501835b25bdabe8b77fea10c60afaf24427cefff19da8c",
+   "provider": "local",
+   "remote_job_id": null,
+   "started_at": "2026-09-03T16:17:32.955Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "05_xgb_exp135_cats_te.yaml",
+    "sha256": "255a5bc87175c3650f03a9e6a6c7a287e2b05e7f73cc4ee964af1cccd5e67c46",
+    "committed_path": "configs/constraint-derived/05_xgb_exp135_cats_te.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "f051692df7f98a732d3bd83e288121a2cbe1c47787f9fcf1eb25da8c932c3c3a",
+    "auc": 0.9682821467621356,
+    "seed_aucs": {
+     "42": 0.9681599569739732,
+     "43": 0.9681805803441413,
+     "44": 0.9681873576598914
+    },
+    "fold_aucs": {
+     "0": 0.9676686652146268,
+     "1": 0.9683420427213786,
+     "2": 0.9684449064796621,
+     "3": 0.9689164854445935,
+     "4": 0.968046158770714
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "6b2f524060a814c36946b1a0500338f31d71f9f48a7fc5b5a4f8ee64f901cc6a"
+   },
+   "prediction_pair_sha256": "c38c3610a5c0513311f7723ec2b2fb79da95c4f8b59548e83f599a7da5986371",
+   "stage": "cats_te",
+   "order": 6
+  },
+  {
+   "config": "cdv2_cat_cats_te",
+   "family": "catboost",
+   "run_id": "ef690ee7832446b9a3a2195b20567f60",
+   "source_run_id": "ef28f9f1c3fd42f6b49e24fd0a259633",
+   "import_bundle_sha256": "017584f466b304b98ed76c4f7a2874a3991071580459eea2b05a6381e52646fd",
+   "provider": "local",
+   "remote_job_id": null,
+   "started_at": "2026-09-03T16:17:42.298Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "08_cat_exp070_cats_te.yaml",
+    "sha256": "90dccd07860fefc87e0d40c3dd65f1736e4ea29e29b88daa222a30e4b86a45ab",
+    "committed_path": "configs/constraint-derived/08_cat_exp070_cats_te.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "ecfa26b4e34f190756cd4b0225c804ee21400d6cf404a35d502d9816b164c592",
+    "auc": 0.968509372118872,
+    "seed_aucs": {
+     "42": 0.9683230254154856,
+     "43": 0.9683397354016083,
+     "44": 0.9683199508453457
+    },
+    "fold_aucs": {
+     "0": 0.9678453531283937,
+     "1": 0.9687042728552459,
+     "2": 0.9685774191483478,
+     "3": 0.9691475105805543,
+     "4": 0.9682712887434903
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "6f16e25e9141f99de635ce9082a2b73e5d3d8be02be5ddd179725f3cb00a7d7b"
+   },
+   "prediction_pair_sha256": "543cc22a4cb0c5239399289225b299d3840a19cd91a9e8806f223fad8ad3d5f0",
+   "stage": "cats_te",
+   "order": 7
+  },
+  {
+   "config": "cdv2_realmlp_cats_te",
+   "family": "realmlp",
+   "run_id": "2f261e3949dd4d5c96586b48b125aa43",
+   "source_run_id": "0cea3a0660be4d809202b645c9ae341a",
+   "import_bundle_sha256": "d9e7714b11e6261c5bb054cf12b538b8493a9f72096540fd809be96dea39ea45",
+   "provider": "vast",
+   "remote_job_id": "issue623-realmlp-ladder-v1",
+   "started_at": "2026-09-03T11:35:01.702Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "11_realmlp_exp139_cats_te.yaml",
+    "sha256": "326319be2d9d007ae1f0acf6f063f66768f138dce99ae688375ed9eb4c0dec96",
+    "committed_path": "configs/constraint-derived/11_realmlp_exp139_cats_te.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "49efa378bf48a2e1700a83e7d12ea8dd9108ee51c18c3e58ccf27fbf45cee17d",
+    "auc": 0.9686200877652102,
+    "seed_aucs": {
+     "42": 0.9684874355644584,
+     "43": 0.9685198356123093,
+     "44": 0.9685026997163874
+    },
+    "fold_aucs": {
+     "0": 0.9679919705766565,
+     "1": 0.9686486702065854,
+     "2": 0.9687925241410482,
+     "3": 0.9692408909347754,
+     "4": 0.9684272851312842
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "b6dc74bcef3722047dd37767cff7a0bba55b47ad6585862e59939bd41702df8b"
+   },
+   "prediction_pair_sha256": "fdc68ae645d007b47ac733f5e7cfdf04a1192b8f77773c3c59d53455408ae0b7",
+   "stage": "cats_te",
+   "order": 8
+  },
+  {
+   "config": "cdv2_lgb_ratio_round",
+   "family": "lightgbm",
+   "run_id": "bf0d691326e74898a8996184cff591a4",
+   "source_run_id": "ba41f58404804363b8543930a4c5c63c",
+   "import_bundle_sha256": "134e4a469b37b88da1d1002c8164ac130885c7989d05bcc49824afea9dfe3a09",
+   "provider": "local",
+   "remote_job_id": null,
+   "started_at": "2026-09-03T16:17:25.992Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "03_lgb_exp117_ratio_round.yaml",
+    "sha256": "ddd1cf3932df7c1b3e518ad5510a854e6b7986005b21a84eb0942baeee8f57b9",
+    "committed_path": "configs/constraint-derived/03_lgb_exp117_ratio_round.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "49aa1777b732a267a49671b2b012082fbd7288fd1959efa1718663cec53c77ba",
+    "auc": 0.9685463303499807,
+    "seed_aucs": {
+     "42": 0.9684644754929733,
+     "43": 0.968486287049638,
+     "44": 0.96848943434611
+    },
+    "fold_aucs": {
+     "0": 0.9678557226481326,
+     "1": 0.9686387256671636,
+     "2": 0.9686540947314694,
+     "3": 0.9692221878681665,
+     "4": 0.9683604018083058
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "ad1ec90d78e6acc82c31cdc5178dc8e4cb8a563d27eafb22442b1c6759ef7343"
+   },
+   "prediction_pair_sha256": "5ad2dcd3f315b4a962c5658e802d4347b43eae38bdb49e4cca7ddc4b175663d5",
+   "stage": "ratio_round",
+   "order": 9
+  },
+  {
+   "config": "cdv2_xgb_ratio_round",
+   "family": "xgboost",
+   "run_id": "e80fbeed12fe4b7ea478d342c27d90c7",
+   "source_run_id": "24e3bbb95d6d468a8585359351f23833",
+   "import_bundle_sha256": "81565340ba120d7bb60122ed802702ac58865d80f393fa850c1e23ebdb6b3728",
+   "provider": "local",
+   "remote_job_id": null,
+   "started_at": "2026-09-03T16:17:35.205Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "06_xgb_exp135_ratio_round.yaml",
+    "sha256": "744e26a670de73c3f5435d5b04d59f54f21bfc1b74a824664f6c45f958912bf3",
+    "committed_path": "configs/constraint-derived/06_xgb_exp135_ratio_round.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "e1da1e6c902b214b98abb4dc0eff40229a59316d1044892851fb18cb19f0411d",
+    "auc": 0.9683162639572424,
+    "seed_aucs": {
+     "42": 0.9682216381340373,
+     "43": 0.9682223156428462,
+     "44": 0.9682225571285723
+    },
+    "fold_aucs": {
+     "0": 0.9676746899132067,
+     "1": 0.9683907368392592,
+     "2": 0.9684812935481375,
+     "3": 0.9689483527522507,
+     "4": 0.9680965433015696
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "6b73c90eee714f024a11be099312d3890d32c56f9a1851c17298e64c1b267f2b"
+   },
+   "prediction_pair_sha256": "a7753bb61c3300d01337f75cd7b71c134776b800140f31aa92cba07035b3e440",
+   "stage": "ratio_round",
+   "order": 10
+  },
+  {
+   "config": "cdv2_cat_ratio_round",
+   "family": "catboost",
+   "run_id": "3383676700f44465a59d7b27547ebca3",
+   "source_run_id": "b468403d86844fd1ab5f46b6448c6cb6",
+   "import_bundle_sha256": "9a0f0f08f565f3ee0d04b252afd33934d0b922f67c894a6d721b8b7dd64e3d32",
+   "provider": "local",
+   "remote_job_id": null,
+   "started_at": "2026-09-03T16:17:44.661Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "09_cat_exp070_ratio_round.yaml",
+    "sha256": "709f2e56507c082389953054e64f72243d7a2df544b130a0d7d3ac1facb2ae3f",
+    "committed_path": "configs/constraint-derived/09_cat_exp070_ratio_round.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "f471ec532316710ac05233d6dedac1ff03d9c19a5eba6f0ee82daae8c7ef4b49",
+    "auc": 0.9684889562765304,
+    "seed_aucs": {
+     "42": 0.9683129852946464,
+     "43": 0.968321031216019,
+     "44": 0.9683003795256123
+    },
+    "fold_aucs": {
+     "0": 0.9678380274826043,
+     "1": 0.9686982460000493,
+     "2": 0.9685435285538013,
+     "3": 0.9691235985238547,
+     "4": 0.9682460317154764
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "ee9332872a83d336f4afe9d7d75736f458da9c62a19b72e03d026a0f26221df4"
+   },
+   "prediction_pair_sha256": "0efe5c4da2463092252b4e42489c90dffadb550761ee50b10872fdb97b16c5a4",
+   "stage": "ratio_round",
+   "order": 11
+  },
+  {
+   "config": "cdv2_realmlp_ratio_round",
+   "family": "realmlp",
+   "run_id": "c5dec94acb0d4e59b54ef056dda5a20f",
+   "source_run_id": "8b3de47889e24c85b5960b2bf4693a78",
+   "import_bundle_sha256": "5acde02db10b5035b02c78b8aaeb453bdf741af829118e9598f2e1acf2de1edd",
+   "provider": "vast",
+   "remote_job_id": "issue623-realmlp-ladder-v1",
+   "started_at": "2026-09-03T11:35:05.078Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "12_realmlp_exp139_ratio_round.yaml",
+    "sha256": "3431d299e67fd73aac1034689b7f67bb91195a919ee4ea58b382d39cf59264a8",
+    "committed_path": "configs/constraint-derived/12_realmlp_exp139_ratio_round.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "567ee1bd70509a307b8a299745e5649dc9704f7311753870cf677dedff86a633",
+    "auc": 0.968873724928663,
+    "seed_aucs": {
+     "42": 0.9687459427433321,
+     "43": 0.968769837443585,
+     "44": 0.9687449331402719
+    },
+    "fold_aucs": {
+     "0": 0.9682287821684998,
+     "1": 0.9689293326630113,
+     "2": 0.9689879821033965,
+     "3": 0.9695339014163212,
+     "4": 0.9686982819846608
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "745d7dc39c5a3185153dfca96b4b820c72d866380ec366c74c01fbbc30198b2b"
+   },
+   "prediction_pair_sha256": "4d2ba2c9c08650b9c811e61cd08989cefe5a10ec0856ab45911b3d311c3bab36",
+   "stage": "ratio_round",
+   "order": 12
+  }
+ ],
+ "ladder": [
+  {
+   "stage": "raw4",
+   "member_count": 4,
+   "members": [
+    "cdv2_lgb_raw4",
+    "cdv2_xgb_raw4",
+    "cdv2_cat_raw4",
+    "cdv2_realmlp_raw4"
+   ]
+  },
+  {
+   "stage": "cats_te",
+   "member_count": 8,
+   "members": [
+    "cdv2_lgb_raw4",
+    "cdv2_xgb_raw4",
+    "cdv2_cat_raw4",
+    "cdv2_realmlp_raw4",
+    "cdv2_lgb_cats_te",
+    "cdv2_xgb_cats_te",
+    "cdv2_cat_cats_te",
+    "cdv2_realmlp_cats_te"
+   ]
+  },
+  {
+   "stage": "ratio_round",
+   "member_count": 12,
+   "members": [
+    "cdv2_lgb_raw4",
+    "cdv2_xgb_raw4",
+    "cdv2_cat_raw4",
+    "cdv2_realmlp_raw4",
+    "cdv2_lgb_cats_te",
+    "cdv2_xgb_cats_te",
+    "cdv2_cat_cats_te",
+    "cdv2_realmlp_cats_te",
+    "cdv2_lgb_ratio_round",
+    "cdv2_xgb_ratio_round",
+    "cdv2_cat_ratio_round",
+    "cdv2_realmlp_ratio_round"
+   ]
+  }
+ ],
+ "baseline_reruns": [
+  {
+   "config": "exp117_ag25_gbm_r21",
+   "family": "lightgbm",
+   "run_id": "fa1b60f193c54c02afb19c3cd8613833",
+   "source_run_id": "56d1408f8f034ea586e617c3e4cde656",
+   "import_bundle_sha256": "aef009d2fce05553a44332ee5b7203a1dbc388ebff88b3783ab8e1cb9058d3b3",
+   "provider": "local",
+   "remote_job_id": null,
+   "started_at": "2026-09-03T16:17:18.782Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "exp117_ag25_gbm_r21.yaml",
+    "sha256": "9bf41cafe8224d64c29528bc45f73b1a9e0e60f16e6a1d2717c82a92ef7e6b8f",
+    "committed_path": "configs/exp117_ag25_gbm_r21.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "78101b80ebda1b5db0b077b68fdae772466a6e040b06b6726f63bfbaf736622b",
+    "auc": 0.9687176938660131,
+    "seed_aucs": {
+     "42": 0.9686391854351686,
+     "43": 0.9686205060837036,
+     "44": 0.9686496309702964
+    },
+    "fold_aucs": {
+     "0": 0.9680852183623907,
+     "1": 0.9688405601103063,
+     "2": 0.9688035325267205,
+     "3": 0.9693470519060217,
+     "4": 0.9685139128604969
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "50e7722e3dbd99484ee79f1810f96c9fe284d19f577721aa0235bed8abeed0ea"
+   },
+   "prediction_pair_sha256": "aaefdc70d8df7c207a54c02335692253ad62466c7caba1933a5eef1776349957",
+   "current_pool_member": null
+  },
+  {
+   "config": "exp135_xgb_hpo_trial30",
+   "family": "xgboost",
+   "run_id": "398c6fcfee1e40a9a12209ea236d2719",
+   "source_run_id": "27e5d91f79b848ca864e923b57381e76",
+   "import_bundle_sha256": "bbccbe72050c67b0aa3bef0611d2066911ecccb02ce436e5f5decf070f4ec471",
+   "provider": "local",
+   "remote_job_id": null,
+   "started_at": "2026-09-03T16:17:28.257Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "exp135_xgb_hpo_trial30.yaml",
+    "sha256": "653c4a07185cc25b00bbb339bdbcf27e058b9d1f36bbb57ef5bbb29749a2baf9",
+    "committed_path": "configs/exp135_xgb_hpo_trial30.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "4e3833e34e1f8b85f33997408f23c8e559bb5d494ec7b5f6a00582c7ab98ae2a",
+    "auc": 0.9683233582861206,
+    "seed_aucs": {
+     "42": 0.9682158224885445,
+     "43": 0.9682228018263945,
+     "44": 0.9682165256383076
+    },
+    "fold_aucs": {
+     "0": 0.9676882876341786,
+     "1": 0.9684041887983252,
+     "2": 0.968486739639187,
+     "3": 0.968939809759857,
+     "4": 0.968103801151356
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "82a87e1960c15e9953187da9e63c30daf8b9cb374e74b5dcb7a3f1d472161d5c"
+   },
+   "prediction_pair_sha256": "7a9bd9c66113ca3a5eb0e271c596c84d9f87ec91165f9b903f9d5f20a99155ca",
+   "current_pool_member": {
+    "run_id": "119b9c4e44674d38a6f758b65a68593e",
+    "oof_auc": 0.9683307160272167
+   }
+  },
+  {
+   "config": "exp070_cat_exact_cats",
+   "family": "catboost",
+   "run_id": "cb326d8dcca14808adda3b765ad4a5c0",
+   "source_run_id": "9696137c69384938ad08a5cb99b4308e",
+   "import_bundle_sha256": "36f193cd079a13f1a0da9ddeba7d4b729a7ec15a4460bf94a4a7b0fdcf806697",
+   "provider": "local",
+   "remote_job_id": null,
+   "started_at": "2026-09-03T16:17:37.500Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "exp070_cat_exact_cats.yaml",
+    "sha256": "78d564c6c4e255f910b62bce855844697ed4ba16640e9f9fa15b1d625ebbb91d",
+    "committed_path": "configs/exp070_cat_exact_cats.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "ee3ca15ed4dd658fbc7bcc9dd22f1d623652c61d75940ea66ab70c72119794dc",
+    "auc": 0.9685685455550421,
+    "seed_aucs": {
+     "42": 0.9683661287273517,
+     "43": 0.9684144908857816,
+     "44": 0.9683633553026846
+    },
+    "fold_aucs": {
+     "0": 0.9679199312116457,
+     "1": 0.9687408211625218,
+     "2": 0.968631424885894,
+     "3": 0.9692268461598819,
+     "4": 0.968322629933821
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "9852efb3eb3e321c8f86a8a6e6cb2683d080f67f5b9bc371513d83eca9761061"
+   },
+   "prediction_pair_sha256": "e00f99613d9656385e5bccc45029876a4cceb4f271161fdfef2311977dcd3ad6",
+   "current_pool_member": null
+  },
+  {
+   "config": "exp139_realmlp_reference_qnormal_train_test",
+   "family": "realmlp",
+   "run_id": "fe6de111d0f749fe973b0080d8a15834",
+   "source_run_id": "329a7a884d194802afdf2870992f75ac",
+   "import_bundle_sha256": "1f5ec5a9830b039db8212fdee0e4a8f74f291b8cee719a99114e920b55e85206",
+   "provider": "vast",
+   "remote_job_id": "issue623-realmlp-ladder-v1",
+   "started_at": "2026-09-03T11:34:54.940Z",
+   "seeds": [
+    42,
+    43,
+    44
+   ],
+   "git_commit": "01d6cf316c7157f86c5ebf62656c08a7db1e727f",
+   "git_dirty": false,
+   "config_artifact": {
+    "name": "exp139_realmlp_reference_qnormal_train_test.yaml",
+    "sha256": "85c74e4ec735fbd4934ea8541600d5c65fc33d7fed5cd9d85613f635ce1ac3e2",
+    "committed_path": "configs/exp139_realmlp_reference_qnormal_train_test.yaml",
+    "committed_content_matches": true
+   },
+   "input_sha256": {
+    "train": "f4669147311c76eb03496061a852af283efcf0f12cf5c19274e775def81edd9c",
+    "test": "8b462dd47fe8165cd0b082bf33b56523c5811453070af48b9f86b2eb928de49e",
+    "folds": "5f5d09e9356f227ecb4a063270b175bb5cae20afb25636c563db185e18a155c4"
+   },
+   "oof": {
+    "rows": 691369,
+    "array_sha256": "909d9698566e9d899e660808ec40799715a81a698c04fb9a70d78396ea5907c1",
+    "auc": 0.9685463700115083,
+    "seed_aucs": {
+     "42": 0.968434416875782,
+     "43": 0.9684601077926251,
+     "44": 0.9684581312013345
+    },
+    "fold_aucs": {
+     "0": 0.9679375668799295,
+     "1": 0.9686068249953801,
+     "2": 0.9687105214613658,
+     "3": 0.969147480895362,
+     "4": 0.9683344275076924
+    }
+   },
+   "test": {
+    "rows": 296302,
+    "array_sha256": "c5654c1ec2b00031393dc593d4cf06cf5f181ca5fb497c4f52cc50d9dc5f8b1e"
+   },
+   "prediction_pair_sha256": "3c57cdf6985812c7fbfd0c8c9b82b0680a4456d99c0212b0906719ae8f1907aa",
+   "current_pool_member": {
+    "run_id": "1af9442e67c14a96a5256251f23a1b9d",
+    "oof_auc": 0.9685456290878953
+   }
+  }
+ ],
+ "reference_arms": {
+  "own36": {
+   "name": "pool36-current",
+   "combiner": "shrunk_rank_logit_logistic",
+   "member_count": 36,
+   "members": [
+    {
+     "config": "exp006_te_drop_gaming",
+     "run_id": "4aaddd505ade428588cf83659f205cf6",
+     "oof_sha256": "6582c852dee84acc1cae9b5231c3e4b223f2849338286cb195bcc6a8bda100f6",
+     "auc": 0.9665924316740748,
+     "order": 1
+    },
+    {
+     "config": "exp011_resid_pair",
+     "run_id": "e21d19af37bb461db5dc1a59b66411a6",
+     "oof_sha256": "15988c7117300ed4be52bee52e0fe065f63f2799448969bef4cc07cab65bd6df",
+     "auc": 0.9674010717025592,
+     "order": 2
+    },
+    {
+     "config": "exp022_orig_knn",
+     "run_id": "52e9c12bcfb94ee9912e4bb7f43e3f09",
+     "oof_sha256": "f66f0895d1e8f9fd86420c02c669b319144d5f9d8bb306a48416fb2968cb71de",
+     "auc": 0.9673310988424522,
+     "order": 3
+    },
+    {
+     "config": "exp023_orig_proxy_residual",
+     "run_id": "202b7d47c3bd4b8e8904fa5c005c7423",
+     "oof_sha256": "585fd50e1eb834a0854434d803022f10c088324cd47d752096312aeda23f283b",
+     "auc": 0.9673739546249797,
+     "order": 4
+    },
+    {
+     "config": "exp025_constrained_impute",
+     "run_id": "9804689a5e3642e586abb972b522f3d4",
+     "oof_sha256": "28ea5e1056ab90765220431169ea5bd67cfad682b2e4f41274cfd24e38b4329f",
+     "auc": 0.9675746898110065,
+     "order": 5
+    },
+    {
+     "config": "exp032_recon_orig_mean_top3",
+     "run_id": "b1bd4b08386946c9a4e05b755dbd5f26",
+     "oof_sha256": "542114610c478fed58b4bb1bb35fee50ad704a01b78cc2f763eab0096f31f064",
+     "auc": 0.9676472210375413,
+     "order": 6
+    },
+    {
+     "config": "mpv1_exp035_lattice_te_missingness_augmented",
+     "run_id": "f525ee26f7e54d4b96f515c858e39e99",
+     "oof_sha256": "f4c6ce0c29f0f4aec9a3a3cc01877231fd107ec42176a5c364fd30bdefdbeedf",
+     "auc": 0.9674748763300264,
+     "order": 7
+    },
+    {
+     "config": "mpv1_exp058_logreg_onehot_missingness_augmented",
+     "run_id": "90aed4413e4b48e7a56f92fa9ecd5285",
+     "oof_sha256": "deb6d0a062861ab17d7aa9dac69aea1f9423c3c7be1134bec953ecd4e8f67427",
+     "auc": 0.9596153717027877,
+     "order": 8
+    },
+    {
+     "config": "exp059_lookup_transformer",
+     "run_id": "b951fac51b6b44298f7fdb0b543caba6",
+     "oof_sha256": "9407248f85db87e1825f140a8c3927d8d296c8daddf80215d929148da6ccf3d1",
+     "auc": 0.9689221785328946,
+     "order": 9
+    },
+    {
+     "config": "mpv1_exp070_cat_exact_cats_missingness_augmented",
+     "run_id": "4fd10d9fc1324583a023552acc2cf77f",
+     "oof_sha256": "bc63a96284b4c33f77b6b8b2c00e9e323fa9d87189a2b7e94827903e94468691",
+     "auc": 0.9687455117591307,
+     "order": 10
+    },
+    {
+     "config": "exp067_tabpfn3",
+     "run_id": "85b09132aae543aab16e69dea5906a30",
+     "oof_sha256": "59a742f0a4ad336826d87491a01f92b1f23bb2ba23ba6c0380d3eede34c070f7",
+     "auc": 0.9672432266679856,
+     "order": 11
+    },
+    {
+     "config": "exp081_lookup_fold_initialization_avg3",
+     "run_id": "d55d1cd49c194eb8bf7b5128e548df81",
+     "oof_sha256": "92d2188043561b57cc937800e54026d7cea97a8ef8d6ee6f1947d7e6007e18a0",
+     "auc": 0.9691957618114269,
+     "order": 12
+    },
+    {
+     "config": "mpv1_exp110_lgb_kitopl_no_te_missingness_augmented",
+     "run_id": "9c51438d9842439881ed151ba66b0c86",
+     "oof_sha256": "4a8581dd9ff851d53b165afee35156a12b8430aefe45e8eb209b055f85b4c152",
+     "auc": 0.9677639450957627,
+     "order": 13
+    },
+    {
+     "config": "exp111_xgb_depth8_no_te",
+     "run_id": "3cbc2ccce9eb46458d884006a33e516e",
+     "oof_sha256": "f1f3d1fb61785b5ec78647c73eabdbb0128057a5b1fb9b0eead26d377cb31a05",
+     "auc": 0.9648262948660623,
+     "order": 14
+    },
+    {
+     "config": "exp071_cat_exact_no_te",
+     "run_id": "521b4924b2ef4ba1830724333b83deb2",
+     "oof_sha256": "e6611866d54b6cf384690e539ec4ced26ee266c62d02fc4206137ae63c572029",
+     "auc": 0.9681599406445471,
+     "order": 15
+    },
+    {
+     "config": "exp106_lookup_fixed24_train_test_preprocessing",
+     "run_id": "547e7bc90b9f4c448307d406f053629a",
+     "oof_sha256": "a149a194f0ed082887cdbffa2b7791a61ab5e4b90c86f9769f2ee4ae7713942e",
+     "auc": 0.9678698020933406,
+     "order": 16
+    },
+    {
+     "config": "exp113_tab_cnn_m0",
+     "run_id": "b47a4184249746cdb1d062aa98364437",
+     "oof_sha256": "97721e2bf2254933057ee0512d76cdbd8b091a60684d22e3396eeacae35b277c",
+     "auc": 0.9620748339267182,
+     "order": 17
+    },
+    {
+     "config": "exp085_contextual_spline_m0",
+     "run_id": "e84d97e875754af1b073b399db2a0616",
+     "oof_sha256": "04b2a8f637a978ed3d428f28d1c2e7bec51f856cdf844aee434d63dc239f6671",
+     "auc": 0.9681422751383426,
+     "order": 18
+    },
+    {
+     "config": "exp027_recon_ce",
+     "run_id": "e4e81bdce7df4a72bf250ef842fd8781",
+     "oof_sha256": "82d4ece1e6d7d6dd20df27a0d48bac1ff99303a17e7900f9d7e6daa86820e1e2",
+     "auc": 0.967717165004002,
+     "order": 19
+    },
+    {
+     "config": "exp048_lgb_orig_cdf_diff",
+     "run_id": "2b5fda6d3ea94ff886c5fe616376f0f0",
+     "oof_sha256": "2bc251ba0f9005dcfddf35aad26f0b380e9d3538b43fe25b875d722a894fc5d5",
+     "auc": 0.9676097182368125,
+     "order": 20
+    },
+    {
+     "config": "exp134_realmlp_muon",
+     "run_id": "f72eeee10b1b4947af79228f888e7a81",
+     "oof_sha256": "29f30a098fb818dc859ea2adad44e1ec9f8e797cefcfd4d05d85e4d937d0cb80",
+     "auc": 0.9684260631310234,
+     "order": 21
+    },
+    {
+     "config": "exp135_xgb_hpo_trial30",
+     "run_id": "119b9c4e44674d38a6f758b65a68593e",
+     "oof_sha256": "b4a601c3a41137a0319be1dd8ff3a4a9ccc2aeaf68a1037ae171f78637085299",
+     "auc": 0.9683307160272167,
+     "order": 22
+    },
+    {
+     "config": "mpv1_exp131_lookup_bivariate_plr5_missingness_augmented",
+     "run_id": "9b847a787b25429f872f6eadb7497659",
+     "oof_sha256": "9a61fec5950c334a5fdb7fe02835ec8b988330413a657c6032068a9a332ffd50",
+     "auc": 0.9694062694182052,
+     "order": 23
+    },
+    {
+     "config": "exp136_realmlp_muon_recon_widths",
+     "run_id": "bd2bd1154e6343f68b364714e2fedcc4",
+     "oof_sha256": "61490376cc8f8a7d49e57c4ee614950a140746838b118e8919213b3eb9f792f9",
+     "auc": 0.9684765044445613,
+     "order": 24
+    },
+    {
+     "config": "exp137_tabm_recon_widths",
+     "run_id": "e7682b186be14dea822d41d7d411bb98",
+     "oof_sha256": "895eace593d884dc911aa1d2c6090aba8d2791ce068e28f4f136d6fe4898946c",
+     "auc": 0.9683846688118484,
+     "order": 25
+    },
+    {
+     "config": "exp133_scalar_token_transformer_oof_te",
+     "run_id": "f16dbc88860a41f39194da2f581f057d",
+     "oof_sha256": "9528f1971b3d8d453f567358b94f18836b9bccd3b9bbfcd54a1615fbea9e5d86",
+     "auc": 0.9678155177269718,
+     "order": 26
+    },
+    {
+     "config": "exp131_tab_cnn_oof_target_mean",
+     "run_id": "ea78fe0dbe2442788580dec56cf7f3ad",
+     "oof_sha256": "fc02cb262dd32ec69e3ae776b45997a452ea72a09186e2214c9e637c34ef0505",
+     "auc": 0.9679518485344029,
+     "order": 27
+    },
+    {
+     "config": "exp132_tab_cnn_epochs100",
+     "run_id": "09d17ca4091e45118d201ba7a321f956",
+     "oof_sha256": "ed6ef11b04834abf1b3da83964e1c3e8cf98bb741ec8b211cc4b8f3d4a92c3c8",
+     "auc": 0.9627879146500447,
+     "order": 28
+    },
+    {
+     "config": "exp139_realmlp_reference_qnormal_train_test",
+     "run_id": "1af9442e67c14a96a5256251f23a1b9d",
+     "oof_sha256": "93b787afe2f8212865a6975e3bc64a1d68c7efdb14c15c8b0178f2f0f39aeea6",
+     "auc": 0.9685456290878953,
+     "order": 29
+    },
+    {
+     "config": "exp140_realmlp_orig_cdf_diff",
+     "run_id": "984b0fd5277243ab95acff71688644a9",
+     "oof_sha256": "316c767212b39003f6025358cf3997860228b50edb310b961b54475de0ba3f13",
+     "auc": 0.9684119417243193,
+     "order": 30
+    },
+    {
+     "config": "exp157_lookup_muon_initavg8",
+     "run_id": "bb7be9baf1b64888818600d7e0b5927b",
+     "oof_sha256": "166270af41cc6cc8824d84701564f8369f8835434fe9b09ee3a8c5038bafcfe4",
+     "auc": 0.9693266193889507,
+     "order": 31
+    },
+    {
+     "config": "exp168_issue413_lgb_no_te_fixed20",
+     "run_id": "2142b26c2d304307bb0c2717b803d643",
+     "oof_sha256": "bed36370bea4e53e378c925370627e4dbd7ae52dae100fed3162512d0989e139",
+     "auc": 0.9650884319322799,
+     "order": 32
+    },
+    {
+     "config": "exp197_issue419_lgb_recon_ce_fixed20",
+     "run_id": "a7a59a1829da4e4e93c3f581ed58597e",
+     "oof_sha256": "392e6538bbe144db743872af700201e6bea25b5af643f55a56acd640627f6c08",
+     "auc": 0.9654566561049915,
+     "order": 33
+    },
+    {
+     "config": "exp183_issue419_cat_exact_fixed10",
+     "run_id": "eded39146a164b6ca421a20d22b10f52",
+     "oof_sha256": "71df86be6d9526fbd1341025e5b7175ea64219e9ba274b0cb7c3d2b10b131a45",
+     "auc": 0.9667978844962996,
+     "order": 34
+    },
+    {
+     "config": "exp208_issue500_ag25_missingness_augmented",
+     "run_id": "e46d1ca38e0746209e049970d3dd2ab6",
+     "oof_sha256": "3444abd8d827c2f1548eea5de330bd71ceff80fefbe05c5a0eebd3a3524bbc67",
+     "auc": 0.9688375116147219,
+     "order": 35
+    },
+    {
+     "config": "exp209_issue505_lgb_lr_onehot_init",
+     "run_id": "8b4111a9a93147caa6b9012e49456474",
+     "oof_sha256": "45b898a12187ef364fad34f20045e097327538e04ff4539971c9d83eb988d0de",
+     "auc": 0.968104144497054,
+     "order": 36
+    }
+   ],
+   "composition_sha256": "aa9371454a86c97fdc7a30b84a95baab253e137ac42097e688b1c8699752f5d9",
+   "nested_auc": 0.9698828758140019,
+   "fold_aucs": {
+    "0": 0.9693299877411192,
+    "1": 0.9699927220915519,
+    "2": 0.9699737362544572,
+    "3": 0.9704601210261992,
+    "4": 0.9696578096623132
+   },
+   "values_source": {
+    "mlflow_run_id": "223055f44dc9427da588a141bc3b1ca3",
+    "artifact": "pool36_full-oof-evidence.json",
+    "artifact_sha256": "9467761733b103cdb98e16642623f0f8f9a24b2bbb78c96d0433f3523e028d89",
+    "git_commit": "43045c1fabce9f35ebf86c4edf7900a4253f30fe",
+    "record": {
+     "path": "docs/research/extended-stack-final-assembly/issue514/submission-record.json",
+     "sha256": "b85bb76ac8bc68285c8a0d167a2df5960064e4ba5046b5d6a049e016a33b779f"
+    },
+    "note": "nested 예측 해시는 기록에 없어 자기 검사는 분할별 AUC 동일성만 대조한다. 근거 산출물의 후보 키 missingness_augmented:<원본> 5개는 풀 등록 이름 mpv1_<원본>_missingness_augmented와 같은 구성원이다."
+   },
+   "corroboration": {
+    "issue513_precommit": {
+     "path": "docs/research/extended-stack-pool-reassembly/issue513/precommit.json",
+     "sha256": "91207768e15b34f77d61dc07ef25f7ae0fc83dab2bee884eee28ce36ba4f38f8"
+    },
+    "own_member_hashes_match": true
+   }
+  },
+  "ext314": {
+   "name": "reassembled-314",
+   "combiner": "c_selected_shrunk_rank_logit_logistic",
+   "member_count": 314,
+   "own_member_count": 36,
+   "external_member_count": 278,
+   "composition_sha256": "e3208ed93ee2912699aa0a0a02839479489faf69ec65f9dd3b0dd8f82823035e",
+   "nested_auc": 0.9703843058098193,
+   "fold_aucs": {
+    "0": 0.9697850148010051,
+    "1": 0.9705601887945755,
+    "2": 0.9704303417039273,
+    "3": 0.9710118898443254,
+    "4": 0.9701340913545267
+   },
+   "prediction_sha256": "fc6a8a3208957fc0dc4fa883535a3e3df3be5ec79676719a5be4b0d2bcbc02c8",
+   "values_source": {
+    "comparison": {
+     "path": "docs/research/extended-stack-pool-reassembly/issue513/comparison.json",
+     "sha256": "65c7f84bb72af1ef18bf811e951583f8b40b2a343fca4ecf781dfdaf993374c2"
+    },
+    "precommit": {
+     "path": "docs/research/extended-stack-pool-reassembly/issue513/precommit.json",
+     "sha256": "91207768e15b34f77d61dc07ef25f7ae0fc83dab2bee884eee28ce36ba4f38f8"
+    },
+    "manifest": {
+     "path": "docs/research/extended-stack-submission-2-manifest.json",
+     "sha256": "3d9a205c810150e7851731b687549fc2b94a2e98fb965b62883fbb4048538711"
+    },
+    "pilot_replay": "docs/research/judgment-round-pilot/issue553 (#553, ADR-0009 실전 검증)"
+   },
+   "sealed_folds": {
+    "0": {
+     "path": "docs/research/extended-stack-pool-reassembly/issue513/reassembled/fold-0/reassembled.json",
+     "sha256": "a02db2ab6dd5630206dfe56aedb3db46ce45e6b1480cb09913f7851ed5db60b4",
+     "auc": 0.9697850148010051,
+     "prediction_sha256": "670a89821d7a2993b65055085936877f31fe774f1883ddf60c5f0c626629f004"
+    },
+    "1": {
+     "path": "docs/research/extended-stack-pool-reassembly/issue513/reassembled/fold-1/reassembled.json",
+     "sha256": "e7cbf3110ed1aa7e95a18890a1679aed260bc7e93b593321be7fd77c0890ccbf",
+     "auc": 0.9705601887945755,
+     "prediction_sha256": "050044109354ac687934ffdf28b7e1ebdd18b414ac86c5fbfed2bfd76eb7fead"
+    },
+    "2": {
+     "path": "docs/research/extended-stack-pool-reassembly/issue513/reassembled/fold-2/reassembled.json",
+     "sha256": "fc2a381766297a0f551d3841536ce792019a2470f03d5da7e94ea921cb65e1a4",
+     "auc": 0.9704303417039273,
+     "prediction_sha256": "ddc91b916bf3c446a9711845348ec3994c6c5fd4c14b00b4998f31c0e04e65a8"
+    },
+    "3": {
+     "path": "docs/research/extended-stack-pool-reassembly/issue513/reassembled/fold-3/reassembled.json",
+     "sha256": "cb176869cebd212198ba7b3ec66e15e912979f9bf10b8a472cb7f565c93fc467",
+     "auc": 0.9710118898443254,
+     "prediction_sha256": "512307383911f27428412686236ebb4a3473aa993feb51c5906cfa3d4d6067ec"
+    },
+    "4": {
+     "path": "docs/research/extended-stack-pool-reassembly/issue513/reassembled/fold-4/reassembled.json",
+     "sha256": "90fd218912304f479838fc369b0f6e45b0c3d7b74e8800f266a690612c4644e9",
+     "auc": 0.9701340913545267,
+     "prediction_sha256": "d1e7cf81d67e7e037a796065f8f232bec0f1d26d9c8996e4d4f0bdf7e471b514"
+    }
+   }
+  }
+ },
+ "content_sha256": "6fa08f3da32742c969cf5d8727cd4c68f46530eeb97d8a2980db728f62ea3905",
+ "member_set_id": "rpf-v1-6fa08f3da327",
+ "frozen_at": "2026-09-03T23:47:16Z",
+ "spec_sha256": "13302eb32e7bdcc553acf15df514d6f60e51de484efddb614f893ecaa647cf2a"
+}
