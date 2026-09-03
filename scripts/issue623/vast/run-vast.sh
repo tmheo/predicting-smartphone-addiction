@@ -576,7 +576,7 @@ excluded_machines=$(jq -c --argjson extra "$(jq -Rn '[inputs | select(length > 0
 for create_attempt in {1..5}; do
   offer_json=$(
     vast search offers \
-      'num_gpus=4 verified=true rentable=true rented=false reliability>=0.99 gpu_ram>=20 cuda_max_good>=13.0 direct_port_count>=2 duration>1 inet_down>=200 disk_space>=80 cpu_cores_effective>=16' \
+      'num_gpus=4 verified=true rentable=true rented=false reliability>=0.99 gpu_ram>=20 cuda_max_good>=13.0 direct_port_count>=2 duration>1 inet_down>=200 disk_space>=60 cpu_cores_effective>=16' \
       --type on-demand \
       --storage 60 \
       --order dph_total \
@@ -746,14 +746,19 @@ ssh_host=${ssh_endpoint%:*}
 ssh_port=${ssh_endpoint##*:}
 [[ "$ssh_port" =~ ^[0-9]+$ ]]
 known_hosts="$STATE_ROOT/known-hosts"
-host_key_deadline=$(( $(date +%s) + 300 ))
+# SSH 포트가 running 뒤 10분 안에 호스트 키를 내주지 않으면 공급 환경 실패로 보고 장비를 제외한 뒤 다른 호스트로 재시도한다(1회차 대만 장비 139778 사례).
+host_key_deadline=$(( $(date +%s) + 600 ))
 while (( $(date +%s) < host_key_deadline )); do
-  if ssh-keyscan -T 10 -p "$ssh_port" "$ssh_host" >"$known_hosts" 2>/dev/null; then
+  if ssh-keyscan -T 10 -p "$ssh_port" "$ssh_host" >"$known_hosts" 2>/dev/null && test -s "$known_hosts"; then
     break
   fi
   sleep 10
 done
-test -s "$known_hosts"
+if ! test -s "$known_hosts"; then
+  printf '%s\n' "$offer_machine" >>"$EXCLUDED_MACHINES_FILE"
+  record "공급 환경 실패: running 뒤 10분 동안 SSH 포트 \`$ssh_host:$ssh_port\`가 호스트 키를 내주지 않음, 장비 \`$offer_machine\` 제외 후 정리"
+  exit 75
+fi
 
 readonly -a SSH_ARGS=(
   -i "$SSH_KEY"
@@ -806,7 +811,11 @@ for recovery_round in {1..3}; do
   fi
   break
 done
-test "$ssh_authenticated" -eq 1
+if [[ "$ssh_authenticated" -ne 1 ]]; then
+  printf '%s\n' "$offer_machine" >>"$EXCLUDED_MACHINES_FILE"
+  record "공급 환경 실패: SSH 인증 관문 미통과($(tail -c 160 "$STATE_ROOT/ssh-last-output.txt" | tr '\n' ' ')), 장비 \`$offer_machine\` 제외 후 정리"
+  exit 75
+fi
 SSH_READY=1
 record "SSH 인증: 독립 5분 관문 통과, 작업별 호스트 키 고정"
 
