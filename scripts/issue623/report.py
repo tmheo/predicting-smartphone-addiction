@@ -57,20 +57,20 @@ def render(runs: dict[str, dict]) -> str:
             lines.append("")
             continue
         lines.append(
-            "| 실험 | run | seed 42 | seed 43 | seed 44 | 3시드 평균 OOF | 기준 대비 | 분할 부호(시드 평균, 5) | 시드x분할 부호(15) |"
+            "| 실험 | run | seed 42 | seed 43 | seed 44 | 시드 AUC 평균 | 기준 대비 | 시드 평균 예측 OOF | 기준 대비 | 분할 부호(시드 평균, 5) | 시드x분할 부호(15) |"
         )
-        lines.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+        lines.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
         base_seed = {s: base["auc_oof_seed"][s] for s in SEEDS}
         base_mean = sum(base_seed.values()) / len(SEEDS)
         lines.append(
             f"| `{baseline}` (기준) | `{base['main_run_id'][:8]}` | "
             + " | ".join(f"{base_seed[s]:.7f}" for s in SEEDS)
-            + f" | {base_mean:.7f} | - | - | - |"
+            + f" | {base_mean:.7f} | - | {base['auc_oof']:.7f} | - | - | - |"
         )
         for experiment in ladder:
             run = runs.get(experiment)
             if run is None:
-                lines.append(f"| `{experiment}` | (없음) | | | | | | | |")
+                lines.append(f"| `{experiment}` | (없음) | | | | | | | | | |")
                 continue
             seed = {s: run["auc_oof_seed"][s] for s in SEEDS}
             mean = sum(seed.values()) / len(SEEDS)
@@ -83,7 +83,7 @@ def render(runs: dict[str, dict]) -> str:
             lines.append(
                 f"| `{experiment}` | `{run['main_run_id'][:8]}` | "
                 + " | ".join(f"{seed[s]:.7f}" for s in SEEDS)
-                + f" | {mean:.7f} | {mean - base_mean:+.7f} | {signs(fold_deltas)} | {signs(seed_fold_deltas)} |"
+                + f" | {mean:.7f} | {mean - base_mean:+.7f} | {run['auc_oof']:.7f} | {run['auc_oof'] - base['auc_oof']:+.7f} | {signs(fold_deltas)} | {signs(seed_fold_deltas)} |"
             )
         lines.append("")
         lines.append("시드별 기준 대비 차이: " + "; ".join(
