@@ -1,0 +1,101 @@
+{
+  "schema": "reproduction-pool-aux-diagnostics/1",
+  "round_id": "reproduction-pool-ext314/issue624",
+  "precommit_sha256": "6d1b99eb6796da62f7728d51a0ba0208c50a1d08de10bb4a3f3e97194910b42e",
+  "reference": {
+    "name": "reassembled-314",
+    "nested_auc_expected": 0.9703843058098193,
+    "nested_auc_replayed": 0.9703843058098192,
+    "replay_matches": true
+  },
+  "control": {
+    "arm": "control-baseline-reruns",
+    "definition": "기준 팔 + 동결 명세 baseline_reruns 4개(exp117·exp135·exp070·exp139 재실행, 3시드, 새 특성 없음). raw4 단과 같은 크기.",
+    "member_count": 318,
+    "nested_auc": 0.9703837596011672,
+    "delta": -5.462086519747444e-07,
+    "fold_aucs": {
+      "0": 0.9697966009061892,
+      "1": 0.970554854086427,
+      "2": 0.9704199287981381,
+      "3": 0.9710141532768088,
+      "4": 0.9701332583846135
+    },
+    "fold_deltas": {
+      "0": 1.1586105184147044e-05,
+      "1": -5.334708148452272e-06,
+      "2": -1.0412905789181082e-05,
+      "3": 2.2634324834402975e-06,
+      "4": -8.329699131559565e-07
+    },
+    "folds_positive": 2
+  },
+  "bootstrap": {
+    "method": "짝지은 행 재표집(복원 추출, 전체 행 수), 같은 표본으로 기준·평가 팔 AUC를 채점한 차이의 백분위 구간",
+    "resamples": 1000,
+    "seed": 20260904,
+    "elapsed_seconds": 349.6070175410714,
+    "arms": {
+      "ext314-raw4": {
+        "point_delta": 4.111686608632148e-06,
+        "ci95": [
+          2.1649830922731995e-07,
+          8.136477957368382e-06
+        ],
+        "ci90": [
+          8.222653659906154e-07,
+          7.549999239064853e-06
+        ],
+        "bootstrap_mean": 4.173632860618115e-06,
+        "bootstrap_sd": 2.0559116559755775e-06,
+        "fraction_nonpositive": 0.021,
+        "fraction_at_or_above_gate": 0.0
+      },
+      "ext314-cats-te": {
+        "point_delta": 9.032435902556202e-07,
+        "ci95": [
+          -3.305582347110092e-06,
+          4.977620402429882e-06
+        ],
+        "ci90": [
+          -2.5067679046086867e-06,
+          4.553732475237604e-06
+        ],
+        "bootstrap_mean": 8.843586452920161e-07,
+        "bootstrap_sd": 2.124220625377891e-06,
+        "fraction_nonpositive": 0.344,
+        "fraction_at_or_above_gate": 0.0
+      },
+      "ext314-ratio-round": {
+        "point_delta": 7.1274038316859745e-06,
+        "ci95": [
+          1.1579780387294126e-06,
+          1.2933220321476036e-05
+        ],
+        "ci90": [
+          2.392912721077556e-06,
+          1.2093138021507237e-05
+        ],
+        "bootstrap_mean": 7.1567631203901526e-06,
+        "bootstrap_sd": 2.9528344274389867e-06,
+        "fraction_nonpositive": 0.007,
+        "fraction_at_or_above_gate": 0.0
+      },
+      "control-baseline-reruns": {
+        "point_delta": -5.462086519747444e-07,
+        "ci95": [
+          -5.70064135916315e-06,
+          4.4547446504450394e-06
+        ],
+        "ci90": [
+          -5.008060801708902e-06,
+          3.7275333126529637e-06
+        ],
+        "bootstrap_mean": -4.891002332862993e-07,
+        "bootstrap_sd": 2.5882914374988194e-06,
+        "fraction_nonpositive": 0.567,
+        "fraction_at_or_above_gate": 0.0
+      }
+    }
+  }
+}

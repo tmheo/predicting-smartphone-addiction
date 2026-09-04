@@ -1,0 +1,131 @@
+{
+  "arms": {
+    "own36-cats-te": {
+      "composition_sha256": "2293308a31d6aed426c4ec95adf6f95210485c83b6574abeac1aaf007818d389",
+      "fold_aucs": {
+        "0": 0.9693231243724271,
+        "1": 0.9699910863613399,
+        "2": 0.9699673782951928,
+        "3": 0.9704586867493437,
+        "4": 0.9696535377419883
+      },
+      "member_count": 44,
+      "nested_auc": 0.9698787631632569,
+      "prediction_sha256": "27e637bff7426b769581cb15fb01bed7a0e7c9347f4976fd3c36a678894cb531",
+      "verdict": {
+        "delta": -4.112650744958479e-06,
+        "delta_minus_gate": -2.411265074495848e-05,
+        "fold_deltas": {
+          "0": -6.86336869215598e-06,
+          "1": -1.6357302119462958e-06,
+          "2": -6.357959264402524e-06,
+          "3": -1.4342768555053453e-06,
+          "4": -4.271920324927514e-06
+        },
+        "folds_positive": 0,
+        "gate": {
+          "delta_required": 2e-05,
+          "folds_required_positive": 5
+        },
+        "gate_delta_passes": false,
+        "gate_folds_passes": false,
+        "passes_gate": false,
+        "status": "fail",
+        "undecidable_reason": null
+      }
+    },
+    "own36-ratio-round": {
+      "composition_sha256": "dcc70204b5ec40d7b1765be09a8c03f268a9891223dc261ec359adb9bd03c2ab",
+      "fold_aucs": {
+        "0": 0.969334685613091,
+        "1": 0.9700145998245598,
+        "2": 0.9699773801752423,
+        "3": 0.9704807091025194,
+        "4": 0.9696807821758291
+      },
+      "member_count": 48,
+      "nested_auc": 0.9698976318203699,
+      "prediction_sha256": "e01bddb14701361fb92a1f54bccbbd2142572648ceee19af13524fe7a051c89c",
+      "verdict": {
+        "delta": 1.4756006368021879e-05,
+        "delta_minus_gate": -5.243993631978123e-06,
+        "fold_deltas": {
+          "0": 4.6978719717705175e-06,
+          "1": 2.1877733007991118e-05,
+          "2": 3.6439207851124422e-06,
+          "3": 2.0588076320215976e-05,
+          "4": 2.2972513515906456e-05
+        },
+        "folds_positive": 5,
+        "gate": {
+          "delta_required": 2e-05,
+          "folds_required_positive": 5
+        },
+        "gate_delta_passes": false,
+        "gate_folds_passes": true,
+        "passes_gate": false,
+        "status": "fail",
+        "undecidable_reason": null
+      }
+    },
+    "own36-raw4": {
+      "composition_sha256": "e9f8d2756e9aa870d23148ee011b7a9785b7842cfdc5262b9b2476f013e19c2d",
+      "fold_aucs": {
+        "0": 0.969324481772246,
+        "1": 0.9699958778558413,
+        "2": 0.9699655025462466,
+        "3": 0.9704651616733401,
+        "4": 0.9696500957469103
+      },
+      "member_count": 40,
+      "nested_auc": 0.9698802243881123,
+      "prediction_sha256": "cecb0f10d16a15bfba954d03b4a533a2928c71b139155ab4f2dc61dbc967e4e8",
+      "verdict": {
+        "delta": -2.651425889621528e-06,
+        "delta_minus_gate": -2.265142588962153e-05,
+        "fold_deltas": {
+          "0": -5.505968873276146e-06,
+          "1": 3.1557642894419757e-06,
+          "2": -8.233708210569901e-06,
+          "3": 5.040647140908128e-06,
+          "4": -7.713915402884908e-06
+        },
+        "folds_positive": 2,
+        "gate": {
+          "delta_required": 2e-05,
+          "folds_required_positive": 5
+        },
+        "gate_delta_passes": false,
+        "gate_folds_passes": false,
+        "passes_gate": false,
+        "status": "fail",
+        "undecidable_reason": null
+      }
+    }
+  },
+  "compared_at": "2026-09-04T00:09:10Z",
+  "elapsed_seconds_total": 912.0314989970066,
+  "parent_sealed_sha256": "4ddf9145c1a964913ce7a3e9ae1517ccea6ef9e42f2fd9da5d60afdeccb38552",
+  "reference": {
+    "fold_aucs": {
+      "0": 0.9693299877411192,
+      "1": 0.9699927220915519,
+      "2": 0.9699737362544572,
+      "3": 0.9704601210261992,
+      "4": 0.9696578096623132
+    },
+    "name": "pool36-current",
+    "nested_auc": 0.9698828758140019,
+    "values_source": "docs/research/reproduction-pool-freeze/rpf-v1-6fa08f3da327.json#reference_arms/own36 (MLflow 223055f4 pool36_full-oof-evidence.json proposal, 이슈 514 pool36_full)"
+  },
+  "round_id": "reproduction-pool-own36/issue624",
+  "rows_scored": 691369,
+  "schema": "reproduction-pool-judgment/comparison/1",
+  "sealed_sha256": "8338d1663b845a1927881adc95342a7f0973ecb6f8750625a557a4a17c29fcfe",
+  "selfcheck": {
+    "grade": "all-folds-replay",
+    "passed": true,
+    "records": 5,
+    "source": "docs/research/reproduction-pool-freeze/rpf-v1-6fa08f3da327.json#reference_arms/own36/fold_aucs (MLflow 223055f4 근거 산출물의 분할별 AUC, 예측 해시는 기록에 없어 AUC만 대조)"
+  }
+}

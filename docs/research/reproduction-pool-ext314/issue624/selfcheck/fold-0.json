@@ -1,0 +1,20 @@
+{
+  "actual": {
+    "auc": 0.9697850148010051,
+    "prediction_sha256": "670a89821d7a2993b65055085936877f31fe774f1883ddf60c5f0c626629f004"
+  },
+  "elapsed_seconds": 742.7188816659618,
+  "expected": {
+    "auc": 0.9697850148010051,
+    "prediction_sha256": "670a89821d7a2993b65055085936877f31fe774f1883ddf60c5f0c626629f004"
+  },
+  "finished_at": "2026-09-04T00:21:44Z",
+  "fold": 0,
+  "grade": "sealed-fold-replay",
+  "matches": true,
+  "parent_sealed_sha256": "6d1b99eb6796da62f7728d51a0ba0208c50a1d08de10bb4a3f3e97194910b42e",
+  "rows": 138274,
+  "schema": "reproduction-pool-judgment/selfcheck/1",
+  "sealed_sha256": "5dbb0c4482d28d92d658876312b494c03f9ce3ed1d1f89301593c931cbafd255",
+  "source": "docs/research/reproduction-pool-freeze/rpf-v1-6fa08f3da327.json#reference_arms/ext314/sealed_folds/0 (이슈 513 docs/research/extended-stack-pool-reassembly/issue513/reassembled/fold-0/reassembled.json)"
+}

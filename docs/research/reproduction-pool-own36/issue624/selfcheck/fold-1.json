@@ -1,0 +1,20 @@
+{
+  "actual": {
+    "auc": 0.9699927220915519,
+    "prediction_sha256": "aad03cfd9c6dc3e5cb5f91845b05c1eb53dd32fe8521f5fddb7a31bc87322f38"
+  },
+  "elapsed_seconds": 50.588719874969684,
+  "expected": {
+    "auc": 0.9699927220915519,
+    "prediction_sha256": null
+  },
+  "finished_at": "2026-09-04T00:02:20Z",
+  "fold": 1,
+  "grade": "all-folds-replay",
+  "matches": true,
+  "parent_sealed_sha256": "4ddf9145c1a964913ce7a3e9ae1517ccea6ef9e42f2fd9da5d60afdeccb38552",
+  "rows": 138274,
+  "schema": "reproduction-pool-judgment/selfcheck/1",
+  "sealed_sha256": "0ec01516b052b72cf0c6aaadde001a3bd66dcd43f79ea3e791bdc5fa946142b4",
+  "source": "docs/research/reproduction-pool-freeze/rpf-v1-6fa08f3da327.json#reference_arms/own36/fold_aucs (MLflow 223055f4 근거 산출물의 분할별 AUC, 예측 해시는 기록에 없어 AUC만 대조)"
+}

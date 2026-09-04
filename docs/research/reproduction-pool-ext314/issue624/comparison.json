@@ -1,0 +1,131 @@
+{
+  "arms": {
+    "ext314-cats-te": {
+      "composition_sha256": "5413bec4a10b121c9c3acaeda02432a5381d2faef520db957a2d7852d53e1702",
+      "fold_aucs": {
+        "0": 0.9697974447775533,
+        "1": 0.9705575645728318,
+        "2": 0.9704188761155494,
+        "3": 0.9710096865433856,
+        "4": 0.9701424707832047
+      },
+      "member_count": 322,
+      "nested_auc": 0.9703852090534094,
+      "prediction_sha256": "571126cb92e88e43cc300ce8b9e74ce8002d801ee44bcee537806a0dc7029651",
+      "verdict": {
+        "delta": 9.032435901445979e-07,
+        "delta_minus_gate": -1.9096756409855404e-05,
+        "fold_deltas": {
+          "0": 1.242997654815614e-05,
+          "1": -2.6242217436855952e-06,
+          "2": -1.1465588377834735e-05,
+          "3": -2.203300939807029e-06,
+          "4": 8.379428678040313e-06
+        },
+        "folds_positive": 2,
+        "gate": {
+          "delta_required": 2e-05,
+          "folds_required_positive": 5
+        },
+        "gate_delta_passes": false,
+        "gate_folds_passes": false,
+        "passes_gate": false,
+        "status": "fail",
+        "undecidable_reason": null
+      }
+    },
+    "ext314-ratio-round": {
+      "composition_sha256": "cadc041574b968332c3c5b5990210f5f6dbb4e76019f75396acea01827f9d4c3",
+      "fold_aucs": {
+        "0": 0.9697959011475535,
+        "1": 0.9705689388221564,
+        "2": 0.9704299240814782,
+        "3": 0.9710200877780734,
+        "4": 0.9701423116993986
+      },
+      "member_count": 326,
+      "nested_auc": 0.9703914332136508,
+      "prediction_sha256": "d73b5dd465721b628599535e578f8fad775bdb16d64f801d0aa3fc24f89304af",
+      "verdict": {
+        "delta": 7.127403831574952e-06,
+        "delta_minus_gate": -1.287259616842505e-05,
+        "fold_deltas": {
+          "0": 1.0886346548444337e-05,
+          "1": 8.750027580939346e-06,
+          "2": -4.176224490670677e-07,
+          "3": 8.19793374795541e-06,
+          "4": 8.220344871912033e-06
+        },
+        "folds_positive": 4,
+        "gate": {
+          "delta_required": 2e-05,
+          "folds_required_positive": 5
+        },
+        "gate_delta_passes": false,
+        "gate_folds_passes": false,
+        "passes_gate": false,
+        "status": "fail",
+        "undecidable_reason": null
+      }
+    },
+    "ext314-raw4": {
+      "composition_sha256": "27103823ae11545515e441031f767ed5b87e1d8328f038f4811f76b24d2704ca",
+      "fold_aucs": {
+        "0": 0.9697989886612728,
+        "1": 0.9705606777122298,
+        "2": 0.9704236896836551,
+        "3": 0.9710151214707731,
+        "4": 0.9701436074585661
+      },
+      "member_count": 318,
+      "nested_auc": 0.9703884174964278,
+      "prediction_sha256": "23fbea220f64ab2c1b83e1de608a1129b0c46112dd41c2a05ba8e46faf3a49ab",
+      "verdict": {
+        "delta": 4.111686608521126e-06,
+        "delta_minus_gate": -1.5888313391478876e-05,
+        "fold_deltas": {
+          "0": 1.3973860267690874e-05,
+          "1": 4.889176542510754e-07,
+          "2": -6.652020272168713e-06,
+          "3": 3.231626447663949e-06,
+          "4": 9.516104039430928e-06
+        },
+        "folds_positive": 4,
+        "gate": {
+          "delta_required": 2e-05,
+          "folds_required_positive": 5
+        },
+        "gate_delta_passes": false,
+        "gate_folds_passes": false,
+        "passes_gate": false,
+        "status": "fail",
+        "undecidable_reason": null
+      }
+    }
+  },
+  "compared_at": "2026-09-04T01:27:33Z",
+  "elapsed_seconds_total": 12008.19410491921,
+  "parent_sealed_sha256": "6d1b99eb6796da62f7728d51a0ba0208c50a1d08de10bb4a3f3e97194910b42e",
+  "reference": {
+    "fold_aucs": {
+      "0": 0.9697850148010051,
+      "1": 0.9705601887945755,
+      "2": 0.9704303417039273,
+      "3": 0.9710118898443254,
+      "4": 0.9701340913545267
+    },
+    "name": "reassembled-314",
+    "nested_auc": 0.9703843058098193,
+    "values_source": "docs/research/reproduction-pool-freeze/rpf-v1-6fa08f3da327.json#reference_arms/ext314 (이슈 513 comparison.json reassembled)"
+  },
+  "round_id": "reproduction-pool-ext314/issue624",
+  "rows_scored": 691369,
+  "schema": "reproduction-pool-judgment/comparison/1",
+  "sealed_sha256": "a6013dd48d9abd545dfcbba71c1025f4c65f3b0c32861db6f9c23186fa48f641",
+  "selfcheck": {
+    "grade": "sealed-fold-replay",
+    "passed": true,
+    "records": 1,
+    "source": "docs/research/reproduction-pool-freeze/rpf-v1-6fa08f3da327.json#reference_arms/ext314/sealed_folds/0 (이슈 513 docs/research/extended-stack-pool-reassembly/issue513/reassembled/fold-0/reassembled.json)"
+  }
+}
