@@ -1,26 +1,53 @@
-<mxfile host="Electron" version="28.1.2">
-<diagram id="screen-06-risk-order-answer" name="Page-1">
-<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
-  <root>
-    <mxCell id="0"/>
-    <mxCell id="1" parent="0"/>
-    <mxCell id="frame" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="1240" height="650" as="geometry"/></mxCell>
-    <mxCell id="2" value="A 순서  높음 → 낮음" style="text;html=1;fontStyle=1;fontSize=28;align=center;" vertex="1" parent="1"><mxGeometry x="70" y="60" width="500" height="50" as="geometry"/></mxCell>
-    <mxCell id="3" value="B 순서  높음 → 낮음" style="text;html=1;fontStyle=1;fontSize=28;align=center;" vertex="1" parent="1"><mxGeometry x="710" y="60" width="500" height="50" as="geometry"/></mxCell>
-    <mxCell id="4" value="가&#xa;중독" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#c2410c;fontColor=#9a3412;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="80" y="170" width="110" height="100" as="geometry"/></mxCell>
-    <mxCell id="5" value="나&#xa;비중독" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;fontColor=#334155;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="210" y="170" width="110" height="100" as="geometry"/></mxCell>
-    <mxCell id="6" value="다&#xa;중독" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#c2410c;fontColor=#9a3412;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="340" y="170" width="110" height="100" as="geometry"/></mxCell>
-    <mxCell id="7" value="라&#xa;비중독" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;fontColor=#334155;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="470" y="170" width="110" height="100" as="geometry"/></mxCell>
-    <mxCell id="8" value="가&#xa;중독" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#c2410c;fontColor=#9a3412;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="720" y="170" width="110" height="100" as="geometry"/></mxCell>
-    <mxCell id="9" value="다&#xa;중독" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#c2410c;fontColor=#9a3412;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="850" y="170" width="110" height="100" as="geometry"/></mxCell>
-    <mxCell id="10" value="나&#xa;비중독" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;fontColor=#334155;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="980" y="170" width="110" height="100" as="geometry"/></mxCell>
-    <mxCell id="11" value="라&#xa;비중독" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;fontColor=#334155;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="1110" y="170" width="110" height="100" as="geometry"/></mxCell>
-    <mxCell id="12" value="○  ○  ×  ○" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7ed;strokeColor=#c2410c;fontColor=#9a3412;fontStyle=1;fontSize=29;" vertex="1" parent="1"><mxGeometry x="130" y="350" width="400" height="80" as="geometry"/></mxCell>
-    <mxCell id="13" value="○  ○  ○  ○" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#15803d;fontColor=#14532d;fontStyle=1;fontSize=29;" vertex="1" parent="1"><mxGeometry x="770" y="350" width="400" height="80" as="geometry"/></mxCell>
-    <mxCell id="14" value="네 쌍 중 3쌍" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffedd5;strokeColor=#c2410c;fontColor=#9a3412;fontStyle=1;fontSize=30;" vertex="1" parent="1"><mxGeometry x="180" y="480" width="300" height="100" as="geometry"/></mxCell>
-    <mxCell id="15" value="네 쌍 중 4쌍" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#15803d;fontColor=#14532d;fontStyle=1;fontSize=30;" vertex="1" parent="1"><mxGeometry x="820" y="480" width="300" height="100" as="geometry"/></mxCell>
-    <mxCell id="16" value="B가 더 좋은 위험 순서입니다" style="text;html=1;fontStyle=1;fontSize=28;align=center;fontColor=#14532d;" vertex="1" parent="1"><mxGeometry x="710" y="610" width="520" height="50" as="geometry"/></mxCell>
-  </root>
-</mxGraphModel>
-</diagram>
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="Electron">
+  <diagram id="retrospective-roc-auc-pairs" name="Page-1">
+    <mxGraphModel page="1" pageWidth="1200" pageHeight="850" background="#ffffff" adaptiveColors="auto">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" parent="1" vertex="1" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=0;fontColor=#172b4d;fillColor=#ffffff;strokeColor=none;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="0" y="0" width="1200" height="850" />
+        </mxCell>
+        <mxCell id="3" parent="1" vertex="1" value="AUC: 중독인 사람에게 더 높은 점수를 주었나요?" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=34;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="25" width="1120" height="55" />
+        </mxCell>
+        <mxCell id="4" parent="1" vertex="1" value="중독 2명과 비중독 2명으로 비교해 봅니다. 점수가 클수록 위험하다고 본 것입니다." style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=22;fontStyle=0;fontColor=#475569;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="85" width="1120" height="50" />
+        </mxCell>
+        <mxCell id="5" parent="1" vertex="1" value="&lt;b&gt;가 · 중독&lt;/b&gt;&lt;br&gt;모델 점수 0.9" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=26;fontStyle=0;fontColor=#172b4d;fillColor=#fff7ed;strokeColor=#fdba74;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="40" y="155" width="250" height="100" />
+        </mxCell>
+        <mxCell id="6" parent="1" vertex="1" value="&lt;b&gt;나 · 비중독&lt;/b&gt;&lt;br&gt;모델 점수 0.6" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=26;fontStyle=0;fontColor=#172b4d;fillColor=#eff6ff;strokeColor=#93c5fd;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="330" y="155" width="250" height="100" />
+        </mxCell>
+        <mxCell id="7" parent="1" vertex="1" value="&lt;b&gt;다 · 중독&lt;/b&gt;&lt;br&gt;모델 점수 0.4" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=26;fontStyle=0;fontColor=#172b4d;fillColor=#fff7ed;strokeColor=#fdba74;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="620" y="155" width="250" height="100" />
+        </mxCell>
+        <mxCell id="8" parent="1" vertex="1" value="&lt;b&gt;라 · 비중독&lt;/b&gt;&lt;br&gt;모델 점수 0.2" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=26;fontStyle=0;fontColor=#172b4d;fillColor=#eff6ff;strokeColor=#93c5fd;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="910" y="155" width="250" height="100" />
+        </mxCell>
+        <mxCell id="9" parent="1" vertex="1" value="중독 1명 + 비중독 1명을 고르면 가능한 비교는 네 번" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=27;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="285" width="1120" height="50" />
+        </mxCell>
+        <mxCell id="10" parent="1" vertex="1" value="&lt;b&gt;가(중독) vs 나(비중독)&lt;/b&gt;&lt;br&gt;0.9 &gt; 0.6　 ·　 맞힘" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=25;fontStyle=0;fontColor=#172b4d;fillColor=#f0fdf4;strokeColor=#86efac;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="40" y="355" width="540" height="95" />
+        </mxCell>
+        <mxCell id="11" parent="1" vertex="1" value="&lt;b&gt;가(중독) vs 라(비중독)&lt;/b&gt;&lt;br&gt;0.9 &gt; 0.2　 ·　 맞힘" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=25;fontStyle=0;fontColor=#172b4d;fillColor=#f0fdf4;strokeColor=#86efac;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="620" y="355" width="540" height="95" />
+        </mxCell>
+        <mxCell id="12" parent="1" vertex="1" value="&lt;b&gt;다(중독) vs 나(비중독)&lt;/b&gt;&lt;br&gt;0.4 &lt; 0.6　 ·　 틀림" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=25;fontStyle=0;fontColor=#172b4d;fillColor=#fff1f2;strokeColor=#fda4af;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="40" y="475" width="540" height="95" />
+        </mxCell>
+        <mxCell id="13" parent="1" vertex="1" value="&lt;b&gt;다(중독) vs 라(비중독)&lt;/b&gt;&lt;br&gt;0.4 &gt; 0.2　 ·　 맞힘" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=25;fontStyle=0;fontColor=#172b4d;fillColor=#f0fdf4;strokeColor=#86efac;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="620" y="475" width="540" height="95" />
+        </mxCell>
+        <mxCell id="14" parent="1" vertex="1" value="네 번 중 세 번 맞힘　 →　 &lt;b&gt;AUC = 3 ÷ 4 = 0.75&lt;/b&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=31;fontStyle=0;fontColor=#ffffff;fillColor=#172b4d;strokeColor=#172b4d;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="40" y="630" width="1120" height="90" />
+        </mxCell>
+        <mxCell id="15" parent="1" vertex="1" value="사람 75%를 맞혔다는 뜻이 아닙니다. 서로 다른 정답을 가진 두 사람의 순서를 비교합니다." style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=22;fontStyle=0;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="745" width="1120" height="50" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
 </mxfile>

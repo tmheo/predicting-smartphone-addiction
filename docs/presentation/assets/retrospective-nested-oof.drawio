@@ -1,104 +1,77 @@
-<mxfile host="Electron" version="28.1.2">
-<diagram id="retrospective-nested-oof" name="Page-1">
-<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
-  <root>
-    <mxCell id="0"/>
-    <mxCell id="1" parent="0"/>
-    <mxCell id="title" value="모델마다 이미 있는 OOF 예측에서 fold 3을 봉인하고 앙상블을 고릅니다" style="text;html=1;fontStyle=1;fontSize=24;align=left;" vertex="1" parent="1">
-      <mxGeometry x="40" y="20" width="1000" height="50" as="geometry"/>
-    </mxCell>
-    <mxCell id="h1" value="fold 1" style="text;html=1;fontStyle=1;fontSize=18;align=center;" vertex="1" parent="1">
-      <mxGeometry x="260" y="80" width="130" height="30" as="geometry"/>
-    </mxCell>
-    <mxCell id="h2" value="fold 2" style="text;html=1;fontStyle=1;fontSize=18;align=center;" vertex="1" parent="1">
-      <mxGeometry x="410" y="80" width="130" height="30" as="geometry"/>
-    </mxCell>
-    <mxCell id="h3" value="fold 3 봉인" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontStyle=1;fontSize=18;" vertex="1" parent="1">
-      <mxGeometry x="560" y="76" width="130" height="38" as="geometry"/>
-    </mxCell>
-    <mxCell id="h4" value="fold 4" style="text;html=1;fontStyle=1;fontSize=18;align=center;" vertex="1" parent="1">
-      <mxGeometry x="710" y="80" width="130" height="30" as="geometry"/>
-    </mxCell>
-    <mxCell id="h5" value="fold 5" style="text;html=1;fontStyle=1;fontSize=18;align=center;" vertex="1" parent="1">
-      <mxGeometry x="860" y="80" width="130" height="30" as="geometry"/>
-    </mxCell>
-    <mxCell id="r1" value="LightGBM" style="text;html=1;fontStyle=1;fontSize=18;align=right;verticalAlign=middle;" vertex="1" parent="1">
-      <mxGeometry x="40" y="124" width="200" height="44" as="geometry"/>
-    </mxCell>
-    <mxCell id="r2" value="XGBoost" style="text;html=1;fontStyle=1;fontSize=18;align=right;verticalAlign=middle;" vertex="1" parent="1">
-      <mxGeometry x="40" y="180" width="200" height="44" as="geometry"/>
-    </mxCell>
-    <mxCell id="r3" value="CatBoost" style="text;html=1;fontStyle=1;fontSize=18;align=right;verticalAlign=middle;" vertex="1" parent="1">
-      <mxGeometry x="40" y="236" width="200" height="44" as="geometry"/>
-    </mxCell>
-    <mxCell id="r4" value="Lookup-Transformer" style="text;html=1;fontStyle=1;fontSize=18;align=right;verticalAlign=middle;" vertex="1" parent="1">
-      <mxGeometry x="40" y="292" width="200" height="44" as="geometry"/>
-    </mxCell>
-    <mxCell id="r5" value="… 모델 N개" style="text;html=1;fontStyle=1;fontSize=18;align=right;verticalAlign=middle;fontColor=#475569;" vertex="1" parent="1">
-      <mxGeometry x="40" y="348" width="200" height="44" as="geometry"/>
-    </mxCell>
-    <mxCell id="c11" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="260" y="124" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c12" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="410" y="124" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c13" value="OOF" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontSize=16;" vertex="1" parent="1"><mxGeometry x="560" y="124" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c14" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="710" y="124" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c15" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="860" y="124" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c21" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="260" y="180" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c22" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="410" y="180" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c23" value="OOF" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontSize=16;" vertex="1" parent="1"><mxGeometry x="560" y="180" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c24" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="710" y="180" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c25" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="860" y="180" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c31" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="260" y="236" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c32" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="410" y="236" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c33" value="OOF" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontSize=16;" vertex="1" parent="1"><mxGeometry x="560" y="236" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c34" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="710" y="236" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c35" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="860" y="236" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c41" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="260" y="292" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c42" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="410" y="292" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c43" value="OOF" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontSize=16;" vertex="1" parent="1"><mxGeometry x="560" y="292" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c44" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="710" y="292" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c45" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;" vertex="1" parent="1"><mxGeometry x="860" y="292" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c51" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;dashed=1;" vertex="1" parent="1"><mxGeometry x="260" y="348" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c52" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;dashed=1;" vertex="1" parent="1"><mxGeometry x="410" y="348" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c53" value="OOF" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontSize=16;dashed=1;" vertex="1" parent="1"><mxGeometry x="560" y="348" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c54" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;dashed=1;" vertex="1" parent="1"><mxGeometry x="710" y="348" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="c55" value="OOF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontSize=16;dashed=1;" vertex="1" parent="1"><mxGeometry x="860" y="348" width="130" height="44" as="geometry"/></mxCell>
-    <mxCell id="note1" value="모델마다 고정 5-fold로 한 번 만들어 둔 OOF 예측 (다시 학습하지 않음)" style="text;html=1;fontSize=16;fontColor=#475569;align=left;" vertex="1" parent="1">
-      <mxGeometry x="260" y="400" width="740" height="30" as="geometry"/>
-    </mxCell>
-    <mxCell id="lblA" value="선택에 사용" style="text;html=1;fontStyle=1;fontSize=16;fontColor=#2563eb;align=center;" vertex="1" parent="1">
-      <mxGeometry x="260" y="430" width="280" height="30" as="geometry"/>
-    </mxCell>
-    <mxCell id="lblC" value="평가에만 사용" style="text;html=1;fontStyle=1;fontSize=16;fontColor=#0f766e;align=center;" vertex="1" parent="1">
-      <mxGeometry x="560" y="430" width="130" height="30" as="geometry"/>
-    </mxCell>
-    <mxCell id="lblB" value="선택에 사용" style="text;html=1;fontStyle=1;fontSize=16;fontColor=#2563eb;align=center;" vertex="1" parent="1">
-      <mxGeometry x="710" y="430" width="280" height="30" as="geometry"/>
-    </mxCell>
-    <mxCell id="boxA" value="fold 1, 2, 4, 5 행의&#xa;모델 N개 OOF 예측과 정답" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontStyle=1;fontSize=18;" vertex="1" parent="1">
-      <mxGeometry x="40" y="500" width="340" height="90" as="geometry"/>
-    </mxCell>
-    <mxCell id="boxB" value="어떤 모델을 넣을지 고르고&#xa;합치는 가중치를 맞춤" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;fontStyle=1;fontSize=18;" vertex="1" parent="1">
-      <mxGeometry x="470" y="500" width="300" height="90" as="geometry"/>
-    </mxCell>
-    <mxCell id="boxC" value="fold 3 행의 OOF에 적용&#xa;→ fold 3 앙상블 예측" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontStyle=1;fontSize=18;" vertex="1" parent="1">
-      <mxGeometry x="860" y="500" width="300" height="90" as="geometry"/>
-    </mxCell>
-    <mxCell id="eAB" value="안쪽 선택" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=2;fontSize=16;" edge="1" source="boxA" target="boxB" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="eBC" value="적용" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#0f766e;strokeWidth=2;fontSize=16;" edge="1" source="boxB" target="boxC" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="rep" value="봉인할 fold를 1부터 5까지 바꿔 가며 반복" style="text;html=1;fontStyle=1;fontSize=18;align=left;" vertex="1" parent="1">
-      <mxGeometry x="40" y="630" width="500" height="30" as="geometry"/>
-    </mxCell>
-    <mxCell id="p1" value="앙상블 예측&#xa;fold 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontSize=15;" vertex="1" parent="1"><mxGeometry x="40" y="670" width="130" height="56" as="geometry"/></mxCell>
-    <mxCell id="p2" value="앙상블 예측&#xa;fold 2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontSize=15;" vertex="1" parent="1"><mxGeometry x="190" y="670" width="130" height="56" as="geometry"/></mxCell>
-    <mxCell id="p3" value="앙상블 예측&#xa;fold 3" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontStyle=1;fontSize=15;" vertex="1" parent="1"><mxGeometry x="340" y="670" width="130" height="56" as="geometry"/></mxCell>
-    <mxCell id="p4" value="앙상블 예측&#xa;fold 4" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontSize=15;" vertex="1" parent="1"><mxGeometry x="490" y="670" width="130" height="56" as="geometry"/></mxCell>
-    <mxCell id="p5" value="앙상블 예측&#xa;fold 5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontSize=15;" vertex="1" parent="1"><mxGeometry x="640" y="670" width="130" height="56" as="geometry"/></mxCell>
-    <mxCell id="result" value="다섯 조각을 이어 붙여 채점&#xa;= nested OOF AUC" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f766e;strokeColor=#115e59;fontColor=#ffffff;fontStyle=1;fontSize=20;" vertex="1" parent="1">
-      <mxGeometry x="860" y="655" width="300" height="86" as="geometry"/>
-    </mxCell>
-    <mxCell id="eCp3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#0f766e;strokeWidth=2;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="boxC" target="p3" parent="1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1010" y="620"/><mxPoint x="405" y="620"/></Array></mxGeometry></mxCell>
-    <mxCell id="eP5R" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#0f766e;strokeWidth=2;" edge="1" source="p5" target="result" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-  </root>
-</mxGraphModel>
-</diagram>
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="Electron">
+  <diagram id="retrospective-nested-oof" name="Page-1">
+    <mxGraphModel page="1" pageWidth="1200" pageHeight="1050" background="#ffffff" adaptiveColors="auto">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" parent="1" vertex="1" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=0;fontColor=#172b4d;fillColor=#ffffff;strokeColor=none;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="0" y="0" width="1200" height="1050" />
+        </mxCell>
+        <mxCell id="3" parent="1" vertex="1" value="nested OOF: 조합을 고를 때도 확인용 정답은 남겨 둡니다" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=34;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="25" width="1120" height="55" />
+        </mxCell>
+        <mxCell id="4" parent="1" vertex="1" value="준비물: 모델별로 이미 만들어 둔 OOF 예측 + 정답. 모델을 다시 학습하지는 않습니다." style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=22;fontStyle=0;fontColor=#475569;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="85" width="1120" height="50" />
+        </mxCell>
+        <mxCell id="5" parent="1" vertex="1" value="예: 이번에는 3번 묶음을 조합의 최종 확인용으로 사용" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=26;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="150" width="1120" height="50" />
+        </mxCell>
+        <mxCell id="6" parent="1" vertex="1" value="&lt;b&gt;1번 묶음&lt;/b&gt;&lt;br&gt;조합 선택에 사용" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=22;fontStyle=0;fontColor=#172b4d;fillColor=#eff6ff;strokeColor=#93c5fd;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="40" y="225" width="208" height="95" />
+        </mxCell>
+        <mxCell id="7" parent="1" vertex="1" value="&lt;b&gt;2번 묶음&lt;/b&gt;&lt;br&gt;조합 선택에 사용" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=22;fontStyle=0;fontColor=#172b4d;fillColor=#eff6ff;strokeColor=#93c5fd;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="268" y="225" width="208" height="95" />
+        </mxCell>
+        <mxCell id="8" parent="1" vertex="1" value="&lt;b&gt;3번 묶음&lt;/b&gt;&lt;br&gt;확인용 정답 가림" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=22;fontStyle=0;fontColor=#172b4d;fillColor=#fff7ed;strokeColor=#fb923c;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="496" y="225" width="208" height="95" />
+        </mxCell>
+        <mxCell id="9" parent="1" vertex="1" value="&lt;b&gt;4번 묶음&lt;/b&gt;&lt;br&gt;조합 선택에 사용" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=22;fontStyle=0;fontColor=#172b4d;fillColor=#eff6ff;strokeColor=#93c5fd;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="724" y="225" width="208" height="95" />
+        </mxCell>
+        <mxCell id="10" parent="1" vertex="1" value="&lt;b&gt;5번 묶음&lt;/b&gt;&lt;br&gt;조합 선택에 사용" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=22;fontStyle=0;fontColor=#172b4d;fillColor=#eff6ff;strokeColor=#93c5fd;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="952" y="225" width="208" height="95" />
+        </mxCell>
+        <mxCell id="11" parent="1" vertex="1" value="&lt;b&gt;1. 1·2·4·5번에서 고르기&lt;/b&gt;&lt;br&gt;&lt;br&gt;예측과 정답을 비교해&lt;br&gt;넣을 모델과 반영 비중 선택" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=25;fontStyle=0;fontColor=#172b4d;fillColor=#eff6ff;strokeColor=#93c5fd;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="40" y="390" width="340" height="190" />
+        </mxCell>
+        <mxCell id="12" parent="1" vertex="1" value="&lt;b&gt;2. 조합 확정&lt;/b&gt;&lt;br&gt;&lt;br&gt;예: A 60% + B 40%&lt;br&gt;비중은 설명용 예시" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=25;fontStyle=0;fontColor=#172b4d;fillColor=#f0fdf4;strokeColor=#86efac;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="430" y="390" width="340" height="190" />
+        </mxCell>
+        <mxCell id="13" parent="1" vertex="1" value="&lt;b&gt;3. 3번에 그대로 적용&lt;/b&gt;&lt;br&gt;&lt;br&gt;3번의 OOF 예측을 합침&lt;br&gt;3번 결과로 조합 수정 안 함" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=0;fontColor=#172b4d;fillColor=#fff7ed;strokeColor=#fb923c;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="820" y="390" width="340" height="190" />
+        </mxCell>
+        <mxCell id="14" parent="1" edge="1" source="11" target="12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#64748b;strokeWidth=3;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="15" parent="1" edge="1" source="12" target="13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#64748b;strokeWidth=3;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="16" parent="1" vertex="1" value="확인용을 1번부터 5번까지 바꾸어, 위 과정을 다섯 번 반복" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=27;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="640" width="1120" height="50" />
+        </mxCell>
+        <mxCell id="17" parent="1" vertex="1" value="1번의&lt;br&gt;조합 예측" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=0;fontColor=#172b4d;fillColor=#fff7ed;strokeColor=#fb923c;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="40" y="720" width="208" height="80" />
+        </mxCell>
+        <mxCell id="18" parent="1" vertex="1" value="2번의&lt;br&gt;조합 예측" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=0;fontColor=#172b4d;fillColor=#fff7ed;strokeColor=#fb923c;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="268" y="720" width="208" height="80" />
+        </mxCell>
+        <mxCell id="19" parent="1" vertex="1" value="3번의&lt;br&gt;조합 예측" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=0;fontColor=#172b4d;fillColor=#fff7ed;strokeColor=#fb923c;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="496" y="720" width="208" height="80" />
+        </mxCell>
+        <mxCell id="20" parent="1" vertex="1" value="4번의&lt;br&gt;조합 예측" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=0;fontColor=#172b4d;fillColor=#fff7ed;strokeColor=#fb923c;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="724" y="720" width="208" height="80" />
+        </mxCell>
+        <mxCell id="21" parent="1" vertex="1" value="5번의&lt;br&gt;조합 예측" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=0;fontColor=#172b4d;fillColor=#fff7ed;strokeColor=#fb923c;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="952" y="720" width="208" height="80" />
+        </mxCell>
+        <mxCell id="22" parent="1" vertex="1" value="&lt;b&gt;다섯 조각을 모아 AUC로 채점 = nested OOF AUC&lt;/b&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=28;fontStyle=0;fontColor=#ffffff;fillColor=#172b4d;strokeColor=#172b4d;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="40" y="845" width="1120" height="80" />
+        </mxCell>
+        <mxCell id="23" parent="1" vertex="1" value="확인하는 것: 조합을 고르는 방법이, 고를 때 정답을 쓰지 않은 사례에서도 통하는가?" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="950" width="1120" height="55" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
 </mxfile>

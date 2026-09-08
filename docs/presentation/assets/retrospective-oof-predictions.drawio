@@ -1,26 +1,143 @@
-<mxfile host="Electron" version="30.3.6">
-<diagram id="screen-11-oof-predictions" name="Page-1">
-<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="1440" pageHeight="810" math="0" shadow="0">
-  <root>
-    <mxCell id="0"/>
-    <mxCell id="1" parent="0"/>
-    <mxCell id="2" value="예: fold 3이 검증 묶음일 때" style="text;html=1;fontStyle=1;fontSize=27;align=center;fontColor=#334155;" vertex="1" parent="1"><mxGeometry x="430" y="30" width="580" height="50" as="geometry"/></mxCell>
-    <mxCell id="3" value="fold 1&#xa;학습" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="80" y="110" width="190" height="90" as="geometry"/></mxCell>
-    <mxCell id="4" value="fold 2&#xa;학습" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="345" y="110" width="190" height="90" as="geometry"/></mxCell>
-    <mxCell id="5" value="fold 3&#xa;검증" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2563eb;strokeColor=#1d4ed8;fontColor=#ffffff;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="610" y="100" width="190" height="110" as="geometry"/></mxCell>
-    <mxCell id="6" value="fold 4&#xa;학습" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="875" y="110" width="190" height="90" as="geometry"/></mxCell>
-    <mxCell id="7" value="fold 5&#xa;학습" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;fontStyle=1;fontSize=22;" vertex="1" parent="1"><mxGeometry x="1140" y="110" width="190" height="90" as="geometry"/></mxCell>
-    <mxCell id="8" value="fold 1, 2, 4, 5로 학습" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontColor=#1e3a8a;fontStyle=1;fontSize=24;" vertex="1" parent="1"><mxGeometry x="210" y="300" width="360" height="90" as="geometry"/></mxCell>
-    <mxCell id="9" value="fold 3의&#xa;OOF 예측" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2563eb;strokeColor=#1d4ed8;fontColor=#ffffff;fontStyle=1;fontSize=25;" vertex="1" parent="1"><mxGeometry x="850" y="290" width="240" height="110" as="geometry"/></mxCell>
-    <mxCell id="10" value="다섯 번 반복" style="text;html=1;fontStyle=1;fontSize=22;align=center;fontColor=#475569;" vertex="1" parent="1"><mxGeometry x="550" y="455" width="340" height="45" as="geometry"/></mxCell>
-    <mxCell id="11" value="OOF 1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#2563eb;fontStyle=1;fontSize=21;" vertex="1" parent="1"><mxGeometry x="150" y="530" width="180" height="80" as="geometry"/></mxCell>
-    <mxCell id="12" value="OOF 2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#2563eb;fontStyle=1;fontSize=21;" vertex="1" parent="1"><mxGeometry x="390" y="530" width="180" height="80" as="geometry"/></mxCell>
-    <mxCell id="13" value="OOF 3" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2563eb;strokeColor=#1d4ed8;fontColor=#ffffff;fontStyle=1;fontSize=21;" vertex="1" parent="1"><mxGeometry x="630" y="530" width="180" height="80" as="geometry"/></mxCell>
-    <mxCell id="14" value="OOF 4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#2563eb;fontStyle=1;fontSize=21;" vertex="1" parent="1"><mxGeometry x="870" y="530" width="180" height="80" as="geometry"/></mxCell>
-    <mxCell id="15" value="OOF 5" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#2563eb;fontStyle=1;fontSize=21;" vertex="1" parent="1"><mxGeometry x="1110" y="530" width="180" height="80" as="geometry"/></mxCell>
-    <mxCell id="16" value="원래 행 순서로 연결한 전체 OOF 예측" style="text;html=1;fontStyle=1;fontSize=27;align=center;fontColor=#1e3a8a;" vertex="1" parent="1"><mxGeometry x="360" y="680" width="720" height="55" as="geometry"/></mxCell>
-    <mxCell id="e1" value="자기 정답은 학습에서 제외" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#2563eb;strokeWidth=3;fontSize=18;" edge="1" source="8" target="9" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-  </root>
-</mxGraphModel>
-</diagram>
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="Electron">
+  <diagram id="retrospective-oof-predictions" name="Page-1">
+    <mxGraphModel page="1" pageWidth="1200" pageHeight="920" background="#ffffff" adaptiveColors="auto">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" parent="1" vertex="1" value="" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=0;fontColor=#172b4d;fillColor=#ffffff;strokeColor=none;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="0" y="0" width="1200" height="920" />
+        </mxCell>
+        <mxCell id="3" parent="1" vertex="1" value="CV: 다섯 묶음이 돌아가며 시험지가 됩니다" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=34;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="25" width="1120" height="55" />
+        </mxCell>
+        <mxCell id="4" parent="1" vertex="1" value="예: 정답이 있는 100개 사례를 20개씩 나눕니다. 매번 새 모델을 학습합니다." style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=22;fontStyle=0;fontColor=#475569;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="85" width="1120" height="50" />
+        </mxCell>
+        <mxCell id="5" parent="1" vertex="1" value="공부 = 정답과 함께 학습" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="40" y="150" width="440" height="55" />
+        </mxCell>
+        <mxCell id="6" parent="1" vertex="1" value="검증 = 학습에서 제외하고 예측" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=1;fontColor=#172b4d;fillColor=#dbeafe;strokeColor=#3b82f6;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="510" y="150" width="650" height="55" />
+        </mxCell>
+        <mxCell id="7" parent="1" vertex="1" value="1번 묶음" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=center;spacing=0;">
+          <mxGeometry as="geometry" x="220" y="235" width="170" height="40" />
+        </mxCell>
+        <mxCell id="8" parent="1" vertex="1" value="2번 묶음" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=center;spacing=0;">
+          <mxGeometry as="geometry" x="410" y="235" width="170" height="40" />
+        </mxCell>
+        <mxCell id="9" parent="1" vertex="1" value="3번 묶음" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=center;spacing=0;">
+          <mxGeometry as="geometry" x="600" y="235" width="170" height="40" />
+        </mxCell>
+        <mxCell id="10" parent="1" vertex="1" value="4번 묶음" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=center;spacing=0;">
+          <mxGeometry as="geometry" x="790" y="235" width="170" height="40" />
+        </mxCell>
+        <mxCell id="11" parent="1" vertex="1" value="5번 묶음" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=center;spacing=0;">
+          <mxGeometry as="geometry" x="980" y="235" width="170" height="40" />
+        </mxCell>
+        <mxCell id="12" parent="1" vertex="1" value="1회차" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="300" width="140" height="55" />
+        </mxCell>
+        <mxCell id="13" parent="1" vertex="1" value="검증 · 20개" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=1;fontColor=#172b4d;fillColor=#dbeafe;strokeColor=#3b82f6;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="220" y="300" width="170" height="55" />
+        </mxCell>
+        <mxCell id="14" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="410" y="300" width="170" height="55" />
+        </mxCell>
+        <mxCell id="15" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="600" y="300" width="170" height="55" />
+        </mxCell>
+        <mxCell id="16" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="790" y="300" width="170" height="55" />
+        </mxCell>
+        <mxCell id="17" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="980" y="300" width="170" height="55" />
+        </mxCell>
+        <mxCell id="18" parent="1" vertex="1" value="2회차" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="372" width="140" height="55" />
+        </mxCell>
+        <mxCell id="19" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="220" y="372" width="170" height="55" />
+        </mxCell>
+        <mxCell id="20" parent="1" vertex="1" value="검증 · 20개" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=1;fontColor=#172b4d;fillColor=#dbeafe;strokeColor=#3b82f6;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="410" y="372" width="170" height="55" />
+        </mxCell>
+        <mxCell id="21" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="600" y="372" width="170" height="55" />
+        </mxCell>
+        <mxCell id="22" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="790" y="372" width="170" height="55" />
+        </mxCell>
+        <mxCell id="23" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="980" y="372" width="170" height="55" />
+        </mxCell>
+        <mxCell id="24" parent="1" vertex="1" value="3회차" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="444" width="140" height="55" />
+        </mxCell>
+        <mxCell id="25" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="220" y="444" width="170" height="55" />
+        </mxCell>
+        <mxCell id="26" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="410" y="444" width="170" height="55" />
+        </mxCell>
+        <mxCell id="27" parent="1" vertex="1" value="검증 · 20개" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=1;fontColor=#172b4d;fillColor=#dbeafe;strokeColor=#3b82f6;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="600" y="444" width="170" height="55" />
+        </mxCell>
+        <mxCell id="28" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="790" y="444" width="170" height="55" />
+        </mxCell>
+        <mxCell id="29" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="980" y="444" width="170" height="55" />
+        </mxCell>
+        <mxCell id="30" parent="1" vertex="1" value="4회차" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="516" width="140" height="55" />
+        </mxCell>
+        <mxCell id="31" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="220" y="516" width="170" height="55" />
+        </mxCell>
+        <mxCell id="32" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="410" y="516" width="170" height="55" />
+        </mxCell>
+        <mxCell id="33" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="600" y="516" width="170" height="55" />
+        </mxCell>
+        <mxCell id="34" parent="1" vertex="1" value="검증 · 20개" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=1;fontColor=#172b4d;fillColor=#dbeafe;strokeColor=#3b82f6;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="790" y="516" width="170" height="55" />
+        </mxCell>
+        <mxCell id="35" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="980" y="516" width="170" height="55" />
+        </mxCell>
+        <mxCell id="36" parent="1" vertex="1" value="5회차" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=24;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="588" width="140" height="55" />
+        </mxCell>
+        <mxCell id="37" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="220" y="588" width="170" height="55" />
+        </mxCell>
+        <mxCell id="38" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="410" y="588" width="170" height="55" />
+        </mxCell>
+        <mxCell id="39" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="600" y="588" width="170" height="55" />
+        </mxCell>
+        <mxCell id="40" parent="1" vertex="1" value="공부" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=0;fontColor=#172b4d;fillColor=#f1f5f9;strokeColor=#cbd5e1;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="790" y="588" width="170" height="55" />
+        </mxCell>
+        <mxCell id="41" parent="1" vertex="1" value="검증 · 20개" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=23;fontStyle=1;fontColor=#172b4d;fillColor=#dbeafe;strokeColor=#3b82f6;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="980" y="588" width="170" height="55" />
+        </mxCell>
+        <mxCell id="42" parent="1" vertex="1" value="파란 칸에서 만든 예측만 모아, 원래 사람 순서로 놓습니다." style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=25;fontStyle=1;fontColor=#172b4d;fillColor=none;strokeColor=none;strokeWidth=2;spacing=12;align=left;spacing=0;">
+          <mxGeometry as="geometry" x="40" y="680" width="1120" height="45" />
+        </mxCell>
+        <mxCell id="43" parent="1" vertex="1" value="&lt;b&gt;OOF 예측 100개&lt;/b&gt;&lt;br&gt;각자 자기 정답으로 공부하지 않은 모델의 예측" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=25;fontStyle=0;fontColor=#172b4d;fillColor=#dbeafe;strokeColor=#3b82f6;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="40" y="750" width="710" height="105" />
+        </mxCell>
+        <mxCell id="44" parent="1" vertex="1" value="&lt;b&gt;정답과 비교&lt;/b&gt;&lt;br&gt;AUC로 채점" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Apple SD Gothic Neo;fontSize=26;fontStyle=0;fontColor=#ffffff;fillColor=#172b4d;strokeColor=#172b4d;strokeWidth=2;spacing=12;">
+          <mxGeometry as="geometry" x="840" y="750" width="320" height="105" />
+        </mxCell>
+        <mxCell id="45" parent="1" edge="1" source="43" target="44" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#64748b;strokeWidth=3;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
 </mxfile>
